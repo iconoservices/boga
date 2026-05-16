@@ -148,17 +148,25 @@ export default function SunsetTemplate({ store }: SunsetTemplateProps) {
   });
 
   // ── Splash / Landing ──────────────────────────────────────────
-  // Si el componente aún no está montado (primer render del servidor
-  // o hidratación), devolvemos un div con el color de fondo de la tienda
-  // para evitar el flash blanco mientras el contexto carga.
   if (!isMounted) return <div style={{ background: t.background, minHeight: '100vh', width: '100%' }} />;
 
-  if (!entered && settings.showSplash) {
-    return (
-      <main
-        className="relative h-screen w-full flex items-center justify-center overflow-hidden"
-        style={{ background: t.background, fontFamily: t.fontBody }}
-      >
+  return (
+    <>
+      {/* Background protector to prevent white flashes during hydration or transitions */}
+      <div 
+        style={{ 
+          position: 'fixed', 
+          inset: 0, 
+          background: t.background, 
+          zIndex: -1 
+        }} 
+      />
+
+      {(!entered && settings.showSplash) ? (
+        <main
+          className="relative h-screen w-full flex items-center justify-center overflow-hidden"
+          style={{ background: t.background, fontFamily: t.fontBody }}
+        >
         <link
           href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400;1,700&family=Manrope:wght@400;500;600;700;800&display=swap"
           rel="stylesheet"
@@ -262,14 +270,12 @@ export default function SunsetTemplate({ store }: SunsetTemplateProps) {
         `}</style>
       </main>
     );
-  }
-
-  // ── Menu / Catalog ─────────────────────────────────────────────
-  return (
-    <div
-      className="min-h-screen"
-      style={{ background: t.background, color: t.onBackground, fontFamily: t.fontBody }}
-    >
+      ) : (
+        /* ── Menu / Catalog ───────────────────────────────────────────── */
+        <div
+          className="min-h-screen"
+          style={{ background: t.background, color: t.onBackground, fontFamily: t.fontBody }}
+        >
       <link
         href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400;1,700&family=Manrope:wght@400;500;600;700;800&display=swap"
         rel="stylesheet"
@@ -612,6 +618,7 @@ export default function SunsetTemplate({ store }: SunsetTemplateProps) {
           </div>
         </div>
       )}
-    </div>
+      )}
+    </>
   );
 }
