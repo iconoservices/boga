@@ -316,7 +316,7 @@ export default function SunsetTemplate({ store }: SunsetTemplateProps) {
         </Link>
       </header>
 
-      <main className="pt-20 pb-32 px-6 max-w-5xl mx-auto">
+      <main className="pt-[72px] pb-32 px-6 max-w-5xl mx-auto">
         {/* Section header */}
         <header className="mb-6">
           <h2
