@@ -322,7 +322,7 @@ export default function Explore() {
                   <div className="p-3 flex flex-col flex-1 justify-between">
                     <div>
                       <h3 className="text-[13px] font-bold text-[#3E2723] line-clamp-2 leading-tight mb-1">{p.name}</h3>
-                      {p.original && <span className="text-[#745853] text-[11px] line-through">{p.original}</span>}
+                      {(p as any).original && <span className="text-[#745853] text-[11px] line-through">{(p as any).original}</span>}
                     </div>
                     <div className="flex justify-between items-end mt-2">
                       <span className="text-primary font-black text-[15px]">{p.price}</span>
