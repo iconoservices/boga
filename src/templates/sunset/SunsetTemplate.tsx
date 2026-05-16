@@ -273,8 +273,8 @@ export default function SunsetTemplate({ store }: SunsetTemplateProps) {
       /* ── Menu / Catalog ───────────────────────────────────────────── */
       <div
         className="min-h-[100dvh]"
-          style={{ background: t.background, color: t.onBackground, fontFamily: t.fontBody }}
-        >
+        style={{ background: t.background, color: t.onBackground, fontFamily: t.fontBody }}
+      >
       <link
         href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400;1,700&family=Manrope:wght@400;500;600;700;800&display=swap"
         rel="stylesheet"
@@ -617,7 +617,8 @@ export default function SunsetTemplate({ store }: SunsetTemplateProps) {
           </div>
         </div>
       )}
-      )}
+      </div>
+    )}
     </>
   );
 }
