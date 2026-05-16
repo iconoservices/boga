@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Detalle de Pensión - Boga Market</title>
+<!-- Google Fonts: Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config from Design System -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "outline": "#89726d",
+                    "on-tertiary-fixed": "#00201a",
+                    "on-tertiary": "#ffffff",
+                    "primary": "#9f402d",
+                    "surface-container": "#fdeae6",
+                    "secondary-container": "#fed7d0",
+                    "surface-container-highest": "#f2deda",
+                    "error": "#ba1a1a",
+                    "on-tertiary-fixed-variant": "#005144",
+                    "secondary-fixed": "#ffdad4",
+                    "tertiary-fixed": "#7bf8dd",
+                    "on-primary-fixed": "#3e0500",
+                    "surface-variant": "#f2deda",
+                    "inverse-on-surface": "#ffede9",
+                    "background": "#fff8f6",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-bright": "#fff8f6",
+                    "surface": "#fff8f6",
+                    "on-tertiary-container": "#00322a",
+                    "on-primary": "#ffffff",
+                    "surface-container-high": "#f8e4e0",
+                    "on-background": "#231917",
+                    "outline-variant": "#ddc0ba",
+                    "surface-dim": "#e9d6d2",
+                    "on-error": "#ffffff",
+                    "inverse-primary": "#ffb4a5",
+                    "inverse-surface": "#392e2b",
+                    "primary-fixed-dim": "#ffb4a5",
+                    "on-secondary-container": "#795c57",
+                    "on-secondary-fixed": "#2b1613",
+                    "on-primary-container": "#5a0d02",
+                    "surface-tint": "#9f402d",
+                    "on-primary-fixed-variant": "#802918",
+                    "tertiary-container": "#00a58e",
+                    "on-secondary-fixed-variant": "#5b403c",
+                    "on-error-container": "#93000a",
+                    "primary-fixed": "#ffdad3",
+                    "tertiary-fixed-dim": "#5cdbc2",
+                    "on-surface": "#231917",
+                    "on-secondary": "#ffffff",
+                    "surface-container-low": "#fff0ee",
+                    "tertiary": "#006b5b",
+                    "on-surface-variant": "#56423e",
+                    "secondary": "#745853",
+                    "error-container": "#ffdad6",
+                    "secondary-fixed-dim": "#e3beb8",
+                    "primary-container": "#e2725b"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "container-max": "1200px",
+                    "xl": "64px",
+                    "gutter": "16px",
+                    "lg": "40px",
+                    "md": "24px",
+                    "xs": "4px",
+                    "base": "8px",
+                    "sm": "12px"
+            },
+            "fontFamily": {
+                    "body-md": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "h1": ["Plus Jakarta Sans"],
+                    "display": ["Plus Jakarta Sans"],
+                    "h3": ["Plus Jakarta Sans"],
+                    "h2": ["Plus Jakarta Sans"],
+                    "caption": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "h1": ["32px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "display": ["40px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "h3": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                    "h2": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "caption": ["12px", {"lineHeight": "1.4", "fontWeight": "500"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md antialiased pb-32">
+<!-- JSON Component: TopAppBar -->
+<nav class="bg-stone-50 dark:bg-stone-950 docked full-width top-0 shadow-sm shadow-stone-900/5 fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 h-16">
+<button class="text-stone-500 hover:opacity-80 transition-opacity active:scale-95 duration-150 flex items-center justify-center w-10 h-10">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<span class="font-plus-jakarta-sans font-semibold text-lg text-xl font-bold text-stone-900 dark:text-stone-50">
+            Boga Market
+        </span>
+<button class="text-stone-500 hover:opacity-80 transition-opacity active:scale-95 duration-150 flex items-center justify-center w-10 h-10">
+<span class="material-symbols-outlined">shopping_bag</span>
+</button>
+</nav>
+<!-- Hero Image Area -->
+<div class="w-full h-72 relative mt-16 overflow-hidden bg-surface-container-low">
+<img class="w-full h-full object-cover object-center" data-alt="Close-up of traditional Amazonian dish Juane with rice and meat wrapped in bijao leaves, served on a rustic wooden table with soft warm natural lighting, high-end food photography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnvXZdATu7W4t-bZYXNhxxGJKBSD_OwEVnY-6AtiuzmydzQYCJznA-oFtnTPjrv8vInrKCK4NG70cLzbzvwN6vfdur37dQB9ATTA2wqUnKLdOb9btG-Ca9F14R6tZi0egcOhZpmxZ80G-3moCikBTpenb7UnIQNzqoIhhh8Hvhhic5dpLKcuxt2YRIfox6ASUx9HE0OZkPBAg5xT6C5TFs-i3i9hVIJAeF5cato3We6vzFF1SpMYK5GEhw2XnL_KNEfjtsOOU9IqZO"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+</div>
+<!-- Main Content Container -->
+<main class="px-gutter pt-md max-w-container-max mx-auto -mt-6 relative z-10">
+<!-- Header Info -->
+<div class="bg-surface-container-lowest p-md rounded-xl shadow-[0_10px_30px_rgba(62,39,35,0.06)] mb-lg border border-surface-container-high">
+<div class="flex justify-between items-start mb-2">
+<div>
+<span class="inline-block px-3 py-1 bg-surface-container text-primary font-label-md text-label-md rounded-full mb-3">Lunes</span>
+<h1 class="font-h1 text-h1 text-on-background leading-tight">Pensión del Día</h1>
+</div>
+<div class="text-right">
+<p class="font-h2 text-h2 text-primary">S/ 18.50</p>
+<div class="flex items-center justify-end text-surface-tint mt-1">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-caption text-caption text-on-surface-variant ml-1">4.9 (84)</span>
+</div>
+</div>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Sabor Amazónico Tradicional. Un viaje culinario a la selva con ingredientes frescos y recetas auténticas.</p>
+</div>
+<!-- Section: Menú Completo (Bento Grid) -->
+<section class="mb-lg">
+<div class="flex items-center gap-2 mb-sm">
+<span class="material-symbols-outlined text-primary">restaurant_menu</span>
+<h2 class="font-h2 text-h2 text-on-background">Menú Completo</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-sm">
+<!-- Main Dish (Featured) -->
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-[0_4px_20px_rgba(62,39,35,0.04)] flex flex-row items-center gap-4 md:col-span-2 border border-surface-container">
+<div class="w-24 h-24 rounded-lg bg-surface-container-high overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="Close up of roasted pork meat (Cecina) with mashed plantain balls (Tacacho) on a white plate" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtNc8tZYke_8hs-ocw7rFbyGTjc7fh-eCbm0leE53fXOU2qqX7p8y8ceuEFUBzLRvTKextc5r5CVqfzDc0xaF46u3MApVP64lRzvsnGXbSO8V7umqi3iB5IyRcibxAaRzBp_Zxc5ACN5RpXB876csMyk02CjOZGh8XzcCKI8vOZC9NsdWw2LDTRVCn9NEn_uYBU9If7HrZLYik8oFgCBSM1hV1kGlVzMdtFJzd2PVQvcF4NsfD452R-wf7kIQA20vTOrOOf894Pt5X"/>
+</div>
+<div class="flex-1">
+<span class="font-caption text-caption text-primary uppercase tracking-widest mb-1 block">Plato de Fondo</span>
+<h3 class="font-h3 text-h3 text-on-background mb-1">Cecina con Tacacho</h3>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2">Carne de cerdo ahumada tradicionalmente, acompañada de bolas de plátano verde asado y majado con manteca.</p>
+</div>
+</div>
+<!-- Soup -->
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-[0_4px_20px_rgba(62,39,35,0.04)] flex flex-row items-center gap-4 border border-surface-container">
+<div class="w-16 h-16 rounded-lg bg-surface-container-high overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="Creamy yellow peanut and corn soup (Inchicapi) in a rustic ceramic bowl garnished with cilantro" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBS5K9Anfyw3t245-a4bepKF6wzWOAjvf4qm8M0k0mIydX_cD_u8bWu2zNGS_xfyzHkDcBK16r5zSK2YwOXkIZU9QA-DLi8smPCDhZJUzHmTNOfKAHq7wRvWnZHoAV5MAbhC16dak7VeWwlD1h4szwvaMJ47tZOQ1T-bkRQ5KSwYQvY6M0ZQr_TEVvbwobkADgz619klq0MCY1wq8sZvRmT4-Yf-fMtZpM_kdG3_nHXOLh6mjvanru0bhgU7OBUIQAcZuK8s0IOF8q5"/>
+</div>
+<div>
+<span class="font-caption text-caption text-secondary uppercase tracking-widest mb-1 block">Entrada</span>
+<h4 class="font-label-md text-label-md text-on-background">Sopa Inchicapi</h4>
+</div>
+</div>
+<!-- Drink Default -->
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-[0_4px_20px_rgba(62,39,35,0.04)] flex flex-row items-center gap-4 border border-surface-container">
+<div class="w-16 h-16 rounded-lg bg-surface-container-high overflow-hidden shrink-0 flex items-center justify-center bg-secondary-container">
+<span class="material-symbols-outlined text-primary text-3xl">local_drink</span>
+</div>
+<div>
+<span class="font-caption text-caption text-secondary uppercase tracking-widest mb-1 block">Bebida Incluida</span>
+<h4 class="font-label-md text-label-md text-on-background">Refresco de Cocona</h4>
+</div>
+</div>
+</div>
+</section>
+<!-- Section: Opciones de Bebida -->
+<section class="mb-lg">
+<h2 class="font-h3 text-h3 text-on-background mb-sm">Cambiar Bebida</h2>
+<div class="flex gap-2 overflow-x-auto pb-2 -mx-gutter px-gutter snap-x">
+<button class="snap-start shrink-0 px-5 py-2.5 bg-surface-container text-primary border-2 border-primary-container rounded-full font-label-md text-label-md flex items-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+                    Cocona
+                </button>
+<button class="snap-start shrink-0 px-5 py-2.5 bg-surface-container-lowest text-on-surface-variant border border-outline-variant rounded-full font-label-md text-label-md hover:bg-surface-container-low transition-colors">
+                    Camu Camu
+                </button>
+<button class="snap-start shrink-0 px-5 py-2.5 bg-surface-container-lowest text-on-surface-variant border border-outline-variant rounded-full font-label-md text-label-md hover:bg-surface-container-low transition-colors">
+                    Chicha Morada
+                </button>
+<button class="snap-start shrink-0 px-5 py-2.5 bg-surface-container-lowest text-on-surface-variant border border-outline-variant rounded-full font-label-md text-label-md hover:bg-surface-container-low transition-colors">
+                    Maracuyá
+                </button>
+</div>
+</section>
+<!-- Section: Información de suscripción -->
+<section class="mb-xl">
+<div class="bg-surface-variant p-md rounded-xl border border-outline-variant/30 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-6xl">event_repeat</span>
+</div>
+<div class="relative z-10">
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-secondary text-[20px]">info</span>
+<h3 class="font-h3 text-h3 text-on-background">Información de Suscripción</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-3">
+                         Al suscribirte a este plato, aseguras tu almuerzo de los lunes con envío prioritario.
+                     </p>
+<ul class="space-y-2">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-[18px] mt-0.5">check</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Entrega programada entre 12:30 PM - 1:30 PM.</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-[18px] mt-0.5">check</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Puedes modificar o pausar hasta las 10:00 AM del mismo día.</span>
+</li>
+</ul>
+</div>
+</div>
+</section>
+</main>
+<!-- Sticky Bottom CTA (Replacing BottomNavBar for Transactional Flow) -->
+<div class="fixed bottom-0 left-0 w-full bg-surface-container-lowest p-4 shadow-[0_-15px_40px_rgba(62,39,35,0.08)] z-50 rounded-t-xl border-t border-surface-container-high backdrop-blur-md bg-opacity-95">
+<div class="max-w-container-max mx-auto flex items-center justify-between gap-4">
+<div class="hidden sm:block">
+<p class="font-caption text-caption text-on-surface-variant">Total semanal</p>
+<p class="font-h2 text-h2 text-on-background">S/ 18.50</p>
+</div>
+<button class="flex-1 bg-primary text-on-primary font-label-md text-label-md py-4 px-6 rounded-xl flex justify-center items-center gap-2 shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined">event_available</span>
+                Suscribirse a Pensión
+            </button>
+</div>
+</div>
+</body></html>
