@@ -245,7 +245,7 @@ export default function DelvaTemplate({ store }: DelvaTemplateProps) {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '12px' }}>
             {filtered.map((product) => {
-              const seed = product.id.split('').reduce((acc: number, c: string) => acc + c.charCodeAt(0), 0);
+              const seed = product.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
               const approval = 94 + (seed % 6);
               return (
                 <div

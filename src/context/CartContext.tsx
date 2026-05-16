@@ -13,7 +13,7 @@ interface CartContextType {
   cartItems: CartItem[];
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
-  addToCart: (product: any) => void;
+  addToCart: (product: any, qty?: number) => void;
   updateQuantity: (name: string, delta: number) => void;
   removeItem: (name: string) => void;
   cartCount: number;
