@@ -164,7 +164,7 @@ export default function SunsetTemplate({ store }: SunsetTemplateProps) {
 
       {(!entered && settings.showSplash) ? (
         <main
-          className="relative h-screen w-full flex items-center justify-center overflow-hidden"
+          className="relative h-[100dvh] w-full flex items-center justify-center overflow-hidden"
           style={{ background: t.background, fontFamily: t.fontBody }}
         >
         <link
@@ -269,11 +269,10 @@ export default function SunsetTemplate({ store }: SunsetTemplateProps) {
           }
         `}</style>
       </main>
-    );
-      ) : (
-        /* ── Menu / Catalog ───────────────────────────────────────────── */
-        <div
-          className="min-h-screen"
+    ) : (
+      /* ── Menu / Catalog ───────────────────────────────────────────── */
+      <div
+        className="min-h-[100dvh]"
           style={{ background: t.background, color: t.onBackground, fontFamily: t.fontBody }}
         >
       <link
