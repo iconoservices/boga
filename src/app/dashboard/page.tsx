@@ -472,7 +472,7 @@ export default function DashboardPage() {
                             <td className="p-3 text-right">
                               <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button 
-                                  onClick={() => editProduct(p)}
+                                  onClick={() => handleEdit(p)}
                                   className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition-colors"
                                   title="Editar"
                                 >
