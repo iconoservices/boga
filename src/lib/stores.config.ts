@@ -24,7 +24,7 @@ export interface StoreConfig {
   name: string;
   tagline: string;
   marketplaceCategory: string;
-  template: 'sunset' | 'delva' | 'natura' | 'default';
+  template: 'sunset' | 'delva' | 'natura' | 'amazonia' | 'default';
   theme: StoreTheme;
   heroImage: string;
   heroAlt: string;
