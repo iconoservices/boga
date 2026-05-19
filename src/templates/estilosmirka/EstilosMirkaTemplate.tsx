@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
 import { supabase } from '@/lib/supabase';
+import { useDemo } from '@/context/DemoContext';
 
 interface EstilosMirkaTemplateProps {
   store: StoreConfig;
@@ -22,6 +23,9 @@ const MOCK_PRODUCTS = [
 
 
 export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProps) {
+  const { isDemoVisible } = useDemo();
+  const demoOn = isDemoVisible(store.slug);
+
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -62,7 +66,7 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
   }, []);
 
   const theme = store.theme;
-  const allProducts = [...supabaseProducts, ...MOCK_PRODUCTS];
+  const allProducts = demoOn ? [...supabaseProducts, ...MOCK_PRODUCTS] : supabaseProducts;
 
   const filteredProducts = allProducts.filter((prod) => {
     const matchCat = activeCategory === 'all' || prod.category === activeCategory;

@@ -5,7 +5,6 @@ import dynamic from 'next/dynamic';
 
 // Lazy load templates so only the needed one is downloaded
 const SunsetTemplate = dynamic(() => import('@/templates/sunset/SunsetTemplate'));
-const DelvaTemplate = dynamic(() => import('@/templates/delva/DelvaTemplate'));
 const NaturaTemplate = dynamic(() => import('@/templates/natura/NaturaTemplate'));
 const AmazoniaTemplate = dynamic(() => import('@/templates/amazonia/AmazoniaTemplate'));
 const SweetKittyNailsTemplate = dynamic(() => import('@/templates/sweetkittynails/SweetKittyNailsTemplate'));
@@ -19,8 +18,6 @@ export default function StoreRenderer({ store }: Props) {
   switch (store.template) {
     case 'sunset':
       return <SunsetTemplate store={store} />;
-    case 'delva':
-      return <DelvaTemplate store={store} />;
     case 'natura':
       return <NaturaTemplate store={store} />;
     case 'amazonia':

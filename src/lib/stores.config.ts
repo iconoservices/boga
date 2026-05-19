@@ -24,7 +24,7 @@ export interface StoreConfig {
   name: string;
   tagline: string;
   marketplaceCategory: string;
-  template: 'sunset' | 'delva' | 'natura' | 'amazonia' | 'default' | 'sweetkittynails' | 'estilosmirka';
+  template: 'sunset' | 'natura' | 'amazonia' | 'default' | 'sweetkittynails' | 'estilosmirka';
   theme: StoreTheme;
   heroImage: string;
   heroAlt: string;
@@ -65,43 +65,6 @@ export const stores: Record<string, StoreConfig> = {
       { name: 'Cocina', icon: 'restaurant', href: 'kitchen' },
       { name: 'Bar', icon: 'local_bar', href: 'bar' },
       { name: 'Café', icon: 'coffee', href: 'cafe' },
-    ],
-  },
-
-  delva: {
-    slug: 'delva',
-    name: 'DELVA',
-    tagline: 'De la selva, su marketplace',
-    marketplaceCategory: 'Mercado',
-    template: 'delva',
-    heroImage:
-      'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&q=80',
-    heroAlt: 'selva amazónica exuberante con luz dorada',
-    theme: {
-      primary: '#00a651',
-      onPrimary: '#ffffff',
-      primaryContainer: '#2D6A4F',
-      secondary: '#1B4332',
-      secondaryContainer: '#1B4332',
-      background: '#F8F9F8',
-      surface: '#ffffff',
-      surfaceContainer: '#f0f4f0',
-      surfaceContainerLow: '#f8faf8',
-      surfaceContainerLowest: '#ffffff',
-      surfaceContainerHigh: '#e8ede8',
-      onBackground: '#1A1A1A',
-      onSurface: '#1A1A1A',
-      onSurfaceVariant: '#444444',
-      outlineVariant: '#d0d8d0',
-      fontHeadline: "'Outfit', sans-serif",
-      fontBody: "'Outfit', sans-serif",
-      fontLabel: "'Outfit', sans-serif",
-    },
-    categories: [
-      { name: 'Frutas', icon: 'nutrition', href: 'frutas' },
-      { name: 'Verduras', icon: 'eco', href: 'verduras' },
-      { name: 'Carnes', icon: 'set_meal', href: 'carnes' },
-      { name: 'Artesanía', icon: 'diamond', href: 'artesania' },
     ],
   },
 
