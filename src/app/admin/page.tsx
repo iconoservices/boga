@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 
 const META: Record<string, { emoji: string; cat: string }> = {
   sunset:   { emoji: '🥂', cat: 'Bar & Café' },
+  delva:    { emoji: '🌿', cat: 'Mercado' },
   natura:   { emoji: '🪴', cat: 'Salud' },
   amazonia: { emoji: '🏺', cat: 'Artesanía' },
   estilosmirka: { emoji: '👗', cat: 'Boutique' },
@@ -17,7 +18,7 @@ const META: Record<string, { emoji: string; cat: string }> = {
 
 const INITIAL_CATEGORIES = [
   { id: 1, name: 'Restaurantes y Bares', subs: ['Cocina', 'Bar', 'Café', 'Postres', 'Bebidas'], storeSlugs: ['sunset'] },
-  { id: 2, name: 'Mercado y Abastos',    subs: ['Frutas', 'Verduras', 'Carnes', 'Lácteos', 'Abarrotes'], storeSlugs: [] },
+  { id: 2, name: 'Mercado y Abastos',    subs: ['Frutas', 'Verduras', 'Carnes', 'Lácteos', 'Abarrotes'], storeSlugs: ['delva'] },
   { id: 3, name: 'Salud y Bienestar',    subs: ['Suplementos', 'Cuidado Personal', 'Vitaminas', 'Orgánico'], storeSlugs: ['natura'] },
   { id: 4, name: 'Artesanía y Hogar',   subs: ['Decoración', 'Muebles', 'Textiles', 'Cerámica'], storeSlugs: ['amazonia'] },
   { id: 5, name: 'Moda y Boutique',     subs: ['Damas', 'Caballeros', 'Accesorios', 'Calzado', 'Nuevos'], storeSlugs: ['estilosmirka'] },
@@ -116,7 +117,7 @@ export default function AdminPage() {
   const [users, setUsers] = useState([
     { id: 1, email: 'tu@bogamarket.com',    name: 'Super Admin',      role: 'super_admin' as UserRole, store: '',       status: 'activo' },
     { id: 2, email: 'pedro@sunsetlounge.com', name: 'Pedro Ramírez',  role: 'store_admin' as UserRole, store: 'sunset', status: 'activo' },
-    { id: 3, email: 'mirka@estilosmirka.com', name: 'Mirka Estilos', role: 'store_admin' as UserRole, store: 'estilosmirka', status: 'activo' },
+    { id: 3, email: 'maria@delva.com',      name: 'María López',     role: 'store_admin' as UserRole, store: 'delva',  status: 'pendiente' },
   ]);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');

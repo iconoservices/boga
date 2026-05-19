@@ -177,11 +177,11 @@ export const stores: Record<string, StoreConfig> = {
   estilosmirka: {
     slug: 'estilosmirka',
     name: 'Estilos Mirka',
-    tagline: 'Tu salón de belleza de confianza, donde el estilo te define',
-    marketplaceCategory: 'Moda y Belleza',
+    tagline: 'Moda elegante y sofisticada para mujeres que imponen tendencia',
+    marketplaceCategory: 'Moda',
     template: 'estilosmirka',
-    heroImage: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=1200&q=80',
-    heroAlt: 'Salón de belleza premium con estilo sofisticado',
+    heroImage: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200&q=80',
+    heroAlt: 'Boutique de ropa premium con estilo sofisticado',
     theme: {
       primary: '#6B1A2C',
       onPrimary: '#ffffff',
@@ -203,10 +203,10 @@ export const stores: Record<string, StoreConfig> = {
       fontLabel: "'Montserrat', sans-serif",
     },
     categories: [
-      { name: 'Cabello & Color', icon: 'dry_cleaning', href: 'cabello' },
-      { name: 'Maquillaje', icon: 'brush', href: 'maquillaje' },
-      { name: 'Uñas & Manicura', icon: 'spa', href: 'manicura' },
-      { name: 'Tratamientos', icon: 'self_improvement', href: 'tratamientos' },
+      { name: 'Vestidos', icon: 'styler', href: 'vestidos' },
+      { name: 'Blusas', icon: 'checkroom', href: 'blusas' },
+      { name: 'Pantalones', icon: 'accessibility_new', href: 'pantalones' },
+      { name: 'Accesorios', icon: 'diamond', href: 'accesorios' },
     ],
   },
 };

@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
 import { supabase } from '@/lib/supabase';
-import { useDemo } from '@/context/DemoContext';
 
 interface EstilosMirkaTemplateProps {
   store: StoreConfig;
@@ -23,11 +22,13 @@ const MOCK_PRODUCTS = [
 
 
 export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProps) {
-  const { isDemoVisible } = useDemo();
-  const demoOn = isDemoVisible(store.slug);
-
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Product Detail Sheet
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  const [selectedSize, setSelectedSize] = useState('M');
+  const [detailQty, setDetailQty] = useState(1);
   
   // Cart State
   const [cart, setCart] = useState<{ product: any; quantity: number }[]>([]);
@@ -66,7 +67,7 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
   }, []);
 
   const theme = store.theme;
-  const allProducts = demoOn ? [...supabaseProducts, ...MOCK_PRODUCTS] : supabaseProducts;
+  const allProducts = supabaseProducts;
 
   const filteredProducts = allProducts.filter((prod) => {
     const matchCat = activeCategory === 'all' || prod.category === activeCategory;
@@ -148,10 +149,6 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
 
           {/* Right icons */}
           <div className="flex items-center gap-3">
-            {/* Search icon */}
-            <button className="p-1.5 cursor-pointer hover:opacity-60 transition-opacity">
-              <span className="material-symbols-outlined text-xl" style={{ color: theme.primaryContainer }}>search</span>
-            </button>
             {/* Wishlist */}
             <button className="p-1.5 cursor-pointer hover:opacity-60 transition-opacity hidden md:block">
               <span className="material-symbols-outlined text-xl" style={{ color: theme.primaryContainer }}>favorite_border</span>
@@ -173,7 +170,7 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
       </header>
 
       {/* ── HERO BANNER ──────────────────────────────── */}
-      <section className="relative overflow-hidden" style={{ height: '70vw', maxHeight: '520px', minHeight: '300px' }}>
+      <section className="relative overflow-hidden" style={{ height: '52vw', maxHeight: '380px', minHeight: '220px' }}>
         <div className="absolute inset-0 z-0">
           <img 
             src={store.heroImage} 
@@ -184,12 +181,12 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
         </div>
 
         <div className="max-w-6xl mx-auto px-5 relative z-10 h-full flex flex-col justify-center">
-          <div className="text-white space-y-4 max-w-sm sm:max-w-md md:max-w-xl lg:max-w-2xl">
+          <div className="text-white space-y-3 max-w-[260px] sm:max-w-md md:max-w-xl lg:max-w-2xl">
             <p className="text-[10px] uppercase tracking-[0.25em] font-semibold text-white/70">Colección Exclusiva</p>
             <h1 className="text-3xl md:text-5xl font-bold leading-tight" style={{ fontFamily: theme.fontHeadline }}>
               Sofisticante
             </h1>
-            <p className="text-xs text-white/75 font-light leading-relaxed">
+            <p className="text-sm text-white/75 font-light leading-relaxed">
               {store.tagline}
             </p>
             <div className="flex flex-wrap gap-3 pt-1">
@@ -222,16 +219,6 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
           <h2 className="text-xl font-bold" style={{ fontFamily: theme.fontHeadline, color: theme.primaryContainer }}>
             Nuestra Colección
           </h2>
-          <div className="relative flex-1 max-w-sm">
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
-            <input
-              type="text"
-              placeholder="Buscar prendas..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-full border border-black/10 focus:outline-none bg-white text-sm"
-            />
-          </div>
         </div>
 
         {/* Category Ribbon */}
@@ -263,7 +250,12 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
         {/* Product Grid — 4 columns on desktop, 2 on mobile */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 {filteredProducts.map((prod) => (
-                  <div key={prod.id} className="bg-white border border-black/5 overflow-hidden flex flex-col group relative" style={{ borderRadius: '4px' }}>
+                  <div
+                    key={prod.id}
+                    onClick={() => { setSelectedProduct(prod); setDetailQty(1); setSelectedSize('M'); }}
+                    className="bg-white border border-black/5 overflow-hidden flex flex-col group relative cursor-pointer"
+                    style={{ borderRadius: '4px' }}
+                  >
                     {/* Badge Offer */}
                     {prod.hasOffer && (
                       <span className="absolute top-2 left-2 text-white text-[9px] font-black px-2 py-0.5 z-10 shadow uppercase tracking-wide" style={{ background: theme.primary, borderRadius: '2px' }}>
@@ -274,13 +266,6 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
                     {/* Portrait image — 3:4 ratio like fashion stores */}
                     <div className="overflow-hidden relative bg-gray-100" style={{ aspectRatio: '3/4' }}>
                       <img src={prod.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt={prod.title} />
-                      <button
-                        onClick={() => addToCart(prod)}
-                        className="absolute bottom-2 right-2 w-8 h-8 flex items-center justify-center text-white shadow-lg transition-all hover:scale-110 active:scale-90 cursor-pointer"
-                        style={{ background: theme.primary, borderRadius: '2px' }}
-                      >
-                        <span className="material-symbols-outlined text-base">add_shopping_cart</span>
-                      </button>
                     </div>
 
                     <div className="p-3 flex-1 flex flex-col justify-between">
@@ -307,6 +292,137 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
                 ))}
         </div>
       </section>
+
+      {/* ── PRODUCT DETAIL SHEET ───────────────────────── */}
+      {selectedProduct && (
+        <div 
+          className="fixed inset-0 z-50 flex flex-col w-full h-full bg-white overflow-hidden animate-fade-in"
+          style={{ background: theme.background }}
+        >
+          {/* Header/Top Bar */}
+          <div className="flex items-center justify-between px-4 h-14 border-b border-black/5 shrink-0 bg-white" style={{ background: theme.surface }}>
+            <button
+              onClick={() => setSelectedProduct(null)}
+              className="w-10 h-10 flex items-center justify-center cursor-pointer hover:opacity-75 transition-opacity"
+            >
+              <span className="material-symbols-outlined text-xl" style={{ color: theme.primary }}>arrow_back</span>
+            </button>
+            <span className="font-bold text-xs uppercase tracking-widest" style={{ fontFamily: theme.fontHeadline, color: theme.primaryContainer }}>
+              Detalle del Producto
+            </span>
+            <button
+              onClick={() => { setSelectedProduct(null); setIsCartOpen(true); }}
+              className="w-10 h-10 flex items-center justify-center cursor-pointer hover:opacity-75 transition-opacity relative"
+            >
+              <span className="material-symbols-outlined text-xl" style={{ color: theme.primary }}>shopping_bag</span>
+              {cartItemsCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-black text-white" style={{ backgroundColor: theme.primary }}>
+                  {cartItemsCount}
+                </span>
+              )}
+            </button>
+          </div>
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto pb-28">
+            {/* Image (3:4 ratio for clothes) */}
+            <div className="w-full relative bg-gray-100 aspect-[3/4] max-w-md mx-auto">
+              <img
+                src={selectedProduct.image}
+                alt={selectedProduct.title}
+                className="w-full h-full object-cover object-top"
+              />
+              {selectedProduct.hasOffer && (
+                <span className="absolute top-4 left-4 text-white text-[10px] font-black px-3 py-1 shadow uppercase tracking-wide" style={{ background: theme.primary, borderRadius: '2px' }}>OFERTA</span>
+              )}
+            </div>
+
+            {/* Product Info */}
+            <div className="max-w-md mx-auto px-5 py-6">
+              {/* Title + Price */}
+              <div className="flex flex-col gap-2 mb-4">
+                <span className="text-[10px] font-bold uppercase tracking-widest opacity-60" style={{ color: theme.primary }}>
+                  {selectedProduct.category}
+                </span>
+                <h1 className="text-xl font-bold leading-tight" style={{ fontFamily: theme.fontHeadline, color: theme.primaryContainer }}>
+                  {selectedProduct.title}
+                </h1>
+                <div className="flex items-baseline gap-2 mt-1">
+                  <span className="text-xl font-black" style={{ color: theme.primary }}>S/ {selectedProduct.price.toFixed(2)}</span>
+                  {selectedProduct.hasOffer && selectedProduct.originalPrice && selectedProduct.originalPrice !== selectedProduct.price && (
+                    <span className="text-xs text-gray-400 line-through">S/ {selectedProduct.originalPrice.toFixed(2)}</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Description */}
+              {selectedProduct.description && (
+                <div className="border-t border-black/5 pt-4 mb-5">
+                  <p className="text-sm text-gray-500 leading-relaxed">{selectedProduct.description}</p>
+                </div>
+              )}
+
+              {/* Size selector */}
+              <div className="border-t border-black/5 pt-4 mb-5">
+                <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: theme.primaryContainer }}>Talla</p>
+                <div className="flex gap-2 flex-wrap">
+                  {['XS','S','M','L','XL','XXL'].map((sz) => (
+                    <button
+                      key={sz}
+                      onClick={() => setSelectedSize(sz)}
+                      className="w-10 h-10 text-xs font-bold border transition-all cursor-pointer"
+                      style={{
+                        borderRadius: '2px',
+                        background: selectedSize === sz ? theme.primary : 'white',
+                        color: selectedSize === sz ? 'white' : '#555',
+                        borderColor: selectedSize === sz ? theme.primary : 'rgba(0,0,0,0.15)',
+                      }}
+                    >
+                      {sz}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Fixed bottom bar */}
+          <div className="border-t border-black/5 px-5 py-4 flex gap-3 items-center bg-white shrink-0 mt-auto" style={{ background: theme.surface }}>
+            {/* Qty */}
+            <div className="flex items-center gap-3 bg-gray-100 rounded-full px-3 py-1.5 shrink-0">
+              <button onClick={() => setDetailQty(Math.max(1, detailQty - 1))} className="w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center cursor-pointer hover:opacity-70 transition-opacity">
+                <span className="material-symbols-outlined text-base" style={{ color: theme.primaryContainer }}>remove</span>
+              </button>
+              <span className="font-black text-sm w-4 text-center" style={{ color: theme.primaryContainer }}>{detailQty}</span>
+              <button onClick={() => setDetailQty(detailQty + 1)} className="w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center cursor-pointer hover:opacity-70 transition-opacity">
+                <span className="material-symbols-outlined text-base" style={{ color: theme.primaryContainer }}>add</span>
+              </button>
+            </div>
+
+            {/* WhatsApp */}
+            <a
+              href={`https://wa.me/51999999999?text=Hola,%20quiero%20comprar%20${detailQty}%20${encodeURIComponent(selectedProduct.title)}%20Talla%20${selectedSize}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-11 h-11 rounded-xl bg-[#25D366] flex items-center justify-center shadow-lg shrink-0 hover:opacity-90 active:scale-95 transition-all"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
+                <path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232"/>
+              </svg>
+            </a>
+
+            {/* Add to cart */}
+            <button
+              onClick={() => { addToCart(selectedProduct); setSelectedProduct(null); }}
+              className="flex-1 h-11 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 shadow-lg hover:opacity-90 active:scale-95 transition-all cursor-pointer"
+              style={{ background: theme.primary }}
+            >
+              <span className="material-symbols-outlined text-lg">shopping_bag</span>
+              Añadir · S/ {(selectedProduct.price * detailQty).toFixed(2)}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── SHOPPING CART DRAWER ─────────────────────── */}
       {isCartOpen && (
@@ -428,7 +544,7 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
               {store.name}
             </span>
             <p className="text-[11px] leading-relaxed">
-              Tu salón y tienda de belleza de confianza. Ofrecemos estilismo premium, tratamientos moleculares y cosmética exclusiva para que luzcas espectacular cada día.
+              Tu boutique de moda de confianza. Ofrecemos prendas exclusivas, calidad premium y las últimas tendencias para que deslumbres con cada look.
             </p>
           </div>
 
