@@ -207,7 +207,7 @@ export default function Home() {
                   <Link key={prod.id} href={`/${prod.slug}`} className="col-span-2 relative bg-white rounded-2xl shadow-md overflow-hidden flex group min-h-[150px] border border-black/5">
                     <div className="w-[42%] relative overflow-hidden shrink-0">
                       <img alt={prod.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src={prod.image} />
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/80" />
+
                       <button 
                         onClick={(e) => {
                           e.preventDefault();

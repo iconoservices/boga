@@ -53,6 +53,72 @@ export default function Explore() {
               : s.products
           };
         }));
+
+        const newSectionsProducts: Record<string, any[]> = {
+          'Combos & Promos': [],
+          'Comida': [],
+          'Bebidas': [],
+          'Mercado': [],
+          'Salud': [],
+          'Moda': [],
+          'Servicios': []
+        };
+
+        data.forEach((p: any) => {
+          const storeDef = stores[p.store as keyof typeof stores];
+          let macroCat = 'Mercado';
+
+          const storeCategory = storeDef?.marketplaceCategory?.toLowerCase() || '';
+          const productCategory = p.category?.toLowerCase() || '';
+
+          if (storeCategory.includes('moda') || productCategory.includes('ropa') || productCategory.includes('vestido') || storeCategory.includes('boutique')) {
+            macroCat = 'Moda';
+          } else if (storeCategory.includes('salud') || productCategory.includes('salud') || storeCategory.includes('belleza')) {
+            macroCat = 'Salud';
+          } else if (storeCategory.includes('restaurante') || productCategory.includes('comida') || productCategory.includes('cocina')) {
+            macroCat = 'Comida';
+          } else if (productCategory.includes('bebida') || productCategory.includes('bar') || productCategory.includes('café')) {
+            macroCat = 'Bebidas';
+          } else if (storeCategory.includes('mercado') || productCategory.includes('fruta') || productCategory.includes('carne')) {
+            macroCat = 'Mercado';
+          } else if (storeCategory.includes('servicio')) {
+            macroCat = 'Servicios';
+          }
+
+          if (newSectionsProducts[macroCat]) {
+            newSectionsProducts[macroCat].push({
+              name: p.name,
+              price: `S/ ${p.price.toFixed(2)}`,
+              badge: 'Nuevo',
+              img: p.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80'
+            });
+          }
+        });
+
+        setSections(prev => {
+          const updated = [...prev];
+          Object.keys(newSectionsProducts).forEach(catId => {
+            const products = newSectionsProducts[catId];
+            if (products.length > 0) {
+              const existingIdx = updated.findIndex(s => s.id === catId);
+              if (existingIdx >= 0) {
+                updated[existingIdx].products = products;
+              } else {
+                let title = catId;
+                if (catId === 'Moda') title = 'Moda y Estilo 👗';
+                if (catId === 'Salud') title = 'Salud y Bienestar 💊';
+                if (catId === 'Servicios') title = 'Servicios 🛠️';
+                
+                updated.push({
+                  id: catId,
+                  title: title,
+                  products: products
+                });
+              }
+            }
+          });
+          return updated;
+        });
       }
     };
     fetchRealData();
@@ -134,7 +200,7 @@ export default function Explore() {
     ? Object.values(subCategories).flat() 
     : subCategories[activeCategory] || [];
 
-  const sections = [
+  const [sections, setSections] = useState([
     {
       id: 'Combos & Promos',
       title: 'Promos & Combos 🏷️',
@@ -182,7 +248,7 @@ export default function Explore() {
         { name: 'Arroz 5kg',     price: 'S/ 16.50', badge: 'Esencial', img: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=400' },
       ]
     }
-  ];
+  ]);
 
   return (
     <>

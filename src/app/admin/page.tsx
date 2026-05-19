@@ -17,11 +17,13 @@ const META: Record<string, { emoji: string; cat: string }> = {
 };
 
 const INITIAL_CATEGORIES = [
-  { id: 1, name: 'Restaurantes y Bares', subs: ['Cocina', 'Bar', 'Café', 'Postres', 'Bebidas'], storeSlugs: ['sunset'] },
-  { id: 2, name: 'Mercado y Abastos',    subs: ['Frutas', 'Verduras', 'Carnes', 'Lácteos', 'Abarrotes'], storeSlugs: ['delva'] },
-  { id: 3, name: 'Salud y Bienestar',    subs: ['Suplementos', 'Cuidado Personal', 'Vitaminas', 'Orgánico'], storeSlugs: ['natura'] },
-  { id: 4, name: 'Artesanía y Hogar',   subs: ['Decoración', 'Muebles', 'Textiles', 'Cerámica'], storeSlugs: ['amazonia'] },
-  { id: 5, name: 'Moda y Boutique',     subs: ['Damas', 'Caballeros', 'Accesorios', 'Calzado', 'Nuevos'], storeSlugs: ['estilosmirka'] },
+  { id: 1, name: 'Comida', subs: ['Menú del Día', 'Criollo', 'Hamburguesas', 'Pizzas', 'Sándwiches'], storeSlugs: ['sunset'] },
+  { id: 2, name: 'Bebidas', subs: ['Piqueos & Snacks', 'Cervezas', 'Licores', 'Jugos', 'Café'], storeSlugs: ['sunset'] },
+  { id: 3, name: 'Mercado', subs: ['Frutas', 'Verduras', 'Carnes', 'Lácteos', 'Panadería'], storeSlugs: ['delva', 'amazonia'] },
+  { id: 4, name: 'Salud', subs: ['Medicamentos', 'Cuidado Personal', 'Suplementos'], storeSlugs: ['natura'] },
+  { id: 5, name: 'Moda', subs: ['Vestidos', 'Blusas', 'Accesorios', 'Relojes', 'Calzado'], storeSlugs: ['estilosmirka', 'sweetkittynails'] },
+  { id: 6, name: 'Servicios', subs: ['Limpieza', 'Reparación', 'Delivery'], storeSlugs: [] },
+  { id: 7, name: 'Combos & Promos', subs: ['Combos Comida', 'Packs Bebidas', 'Ofertas Flash'], storeSlugs: [] },
 ];
 
 const NAV = [
