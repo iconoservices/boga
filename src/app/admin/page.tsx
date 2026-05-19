@@ -12,6 +12,8 @@ const META: Record<string, { emoji: string; cat: string }> = {
   delva:    { emoji: '🌿', cat: 'Mercado' },
   natura:   { emoji: '🪴', cat: 'Salud' },
   amazonia: { emoji: '🏺', cat: 'Artesanía' },
+  estilosmirka: { emoji: '👗', cat: 'Boutique' },
+  sweetkittynails: { emoji: '💅', cat: 'Beauty' },
 };
 
 const INITIAL_CATEGORIES = [
@@ -19,6 +21,7 @@ const INITIAL_CATEGORIES = [
   { id: 2, name: 'Mercado y Abastos',    subs: ['Frutas', 'Verduras', 'Carnes', 'Lácteos', 'Abarrotes'], storeSlugs: ['delva'] },
   { id: 3, name: 'Salud y Bienestar',    subs: ['Suplementos', 'Cuidado Personal', 'Vitaminas', 'Orgánico'], storeSlugs: ['natura'] },
   { id: 4, name: 'Artesanía y Hogar',   subs: ['Decoración', 'Muebles', 'Textiles', 'Cerámica'], storeSlugs: ['amazonia'] },
+  { id: 5, name: 'Moda y Boutique',     subs: ['Damas', 'Caballeros', 'Accesorios', 'Calzado', 'Nuevos'], storeSlugs: ['estilosmirka'] },
 ];
 
 const NAV = [
@@ -520,156 +523,253 @@ export default function AdminPage() {
                 <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">Taxonomía Maestra</h2>
                 <p className="text-sm text-gray-500 font-medium">Gestiona las categorías globales y asigna qué tiendas pertenecen a cada una.</p>
               </div>
-              <button className="bg-black text-white px-4 py-2.5 rounded-xl font-bold shadow-lg shadow-black/15 flex items-center gap-2 hover:-translate-y-0.5 transition-all">
+              <button 
+                onClick={() => {
+                  const newId = Math.max(...categories.map(c => c.id), 0) + 1;
+                  setCategories(cats => [...cats, {
+                    id: newId,
+                    name: 'Nueva Categoría',
+                    subs: ['General'],
+                    storeSlugs: []
+                  }]);
+                  setEditingCatId(newId);
+                }}
+                className="bg-black text-white px-4 py-2.5 rounded-xl font-bold shadow-lg shadow-black/15 flex items-center gap-2 hover:-translate-y-0.5 transition-all text-xs cursor-pointer"
+              >
                 <span className="material-symbols-outlined text-[18px]">add</span>
                 Nueva Categoría
               </button>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Compact categories list */}
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-100">
+              {/* Table header */}
+              <div className="hidden md:grid grid-cols-[220px_1fr_250px] gap-4 px-5 py-3 bg-gray-50 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                <span>Categoría Principal</span>
+                <span>Subcategorías (Secciones)</span>
+                <span>Tiendas Vinculadas</span>
+              </div>
+
               {categories.map((cat) => (
-                <div key={cat.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-                  {/* Category Header */}
-                  <div className="p-5 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="w-10 h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-400 shadow-sm">
-                        <span className="material-symbols-outlined text-[20px]">category</span>
-                      </div>
-                      <div className="flex-1">
-                        {editingCatId === cat.id ? (
-                          <input
-                            autoFocus
-                            value={cat.name}
-                            onChange={(e) => setCategories(cats => cats.map(c => c.id === cat.id ? { ...c, name: e.target.value } : c))}
-                            onBlur={() => setEditingCatId(null)}
-                            onKeyDown={(e) => e.key === 'Enter' && setEditingCatId(null)}
-                            className="font-extrabold text-base text-gray-900 bg-white border border-gray-300 rounded px-2 py-0.5 outline-none focus:border-black w-full"
-                          />
-                        ) : (
-                          <h3 className="font-extrabold text-base text-gray-900 cursor-pointer hover:underline flex items-center gap-2" onClick={() => setEditingCatId(cat.id)}>
-                            {cat.name}
-                            <span className="text-[10px] text-gray-400 font-bold bg-gray-200/50 px-1.5 py-0.5 rounded uppercase no-underline">ID:{cat.id}</span>
-                          </h3>
-                        )}
-                      </div>
-                    </div>
-                    <button onClick={() => setEditingCatId(cat.id)} className="w-8 h-8 flex items-center justify-center hover:bg-gray-200 rounded-full transition-colors text-gray-400">
-                      <span className="material-symbols-outlined text-[16px]">edit</span>
-                    </button>
-                  </div>
-
-                  <div className="p-5 flex-1 flex flex-col gap-6">
-                    {/* Subcategories */}
-                    <div>
-                      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Subcategorías (Secciones)</p>
-                      <div className="flex flex-wrap gap-2">
-                        {cat.subs.map((sub, idx) => (
-                          <div key={idx} className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-1 group transition-all">
-                            {editingSubId?.catId === cat.id && editingSubId?.index === idx ? (
-                               <input
-                                 autoFocus
-                                 value={sub}
-                                 onChange={(e) => setCategories(cats => cats.map(c => {
-                                   if (c.id !== cat.id) return c;
-                                   const newSubs = [...c.subs];
-                                   newSubs[idx] = e.target.value;
-                                   return { ...c, subs: newSubs };
-                                 }))}
-                                 onBlur={() => setEditingSubId(null)}
-                                 onKeyDown={(e) => e.key === 'Enter' && setEditingSubId(null)}
-                                 className="text-xs font-semibold text-gray-900 bg-white border-b border-gray-400 outline-none w-20 px-1"
-                               />
-                            ) : (
-                              <span className="text-xs font-semibold text-gray-700 cursor-pointer" onClick={() => setEditingSubId({catId: cat.id, index: idx})}>{sub}</span>
-                            )}
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (window.confirm(`¿Estás seguro de que quieres eliminar la subcategoría "${sub}"?`)) {
-                                  setCategories(cats => cats.map(c => c.id === cat.id ? { ...c, subs: c.subs.filter((_, i) => i !== idx) } : c));
-                                }
-                              }}
-                              className="material-symbols-outlined text-[12px] text-gray-300 hover:text-red-500 rounded-full w-4 h-4 flex items-center justify-center transition-all ml-1"
-                              title="Eliminar"
-                            >
-                              close
-                            </button>
-                          </div>
-                        ))}
-                        <button 
-                          onClick={() => {
-                            setCategories(cats => cats.map(c => {
-                              if (c.id !== cat.id) return c;
-                              const newSubs = [...c.subs, 'Nueva Sub'];
-                              setEditingSubId({ catId: cat.id, index: newSubs.length - 1 });
-                              return { ...c, subs: newSubs };
-                            }));
-                          }}
-                          className="px-3 py-1.5 border border-dashed border-gray-300 rounded-lg text-gray-500 text-xs font-semibold flex items-center gap-1 hover:border-gray-400 hover:text-gray-900 transition-all cursor-pointer bg-gray-50/50"
+                <div key={cat.id} className="grid grid-cols-1 md:grid-cols-[220px_1fr_250px] gap-4 p-5 items-start hover:bg-gray-50/30 transition-colors">
+                  {/* Col 1: Main Category name & edit */}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 rounded bg-gray-100 text-gray-500 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-[14px]">category</span>
+                      </span>
+                      {editingCatId === cat.id ? (
+                        <input
+                          autoFocus
+                          value={cat.name}
+                          onChange={(e) => setCategories(cats => cats.map(c => c.id === cat.id ? { ...c, name: e.target.value } : c))}
+                          onBlur={() => setEditingCatId(null)}
+                          onKeyDown={(e) => e.key === 'Enter' && setEditingCatId(null)}
+                          className="font-bold text-xs text-gray-900 bg-white border border-gray-300 rounded px-1.5 py-0.5 outline-none focus:border-black w-full"
+                        />
+                      ) : (
+                        <span 
+                          onClick={() => setEditingCatId(cat.id)} 
+                          className="font-bold text-xs text-gray-900 cursor-pointer hover:underline flex items-center gap-1.5"
                         >
-                          <span className="material-symbols-outlined text-[14px]">add</span>
-                          Añadir
-                        </button>
-                      </div>
+                          {cat.name}
+                          <span className="text-[8px] text-gray-400 font-bold bg-gray-100 px-1 rounded">ID:{cat.id}</span>
+                        </span>
+                      )}
                     </div>
-
-                    {/* Assigned Stores */}
-                    <div className="mt-auto border-t border-gray-100 pt-4">
-                      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Tiendas Asignadas</p>
-                      <div className="flex flex-col gap-2">
-                        <div className="flex flex-wrap gap-2">
-                          {(cat.storeSlugs || []).length === 0 ? (
-                            <span className="text-sm text-gray-400 italic">No hay tiendas en esta categoría.</span>
-                          ) : (
-                            (cat.storeSlugs || []).map((slug) => {
-                              const storeObj = stores[slug];
-                              return (
-                                <div key={slug} className="flex items-center gap-2 bg-black text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm">
-                                  <span className="w-4 h-4 flex items-center justify-center rounded-full bg-white/20 text-[10px]">{META[slug]?.emoji || '🏪'}</span>
-                                  {storeObj?.name || slug}
-                                  <button
-                                    onClick={() => {
-                                      setCategories(cats => cats.map(c => c.id === cat.id ? { ...c, storeSlugs: c.storeSlugs?.filter(s => s !== slug) } : c));
-                                    }}
-                                    className="ml-1 material-symbols-outlined text-[12px] opacity-60 hover:opacity-100 transition-opacity"
-                                  >
-                                    close
-                                  </button>
-                                </div>
-                              );
-                            })
-                          )}
-                        </div>
-                        
-                        <div className="mt-2 flex items-center gap-2">
-                          <select 
-                            className="bg-gray-50 border border-gray-200 text-gray-700 text-xs font-semibold px-3 py-2 rounded-lg outline-none focus:border-black flex-1"
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              if (!val) return;
-                              setCategories(cats => cats.map(c => {
-                                if (c.id === cat.id) {
-                                  const current = c.storeSlugs || [];
-                                  if (!current.includes(val)) {
-                                    return { ...c, storeSlugs: [...current, val] };
-                                  }
-                                }
-                                return c;
-                              }));
-                              e.target.value = ''; // reset
-                            }}
-                          >
-                            <option value="">+ Vincular Tienda...</option>
-                            {Object.values(stores).filter(s => !(cat.storeSlugs || []).includes(s.slug)).map(s => (
-                              <option key={s.slug} value={s.slug}>{s.name}</option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
+                    <div className="flex items-center gap-1.5 pl-7">
+                      <button 
+                        onClick={() => setEditingCatId(cat.id)} 
+                        className="text-[10px] text-gray-400 hover:text-black font-semibold flex items-center gap-0.5 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[10px]">edit</span> Editar
+                      </button>
+                      <span className="text-gray-200 text-[10px]">|</span>
+                      <button 
+                        onClick={() => {
+                          if (window.confirm(`¿Eliminar la categoría "${cat.name}"?`)) {
+                            setCategories(cats => cats.filter(c => c.id !== cat.id));
+                          }
+                        }}
+                        className="text-[10px] text-gray-400 hover:text-red-600 font-semibold flex items-center gap-0.5 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[10px]">delete</span> Eliminar
+                      </button>
                     </div>
                   </div>
+
+                  {/* Col 2: Subcategories (inline wrap tags) */}
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap gap-1.5 items-center">
+                      {cat.subs.map((sub, idx) => (
+                        <div key={idx} className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100/70 border border-gray-200 rounded text-[11px] font-medium text-gray-600 hover:bg-gray-200/50 transition-colors">
+                          {editingSubId?.catId === cat.id && editingSubId?.index === idx ? (
+                            <input
+                              autoFocus
+                              value={sub}
+                              onChange={(e) => setCategories(cats => cats.map(c => {
+                                if (c.id !== cat.id) return c;
+                                const newSubs = [...c.subs];
+                                newSubs[idx] = e.target.value;
+                                return { ...c, subs: newSubs };
+                              }))}
+                              onBlur={() => setEditingSubId(null)}
+                              onKeyDown={(e) => e.key === 'Enter' && setEditingSubId(null)}
+                              className="text-[10px] font-semibold text-gray-900 bg-white border border-gray-400 outline-none w-16 px-0.5"
+                            />
+                          ) : (
+                            <span onClick={() => setEditingSubId({catId: cat.id, index: idx})} className="cursor-pointer">{sub}</span>
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCategories(cats => cats.map(c => c.id === cat.id ? { ...c, subs: c.subs.filter((_, i) => i !== idx) } : c));
+                            }}
+                            className="material-symbols-outlined text-[10px] text-gray-400 hover:text-red-500 transition-colors shrink-0"
+                          >
+                            close
+                          </button>
+                        </div>
+                      ))}
+                      <button 
+                        onClick={() => {
+                          setCategories(cats => cats.map(c => {
+                            if (c.id !== cat.id) return c;
+                            const newSubs = [...c.subs, 'Nueva Sub'];
+                            setEditingSubId({ catId: cat.id, index: newSubs.length - 1 });
+                            return { ...c, subs: newSubs };
+                          }));
+                        }}
+                        className="inline-flex items-center gap-0.5 px-2 py-0.5 border border-dashed border-gray-300 hover:border-gray-400 rounded text-[10px] font-bold text-gray-400 hover:text-gray-900 transition-all cursor-pointer bg-white"
+                      >
+                        <span className="material-symbols-outlined text-[10px]">add</span> Añadir
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Col 3: Assigned Stores (very compact design) */}
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-1">
+                      {(cat.storeSlugs || []).length === 0 ? (
+                        <span className="text-[10px] text-gray-400 italic">Sin tiendas</span>
+                      ) : (
+                        (cat.storeSlugs || []).map((slug) => {
+                          const storeObj = stores[slug];
+                          return (
+                            <div key={slug} className="inline-flex items-center gap-1 bg-black text-white px-2 py-0.5 rounded text-[10px] font-bold shrink-0">
+                              <span>{META[slug]?.emoji || '🏪'}</span>
+                              <span>{storeObj?.name || slug}</span>
+                              <button
+                                onClick={() => {
+                                  setCategories(cats => cats.map(c => c.id === cat.id ? { ...c, storeSlugs: c.storeSlugs?.filter(s => s !== slug) } : c));
+                                }}
+                                className="material-symbols-outlined text-[10px] text-white/50 hover:text-white transition-colors"
+                              >
+                                close
+                              </button>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                    <div>
+                      <select 
+                        className="w-full bg-gray-50 border border-gray-200 text-gray-600 text-[10px] font-semibold px-2 py-1 rounded outline-none focus:border-black transition-colors"
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (!val) return;
+                          setCategories(cats => cats.map(c => {
+                            if (c.id === cat.id) {
+                              const current = c.storeSlugs || [];
+                              if (!current.includes(val)) {
+                                return { ...c, storeSlugs: [...current, val] };
+                              }
+                            }
+                            return c;
+                          }));
+                          e.target.value = ''; // reset
+                        }}
+                      >
+                        <option value="">+ Vincular Tienda...</option>
+                        {Object.values(stores).filter(s => !(cat.storeSlugs || []).includes(s.slug)).map(s => (
+                          <option key={s.slug} value={s.slug}>{s.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
                 </div>
               ))}
+            </div>
+
+            {/* Unlinked stores card */}
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-4">
+              <div className="flex items-center gap-2 border-b border-gray-50 pb-3">
+                <span className="w-7 h-7 rounded bg-amber-50 text-amber-500 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[16px]">link_off</span>
+                </span>
+                <div>
+                  <h3 className="font-extrabold text-sm text-gray-900">Tiendas sin Vincular</h3>
+                  <p className="text-[11px] text-gray-400 font-medium">Estas tiendas no pertenecen a ninguna categoría de la taxonomía del marketplace.</p>
+                </div>
+              </div>
+
+              {(() => {
+                const allCategoryStoreSlugs = new Set(categories.flatMap(c => c.storeSlugs || []));
+                const unlinked = Object.values(stores).filter(s => !allCategoryStoreSlugs.has(s.slug));
+
+                if (unlinked.length === 0) {
+                  return (
+                    <div className="bg-green-50 border border-green-100 text-green-700 rounded-lg p-3 text-xs font-semibold flex items-center gap-2">
+                      <span className="material-symbols-outlined text-sm">check_circle</span>
+                      ¡Todas las tiendas registradas están vinculadas a alguna categoría principal!
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {unlinked.map(s => {
+                      const meta = META[s.slug] || { emoji: '🏪' };
+                      return (
+                        <div key={s.slug} className="bg-gray-50/50 border border-gray-150 rounded-xl p-3 flex flex-col justify-between gap-3 hover:bg-gray-50 transition-colors">
+                          <div className="flex items-center gap-2.5">
+                            <span className="text-lg">{meta.emoji}</span>
+                            <div>
+                              <p className="font-bold text-xs text-gray-900 leading-none">{s.name}</p>
+                              <p className="text-[9px] text-gray-400 mt-0.5">/{s.slug}</p>
+                            </div>
+                          </div>
+                          <div>
+                            <select 
+                              className="w-full bg-white border border-gray-200 text-gray-700 text-[10px] font-semibold px-2.5 py-1.5 rounded-lg outline-none focus:border-black transition-colors"
+                              onChange={(e) => {
+                                const catId = Number(e.target.value);
+                                if (!catId) return;
+                                setCategories(cats => cats.map(c => {
+                                  if (c.id === catId) {
+                                    const current = c.storeSlugs || [];
+                                    if (!current.includes(s.slug)) {
+                                      return { ...c, storeSlugs: [...current, s.slug] };
+                                    }
+                                  }
+                                  return c;
+                                }));
+                                e.target.value = ''; // reset
+                              }}
+                            >
+                              <option value="">Vincular a categoría...</option>
+                              {categories.map(cat => (
+                                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}
