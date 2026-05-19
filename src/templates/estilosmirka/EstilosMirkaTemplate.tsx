@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
 import { supabase } from '@/lib/supabase';
+import { useDemo } from '@/context/DemoContext';
 
 interface EstilosMirkaTemplateProps {
   store: StoreConfig;
@@ -19,9 +20,8 @@ const MOCK_PRODUCTS = [
   { id: 'vestido-noche', title: 'Vestido Noche Negro Clásico', price: 220.00, originalPrice: 220.00, hasOffer: false, category: 'vestidos', image: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=600&q=80', description: 'Vestido de noche en negro, escote asimétrico y corte a la rodilla, para eventos formales y galas.' }
 ];
 
-
-
 export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProps) {
+  const { isDemoVisible } = useDemo();
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -67,7 +67,9 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
   }, []);
 
   const theme = store.theme;
-  const allProducts = supabaseProducts;
+  const allProducts = isDemoVisible('estilosmirka')
+    ? [...supabaseProducts, ...MOCK_PRODUCTS]
+    : supabaseProducts;
 
   const filteredProducts = allProducts.filter((prod) => {
     const matchCat = activeCategory === 'all' || prod.category === activeCategory;

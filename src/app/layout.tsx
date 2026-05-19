@@ -1,10 +1,17 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import BottomNav from '@/components/BottomNav';
 
 export const metadata: Metadata = {
   title: 'Boga Market',
   description: 'Boga Market App',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 import { CartProvider } from '@/context/CartContext';

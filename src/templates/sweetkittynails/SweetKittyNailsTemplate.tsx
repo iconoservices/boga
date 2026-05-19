@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
 import { supabase } from '@/lib/supabase';
+import { useDemo } from '@/context/DemoContext';
 
 interface SweetKittyNailsTemplateProps {
   store: StoreConfig;
@@ -38,6 +39,7 @@ const STORIES = [
 ];
 
 export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTemplateProps) {
+  const { isDemoVisible } = useDemo();
   const [activeTab, setActiveTab] = useState<'servicios' | 'productos'>('servicios');
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -93,7 +95,9 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
   }, []);
 
   const theme = store.theme;
-  const allProducts = [...supabaseProducts, ...MOCK_PRODUCTS];
+  const allProducts = isDemoVisible('sweetkittynails')
+    ? [...supabaseProducts, ...MOCK_PRODUCTS]
+    : supabaseProducts;
 
   // Filtering Logic
   const filteredServices = MOCK_SERVICES.filter((srv) => {

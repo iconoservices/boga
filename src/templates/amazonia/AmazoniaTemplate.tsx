@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
 import { supabase } from '@/lib/supabase';
+import { useDemo } from '@/context/DemoContext';
 
 interface AmazoniaTemplateProps {
   store: StoreConfig;
@@ -26,36 +27,38 @@ const CATEGORY_TABS = [
 ];
 
 export default function AmazoniaTemplate({ store }: AmazoniaTemplateProps) {
+  const { isDemoVisible } = useDemo();
   const [activeCategory, setActiveCategory] = useState('all');
   const [cartCount, setCartCount] = useState(0);
-  const [products, setProducts] = useState<any[]>(MOCK_PRODUCTS);
+  const [products, setProducts] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchProducts = async () => {
+      const showDemo = isDemoVisible(store.slug);
+      setProducts(showDemo ? MOCK_PRODUCTS : []);
+
       const { data, error } = await supabase
         .from('products')
         .select('*')
         .eq('store', store.slug);
       
-      if (data && !error && data.length > 0) {
-        const dbProducts = data.map((p) => {
-          const categoryObj = store.categories.find(c => c.name === p.category);
-          return {
-            id: p.id,
-            name: p.name,
-            desc: '',
-            price: `S/ ${p.price.toFixed(2)}`,
-            category: categoryObj ? categoryObj.href : p.category.toLowerCase(),
-            image: p.image || 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400&q=80',
-          };
-        });
-        
-        setProducts([...dbProducts, ...MOCK_PRODUCTS]);
-      }
+      const dbProducts = data && !error ? data.map((p) => {
+        const categoryObj = store.categories.find(c => c.name === p.category);
+        return {
+          id: p.id,
+          name: p.name,
+          desc: '',
+          price: `S/ ${p.price.toFixed(2)}`,
+          category: categoryObj ? categoryObj.href : p.category.toLowerCase(),
+          image: p.image || 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400&q=80',
+        };
+      }) : [];
+      
+      setProducts(showDemo ? [...dbProducts, ...MOCK_PRODUCTS] : dbProducts);
     };
     
     fetchProducts();
-  }, [store.slug, store.categories]);
+  }, [store.slug, store.categories, isDemoVisible]);
 
   const t = store.theme;
 

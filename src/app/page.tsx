@@ -24,21 +24,6 @@ const BANNERS_RAW = [
 const BANNERS = [BANNERS_RAW[BANNERS_RAW.length - 1], ...BANNERS_RAW, BANNERS_RAW[0]];
 const REAL_COUNT = BANNERS_RAW.length;
 
-const MOCK_STORE_PRODUCTS = [
-  { name: 'Producto Destacado', price: 'S/ 25.00', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400' },
-  { name: 'Oferta Especial', price: 'S/ 15.00', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400' },
-];
-
-const LOCAL_STORES = Object.values(stores).map(s => ({
-  name: s.name,
-  slug: s.slug,
-  category: s.tagline || 'TIENDA OFICIAL',
-  time: '20-40 min',
-  delivery: 'S/ 5.00',
-  logo: s.heroImage,
-  products: MOCK_STORE_PRODUCTS
-}));
-
 export default function Home() {
   const [index, setIndex] = useState(1);
   const [animated, setAnimated] = useState(true);
@@ -47,8 +32,29 @@ export default function Home() {
 
   const { addToCart, cartCount, setIsCartOpen } = useCart();
   
-  const [storeData, setStoreData] = useState(LOCAL_STORES);
   const [marketplaceProducts, setMarketplaceProducts] = useState(MOCK_PRODUCTS);
+  const [favorites, setFavorites] = useState<any[]>([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('boga_favorites');
+    if (saved) {
+      try {
+        setFavorites(JSON.parse(saved));
+      } catch (e) {}
+    }
+  }, []);
+
+  const toggleFavorite = (product: any) => {
+    const isFav = favorites.some(f => String(f.id) === String(product.id));
+    let updated;
+    if (isFav) {
+      updated = favorites.filter(f => String(f.id) !== String(product.id));
+    } else {
+      updated = [...favorites, product];
+    }
+    setFavorites(updated);
+    localStorage.setItem('boga_favorites', JSON.stringify(updated));
+  };
 
   const goTo = useCallback((i: number, animate = true) => {
     indexRef.current = i;
@@ -76,18 +82,10 @@ export default function Home() {
             logo: storeDef?.heroImage || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200',
           }
         });
-        setMarketplaceProducts(formattedProducts);
 
-        // Update stores with their real products
-        setStoreData(prev => prev.map(s => {
-          const sProducts = formattedProducts.filter(p => p.slug === s.slug).slice(0, 5);
-          return {
-            ...s,
-            products: sProducts.length > 0 
-              ? sProducts.map(p => ({ name: p.title, price: p.price, img: p.image })) 
-              : s.products
-          };
-        }));
+        // Mezclar aleatoriamente los productos para que salgan variados en el home
+        const shuffledProducts = [...formattedProducts].sort(() => Math.random() - 0.5);
+        setMarketplaceProducts(shuffledProducts);
       }
     };
     fetchRealData();
@@ -193,43 +191,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="flex flex-col gap-3 px-gutter">
-          <h3 className="font-h3 text-[20px] font-black text-[#3E2723]">Tiendas Destacadas</h3>
-          <div className="flex gap-4 overflow-x-auto hide-scrollbar -mx-gutter px-gutter pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
-            {storeData.map((store) => (
-              <Link href={`/${store.slug}`} key={store.name} className="min-w-[280px] w-[80vw] max-w-[310px] bg-white rounded-[20px] p-3 shadow-md border border-[#3E2723]/5 snap-start flex flex-col gap-3 group">
-                <div className="flex gap-2 overflow-x-auto hide-scrollbar snap-x" style={{ scrollbarWidth: 'none' }}>
-                  {store.products.map((p) => (
-                    <div key={p.name} className="min-w-[90px] w-[90px] snap-start flex flex-col gap-1">
-                      <div className="aspect-square rounded-xl overflow-hidden bg-gray-100">
-                        <img src={p.img} className="w-full h-full object-cover" alt={p.name} />
-                      </div>
-                      <span className="font-bold text-[9px] text-[#3E2723] uppercase leading-tight line-clamp-2">{p.name}</span>
-                      <span className="font-black text-[#2E7D32] text-[11px]">{p.price}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex gap-2 items-center border-t border-black/5 pt-2">
-                  <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-[#3E2723]/10">
-                    <img src={store.logo} className="w-full h-full object-cover" alt={store.name} />
-                  </div>
-                  <div className="flex flex-col flex-1 min-w-0">
-                    <span className="font-black text-[#3E2723] text-[15px] leading-tight">{store.name}</span>
-                    <span className="text-[8px] text-[#745853] font-bold uppercase tracking-widest truncate opacity-80">{store.category}</span>
-                    <div className="flex gap-1.5 mt-1">
-                      <span className="bg-amber-50 text-amber-700 text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 border border-amber-200">
-                        <span className="material-symbols-outlined text-[10px]">schedule</span>{store.time}
-                      </span>
-                      <span className="bg-surface-container-lowest text-[#745853] text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 border border-[#3E2723]/10">
-                        <span className="material-symbols-outlined text-[10px]">two_wheeler</span>{store.delivery}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
+
 
         <section className="flex flex-col gap-3 px-gutter">
           <div className="flex justify-between items-center">
@@ -239,12 +201,28 @@ export default function Home() {
           <div className="grid grid-cols-2 gap-4">
             {marketplaceProducts.map((prod, idx) => {
               const isFeatured = (idx + 1) % 5 === 0;
+              const isFav = favorites.some(f => String(f.id) === String(prod.id));
               if (isFeatured) {
                 return (
                   <Link key={prod.id} href={`/${prod.slug}`} className="col-span-2 relative bg-white rounded-2xl shadow-md overflow-hidden flex group min-h-[150px] border border-black/5">
                     <div className="w-[42%] relative overflow-hidden shrink-0">
                       <img alt={prod.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src={prod.image} />
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/80" />
+                      <button 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          toggleFavorite(prod);
+                        }}
+                        className="absolute top-2 left-2 w-7 h-7 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm hover:scale-110 active:scale-95 transition-transform z-10"
+                      >
+                        <span 
+                          className={`material-symbols-outlined text-[15px] ${isFav ? 'text-red-500 font-bold' : 'text-[#3E2723]'}`}
+                          style={isFav ? { fontVariationSettings: "'FILL' 1" } : {}}
+                        >
+                          favorite
+                        </span>
+                      </button>
                     </div>
                     <div className="w-[58%] p-4 flex flex-col justify-between relative z-10">
                       <div className="absolute top-3 right-3 bg-[#2E7D32] text-white text-[9px] font-black px-2 py-[3px] rounded-lg flex items-center gap-0.5 uppercase shadow">
@@ -281,9 +259,21 @@ export default function Home() {
                 <Link key={prod.id} href={`/${prod.slug}`} className="col-span-1 bg-white rounded-2xl shadow-sm border border-black/5 overflow-hidden group">
                   <div className="relative aspect-square overflow-hidden">
                     <img alt={prod.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src={prod.image} />
-                    <div className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm">
-                      <span className="material-symbols-outlined text-[15px] text-[#3E2723]">favorite</span>
-                    </div>
+                    <button 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleFavorite(prod);
+                      }}
+                      className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm hover:scale-110 active:scale-95 transition-transform z-10"
+                    >
+                      <span 
+                        className={`material-symbols-outlined text-[15px] ${isFav ? 'text-red-500' : 'text-[#3E2723]'}`}
+                        style={isFav ? { fontVariationSettings: "'FILL' 1" } : {}}
+                      >
+                        favorite
+                      </span>
+                    </button>
                     <div className="absolute bottom-2 left-2 bg-white/95 backdrop-blur-sm shadow-sm rounded-lg px-1.5 py-1 flex items-center gap-1 border border-black/5">
                       <img alt={prod.store} className="w-3.5 h-3.5 rounded-full object-cover" src={prod.logo} />
                       <span className="text-[9px] font-bold text-[#3E2723] uppercase truncate max-w-[70px]">{prod.store}</span>

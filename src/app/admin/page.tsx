@@ -30,6 +30,7 @@ const NAV = [
   { id: 'usuarios',        icon: 'group',         label: 'Usuarios' },
   { id: 'personalizacion', icon: 'tune',          label: 'Personalización' },
   { id: 'facturacion',     icon: 'payments',      label: 'Facturación' },
+  { id: 'mapa',            icon: 'account_tree',  label: 'Mapa de Apps' },
 ] as const;
 
 // Mini image upload input
@@ -100,7 +101,7 @@ function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
 }
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<'tiendas' | 'categorias' | 'usuarios' | 'personalizacion' | 'facturacion'>('tiendas');
+  const [activeTab, setActiveTab] = useState<'tiendas' | 'categorias' | 'usuarios' | 'personalizacion' | 'facturacion' | 'mapa'>('tiendas');
   const [search, setSearch] = useState('');
   const [activeStores, setActiveStores] = useState<Record<string, boolean>>(
     Object.fromEntries(Object.keys(stores).map((k) => [k, true]))
@@ -206,6 +207,7 @@ export default function AdminPage() {
             {activeTab === 'usuarios' && 'Gestión de Usuarios'}
             {activeTab === 'personalizacion' && 'Personalización de Tiendas'}
             {activeTab === 'facturacion' && 'Facturación'}
+            {activeTab === 'mapa' && 'Mapa de Aplicaciones y Reglas'}
           </h1>
         </div>
 
@@ -879,6 +881,156 @@ export default function AdminPage() {
             <p className="text-gray-400 text-xs text-center max-w-xs">
               Estamos configurando la pasarela de pagos para cobrar suscripciones a tus tiendas.
             </p>
+          </div>
+        )}
+
+        {/* ─── MAPA DE APLICACIONES ─── */}
+        {activeTab === 'mapa' && (
+          <div className="space-y-4 animate-fade-in">
+            {/* Global Ecosistema Stats */}
+            <div className="bg-gradient-to-r from-neutral-900 to-neutral-800 text-white rounded-2xl p-5 shadow-lg border border-neutral-700">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[20px] text-amber-400">gavel</span>
+                    <h2 className="text-base font-extrabold tracking-tight">Reglas del Ecosistema Boga Market</h2>
+                  </div>
+                  <p className="text-xs text-neutral-400 mt-1 max-w-2xl leading-relaxed">
+                    Para asegurar que todas las tiendas del marketplace se sientan como aplicaciones nativas, rápidas y profesionales, implementamos una taxonomía de cumplimiento. Monitorea y audita cada regla por tienda aquí.
+                  </p>
+                </div>
+                <div className="bg-white/10 px-4 py-2.5 rounded-xl border border-white/10 shrink-0 text-center md:text-right">
+                  <p className="text-[10px] uppercase tracking-wider font-bold text-neutral-400 leading-none">Promedio Global</p>
+                  <p className="text-2xl font-black text-white mt-1">83%</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Grid of Stores Compliancy Audit */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Rules List Sidebar */}
+              <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm space-y-4 col-span-1">
+                <h3 className="font-extrabold text-xs text-gray-900 border-b border-gray-50 pb-2 flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[15px] text-gray-400 font-bold">menu_book</span>
+                  Glosario de Reglas
+                </h3>
+                <div className="space-y-3.5">
+                  {[
+                    { title: "1. PWA para Formar Icono", desc: "Todas las tiendas deben tener PWA (Progressive Web App). Permite que la app se instale en el celular del cliente con su propio icono, sin ir a App Stores." },
+                    { title: "2. Módulo de Productos", desc: "Estructura unificada de productos en base de datos. Cada producto debe estar enlazado a su respectiva tienda e incluir imágenes de alta resolución." },
+                    { title: "3. Recuadro de Características", desc: "Los productos deben llevar especificaciones claras: tallas, colores, materiales, peso o descripciones ricas de ficha técnica." },
+                    { title: "4. Categorías Estructuradas", desc: "Cada aplicación debe tener al menos 3 categorías en su menú para permitir navegación fluida (ej. Sunset: Cocina, Bar, Café)." },
+                    { title: "5. Botón de Pedidos WhatsApp", desc: "Un botón activo de WhatsApp en el carrito/reserva para derivar la orden directamente al comercio y concretar la transacción." },
+                    { title: "6. Estilos y Branding", desc: "Tema de color HSL único configurado en el archivo de diseño para adaptar la apariencia visual a la identidad de la tienda." }
+                  ].map((rule, idx) => (
+                    <div key={idx} className="space-y-1 bg-gray-50/50 p-2.5 rounded-xl border border-gray-100/50">
+                      <p className="font-bold text-[11px] text-gray-800">{rule.title}</p>
+                      <p className="text-[10px] text-gray-400 leading-relaxed font-medium">{rule.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Compliance Table / Status */}
+              <div className="lg:col-span-2 space-y-3">
+                <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+                  <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+                    <h3 className="font-extrabold text-xs text-gray-900">Estado de Cumplimiento por Tienda</h3>
+                    <span className="text-[9px] font-bold text-gray-400 bg-gray-200 px-2 py-0.5 rounded-md leading-none">Auditoría Real</span>
+                  </div>
+
+                  <div className="divide-y divide-gray-100">
+                    {[
+                      {
+                        slug: 'sunset',
+                        name: 'Sunset Lounge',
+                        checks: [true, true, false, true, true, true], // PWA, Prod, Specs, Cat, WA, Style
+                        notes: 'Le falta agregar especificaciones de ingredientes/tallas en los platos.'
+                      },
+                      {
+                        slug: 'delva',
+                        name: 'Delva Market',
+                        checks: [true, true, true, true, true, true],
+                        notes: '¡Totalmente compatible! 100% de cumplimiento.'
+                      },
+                      {
+                        slug: 'natura',
+                        name: 'Natura Market',
+                        checks: [true, false, true, true, false, false],
+                        notes: 'Falta subir productos a Supabase (usa demo) y configurar número de WhatsApp corporativo.'
+                      },
+                      {
+                        slug: 'amazonia',
+                        name: 'Amazonia Market',
+                        checks: [true, false, true, true, false, false],
+                        notes: 'Pendiente de sincronizar catálogo de artesanías reales y personalizar paleta HSL.'
+                      },
+                      {
+                        slug: 'sweetkittynails',
+                        name: 'Sweet Kitty Nails',
+                        checks: [true, true, true, true, true, true],
+                        notes: 'Módulo de servicios y reservas de citas optimizado con éxito.'
+                      },
+                      {
+                        slug: 'estilosmirka',
+                        name: 'Estilos Mirka',
+                        checks: [true, true, true, true, true, true],
+                        notes: 'Boutique premium en línea. Cumple con todos los estándares.'
+                      }
+                    ].map((app) => {
+                      const passedCount = app.checks.filter(Boolean).length;
+                      const pct = Math.round((passedCount / app.checks.length) * 100);
+                      const isGold = pct === 100;
+                      return (
+                        <div key={app.slug} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50/20 transition-colors">
+                          <div className="space-y-1 sm:max-w-xs">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-lg">{META[app.slug]?.emoji || '🏪'}</span>
+                              <span className="font-bold text-xs text-gray-900">{app.name}</span>
+                              <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ${isGold ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                                {pct}%
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-gray-400 font-semibold truncate leading-tight">/{app.slug} · {passedCount} de 6 reglas</p>
+                            <p className="text-[10px] text-gray-400 leading-normal italic">{app.notes}</p>
+                          </div>
+
+                          {/* Interactive status indicators */}
+                          <div className="flex flex-wrap items-center gap-1">
+                            {[
+                              { label: 'PWA', icon: 'phone_android' },
+                              { label: 'PROD', icon: 'shopping_bag' },
+                              { label: 'FICHA', icon: 'assignment' },
+                              { label: 'CAT', icon: 'category' },
+                              { label: 'WSP', icon: 'chat' },
+                              { label: 'ESTILO', icon: 'palette' }
+                            ].map((rule, idx) => {
+                              const checked = app.checks[idx];
+                              return (
+                                <div
+                                  key={idx}
+                                  className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-[9px] font-bold cursor-help group relative transition-colors ${
+                                    checked
+                                      ? 'bg-green-50 border-green-200 text-green-700'
+                                      : 'bg-red-50 border-red-200 text-red-500'
+                                  }`}
+                                  title={`${rule.label}: ${checked ? 'Cumplido' : 'Pendiente'}`}
+                                >
+                                  <span className="material-symbols-outlined text-[11px] font-bold">
+                                    {checked ? 'check' : 'warning'}
+                                  </span>
+                                  {rule.label}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </main>

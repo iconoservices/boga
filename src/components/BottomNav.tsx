@@ -11,7 +11,8 @@ export default function BottomNav() {
     pathname.startsWith('/explore') ||
     pathname.startsWith('/orders') ||
     pathname.startsWith('/profile') ||
-    pathname.startsWith('/promotions');
+    pathname.startsWith('/promotions') ||
+    pathname.startsWith('/login');
 
   if (!isMarketplaceRoute) return null;
 
@@ -19,7 +20,7 @@ export default function BottomNav() {
     { path: '/', icon: 'home', label: 'Inicio' },
     { path: '/explore', icon: 'explore', label: 'Explorar' },
     { path: '/orders', icon: 'receipt_long', label: 'Pedidos' },
-    { path: '/profile', icon: 'person', label: 'Perfil' },
+    { path: '/login', icon: 'person', label: 'Perfil' },
   ];
 
   return (

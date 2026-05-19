@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
+import { stores } from '@/lib/stores.config';
+import { supabase } from '@/lib/supabase';
 
 export default function Explore() {
   const [activeCategory, setActiveCategory] = useState('Todas');
@@ -12,6 +14,49 @@ export default function Explore() {
   const { addToCart, cartCount, setIsCartOpen } = useCart();
   const [addedItems, setAddedItems] = useState<Record<string, boolean>>({});
   const [activeSort, setActiveSort] = useState('Populares');
+
+  const [storeData, setStoreData] = useState(() => 
+    Object.values(stores).map(s => ({
+      name: s.name,
+      slug: s.slug,
+      category: s.tagline || 'TIENDA OFICIAL',
+      time: '20-40 min',
+      delivery: 'S/ 5.00',
+      logo: s.heroImage,
+      products: [
+        { name: 'Producto Destacado', price: 'S/ 25.00', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400' },
+        { name: 'Oferta Especial', price: 'S/ 15.00', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400' },
+      ]
+    }))
+  );
+
+  useEffect(() => {
+    const fetchRealData = async () => {
+      const { data, error } = await supabase.from('products').select('*');
+      if (data && !error && data.length > 0) {
+        const formattedProducts = data.map((p: any) => {
+          const storeDef = stores[p.store as keyof typeof stores];
+          return {
+            title: p.name,
+            price: `S/ ${p.price.toFixed(2)}`,
+            slug: p.store,
+            image: p.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80',
+          }
+        });
+
+        setStoreData(prev => prev.map(s => {
+          const sProducts = formattedProducts.filter(p => p.slug === s.slug).slice(0, 5);
+          return {
+            ...s,
+            products: sProducts.length > 0 
+              ? sProducts.map(p => ({ name: p.title, price: p.price, img: p.image })) 
+              : s.products
+          };
+        }));
+      }
+    };
+    fetchRealData();
+  }, []);
 
   const handleAddToCartWithAnim = (product: any) => {
     addToCart(product);
@@ -241,7 +286,47 @@ export default function Explore() {
 
         {/* Discovery Mode (Todas) or Listing Mode (Specific Category) */}
         {activeCategory === 'Todas' ? (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-6">
+            
+            {/* Tiendas Destacadas */}
+            <section className="flex flex-col gap-3">
+              <h3 className="font-h3 text-[20px] font-black text-[#3E2723] px-1">Tiendas Destacadas</h3>
+              <div className="flex gap-4 overflow-x-auto hide-scrollbar -mx-gutter px-gutter pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
+                {storeData.map((store) => (
+                  <Link href={`/${store.slug}`} key={store.name} className="min-w-[280px] w-[80vw] max-w-[310px] bg-white rounded-[20px] p-3 shadow-md border border-[#3E2723]/5 snap-start flex flex-col gap-3 group">
+                    <div className="flex gap-2 overflow-x-auto hide-scrollbar snap-x" style={{ scrollbarWidth: 'none' }}>
+                      {store.products.map((p) => (
+                        <div key={p.name} className="min-w-[90px] w-[90px] snap-start flex flex-col gap-1">
+                          <div className="aspect-square rounded-xl overflow-hidden bg-gray-100">
+                            <img src={p.img} className="w-full h-full object-cover" alt={p.name} />
+                          </div>
+                          <span className="font-bold text-[9px] text-[#3E2723] uppercase leading-tight line-clamp-2">{p.name}</span>
+                          <span className="font-black text-[#2E7D32] text-[11px]">{p.price}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex gap-2 items-center border-t border-black/5 pt-2">
+                      <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-[#3E2723]/10">
+                        <img src={store.logo} className="w-full h-full object-cover" alt={store.name} />
+                      </div>
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <span className="font-black text-[#3E2723] text-[15px] leading-tight">{store.name}</span>
+                        <span className="text-[8px] text-[#745853] font-bold uppercase tracking-widest truncate opacity-80">{store.category}</span>
+                        <div className="flex gap-1.5 mt-1">
+                          <span className="bg-amber-50 text-amber-700 text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 border border-amber-200">
+                            <span className="material-symbols-outlined text-[10px]">schedule</span>{store.time}
+                          </span>
+                          <span className="bg-surface-container-lowest text-[#745853] text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 border border-[#3E2723]/10">
+                            <span className="material-symbols-outlined text-[10px]">two_wheeler</span>{store.delivery}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+
             {sections.map((section) => (
               <section key={section.id}>
                 <div className="flex justify-between items-center mb-3 px-1">
