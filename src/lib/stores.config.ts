@@ -24,7 +24,7 @@ export interface StoreConfig {
   name: string;
   tagline: string;
   marketplaceCategory: string;
-  template: 'sunset' | 'delva' | 'natura' | 'amazonia' | 'default';
+  template: 'sunset' | 'delva' | 'natura' | 'amazonia' | 'default' | 'sweetkittynails' | 'estilosmirka';
   theme: StoreTheme;
   heroImage: string;
   heroAlt: string;
@@ -172,6 +172,78 @@ export const stores: Record<string, StoreConfig> = {
       { name: 'Frutas', icon: 'nutrition', href: 'frutas' },
       { name: 'Verduras', icon: 'eco', href: 'verduras' },
       { name: 'Carnes', icon: 'set_meal', href: 'carnes' },
+    ],
+  },
+  
+  sweetkittynails: {
+    slug: 'sweetkittynails',
+    name: 'Sweet Kitty Nails',
+    tagline: 'El arte en tus uñas con un toque de dulzura y estilo',
+    marketplaceCategory: 'Moda y Belleza',
+    template: 'sweetkittynails',
+    heroImage: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=1200&q=80',
+    heroAlt: 'Sweet Kitty Nails premium pink glossy salon',
+    theme: {
+      primary: '#ff85a2',
+      onPrimary: '#ffffff',
+      primaryContainer: '#2c1015',
+      secondary: '#ffccd5',
+      secondaryContainer: '#fff0f3',
+      background: '#fff5f6',
+      surface: '#ffffff',
+      surfaceContainer: '#ffe5ec',
+      surfaceContainerLow: '#fff5f6',
+      surfaceContainerLowest: '#ffffff',
+      surfaceContainerHigh: '#ffd3e8',
+      onBackground: '#2c1015',
+      onSurface: '#2c1015',
+      onSurfaceVariant: '#7a5259',
+      outlineVariant: '#ffccd5',
+      fontHeadline: "'Outfit', sans-serif",
+      fontBody: "'Outfit', sans-serif",
+      fontLabel: "'Outfit', sans-serif",
+    },
+    categories: [
+      { name: 'Manicura Gel', icon: 'dry_cleaning', href: 'manicura' },
+      { name: 'Uñas Acrílicas', icon: 'brush', href: 'acrilicas' },
+      { name: 'Nail Art 3D', icon: 'palette', href: 'nailart' },
+      { name: 'Pedicura Spa', icon: 'spa', href: 'pedicura' },
+    ],
+  },
+
+  estilosmirka: {
+    slug: 'estilosmirka',
+    name: 'Estilos Mirka',
+    tagline: 'Tu salón de belleza de confianza, donde el estilo te define',
+    marketplaceCategory: 'Moda y Belleza',
+    template: 'estilosmirka',
+    heroImage: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=1200&q=80',
+    heroAlt: 'Salón de belleza premium con estilo sofisticado',
+    theme: {
+      primary: '#6B1A2C',
+      onPrimary: '#ffffff',
+      primaryContainer: '#3d0d18',
+      secondary: '#c8a4ae',
+      secondaryContainer: '#f5e8eb',
+      background: '#fdf6f7',
+      surface: '#ffffff',
+      surfaceContainer: '#f5e8eb',
+      surfaceContainerLow: '#fdf6f7',
+      surfaceContainerLowest: '#ffffff',
+      surfaceContainerHigh: '#ead4d9',
+      onBackground: '#1a0a0d',
+      onSurface: '#1a0a0d',
+      onSurfaceVariant: '#6b3a42',
+      outlineVariant: '#e0c4ca',
+      fontHeadline: "'Playfair Display', serif",
+      fontBody: "'Montserrat', sans-serif",
+      fontLabel: "'Montserrat', sans-serif",
+    },
+    categories: [
+      { name: 'Cabello & Color', icon: 'dry_cleaning', href: 'cabello' },
+      { name: 'Maquillaje', icon: 'brush', href: 'maquillaje' },
+      { name: 'Uñas & Manicura', icon: 'spa', href: 'manicura' },
+      { name: 'Tratamientos', icon: 'self_improvement', href: 'tratamientos' },
     ],
   },
 };
