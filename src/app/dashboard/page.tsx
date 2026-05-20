@@ -48,6 +48,7 @@ export default function DashboardPage() {
   const [isPosSaving, setIsPosSaving] = useState(false);
   const [lastCompletedSale, setLastCompletedSale] = useState<any | null>(null);
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
+  const [isCustomerDetailsOpen, setIsCustomerDetailsOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const storeLogoInputRef = useRef<HTMLInputElement>(null);
@@ -1292,41 +1293,42 @@ export default function DashboardPage() {
         )}
 
         {activeTab === 'pos' && (
-          <div className="flex flex-col lg:flex-row gap-6 w-full items-start">
-            {/* Catalog Grid (60%) */}
-            <div className="flex-1 w-full bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                <div className="relative flex-1">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
+          <div className="flex flex-col lg:flex-row gap-6 w-full items-start bg-[#f9f9ff] -m-6 p-6 min-h-[calc(100vh-100px)] rounded-2xl">
+            {/* Catalog Grid (Left Side) */}
+            <div className="flex-1 w-full flex flex-col gap-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                {/* Search */}
+                <div className="relative w-full max-w-md group">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
                   <input 
                     type="text" 
                     value={posProductSearch}
                     onChange={(e) => setPosProductSearch(e.target.value)}
-                    placeholder="Buscar producto..." 
-                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-1 focus:ring-black focus:border-black transition-all"
+                    placeholder="Buscar producto, SKU o categoría..." 
+                    className="w-full pl-10 pr-4 py-2.5 bg-[#f0f3ff] border border-[#c7c4d8]/40 rounded-xl focus:ring-2 focus:ring-[#3525cd] focus:outline-none transition-all text-sm font-semibold text-[#111c2d]"
                   />
                 </div>
-                
-                {/* Category selectors */}
+
+                {/* Categories */}
                 <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1 md:pb-0" style={{ scrollbarWidth: 'none' }}>
                   <button 
                     onClick={() => setPosProductCategory('all')}
-                    className={`px-4 py-2 rounded-full text-[11px] font-bold whitespace-nowrap transition-colors uppercase tracking-wider border ${
+                    className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors border ${
                       posProductCategory === 'all' 
-                        ? 'bg-[#FF6B00] text-white border-transparent' 
-                        : 'bg-transparent text-gray-600 border-gray-200 hover:bg-gray-50'
+                        ? 'bg-[#3525cd] text-white border-transparent' 
+                        : 'bg-[#e7eeff] text-[#464555] border-transparent hover:bg-[#dee8ff]'
                     }`}
                   >
-                    Todos
+                    All Items
                   </button>
                   {Array.from(new Set((selectedStore === 'all' ? products : products.filter(p => p.store === selectedStore)).map(p => p.category))).map(cat => (
                     <button 
                       key={cat}
                       onClick={() => setPosProductCategory(cat)}
-                      className={`px-4 py-2 rounded-full text-[11px] font-bold whitespace-nowrap uppercase tracking-wider transition-colors border ${
+                      className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors border ${
                         posProductCategory === cat 
-                          ? 'bg-[#FF6B00] text-white border-transparent' 
-                          : 'bg-transparent text-gray-600 border-gray-200 hover:bg-gray-50'
+                          ? 'bg-[#3525cd] text-white border-transparent' 
+                          : 'bg-[#e7eeff] text-[#464555] border-transparent hover:bg-[#dee8ff]'
                       }`}
                     >
                       {cat}
@@ -1335,7 +1337,7 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Products Grid */}
+              {/* Grid */}
               {(() => {
                 const posFilteredStoreProducts = selectedStore === 'all' ? products : products.filter(p => p.store === selectedStore);
                 const posProducts = posFilteredStoreProducts.filter(p => {
@@ -1347,7 +1349,7 @@ export default function DashboardPage() {
 
                 if (posProducts.length === 0) {
                   return (
-                    <div className="p-12 text-center flex flex-col items-center justify-center">
+                    <div className="p-12 text-center flex flex-col items-center justify-center bg-white border border-[#c7c4d8]/40 rounded-2xl shadow-sm">
                       <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">shopping_basket</span>
                       <p className="text-gray-500 font-bold text-sm">No se encontraron productos.</p>
                     </div>
@@ -1355,53 +1357,35 @@ export default function DashboardPage() {
                 }
 
                 return (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {posProducts.map(p => {
                       const cartItem = posCart.find(item => item.product.id === p.id);
                       const quantity = cartItem?.quantity || 0;
                       return (
-                        <div 
+                        <button 
                           key={p.id} 
-                          className={`relative border rounded-2xl p-3 flex flex-col justify-between transition-all select-none hover:-translate-y-0.5 hover:shadow-md cursor-pointer ${quantity > 0 ? 'border-black shadow-sm ring-1 ring-black/5' : 'border-gray-100'}`}
                           onClick={() => addToCart(p)}
+                          className={`product-card text-left flex flex-col bg-white border rounded-2xl overflow-hidden hover:shadow-md transition-all active:scale-[0.98] cursor-pointer group ${
+                            quantity > 0 ? 'border-[#3525cd] ring-1 ring-[#3525cd]/20' : 'border-[#c7c4d8]/40'
+                          }`}
                         >
-                          <div className="relative w-full aspect-square bg-gray-50 rounded-xl overflow-hidden mb-3 shrink-0">
+                          <div className="h-32 w-full bg-[#f0f3ff] relative overflow-hidden shrink-0">
                             {p.image ? (
-                              <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                              <img src={p.image} alt={p.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-300 bg-gray-100">
-                                <span className="material-symbols-outlined text-2xl">image</span>
+                              <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                <span className="material-symbols-outlined text-3xl">image</span>
                               </div>
                             )}
-                            {quantity > 0 && (
-                              <div className="absolute top-2 right-2 bg-black text-white text-xs font-black w-6 h-6 rounded-full flex items-center justify-center shadow-md animate-scale">
-                                {quantity}
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 flex flex-col justify-between min-h-[50px]">
-                            <h4 className="text-xs font-extrabold text-gray-900 leading-snug line-clamp-2">{p.name}</h4>
-                            <div className="flex items-center justify-between mt-2">
-                              <span className="text-sm font-black text-gray-900">S/ {p.price.toFixed(2)}</span>
-                              {quantity > 0 && (
-                                <div className="flex gap-1 shrink-0" onClick={e => e.stopPropagation()}>
-                                  <button 
-                                    onClick={() => removeFromCart(p.id)}
-                                    className="w-6 h-6 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center justify-center text-sm font-bold"
-                                  >
-                                    -
-                                  </button>
-                                  <button 
-                                    onClick={() => addToCart(p)}
-                                    className="w-6 h-6 rounded-md bg-black text-white hover:bg-gray-800 flex items-center justify-center text-sm font-bold"
-                                  >
-                                    +
-                                  </button>
-                                </div>
-                              )}
+                            <div className="absolute top-2 right-2 px-2 py-1 bg-white/90 backdrop-blur rounded font-bold text-[9px] text-[#3525cd]">
+                              {quantity > 0 ? `${quantity} IN CART` : 'IN STOCK'}
                             </div>
                           </div>
-                        </div>
+                          <div className="p-3 flex-1 flex flex-col justify-between">
+                            <h3 className="font-bold text-sm text-[#111c2d] truncate">{p.name}</h3>
+                            <p className="font-extrabold text-base text-[#3525cd] mt-1">S/ {p.price.toFixed(2)}</p>
+                          </div>
+                        </button>
                       );
                     })}
                   </div>
@@ -1409,84 +1393,59 @@ export default function DashboardPage() {
               })()}
             </div>
 
-            {/* Cart and Checkout Summary (40%) */}
-            <div className="w-full lg:w-[420px] bg-white border border-gray-100 rounded-2xl p-5 shadow-sm flex flex-col gap-5 shrink-0 sticky top-24">
-              <div className="flex justify-between items-center border-b border-gray-50 pb-3">
-                <h3 className="font-extrabold text-gray-900 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[20px]">shopping_cart</span>
-                  Resumen de Venta
-                </h3>
-                <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
-                  {posCart.reduce((sum, item) => sum + item.quantity, 0)} ítems
-                </span>
-              </div>
-
-              {/* Cart Items List */}
-              <div className="max-h-56 overflow-y-auto divide-y divide-gray-50 pr-1 select-none custom-scrollbar min-h-[100px]">
-                {posCart.length === 0 ? (
-                  <div className="py-8 text-center text-gray-400 text-sm flex flex-col items-center justify-center">
-                    <span className="material-symbols-outlined text-3xl mb-2 text-gray-300">shopping_cart_checkout</span>
-                    El carrito está vacío.<br />Toca un producto para agregarlo.
-                  </div>
-                ) : (
-                  posCart.map(item => (
-                    <div key={item.product.id} className="py-3 flex items-center justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-xs font-bold text-gray-900 truncate">{item.product.name}</h4>
-                        <p className="text-[11px] font-semibold text-gray-400 mt-0.5">S/ {item.product.price.toFixed(2)} x {item.quantity}</p>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <button 
-                          onClick={() => removeFromCart(item.product.id)}
-                          className="w-8 h-8 rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 flex items-center justify-center font-bold"
-                        >
-                          -
-                        </button>
-                        <span className="text-sm font-extrabold text-gray-900 w-6 text-center">{item.quantity}</span>
-                        <button 
-                          onClick={() => addToCart(item.product)}
-                          className="w-8 h-8 rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 flex items-center justify-center font-bold"
-                        >
-                          +
-                        </button>
-                      </div>
-                      <span className="text-xs font-black text-gray-900 shrink-0 w-16 text-right">
-                        S/ {(item.product.price * item.quantity).toFixed(2)}
-                      </span>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              {/* Customer Details Form */}
-              <div className="border-t border-gray-50 pt-4 flex flex-col gap-3">
-                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Cliente (Opcional)</h4>
-                <div className="grid grid-cols-2 gap-3">
-                  <input 
-                    type="text" 
-                    value={posCustomerName}
-                    onChange={(e) => setPosCustomerName(e.target.value)}
-                    placeholder="Nombre Cliente" 
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-black"
-                  />
-                  <input 
-                    type="text" 
-                    value={posCustomerPhone}
-                    onChange={(e) => setPosCustomerPhone(e.target.value)}
-                    placeholder="Nro Celular (WhatsApp)" 
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-black"
-                  />
+            {/* Sidebar (Right Side) */}
+            <aside className="w-full lg:w-96 bg-[#f0f3ff]/40 border border-[#c7c4d8]/40 rounded-2xl flex flex-col shrink-0 sticky top-24 overflow-hidden shadow-sm">
+              {/* Receipt Header */}
+              <div className="p-4 border-b border-[#c7c4d8]/30 bg-white">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-extrabold text-base text-[#111c2d]">Current Sale</h2>
+                  <button 
+                    onClick={() => setPosCart([])}
+                    className="text-red-500 hover:text-red-700 font-bold text-xs hover:underline cursor-pointer"
+                  >
+                    Clear All
+                  </button>
                 </div>
+                <button 
+                  onClick={() => setIsCustomerDetailsOpen(!isCustomerDetailsOpen)}
+                  className="flex items-center gap-1.5 text-[#3525cd] font-bold text-xs mt-2 hover:underline cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[18px]">person_add</span>
+                  {posCustomerName ? `${posCustomerName} (${posCustomerPhone || 'Sin Celular'})` : 'Add Customer'}
+                </button>
               </div>
 
-              {/* Seller / Employee Selector */}
-              <div className="flex flex-col gap-2">
-                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Vendedor</h4>
-                <div className="grid grid-cols-2 gap-3">
+              {/* Collapsible Customer Form */}
+              {isCustomerDetailsOpen && (
+                <div className="p-4 border-b border-[#c7c4d8]/20 bg-white/80 flex flex-col gap-2.5">
+                  <h4 className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Customer Info</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input 
+                      type="text" 
+                      value={posCustomerName}
+                      onChange={(e) => setPosCustomerName(e.target.value)}
+                      placeholder="Name" 
+                      className="w-full px-3 py-2 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd]"
+                    />
+                    <input 
+                      type="text" 
+                      value={posCustomerPhone}
+                      onChange={(e) => setPosCustomerPhone(e.target.value)}
+                      placeholder="WhatsApp" 
+                      className="w-full px-3 py-2 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd]"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Seller Selection */}
+              <div className="p-4 border-b border-[#c7c4d8]/10 bg-white/60 flex flex-col gap-2">
+                <h4 className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Seller / Vendedor</h4>
+                <div className="grid grid-cols-2 gap-2">
                   <select 
                     value={posSeller} 
                     onChange={(e) => setPosSeller(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-black cursor-pointer"
+                    className="w-full px-3 py-2 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd] cursor-pointer"
                   >
                     <option value="Administrador">Administrador</option>
                     <option value="Juan">Juan</option>
@@ -1500,75 +1459,131 @@ export default function DashboardPage() {
                       type="text" 
                       value={customSeller}
                       onChange={(e) => setCustomSeller(e.target.value)}
-                      placeholder="Nombre Vendedor" 
-                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-black"
+                      placeholder="Name" 
+                      className="w-full px-3 py-2 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd]"
                     />
                   )}
                 </div>
               </div>
 
-              {/* Payment Method Selector */}
-              <div className="flex flex-col gap-2">
-                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Método de Pago</h4>
-                <div className="grid grid-cols-3 gap-2">
-                  <button 
-                    type="button" 
-                    onClick={() => setPosPaymentMethod('Efectivo')}
-                    className={`flex flex-col items-center gap-1.5 py-2.5 rounded-xl border-2 transition-all cursor-pointer ${posPaymentMethod === 'Efectivo' ? 'border-black bg-black/5 text-black' : 'border-gray-100 hover:border-gray-200 text-gray-500 bg-white'}`}
-                  >
-                    <span className="material-symbols-outlined text-[20px]">payments</span>
-                    <span className="text-[10px] font-bold">Efectivo</span>
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={() => setPosPaymentMethod('Yape/Plin')}
-                    className={`flex flex-col items-center gap-1.5 py-2.5 rounded-xl border-2 transition-all cursor-pointer ${posPaymentMethod === 'Yape/Plin' ? 'border-[#6200EE] bg-[#6200EE]/5 text-[#6200EE]' : 'border-gray-100 hover:border-gray-200 text-gray-500 bg-white'}`}
-                  >
-                    <span className="material-symbols-outlined text-[20px]">qr_code_2</span>
-                    <span className="text-[10px] font-bold">Yape/Plin</span>
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={() => setPosPaymentMethod('Tarjeta')}
-                    className={`flex flex-col items-center gap-1.5 py-2.5 rounded-xl border-2 transition-all cursor-pointer ${posPaymentMethod === 'Tarjeta' ? 'border-[#0066FF] bg-[#0066FF]/5 text-[#0066FF]' : 'border-gray-100 hover:border-gray-200 text-gray-500 bg-white'}`}
-                  >
-                    <span className="material-symbols-outlined text-[20px]">credit_card</span>
-                    <span className="text-[10px] font-bold">Tarjeta</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Totals */}
-              <div className="border-t border-gray-50 pt-4 flex flex-col gap-2 bg-gray-50/50 -mx-5 px-5 py-4">
-                <div className="flex justify-between items-center text-xs font-bold text-gray-500">
-                  <span>Subtotal</span>
-                  <span>S/ {posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between items-center text-lg font-black text-gray-900 border-t border-dashed border-gray-200 pt-2 mt-1">
-                  <span>Total</span>
-                  <span>S/ {posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0).toFixed(2)}</span>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <button 
-                onClick={handlePosCheckout}
-                disabled={posCart.length === 0 || isPosSaving}
-                className="w-full flex items-center justify-center gap-2 py-4 bg-black text-white hover:bg-gray-800 disabled:bg-gray-200 disabled:text-gray-400 font-bold rounded-xl transition-all shadow-lg hover:shadow-black/15 shadow-black/5 disabled:shadow-none cursor-pointer"
-              >
-                {isPosSaving ? (
-                  <>
-                    <span className="material-symbols-outlined animate-spin text-[18px]">refresh</span>
-                    Procesando Venta...
-                  </>
+              {/* Cart Items List */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[300px] min-h-[140px] custom-scrollbar bg-white/20">
+                {posCart.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-gray-400 py-12">
+                    <span className="material-symbols-outlined text-4xl mb-2">shopping_basket</span>
+                    <p className="text-sm font-semibold">Cart is empty</p>
+                  </div>
                 ) : (
-                  <>
-                    <span className="material-symbols-outlined text-[18px]">point_of_sale</span>
-                    Cobrar y Imprimir Ticket
-                  </>
+                  posCart.map((item, index) => (
+                    <div key={item.product.id} className="flex items-center justify-between gap-4 group">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-sm text-[#111c2d] truncate">{item.product.name}</h4>
+                        <p className="text-[12px] text-gray-500 mt-0.5">S/ {item.product.price.toFixed(2)} x {item.quantity}</p>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className="font-bold text-sm text-[#111c2d]">S/ {(item.product.price * item.quantity).toFixed(2)}</span>
+                        <div className="flex items-center gap-1 bg-[#f0f3ff] border border-[#c7c4d8]/20 p-0.5 rounded-lg">
+                          <button 
+                            onClick={() => removeFromCart(item.product.id)}
+                            className="text-gray-500 hover:text-red-500 transition-colors w-6 h-6 flex items-center justify-center font-bold text-sm"
+                          >
+                            -
+                          </button>
+                          <span className="text-xs font-black text-[#111c2d] w-4 text-center">{item.quantity}</span>
+                          <button 
+                            onClick={() => addToCart(item.product)}
+                            className="text-gray-500 hover:text-[#3525cd] transition-colors w-6 h-6 flex items-center justify-center font-bold text-sm"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
                 )}
-              </button>
-            </div>
+              </div>
+
+              {/* Checkout Summary Footer */}
+              <div className="p-4 bg-white border-t border-[#c7c4d8]/30">
+                <div className="space-y-2 mb-4">
+                  <div className="flex justify-between text-gray-500 font-semibold text-xs">
+                    <span>Subtotal</span>
+                    <span>S/ {posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-500 font-semibold text-xs">
+                    <span>IGV (18% Incluido)</span>
+                    <span>S/ {(posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0) * 0.18 / 1.18).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-[#111c2d] font-black text-lg mt-3 pt-3 border-t border-[#c7c4d8]/20">
+                    <span>Total</span>
+                    <span>S/ {posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0).toFixed(2)}</span>
+                  </div>
+                </div>
+
+                {/* Payment Actions */}
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <h4 className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Payment Method</h4>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button 
+                        type="button" 
+                        onClick={() => setPosPaymentMethod('Efectivo')}
+                        className={`py-2 px-3 rounded-xl border-2 transition-all flex flex-col items-center gap-1 cursor-pointer ${
+                          posPaymentMethod === 'Efectivo' 
+                            ? 'border-[#3525cd] bg-[#3525cd]/5 text-[#3525cd]' 
+                            : 'border-[#c7c4d8]/30 bg-[#f0f3ff]/40 text-gray-500 hover:border-gray-300'
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-[20px]">payments</span>
+                        <span className="text-[10px] font-bold">Efectivo</span>
+                      </button>
+                      <button 
+                        type="button" 
+                        onClick={() => setPosPaymentMethod('Yape/Plin')}
+                        className={`py-2 px-3 rounded-xl border-2 transition-all flex flex-col items-center gap-1 cursor-pointer ${
+                          posPaymentMethod === 'Yape/Plin' 
+                            ? 'border-[#3525cd] bg-[#3525cd]/5 text-[#3525cd]' 
+                            : 'border-[#c7c4d8]/30 bg-[#f0f3ff]/40 text-gray-500 hover:border-gray-300'
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-[20px]">qr_code_2</span>
+                        <span className="text-[10px] font-bold">Yape/Plin</span>
+                      </button>
+                      <button 
+                        type="button" 
+                        onClick={() => setPosPaymentMethod('Tarjeta')}
+                        className={`py-2 px-3 rounded-xl border-2 transition-all flex flex-col items-center gap-1 cursor-pointer ${
+                          posPaymentMethod === 'Tarjeta' 
+                            ? 'border-[#3525cd] bg-[#3525cd]/5 text-[#3525cd]' 
+                            : 'border-[#c7c4d8]/30 bg-[#f0f3ff]/40 text-gray-500 hover:border-gray-300'
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-[20px]">credit_card</span>
+                        <span className="text-[10px] font-bold">Tarjeta</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={handlePosCheckout}
+                    disabled={posCart.length === 0 || isPosSaving}
+                    className="w-full py-3.5 bg-[#3525cd] text-white rounded-xl font-bold text-base shadow-lg shadow-[#3525cd]/20 hover:scale-[1.01] active:scale-95 transition-all disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    {isPosSaving ? (
+                      <>
+                        <span className="material-symbols-outlined animate-spin text-[20px]">refresh</span>
+                        Procesando Pago...
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-[20px]">receipt_long</span>
+                        Process Payment
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </aside>
           </div>
         )}
 
