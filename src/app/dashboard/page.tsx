@@ -654,21 +654,21 @@ export default function DashboardPage() {
                     <div className="p-4 border-b border-gray-100 flex flex-col gap-4 bg-white">
                       <div className="flex items-center justify-between flex-wrap gap-4">
                         <h2 className="text-base font-bold text-gray-900">Catálogo Actual {selectedStore !== 'all' ? `- ${stores[selectedStore]?.name}` : ''}</h2>
-                        <div className="flex items-center gap-3">
-                          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Acciones:</span>
-                          <div className="flex flex-row items-center gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest leading-none select-none">Acciones</span>
+                          <div className="flex flex-row items-center gap-1.5">
                             <button
                               onClick={() => setIsQRModalOpen(true)}
-                              className="px-3 py-1.5 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 bg-black text-white hover:bg-gray-800 whitespace-nowrap"
+                              className="px-2.5 py-1.5 text-[11px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 bg-black text-white hover:bg-gray-800 whitespace-nowrap active:scale-95 cursor-pointer shadow-sm"
                             >
-                              <span className="material-symbols-outlined text-[15px]">qr_code_2</span>
+                              <span className="material-symbols-outlined text-[14px]">qr_code_2</span>
                               Código QR
                             </button>
                             <button
                               onClick={() => setIsPDFModalOpen(true)}
-                              className="px-3 py-1.5 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 bg-red-50 text-red-600 hover:bg-red-100 whitespace-nowrap"
+                              className="px-2.5 py-1.5 text-[11px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 bg-red-50 text-red-600 hover:bg-red-100 whitespace-nowrap active:scale-95 cursor-pointer border border-red-100 shadow-sm"
                             >
-                              <span className="material-symbols-outlined text-[15px]">picture_as_pdf</span>
+                              <span className="material-symbols-outlined text-[14px]">picture_as_pdf</span>
                               Exportar PDF
                             </button>
                           </div>
