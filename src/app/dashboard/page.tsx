@@ -1289,7 +1289,7 @@ export default function DashboardPage() {
         {activeTab === 'pos' && (
           <div className="flex flex-col lg:flex-row gap-6 w-full items-start bg-[#f9f9ff] -m-6 p-6 min-h-[calc(100vh-100px)] rounded-2xl">
             {/* Catalog Grid (Left Side) */}
-            <div className="flex-1 w-full flex flex-col gap-6 pb-28 lg:pb-0">
+            <div className="flex-1 w-full flex flex-col gap-6 pb-60 lg:pb-0">
               {/* Row 1: Search Bar */}
               <div className="relative w-full max-w-lg group">
                 <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
@@ -2213,14 +2213,16 @@ export default function DashboardPage() {
       )}
 
       {/* Mobile Floating Action Button (FAB) */}
-      <div className="md:hidden fixed right-4 bottom-24 z-40">
-        <button 
-          onClick={() => { setIsModalOpen(true); resetForm(); }}
-          className="w-14 h-14 bg-[#5244e1] text-white rounded-full flex items-center justify-center shadow-lg hover:bg-[#4338ca] transition-colors"
-        >
-          <span className="material-symbols-outlined text-3xl">add</span>
-        </button>
-      </div>
+      {activeTab === 'products' && (
+        <div className="md:hidden fixed right-4 bottom-24 z-40">
+          <button 
+            onClick={() => { setIsModalOpen(true); resetForm(); }}
+            className="w-14 h-14 bg-[#5244e1] text-white rounded-full flex items-center justify-center shadow-lg hover:bg-[#4338ca] transition-colors"
+          >
+            <span className="material-symbols-outlined text-3xl">add</span>
+          </button>
+        </div>
+      )}
 
       {/* Mobile Bottom Navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 flex justify-between items-center z-50 rounded-t-2xl shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
