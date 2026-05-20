@@ -34,6 +34,7 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilterCategory, setSelectedFilterCategory] = useState('all');
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+  const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'metrics' | 'stores' | 'pos'>('products');
 
   // POS (Caja Rápida) States
@@ -663,21 +664,13 @@ export default function DashboardPage() {
                               <span className="material-symbols-outlined text-[16px]">qr_code_2</span>
                               Código QR
                             </button>
-                            {Object.values(stores)
-                              .filter(store => selectedStore === 'all' || store.slug === selectedStore)
-                              .map(store => (
-                              <button
-                                key={store.slug}
-                                onClick={() => exportStoreMenuPDF(store.slug)}
-                                disabled={isExporting}
-                                className={`px-3 py-1.5 text-sm font-bold rounded-lg transition-colors flex items-center gap-1.5 ${isExporting ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
-                              >
-                                <span className={`material-symbols-outlined text-[16px] ${isExporting ? 'animate-pulse' : ''}`}>
-                                  {isExporting ? 'hourglass_empty' : 'picture_as_pdf'}
-                                </span>
-                                {isExporting ? 'Generando...' : (selectedStore === 'all' ? store.name : 'Descargar')}
-                              </button>
-                            ))}
+                            <button
+                              onClick={() => setIsPDFModalOpen(true)}
+                              className="px-3 py-1.5 text-sm font-bold rounded-lg transition-colors flex items-center gap-1.5 bg-red-50 text-red-600 hover:bg-red-100"
+                            >
+                              <span className="material-symbols-outlined text-[16px]">picture_as_pdf</span>
+                              Exportar PDF
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -1947,6 +1940,47 @@ export default function DashboardPage() {
                 <span className="material-symbols-outlined text-[18px]">download</span>
                 Descargar PNG
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PDF Export Modal */}
+      {isPDFModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/40 backdrop-blur-sm" onClick={() => setIsPDFModalOpen(false)}>
+          <div className="bg-white rounded-[24px] shadow-2xl overflow-hidden flex flex-col w-[420px]" onClick={e => e.stopPropagation()}>
+            <div className="p-6 border-b border-gray-100 relative text-center">
+              <button onClick={() => setIsPDFModalOpen(false)} className="absolute right-4 top-4 text-gray-400 hover:text-black">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+              <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">Exportar Catálogo PDF</h2>
+              <p className="text-xs text-gray-500 mt-1">Selecciona qué tienda deseas descargar en PDF</p>
+            </div>
+            <div className="p-6 flex flex-col gap-3 max-h-[60vh] overflow-y-auto custom-scrollbar">
+              {Object.values(stores)
+                .filter(store => selectedStore === 'all' || store.slug === selectedStore)
+                .map(store => (
+                  <button
+                    key={store.slug}
+                    onClick={() => {
+                      exportStoreMenuPDF(store.slug);
+                      setIsPDFModalOpen(false);
+                    }}
+                    disabled={isExporting}
+                    className="w-full flex items-center justify-between p-4 bg-[#f8f9fa] hover:bg-[#3525cd]/5 border border-gray-100 hover:border-[#3525cd]/20 rounded-2xl transition-all text-left group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-red-500 shadow-sm">
+                        <span className="material-symbols-outlined text-[24px]">picture_as_pdf</span>
+                      </div>
+                      <div>
+                        <h4 className="font-extrabold text-sm text-gray-900">{store.name}</h4>
+                        <p className="text-[11px] text-gray-500 mt-0.5">Catálogo listo para descargar</p>
+                      </div>
+                    </div>
+                    <span className="material-symbols-outlined text-gray-400 group-hover:text-[#3525cd] transition-colors">download</span>
+                  </button>
+                ))}
             </div>
           </div>
         </div>
