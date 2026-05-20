@@ -1296,45 +1296,43 @@ export default function DashboardPage() {
           <div className="flex flex-col lg:flex-row gap-6 w-full items-start bg-[#f9f9ff] -m-6 p-6 min-h-[calc(100vh-100px)] rounded-2xl">
             {/* Catalog Grid (Left Side) */}
             <div className="flex-1 w-full flex flex-col gap-6">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                {/* Search */}
-                <div className="relative w-full max-w-md group">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
-                  <input 
-                    type="text" 
-                    value={posProductSearch}
-                    onChange={(e) => setPosProductSearch(e.target.value)}
-                    placeholder="Buscar producto, SKU o categoría..." 
-                    className="w-full pl-10 pr-4 py-2.5 bg-[#f0f3ff] border border-[#c7c4d8]/40 rounded-xl focus:ring-2 focus:ring-[#3525cd] focus:outline-none transition-all text-sm font-semibold text-[#111c2d]"
-                  />
-                </div>
+              {/* Row 1: Search Bar */}
+              <div className="relative w-full max-w-lg group">
+                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
+                <input 
+                  type="text" 
+                  value={posProductSearch}
+                  onChange={(e) => setPosProductSearch(e.target.value)}
+                  placeholder="Buscar producto, SKU o categoría..." 
+                  className="w-full pl-11 pr-4 py-2.5 bg-[#f0f3ff] border border-[#c7c4d8]/40 rounded-xl focus:ring-2 focus:ring-[#3525cd] focus:outline-none transition-all text-sm font-semibold text-[#111c2d]"
+                />
+              </div>
 
-                {/* Categories */}
-                <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1 md:pb-0" style={{ scrollbarWidth: 'none' }}>
+              {/* Row 2: Categories */}
+              <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1" style={{ scrollbarWidth: 'none' }}>
+                <button 
+                  onClick={() => setPosProductCategory('all')}
+                  className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors border ${
+                    posProductCategory === 'all' 
+                      ? 'bg-[#3525cd] text-white border-transparent' 
+                      : 'bg-[#e7eeff] text-[#464555] border-transparent hover:bg-[#dee8ff]'
+                  }`}
+                >
+                  Todos los Productos
+                </button>
+                {Array.from(new Set((selectedStore === 'all' ? products : products.filter(p => p.store === selectedStore)).map(p => p.category))).map(cat => (
                   <button 
-                    onClick={() => setPosProductCategory('all')}
+                    key={cat}
+                    onClick={() => setPosProductCategory(cat)}
                     className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors border ${
-                      posProductCategory === 'all' 
+                      posProductCategory === cat 
                         ? 'bg-[#3525cd] text-white border-transparent' 
                         : 'bg-[#e7eeff] text-[#464555] border-transparent hover:bg-[#dee8ff]'
                     }`}
                   >
-                    All Items
+                    {cat}
                   </button>
-                  {Array.from(new Set((selectedStore === 'all' ? products : products.filter(p => p.store === selectedStore)).map(p => p.category))).map(cat => (
-                    <button 
-                      key={cat}
-                      onClick={() => setPosProductCategory(cat)}
-                      className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors border ${
-                        posProductCategory === cat 
-                          ? 'bg-[#3525cd] text-white border-transparent' 
-                          : 'bg-[#e7eeff] text-[#464555] border-transparent hover:bg-[#dee8ff]'
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
+                ))}
               </div>
 
               {/* Grid */}
@@ -1378,7 +1376,7 @@ export default function DashboardPage() {
                               </div>
                             )}
                             <div className="absolute top-2 right-2 px-2 py-1 bg-white/90 backdrop-blur rounded font-bold text-[9px] text-[#3525cd]">
-                              {quantity > 0 ? `${quantity} IN CART` : 'IN STOCK'}
+                              {quantity > 0 ? `${quantity} EN CARRO` : 'EN STOCK'}
                             </div>
                           </div>
                           <div className="p-3 flex-1 flex flex-col justify-between">
@@ -1398,12 +1396,12 @@ export default function DashboardPage() {
               {/* Receipt Header */}
               <div className="p-4 border-b border-[#c7c4d8]/30 bg-white">
                 <div className="flex items-center justify-between">
-                  <h2 className="font-extrabold text-base text-[#111c2d]">Current Sale</h2>
+                  <h2 className="font-extrabold text-base text-[#111c2d]">Venta Actual</h2>
                   <button 
                     onClick={() => setPosCart([])}
                     className="text-red-500 hover:text-red-700 font-bold text-xs hover:underline cursor-pointer"
                   >
-                    Clear All
+                    Limpiar Todo
                   </button>
                 </div>
                 <button 
@@ -1411,20 +1409,20 @@ export default function DashboardPage() {
                   className="flex items-center gap-1.5 text-[#3525cd] font-bold text-xs mt-2 hover:underline cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-[18px]">person_add</span>
-                  {posCustomerName ? `${posCustomerName} (${posCustomerPhone || 'Sin Celular'})` : 'Add Customer'}
+                  {posCustomerName ? `${posCustomerName} (${posCustomerPhone || 'Sin Celular'})` : 'Agregar Cliente'}
                 </button>
               </div>
 
               {/* Collapsible Customer Form */}
               {isCustomerDetailsOpen && (
                 <div className="p-4 border-b border-[#c7c4d8]/20 bg-white/80 flex flex-col gap-2.5">
-                  <h4 className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Customer Info</h4>
+                  <h4 className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Datos del Cliente</h4>
                   <div className="grid grid-cols-2 gap-2">
                     <input 
                       type="text" 
                       value={posCustomerName}
                       onChange={(e) => setPosCustomerName(e.target.value)}
-                      placeholder="Name" 
+                      placeholder="Nombre" 
                       className="w-full px-3 py-2 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd]"
                     />
                     <input 
@@ -1440,7 +1438,7 @@ export default function DashboardPage() {
 
               {/* Seller Selection */}
               <div className="p-4 border-b border-[#c7c4d8]/10 bg-white/60 flex flex-col gap-2">
-                <h4 className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Seller / Vendedor</h4>
+                <h4 className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Vendedor</h4>
                 <div className="grid grid-cols-2 gap-2">
                   <select 
                     value={posSeller} 
@@ -1459,7 +1457,7 @@ export default function DashboardPage() {
                       type="text" 
                       value={customSeller}
                       onChange={(e) => setCustomSeller(e.target.value)}
-                      placeholder="Name" 
+                      placeholder="Nombre" 
                       className="w-full px-3 py-2 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd]"
                     />
                   )}
@@ -1471,7 +1469,7 @@ export default function DashboardPage() {
                 {posCart.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-gray-400 py-12">
                     <span className="material-symbols-outlined text-4xl mb-2">shopping_basket</span>
-                    <p className="text-sm font-semibold">Cart is empty</p>
+                    <p className="text-sm font-semibold">El carrito está vacío</p>
                   </div>
                 ) : (
                   posCart.map((item, index) => (
@@ -1523,7 +1521,7 @@ export default function DashboardPage() {
                 {/* Payment Actions */}
                 <div className="flex flex-col gap-3">
                   <div className="flex flex-col gap-1.5">
-                    <h4 className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Payment Method</h4>
+                    <h4 className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Método de Pago</h4>
                     <div className="grid grid-cols-3 gap-2">
                       <button 
                         type="button" 
@@ -1577,7 +1575,7 @@ export default function DashboardPage() {
                     ) : (
                       <>
                         <span className="material-symbols-outlined text-[20px]">receipt_long</span>
-                        Process Payment
+                        Cobrar y Generar Ticket
                       </>
                     )}
                   </button>
