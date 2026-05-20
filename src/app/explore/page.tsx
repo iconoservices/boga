@@ -52,6 +52,7 @@ export default function Explore() {
             price: `S/ ${p.price.toFixed(2)}`,
             slug: p.store,
             image: p.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80',
+            status: p.status || 'Activo',
           }
         });
 
@@ -60,7 +61,7 @@ export default function Explore() {
           return {
             ...s,
             products: sProducts.length > 0 
-              ? sProducts.map(p => ({ name: p.title, price: p.price, img: p.image })) 
+              ? sProducts.map(p => ({ name: p.title, price: p.price, img: p.image, status: p.status })) 
               : s.products
           };
         }));
@@ -101,7 +102,8 @@ export default function Explore() {
               name: p.name,
               price: `S/ ${p.price.toFixed(2)}`,
               badge: 'Nuevo',
-              img: p.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80'
+              img: p.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80',
+              status: p.status || 'Activo'
             });
           }
         });
@@ -431,16 +433,23 @@ export default function Explore() {
                   {section.products.slice(0, 4).map((p, idx) => (
                     <div key={idx} className="min-w-[160px] w-[160px] bg-surface-container-lowest rounded-2xl shadow-sm overflow-hidden flex flex-col border border-[#3E2723]/5 snap-start">
                       <div className="relative h-28">
-                        <img className="w-full h-full object-cover" src={p.img} alt={p.name} />
+                        <img className={`w-full h-full object-cover ${p.status === 'Agotado' ? 'grayscale opacity-60' : ''}`} src={p.img} alt={p.name} />
                         <div className="absolute top-2 left-2 bg-[#E2725B] text-white text-[10px] font-black px-2 py-0.5 rounded-lg">{p.badge}</div>
+                        {p.status === 'Agotado' && (
+                          <div className="absolute inset-0 bg-white/40 flex items-center justify-center backdrop-blur-[1px]">
+                            <span className="bg-black/80 text-white text-[11px] font-black px-3 py-1 rounded-full tracking-widest uppercase shadow-md">Agotado</span>
+                          </div>
+                        )}
                       </div>
                       <div className="p-3">
-                        <h3 className="text-[13px] font-bold text-[#3E2723] line-clamp-1">{p.name}</h3>
+                        <h3 className={`text-[13px] font-bold line-clamp-1 ${p.status === 'Agotado' ? 'text-gray-400' : 'text-[#3E2723]'}`}>{p.name}</h3>
                         <div className="flex justify-between items-center mt-2">
-                          <span className="text-primary font-black text-[14px]">{p.price}</span>
+                          <span className={`font-black text-[14px] ${p.status === 'Agotado' ? 'text-gray-400' : 'text-primary'}`}>{p.price}</span>
                           <button 
+                            disabled={p.status === 'Agotado'}
                             onClick={() => handleAddToCartWithAnim(p)}
                             className={`w-6 h-6 rounded-full flex items-center justify-center shadow-sm transition-all duration-300 ${
+                              p.status === 'Agotado' ? 'bg-gray-200 text-gray-400 cursor-not-allowed' :
                               addedItems[p.name] ? 'bg-[#25D366] text-white scale-110' : 'bg-primary text-white active:scale-90'
                             }`}
                           >
@@ -522,19 +531,26 @@ export default function Explore() {
               {(sections.find(s => s.id === activeCategory)?.products || []).map((p, idx) => (
                 <div key={idx} className="bg-surface-container-lowest rounded-2xl shadow-sm overflow-hidden flex flex-col border border-[#3E2723]/5">
                   <div className="relative h-32">
-                    <img className="w-full h-full object-cover" src={p.img} alt={p.name} />
+                    <img className={`w-full h-full object-cover ${p.status === 'Agotado' ? 'grayscale opacity-60' : ''}`} src={p.img} alt={p.name} />
                     <div className="absolute top-2 left-2 bg-[#E2725B] text-white text-[10px] font-black px-2 py-0.5 rounded-lg">{p.badge}</div>
+                    {p.status === 'Agotado' && (
+                      <div className="absolute inset-0 bg-white/40 flex items-center justify-center backdrop-blur-[1px]">
+                        <span className="bg-black/80 text-white text-[11px] font-black px-3 py-1 rounded-full tracking-widest uppercase shadow-md">Agotado</span>
+                      </div>
+                    )}
                   </div>
                   <div className="p-3 flex flex-col flex-1 justify-between">
                     <div>
-                      <h3 className="text-[13px] font-bold text-[#3E2723] line-clamp-2 leading-tight mb-1">{p.name}</h3>
+                      <h3 className={`text-[13px] font-bold line-clamp-2 leading-tight mb-1 ${p.status === 'Agotado' ? 'text-gray-400' : 'text-[#3E2723]'}`}>{p.name}</h3>
                       {(p as any).original && <span className="text-[#745853] text-[11px] line-through">{(p as any).original}</span>}
                     </div>
                     <div className="flex justify-between items-end mt-2">
-                      <span className="text-primary font-black text-[15px]">{p.price}</span>
+                      <span className={`font-black text-[15px] ${p.status === 'Agotado' ? 'text-gray-400' : 'text-primary'}`}>{p.price}</span>
                       <button 
+                        disabled={p.status === 'Agotado'}
                         onClick={() => handleAddToCartWithAnim(p)}
                         className={`w-7 h-7 rounded-full flex items-center justify-center shadow-sm transition-all duration-300 ${
+                          p.status === 'Agotado' ? 'bg-gray-200 text-gray-400 cursor-not-allowed' :
                           addedItems[p.name] ? 'bg-[#25D366] text-white scale-110' : 'bg-primary text-white active:scale-90'
                         }`}
                       >

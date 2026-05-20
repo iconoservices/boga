@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { stores } from '@/lib/stores.config';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface Product {
   id: string;
@@ -32,6 +33,8 @@ export default function DashboardPage() {
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilterCategory, setSelectedFilterCategory] = useState('all');
+  const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'metrics'>('products');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -72,6 +75,19 @@ export default function DashboardPage() {
       setProducts(data || []);
     }
     setIsLoading(false);
+  };
+
+  const toggleStatus = async (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'Activo' ? 'Agotado' : 'Activo';
+    setProducts(prev => prev.map(p => p.id === id ? { ...p, status: newStatus } : p));
+    try {
+      const { error } = await supabase.from('products').update({ status: newStatus }).eq('id', id);
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating status:', error);
+      setProducts(prev => prev.map(p => p.id === id ? { ...p, status: currentStatus } : p));
+      alert('Error al actualizar el estado.');
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -299,17 +315,30 @@ export default function DashboardPage() {
           <div className="w-8 h-8 rounded-lg bg-black text-white flex items-center justify-center font-bold text-xl">B</div>
           <span className="font-extrabold text-xl tracking-tight text-gray-900">Workspace</span>
         </div>
-        <nav className="p-4 flex flex-col gap-2 flex-1">
-          <button className="flex items-center gap-3 px-4 py-3 bg-black text-white rounded-xl font-semibold shadow-md shadow-black/10 transition-all hover:scale-[1.02]">
+        <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+          <button 
+            onClick={() => setActiveTab('products')}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold transition-colors ${activeTab === 'products' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+          >
             <span className="material-symbols-outlined text-[20px]">inventory_2</span>
             Productos
           </button>
-          <button className="flex items-center gap-3 px-4 py-3 text-gray-500 rounded-xl font-semibold hover:bg-gray-50 transition-colors">
-            <span className="material-symbols-outlined text-[20px]">receipt_long</span>
+          <button 
+            onClick={() => setActiveTab('orders')}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold transition-colors ${activeTab === 'orders' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+          >
+            <span className="material-symbols-outlined text-[20px]">shopping_cart</span>
             Pedidos
           </button>
-          <button className="flex items-center gap-3 px-4 py-3 text-gray-500 rounded-xl font-semibold hover:bg-gray-50 transition-colors">
-            <span className="material-symbols-outlined text-[20px]">storefront</span>
+          <button 
+            onClick={() => setActiveTab('metrics')}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold transition-colors ${activeTab === 'metrics' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+          >
+            <span className="material-symbols-outlined text-[20px]">bar_chart</span>
+            Métricas
+          </button>
+          <button className="w-full flex items-center gap-3 px-3 py-2.5 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors">
+            <span className="material-symbols-outlined text-[20px]">store</span>
             Mis Tiendas
           </button>
         </nav>
@@ -349,102 +378,6 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        {/* Stats Row */}
-        {(() => {
-          const storeFiltered = selectedStore === 'all' ? products : products.filter(p => p.store === selectedStore);
-          const availableCategories = Array.from(new Set(storeFiltered.map(p => p.category)));
-          
-          const filteredProducts = storeFiltered.filter(p => {
-            const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                                  p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                  (p.subcategory || '').toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesCategory = selectedFilterCategory === 'all' || p.category === selectedFilterCategory;
-            return matchesSearch && matchesCategory;
-          });
-
-          return (
-            <>
-              <div className="flex flex-wrap gap-4 mb-6">
-                <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm flex items-center gap-3 min-w-[150px] flex-1">
-                  <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[18px]">inventory_2</span>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 font-medium text-[11px] mb-0.5">Total Productos</p>
-                    <h3 className="text-xl font-extrabold text-gray-900 leading-none">{storeFiltered.length}</h3>
-                  </div>
-                </div>
-                {selectedStore === 'all' && (
-                  <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm flex items-center gap-3 min-w-[150px] flex-1">
-                    <div className="w-8 h-8 rounded-full bg-green-50 text-green-600 flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-[18px]">storefront</span>
-                    </div>
-                    <div>
-                      <p className="text-gray-500 font-medium text-[11px] mb-0.5">Tiendas Activas</p>
-                      <h3 className="text-xl font-extrabold text-gray-900 leading-none">
-                        {new Set(products.map(p => p.store)).size || 0}
-                      </h3>
-                    </div>
-                  </div>
-                )}
-                <div className="hidden lg:block flex-1 border-2 border-dashed border-gray-200 rounded-xl bg-transparent"></div>
-              </div>
-
-              {/* Products Table */}
-              <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
-                <div className="p-4 border-b border-gray-100 flex flex-col gap-4 bg-white">
-                  <div className="flex items-center justify-between flex-wrap gap-4">
-                    <h2 className="text-base font-bold text-gray-900">Catálogo Actual {selectedStore !== 'all' ? `- ${stores[selectedStore]?.name}` : ''}</h2>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-semibold text-gray-500">Exportar PDF:</span>
-                      <div className="flex gap-2 flex-wrap">
-                        {Object.values(stores)
-                          .filter(store => selectedStore === 'all' || store.slug === selectedStore)
-                          .map(store => (
-                          <button
-                            key={store.slug}
-                            onClick={() => exportStoreMenuPDF(store.slug)}
-                            disabled={isExporting}
-                            className={`px-3 py-1.5 text-sm font-bold rounded-lg transition-colors flex items-center gap-1.5 ${isExporting ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
-                          >
-                            <span className={`material-symbols-outlined text-[16px] ${isExporting ? 'animate-pulse' : ''}`}>
-                              {isExporting ? 'hourglass_empty' : 'picture_as_pdf'}
-                            </span>
-                            {isExporting ? 'Generando...' : (selectedStore === 'all' ? store.name : 'Descargar')}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Search and Filters */}
-                  <div className="flex flex-col md:flex-row md:items-center gap-3">
-                    <div className="relative w-full md:w-96 shrink-0">
-                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
-                      <input 
-                        type="text" 
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Buscar nombre o categoría..." 
-                        className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-1 focus:ring-black focus:border-black transition-all"
-                      />
-                    </div>
-                    <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1 md:pb-0" style={{ scrollbarWidth: 'none' }}>
-                      <button 
-                        onClick={() => setSelectedFilterCategory('all')}
-                        className={`px-4 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition-colors uppercase tracking-wider border ${
-                          selectedFilterCategory === 'all' 
-                            ? 'bg-[#FF6B00] text-white border-transparent' 
-                            : 'bg-transparent text-gray-600 border-gray-200 hover:bg-gray-50'
-                        }`}
-                      >
-                        Todos
-                      </button>
-                      {availableCategories.map(cat => (
-                        <button 
-                          key={cat}
-                          onClick={() => setSelectedFilterCategory(cat)}
-                          className={`px-4 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap uppercase tracking-wider transition-colors border ${
                             selectedFilterCategory === cat 
                               ? 'bg-[#FF6B00] text-white border-transparent' 
                               : 'bg-transparent text-gray-600 border-gray-200 hover:bg-gray-50'
@@ -484,13 +417,14 @@ export default function DashboardPage() {
                               <th className="p-3 font-bold w-1/3">Producto</th>
                               {selectedStore === 'all' && <th className="p-3 font-bold">Tienda</th>}
                               <th className="p-3 font-bold">Categoría</th>
+                              <th className="p-3 font-bold">Estado</th>
                               <th className="p-3 font-bold">Precio</th>
                               <th className="p-3 font-bold text-right">Acciones</th>
                             </tr>
                           </thead>
                           <tbody>
                             {filteredProducts.map((p) => (
-                              <tr key={p.id} className="group border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                              <tr key={p.id} className={`group border-b border-gray-50 hover:bg-gray-50/50 transition-colors ${p.status === 'Agotado' ? 'opacity-70' : ''}`}>
                                 <td className="p-3">
                                   <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
@@ -521,6 +455,16 @@ export default function DashboardPage() {
                                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
                                     {p.category}
                                   </span>
+                                </td>
+                                <td className="p-3">
+                                  <label className="flex items-center cursor-pointer">
+                                    <div className="relative">
+                                      <input type="checkbox" className="sr-only" checked={p.status === 'Activo'} onChange={() => toggleStatus(p.id, p.status)} />
+                                      <div className={`block w-10 h-6 rounded-full transition-colors ${p.status === 'Activo' ? 'bg-[#25D366]' : 'bg-red-500'}`}></div>
+                                      <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${p.status === 'Activo' ? 'translate-x-4' : ''}`}></div>
+                                    </div>
+                                    <span className={`ml-2 text-xs font-bold ${p.status === 'Activo' ? 'text-green-700' : 'text-red-600'}`}>{p.status === 'Activo' ? 'ACTIVO' : 'AGOTADO'}</span>
+                                  </label>
                                 </td>
                                 <td className="p-3 font-bold text-gray-900">
                                   S/ {Number(p.price).toFixed(2)}
@@ -555,7 +499,7 @@ export default function DashboardPage() {
                       {/* Mobile Cards View */}
                       <div className="md:hidden flex flex-col p-4 gap-3">
                         {filteredProducts.map((p) => (
-                          <div key={p.id} className="bg-white border border-gray-100 rounded-xl p-3 flex gap-4 shadow-sm relative">
+                          <div key={p.id} className={`bg-white border border-gray-100 rounded-xl p-3 flex gap-4 shadow-sm relative ${p.status === 'Agotado' ? 'opacity-70 grayscale-[0.3]' : ''}`}>
                             {/* Image */}
                             <div className="w-20 h-20 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden shrink-0">
                               {p.image ? (
@@ -579,13 +523,16 @@ export default function DashboardPage() {
                               </p>
                               
                               <div className="flex justify-between items-center mt-auto">
-                                <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full ${
-                                  p.status === 'Activo' || p.stock > 0 
-                                    ? 'bg-green-100 text-green-700' 
-                                    : 'bg-red-100 text-red-700'
-                                }`}>
-                                  {p.status === 'Activo' ? 'EN STOCK' : p.status.toUpperCase()}
-                                </span>
+                                <label className="flex items-center cursor-pointer" onClick={(e) => e.stopPropagation()}>
+                                  <div className="relative">
+                                    <input type="checkbox" className="sr-only" checked={p.status === 'Activo'} onChange={() => toggleStatus(p.id, p.status)} />
+                                    <div className={`block w-8 h-5 rounded-full transition-colors ${p.status === 'Activo' ? 'bg-[#25D366]' : 'bg-red-500'}`}></div>
+                                    <div className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform ${p.status === 'Activo' ? 'translate-x-3' : ''}`}></div>
+                                  </div>
+                                  <span className={`ml-1.5 text-[9px] font-extrabold ${p.status === 'Activo' ? 'text-green-700' : 'text-red-600'}`}>
+                                    {p.status === 'Activo' ? 'STOCK' : 'AGOTADO'}
+                                  </span>
+                                </label>
                                 
                                 <div className="flex items-center gap-1">
                                   <button onClick={() => handleEdit(p)} className="p-1.5 text-gray-400 hover:text-black rounded-lg hover:bg-gray-100 transition-colors">
@@ -780,6 +727,59 @@ export default function DashboardPage() {
                 ) : (
                   'Crear Producto'
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* QR Modal */}
+      {isQRModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/40 backdrop-blur-sm" onClick={() => setIsQRModalOpen(false)}>
+          <div className="bg-white rounded-[24px] shadow-2xl overflow-hidden flex flex-col w-[350px]" onClick={e => e.stopPropagation()}>
+            <div className="p-6 text-center border-b border-gray-100 relative">
+              <button onClick={() => setIsQRModalOpen(false)} className="absolute right-4 top-4 text-gray-400 hover:text-black">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+              <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">Código QR</h2>
+              <p className="text-xs text-gray-500 mt-1">Imprímelo para tus mesas o local</p>
+            </div>
+            <div className="p-8 flex flex-col items-center gap-6" id="qr-container">
+              <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col items-center">
+                <div className="text-lg font-black tracking-tight mb-4">{selectedStore !== 'all' ? stores[selectedStore]?.name : 'Boga Market'}</div>
+                <QRCodeSVG 
+                  value={selectedStore !== 'all' ? `https://boga.com/${selectedStore}` : `https://boga.com/explore`}
+                  size={200}
+                  level="H"
+                  includeMargin={true}
+                />
+                <div className="text-[10px] text-gray-400 mt-4 font-bold tracking-widest uppercase">Escanéame para ordenar</div>
+              </div>
+              <button 
+                onClick={() => {
+                  const svg = document.querySelector('#qr-container svg');
+                  if (svg) {
+                    const svgData = new XMLSerializer().serializeToString(svg);
+                    const canvas = document.createElement("canvas");
+                    const ctx = canvas.getContext("2d");
+                    const img = new Image();
+                    img.onload = () => {
+                      canvas.width = img.width;
+                      canvas.height = img.height;
+                      ctx?.drawImage(img, 0, 0);
+                      const pngFile = canvas.toDataURL("image/png");
+                      const downloadLink = document.createElement("a");
+                      downloadLink.download = `QR_${selectedStore}.png`;
+                      downloadLink.href = `${pngFile}`;
+                      downloadLink.click();
+                    };
+                    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
+                  }
+                }}
+                className="w-full flex items-center justify-center gap-2 bg-black text-white px-5 py-3 rounded-xl font-bold shadow-lg hover:shadow-black/25 transition-all"
+              >
+                <span className="material-symbols-outlined text-[18px]">download</span>
+                Descargar PNG
               </button>
             </div>
           </div>
