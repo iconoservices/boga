@@ -1297,8 +1297,8 @@ export default function DashboardPage() {
                   type="text" 
                   value={posProductSearch}
                   onChange={(e) => setPosProductSearch(e.target.value)}
-                  placeholder="Buscar producto, SKU o categoría..." 
-                  className="w-full pl-11 pr-4 py-2.5 bg-[#f0f3ff] border border-[#c7c4d8]/40 rounded-xl focus:ring-2 focus:ring-[#3525cd] focus:outline-none transition-all text-sm font-semibold text-[#111c2d]"
+                  placeholder="Buscar productos, SKUs o categorías..." 
+                  className="w-full h-12 pl-11 pr-4 bg-white border border-[#c7c4d8]/60 rounded-xl focus:ring-2 focus:ring-[#3525cd] focus:border-transparent focus:outline-none transition-all text-sm font-medium text-[#111c2d]"
                 />
               </div>
 
