@@ -1292,7 +1292,7 @@ export default function DashboardPage() {
             <div className="flex-1 w-full flex flex-col gap-6 pb-60 lg:pb-0">
               {/* Row 1: Search Bar & Filters */}
               <div className="flex items-center w-full max-w-lg gap-2">
-                <div className="relative flex-1 group">
+                <div className="relative flex-1 min-w-0 group">
                   <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
                   <input 
                     type="text" 
@@ -1415,56 +1415,56 @@ export default function DashboardPage() {
             {/* Sidebar (Right Side) - Desktop Only */}
             <aside className="hidden lg:flex w-full lg:w-96 lg:h-[calc(100vh-110px)] lg:sticky lg:top-[80px] bg-[#f0f3ff]/40 border border-[#c7c4d8]/40 rounded-2xl flex-col shrink-0 overflow-hidden shadow-sm">
               {/* Receipt Header */}
-              <div className="p-3 border-b border-[#c7c4d8]/30 bg-white">
+              <div className="p-2.5 border-b border-[#c7c4d8]/30 bg-white">
                 <div className="flex items-center justify-between">
-                  <h2 className="font-extrabold text-sm text-[#111c2d]">Venta Actual</h2>
+                  <h2 className="font-extrabold text-xs text-[#111c2d]">Venta Actual</h2>
                   <button 
                     onClick={() => setPosCart([])}
-                    className="text-red-500 hover:text-red-700 font-bold text-[11px] hover:underline cursor-pointer"
+                    className="text-red-500 hover:text-red-700 font-bold text-[10px] hover:underline cursor-pointer"
                   >
                     Limpiar Todo
                   </button>
                 </div>
                 <button 
                   onClick={() => setIsCustomerDetailsOpen(!isCustomerDetailsOpen)}
-                  className="flex items-center gap-1 text-[#3525cd] font-bold text-[11px] mt-1.5 hover:underline cursor-pointer"
+                  className="flex items-center gap-1 text-[#3525cd] font-bold text-[10px] mt-1 hover:underline cursor-pointer"
                 >
-                  <span className="material-symbols-outlined text-[16px]">person_add</span>
+                  <span className="material-symbols-outlined text-[15px]">person_add</span>
                   {posCustomerName ? `${posCustomerName} (${posCustomerPhone || 'Sin Celular'})` : 'Agregar Cliente'}
                 </button>
               </div>
 
               {/* Collapsible Customer Form */}
               {isCustomerDetailsOpen && (
-                <div className="p-3 border-b border-[#c7c4d8]/20 bg-white/80 flex flex-col gap-2">
-                  <h4 className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Datos del Cliente</h4>
+                <div className="p-2.5 border-b border-[#c7c4d8]/20 bg-white/80 flex flex-col gap-1.5">
+                  <h4 className="text-[8px] font-extrabold text-gray-400 uppercase tracking-widest">Datos del Cliente</h4>
                   <div className="grid grid-cols-2 gap-2">
                     <input 
                       type="text" 
                       value={posCustomerName}
                       onChange={(e) => setPosCustomerName(e.target.value)}
                       placeholder="Nombre" 
-                      className="w-full px-2.5 py-1.5 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd]"
+                      className="w-full px-2 py-1 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd]"
                     />
                     <input 
                       type="text" 
                       value={posCustomerPhone}
                       onChange={(e) => setPosCustomerPhone(e.target.value)}
                       placeholder="WhatsApp" 
-                      className="w-full px-2.5 py-1.5 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd]"
+                      className="w-full px-2 py-1 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd]"
                     />
                   </div>
                 </div>
               )}
 
               {/* Seller Selection */}
-              <div className="p-3 border-b border-[#c7c4d8]/10 bg-white/60 flex flex-col gap-1.5">
-                <h4 className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Vendedor</h4>
+              <div className="p-2.5 border-b border-[#c7c4d8]/10 bg-white/60 flex flex-col gap-1">
+                <h4 className="text-[8px] font-extrabold text-gray-400 uppercase tracking-widest">Vendedor</h4>
                 <div className="grid grid-cols-2 gap-2">
                   <select 
                     value={posSeller} 
                     onChange={(e) => setPosSeller(e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd] cursor-pointer"
+                    className="w-full px-2 py-1 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd] cursor-pointer"
                   >
                     <option value="Administrador">Administrador</option>
                     <option value="Juan">Juan</option>
@@ -1479,18 +1479,18 @@ export default function DashboardPage() {
                       value={customSeller}
                       onChange={(e) => setCustomSeller(e.target.value)}
                       placeholder="Nombre" 
-                      className="w-full px-2.5 py-1.5 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd]"
+                      className="w-full px-2 py-1 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd]"
                     />
                   )}
                 </div>
               </div>
 
               {/* Cart Items List */}
-              <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-[100px] custom-scrollbar bg-white/20">
+              <div className="flex-1 overflow-y-auto p-2.5 space-y-2 min-h-[90px] custom-scrollbar bg-white/20">
                 {posCart.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-gray-400 py-6">
-                    <span className="material-symbols-outlined text-3xl mb-1.5">shopping_basket</span>
-                    <p className="text-xs font-semibold">El carrito está vacío</p>
+                  <div className="flex flex-col items-center justify-center h-full text-gray-400 py-4">
+                    <span className="material-symbols-outlined text-2xl mb-1">shopping_basket</span>
+                    <p className="text-[11px] font-semibold">El carrito está vacío</p>
                   </div>
                 ) : (
                   posCart.map((item, index) => (
@@ -1523,62 +1523,62 @@ export default function DashboardPage() {
               </div>
 
               {/* Checkout Summary Footer */}
-              <div className="p-3 bg-white border-t border-[#c7c4d8]/30">
-                <div className="space-y-1 mb-2.5">
-                  <div className="flex justify-between text-gray-500 font-semibold text-[11px]">
+              <div className="p-2.5 bg-white border-t border-[#c7c4d8]/30">
+                <div className="space-y-1 mb-2">
+                  <div className="flex justify-between text-gray-500 font-semibold text-[10px]">
                     <span>Subtotal</span>
                     <span>S/ {posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0).toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-gray-500 font-semibold text-[11px]">
+                  <div className="flex justify-between text-gray-500 font-semibold text-[10px]">
                     <span>IGV (18% Incluido)</span>
                     <span>S/ {(posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0) * 0.18 / 1.18).toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-[#111c2d] font-black text-sm mt-1.5 pt-1.5 border-t border-[#c7c4d8]/20">
+                  <div className="flex justify-between text-[#111c2d] font-black text-xs mt-1 pt-1 border-t border-[#c7c4d8]/20">
                     <span>Total</span>
                     <span>S/ {posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0).toFixed(2)}</span>
                   </div>
                 </div>
 
                 {/* Payment Actions */}
-                <div className="flex flex-col gap-2.5">
+                <div className="flex flex-col gap-2">
                   <div className="flex flex-col gap-1">
-                    <h4 className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Método de Pago</h4>
-                    <div className="grid grid-cols-3 gap-1.5">
+                    <h4 className="text-[8px] font-extrabold text-gray-400 uppercase tracking-widest">Método de Pago</h4>
+                    <div className="grid grid-cols-3 gap-1">
                       <button 
                         type="button" 
                         onClick={() => setPosPaymentMethod('Efectivo')}
-                        className={`py-1.5 px-2 rounded-lg border-2 transition-all flex flex-col items-center gap-0.5 cursor-pointer ${
+                        className={`py-1 px-1.5 rounded-lg border transition-all flex items-center justify-center gap-1 cursor-pointer ${
                           posPaymentMethod === 'Efectivo' 
                             ? 'border-[#3525cd] bg-[#3525cd]/5 text-[#3525cd]' 
                             : 'border-[#c7c4d8]/30 bg-[#f0f3ff]/40 text-gray-500 hover:border-gray-300'
                         }`}
                       >
-                        <span className="material-symbols-outlined text-[16px]">payments</span>
-                        <span className="text-[9px] font-bold">Efectivo</span>
+                        <span className="material-symbols-outlined text-[15px]">payments</span>
+                        <span className="text-[10px] font-bold">Efectivo</span>
                       </button>
                       <button 
                         type="button" 
                         onClick={() => setPosPaymentMethod('Yape/Plin')}
-                        className={`py-1.5 px-2 rounded-lg border-2 transition-all flex flex-col items-center gap-0.5 cursor-pointer ${
+                        className={`py-1 px-1.5 rounded-lg border transition-all flex items-center justify-center gap-1 cursor-pointer ${
                           posPaymentMethod === 'Yape/Plin' 
                             ? 'border-[#3525cd] bg-[#3525cd]/5 text-[#3525cd]' 
                             : 'border-[#c7c4d8]/30 bg-[#f0f3ff]/40 text-gray-500 hover:border-gray-300'
                         }`}
                       >
-                        <span className="material-symbols-outlined text-[16px]">qr_code_2</span>
-                        <span className="text-[9px] font-bold">Yape/Plin</span>
+                        <span className="material-symbols-outlined text-[15px]">qr_code_2</span>
+                        <span className="text-[10px] font-bold">Yape/Plin</span>
                       </button>
                       <button 
                         type="button" 
                         onClick={() => setPosPaymentMethod('Tarjeta')}
-                        className={`py-1.5 px-2 rounded-lg border-2 transition-all flex flex-col items-center gap-0.5 cursor-pointer ${
+                        className={`py-1 px-1.5 rounded-lg border transition-all flex items-center justify-center gap-1 cursor-pointer ${
                           posPaymentMethod === 'Tarjeta' 
                             ? 'border-[#3525cd] bg-[#3525cd]/5 text-[#3525cd]' 
                             : 'border-[#c7c4d8]/30 bg-[#f0f3ff]/40 text-gray-500 hover:border-gray-300'
                         }`}
                       >
-                        <span className="material-symbols-outlined text-[16px]">credit_card</span>
-                        <span className="text-[9px] font-bold">Tarjeta</span>
+                        <span className="material-symbols-outlined text-[15px]">credit_card</span>
+                        <span className="text-[10px] font-bold">Tarjeta</span>
                       </button>
                     </div>
                   </div>
@@ -1586,16 +1586,16 @@ export default function DashboardPage() {
                   <button 
                     onClick={handlePosCheckout}
                     disabled={posCart.length === 0 || isPosSaving}
-                    className="w-full py-2.5 bg-[#3525cd] text-white rounded-lg font-bold text-sm shadow-lg shadow-[#3525cd]/20 hover:scale-[1.01] active:scale-95 transition-all disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none cursor-pointer flex items-center justify-center gap-1.5"
+                    className="w-full py-2 bg-[#3525cd] text-white rounded-lg font-bold text-[13px] shadow-lg shadow-[#3525cd]/20 hover:scale-[1.01] active:scale-95 transition-all disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     {isPosSaving ? (
                       <>
-                        <span className="material-symbols-outlined animate-spin text-[16px]">refresh</span>
+                        <span className="material-symbols-outlined animate-spin text-[15px]">refresh</span>
                         Procesando...
                       </>
                     ) : (
                       <>
-                        <span className="material-symbols-outlined text-[16px]">receipt_long</span>
+                        <span className="material-symbols-outlined text-[15px]">receipt_long</span>
                         Cobrar y Generar Ticket
                       </>
                     )}
