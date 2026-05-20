@@ -372,7 +372,7 @@ export default function Explore() {
 
         {/* Discovery Mode (Todas) or Listing Mode (Specific Category) */}
         {activeCategory === 'Todas' && viewMode === 'products' ? (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-3">
             
             {/* Tiendas Destacadas */}
             <section className="flex flex-col gap-2">
@@ -417,17 +417,17 @@ export default function Explore() {
             </section>
 
             {sections.map((section) => (
-              <section key={section.id}>
-                <div className="flex justify-between items-center mb-3 px-1">
+              <section key={section.id} className="flex flex-col gap-2">
+                <div className="flex justify-between items-center px-1">
                   <h2 className="font-h2 text-[18px] text-[#3E2723] font-black">{section.title}</h2>
                   <button 
                     onClick={() => setActiveCategory(section.id)}
-                    className="text-[#9C3F2B] font-bold text-[12px] bg-[#9C3F2B]/10 px-3 py-1 rounded-full active:scale-90 transition-transform"
+                    className="text-[#9C3F2B] font-bold text-[11px] bg-[#9C3F2B]/10 px-2.5 py-0.5 rounded-full active:scale-90 transition-transform"
                   >
                     Ver todo
                   </button>
                 </div>
-                <div className="flex gap-4 overflow-x-auto hide-scrollbar -mx-gutter px-gutter pb-4 snap-x" style={{ scrollbarWidth: 'none' }}>
+                <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-gutter px-gutter pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
                   {section.products.slice(0, 4).map((p, idx) => (
                     <div key={idx} className="min-w-[160px] w-[160px] bg-surface-container-lowest rounded-2xl shadow-sm overflow-hidden flex flex-col border border-[#3E2723]/5 snap-start">
                       <div className="relative h-28">
