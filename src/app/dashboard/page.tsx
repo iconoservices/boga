@@ -341,6 +341,20 @@ export default function DashboardPage() {
             <span className="material-symbols-outlined text-[20px]">store</span>
             Mis Tiendas
           </button>
+          
+          {/* Static Install Button */}
+          <button 
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                localStorage.removeItem('bogadash_pwa_stats');
+                window.location.reload();
+              }
+            }}
+            className="w-full flex items-center gap-3 px-3 py-2.5 text-[#5244e1] hover:bg-[#5244e1]/10 rounded-xl font-bold transition-colors mt-4"
+          >
+            <span className="material-symbols-outlined text-[20px]">install_mobile</span>
+            Instalar App
+          </button>
         </nav>
         <div className="p-4 border-t border-gray-100">
           <Link href="/" className="flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-gray-900 font-semibold transition-colors">
@@ -992,6 +1006,24 @@ export default function DashboardPage() {
               <div className="p-8 text-center">
                 <p className="text-gray-500">Aún no hay suficientes datos para mostrar métricas. ¡Comparte tu código QR para recibir más pedidos!</p>
               </div>
+            </div>
+
+            {/* Install App Card for Mobile users */}
+            <div className="md:hidden bg-[#5244e1] text-white p-6 rounded-xl shadow-md mt-2 flex flex-col items-center text-center">
+              <span className="material-symbols-outlined text-4xl mb-2">install_mobile</span>
+              <h3 className="font-bold text-lg mb-1">Instalar Boga Dash</h3>
+              <p className="text-white/80 text-sm mb-4">Instala la app en tu celular para una experiencia más rápida y nativa.</p>
+              <button 
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    localStorage.removeItem('bogadash_pwa_stats');
+                    window.location.reload();
+                  }
+                }}
+                className="w-full py-3 bg-white text-[#5244e1] rounded-xl font-bold hover:bg-gray-50 transition-colors"
+              >
+                Instalar Ahora
+              </button>
             </div>
           </div>
         )}
