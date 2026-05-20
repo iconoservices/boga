@@ -36,7 +36,8 @@ export default function DashboardPage() {
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'metrics'>('products');
   
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -1268,29 +1269,92 @@ export default function DashboardPage() {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-3 flex justify-between items-center z-50 rounded-t-2xl shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 flex justify-between items-center z-50 rounded-t-2xl shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
+        <button 
+          onClick={() => setIsMobileMenuOpen(true)}
+          className="flex flex-col items-center gap-1 w-16 py-2 transition-all text-gray-500 hover:bg-gray-50 rounded-[20px]"
+        >
+          <div className="w-6 h-6 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold text-xs mb-[2px]">B</div>
+          <span className="text-[10px] font-bold">Perfil</span>
+        </button>
         <button 
           onClick={() => setActiveTab('orders')} 
-          className={`flex flex-col items-center gap-1 w-20 py-2 rounded-[20px] transition-all ${activeTab === 'orders' ? 'bg-[#5244e1] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+          className={`flex flex-col items-center gap-1 w-16 py-2 rounded-[20px] transition-all ${activeTab === 'orders' ? 'bg-[#5244e1] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
         >
           <span className="material-symbols-outlined text-[22px]">receipt_long</span>
-          <span className="text-[11px] font-bold">Pedidos</span>
+          <span className="text-[10px] font-bold">Pedidos</span>
         </button>
         <button 
           onClick={() => setActiveTab('products')} 
-          className={`flex flex-col items-center gap-1 w-20 py-2 rounded-[20px] transition-all ${activeTab === 'products' ? 'bg-[#5244e1] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+          className={`flex flex-col items-center gap-1 w-16 py-2 rounded-[20px] transition-all ${activeTab === 'products' ? 'bg-[#5244e1] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
         >
           <span className="material-symbols-outlined text-[22px]">inventory_2</span>
-          <span className="text-[11px] font-bold">Productos</span>
+          <span className="text-[10px] font-bold">Productos</span>
         </button>
         <button 
           onClick={() => setActiveTab('metrics')} 
-          className={`flex flex-col items-center gap-1 w-20 py-2 rounded-[20px] transition-all ${activeTab === 'metrics' ? 'bg-[#5244e1] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+          className={`flex flex-col items-center gap-1 w-16 py-2 rounded-[20px] transition-all ${activeTab === 'metrics' ? 'bg-[#5244e1] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
         >
           <span className="material-symbols-outlined text-[22px]">bar_chart</span>
-          <span className="text-[11px] font-bold">Métricas</span>
+          <span className="text-[10px] font-bold">Métricas</span>
         </button>
       </div>
+
+      {/* Mobile Profile Menu Modal */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
+          <div className="relative bg-white w-full rounded-t-[32px] sm:rounded-[32px] sm:w-[400px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-[slideDown_0.3s_ease-out]">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
+              <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">Menú</h2>
+              <button 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto">
+              <div className="mb-6">
+                <label className="block text-sm font-bold text-gray-700 mb-2">Seleccionar Tienda</label>
+                <select
+                  value={selectedStore}
+                  onChange={(e) => {
+                    setSelectedStore(e.target.value);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full bg-gray-50 border border-gray-200 text-gray-900 px-4 py-3 rounded-xl font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-black/5"
+                >
+                  <option value="all">Todas las tiendas (Super Admin)</option>
+                  {Object.values(stores).map(s => (
+                    <option key={s.slug} value={s.slug}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2 border-t border-gray-100 pt-6">
+                <Link href="/" className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-semibold transition-colors">
+                  <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+                  Volver a Boga
+                </Link>
+                
+                <button 
+                  onClick={() => {
+                    if (typeof window !== 'undefined') {
+                      localStorage.removeItem('bogadash_pwa_stats');
+                      window.location.reload();
+                    }
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-[#5244e1] bg-[#5244e1]/5 hover:bg-[#5244e1]/10 rounded-xl font-bold transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[20px]">install_mobile</span>
+                  Instalar App
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
