@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 
 export default function Explore() {
   const [activeCategory, setActiveCategory] = useState('Todas');
+  const [viewMode, setViewMode] = useState<'products' | 'stores'>('products');
   const [showAllSubCategories, setShowAllSubCategories] = useState(false);
   
   const { addToCart, cartCount, setIsCartOpen } = useCart();
@@ -16,18 +17,28 @@ export default function Explore() {
   const [activeSort, setActiveSort] = useState('Populares');
 
   const [storeData, setStoreData] = useState(() => 
-    Object.values(stores).map(s => ({
-      name: s.name,
-      slug: s.slug,
-      category: s.tagline || 'TIENDA OFICIAL',
-      time: '20-40 min',
-      delivery: 'S/ 5.00',
-      logo: s.heroImage,
-      products: [
-        { name: 'Producto Destacado', price: 'S/ 25.00', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400' },
-        { name: 'Oferta Especial', price: 'S/ 15.00', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400' },
-      ]
-    }))
+    Object.values(stores).map(s => {
+      let macroCat = 'Mercado';
+      const storeCategory = s.marketplaceCategory?.toLowerCase() || '';
+      if (storeCategory.includes('moda') || storeCategory.includes('boutique')) macroCat = 'Moda';
+      else if (storeCategory.includes('salud') || storeCategory.includes('belleza')) macroCat = 'Salud';
+      else if (storeCategory.includes('restaurante') || storeCategory.includes('comida')) macroCat = 'Comida';
+      else if (storeCategory.includes('servicio')) macroCat = 'Servicios';
+      
+      return {
+        name: s.name,
+        slug: s.slug,
+        category: s.tagline || 'TIENDA OFICIAL',
+        macroCat,
+        time: '20-40 min',
+        delivery: 'S/ 5.00',
+        logo: s.heroImage,
+        products: [
+          { name: 'Producto Destacado', price: 'S/ 25.00', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400' },
+          { name: 'Oferta Especial', price: 'S/ 15.00', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400' },
+        ]
+      };
+    })
   );
 
   useEffect(() => {
@@ -265,14 +276,21 @@ export default function Explore() {
         <section className="flex flex-col gap-1.5 transition-all duration-500">
           <div className="flex justify-between items-center px-1">
             <h2 className="font-h2 text-[14px] text-[#3E2723] font-bold">Categorías Principales</h2>
-            {activeCategory !== 'Todas' && (
+            {viewMode === 'stores' ? (
+              <button 
+                onClick={() => { setViewMode('products'); setActiveCategory('Todas'); }}
+                className="text-[#9C3F2B] text-[11px] font-bold active:scale-90"
+              >
+                Volver a Productos
+              </button>
+            ) : activeCategory !== 'Todas' ? (
               <button 
                 onClick={() => setActiveCategory('Todas')}
-                className="text-primary text-[11px] font-bold active:scale-90"
+                className="text-[#9C3F2B] text-[11px] font-bold active:scale-90"
               >
                 Restablecer
               </button>
-            )}
+            ) : null}
           </div>
           
           <div className={`
@@ -318,8 +336,9 @@ export default function Explore() {
         </section>
 
         {/* Specific Sub-Categories (Filtered) */}
-        <section className="flex flex-col gap-2">
-          <div 
+        {viewMode === 'products' && (
+          <section className="flex flex-col gap-2">
+            <div 
             className={`px-1 py-1 ${showAllSubCategories ? 'flex flex-wrap gap-x-3 gap-y-2 justify-start' : '-mx-gutter px-gutter overflow-x-auto hide-scrollbar flex gap-3 items-center'}`} 
             style={{ scrollbarWidth: 'none' }}
           >
@@ -349,6 +368,7 @@ export default function Explore() {
             ))}
           </div>
         </section>
+        )}
 
         {/* Discovery Mode (Todas) or Listing Mode (Specific Category) */}
         {activeCategory === 'Todas' ? (
@@ -358,7 +378,7 @@ export default function Explore() {
             <section className="flex flex-col gap-2">
               <div className="flex justify-between items-center px-1">
                 <h3 className="font-h3 text-[18px] font-black text-[#3E2723]">Tiendas Destacadas</h3>
-                <button onClick={() => setActiveCategory('Tiendas')} className="text-[12px] font-bold text-primary-container">Ver todo</button>
+                <button onClick={() => { setViewMode('stores'); setActiveCategory('Todas'); }} className="text-[12px] font-bold text-primary-container">Ver todo</button>
               </div>
               <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-gutter px-gutter pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
                 {storeData.map((store) => (
@@ -436,7 +456,7 @@ export default function Explore() {
               </section>
             ))}
           </div>
-        ) : activeCategory === 'Tiendas' ? (
+        ) : viewMode === 'stores' ? (
           <section className="flex flex-col gap-6">
             <div className="flex flex-col gap-4 px-1">
               <div>
@@ -446,7 +466,7 @@ export default function Explore() {
             </div>
             
             <div className="grid grid-cols-2 gap-3">
-              {storeData.map((store, idx) => (
+              {storeData.filter(s => activeCategory === 'Todas' || s.macroCat === activeCategory).map((store, idx) => (
                 <Link href={`/${store.slug}`} key={store.name} className="bg-surface-container-lowest rounded-2xl p-2.5 shadow-sm border border-black/5 flex flex-col gap-2 group hover:border-primary/30 transition-colors">
                   <div className="flex gap-1.5">
                     {store.products.slice(0, 2).map((p, i) => (
