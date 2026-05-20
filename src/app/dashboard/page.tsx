@@ -351,7 +351,7 @@ export default function DashboardPage() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full">
+      <main className="flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full pb-28 md:pb-8">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">Gestión de Productos</h1>
@@ -1224,6 +1224,41 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Mobile Floating Action Button (FAB) */}
+      <div className="md:hidden fixed right-4 bottom-24 z-40">
+        <button 
+          onClick={() => { setIsModalOpen(true); resetForm(); }}
+          className="w-14 h-14 bg-[#5244e1] text-white rounded-full flex items-center justify-center shadow-lg hover:bg-[#4338ca] transition-colors"
+        >
+          <span className="material-symbols-outlined text-3xl">add</span>
+        </button>
+      </div>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-3 flex justify-between items-center z-50 rounded-t-2xl shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
+        <button 
+          onClick={() => setActiveTab('orders')} 
+          className={`flex flex-col items-center gap-1 w-20 py-2 rounded-[20px] transition-all ${activeTab === 'orders' ? 'bg-[#5244e1] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+        >
+          <span className="material-symbols-outlined text-[22px]">receipt_long</span>
+          <span className="text-[11px] font-bold">Pedidos</span>
+        </button>
+        <button 
+          onClick={() => setActiveTab('products')} 
+          className={`flex flex-col items-center gap-1 w-20 py-2 rounded-[20px] transition-all ${activeTab === 'products' ? 'bg-[#5244e1] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+        >
+          <span className="material-symbols-outlined text-[22px]">inventory_2</span>
+          <span className="text-[11px] font-bold">Productos</span>
+        </button>
+        <button 
+          onClick={() => setActiveTab('metrics')} 
+          className={`flex flex-col items-center gap-1 w-20 py-2 rounded-[20px] transition-all ${activeTab === 'metrics' ? 'bg-[#5244e1] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+        >
+          <span className="material-symbols-outlined text-[22px]">bar_chart</span>
+          <span className="text-[11px] font-bold">Métricas</span>
+        </button>
+      </div>
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
