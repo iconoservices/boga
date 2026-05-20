@@ -1354,7 +1354,7 @@ export default function DashboardPage() {
                       const cartItem = posCart.find(item => item.product.id === p.id);
                       const quantity = cartItem?.quantity || 0;
                       return (
-                        <button 
+                        <div 
                           key={p.id} 
                           onClick={() => addToCart(p)}
                           className={`product-card text-left flex flex-col bg-white border rounded-2xl overflow-hidden hover:shadow-md transition-all active:scale-[0.98] cursor-pointer group ${
@@ -1375,9 +1375,28 @@ export default function DashboardPage() {
                           </div>
                           <div className="p-3 flex-1 flex flex-col justify-between">
                             <h3 className="font-bold text-sm text-[#111c2d] truncate">{p.name}</h3>
-                            <p className="font-extrabold text-base text-[#3525cd] mt-1">S/ {p.price.toFixed(2)}</p>
+                            <div className="flex items-center justify-between mt-1">
+                              <p className="font-extrabold text-base text-[#3525cd]">S/ {p.price.toFixed(2)}</p>
+                              {quantity > 0 && (
+                                <div className="flex items-center gap-1 bg-[#f0f3ff] border border-[#c7c4d8]/20 p-0.5 rounded-lg" onClick={e => e.stopPropagation()}>
+                                  <button 
+                                    onClick={() => removeFromCart(p.id)}
+                                    className="text-gray-500 hover:text-red-500 transition-colors w-5.5 h-5.5 flex items-center justify-center font-bold text-xs bg-white rounded shadow-sm cursor-pointer"
+                                  >
+                                    -
+                                  </button>
+                                  <span className="text-[11px] font-black text-[#111c2d] w-3 text-center">{quantity}</span>
+                                  <button 
+                                    onClick={() => addToCart(p)}
+                                    className="text-gray-500 hover:text-[#3525cd] transition-colors w-5.5 h-5.5 flex items-center justify-center font-bold text-xs bg-white rounded shadow-sm cursor-pointer"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </button>
+                        </div>
                       );
                     })}
                   </div>
@@ -1578,7 +1597,7 @@ export default function DashboardPage() {
             </aside>
 
             {/* Mobile Pinned Checkout Bar */}
-            <div className="lg:hidden fixed bottom-[68px] md:bottom-0 left-0 right-0 bg-white border-t border-[#c7c4d8]/20 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] px-4 py-3 z-40 flex items-center justify-between">
+            <div className="lg:hidden fixed bottom-[76px] md:bottom-0 left-0 right-0 bg-white border-t border-[#c7c4d8]/20 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] px-4 py-3 z-40 flex items-center justify-between">
               <div className="flex flex-col">
                 <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Total</span>
                 <span className="text-base font-black text-[#3525cd]">S/ {posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0).toFixed(2)}</span>
