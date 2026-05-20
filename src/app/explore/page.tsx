@@ -356,7 +356,10 @@ export default function Explore() {
             
             {/* Tiendas Destacadas */}
             <section className="flex flex-col gap-2">
-              <h3 className="font-h3 text-[18px] font-black text-[#3E2723] px-1">Tiendas Destacadas</h3>
+              <div className="flex justify-between items-center px-1">
+                <h3 className="font-h3 text-[18px] font-black text-[#3E2723]">Tiendas Destacadas</h3>
+                <button onClick={() => setActiveCategory('Tiendas')} className="text-[12px] font-bold text-primary-container">Ver todo</button>
+              </div>
               <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-gutter px-gutter pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
                 {storeData.map((store) => (
                   <Link href={`/${store.slug}`} key={store.name} className="min-w-[280px] w-[80vw] max-w-[310px] bg-white rounded-[20px] p-3 shadow-md border border-[#3E2723]/5 snap-start flex flex-col gap-3 group">
@@ -433,6 +436,38 @@ export default function Explore() {
               </section>
             ))}
           </div>
+        ) : activeCategory === 'Tiendas' ? (
+          <section className="flex flex-col gap-6">
+            <div className="flex flex-col gap-4 px-1">
+              <div>
+                <h2 className="font-h2 text-[20px] text-[#3E2723] font-black">Nuestras Tiendas</h2>
+                <p className="text-[#745853] text-[13px]">Descubre los mejores locales</p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              {storeData.map((store, idx) => (
+                <Link href={`/${store.slug}`} key={store.name} className="bg-surface-container-lowest rounded-2xl p-2.5 shadow-sm border border-black/5 flex flex-col gap-2 group hover:border-primary/30 transition-colors">
+                  <div className="flex gap-1.5">
+                    {store.products.slice(0, 2).map((p, i) => (
+                      <div key={i} className="flex-1 aspect-square rounded-[10px] overflow-hidden bg-gray-100">
+                        <img src={p.img} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={p.name} />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 items-center border-t border-black/5 pt-2 mt-0.5">
+                    <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 border border-[#3E2723]/10">
+                      <img src={store.logo} className="w-full h-full object-cover" alt={store.name} />
+                    </div>
+                    <div className="flex flex-col flex-1 min-w-0">
+                      <span className="font-black text-[#3E2723] text-[13px] leading-tight truncate">{store.name}</span>
+                      <span className="text-[8px] text-[#745853] font-bold uppercase tracking-widest truncate opacity-80 mt-0.5">{store.category}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
         ) : (
           <section className="flex flex-col gap-6">
             <div className="flex flex-col gap-4 px-1">
