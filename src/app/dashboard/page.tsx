@@ -34,7 +34,20 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilterCategory, setSelectedFilterCategory] = useState('all');
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'metrics' | 'stores'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'metrics' | 'stores' | 'pos'>('products');
+
+  // POS (Caja Rápida) States
+  const [posCart, setPosCart] = useState<{ product: Product; quantity: number }[]>([]);
+  const [posPaymentMethod, setPosPaymentMethod] = useState<'Efectivo' | 'Yape/Plin' | 'Tarjeta'>('Efectivo');
+  const [posSeller, setPosSeller] = useState('Administrador');
+  const [customSeller, setCustomSeller] = useState('');
+  const [posCustomerName, setPosCustomerName] = useState('');
+  const [posCustomerPhone, setPosCustomerPhone] = useState('');
+  const [posProductSearch, setPosProductSearch] = useState('');
+  const [posProductCategory, setPosProductCategory] = useState('all');
+  const [isPosSaving, setIsPosSaving] = useState(false);
+  const [lastCompletedSale, setLastCompletedSale] = useState<any | null>(null);
+  const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const storeLogoInputRef = useRef<HTMLInputElement>(null);
@@ -94,6 +107,70 @@ export default function DashboardPage() {
   const fetchStores = async () => {
     const { data } = await supabase.from('stores').select('*');
     if (data) setDbStores(data);
+  };
+
+  const addToCart = (product: Product) => {
+    setPosCart(prev => {
+      const existing = prev.find(item => item.product.id === product.id);
+      if (existing) {
+        return prev.map(item => item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+      }
+      return [...prev, { product, quantity: 1 }];
+    });
+  };
+
+  const removeFromCart = (productId: string) => {
+    setPosCart(prev => {
+      const existing = prev.find(item => item.product.id === productId);
+      if (existing && existing.quantity > 1) {
+        return prev.map(item => item.product.id === productId ? { ...item, quantity: item.quantity - 1 } : item);
+      }
+      return prev.filter(item => item.product.id !== productId);
+    });
+  };
+
+  const handlePosCheckout = async () => {
+    if (posCart.length === 0) return;
+    setIsPosSaving(true);
+    
+    // Si selectedStore es 'all', usamos el store del primer producto
+    const storeSlug = selectedStore === 'all' ? (posCart[0]?.product.store || 'sunset') : selectedStore;
+    const cartTotal = posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+
+    const saleDetails = {
+      store: storeSlug,
+      customer_name: posCustomerName.trim() || 'Cliente Local (POS)',
+      customer_phone: posCustomerPhone.trim() || null,
+      items: posCart.map(item => ({
+        id: item.product.id,
+        name: item.product.name,
+        price: item.product.price,
+        quantity: item.quantity
+      })),
+      total_amount: cartTotal,
+      status: 'Entregado',
+      payment_method: posPaymentMethod,
+      seller_name: posSeller === 'Otro' ? customSeller.trim() || 'Otro' : posSeller,
+      order_source: 'POS'
+    };
+
+    const { data, error } = await supabase
+      .from('orders')
+      .insert([saleDetails])
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Error saving POS sale:', error);
+      alert('Hubo un error al registrar la venta: ' + error.message);
+    } else {
+      setLastCompletedSale(data || { ...saleDetails, id: 'POS-' + Math.floor(Math.random() * 90000 + 10000), created_at: new Date().toISOString() });
+      setPosCart([]);
+      setPosCustomerName('');
+      setPosCustomerPhone('');
+      setIsTicketModalOpen(true);
+    }
+    setIsPosSaving(false);
   };
 
   const openStoreEditor = (slug: string) => {
@@ -408,6 +485,13 @@ export default function DashboardPage() {
             Productos
           </button>
           <button 
+            onClick={() => setActiveTab('pos')}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold transition-colors ${activeTab === 'pos' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+          >
+            <span className="material-symbols-outlined text-[20px]">point_of_sale</span>
+            Vender (POS)
+          </button>
+          <button 
             onClick={() => setActiveTab('orders')}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold transition-colors ${activeTab === 'orders' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-50'}`}
           >
@@ -456,10 +540,10 @@ export default function DashboardPage() {
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">
-              {activeTab === 'products' ? 'Gestión de Productos' : activeTab === 'orders' ? 'Gestión de Pedidos' : activeTab === 'stores' ? 'Mis Tiendas' : 'Métricas y Rendimiento'}
+              {activeTab === 'products' ? 'Gestión de Productos' : activeTab === 'orders' ? 'Gestión de Pedidos' : activeTab === 'stores' ? 'Mis Tiendas' : activeTab === 'pos' ? 'Caja Rápida (POS)' : 'Métricas y Rendimiento'}
             </h1>
             <p className="text-gray-500 text-sm font-medium mt-1">
-              {activeTab === 'products' ? 'Administra el inventario de tus tiendas.' : activeTab === 'orders' ? 'Gestiona los pedidos de tus clientes.' : activeTab === 'stores' ? 'Administra la información de tus sucursales.' : 'Analiza el rendimiento de tu negocio.'}
+              {activeTab === 'products' ? 'Administra el inventario de tus tiendas.' : activeTab === 'orders' ? 'Gestiona los pedidos de tus clientes.' : activeTab === 'stores' ? 'Administra la información de tus sucursales.' : activeTab === 'pos' ? 'Registra ventas físicas y genera tickets al instante.' : 'Analiza el rendimiento de tu negocio.'}
             </p>
           </div>
           <div className="hidden md:flex flex-col md:flex-row gap-3">
@@ -473,13 +557,23 @@ export default function DashboardPage() {
                 <option key={s.slug} value={s.slug}>{s.name}</option>
               ))}
             </select>
-            <button 
-              onClick={() => { resetForm(); setIsModalOpen(true); }}
-              className="flex items-center justify-center gap-2 bg-black text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-black/15 hover:shadow-black/25 transition-all hover:-translate-y-0.5 active:translate-y-0 w-full md:w-auto"
-            >
-              <span className="material-symbols-outlined text-[18px]">add</span>
-              Nuevo Producto
-            </button>
+            {activeTab === 'pos' ? (
+              <button 
+                onClick={() => setPosCart([])}
+                className="flex items-center justify-center gap-2 bg-red-50 text-red-600 hover:bg-red-100 px-5 py-2.5 rounded-xl font-bold transition-all w-full md:w-auto"
+              >
+                <span className="material-symbols-outlined text-[18px]">delete_sweep</span>
+                Limpiar Carrito
+              </button>
+            ) : (
+              <button 
+                onClick={() => { resetForm(); setIsModalOpen(true); }}
+                className="flex items-center justify-center gap-2 bg-black text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-black/15 hover:shadow-black/25 transition-all hover:-translate-y-0.5 active:translate-y-0 w-full md:w-auto"
+              >
+                <span className="material-symbols-outlined text-[18px]">add</span>
+                Nuevo Producto
+              </button>
+            )}
           </div>
         </header>
         {activeTab === 'products' && (
@@ -1197,6 +1291,287 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {activeTab === 'pos' && (
+          <div className="flex flex-col lg:flex-row gap-6 w-full items-start">
+            {/* Catalog Grid (60%) */}
+            <div className="flex-1 w-full bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div className="relative flex-1">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
+                  <input 
+                    type="text" 
+                    value={posProductSearch}
+                    onChange={(e) => setPosProductSearch(e.target.value)}
+                    placeholder="Buscar producto..." 
+                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-1 focus:ring-black focus:border-black transition-all"
+                  />
+                </div>
+                
+                {/* Category selectors */}
+                <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1 md:pb-0" style={{ scrollbarWidth: 'none' }}>
+                  <button 
+                    onClick={() => setPosProductCategory('all')}
+                    className={`px-4 py-2 rounded-full text-[11px] font-bold whitespace-nowrap transition-colors uppercase tracking-wider border ${
+                      posProductCategory === 'all' 
+                        ? 'bg-[#FF6B00] text-white border-transparent' 
+                        : 'bg-transparent text-gray-600 border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    Todos
+                  </button>
+                  {Array.from(new Set((selectedStore === 'all' ? products : products.filter(p => p.store === selectedStore)).map(p => p.category))).map(cat => (
+                    <button 
+                      key={cat}
+                      onClick={() => setPosProductCategory(cat)}
+                      className={`px-4 py-2 rounded-full text-[11px] font-bold whitespace-nowrap uppercase tracking-wider transition-colors border ${
+                        posProductCategory === cat 
+                          ? 'bg-[#FF6B00] text-white border-transparent' 
+                          : 'bg-transparent text-gray-600 border-gray-200 hover:bg-gray-50'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Products Grid */}
+              {(() => {
+                const posFilteredStoreProducts = selectedStore === 'all' ? products : products.filter(p => p.store === selectedStore);
+                const posProducts = posFilteredStoreProducts.filter(p => {
+                  const matchesSearch = p.name.toLowerCase().includes(posProductSearch.toLowerCase()) ||
+                                        p.category.toLowerCase().includes(posProductSearch.toLowerCase());
+                  const matchesCategory = posProductCategory === 'all' || p.category === posProductCategory;
+                  return matchesSearch && matchesCategory;
+                });
+
+                if (posProducts.length === 0) {
+                  return (
+                    <div className="p-12 text-center flex flex-col items-center justify-center">
+                      <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">shopping_basket</span>
+                      <p className="text-gray-500 font-bold text-sm">No se encontraron productos.</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {posProducts.map(p => {
+                      const cartItem = posCart.find(item => item.product.id === p.id);
+                      const quantity = cartItem?.quantity || 0;
+                      return (
+                        <div 
+                          key={p.id} 
+                          className={`relative border rounded-2xl p-3 flex flex-col justify-between transition-all select-none hover:-translate-y-0.5 hover:shadow-md cursor-pointer ${quantity > 0 ? 'border-black shadow-sm ring-1 ring-black/5' : 'border-gray-100'}`}
+                          onClick={() => addToCart(p)}
+                        >
+                          <div className="relative w-full aspect-square bg-gray-50 rounded-xl overflow-hidden mb-3 shrink-0">
+                            {p.image ? (
+                              <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-300 bg-gray-100">
+                                <span className="material-symbols-outlined text-2xl">image</span>
+                              </div>
+                            )}
+                            {quantity > 0 && (
+                              <div className="absolute top-2 right-2 bg-black text-white text-xs font-black w-6 h-6 rounded-full flex items-center justify-center shadow-md animate-scale">
+                                {quantity}
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 flex flex-col justify-between min-h-[50px]">
+                            <h4 className="text-xs font-extrabold text-gray-900 leading-snug line-clamp-2">{p.name}</h4>
+                            <div className="flex items-center justify-between mt-2">
+                              <span className="text-sm font-black text-gray-900">S/ {p.price.toFixed(2)}</span>
+                              {quantity > 0 && (
+                                <div className="flex gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+                                  <button 
+                                    onClick={() => removeFromCart(p.id)}
+                                    className="w-6 h-6 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center justify-center text-sm font-bold"
+                                  >
+                                    -
+                                  </button>
+                                  <button 
+                                    onClick={() => addToCart(p)}
+                                    className="w-6 h-6 rounded-md bg-black text-white hover:bg-gray-800 flex items-center justify-center text-sm font-bold"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Cart and Checkout Summary (40%) */}
+            <div className="w-full lg:w-[420px] bg-white border border-gray-100 rounded-2xl p-5 shadow-sm flex flex-col gap-5 shrink-0 sticky top-24">
+              <div className="flex justify-between items-center border-b border-gray-50 pb-3">
+                <h3 className="font-extrabold text-gray-900 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[20px]">shopping_cart</span>
+                  Resumen de Venta
+                </h3>
+                <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
+                  {posCart.reduce((sum, item) => sum + item.quantity, 0)} ítems
+                </span>
+              </div>
+
+              {/* Cart Items List */}
+              <div className="max-h-56 overflow-y-auto divide-y divide-gray-50 pr-1 select-none custom-scrollbar min-h-[100px]">
+                {posCart.length === 0 ? (
+                  <div className="py-8 text-center text-gray-400 text-sm flex flex-col items-center justify-center">
+                    <span className="material-symbols-outlined text-3xl mb-2 text-gray-300">shopping_cart_checkout</span>
+                    El carrito está vacío.<br />Toca un producto para agregarlo.
+                  </div>
+                ) : (
+                  posCart.map(item => (
+                    <div key={item.product.id} className="py-3 flex items-center justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-xs font-bold text-gray-900 truncate">{item.product.name}</h4>
+                        <p className="text-[11px] font-semibold text-gray-400 mt-0.5">S/ {item.product.price.toFixed(2)} x {item.quantity}</p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button 
+                          onClick={() => removeFromCart(item.product.id)}
+                          className="w-8 h-8 rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 flex items-center justify-center font-bold"
+                        >
+                          -
+                        </button>
+                        <span className="text-sm font-extrabold text-gray-900 w-6 text-center">{item.quantity}</span>
+                        <button 
+                          onClick={() => addToCart(item.product)}
+                          className="w-8 h-8 rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 flex items-center justify-center font-bold"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <span className="text-xs font-black text-gray-900 shrink-0 w-16 text-right">
+                        S/ {(item.product.price * item.quantity).toFixed(2)}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Customer Details Form */}
+              <div className="border-t border-gray-50 pt-4 flex flex-col gap-3">
+                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Cliente (Opcional)</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <input 
+                    type="text" 
+                    value={posCustomerName}
+                    onChange={(e) => setPosCustomerName(e.target.value)}
+                    placeholder="Nombre Cliente" 
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-black"
+                  />
+                  <input 
+                    type="text" 
+                    value={posCustomerPhone}
+                    onChange={(e) => setPosCustomerPhone(e.target.value)}
+                    placeholder="Nro Celular (WhatsApp)" 
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-black"
+                  />
+                </div>
+              </div>
+
+              {/* Seller / Employee Selector */}
+              <div className="flex flex-col gap-2">
+                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Vendedor</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <select 
+                    value={posSeller} 
+                    onChange={(e) => setPosSeller(e.target.value)}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-black cursor-pointer"
+                  >
+                    <option value="Administrador">Administrador</option>
+                    <option value="Juan">Juan</option>
+                    <option value="María">María</option>
+                    <option value="Pedro">Pedro</option>
+                    <option value="Sofía">Sofía</option>
+                    <option value="Otro">Otro...</option>
+                  </select>
+                  {posSeller === 'Otro' && (
+                    <input 
+                      type="text" 
+                      value={customSeller}
+                      onChange={(e) => setCustomSeller(e.target.value)}
+                      placeholder="Nombre Vendedor" 
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-black"
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Payment Method Selector */}
+              <div className="flex flex-col gap-2">
+                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Método de Pago</h4>
+                <div className="grid grid-cols-3 gap-2">
+                  <button 
+                    type="button" 
+                    onClick={() => setPosPaymentMethod('Efectivo')}
+                    className={`flex flex-col items-center gap-1.5 py-2.5 rounded-xl border-2 transition-all cursor-pointer ${posPaymentMethod === 'Efectivo' ? 'border-black bg-black/5 text-black' : 'border-gray-100 hover:border-gray-200 text-gray-500 bg-white'}`}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">payments</span>
+                    <span className="text-[10px] font-bold">Efectivo</span>
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setPosPaymentMethod('Yape/Plin')}
+                    className={`flex flex-col items-center gap-1.5 py-2.5 rounded-xl border-2 transition-all cursor-pointer ${posPaymentMethod === 'Yape/Plin' ? 'border-[#6200EE] bg-[#6200EE]/5 text-[#6200EE]' : 'border-gray-100 hover:border-gray-200 text-gray-500 bg-white'}`}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">qr_code_2</span>
+                    <span className="text-[10px] font-bold">Yape/Plin</span>
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setPosPaymentMethod('Tarjeta')}
+                    className={`flex flex-col items-center gap-1.5 py-2.5 rounded-xl border-2 transition-all cursor-pointer ${posPaymentMethod === 'Tarjeta' ? 'border-[#0066FF] bg-[#0066FF]/5 text-[#0066FF]' : 'border-gray-100 hover:border-gray-200 text-gray-500 bg-white'}`}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">credit_card</span>
+                    <span className="text-[10px] font-bold">Tarjeta</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Totals */}
+              <div className="border-t border-gray-50 pt-4 flex flex-col gap-2 bg-gray-50/50 -mx-5 px-5 py-4">
+                <div className="flex justify-between items-center text-xs font-bold text-gray-500">
+                  <span>Subtotal</span>
+                  <span>S/ {posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center text-lg font-black text-gray-900 border-t border-dashed border-gray-200 pt-2 mt-1">
+                  <span>Total</span>
+                  <span>S/ {posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0).toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <button 
+                onClick={handlePosCheckout}
+                disabled={posCart.length === 0 || isPosSaving}
+                className="w-full flex items-center justify-center gap-2 py-4 bg-black text-white hover:bg-gray-800 disabled:bg-gray-200 disabled:text-gray-400 font-bold rounded-xl transition-all shadow-lg hover:shadow-black/15 shadow-black/5 disabled:shadow-none cursor-pointer"
+              >
+                {isPosSaving ? (
+                  <>
+                    <span className="material-symbols-outlined animate-spin text-[18px]">refresh</span>
+                    Procesando Venta...
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-[18px]">point_of_sale</span>
+                    Cobrar y Imprimir Ticket
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
       </main>
 
       {/* Modal for New Product */}
@@ -1591,6 +1966,13 @@ export default function DashboardPage() {
           <span className="text-[10px] font-bold">Productos</span>
         </button>
         <button 
+          onClick={() => setActiveTab('pos')} 
+          className={`flex flex-col items-center gap-1 w-16 py-2 rounded-[20px] transition-all ${activeTab === 'pos' ? 'bg-[#5244e1] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+        >
+          <span className="material-symbols-outlined text-[22px]">point_of_sale</span>
+          <span className="text-[10px] font-bold">Vender</span>
+        </button>
+        <button 
           onClick={() => setActiveTab('metrics')} 
           className={`flex flex-col items-center gap-1 w-16 py-2 rounded-[20px] transition-all ${activeTab === 'metrics' ? 'bg-[#5244e1] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
         >
@@ -1640,6 +2022,14 @@ export default function DashboardPage() {
 
               <div className="space-y-2 border-t border-gray-100 pt-6">
                 <button
+                  onClick={() => { setActiveTab('pos'); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors ${activeTab === 'pos' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+                >
+                  <span className="material-symbols-outlined text-[20px]">point_of_sale</span>
+                  Vender (POS)
+                </button>
+
+                <button
                   onClick={() => { setActiveTab('stores'); setIsMobileMenuOpen(false); }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors ${activeTab === 'stores' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-50'}`}
                 >
@@ -1667,6 +2057,189 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Ticket Modal */}
+      {isTicketModalOpen && lastCompletedSale && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center px-4 bg-black/55 backdrop-blur-sm">
+          <div className="bg-white rounded-[32px] shadow-2xl overflow-hidden flex flex-col w-full max-w-[400px] max-h-[90vh]">
+            {/* Header */}
+            <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
+              <h3 className="font-extrabold text-gray-900 flex items-center gap-2">
+                <span className="material-symbols-outlined text-[20px] text-green-600">check_circle</span>
+                Venta Registrada
+              </h3>
+              <button 
+                onClick={() => setIsTicketModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
+
+            {/* Scrollable Receipt Body */}
+            <div className="p-6 overflow-y-auto flex-1 custom-scrollbar flex flex-col items-center bg-gray-50/50">
+              {/* Receipt Visual Container */}
+              <div 
+                id="thermal-ticket"
+                className="bg-white border border-gray-200 shadow-sm rounded-xl p-5 w-full font-mono text-xs text-gray-800 flex flex-col gap-4 relative overflow-hidden"
+              >
+                {/* Decorative cut details */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-200 via-transparent to-transparent"></div>
+                
+                {/* Header info */}
+                <div className="text-center flex flex-col items-center border-b border-dashed border-gray-200 pb-4">
+                  <span className="font-black text-lg text-gray-900 tracking-tight">BOGA MARKET</span>
+                  <span className="text-[10px] font-bold text-gray-500 uppercase mt-0.5">{stores[lastCompletedSale.store]?.name || lastCompletedSale.store}</span>
+                  <span className="text-[10px] text-gray-400 mt-2">TICKET DE VENTA LOCAL</span>
+                </div>
+
+                {/* Meta details */}
+                <div className="flex flex-col gap-1.5 border-b border-dashed border-gray-200 pb-3 text-[11px]">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">ID Venta:</span>
+                    <span className="font-bold text-gray-900">#{lastCompletedSale.id.substring(0, 8)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Fecha:</span>
+                    <span className="font-bold text-gray-900">
+                      {new Date(lastCompletedSale.created_at).toLocaleDateString('es-PE', {
+                        day: '2-digit', month: '2-digit', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Vendedor:</span>
+                    <span className="font-bold text-gray-900">{lastCompletedSale.seller_name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Pago:</span>
+                    <span className="font-bold text-gray-900">{lastCompletedSale.payment_method}</span>
+                  </div>
+                  {lastCompletedSale.customer_name && lastCompletedSale.customer_name !== 'Cliente Local (POS)' && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Cliente:</span>
+                      <span className="font-bold text-gray-900">{lastCompletedSale.customer_name}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Items Table */}
+                <div className="flex flex-col gap-2 border-b border-dashed border-gray-200 pb-4">
+                  <div className="grid grid-cols-12 font-bold text-[10px] text-gray-400 uppercase">
+                    <span className="col-span-2">Cant</span>
+                    <span className="col-span-6">Producto</span>
+                    <span className="col-span-4 text-right">Subtotal</span>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {(() => {
+                      const items = Array.isArray(lastCompletedSale.items) 
+                        ? lastCompletedSale.items 
+                        : typeof lastCompletedSale.items === 'string' 
+                          ? JSON.parse(lastCompletedSale.items) 
+                          : [];
+                      return items.map((item: any, idx: number) => (
+                        <div key={idx} className="grid grid-cols-12 text-[11px] leading-tight">
+                          <span className="col-span-2 font-bold">{item.quantity}x</span>
+                          <span className="col-span-6 truncate pr-1">{item.name}</span>
+                          <span className="col-span-4 text-right">S/ {(item.price * item.quantity).toFixed(2)}</span>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                </div>
+
+                {/* Totals */}
+                <div className="flex justify-between items-center text-sm font-black text-gray-900 pt-1">
+                  <span>TOTAL</span>
+                  <span>S/ {lastCompletedSale.total_amount.toFixed(2)}</span>
+                </div>
+
+                {/* Footer text */}
+                <div className="text-center text-[10px] text-gray-400 border-t border-dashed border-gray-200 pt-3 mt-1 uppercase font-bold tracking-widest">
+                  ¡Gracias por su compra!
+                </div>
+              </div>
+            </div>
+
+            {/* Print and Share Actions */}
+            <div className="p-6 border-t border-gray-100 flex flex-col gap-3 bg-white sticky bottom-0">
+              <button 
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    window.print();
+                  }
+                }}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-black text-white hover:bg-gray-800 font-bold rounded-xl transition-all shadow-md cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">print</span>
+                Imprimir Ticket (Impresora Térmica)
+              </button>
+              
+              <button 
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    const items = Array.isArray(lastCompletedSale.items) 
+                      ? lastCompletedSale.items 
+                      : typeof lastCompletedSale.items === 'string' 
+                        ? JSON.parse(lastCompletedSale.items) 
+                        : [];
+                    
+                    const storeName = stores[lastCompletedSale.store]?.name || lastCompletedSale.store.toUpperCase();
+                    let ticketText = `*TICKET DE VENTA LOCAL*\n`;
+                    ticketText += `*Tienda:* ${storeName}\n`;
+                    ticketText += `*Venta ID:* #${lastCompletedSale.id.substring(0, 8)}\n`;
+                    ticketText += `*Vendedor:* ${lastCompletedSale.seller_name}\n`;
+                    ticketText += `*Método de Pago:* ${lastCompletedSale.payment_method}\n`;
+                    ticketText += `---------------------------\n`;
+                    items.forEach((item: any) => {
+                      ticketText += `• ${item.quantity}x ${item.name} - S/ ${(item.price * item.quantity).toFixed(2)}\n`;
+                    });
+                    ticketText += `---------------------------\n`;
+                    ticketText += `*TOTAL:* S/ ${lastCompletedSale.total_amount.toFixed(2)}\n\n`;
+                    ticketText += `¡Gracias por su compra en ${storeName}!`;
+
+                    const phone = lastCompletedSale.customer_phone ? lastCompletedSale.customer_phone.replace(/\D/g, '') : '';
+                    const encodedText = encodeURIComponent(ticketText);
+                    const whatsappUrl = phone 
+                      ? `https://wa.me/${phone.startsWith('51') ? phone : '51' + phone}?text=${encodedText}` 
+                      : `https://wa.me/?text=${encodedText}`;
+                    
+                    window.open(whatsappUrl, '_blank');
+                  }
+                }}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-[#25D366] text-white hover:bg-[#20ba59] font-bold rounded-xl transition-all shadow-md cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">share</span>
+                Compartir por WhatsApp
+              </button>
+            </div>
+          </div>
+          {/* Custom Print Style */}
+          <style dangerouslySetInnerHTML={{__html: `
+            @media print {
+              body * {
+                visibility: hidden !important;
+              }
+              #thermal-ticket, #thermal-ticket * {
+                visibility: visible !important;
+              }
+              #thermal-ticket {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 10px !important;
+                margin: 0 !important;
+                font-size: 11px !important;
+              }
+            }
+          `}} />
         </div>
       )}
 
