@@ -540,7 +540,7 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <main className="flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full pb-28 md:pb-8">
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <header className="hidden md:flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">
               {activeTab === 'products' ? 'Gestión de Productos' : activeTab === 'orders' ? 'Gestión de Pedidos' : activeTab === 'stores' ? 'Mis Tiendas' : activeTab === 'pos' ? 'Caja Rápida (POS)' : 'Métricas y Rendimiento'}
@@ -1287,7 +1287,7 @@ export default function DashboardPage() {
         )}
 
         {activeTab === 'pos' && (
-          <div className="flex flex-col lg:flex-row gap-6 w-full items-start bg-[#f9f9ff] -m-6 p-6 min-h-[calc(100vh-100px)] rounded-2xl">
+          <div className="flex flex-col lg:flex-row gap-6 w-full items-start bg-[#f9f9ff] p-6 min-h-[calc(100vh-100px)] rounded-2xl">
             {/* Catalog Grid (Left Side) */}
             <div className="flex-1 w-full flex flex-col gap-6 pb-60 lg:pb-0">
               {/* Row 1: Search Bar */}
