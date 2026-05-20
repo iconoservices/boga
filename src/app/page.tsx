@@ -52,10 +52,16 @@ export default function Home() {
         const formattedProducts = data.map((p: any) => {
           const storeDef = stores[p.store as keyof typeof stores];
           return {
+            id: p.id || p.name,
+            name: p.name,
             title: p.name,
             price: `S/ ${p.price.toFixed(2)}`,
             slug: p.store,
             image: p.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80',
+            store: storeDef?.name || p.store,
+            logo: storeDef?.heroImage || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=100',
+            rating: (4 + Math.random()).toFixed(1),
+            reviews: `(${Math.floor(Math.random() * 200) + 10}+)`
           }
         });
 
@@ -483,45 +489,96 @@ export default function Home() {
           <div className="flex flex-col gap-6">
             
 
-            {sections.map((section) => (
-              <section key={section.id}>
-                <div className="flex justify-between items-center mb-3 px-gutter">
-                  <h2 className="font-h2 text-[18px] text-[#3E2723] font-black">{section.title}</h2>
-                  <button 
-                    onClick={() => setActiveCategory(section.id)}
-                    className="text-[#9C3F2B] font-bold text-[12px] bg-[#9C3F2B]/10 px-3 py-1 rounded-full active:scale-90 transition-transform"
-                  >
-                    Ver todo
-                  </button>
-                </div>
-                <div className="flex gap-4 overflow-x-auto hide-scrollbar px-gutter pb-4 snap-x" style={{ scrollbarWidth: 'none' }}>
-                  {section.products.slice(0, 4).map((p, idx) => (
-                    <div key={idx} className="min-w-[160px] w-[160px] bg-surface-container-lowest rounded-2xl shadow-sm overflow-hidden flex flex-col border border-[#3E2723]/5 snap-start">
-                      <div className="relative h-28">
-                        <img className="w-full h-full object-cover" src={p.img} alt={p.name} />
-                        <div className="absolute top-2 left-2 bg-[#E2725B] text-white text-[10px] font-black px-2 py-0.5 rounded-lg">{p.badge}</div>
+            <section className="flex flex-col gap-3 px-gutter">
+              <div className="flex justify-between items-center">
+                <h3 className="font-h3 text-[20px] font-black text-[#3E2723]">Recomendados</h3>
+                <Link href="/promotions" className="text-[12px] font-bold text-primary-container">Ver todo</Link>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                {marketplaceProducts.map((prod, idx) => {
+                  const isFeatured = (idx + 1) % 5 === 0;
+                  if (isFeatured) {
+                    return (
+                      <Link key={prod.id} href={`/${prod.slug}`} className="col-span-2 relative bg-white rounded-2xl shadow-md overflow-hidden flex group min-h-[150px] border border-black/5">
+                        <div className="w-[42%] relative overflow-hidden shrink-0">
+                          <img alt={prod.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src={prod.image} />
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/80" />
+                        </div>
+                        <div className="w-[58%] p-4 flex flex-col justify-between relative z-10">
+                          <div className="absolute top-3 right-3 bg-[#2E7D32] text-white text-[9px] font-black px-2 py-[3px] rounded-lg flex items-center gap-0.5 uppercase shadow">
+                            <span className="material-symbols-outlined text-[10px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span> Destacado
+                          </div>
+                          <div className="flex gap-2 items-center mt-1">
+                            <img alt={prod.store} className="w-5 h-5 rounded-full object-cover border border-[#3E2723]/10" src={prod.logo} />
+                            <span className="text-[11px] font-bold text-[#745853]">{prod.store}</span>
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-[16px] leading-tight text-[#3E2723] mt-2 line-clamp-2">{prod.title}</h4>
+                            <div className="flex items-center gap-1 mt-1">
+                              <span className="material-symbols-outlined text-[13px] text-yellow-500" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                              <span className="text-[11px] text-[#745853]">{prod.rating} <span className="opacity-60">{prod.reviews}</span></span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between mt-3">
+                            <span className="font-black text-[18px] text-[#2E7D32]">{prod.price}</span>
+                            <button 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleAddToCartWithAnim(prod);
+                              }}
+                              className={`w-8 h-8 rounded-full flex items-center justify-center shadow transition-transform ${addedItems[prod.name] ? 'bg-[#25D366] text-white scale-110' : 'bg-primary text-white active:scale-90'}`}
+                            >
+                              <span className="material-symbols-outlined text-[20px]">{addedItems[prod.name] ? 'check' : 'add'}</span>
+                            </button>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  }
+                  return (
+                    <Link key={prod.id} href={`/${prod.slug}`} className="col-span-1 bg-white rounded-2xl shadow-sm border border-black/5 overflow-hidden group">
+                      <div className="relative aspect-square overflow-hidden">
+                        <img alt={prod.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src={prod.image} />
+                        <div className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm">
+                          <span className="material-symbols-outlined text-[15px] text-[#3E2723]">favorite</span>
+                        </div>
+                        <div className="absolute bottom-2 left-2 bg-white/95 backdrop-blur-sm shadow-sm rounded-lg px-1.5 py-1 flex items-center gap-1 border border-black/5">
+                          <img alt={prod.store} className="w-3.5 h-3.5 rounded-full object-cover" src={prod.logo} />
+                          <span className="text-[9px] font-bold text-[#3E2723] uppercase truncate max-w-[70px]">{prod.store}</span>
+                        </div>
                       </div>
                       <div className="p-3">
-                        <h3 className="text-[13px] font-bold text-[#3E2723] line-clamp-1">{p.name}</h3>
-                        <div className="flex justify-between items-center mt-2">
-                          <span className="text-primary font-black text-[14px]">{p.price}</span>
+                        <h4 className="font-bold text-[13px] leading-tight text-[#3E2723] line-clamp-2">{prod.title}</h4>
+                        <div className="flex items-center gap-1 mt-1">
+                          <span className="material-symbols-outlined text-[12px] text-yellow-500" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                          <span className="text-[11px] text-[#745853]">{prod.rating} <span className="opacity-60">{prod.reviews}</span></span>
+                        </div>
+                        <div className="flex items-center justify-between mt-2">
+                          <span className="font-black text-[14px] text-[#2E7D32]">{prod.price}</span>
                           <button 
-                            onClick={() => handleAddToCartWithAnim(p)}
-                            className={`w-6 h-6 rounded-full flex items-center justify-center shadow-sm transition-all duration-300 ${
-                              addedItems[p.name] ? 'bg-[#25D366] text-white scale-110' : 'bg-primary text-white active:scale-90'
-                            }`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleAddToCartWithAnim(prod);
+                            }}
+                            className={`w-7 h-7 rounded-full flex items-center justify-center transition-transform ${addedItems[prod.name] ? 'bg-[#25D366] text-white scale-110' : 'bg-primary text-white active:scale-90'}`}
                           >
-                            <span className="material-symbols-outlined text-[16px]">
-                              {addedItems[p.name] ? 'check' : 'add'}
-                            </span>
+                            <span className="material-symbols-outlined text-[18px]">{addedItems[prod.name] ? 'check' : 'add'}</span>
                           </button>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            ))}
+                    </Link>
+                  );
+                })}
+              </div>
+
+              <div className="w-full py-4 flex flex-col justify-center items-center gap-2 opacity-50">
+                <svg className="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span className="text-[11px] font-bold text-[#3E2723]">Cargando más recomendados...</span>
+              </div>
+            </section>
           </div>
         ) : (
           <section className="flex flex-col gap-6">
