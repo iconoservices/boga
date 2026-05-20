@@ -655,20 +655,20 @@ export default function DashboardPage() {
                       <div className="flex items-center justify-between flex-wrap gap-4">
                         <h2 className="text-base font-bold text-gray-900">Catálogo Actual {selectedStore !== 'all' ? `- ${stores[selectedStore]?.name}` : ''}</h2>
                         <div className="flex items-center gap-3">
-                          <span className="text-sm font-semibold text-gray-500">Acciones:</span>
-                          <div className="flex gap-2 flex-wrap">
+                          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Acciones:</span>
+                          <div className="flex flex-row items-center gap-2">
                             <button
                               onClick={() => setIsQRModalOpen(true)}
-                              className="px-3 py-1.5 text-sm font-bold rounded-lg transition-colors flex items-center gap-1.5 bg-black text-white hover:bg-gray-800"
+                              className="px-3 py-1.5 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 bg-black text-white hover:bg-gray-800 whitespace-nowrap"
                             >
-                              <span className="material-symbols-outlined text-[16px]">qr_code_2</span>
+                              <span className="material-symbols-outlined text-[15px]">qr_code_2</span>
                               Código QR
                             </button>
                             <button
                               onClick={() => setIsPDFModalOpen(true)}
-                              className="px-3 py-1.5 text-sm font-bold rounded-lg transition-colors flex items-center gap-1.5 bg-red-50 text-red-600 hover:bg-red-100"
+                              className="px-3 py-1.5 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 bg-red-50 text-red-600 hover:bg-red-100 whitespace-nowrap"
                             >
-                              <span className="material-symbols-outlined text-[16px]">picture_as_pdf</span>
+                              <span className="material-symbols-outlined text-[15px]">picture_as_pdf</span>
                               Exportar PDF
                             </button>
                           </div>
