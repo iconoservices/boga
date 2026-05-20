@@ -3,8 +3,23 @@ import './globals.css';
 import BottomNav from '@/components/BottomNav';
 
 export const metadata: Metadata = {
-  title: 'Boga Market',
+  title: 'Boga Dash',
   description: 'Boga Market App',
+  manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/pwa-icon.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/pwa-icon.png', sizes: '512x512', type: 'image/png' },
+    ],
+    shortcut: '/pwa-icon.png',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Boga Dash',
+  },
 };
 
 export const viewport: Viewport = {
@@ -12,6 +27,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  themeColor: '#5244e1',
 };
 
 import { CartProvider } from '@/context/CartContext';
