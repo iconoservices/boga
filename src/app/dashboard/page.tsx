@@ -1289,23 +1289,24 @@ export default function DashboardPage() {
         {activeTab === 'pos' && (
           <div className="flex flex-col lg:flex-row gap-6 w-full items-stretch lg:items-start bg-[#f9f9ff] p-3 md:p-6 min-h-[calc(100vh-100px)] rounded-2xl">
             {/* Catalog Grid (Left Side) */}
-            <div className="w-full lg:flex-1 flex flex-col gap-6 pb-60 lg:pb-0">
-              <div className="flex items-center gap-2 w-full max-w-lg">
-                <div className="relative flex-1 min-w-0 group">
+            <div className="flex-1 w-full flex flex-col gap-6 pb-60 lg:pb-0">
+              {/* Row 1: Search Bar & Filters */}
+              <div className="flex items-center w-full max-w-lg gap-2">
+                <div className="relative flex-1 group">
                   <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
                   <input 
                     type="text" 
                     value={posProductSearch}
                     onChange={(e) => setPosProductSearch(e.target.value)}
-                    placeholder="Buscar productos, SKUs o categorías..." 
+                    placeholder="Buscar productos..." 
                     className="w-full h-12 pl-11 pr-4 bg-white border border-[#c7c4d8]/60 rounded-xl focus:ring-2 focus:ring-[#3525cd] focus:border-transparent focus:outline-none transition-all text-sm font-medium text-[#111c2d]"
                   />
                 </div>
                 <button 
                   type="button"
-                  className="h-12 w-12 bg-[#e7eeff] hover:bg-[#dee8ff] text-[#3525cd] border border-[#c7c4d8]/40 rounded-xl flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                  className="w-12 h-12 flex items-center justify-center bg-[#e7eeff] rounded-xl text-[#3525cd] hover:bg-[#dee8ff] transition-colors shrink-0 cursor-pointer"
                 >
-                  <span className="material-symbols-outlined text-[20px]">tune</span>
+                  <span className="material-symbols-outlined text-[22px]">tune</span>
                 </button>
               </div>
 
