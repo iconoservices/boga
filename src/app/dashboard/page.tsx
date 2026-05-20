@@ -1271,13 +1271,6 @@ export default function DashboardPage() {
       {/* Mobile Bottom Navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 flex justify-between items-center z-50 rounded-t-2xl shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
         <button 
-          onClick={() => setIsMobileMenuOpen(true)}
-          className="flex flex-col items-center gap-1 w-16 py-2 transition-all text-gray-500 hover:bg-gray-50 rounded-[20px]"
-        >
-          <div className="w-6 h-6 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold text-xs mb-[2px]">B</div>
-          <span className="text-[10px] font-bold">Perfil</span>
-        </button>
-        <button 
           onClick={() => setActiveTab('orders')} 
           className={`flex flex-col items-center gap-1 w-16 py-2 rounded-[20px] transition-all ${activeTab === 'orders' ? 'bg-[#5244e1] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
         >
@@ -1297,6 +1290,13 @@ export default function DashboardPage() {
         >
           <span className="material-symbols-outlined text-[22px]">bar_chart</span>
           <span className="text-[10px] font-bold">Métricas</span>
+        </button>
+        <button 
+          onClick={() => setIsMobileMenuOpen(true)}
+          className="flex flex-col items-center gap-1 w-16 py-2 transition-all text-gray-500 hover:bg-gray-50 rounded-[20px]"
+        >
+          <div className="w-6 h-6 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold text-xs mb-[2px]">B</div>
+          <span className="text-[10px] font-bold">Perfil</span>
         </button>
       </div>
 
