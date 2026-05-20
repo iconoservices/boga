@@ -3,25 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
 import { supabase } from '@/lib/supabase';
-import { useDemo } from '@/context/DemoContext';
 
 interface EstilosMirkaTemplateProps {
   store: StoreConfig;
 }
 
-const MOCK_PRODUCTS = [
-  { id: 'blazer-vino', title: 'Blazer Ejecutivo Vino Estructurado', price: 189.00, originalPrice: 240.00, hasOffer: true, category: 'blazers', image: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&q=80', description: 'Blazer de corte ejecutivo en tono vino, perfecto para ocasiones formales y looks de oficina sofisticados.' },
-  { id: 'blusa-rosa', title: 'Blusa Satinada Rosa Empolvado', price: 85.00, originalPrice: 85.00, hasOffer: false, category: 'blusas', image: 'https://images.unsplash.com/photo-1551163943-3f7253a97891?w=600&q=80', description: 'Blusa de corte fluido en satín suave, ideal para combinar con pantalones de vestir o faldas midi.' },
-  { id: 'pantalon-negro', title: 'Pantalón Palazzo Negro Elegante', price: 120.00, originalPrice: 150.00, hasOffer: true, category: 'pantalones', image: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&q=80', description: 'Pantalón de pierna ancha en tejido fluido negro, versátil para looks casual o semi-formal.' },
-  { id: 'vestido-midi', title: 'Vestido Midi Vino Cruzado', price: 145.00, originalPrice: 145.00, hasOffer: false, category: 'vestidos', image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&q=80', description: 'Vestido cruzado de longitud midi en tono burgundy, escote en V y cintura ajustable con lazo.' },
-  { id: 'chaqueta-cuero', title: 'Chaqueta Cuero Sintético Negra', price: 210.00, originalPrice: 280.00, hasOffer: true, category: 'blazers', image: 'https://images.unsplash.com/photo-1548126032-079a0fb0099d?w=600&q=80', description: 'Chaqueta de cuero sintético de alta calidad, corte slim con detalles metálicos dorados.' },
-  { id: 'falda-lapiz', title: 'Falda Lápiz Marrón Chocolate', price: 95.00, originalPrice: 95.00, hasOffer: false, category: 'faldas', image: 'https://images.unsplash.com/photo-1583496661160-fb5218d8f91e?w=600&q=80', description: 'Falda lápiz de corte entallado en tono marrón oscuro, con abertura trasera discreta.' },
-  { id: 'blusa-estampada', title: 'Blusa Floral Manga Larga Vino', price: 75.00, originalPrice: 95.00, hasOffer: true, category: 'blusas', image: 'https://images.unsplash.com/photo-1603344205538-f29e5e47df84?w=600&q=80', description: 'Blusa de manga larga con estampado floral en tonos vino y beige, perfecta para looks románticos.' },
-  { id: 'vestido-noche', title: 'Vestido Noche Negro Clásico', price: 220.00, originalPrice: 220.00, hasOffer: false, category: 'vestidos', image: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=600&q=80', description: 'Vestido de noche en negro, escote asimétrico y corte a la rodilla, para eventos formales y galas.' }
-];
-
 export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProps) {
-  const { isDemoVisible } = useDemo();
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -67,9 +54,7 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
   }, []);
 
   const theme = store.theme;
-  const allProducts = isDemoVisible('estilosmirka')
-    ? [...supabaseProducts, ...MOCK_PRODUCTS]
-    : supabaseProducts;
+  const allProducts = supabaseProducts;
 
   const filteredProducts = allProducts.filter((prod) => {
     const matchCat = activeCategory === 'all' || prod.category === activeCategory;
