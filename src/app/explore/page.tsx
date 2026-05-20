@@ -270,7 +270,7 @@ export default function Explore() {
         onCartClick={() => setIsCartOpen(true)}
       />
 
-      <main className="px-gutter pt-2 flex flex-col gap-6 pb-10">
+      <main className="px-gutter pt-2 flex flex-col gap-3 pb-10">
         
         {/* Adaptive Macro-Categories Selector */}
         <section className="flex flex-col gap-1.5 transition-all duration-500">
@@ -489,24 +489,24 @@ export default function Explore() {
             </div>
           </section>
         ) : (
-          <section className="flex flex-col gap-6">
-            <div className="flex flex-col gap-4 px-1">
+          <section className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2 px-1">
               <div>
-                <h2 className="font-h2 text-[20px] text-[#3E2723] font-black">
+                <h2 className="font-h2 text-[18px] text-[#3E2723] font-black">
                   {sections.find(s => s.id === activeCategory)?.title || activeCategory}
                 </h2>
-                <p className="text-[#745853] text-[13px]">Mostrando todos los productos disponibles</p>
+                <p className="text-[#745853] text-[11px]">Mostrando todos los productos disponibles</p>
               </div>
 
               <div className="flex gap-2 overflow-x-auto hide-scrollbar -mx-1 px-1" style={{ scrollbarWidth: 'none' }}>
-                <button className="flex items-center justify-center w-8 h-8 rounded-full border border-[#3E2723]/10 bg-white shrink-0 text-[#3E2723]">
-                  <span className="material-symbols-outlined text-[18px]">tune</span>
+                <button className="flex items-center justify-center w-7 h-7 rounded-full border border-[#3E2723]/10 bg-white shrink-0 text-[#3E2723]">
+                  <span className="material-symbols-outlined text-[16px]">tune</span>
                 </button>
                 {['Populares', 'Menor Precio', 'Nuevos', 'A-Z'].map(sort => (
                   <button 
                     key={sort}
                     onClick={() => setActiveSort(sort)}
-                    className={`px-4 py-1.5 rounded-full text-[12px] font-bold shrink-0 transition-all ${
+                    className={`px-3 py-1 rounded-full text-[11px] font-bold shrink-0 transition-all ${
                       activeSort === sort 
                         ? 'bg-[#3E2723] text-white shadow-md' 
                         : 'bg-surface-container-lowest border border-[#3E2723]/10 text-[#3E2723]'
