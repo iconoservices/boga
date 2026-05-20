@@ -371,7 +371,7 @@ export default function Explore() {
         )}
 
         {/* Discovery Mode (Todas) or Listing Mode (Specific Category) */}
-        {activeCategory === 'Todas' ? (
+        {activeCategory === 'Todas' && viewMode === 'products' ? (
           <div className="flex flex-col gap-6">
             
             {/* Tiendas Destacadas */}
