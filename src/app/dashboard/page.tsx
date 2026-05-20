@@ -934,21 +934,21 @@ export default function DashboardPage() {
               </div>
 
               {/* Promotional Cards Area */}
-              <div className="grid grid-cols-3 gap-6 mt-2">
-                <div className="col-span-2 bg-gradient-to-r from-gray-50 to-white border border-gray-100 rounded-xl p-6 shadow-sm flex flex-col justify-center">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-2">
+                <div className="lg:col-span-2 bg-gradient-to-r from-gray-50 to-white border border-gray-100 rounded-xl p-6 shadow-sm flex flex-col justify-center">
                   <h3 className="text-lg font-bold text-gray-900 mb-2">Automatizar Etiquetas de Envío</h3>
-                  <p className="text-sm text-gray-500 mb-4 max-w-md">Conecta tu proveedor preferido para generar etiquetas de envío automáticamente tan pronto como un pedido sea marcado como 'Empacado'.</p>
+                  <p className="text-sm text-gray-500 mb-4 w-full">Conecta tu proveedor preferido para generar etiquetas de envío automáticamente tan pronto como un pedido sea marcado como 'Empacado'.</p>
                   <a href="#" className="text-[#5244e1] font-bold text-sm flex items-center gap-1 hover:underline">
                     Ver integraciones <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                   </a>
                 </div>
                 <div className="bg-[#5244e1] rounded-xl p-6 shadow-md text-white flex flex-col justify-between relative overflow-hidden">
                   <span className="material-symbols-outlined absolute -right-4 -top-4 text-7xl opacity-10">verified_user</span>
-                  <div>
+                  <div className="relative z-10">
                     <h3 className="text-lg font-bold mb-2">Protección contra Fraude</h3>
-                    <p className="text-sm text-white/80 mb-4">Tu cuenta está cubierta actualmente por detección de fraude con IA para todos los pedidos.</p>
+                    <p className="text-sm text-white/80 mb-4 w-full">Tu cuenta está cubierta actualmente por detección de fraude con IA para todos los pedidos.</p>
                   </div>
-                  <button className="w-full py-2 bg-white/20 hover:bg-white/30 transition-colors rounded-lg font-bold text-sm backdrop-blur-sm">
+                  <button className="relative z-10 w-full py-2 bg-white/20 hover:bg-white/30 transition-colors rounded-lg font-bold text-sm backdrop-blur-sm">
                     Ver Reporte de Seguridad
                   </button>
                 </div>
