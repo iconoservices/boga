@@ -1287,19 +1287,27 @@ export default function DashboardPage() {
         )}
 
         {activeTab === 'pos' && (
-          <div className="flex flex-col lg:flex-row gap-6 w-full items-start bg-[#f9f9ff] p-3 md:p-6 min-h-[calc(100vh-100px)] rounded-2xl">
+          <div className="flex flex-col lg:flex-row gap-6 w-full items-stretch lg:items-start bg-[#f9f9ff] p-3 md:p-6 min-h-[calc(100vh-100px)] rounded-2xl">
             {/* Catalog Grid (Left Side) */}
             <div className="flex-1 w-full flex flex-col gap-6 pb-60 lg:pb-0">
               {/* Row 1: Search Bar */}
-              <div className="relative w-full max-w-lg group">
-                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
-                <input 
-                  type="text" 
-                  value={posProductSearch}
-                  onChange={(e) => setPosProductSearch(e.target.value)}
-                  placeholder="Buscar productos, SKUs o categorías..." 
-                  className="w-full h-12 pl-11 pr-4 bg-white border border-[#c7c4d8]/60 rounded-xl focus:ring-2 focus:ring-[#3525cd] focus:border-transparent focus:outline-none transition-all text-sm font-medium text-[#111c2d]"
-                />
+              <div className="flex items-center gap-2 w-full max-w-lg">
+                <div className="relative flex-1 group">
+                  <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
+                  <input 
+                    type="text" 
+                    value={posProductSearch}
+                    onChange={(e) => setPosProductSearch(e.target.value)}
+                    placeholder="Buscar productos, SKUs o categorías..." 
+                    className="w-full h-12 pl-11 pr-4 bg-white border border-[#c7c4d8]/60 rounded-xl focus:ring-2 focus:ring-[#3525cd] focus:border-transparent focus:outline-none transition-all text-sm font-medium text-[#111c2d]"
+                  />
+                </div>
+                <button 
+                  type="button"
+                  className="h-12 w-12 bg-[#e7eeff] hover:bg-[#dee8ff] text-[#3525cd] border border-[#c7c4d8]/40 rounded-xl flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                >
+                  <span className="material-symbols-outlined text-[20px]">tune</span>
+                </button>
               </div>
 
               {/* Row 2: Categories */}
