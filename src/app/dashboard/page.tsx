@@ -30,6 +30,8 @@ export default function DashboardPage() {
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFilterCategory, setSelectedFilterCategory] = useState('all');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -349,7 +351,17 @@ export default function DashboardPage() {
 
         {/* Stats Row */}
         {(() => {
-          const filteredProducts = selectedStore === 'all' ? products : products.filter(p => p.store === selectedStore);
+          const storeFiltered = selectedStore === 'all' ? products : products.filter(p => p.store === selectedStore);
+          const availableCategories = Array.from(new Set(storeFiltered.map(p => p.category)));
+          
+          const filteredProducts = storeFiltered.filter(p => {
+            const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                  p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                  (p.subcategory || '').toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesCategory = selectedFilterCategory === 'all' || p.category === selectedFilterCategory;
+            return matchesSearch && matchesCategory;
+          });
+
           return (
             <>
               <div className="flex flex-wrap gap-4 mb-6">
@@ -359,7 +371,7 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <p className="text-gray-500 font-medium text-[11px] mb-0.5">Total Productos</p>
-                    <h3 className="text-xl font-extrabold text-gray-900 leading-none">{filteredProducts.length}</h3>
+                    <h3 className="text-xl font-extrabold text-gray-900 leading-none">{storeFiltered.length}</h3>
                   </div>
                 </div>
                 {selectedStore === 'all' && (
@@ -380,24 +392,65 @@ export default function DashboardPage() {
 
               {/* Products Table */}
               <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
-                <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white flex-wrap gap-4">
-                  <h2 className="text-base font-bold text-gray-900">Catálogo Actual {selectedStore !== 'all' ? `- ${stores[selectedStore]?.name}` : ''}</h2>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-semibold text-gray-500">Exportar PDF:</span>
-                    <div className="flex gap-2 flex-wrap">
-                      {Object.values(stores)
-                        .filter(store => selectedStore === 'all' || store.slug === selectedStore)
-                        .map(store => (
-                        <button
-                          key={store.slug}
-                          onClick={() => exportStoreMenuPDF(store.slug)}
-                          disabled={isExporting}
-                          className={`px-3 py-1.5 text-sm font-bold rounded-lg transition-colors flex items-center gap-1.5 ${isExporting ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
+                <div className="p-4 border-b border-gray-100 flex flex-col gap-4 bg-white">
+                  <div className="flex items-center justify-between flex-wrap gap-4">
+                    <h2 className="text-base font-bold text-gray-900">Catálogo Actual {selectedStore !== 'all' ? `- ${stores[selectedStore]?.name}` : ''}</h2>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-semibold text-gray-500">Exportar PDF:</span>
+                      <div className="flex gap-2 flex-wrap">
+                        {Object.values(stores)
+                          .filter(store => selectedStore === 'all' || store.slug === selectedStore)
+                          .map(store => (
+                          <button
+                            key={store.slug}
+                            onClick={() => exportStoreMenuPDF(store.slug)}
+                            disabled={isExporting}
+                            className={`px-3 py-1.5 text-sm font-bold rounded-lg transition-colors flex items-center gap-1.5 ${isExporting ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
+                          >
+                            <span className={`material-symbols-outlined text-[16px] ${isExporting ? 'animate-pulse' : ''}`}>
+                              {isExporting ? 'hourglass_empty' : 'picture_as_pdf'}
+                            </span>
+                            {isExporting ? 'Generando...' : (selectedStore === 'all' ? store.name : 'Descargar')}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Search and Filters */}
+                  <div className="flex flex-col md:flex-row md:items-center gap-3">
+                    <div className="relative w-full md:w-96 shrink-0">
+                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
+                      <input 
+                        type="text" 
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Buscar nombre o categoría..." 
+                        className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-1 focus:ring-black focus:border-black transition-all"
+                      />
+                    </div>
+                    <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1 md:pb-0" style={{ scrollbarWidth: 'none' }}>
+                      <button 
+                        onClick={() => setSelectedFilterCategory('all')}
+                        className={`px-4 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition-colors uppercase tracking-wider border ${
+                          selectedFilterCategory === 'all' 
+                            ? 'bg-[#FF6B00] text-white border-transparent' 
+                            : 'bg-transparent text-gray-600 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        Todos
+                      </button>
+                      {availableCategories.map(cat => (
+                        <button 
+                          key={cat}
+                          onClick={() => setSelectedFilterCategory(cat)}
+                          className={`px-4 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap uppercase tracking-wider transition-colors border ${
+                            selectedFilterCategory === cat 
+                              ? 'bg-[#FF6B00] text-white border-transparent' 
+                              : 'bg-transparent text-gray-600 border-gray-200 hover:bg-gray-50'
+                          }`}
                         >
-                          <span className={`material-symbols-outlined text-[16px] ${isExporting ? 'animate-pulse' : ''}`}>
-                            {isExporting ? 'hourglass_empty' : 'picture_as_pdf'}
-                          </span>
-                          {isExporting ? 'Generando...' : (selectedStore === 'all' ? store.name : 'Descargar')}
+                          {cat}
                         </button>
                       ))}
                     </div>
