@@ -50,6 +50,7 @@ export default function DashboardPage() {
   const [lastCompletedSale, setLastCompletedSale] = useState<any | null>(null);
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [isCustomerDetailsOpen, setIsCustomerDetailsOpen] = useState(false);
+  const [isMobileCheckoutOpen, setIsMobileCheckoutOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const storeLogoInputRef = useRef<HTMLInputElement>(null);
@@ -1288,7 +1289,7 @@ export default function DashboardPage() {
         {activeTab === 'pos' && (
           <div className="flex flex-col lg:flex-row gap-6 w-full items-start bg-[#f9f9ff] -m-6 p-6 min-h-[calc(100vh-100px)] rounded-2xl">
             {/* Catalog Grid (Left Side) */}
-            <div className="flex-1 w-full flex flex-col gap-6">
+            <div className="flex-1 w-full flex flex-col gap-6 pb-28 lg:pb-0">
               {/* Row 1: Search Bar */}
               <div className="relative w-full max-w-lg group">
                 <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
@@ -1384,8 +1385,8 @@ export default function DashboardPage() {
               })()}
             </div>
 
-            {/* Sidebar (Right Side) */}
-            <aside className="w-full lg:w-96 lg:h-[calc(100vh-180px)] lg:sticky lg:top-[120px] bg-[#f0f3ff]/40 border border-[#c7c4d8]/40 rounded-2xl flex flex-col shrink-0 overflow-hidden shadow-sm">
+            {/* Sidebar (Right Side) - Desktop Only */}
+            <aside className="hidden lg:flex w-full lg:w-96 lg:h-[calc(100vh-180px)] lg:sticky lg:top-[120px] bg-[#f0f3ff]/40 border border-[#c7c4d8]/40 rounded-2xl flex-col shrink-0 overflow-hidden shadow-sm">
               {/* Receipt Header */}
               <div className="p-3 border-b border-[#c7c4d8]/30 bg-white">
                 <div className="flex items-center justify-between">
@@ -1575,6 +1576,231 @@ export default function DashboardPage() {
                 </div>
               </div>
             </aside>
+
+            {/* Mobile Pinned Checkout Bar */}
+            <div className="lg:hidden fixed bottom-[68px] md:bottom-0 left-0 right-0 bg-white border-t border-[#c7c4d8]/20 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] px-4 py-3 z-40 flex items-center justify-between">
+              <div className="flex flex-col">
+                <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Total</span>
+                <span className="text-base font-black text-[#3525cd]">S/ {posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0).toFixed(2)}</span>
+              </div>
+              <button 
+                onClick={() => setIsMobileCheckoutOpen(true)}
+                disabled={posCart.length === 0}
+                className="bg-[#3525cd] text-white px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-1.5 active:scale-95 transition-transform disabled:bg-gray-200 disabled:text-gray-400 cursor-pointer shadow-md"
+              >
+                <span className="material-symbols-outlined text-[16px]">shopping_cart</span>
+                Cobrar ({posCart.reduce((sum, item) => sum + item.quantity, 0)})
+              </button>
+            </div>
+
+            {/* Mobile Checkout Drawer */}
+            {isMobileCheckoutOpen && (
+              <div className="lg:hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex flex-col justify-end" onClick={() => setIsMobileCheckoutOpen(false)}>
+                <div className="bg-white rounded-t-[24px] shadow-2xl flex flex-col max-h-[85vh] w-full" onClick={e => e.stopPropagation()}>
+                  {/* Drawer Header */}
+                  <div className="p-4 border-b border-[#c7c4d8]/30 bg-white flex items-center justify-between shrink-0">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[#3525cd] text-[20px]">shopping_cart</span>
+                      <h3 className="font-extrabold text-base text-[#111c2d]">Confirmar Venta</h3>
+                    </div>
+                    <button onClick={() => setIsMobileCheckoutOpen(false)} className="text-gray-400 hover:text-black">
+                      <span className="material-symbols-outlined">close</span>
+                    </button>
+                  </div>
+
+                  {/* Drawer Scrollable Content */}
+                  <div className="overflow-y-auto flex-1 bg-[#f9f9ff]">
+                    {/* Receipt Header Actions (like Limpiar Todo) */}
+                    <div className="p-3 border-b border-[#c7c4d8]/30 bg-white flex items-center justify-between">
+                      <span className="text-xs font-bold text-gray-500">Detalles de Venta</span>
+                      <button 
+                        onClick={() => {
+                          setPosCart([]);
+                          setIsMobileCheckoutOpen(false);
+                        }}
+                        className="text-red-500 hover:text-red-700 font-bold text-xs hover:underline cursor-pointer"
+                      >
+                        Limpiar Todo
+                      </button>
+                    </div>
+
+                    {/* Client Add button & form */}
+                    <div className="p-3 border-b border-[#c7c4d8]/30 bg-white">
+                      <button 
+                        onClick={() => setIsCustomerDetailsOpen(!isCustomerDetailsOpen)}
+                        className="flex items-center gap-1 text-[#3525cd] font-bold text-xs hover:underline cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">person_add</span>
+                        {posCustomerName ? `${posCustomerName} (${posCustomerPhone || 'Sin Celular'})` : 'Agregar Cliente'}
+                      </button>
+                      {isCustomerDetailsOpen && (
+                        <div className="mt-3 flex flex-col gap-2">
+                          <div className="grid grid-cols-2 gap-2">
+                            <input 
+                              type="text" 
+                              value={posCustomerName}
+                              onChange={(e) => setPosCustomerName(e.target.value)}
+                              placeholder="Nombre" 
+                              className="w-full px-2.5 py-1.5 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd]"
+                            />
+                            <input 
+                              type="text" 
+                              value={posCustomerPhone}
+                              onChange={(e) => setPosCustomerPhone(e.target.value)}
+                              placeholder="WhatsApp" 
+                              className="w-full px-2.5 py-1.5 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd]"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Seller Selector */}
+                    <div className="p-3 border-b border-[#c7c4d8]/10 bg-white flex flex-col gap-1.5">
+                      <h4 className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Vendedor</h4>
+                      <div className="grid grid-cols-2 gap-2">
+                        <select 
+                          value={posSeller} 
+                          onChange={(e) => setPosSeller(e.target.value)}
+                          className="w-full px-2.5 py-1.5 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd] cursor-pointer"
+                        >
+                          <option value="Administrador">Administrador</option>
+                          <option value="Juan">Juan</option>
+                          <option value="María">María</option>
+                          <option value="Pedro">Pedro</option>
+                          <option value="Sofía">Sofía</option>
+                          <option value="Otro">Otro...</option>
+                        </select>
+                        {posSeller === 'Otro' && (
+                          <input 
+                            type="text" 
+                            value={customSeller}
+                            onChange={(e) => setCustomSeller(e.target.value)}
+                            placeholder="Nombre" 
+                            className="w-full px-2.5 py-1.5 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd]"
+                          />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Cart Items List */}
+                    <div className="p-3 bg-white border-b border-[#c7c4d8]/10 space-y-3">
+                      <h4 className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Productos</h4>
+                      {posCart.map((item, index) => (
+                        <div key={item.product.id} className="flex items-center justify-between gap-3 group">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-xs text-[#111c2d] truncate">{item.product.name}</h4>
+                            <p className="text-[11px] text-gray-500 mt-0.5">S/ {item.product.price.toFixed(2)} x {item.quantity}</p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="font-bold text-xs text-[#111c2d]">S/ {(item.product.price * item.quantity).toFixed(2)}</span>
+                            <div className="flex items-center gap-0.5 bg-[#f0f3ff] border border-[#c7c4d8]/20 p-0.5 rounded-lg">
+                              <button 
+                                onClick={() => removeFromCart(item.product.id)}
+                                className="text-gray-500 hover:text-red-500 transition-colors w-5.5 h-5.5 flex items-center justify-center font-bold text-xs"
+                              >
+                                -
+                              </button>
+                              <span className="text-[11px] font-black text-[#111c2d] w-3 text-center">{item.quantity}</span>
+                              <button 
+                                onClick={() => addToCart(item.product)}
+                                className="text-gray-500 hover:text-[#3525cd] transition-colors w-5.5 h-5.5 flex items-center justify-center font-bold text-xs"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Payment & Action Footer */}
+                    <div className="p-4 bg-white border-t border-[#c7c4d8]/30">
+                      <div className="space-y-1 mb-2.5">
+                        <div className="flex justify-between text-gray-500 font-semibold text-[11px]">
+                          <span>Subtotal</span>
+                          <span>S/ {posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-gray-500 font-semibold text-[11px]">
+                          <span>IGV (18% Incluido)</span>
+                          <span>S/ {(posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0) * 0.18 / 1.18).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-[#111c2d] font-black text-sm mt-1.5 pt-1.5 border-t border-[#c7c4d8]/20">
+                          <span>Total</span>
+                          <span>S/ {posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0).toFixed(2)}</span>
+                        </div>
+                      </div>
+
+                      {/* Payment Actions */}
+                      <div className="flex flex-col gap-2.5">
+                        <div className="flex flex-col gap-1">
+                          <h4 className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Método de Pago</h4>
+                          <div className="grid grid-cols-3 gap-1.5">
+                            <button 
+                              type="button" 
+                              onClick={() => setPosPaymentMethod('Efectivo')}
+                              className={`py-1.5 px-2 rounded-lg border-2 transition-all flex flex-col items-center gap-0.5 cursor-pointer ${
+                                posPaymentMethod === 'Efectivo' 
+                                  ? 'border-[#3525cd] bg-[#3525cd]/5 text-[#3525cd]' 
+                                  : 'border-[#c7c4d8]/30 bg-[#f0f3ff]/40 text-gray-500 hover:border-gray-300'
+                              }`}
+                            >
+                              <span className="material-symbols-outlined text-[16px]">payments</span>
+                              <span className="text-[9px] font-bold">Efectivo</span>
+                            </button>
+                            <button 
+                              type="button" 
+                              onClick={() => setPosPaymentMethod('Yape/Plin')}
+                              className={`py-1.5 px-2 rounded-lg border-2 transition-all flex flex-col items-center gap-0.5 cursor-pointer ${
+                                posPaymentMethod === 'Yape/Plin' 
+                                  ? 'border-[#3525cd] bg-[#3525cd]/5 text-[#3525cd]' 
+                                  : 'border-[#c7c4d8]/30 bg-[#f0f3ff]/40 text-gray-500 hover:border-gray-300'
+                              }`}
+                            >
+                              <span className="material-symbols-outlined text-[16px]">qr_code_2</span>
+                              <span className="text-[9px] font-bold">Yape/Plin</span>
+                            </button>
+                            <button 
+                              type="button" 
+                              onClick={() => setPosPaymentMethod('Tarjeta')}
+                              className={`py-1.5 px-2 rounded-lg border-2 transition-all flex flex-col items-center gap-0.5 cursor-pointer ${
+                                posPaymentMethod === 'Tarjeta' 
+                                  ? 'border-[#3525cd] bg-[#3525cd]/5 text-[#3525cd]' 
+                                  : 'border-[#c7c4d8]/30 bg-[#f0f3ff]/40 text-gray-500 hover:border-gray-300'
+                              }`}
+                            >
+                              <span className="material-symbols-outlined text-[16px]">credit_card</span>
+                              <span className="text-[9px] font-bold">Tarjeta</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        <button 
+                          onClick={async () => {
+                            await handlePosCheckout();
+                            setIsMobileCheckoutOpen(false);
+                          }}
+                          disabled={posCart.length === 0 || isPosSaving}
+                          className="w-full py-3 bg-[#3525cd] text-white rounded-lg font-bold text-sm shadow-lg shadow-[#3525cd]/20 hover:scale-[1.01] active:scale-95 transition-all disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          {isPosSaving ? (
+                            <>
+                              <span className="material-symbols-outlined animate-spin text-[16px]">refresh</span>
+                              Procesando...
+                            </>
+                          ) : (
+                            <>
+                              <span className="material-symbols-outlined text-[16px]">receipt_long</span>
+                              Cobrar y Generar Ticket
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
