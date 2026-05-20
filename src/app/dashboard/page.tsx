@@ -692,72 +692,269 @@ export default function DashboardPage() {
         )}
 
         {activeTab === 'orders' && (
-          <div className="flex flex-col gap-4 max-w-2xl">
-            <div className="relative w-full">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
-              <input 
-                type="text" 
-                placeholder="Buscar ID de Pedido, Cliente..." 
-                className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-1 focus:ring-[#5244e1] focus:border-[#5244e1] shadow-sm transition-all"
-              />
-            </div>
-            
-            <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
-              <button className="px-5 py-2 rounded-full text-xs font-bold bg-[#5244e1] text-white">Todos</button>
-              <button className="px-5 py-2 rounded-full text-xs font-bold bg-[#e6ebf5] text-[#4a5568]">Pendiente</button>
-              <button className="px-5 py-2 rounded-full text-xs font-bold bg-[#e6ebf5] text-[#4a5568]">Enviado</button>
-              <button className="px-5 py-2 rounded-full text-xs font-bold bg-[#e6ebf5] text-[#4a5568]">Entregado</button>
-            </div>
+          <>
+            {/* Mobile View (Stich Dash Mobile UI) */}
+            <div className="flex flex-col gap-4 w-full md:hidden">
+              <div className="relative w-full">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
+                <input 
+                  type="text" 
+                  placeholder="Buscar ID de Pedido, Cliente..." 
+                  className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-1 focus:ring-[#5244e1] focus:border-[#5244e1] shadow-sm transition-all"
+                />
+              </div>
+              
+              <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+                <button className="px-5 py-2 rounded-full text-xs font-bold bg-[#5244e1] text-white">Todos</button>
+                <button className="px-5 py-2 rounded-full text-xs font-bold bg-[#e6ebf5] text-[#4a5568]">Pendiente</button>
+                <button className="px-5 py-2 rounded-full text-xs font-bold bg-[#e6ebf5] text-[#4a5568]">Enviado</button>
+                <button className="px-5 py-2 rounded-full text-xs font-bold bg-[#e6ebf5] text-[#4a5568]">Entregado</button>
+              </div>
 
-            <h3 className="text-[11px] font-bold text-gray-400 tracking-wider uppercase mt-2">Pedidos Recientes</h3>
+              <h3 className="text-[11px] font-bold text-gray-400 tracking-wider uppercase mt-2">Pedidos Recientes</h3>
 
-            <div className="flex flex-col gap-3">
-              {/* Mock Order 1 */}
-              <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm flex flex-col gap-3">
-                <div className="flex justify-between items-start">
-                  <div className="flex flex-col">
-                    <span className="text-[#5244e1] font-bold text-xs tracking-wide">#ORD-94210</span>
-                    <span className="text-gray-900 font-extrabold text-base mt-1">Elena Rodriguez</span>
+              <div className="flex flex-col gap-3">
+                {/* Mock Order 1 */}
+                <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm flex flex-col gap-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex flex-col">
+                      <span className="text-[#5244e1] font-bold text-xs tracking-wide">#ORD-94210</span>
+                      <span className="text-gray-900 font-extrabold text-base mt-1">Elena Rodriguez</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-orange-600 border border-orange-200 bg-orange-50 px-2.5 py-1 rounded-full uppercase tracking-wider">PENDIENTE</span>
                   </div>
-                  <span className="text-[10px] font-bold text-orange-600 border border-orange-200 bg-orange-50 px-2.5 py-1 rounded-full uppercase tracking-wider">PENDIENTE</span>
+                  <div className="flex justify-between items-end mt-1">
+                    <span className="text-gray-500 text-xs font-medium">24 Oct, 2023 • 2 Ítems</span>
+                    <span className="text-gray-900 font-black text-xl">S/ 142.50</span>
+                  </div>
                 </div>
-                <div className="flex justify-between items-end mt-1">
-                  <span className="text-gray-500 text-xs font-medium">24 Oct, 2023 • 2 Ítems</span>
-                  <span className="text-gray-900 font-black text-xl">S/ 142.50</span>
+
+                {/* Mock Order 2 */}
+                <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm flex flex-col gap-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex flex-col">
+                      <span className="text-[#5244e1] font-bold text-xs tracking-wide">#ORD-94209</span>
+                      <span className="text-gray-900 font-extrabold text-base mt-1">Marcus Sterling</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-blue-600 border border-blue-200 bg-blue-50 px-2.5 py-1 rounded-full uppercase tracking-wider">ENVIADO</span>
+                  </div>
+                  <div className="flex justify-between items-end mt-1">
+                    <span className="text-gray-500 text-xs font-medium">23 Oct, 2023 • 1 Ítem</span>
+                    <span className="text-gray-900 font-black text-xl">S/ 89.00</span>
+                  </div>
+                </div>
+
+                {/* Mock Order 3 */}
+                <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm flex flex-col gap-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex flex-col">
+                      <span className="text-[#5244e1] font-bold text-xs tracking-wide">#ORD-94208</span>
+                      <span className="text-gray-900 font-extrabold text-base mt-1">Sarah Chen</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-green-600 border border-green-200 bg-green-50 px-2.5 py-1 rounded-full uppercase tracking-wider">ENTREGADO</span>
+                  </div>
+                  <div className="flex justify-between items-end mt-1">
+                    <span className="text-gray-500 text-xs font-medium">23 Oct, 2023 • 4 Ítems</span>
+                    <span className="text-gray-900 font-black text-xl">S/ 310.25</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Desktop View (Stich Dash PC UI) */}
+            <div className="hidden md:flex flex-col gap-6 w-full">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-black tracking-tight text-gray-900">Gestión de Pedidos</h2>
+                  <p className="text-sm text-gray-500 font-medium mt-1">Rastrea y administra el ciclo de vida de los pedidos de tus clientes.</p>
+                </div>
+                <div className="flex gap-2">
+                  <button className="px-5 py-2 rounded-lg text-sm font-bold bg-[#5244e1] text-white">Todos los Pedidos</button>
+                  <button className="px-5 py-2 rounded-lg text-sm font-bold bg-white text-gray-600 hover:bg-gray-50 border border-gray-200 transition-colors">Pendiente</button>
+                  <button className="px-5 py-2 rounded-lg text-sm font-bold bg-white text-gray-600 hover:bg-gray-50 border border-gray-200 transition-colors">Enviado</button>
+                  <button className="px-5 py-2 rounded-lg text-sm font-bold bg-white text-gray-600 hover:bg-gray-50 border border-gray-200 transition-colors">Entregado</button>
                 </div>
               </div>
 
-              {/* Mock Order 2 */}
-              <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm flex flex-col gap-3">
-                <div className="flex justify-between items-start">
-                  <div className="flex flex-col">
-                    <span className="text-[#5244e1] font-bold text-xs tracking-wide">#ORD-94209</span>
-                    <span className="text-gray-900 font-extrabold text-base mt-1">Marcus Sterling</span>
+              {/* KPI Cards */}
+              <div className="grid grid-cols-4 gap-4">
+                <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                  <div>
+                    <h4 className="text-[11px] font-bold text-gray-500 tracking-wider uppercase mb-1">Ingresos Totales</h4>
+                    <span className="text-3xl font-black text-gray-900">S/ 12,840.00</span>
                   </div>
-                  <span className="text-[10px] font-bold text-blue-600 border border-blue-200 bg-blue-50 px-2.5 py-1 rounded-full uppercase tracking-wider">ENVIADO</span>
+                  <div className="mt-4 flex items-center gap-1 text-[#5244e1] font-bold text-[13px]">
+                    <span className="material-symbols-outlined text-[16px]">trending_up</span>
+                    +14.2% desde el mes pasado
+                  </div>
                 </div>
-                <div className="flex justify-between items-end mt-1">
-                  <span className="text-gray-500 text-xs font-medium">23 Oct, 2023 • 1 Ítem</span>
-                  <span className="text-gray-900 font-black text-xl">S/ 89.00</span>
+                <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                  <div>
+                    <h4 className="text-[11px] font-bold text-gray-500 tracking-wider uppercase mb-1">Pedidos Activos</h4>
+                    <span className="text-3xl font-black text-gray-900">154</span>
+                  </div>
+                  <div className="mt-4 flex items-center gap-1 text-gray-500 font-bold text-[13px]">
+                    <span className="material-symbols-outlined text-[16px]">schedule</span>
+                    12 pedidos requieren atención
+                  </div>
+                </div>
+                <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                  <div>
+                    <h4 className="text-[11px] font-bold text-gray-500 tracking-wider uppercase mb-1">Tiempo Promedio</h4>
+                    <span className="text-3xl font-black text-gray-900">1.2 Días</span>
+                  </div>
+                  <div className="mt-4 flex items-center gap-1 text-[#5244e1] font-bold text-[13px]">
+                    <span className="material-symbols-outlined text-[16px]">bolt</span>
+                    20% más rápido que el promedio
+                  </div>
+                </div>
+                <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                  <div>
+                    <h4 className="text-[11px] font-bold text-gray-500 tracking-wider uppercase mb-1">Tasa de Devolución</h4>
+                    <span className="text-3xl font-black text-gray-900">2.4%</span>
+                  </div>
+                  <div className="mt-4 flex items-center gap-1 text-red-500 font-bold text-[13px]">
+                    <span className="material-symbols-outlined text-[16px]">trending_down</span>
+                    +0.3% desde la semana pasada
+                  </div>
                 </div>
               </div>
 
-              {/* Mock Order 3 */}
-              <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm flex flex-col gap-3">
-                <div className="flex justify-between items-start">
-                  <div className="flex flex-col">
-                    <span className="text-[#5244e1] font-bold text-xs tracking-wide">#ORD-94208</span>
-                    <span className="text-gray-900 font-extrabold text-base mt-1">Sarah Chen</span>
+              {/* Table */}
+              <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden mt-2">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-100 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                      <th className="p-4">ID Pedido</th>
+                      <th className="p-4">Nombre del Cliente</th>
+                      <th className="p-4">Fecha</th>
+                      <th className="p-4">Ítems</th>
+                      <th className="p-4">Estado</th>
+                      <th className="p-4 text-right">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-sm font-medium">
+                    <tr className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                      <td className="p-4 text-[#5244e1] font-bold">#ORD-9021</td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-[#5244e1]/10 text-[#5244e1] flex items-center justify-center font-bold text-xs shrink-0">ED</div>
+                          <span className="text-gray-900">Eleanor Donahue</span>
+                        </div>
+                      </td>
+                      <td className="p-4 text-gray-500">24 Oct, 2023</td>
+                      <td className="p-4 text-gray-500">3 Ítems</td>
+                      <td className="p-4">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 text-orange-600 border border-orange-200 text-xs font-bold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span> Pendiente
+                        </span>
+                      </td>
+                      <td className="p-4 text-right text-gray-900 font-bold">S/ 245.99</td>
+                    </tr>
+                    <tr className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                      <td className="p-4 text-[#5244e1] font-bold">#ORD-9020</td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center font-bold text-xs shrink-0">JM</div>
+                          <span className="text-gray-900">Julian Marshall</span>
+                        </div>
+                      </td>
+                      <td className="p-4 text-gray-500">24 Oct, 2023</td>
+                      <td className="p-4 text-gray-500">1 Ítem</td>
+                      <td className="p-4">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 text-green-600 border border-green-200 text-xs font-bold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Enviado
+                        </span>
+                      </td>
+                      <td className="p-4 text-right text-gray-900 font-bold">S/ 89.00</td>
+                    </tr>
+                    <tr className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                      <td className="p-4 text-[#5244e1] font-bold">#ORD-9019</td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center font-bold text-xs shrink-0">SW</div>
+                          <span className="text-gray-900">Sarah Waters</span>
+                        </div>
+                      </td>
+                      <td className="p-4 text-gray-500">23 Oct, 2023</td>
+                      <td className="p-4 text-gray-500">5 Ítems</td>
+                      <td className="p-4">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-200 text-xs font-bold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Entregado
+                        </span>
+                      </td>
+                      <td className="p-4 text-right text-gray-900 font-bold">S/ 1,024.50</td>
+                    </tr>
+                    <tr className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                      <td className="p-4 text-[#5244e1] font-bold">#ORD-9018</td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-[#5244e1]/10 text-[#5244e1] flex items-center justify-center font-bold text-xs shrink-0">BB</div>
+                          <span className="text-gray-900">Benson Bernard</span>
+                        </div>
+                      </td>
+                      <td className="p-4 text-gray-500">23 Oct, 2023</td>
+                      <td className="p-4 text-gray-500">2 Ítems</td>
+                      <td className="p-4">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 text-orange-600 border border-orange-200 text-xs font-bold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span> Pendiente
+                        </span>
+                      </td>
+                      <td className="p-4 text-right text-gray-900 font-bold">S/ 112.20</td>
+                    </tr>
+                    <tr className="hover:bg-gray-50/50 transition-colors">
+                      <td className="p-4 text-[#5244e1] font-bold">#ORD-9017</td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center font-bold text-xs shrink-0">KT</div>
+                          <span className="text-gray-900">Kira Thompson</span>
+                        </div>
+                      </td>
+                      <td className="p-4 text-gray-500">22 Oct, 2023</td>
+                      <td className="p-4 text-gray-500">12 Ítems</td>
+                      <td className="p-4">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 text-green-600 border border-green-200 text-xs font-bold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Enviado
+                        </span>
+                      </td>
+                      <td className="p-4 text-right text-gray-900 font-bold">S/ 2,410.00</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div className="p-4 border-t border-gray-100 flex items-center justify-between bg-white">
+                  <span className="text-sm text-gray-500">Mostrando 1 a 5 de 154 pedidos</span>
+                  <div className="flex gap-1">
+                    <button className="w-8 h-8 rounded bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-black transition-colors"><span className="material-symbols-outlined text-[18px]">chevron_left</span></button>
+                    <button className="w-8 h-8 rounded bg-[#5244e1] text-white flex items-center justify-center font-bold text-sm">1</button>
+                    <button className="w-8 h-8 rounded bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 font-bold text-sm transition-colors">2</button>
+                    <button className="w-8 h-8 rounded bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 font-bold text-sm transition-colors">3</button>
+                    <button className="w-8 h-8 rounded bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors"><span className="material-symbols-outlined text-[18px]">chevron_right</span></button>
                   </div>
-                  <span className="text-[10px] font-bold text-green-600 border border-green-200 bg-green-50 px-2.5 py-1 rounded-full uppercase tracking-wider">ENTREGADO</span>
                 </div>
-                <div className="flex justify-between items-end mt-1">
-                  <span className="text-gray-500 text-xs font-medium">23 Oct, 2023 • 4 Ítems</span>
-                  <span className="text-gray-900 font-black text-xl">S/ 310.25</span>
+              </div>
+
+              {/* Promotional Cards Area */}
+              <div className="grid grid-cols-3 gap-6 mt-2">
+                <div className="col-span-2 bg-gradient-to-r from-gray-50 to-white border border-gray-100 rounded-xl p-6 shadow-sm flex flex-col justify-center">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">Automatizar Etiquetas de Envío</h3>
+                  <p className="text-sm text-gray-500 mb-4 max-w-md">Conecta tu proveedor preferido para generar etiquetas de envío automáticamente tan pronto como un pedido sea marcado como 'Empacado'.</p>
+                  <a href="#" className="text-[#5244e1] font-bold text-sm flex items-center gap-1 hover:underline">
+                    Ver integraciones <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                  </a>
+                </div>
+                <div className="bg-[#5244e1] rounded-xl p-6 shadow-md text-white flex flex-col justify-between relative overflow-hidden">
+                  <span className="material-symbols-outlined absolute -right-4 -top-4 text-7xl opacity-10">verified_user</span>
+                  <div>
+                    <h3 className="text-lg font-bold mb-2">Protección contra Fraude</h3>
+                    <p className="text-sm text-white/80 mb-4">Tu cuenta está cubierta actualmente por detección de fraude con IA para todos los pedidos.</p>
+                  </div>
+                  <button className="w-full py-2 bg-white/20 hover:bg-white/30 transition-colors rounded-lg font-bold text-sm backdrop-blur-sm">
+                    Ver Reporte de Seguridad
+                  </button>
                 </div>
               </div>
             </div>
-          </div>
+          </>
         )}
 
         {activeTab === 'metrics' && (
