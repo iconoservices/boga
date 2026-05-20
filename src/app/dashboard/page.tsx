@@ -1614,7 +1614,7 @@ export default function DashboardPage() {
 
             {/* Mobile Checkout Drawer */}
             {isMobileCheckoutOpen && (
-              <div className="lg:hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex flex-col justify-end" onClick={() => setIsMobileCheckoutOpen(false)}>
+              <div className="lg:hidden fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex flex-col justify-end" onClick={() => setIsMobileCheckoutOpen(false)}>
                 <div className="bg-white rounded-t-[24px] shadow-2xl flex flex-col max-h-[85vh] w-full" onClick={e => e.stopPropagation()}>
                   {/* Drawer Header */}
                   <div className="p-4 border-b border-[#c7c4d8]/30 bg-white flex items-center justify-between shrink-0">
@@ -1732,9 +1732,10 @@ export default function DashboardPage() {
                         </div>
                       ))}
                     </div>
+                  </div>
 
-                    {/* Payment & Action Footer */}
-                    <div className="p-4 bg-white border-t border-[#c7c4d8]/30">
+                  {/* Payment & Action Footer */}
+                  <div className="p-4 bg-white border-t border-[#c7c4d8]/30 shrink-0">
                       <div className="space-y-1 mb-2.5">
                         <div className="flex justify-between text-gray-500 font-semibold text-[11px]">
                           <span>Subtotal</span>
@@ -1818,7 +1819,6 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </div>
-              </div>
             )}
           </div>
         )}
