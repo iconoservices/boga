@@ -27,6 +27,8 @@ export default function Home() {
   const { addToCart, cartCount, setIsCartOpen } = useCart();
   const [addedItems, setAddedItems] = useState<Record<string, boolean>>({});
   const [activeSort, setActiveSort] = useState('Populares');
+  const [favorites, setFavorites] = useState<any[]>([]);
+  const [marketplaceProducts, setMarketplaceProducts] = useState<any[]>([]);
 
   const [storeData, setStoreData] = useState(() => 
     Object.values(stores).map(s => ({
@@ -163,12 +165,6 @@ export default function Home() {
     setFavorites(updated);
     localStorage.setItem('boga_favorites', JSON.stringify(updated));
   };
-
-  const goTo = useCallback((i: number, animate = true) => {
-    indexRef.current = i;
-    setAnimated(animate);
-    setIndex(i);
-  }, []);
 
   useEffect(() => {
     const fetchRealData = async () => {
@@ -361,7 +357,7 @@ export default function Home() {
         onCartClick={() => setIsCartOpen(true)}
       />
 
-      <main className="flex flex-col gap-6 mt-sm pb-8">
+      <main className="flex flex-col gap-4 mt-2 pb-8">
         {/* Banners Section */}
         <section className="overflow-hidden">
           <div ref={trackRef} className="flex gap-3 will-change-transform">
@@ -405,24 +401,13 @@ export default function Home() {
         </section>
         
         {/* Adaptive Macro-Categories Selector */}
-        <section className="flex flex-col gap-3 transition-all duration-500">
-          <div className="flex justify-between items-center px-1">
-            <h2 className="font-h2 text-[15px] text-[#3E2723] font-bold">Categorías Principales</h2>
-            {activeCategory !== 'Todas' && (
-              <button 
-                onClick={() => setActiveCategory('Todas')}
-                className="text-primary text-[11px] font-bold active:scale-90"
-              >
-                Restablecer
-              </button>
-            )}
-          </div>
+        <section className="flex flex-col gap-2 transition-all duration-500">
           
           <div className={`
             transition-all duration-500 ease-in-out
             ${activeCategory === 'Todas' 
-              ? 'grid grid-cols-4 gap-2' 
-              : 'flex gap-3 overflow-x-auto hide-scrollbar -mx-gutter px-gutter pb-2'
+              ? 'grid grid-cols-4 gap-2 px-gutter' 
+              : 'flex gap-3 overflow-x-auto hide-scrollbar px-gutter pb-2'
             }`}
             style={{ scrollbarWidth: 'none' }}
           >
@@ -436,8 +421,8 @@ export default function Home() {
                 className={`
                   flex transition-all duration-300 active:scale-95 shrink-0
                   ${activeCategory === 'Todas' 
-                    ? 'flex-col items-center justify-center gap-1.5 w-full px-2 py-3 rounded-xl border shadow-sm' 
-                    : 'flex-row items-center gap-2 px-4 py-2 rounded-full border border-[#3E2723]/10'
+                    ? 'flex-col items-center justify-center gap-1 w-full px-1 py-2 rounded-[14px] border shadow-sm' 
+                    : 'flex-row items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#3E2723]/10'
                   }
                   ${activeCategory === cat.id 
                     ? 'bg-primary text-white border-primary shadow-md' 
@@ -446,7 +431,7 @@ export default function Home() {
                 `}
               >
                 <span className={`material-symbols-outlined shrink-0 transition-all ${
-                  activeCategory === 'Todas' ? 'text-[20px]' : 'text-[16px]'
+                  activeCategory === 'Todas' ? 'text-[18px]' : 'text-[16px]'
                 } ${activeCategory === cat.id ? 'text-white' : 'text-primary'}`}>
                   {cat.icon}
                 </span>
@@ -463,31 +448,31 @@ export default function Home() {
         {/* Specific Sub-Categories (Filtered) */}
         <section className="flex flex-col gap-2">
           <div 
-            className={`px-1 py-1 ${showAllSubCategories ? 'flex flex-wrap gap-x-6 gap-y-4 justify-start' : '-mx-gutter px-gutter overflow-x-auto hide-scrollbar flex gap-6 items-center'}`} 
+            className={`px-gutter py-1 ${showAllSubCategories ? 'flex flex-wrap gap-x-4 gap-y-3 justify-start' : 'px-gutter overflow-x-auto hide-scrollbar flex gap-4 items-center'}`} 
             style={{ scrollbarWidth: 'none' }}
           >
             <div 
               onClick={() => setShowAllSubCategories(!showAllSubCategories)}
               className="flex flex-col items-center gap-2 shrink-0 group cursor-pointer active:scale-90 transition-transform"
             >
-              <div className="w-14 h-14 rounded-full bg-[#FFF0E6] shadow-sm flex items-center justify-center border border-[#E2725B]/20 group-hover:border-primary">
-                <span className="material-symbols-outlined text-primary text-[24px]">
+              <div className="w-12 h-12 rounded-full bg-[#FFF0E6] shadow-sm flex items-center justify-center border border-[#E2725B]/20 group-hover:border-primary">
+                <span className="material-symbols-outlined text-primary text-[20px]">
                   {showAllSubCategories ? 'unfold_less' : 'unfold_more'}
                 </span>
               </div>
-              <span className="text-[11px] font-bold text-primary text-center w-16 leading-tight">
+              <span className="text-[10px] font-bold text-primary text-center w-14 leading-tight">
                 {showAllSubCategories ? 'Ver menos' : 'Ver todo'}
               </span>
             </div>
 
             {currentSubCategories.map((sub, index) => (
               <div key={index} className="flex flex-col items-center gap-2 shrink-0 group cursor-pointer active:scale-90 transition-transform">
-                <div className="w-14 h-14 rounded-full bg-surface-container-lowest shadow-sm flex items-center justify-center border border-[#E2725B]/10 group-hover:border-primary">
-                  <span className="material-symbols-outlined text-primary text-[24px]">
+                <div className="w-12 h-12 rounded-full bg-surface-container-lowest shadow-sm flex items-center justify-center border border-[#E2725B]/10 group-hover:border-primary">
+                  <span className="material-symbols-outlined text-primary text-[20px]">
                     {sub.icon}
                   </span>
                 </div>
-                <span className="text-[11px] font-bold text-on-surface text-center w-16 leading-tight">{sub.name}</span>
+                <span className="text-[10px] font-bold text-on-surface text-center w-14 leading-tight">{sub.name}</span>
               </div>
             ))}
           </div>
@@ -497,48 +482,10 @@ export default function Home() {
         {activeCategory === 'Todas' ? (
           <div className="flex flex-col gap-6">
             
-            {/* Tiendas Destacadas */}
-            <section className="flex flex-col gap-3">
-              <h3 className="font-h3 text-[20px] font-black text-[#3E2723] px-1">Tiendas Destacadas</h3>
-              <div className="flex gap-4 overflow-x-auto hide-scrollbar -mx-gutter px-gutter pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
-                {storeData.map((store) => (
-                  <Link href={`/${store.slug}`} key={store.name} className="min-w-[280px] w-[80vw] max-w-[310px] bg-white rounded-[20px] p-3 shadow-md border border-[#3E2723]/5 snap-start flex flex-col gap-3 group">
-                    <div className="flex gap-2 overflow-x-auto hide-scrollbar snap-x" style={{ scrollbarWidth: 'none' }}>
-                      {store.products.map((p) => (
-                        <div key={p.name} className="min-w-[90px] w-[90px] snap-start flex flex-col gap-1">
-                          <div className="aspect-square rounded-xl overflow-hidden bg-gray-100">
-                            <img src={p.img} className="w-full h-full object-cover" alt={p.name} />
-                          </div>
-                          <span className="font-bold text-[9px] text-[#3E2723] uppercase leading-tight line-clamp-2">{p.name}</span>
-                          <span className="font-black text-[#2E7D32] text-[11px]">{p.price}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex gap-2 items-center border-t border-black/5 pt-2">
-                      <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-[#3E2723]/10">
-                        <img src={store.logo} className="w-full h-full object-cover" alt={store.name} />
-                      </div>
-                      <div className="flex flex-col flex-1 min-w-0">
-                        <span className="font-black text-[#3E2723] text-[15px] leading-tight">{store.name}</span>
-                        <span className="text-[8px] text-[#745853] font-bold uppercase tracking-widest truncate opacity-80">{store.category}</span>
-                        <div className="flex gap-1.5 mt-1">
-                          <span className="bg-amber-50 text-amber-700 text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 border border-amber-200">
-                            <span className="material-symbols-outlined text-[10px]">schedule</span>{store.time}
-                          </span>
-                          <span className="bg-surface-container-lowest text-[#745853] text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 border border-[#3E2723]/10">
-                            <span className="material-symbols-outlined text-[10px]">two_wheeler</span>{store.delivery}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </section>
 
             {sections.map((section) => (
               <section key={section.id}>
-                <div className="flex justify-between items-center mb-3 px-1">
+                <div className="flex justify-between items-center mb-3 px-gutter">
                   <h2 className="font-h2 text-[18px] text-[#3E2723] font-black">{section.title}</h2>
                   <button 
                     onClick={() => setActiveCategory(section.id)}
@@ -547,7 +494,7 @@ export default function Home() {
                     Ver todo
                   </button>
                 </div>
-                <div className="flex gap-4 overflow-x-auto hide-scrollbar -mx-gutter px-gutter pb-4 snap-x" style={{ scrollbarWidth: 'none' }}>
+                <div className="flex gap-4 overflow-x-auto hide-scrollbar px-gutter pb-4 snap-x" style={{ scrollbarWidth: 'none' }}>
                   {section.products.slice(0, 4).map((p, idx) => (
                     <div key={idx} className="min-w-[160px] w-[160px] bg-surface-container-lowest rounded-2xl shadow-sm overflow-hidden flex flex-col border border-[#3E2723]/5 snap-start">
                       <div className="relative h-28">
@@ -578,7 +525,7 @@ export default function Home() {
           </div>
         ) : (
           <section className="flex flex-col gap-6">
-            <div className="flex flex-col gap-4 px-1">
+            <div className="flex flex-col gap-4 px-gutter">
               <div>
                 <h2 className="font-h2 text-[20px] text-[#3E2723] font-black">
                   {sections.find(s => s.id === activeCategory)?.title || activeCategory}
@@ -586,7 +533,7 @@ export default function Home() {
                 <p className="text-[#745853] text-[13px]">Mostrando todos los productos disponibles</p>
               </div>
 
-              <div className="flex gap-2 overflow-x-auto hide-scrollbar -mx-1 px-1" style={{ scrollbarWidth: 'none' }}>
+              <div className="flex gap-2 overflow-x-auto hide-scrollbar px-gutter" style={{ scrollbarWidth: 'none' }}>
                 <button className="flex items-center justify-center w-8 h-8 rounded-full border border-[#3E2723]/10 bg-white shrink-0 text-[#3E2723]">
                   <span className="material-symbols-outlined text-[18px]">tune</span>
                 </button>
@@ -606,7 +553,7 @@ export default function Home() {
               </div>
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 px-gutter">
               {(sections.find(s => s.id === activeCategory)?.products || []).map((p, idx) => (
                 <div key={idx} className="bg-surface-container-lowest rounded-2xl shadow-sm overflow-hidden flex flex-col border border-[#3E2723]/5">
                   <div className="relative h-32">
