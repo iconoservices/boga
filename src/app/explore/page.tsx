@@ -16,7 +16,8 @@ export default function Explore() {
   const [addedItems, setAddedItems] = useState<Record<string, boolean>>({});
   const [activeSort, setActiveSort] = useState('Populares');
 
-  const [storeData, setStoreData] = useState(() => 
+  type StoreDataType = { name: string, slug: string, category: string, macroCat: string, time: string, delivery: string, logo: string, products: { name: string, price: string, img: string, status?: string }[] };
+  const [storeData, setStoreData] = useState<StoreDataType[]>(() => 
     Object.values(stores).map(s => {
       let macroCat = 'Mercado';
       const storeCategory = s.marketplaceCategory?.toLowerCase() || '';
@@ -213,7 +214,8 @@ export default function Explore() {
     ? Object.values(subCategories).flat() 
     : subCategories[activeCategory] || [];
 
-  const [sections, setSections] = useState([
+  type SectionType = { id: string, title: string, link?: string, products: { name: string, price: string, original?: string, badge?: string, img: string, status?: string }[] };
+  const [sections, setSections] = useState<SectionType[]>([
     {
       id: 'Combos & Promos',
       title: 'Promos & Combos 🏷️',

@@ -377,18 +377,150 @@ export default function DashboardPage() {
             </button>
           </div>
         </header>
+        {activeTab === 'products' && (
+          <>
+            {/* Store Selector Global for Dashboard */}
+            <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2 mb-6" style={{ scrollbarWidth: 'none' }}>
+              <button
+                onClick={() => setSelectedStore('all')}
+                className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-2 ${
+                  selectedStore === 'all' 
+                    ? 'bg-black text-white shadow-md' 
+                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">grid_view</span>
+                Todas las tiendas
+              </button>
+              {Object.values(stores).map((store) => (
+                <button
+                  key={store.slug}
+                  onClick={() => setSelectedStore(store.slug)}
+                  className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-2 border ${
+                    selectedStore === store.slug 
+                      ? 'bg-black text-white border-black shadow-md' 
+                      : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200'
+                  }`}
+                >
+                  {store.name}
+                </button>
+              ))}
+            </div>
 
-                            selectedFilterCategory === cat 
-                              ? 'bg-[#FF6B00] text-white border-transparent' 
-                              : 'bg-transparent text-gray-600 border-gray-200 hover:bg-gray-50'
-                          }`}
-                        >
-                          {cat}
-                        </button>
-                      ))}
+            {/* Stats Row */}
+            {(() => {
+              const storeFiltered = selectedStore === 'all' ? products : products.filter(p => p.store === selectedStore);
+              const availableCategories = Array.from(new Set(storeFiltered.map(p => p.category)));
+              
+              const filteredProducts = storeFiltered.filter(p => {
+                const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                      p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                      (p.subcategory || '').toLowerCase().includes(searchQuery.toLowerCase());
+                const matchesCategory = selectedFilterCategory === 'all' || p.category === selectedFilterCategory;
+                return matchesSearch && matchesCategory;
+              });
+
+              return (
+                <>
+                  <div className="flex flex-wrap gap-4 mb-6">
+                    <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm flex items-center gap-3 min-w-[150px] flex-1">
+                      <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-[18px]">inventory_2</span>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 font-medium text-[11px] mb-0.5">Total Productos</p>
+                        <h3 className="text-xl font-extrabold text-gray-900 leading-none">{storeFiltered.length}</h3>
+                      </div>
                     </div>
+                    {selectedStore === 'all' && (
+                      <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm flex items-center gap-3 min-w-[150px] flex-1">
+                        <div className="w-8 h-8 rounded-full bg-green-50 text-green-600 flex items-center justify-center shrink-0">
+                          <span className="material-symbols-outlined text-[18px]">storefront</span>
+                        </div>
+                        <div>
+                          <p className="text-gray-500 font-medium text-[11px] mb-0.5">Tiendas Activas</p>
+                          <h3 className="text-xl font-extrabold text-gray-900 leading-none">
+                            {new Set(products.map(p => p.store)).size || 0}
+                          </h3>
+                        </div>
+                      </div>
+                    )}
+                    <div className="hidden lg:block flex-1 border-2 border-dashed border-gray-200 rounded-xl bg-transparent"></div>
                   </div>
-                </div>
+
+                  {/* Products Table */}
+                  <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+                    <div className="p-4 border-b border-gray-100 flex flex-col gap-4 bg-white">
+                      <div className="flex items-center justify-between flex-wrap gap-4">
+                        <h2 className="text-base font-bold text-gray-900">Catálogo Actual {selectedStore !== 'all' ? `- ${stores[selectedStore]?.name}` : ''}</h2>
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-semibold text-gray-500">Acciones:</span>
+                          <div className="flex gap-2 flex-wrap">
+                            <button
+                              onClick={() => setIsQRModalOpen(true)}
+                              className="px-3 py-1.5 text-sm font-bold rounded-lg transition-colors flex items-center gap-1.5 bg-black text-white hover:bg-gray-800"
+                            >
+                              <span className="material-symbols-outlined text-[16px]">qr_code_2</span>
+                              Código QR
+                            </button>
+                            {Object.values(stores)
+                              .filter(store => selectedStore === 'all' || store.slug === selectedStore)
+                              .map(store => (
+                              <button
+                                key={store.slug}
+                                onClick={() => exportStoreMenuPDF(store.slug)}
+                                disabled={isExporting}
+                                className={`px-3 py-1.5 text-sm font-bold rounded-lg transition-colors flex items-center gap-1.5 ${isExporting ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
+                              >
+                                <span className={`material-symbols-outlined text-[16px] ${isExporting ? 'animate-pulse' : ''}`}>
+                                  {isExporting ? 'hourglass_empty' : 'picture_as_pdf'}
+                                </span>
+                                {isExporting ? 'Generando...' : (selectedStore === 'all' ? store.name : 'Descargar')}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Search and Filters */}
+                      <div className="flex flex-col md:flex-row md:items-center gap-3">
+                        <div className="relative w-full md:w-96 shrink-0">
+                          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
+                          <input 
+                            type="text" 
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Buscar nombre o categoría..." 
+                            className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-1 focus:ring-black focus:border-black transition-all"
+                          />
+                        </div>
+                        <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1 md:pb-0" style={{ scrollbarWidth: 'none' }}>
+                          <button 
+                            onClick={() => setSelectedFilterCategory('all')}
+                            className={`px-4 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition-colors uppercase tracking-wider border ${
+                              selectedFilterCategory === 'all' 
+                                ? 'bg-[#FF6B00] text-white border-transparent' 
+                                : 'bg-transparent text-gray-600 border-gray-200 hover:bg-gray-50'
+                            }`}
+                          >
+                            Todos
+                          </button>
+                          {availableCategories.map(cat => (
+                            <button 
+                              key={cat}
+                              onClick={() => setSelectedFilterCategory(cat)}
+                              className={`px-4 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap uppercase tracking-wider transition-colors border ${
+                                selectedFilterCategory === cat 
+                                  ? 'bg-[#FF6B00] text-white border-transparent' 
+                                  : 'bg-transparent text-gray-600 border-gray-200 hover:bg-gray-50'
+                              }`}
+                            >
+                              {cat}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                 
                 <div className="overflow-x-auto">
                   {isLoading ? (
@@ -556,6 +688,116 @@ export default function DashboardPage() {
             </>
           );
         })()}
+          </>
+        )}
+
+        {activeTab === 'orders' && (
+          <div className="flex flex-col gap-4 max-w-2xl">
+            <div className="relative w-full">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
+              <input 
+                type="text" 
+                placeholder="Buscar ID de Pedido, Cliente..." 
+                className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-1 focus:ring-[#5244e1] focus:border-[#5244e1] shadow-sm transition-all"
+              />
+            </div>
+            
+            <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+              <button className="px-5 py-2 rounded-full text-xs font-bold bg-[#5244e1] text-white">Todos</button>
+              <button className="px-5 py-2 rounded-full text-xs font-bold bg-[#e6ebf5] text-[#4a5568]">Pendiente</button>
+              <button className="px-5 py-2 rounded-full text-xs font-bold bg-[#e6ebf5] text-[#4a5568]">Enviado</button>
+              <button className="px-5 py-2 rounded-full text-xs font-bold bg-[#e6ebf5] text-[#4a5568]">Entregado</button>
+            </div>
+
+            <h3 className="text-[11px] font-bold text-gray-400 tracking-wider uppercase mt-2">Pedidos Recientes</h3>
+
+            <div className="flex flex-col gap-3">
+              {/* Mock Order 1 */}
+              <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm flex flex-col gap-3">
+                <div className="flex justify-between items-start">
+                  <div className="flex flex-col">
+                    <span className="text-[#5244e1] font-bold text-xs tracking-wide">#ORD-94210</span>
+                    <span className="text-gray-900 font-extrabold text-base mt-1">Elena Rodriguez</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-orange-600 border border-orange-200 bg-orange-50 px-2.5 py-1 rounded-full uppercase tracking-wider">PENDIENTE</span>
+                </div>
+                <div className="flex justify-between items-end mt-1">
+                  <span className="text-gray-500 text-xs font-medium">24 Oct, 2023 • 2 Ítems</span>
+                  <span className="text-gray-900 font-black text-xl">S/ 142.50</span>
+                </div>
+              </div>
+
+              {/* Mock Order 2 */}
+              <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm flex flex-col gap-3">
+                <div className="flex justify-between items-start">
+                  <div className="flex flex-col">
+                    <span className="text-[#5244e1] font-bold text-xs tracking-wide">#ORD-94209</span>
+                    <span className="text-gray-900 font-extrabold text-base mt-1">Marcus Sterling</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-blue-600 border border-blue-200 bg-blue-50 px-2.5 py-1 rounded-full uppercase tracking-wider">ENVIADO</span>
+                </div>
+                <div className="flex justify-between items-end mt-1">
+                  <span className="text-gray-500 text-xs font-medium">23 Oct, 2023 • 1 Ítem</span>
+                  <span className="text-gray-900 font-black text-xl">S/ 89.00</span>
+                </div>
+              </div>
+
+              {/* Mock Order 3 */}
+              <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm flex flex-col gap-3">
+                <div className="flex justify-between items-start">
+                  <div className="flex flex-col">
+                    <span className="text-[#5244e1] font-bold text-xs tracking-wide">#ORD-94208</span>
+                    <span className="text-gray-900 font-extrabold text-base mt-1">Sarah Chen</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-green-600 border border-green-200 bg-green-50 px-2.5 py-1 rounded-full uppercase tracking-wider">ENTREGADO</span>
+                </div>
+                <div className="flex justify-between items-end mt-1">
+                  <span className="text-gray-500 text-xs font-medium">23 Oct, 2023 • 4 Ítems</span>
+                  <span className="text-gray-900 font-black text-xl">S/ 310.25</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'metrics' && (
+          <div className="flex flex-col gap-6">
+            <h2 className="text-2xl font-black tracking-tight text-gray-900">Métricas y Rendimiento</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                <div className="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center mb-4">
+                  <span className="material-symbols-outlined">payments</span>
+                </div>
+                <p className="text-sm font-bold text-gray-500">Ventas de Hoy</p>
+                <h3 className="text-3xl font-black text-gray-900 mt-1">S/ 0.00</h3>
+              </div>
+              <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
+                  <span className="material-symbols-outlined">shopping_bag</span>
+                </div>
+                <p className="text-sm font-bold text-gray-500">Pedidos Completados</p>
+                <h3 className="text-3xl font-black text-gray-900 mt-1">0</h3>
+              </div>
+              <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center mb-4">
+                  <span className="material-symbols-outlined">visibility</span>
+                </div>
+                <p className="text-sm font-bold text-gray-500">Vistas del Perfil</p>
+                <h3 className="text-3xl font-black text-gray-900 mt-1">24</h3>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm mt-4">
+              <div className="p-4 border-b border-gray-100 bg-gray-50">
+                <h3 className="font-bold text-gray-900">Productos Más Vendidos</h3>
+              </div>
+              <div className="p-8 text-center">
+                <p className="text-gray-500">Aún no hay suficientes datos para mostrar métricas. ¡Comparte tu código QR para recibir más pedidos!</p>
+              </div>
+            </div>
+          </div>
+        )}
 
       </main>
 
