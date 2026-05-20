@@ -200,19 +200,25 @@ export default function SunsetTemplate({ store }: SunsetTemplateProps) {
           style={{ animation: 'sunsetFadeIn 2.5s ease-out forwards' }}
         >
           <div
-            className="mb-8 p-4 rounded-full"
+            className="mb-8 overflow-hidden rounded-2xl flex items-center justify-center border"
             style={{
-              border: `1px solid ${t.outlineVariant}33`,
+              width: '80px',
+              height: '80px',
+              borderColor: `${t.outlineVariant}33`,
               background: `${t.surface}4D`,
               backdropFilter: 'blur(12px)',
             }}
           >
-            <span
-              className="material-symbols-outlined text-5xl"
-              style={{ color: t.primary, fontVariationSettings: "'FILL' 1" }}
-            >
-              local_bar
-            </span>
+            {store.logoImage ? (
+              <img src={store.logoImage} alt={store.name} className="w-full h-full object-cover" />
+            ) : (
+              <span
+                className="material-symbols-outlined text-5xl"
+                style={{ color: t.primary, fontVariationSettings: "'FILL' 1" }}
+              >
+                local_bar
+              </span>
+            )}
           </div>
 
           <h1
@@ -295,10 +301,13 @@ export default function SunsetTemplate({ store }: SunsetTemplateProps) {
       >
         <button
           onClick={() => setEntered(false)}
-          className="flex items-center gap-2 transition-opacity hover:opacity-70"
+          className="flex items-center gap-3 transition-opacity hover:opacity-70"
           style={{ fontFamily: t.fontLabel, color: t.onSurfaceVariant }}
         >
           <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+          {store.logoImage && (
+            <img src={store.logoImage} alt={store.name} className="w-8 h-8 rounded-lg object-cover border border-white/10" />
+          )}
           <span
             className="text-xl font-bold tracking-tighter uppercase italic"
             style={{ fontFamily: t.fontHeadline, color: t.primary }}

@@ -69,7 +69,7 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
         const { data, error } = await supabase
           .from('products')
           .select('*')
-          .eq('store', 'sweetkittynails');
+          .eq('store', store.slug);
         
         if (data && !error && data.length > 0) {
           const formatted = data.map((p) => ({
@@ -210,9 +210,13 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
       <header className="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-pink-100 shadow-sm transition-all duration-300">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="w-9 h-9 rounded-full flex items-center justify-center text-white text-lg shadow-md animate-bounce" style={{ background: `linear-gradient(135deg, ${theme.primary}, #ffb3c6)` }}>
-              🐈
-            </span>
+            {store.logoImage ? (
+              <img src={store.logoImage} alt={store.name} className="w-9 h-9 rounded-full object-cover border border-pink-100 shadow" />
+            ) : (
+              <span className="w-9 h-9 rounded-full flex items-center justify-center text-white text-lg shadow-md animate-bounce" style={{ background: `linear-gradient(135deg, ${theme.primary}, #ffb3c6)` }}>
+                🐈
+              </span>
+            )}
             <span style={{ fontSize: '1.6rem', fontWeight: 900, fontFamily: theme.fontHeadline, color: theme.primaryContainer, letterSpacing: '-0.8px' }} className="flex items-center gap-1.5">
               Sweet Kitty <span className="text-pink-400 font-normal font-['Pacifico']" style={{ fontSize: '1.25rem' }}>Nails</span>
             </span>

@@ -43,7 +43,7 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
         const { data, error } = await supabase
           .from('products')
           .select('*')
-          .eq('store', 'estilosmirka');
+          .eq('store', store.slug);
         
         if (data && !error && data.length > 0) {
           const formatted = data.map((p) => ({
@@ -131,9 +131,18 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
       <header className="sticky top-0 z-40 bg-white border-b border-black/8 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-5 h-14 flex items-center justify-between gap-6">
           {/* Logo */}
-          <span className="text-xl font-bold tracking-tight shrink-0" style={{ fontFamily: theme.fontHeadline, color: theme.primaryContainer }}>
-            {store.name}
-          </span>
+          <div className="flex items-center gap-2.5 shrink-0">
+            {store.logoImage && (
+              <img 
+                src={store.logoImage} 
+                alt={store.name} 
+                className="w-8 h-8 rounded-full object-cover border border-black/10" 
+              />
+            )}
+            <span className="text-xl font-bold tracking-tight" style={{ fontFamily: theme.fontHeadline, color: theme.primaryContainer }}>
+              {store.name}
+            </span>
+          </div>
 
           {/* Nav links — desktop only */}
           <nav className="hidden md:flex items-center gap-6">

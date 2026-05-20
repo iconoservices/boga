@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 
 interface PWAStats {
     visitCount: number;
@@ -10,6 +11,7 @@ interface PWAStats {
 }
 
 export default function PWAInstallPrompt() {
+    const pathname = usePathname();
     const [installPrompt, setInstallPrompt] = useState<any>(null);
     const [showBanner, setShowBanner] = useState(false);
     const [isIOS, setIsIOS] = useState(false);
@@ -26,6 +28,8 @@ export default function PWAInstallPrompt() {
     };
 
     useEffect(() => {
+        if (!pathname?.startsWith('/dashboard')) return;
+
         const isPWA = window.matchMedia('(display-mode: standalone)').matches;
         if (isPWA) {
             localStorage.removeItem('bogadash_pwa_stats');
@@ -98,7 +102,7 @@ export default function PWAInstallPrompt() {
         });
 
         return () => window.removeEventListener('beforeinstallprompt', handler);
-    }, [showIOSGuide]);
+    }, [showIOSGuide, pathname]);
 
     const handleActionClick = async () => {
         if (isIOS) {
@@ -111,6 +115,7 @@ export default function PWAInstallPrompt() {
         }
     };
 
+    if (!pathname?.startsWith('/dashboard')) return null;
     if (!showBanner && !showIOSGuide) return null;
 
     return (

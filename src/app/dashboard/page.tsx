@@ -34,9 +34,21 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilterCategory, setSelectedFilterCategory] = useState('all');
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'metrics'>('products');
-  
-  const fileInputRef = useRef<HTMLInputElement>(null);  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'metrics' | 'stores'>('products');
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const storeLogoInputRef = useRef<HTMLInputElement>(null);
+  const storeHeroInputRef = useRef<HTMLInputElement>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [dbStores, setDbStores] = useState<any[]>([]);
+  const [isStoreEditorOpen, setIsStoreEditorOpen] = useState(false);
+  const [editingStoreSlug, setEditingStoreSlug] = useState<string | null>(null);
+  const [isStoreSaving, setIsStoreSaving] = useState(false);
+  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '' });
+  const [storeLogoFile, setStoreLogoFile] = useState<File | null>(null);
+  const [storeHeroFile, setStoreHeroFile] = useState<File | null>(null);
+  const [storeLogoPreview, setStoreLogoPreview] = useState<string | null>(null);
+  const [storeHeroPreview, setStoreHeroPreview] = useState<string | null>(null);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -61,6 +73,7 @@ export default function DashboardPage() {
   // Cargar productos al iniciar
   useEffect(() => {
     fetchProducts();
+    fetchStores();
   }, []);
 
   const fetchProducts = async () => {
@@ -76,6 +89,76 @@ export default function DashboardPage() {
       setProducts(data || []);
     }
     setIsLoading(false);
+  };
+
+  const fetchStores = async () => {
+    const { data } = await supabase.from('stores').select('*');
+    if (data) setDbStores(data);
+  };
+
+  const openStoreEditor = (slug: string) => {
+    const config = stores[slug];
+    const dbData = dbStores.find((s: any) => s.slug === slug);
+    setEditingStoreSlug(slug);
+    setStoreForm({
+      name: dbData?.name || config?.name || '',
+      tagline: dbData?.tagline || config?.tagline || '',
+      marketplace_category: dbData?.marketplace_category || config?.marketplaceCategory || '',
+    });
+    setStoreHeroPreview(dbData?.hero_image || config?.heroImage || null);
+    setStoreLogoPreview(dbData?.logo_image || config?.logoImage || null);
+    setStoreLogoFile(null);
+    setStoreHeroFile(null);
+    setIsStoreEditorOpen(true);
+  };
+
+  const handleStoreSave = async () => {
+    if (!editingStoreSlug) return;
+    setIsStoreSaving(true);
+    try {
+      let logoUrl: string | null = storeLogoPreview;
+      let heroUrl: string | null = storeHeroPreview;
+
+      if (storeLogoFile) {
+        const ext = storeLogoFile.name.split('.').pop();
+        const path = `${editingStoreSlug}/logo-${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage.from('store-assets').upload(path, storeLogoFile, { upsert: true });
+        if (!upErr) {
+          const { data: pubData } = supabase.storage.from('store-assets').getPublicUrl(path);
+          logoUrl = pubData.publicUrl;
+        }
+      }
+
+      if (storeHeroFile) {
+        const ext = storeHeroFile.name.split('.').pop();
+        const path = `${editingStoreSlug}/hero-${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage.from('store-assets').upload(path, storeHeroFile, { upsert: true });
+        if (!upErr) {
+          const { data: pubData } = supabase.storage.from('store-assets').getPublicUrl(path);
+          heroUrl = pubData.publicUrl;
+        }
+      }
+
+      const upsertData: any = {
+        slug: editingStoreSlug,
+        name: storeForm.name,
+        tagline: storeForm.tagline,
+        marketplace_category: storeForm.marketplace_category,
+        status: 'active',
+      };
+      if (heroUrl) upsertData.hero_image = heroUrl;
+      if (logoUrl) upsertData.logo_image = logoUrl;
+
+      const { error } = await supabase.from('stores').upsert(upsertData, { onConflict: 'slug' });
+      if (error) throw error;
+
+      await fetchStores();
+      setIsStoreEditorOpen(false);
+    } catch (err: any) {
+      alert('Error al guardar: ' + err.message);
+    } finally {
+      setIsStoreSaving(false);
+    }
   };
 
   const toggleStatus = async (id: string, currentStatus: string) => {
@@ -338,7 +421,10 @@ export default function DashboardPage() {
             <span className="material-symbols-outlined text-[20px]">bar_chart</span>
             Métricas
           </button>
-          <button className="w-full flex items-center gap-3 px-3 py-2.5 text-gray-600 hover:bg-gray-50 rounded-xl font-medium transition-colors">
+          <button 
+            onClick={() => setActiveTab('stores')}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold transition-colors ${activeTab === 'stores' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+          >
             <span className="material-symbols-outlined text-[20px]">store</span>
             Mis Tiendas
           </button>
@@ -976,6 +1062,84 @@ export default function DashboardPage() {
           </>
         )}
 
+        {activeTab === 'stores' && (
+          <div className="flex flex-col gap-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-black tracking-tight text-gray-900">Mis Tiendas</h2>
+                <p className="text-sm text-gray-500 font-medium mt-1">Personaliza el perfil y apariencia de cada sucursal.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {Object.values(stores).map((store) => {
+                const dbStore = dbStores.find((s: any) => s.slug === store.slug);
+                const displayName = dbStore?.name || store.name;
+                const displayTagline = dbStore?.tagline || store.tagline;
+                const heroImg = dbStore?.hero_image || store.heroImage;
+                const productCount = products.filter(p => p.store === store.slug).length;
+                return (
+                  <div key={store.slug} className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
+                    {/* Hero */}
+                    <div className="h-36 relative overflow-hidden bg-gray-100">
+                      {heroImg && <img src={heroImg} alt={displayName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+                      <div className="absolute top-3 right-3">
+                        <span className="text-[10px] font-bold text-white bg-green-500/90 backdrop-blur-sm px-2 py-0.5 rounded-full uppercase tracking-wider">Activo</span>
+                      </div>
+                      <div className="absolute bottom-3 left-3 right-3">
+                        <h3 className="text-white font-extrabold text-base leading-tight drop-shadow">{displayName}</h3>
+                        <p className="text-white/75 text-[11px] font-medium mt-0.5">{displayTagline}</p>
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="p-4 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[11px] font-semibold text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">
+                          {store.marketplaceCategory}
+                        </span>
+                        <span className="text-[11px] font-semibold text-gray-400">
+                          {productCount} producto{productCount !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <a 
+                          href={`/${store.slug}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition-colors"
+                          title="Ver tienda"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">open_in_new</span>
+                        </a>
+                        <button
+                          onClick={() => openStoreEditor(store.slug)}
+                          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition-colors"
+                          title="Editar tienda"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">edit</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Info banner */}
+            <div className="bg-gray-50 border border-dashed border-gray-200 rounded-2xl p-5 flex items-start gap-4">
+              <div className="w-10 h-10 rounded-full bg-[#5244e1]/10 text-[#5244e1] flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>tips_and_updates</span>
+              </div>
+              <div>
+                <h4 className="font-bold text-gray-900 text-sm">Personaliza cada tienda</h4>
+                <p className="text-sm text-gray-500 mt-1">Haz clic en <strong>Editar</strong> para cambiar el nombre, slogan, foto de portada y logo de cada tienda. Los cambios se guardan en la nube y se reflejan en el marketplace automáticamente.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'metrics' && (
           <div className="flex flex-col gap-6">
             <h2 className="text-2xl font-black tracking-tight text-gray-900">Métricas y Rendimiento</h2>
@@ -1209,6 +1373,144 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Store Editor Modal */}
+      {isStoreEditorOpen && editingStoreSlug && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => !isStoreSaving && setIsStoreEditorOpen(false)} />
+          <div className="relative bg-white w-[90vw] md:w-[560px] rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
+              <div>
+                <h2 className="text-xl font-extrabold text-gray-900">Editar Tienda</h2>
+                <p className="text-sm text-gray-500 mt-0.5 font-medium">{stores[editingStoreSlug]?.name}</p>
+              </div>
+              <button
+                onClick={() => setIsStoreEditorOpen(false)}
+                className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors"
+                disabled={isStoreSaving}
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1 custom-scrollbar space-y-6">
+              {/* Hero Image Upload */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Foto de Portada</label>
+                <input type="file" ref={storeHeroInputRef} onChange={e => { if (e.target.files?.[0]) { setStoreHeroFile(e.target.files[0]); setStoreHeroPreview(URL.createObjectURL(e.target.files[0])); }}} accept="image/*" className="hidden" />
+                <div
+                  onClick={() => storeHeroInputRef.current?.click()}
+                  className="w-full h-36 rounded-2xl border-2 border-dashed border-gray-200 overflow-hidden cursor-pointer relative group hover:border-black transition-colors bg-gray-50"
+                >
+                  {storeHeroPreview ? (
+                    <>
+                      <img src={storeHeroPreview} className="w-full h-full object-cover" alt="Hero preview" />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white font-bold transition-opacity">
+                        Cambiar Portada
+                      </div>
+                    </>
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
+                      <span className="material-symbols-outlined text-3xl mb-1">landscape</span>
+                      <span className="text-sm font-bold">Clic para subir portada</span>
+                      <span className="text-xs opacity-70">Imagen panorámica (16:9)</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Logo Upload */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Logo / Miniatura</label>
+                <input type="file" ref={storeLogoInputRef} onChange={e => { if (e.target.files?.[0]) { setStoreLogoFile(e.target.files[0]); setStoreLogoPreview(URL.createObjectURL(e.target.files[0])); }}} accept="image/*" className="hidden" />
+                <div className="flex items-center gap-4">
+                  <div
+                    onClick={() => storeLogoInputRef.current?.click()}
+                    className="w-20 h-20 rounded-2xl border-2 border-dashed border-gray-200 overflow-hidden cursor-pointer relative group hover:border-black transition-colors bg-gray-50 shrink-0"
+                  >
+                    {storeLogoPreview ? (
+                      <>
+                        <img src={storeLogoPreview} className="w-full h-full object-cover" alt="Logo" />
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white font-bold transition-opacity text-xs text-center rounded-2xl">
+                          Cambiar
+                        </div>
+                      </>
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
+                        <span className="material-symbols-outlined text-2xl">add_photo_alternate</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-gray-700">Logo cuadrado</p>
+                    <p className="text-xs text-gray-500 mt-1">Aparece como miniatura en el marketplace. Recomendado: 200×200px, fondo transparente o color sólido.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Name */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Nombre de la Tienda</label>
+                <input
+                  type="text"
+                  value={storeForm.name}
+                  onChange={e => setStoreForm({...storeForm, name: e.target.value})}
+                  className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                  placeholder="Ej: Sunset Lounge"
+                />
+              </div>
+
+              {/* Tagline */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Slogan / Descripción Corta</label>
+                <input
+                  type="text"
+                  value={storeForm.tagline}
+                  onChange={e => setStoreForm({...storeForm, tagline: e.target.value})}
+                  className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                  placeholder="Ej: Bar & Café"
+                />
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Categoría en el Marketplace</label>
+                <input
+                  type="text"
+                  value={storeForm.marketplace_category}
+                  onChange={e => setStoreForm({...storeForm, marketplace_category: e.target.value})}
+                  className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                  placeholder="Ej: Restaurantes, Moda, Salud..."
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-end gap-3 sticky bottom-0">
+              <button
+                onClick={() => setIsStoreEditorOpen(false)}
+                disabled={isStoreSaving}
+                className="px-6 py-3.5 rounded-xl font-bold text-gray-600 hover:bg-gray-200 transition-colors disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleStoreSave}
+                disabled={isStoreSaving}
+                className="flex items-center gap-2 px-8 py-3.5 bg-black text-white rounded-xl font-bold shadow-lg shadow-black/15 hover:shadow-black/25 transition-all hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0"
+              >
+                {isStoreSaving ? (
+                  <>
+                    <span className="material-symbols-outlined animate-spin text-[20px]">refresh</span>
+                    Guardando...
+                  </>
+                ) : 'Guardar Cambios'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* QR Modal */}
       {isQRModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/40 backdrop-blur-sm" onClick={() => setIsQRModalOpen(false)}>
@@ -1337,6 +1639,14 @@ export default function DashboardPage() {
               </div>
 
               <div className="space-y-2 border-t border-gray-100 pt-6">
+                <button
+                  onClick={() => { setActiveTab('stores'); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors ${activeTab === 'stores' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+                >
+                  <span className="material-symbols-outlined text-[20px]">store</span>
+                  Mis Tiendas
+                </button>
+
                 <Link href="/" className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-semibold transition-colors">
                   <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                   Volver a Boga

@@ -73,7 +73,11 @@ export default function NaturaTemplate({ store }: NaturaTemplateProps) {
       <header className="fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-4"
         style={{ background: `${t.surface}F0`, backdropFilter: 'blur(20px)', borderBottom: `1px solid ${t.outlineVariant}`, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-[22px]" style={{ color: t.primary, fontVariationSettings: "'FILL' 1" }}>forest</span>
+          {store.logoImage ? (
+            <img src={store.logoImage} alt={store.name} className="w-7 h-7 rounded-lg object-cover border border-gray-100" />
+          ) : (
+            <span className="material-symbols-outlined text-[22px]" style={{ color: t.primary, fontVariationSettings: "'FILL' 1" }}>forest</span>
+          )}
           <span className="text-xl font-black tracking-tight uppercase" style={{ color: t.secondary }}>{store.name}</span>
         </div>
         <button className="relative w-9 h-9 flex items-center justify-center rounded-full" style={{ background: `${t.primary}14` }}>

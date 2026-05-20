@@ -29,6 +29,7 @@ export interface StoreConfig {
   heroImage: string;
   heroAlt: string;
   categories: { name: string; icon: string; href: string }[];
+  logoImage?: string;
 }
 
 export const stores: Record<string, StoreConfig> = {
