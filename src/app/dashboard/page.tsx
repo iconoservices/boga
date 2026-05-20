@@ -369,10 +369,14 @@ export default function DashboardPage() {
       <main className="flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full pb-28 md:pb-8">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">Gestión de Productos</h1>
-            <p className="text-gray-500 text-sm font-medium mt-1">Administra el inventario de tus tiendas.</p>
+            <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">
+              {activeTab === 'products' ? 'Gestión de Productos' : activeTab === 'orders' ? 'Gestión de Pedidos' : activeTab === 'stores' ? 'Mis Tiendas' : 'Métricas y Rendimiento'}
+            </h1>
+            <p className="text-gray-500 text-sm font-medium mt-1">
+              {activeTab === 'products' ? 'Administra el inventario de tus tiendas.' : activeTab === 'orders' ? 'Gestiona los pedidos de tus clientes.' : activeTab === 'stores' ? 'Administra la información de tus sucursales.' : 'Analiza el rendimiento de tu negocio.'}
+            </p>
           </div>
-          <div className="flex flex-col md:flex-row gap-3">
+          <div className="hidden md:flex flex-col md:flex-row gap-3">
             <select
               value={selectedStore}
               onChange={(e) => setSelectedStore(e.target.value)}
