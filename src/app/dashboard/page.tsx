@@ -890,11 +890,11 @@ export default function DashboardPage() {
             {/* Mobile View (Stich Dash Mobile UI) */}
             <div className="flex flex-col gap-4 w-full md:hidden">
               <div className="relative w-full">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
+                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
                 <input 
                   type="text" 
                   placeholder="Buscar ID de Pedido, Cliente..." 
-                  className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-1 focus:ring-[#5244e1] focus:border-[#5244e1] shadow-sm transition-all"
+                  className="w-full h-12 pl-11 pr-4 bg-white border border-[#c7c4d8]/60 rounded-xl focus:ring-2 focus:ring-[#3525cd] focus:border-transparent focus:outline-none transition-all text-sm font-medium text-[#111c2d]"
                 />
               </div>
               
