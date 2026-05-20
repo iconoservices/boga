@@ -1413,7 +1413,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Sidebar (Right Side) - Desktop Only */}
-            <aside className="hidden lg:flex w-full lg:w-96 lg:h-[calc(100vh-180px)] lg:sticky lg:top-[120px] bg-[#f0f3ff]/40 border border-[#c7c4d8]/40 rounded-2xl flex-col shrink-0 overflow-hidden shadow-sm">
+            <aside className="hidden lg:flex w-full lg:w-96 lg:h-[calc(100vh-110px)] lg:sticky lg:top-[80px] bg-[#f0f3ff]/40 border border-[#c7c4d8]/40 rounded-2xl flex-col shrink-0 overflow-hidden shadow-sm">
               {/* Receipt Header */}
               <div className="p-3 border-b border-[#c7c4d8]/30 bg-white">
                 <div className="flex items-center justify-between">
