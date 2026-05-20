@@ -422,78 +422,134 @@ export default function DashboardPage() {
                       </button>
                     </div>
                   ) : (
-                    <table className="w-full text-left border-collapse min-w-[800px]">
-                      <thead>
-                        <tr className="bg-[#F8F9FA] text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-100">
-                          <th className="p-3 font-bold w-1/3">Producto</th>
-                          {selectedStore === 'all' && <th className="p-3 font-bold">Tienda</th>}
-                          <th className="p-3 font-bold">Categoría</th>
-                          <th className="p-3 font-bold">Precio</th>
-                          <th className="p-3 font-bold text-right">Acciones</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredProducts.map((p) => (
-                          <tr key={p.id} className="group border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                            <td className="p-3">
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
-                                  {p.image ? (
-                                    <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
-                                  ) : (
-                                    <div className="w-full h-full flex items-center justify-center">
-                                      <span className="material-symbols-outlined text-gray-400">image</span>
+                    <>
+                      {/* Desktop Table View */}
+                      <div className="hidden md:block">
+                        <table className="w-full text-left border-collapse min-w-[800px]">
+                          <thead>
+                            <tr className="bg-[#F8F9FA] text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-100">
+                              <th className="p-3 font-bold w-1/3">Producto</th>
+                              {selectedStore === 'all' && <th className="p-3 font-bold">Tienda</th>}
+                              <th className="p-3 font-bold">Categoría</th>
+                              <th className="p-3 font-bold">Precio</th>
+                              <th className="p-3 font-bold text-right">Acciones</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {filteredProducts.map((p) => (
+                              <tr key={p.id} className="group border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                                <td className="p-3">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
+                                      {p.image ? (
+                                        <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                                      ) : (
+                                        <div className="w-full h-full flex items-center justify-center">
+                                          <span className="material-symbols-outlined text-gray-400">image</span>
+                                        </div>
+                                      )}
                                     </div>
-                                  )}
-                                </div>
-                                <div>
-                                  <p className="font-bold text-gray-900">{p.name}</p>
-                                  {p.subcategory && (
-                                    <span className="text-xs font-medium text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-100 mt-1 inline-block">
-                                      {p.subcategory}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </td>
-                            {selectedStore === 'all' && (
-                              <td className="p-3">
-                                <span className="text-sm font-medium text-gray-600">{stores[p.store]?.name || p.store}</span>
-                              </td>
-                            )}
-                            <td className="p-3">
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
-                                {p.category}
-                              </span>
-                            </td>
-                            <td className="p-3 font-bold text-gray-900">
-                              S/ {Number(p.price).toFixed(2)}
-                            </td>
-                            <td className="p-3 text-right">
-                              <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button 
-                                  onClick={() => handleEdit(p)}
-                                  className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition-colors"
-                                  title="Editar"
-                                >
-                                  <span className="material-symbols-outlined text-[18px]">edit</span>
-                                </button>
-                                <button 
-                                  onClick={() => handleDelete(p.id, p.name)}
-                                  disabled={isDeleting === p.id}
-                                  className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                  title="Eliminar"
-                                >
-                                  <span className={`material-symbols-outlined text-[18px] ${isDeleting === p.id ? 'animate-spin' : ''}`}>
-                                    {isDeleting === p.id ? 'refresh' : 'delete'}
+                                    <div>
+                                      <p className="font-bold text-gray-900">{p.name}</p>
+                                      {p.subcategory && (
+                                        <span className="text-xs font-medium text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-100 mt-1 inline-block">
+                                          {p.subcategory}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </td>
+                                {selectedStore === 'all' && (
+                                  <td className="p-3">
+                                    <span className="text-sm font-medium text-gray-600">{stores[p.store]?.name || p.store}</span>
+                                  </td>
+                                )}
+                                <td className="p-3">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
+                                    {p.category}
                                   </span>
-                                </button>
+                                </td>
+                                <td className="p-3 font-bold text-gray-900">
+                                  S/ {Number(p.price).toFixed(2)}
+                                </td>
+                                <td className="p-3 text-right">
+                                  <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button 
+                                      onClick={() => handleEdit(p)}
+                                      className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition-colors"
+                                      title="Editar"
+                                    >
+                                      <span className="material-symbols-outlined text-[18px]">edit</span>
+                                    </button>
+                                    <button 
+                                      onClick={() => handleDelete(p.id, p.name)}
+                                      disabled={isDeleting === p.id}
+                                      className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                      title="Eliminar"
+                                    >
+                                      <span className={`material-symbols-outlined text-[18px] ${isDeleting === p.id ? 'animate-spin' : ''}`}>
+                                        {isDeleting === p.id ? 'refresh' : 'delete'}
+                                      </span>
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Mobile Cards View */}
+                      <div className="md:hidden flex flex-col p-4 gap-3">
+                        {filteredProducts.map((p) => (
+                          <div key={p.id} className="bg-white border border-gray-100 rounded-xl p-3 flex gap-4 shadow-sm relative">
+                            {/* Image */}
+                            <div className="w-20 h-20 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden shrink-0">
+                              {p.image ? (
+                                <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <span className="material-symbols-outlined text-gray-400">image</span>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Details */}
+                            <div className="flex flex-col flex-1 min-w-0 py-0.5">
+                              <div className="flex justify-between items-start gap-2">
+                                <h3 className="font-bold text-gray-900 text-[13px] leading-tight line-clamp-2">{p.name}</h3>
+                                <span className="font-bold text-primary text-[13px] whitespace-nowrap">S/ {Number(p.price).toFixed(2)}</span>
                               </div>
-                            </td>
-                          </tr>
+                              
+                              <p className="text-[10px] text-gray-500 mt-1 uppercase font-bold tracking-wider truncate">
+                                {p.category} {p.subcategory ? `• ${p.subcategory}` : ''}
+                              </p>
+                              
+                              <div className="flex justify-between items-center mt-auto">
+                                <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full ${
+                                  p.status === 'Activo' || p.stock > 0 
+                                    ? 'bg-green-100 text-green-700' 
+                                    : 'bg-red-100 text-red-700'
+                                }`}>
+                                  {p.status === 'Activo' ? 'EN STOCK' : p.status.toUpperCase()}
+                                </span>
+                                
+                                <div className="flex items-center gap-1">
+                                  <button onClick={() => handleEdit(p)} className="p-1.5 text-gray-400 hover:text-black rounded-lg hover:bg-gray-100 transition-colors">
+                                    <span className="material-symbols-outlined text-[16px]">edit</span>
+                                  </button>
+                                  <button onClick={() => handleDelete(p.id, p.name)} className="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors">
+                                    <span className={`material-symbols-outlined text-[16px] ${isDeleting === p.id ? 'animate-spin' : ''}`}>
+                                      {isDeleting === p.id ? 'refresh' : 'delete'}
+                                    </span>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         ))}
-                      </tbody>
-                    </table>
+                      </div>
+                    </>
                   )}
                 </div>
               </div>
