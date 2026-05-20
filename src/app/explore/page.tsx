@@ -262,9 +262,9 @@ export default function Explore() {
       <main className="px-gutter pt-2 flex flex-col gap-6 pb-10">
         
         {/* Adaptive Macro-Categories Selector */}
-        <section className="flex flex-col gap-3 transition-all duration-500">
+        <section className="flex flex-col gap-1.5 transition-all duration-500">
           <div className="flex justify-between items-center px-1">
-            <h2 className="font-h2 text-[15px] text-[#3E2723] font-bold">Categorías Principales</h2>
+            <h2 className="font-h2 text-[14px] text-[#3E2723] font-bold">Categorías Principales</h2>
             {activeCategory !== 'Todas' && (
               <button 
                 onClick={() => setActiveCategory('Todas')}
@@ -278,7 +278,7 @@ export default function Explore() {
           <div className={`
             transition-all duration-500 ease-in-out
             ${activeCategory === 'Todas' 
-              ? 'grid grid-cols-4 gap-2' 
+              ? 'grid grid-cols-4 gap-1.5' 
               : 'flex gap-3 overflow-x-auto hide-scrollbar -mx-gutter px-gutter pb-2'
             }`}
             style={{ scrollbarWidth: 'none' }}
@@ -293,8 +293,8 @@ export default function Explore() {
                 className={`
                   flex transition-all duration-300 active:scale-95 shrink-0
                   ${activeCategory === 'Todas' 
-                    ? 'flex-col items-center justify-center gap-1.5 w-full px-2 py-3 rounded-xl border shadow-sm' 
-                    : 'flex-row items-center gap-2 px-4 py-2 rounded-full border border-[#3E2723]/10'
+                    ? 'flex-col items-center justify-center gap-1 w-full px-1 py-1.5 rounded-[12px] border shadow-sm' 
+                    : 'flex-row items-center gap-1 px-3 py-1.5 rounded-full border border-[#3E2723]/10'
                   }
                   ${activeCategory === cat.id 
                     ? 'bg-primary text-white border-primary shadow-md' 
@@ -303,12 +303,12 @@ export default function Explore() {
                 `}
               >
                 <span className={`material-symbols-outlined shrink-0 transition-all ${
-                  activeCategory === 'Todas' ? 'text-[20px]' : 'text-[16px]'
+                  activeCategory === 'Todas' ? 'text-[16px]' : 'text-[15px]'
                 } ${activeCategory === cat.id ? 'text-white' : 'text-primary'}`}>
                   {cat.icon}
                 </span>
                 <span className={`font-bold transition-all ${
-                  activeCategory === 'Todas' ? 'text-[9px] text-center leading-tight' : 'text-[11px] whitespace-nowrap'
+                  activeCategory === 'Todas' ? 'text-[8px] text-center leading-tight' : 'text-[10px] whitespace-nowrap'
                 } ${activeCategory === cat.id ? 'text-white' : 'text-[#3E2723]'}`}>
                   {cat.name}
                 </span>
@@ -320,31 +320,31 @@ export default function Explore() {
         {/* Specific Sub-Categories (Filtered) */}
         <section className="flex flex-col gap-2">
           <div 
-            className={`px-1 py-1 ${showAllSubCategories ? 'flex flex-wrap gap-x-6 gap-y-4 justify-start' : '-mx-gutter px-gutter overflow-x-auto hide-scrollbar flex gap-6 items-center'}`} 
+            className={`px-1 py-1 ${showAllSubCategories ? 'flex flex-wrap gap-x-3 gap-y-2 justify-start' : '-mx-gutter px-gutter overflow-x-auto hide-scrollbar flex gap-3 items-center'}`} 
             style={{ scrollbarWidth: 'none' }}
           >
             <div 
               onClick={() => setShowAllSubCategories(!showAllSubCategories)}
               className="flex flex-col items-center gap-2 shrink-0 group cursor-pointer active:scale-90 transition-transform"
             >
-              <div className="w-14 h-14 rounded-full bg-[#FFF0E6] shadow-sm flex items-center justify-center border border-[#E2725B]/20 group-hover:border-primary">
-                <span className="material-symbols-outlined text-primary text-[24px]">
+              <div className="w-10 h-10 rounded-full bg-[#FFF0E6] shadow-sm flex items-center justify-center border border-[#E2725B]/20 group-hover:border-primary">
+                <span className="material-symbols-outlined text-primary text-[18px]">
                   {showAllSubCategories ? 'unfold_less' : 'unfold_more'}
                 </span>
               </div>
-              <span className="text-[11px] font-bold text-primary text-center w-16 leading-tight">
+              <span className="text-[9px] font-bold text-primary text-center w-12 leading-tight">
                 {showAllSubCategories ? 'Ver menos' : 'Ver todo'}
               </span>
             </div>
 
             {currentSubCategories.map((sub, index) => (
               <div key={index} className="flex flex-col items-center gap-2 shrink-0 group cursor-pointer active:scale-90 transition-transform">
-                <div className="w-14 h-14 rounded-full bg-surface-container-lowest shadow-sm flex items-center justify-center border border-[#E2725B]/10 group-hover:border-primary">
-                  <span className="material-symbols-outlined text-primary text-[24px]">
+                <div className="w-10 h-10 rounded-full bg-surface-container-lowest shadow-sm flex items-center justify-center border border-[#E2725B]/10 group-hover:border-primary">
+                  <span className="material-symbols-outlined text-primary text-[18px]">
                     {sub.icon}
                   </span>
                 </div>
-                <span className="text-[11px] font-bold text-on-surface text-center w-16 leading-tight">{sub.name}</span>
+                <span className="text-[9px] font-bold text-on-surface text-center w-12 leading-tight">{sub.name}</span>
               </div>
             ))}
           </div>
@@ -355,9 +355,9 @@ export default function Explore() {
           <div className="flex flex-col gap-6">
             
             {/* Tiendas Destacadas */}
-            <section className="flex flex-col gap-3">
-              <h3 className="font-h3 text-[20px] font-black text-[#3E2723] px-1">Tiendas Destacadas</h3>
-              <div className="flex gap-4 overflow-x-auto hide-scrollbar -mx-gutter px-gutter pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
+            <section className="flex flex-col gap-2">
+              <h3 className="font-h3 text-[18px] font-black text-[#3E2723] px-1">Tiendas Destacadas</h3>
+              <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-gutter px-gutter pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
                 {storeData.map((store) => (
                   <Link href={`/${store.slug}`} key={store.name} className="min-w-[280px] w-[80vw] max-w-[310px] bg-white rounded-[20px] p-3 shadow-md border border-[#3E2723]/5 snap-start flex flex-col gap-3 group">
                     <div className="flex gap-2 overflow-x-auto hide-scrollbar snap-x" style={{ scrollbarWidth: 'none' }}>

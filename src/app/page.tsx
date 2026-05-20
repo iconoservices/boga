@@ -496,8 +496,49 @@ export default function Home() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 {marketplaceProducts.map((prod, idx) => {
-                  const isFeatured = (idx + 1) % 5 === 0;
-                  if (isFeatured) {
+                  const isFeaturedStore = (idx + 1) % 10 === 5;
+                  const isFeaturedProduct = (idx + 1) % 10 === 0;
+
+                  if (isFeaturedStore) {
+                    const storeIdx = Math.floor(idx / 10) % storeData.length;
+                    const featuredStore = storeData[storeIdx];
+                    if (featuredStore) {
+                      return (
+                        <Link href={`/${featuredStore.slug}`} key={`store-${idx}`} className="col-span-2 bg-white rounded-[20px] p-3 shadow-md border border-[#3E2723]/5 flex flex-col gap-3 group">
+                          <div className="flex gap-2">
+                            {featuredStore.products?.slice(0, 3).map((sp, i) => (
+                              <div key={i} className="flex-1 flex flex-col gap-1">
+                                <div className="aspect-square rounded-xl overflow-hidden relative">
+                                  <img src={sp.img} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={sp.name} />
+                                </div>
+                                <h4 className="text-[9px] font-bold text-[#3E2723] uppercase leading-tight line-clamp-2 mt-1">{sp.name}</h4>
+                                <span className="text-[11px] font-black text-[#2E7D32]">{sp.price}</span>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex gap-2 items-center border-t border-black/5 pt-2">
+                            <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-[#3E2723]/10">
+                              <img src={featuredStore.logo} className="w-full h-full object-cover" alt={featuredStore.name} />
+                            </div>
+                            <div className="flex flex-col flex-1 min-w-0">
+                              <span className="font-black text-[#3E2723] text-[15px] leading-tight">{featuredStore.name}</span>
+                              <span className="text-[8px] text-[#745853] font-bold uppercase tracking-widest truncate opacity-80">{featuredStore.category}</span>
+                              <div className="flex gap-1.5 mt-1">
+                                <span className="bg-[#FFF0E6] text-[#E2725B] text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 border border-[#E2725B]/20">
+                                  <span className="material-symbols-outlined text-[10px]">schedule</span>{featuredStore.time}
+                                </span>
+                                <span className="bg-surface-container-lowest text-[#745853] text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 border border-[#3E2723]/10">
+                                  <span className="material-symbols-outlined text-[10px]">two_wheeler</span>{featuredStore.delivery}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      );
+                    }
+                  }
+
+                  if (isFeaturedProduct) {
                     return (
                       <Link key={prod.id} href={`/${prod.slug}`} className="col-span-2 relative bg-white rounded-2xl shadow-md overflow-hidden flex group min-h-[150px] border border-black/5">
                         <div className="w-[42%] relative overflow-hidden shrink-0">
