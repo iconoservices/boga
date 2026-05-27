@@ -47,22 +47,22 @@ export default function LoginPage() {
               <span style={{ fontSize: '26px', fontWeight: 900, color: '#000' }}>B</span>
             </div>
             <h1 style={{ fontSize: '40px', fontWeight: 800, color: '#fff', lineHeight: 1.2, marginBottom: '20px' }}>
-              Lleva tu negocio al{' '}
-              <span style={{ color: '#666' }}>siguiente nivel</span>{' '}
-              con Boga.
+              Tu lugar favorito,{' '}
+              <span style={{ color: '#8b5cf6' }}>a un toque</span>{' '}
+              de distancia.
             </h1>
             <p style={{ fontSize: '16px', color: '#777', fontWeight: 500, lineHeight: 1.7 }}>
-              Tu catálogo digital, tu tienda online. Desde restaurantes hasta negocios de cualquier rubro — crea tu presencia, gestiona tus productos y llega a más clientes con un diseño que te diferencia.
+              Descubre menús irresistibles, productos de tus tiendas locales favoritas y gestiona todo de forma rápida y sencilla. Boga te conecta al instante con el sabor y estilo que más disfrutas.
             </p>
             <div style={{ marginTop: '40px', display: 'flex', gap: '28px', alignItems: 'center' }}>
               <div>
-                <p style={{ fontSize: '26px', fontWeight: 700, color: '#fff', marginBottom: '2px' }}>100%</p>
-                <p style={{ fontSize: '10px', fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Digital</p>
+                <p style={{ fontSize: '26px', fontWeight: 700, color: '#fff', marginBottom: '2px' }}>Local</p>
+                <p style={{ fontSize: '10px', fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Apoyo directo</p>
               </div>
               <div style={{ width: '1px', height: '40px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
               <div>
                 <p style={{ fontSize: '26px', fontWeight: 700, color: '#fff', marginBottom: '2px' }}>Al instante</p>
-                <p style={{ fontSize: '10px', fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Acceso</p>
+                <p style={{ fontSize: '10px', fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Tus antojos</p>
               </div>
             </div>
           </div>
@@ -86,12 +86,12 @@ export default function LoginPage() {
             {/* Card */}
             <div style={{ backgroundColor: '#fff', borderRadius: '24px', padding: '32px', boxShadow: '0 4px 40px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.05)' }}>
               <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#111', marginBottom: '4px' }}>
-                {isSignUp ? 'Crea tu cuenta' : 'Bienvenido de nuevo'}
+                {isSignUp ? 'Crea tu espacio' : '¡Hola de nuevo! 👋'}
               </h2>
               <p style={{ fontSize: '13px', color: '#999', fontWeight: 500, marginBottom: '24px', lineHeight: 1.5 }}>
                 {isSignUp 
-                  ? 'Regístrate en Boga Market y crea tu catálogo en minutos.' 
-                  : 'Ingresa tus credenciales para gestionar tu tienda.'}
+                  ? 'Únete a Boga y crea tu carta, catálogo o tienda local favorita en un clic.' 
+                  : 'Ingresa para disfrutar, pedir o gestionar tus tiendas locales.'}
               </p>
 
               <form onSubmit={handleSubmit}>
