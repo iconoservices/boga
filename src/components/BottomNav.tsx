@@ -20,7 +20,7 @@ export default function BottomNav() {
     { path: '/', icon: 'home', label: 'Inicio' },
     { path: '/explore', icon: 'search', label: 'Explorar' },
     { path: '/orders', icon: 'receipt_long', label: 'Pedidos' },
-    { path: '/login', icon: 'person', label: 'Perfil' },
+    { path: '/profile', icon: 'person', label: 'Perfil' },
   ];
 
   return (
