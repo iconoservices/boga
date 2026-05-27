@@ -13,7 +13,7 @@ export default function LoginPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => { window.location.href = '/dashboard'; }, 1500);
+    setTimeout(() => { window.location.href = '/profile'; }, 1500);
   };
 
   const inputStyle: React.CSSProperties = {
@@ -164,7 +164,7 @@ export default function LoginPage() {
                       <div style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
                       {isSignUp ? 'Creando cuenta...' : 'Iniciando sesión...'}
                     </>
-                  ) : isSignUp ? 'Crear cuenta →' : 'Entrar al Dashboard →'}
+                  ) : isSignUp ? 'Crear cuenta →' : 'Entrar →'}
                 </button>
               </form>
 

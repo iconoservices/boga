@@ -1,5 +1,6 @@
 "use client";
 
+import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 
 interface AppHeaderProps {
@@ -52,6 +53,9 @@ export default function AppHeader({
           <button className="w-8 h-8 rounded-full bg-surface-container-lowest border border-[#3E2723]/10 flex items-center justify-center shadow-sm">
             <span className="material-symbols-outlined text-[18px] text-[#3E2723]">notifications</span>
           </button>
+          <Link href="/profile" className="w-8 h-8 rounded-full bg-[#3E2723] flex items-center justify-center shadow-sm border-2 border-[#3E2723]/20 active:scale-90 transition-transform">
+            <span className="material-symbols-outlined text-[14px] text-white" style={{ fontVariationSettings: "'FILL' 1" }}>person</span>
+          </Link>
         </div>
       </div>
 
