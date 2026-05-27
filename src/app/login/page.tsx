@@ -6,6 +6,8 @@ import Link from 'next/link';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -83,19 +85,38 @@ export default function LoginPage() {
 
             {/* Card */}
             <div style={{ backgroundColor: '#fff', borderRadius: '24px', padding: '32px', boxShadow: '0 4px 40px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.05)' }}>
-              <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#111', marginBottom: '4px' }}>Bienvenido de nuevo</h2>
+              <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#111', marginBottom: '4px' }}>
+                {isSignUp ? 'Crea tu cuenta' : 'Bienvenido de nuevo'}
+              </h2>
               <p style={{ fontSize: '13px', color: '#999', fontWeight: 500, marginBottom: '24px', lineHeight: 1.5 }}>
-                Ingresa tus credenciales para gestionar tu tienda.
+                {isSignUp 
+                  ? 'Regístrate en Boga Market y crea tu catálogo en minutos.' 
+                  : 'Ingresa tus credenciales para gestionar tu tienda.'}
               </p>
 
               <form onSubmit={handleSubmit}>
+                {/* Full Name for Signup */}
+                {isSignUp && (
+                  <div style={{ marginBottom: '14px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#444', marginBottom: '6px' }}>Nombre Completo</label>
+                    <div style={{ position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: '#bbb', fontSize: '14px', pointerEvents: 'none' }}>👤</span>
+                      <input type="text" required value={name} onChange={(e) => setName(e.target.value)}
+                        placeholder="Juan Pérez" style={inputStyle}
+                        onFocus={(e) => { e.target.style.backgroundColor = '#fff'; e.target.style.borderColor = '#ddd'; }}
+                        onBlur={(e) => { e.target.style.backgroundColor = '#f5f5f5'; e.target.style.borderColor = 'transparent'; }}
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {/* Email */}
                 <div style={{ marginBottom: '14px' }}>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#444', marginBottom: '6px' }}>Email Corporativo</label>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#444', marginBottom: '6px' }}>Correo Electrónico</label>
                   <div style={{ position: 'relative' }}>
                     <span style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: '#bbb', fontSize: '15px', pointerEvents: 'none' }}>✉</span>
                     <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-                      placeholder="ejemplo@bogamarket.com" style={inputStyle}
+                      placeholder="ejemplo@gmail.com" style={inputStyle}
                       onFocus={(e) => { e.target.style.backgroundColor = '#fff'; e.target.style.borderColor = '#ddd'; }}
                       onBlur={(e) => { e.target.style.backgroundColor = '#f5f5f5'; e.target.style.borderColor = 'transparent'; }}
                     />
@@ -106,7 +127,9 @@ export default function LoginPage() {
                 <div style={{ marginBottom: '14px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                     <label style={{ fontSize: '12px', fontWeight: 700, color: '#444' }}>Contraseña</label>
-                    <Link href="#" style={{ fontSize: '11px', fontWeight: 700, color: '#000', textDecoration: 'none' }}>¿La olvidaste?</Link>
+                    {!isSignUp && (
+                      <Link href="#" style={{ fontSize: '11px', fontWeight: 700, color: '#000', textDecoration: 'none' }}>¿La olvidaste?</Link>
+                    )}
                   </div>
                   <div style={{ position: 'relative' }}>
                     <span style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: '#bbb', fontSize: '13px', pointerEvents: 'none' }}>🔒</span>
@@ -119,10 +142,12 @@ export default function LoginPage() {
                 </div>
 
                 {/* Remember */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-                  <input type="checkbox" id="remember" style={{ width: '14px', height: '14px', accentColor: '#000', cursor: 'pointer' }} />
-                  <label htmlFor="remember" style={{ fontSize: '12px', fontWeight: 600, color: '#777', cursor: 'pointer' }}>Recordarme en este dispositivo</label>
-                </div>
+                {!isSignUp && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                    <input type="checkbox" id="remember" style={{ width: '14px', height: '14px', accentColor: '#000', cursor: 'pointer' }} />
+                    <label htmlFor="remember" style={{ fontSize: '12px', fontWeight: 600, color: '#777', cursor: 'pointer' }}>Recordarme en este dispositivo</label>
+                  </div>
+                )}
 
                 {/* Submit */}
                 <button type="submit" disabled={isLoading} style={{
@@ -132,20 +157,26 @@ export default function LoginPage() {
                   cursor: isLoading ? 'not-allowed' : 'pointer', opacity: isLoading ? 0.7 : 1,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                   boxShadow: '0 6px 20px rgba(0,0,0,0.15)', transition: 'all 0.2s',
+                  marginTop: isSignUp ? '20px' : '0px',
                 }}>
                   {isLoading ? (
                     <>
                       <div style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-                      Iniciando sesión...
+                      {isSignUp ? 'Creando cuenta...' : 'Iniciando sesión...'}
                     </>
-                  ) : 'Entrar al Dashboard →'}
+                  ) : isSignUp ? 'Crear cuenta →' : 'Entrar al Dashboard →'}
                 </button>
               </form>
 
               <div style={{ marginTop: '20px', paddingTop: '18px', borderTop: '1px solid #f0f0f0', textAlign: 'center' }}>
                 <p style={{ fontSize: '12px', color: '#aaa', fontWeight: 500 }}>
-                  ¿No tienes cuenta?{' '}
-                  <Link href="#" style={{ color: '#000', fontWeight: 700, textDecoration: 'none' }}>Contacta con ventas</Link>
+                  {isSignUp ? '¿Ya tienes una cuenta?' : '¿No tienes cuenta?'}{' '}
+                  <span 
+                    onClick={() => setIsSignUp(!isSignUp)}
+                    style={{ color: '#000', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
+                  >
+                    {isSignUp ? 'Inicia sesión' : 'Regístrate gratis'}
+                  </span>
                 </p>
               </div>
             </div>
