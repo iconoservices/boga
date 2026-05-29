@@ -2591,19 +2591,22 @@ export default function AdminPage() {
               </div>
 
               {/* Canvas viewport container */}
-              <div className="flex-1 overflow-auto flex items-center justify-center p-2 bg-[#f2f4f8]">
+              <div className="flex-1 overflow-auto bg-[#f2f4f8] flex justify-center py-6 px-2">
                 <div
-                  className="bg-white shadow-xl overflow-hidden transition-all duration-300 flex flex-col relative"
+                  className="transition-all duration-300 origin-top flex-shrink-0"
                   style={{
+                    transform: previewDevice === 'mobile' ? 'scale(0.85)' : previewDevice === 'tablet' ? 'scale(0.7)' : 'none',
                     width: previewDevice === 'desktop' ? '100%' : previewDevice === 'tablet' ? '768px' : '390px',
-                    height: previewDevice === 'desktop' ? '100%' : previewDevice === 'tablet' ? '700px' : '780px',
-                    maxWidth: '100%',
-                    minWidth: '320px',
-                    flexShrink: 0,
-                    borderRadius: previewDevice === 'mobile' ? '40px' : '16px',
-                    border: previewDevice === 'mobile' ? '12px solid #000000' : '1px solid #c2c6d6',
+                    height: previewDevice === 'desktop' ? '100%' : previewDevice === 'tablet' ? '1024px' : '844px',
                   }}
                 >
+                  <div
+                    className="bg-white shadow-xl overflow-hidden flex flex-col relative w-full h-full mx-auto"
+                    style={{
+                      borderRadius: previewDevice === 'mobile' ? '40px' : '16px',
+                      border: previewDevice === 'mobile' ? '12px solid #000000' : '1px solid #c2c6d6',
+                    }}
+                  >
                   {/* Browser Header / Status Bar */}
                   {previewDevice === 'desktop' && (
                     <div className="h-8 bg-[#ecedf7] border-b border-[#c2c6d6] px-4 flex items-center gap-2 select-none shrink-0">
@@ -2726,6 +2729,7 @@ export default function AdminPage() {
                       );
                     })()}
                   </div>
+                </div>
                 </div>
               </div>
             </div>
