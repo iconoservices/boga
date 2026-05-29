@@ -2,7 +2,8 @@
 
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
-import { stores as initialStores, stores as staticStores } from '@/lib/stores.config';
+import { stores as initialStores, stores as staticStores, type StoreConfig } from '@/lib/stores.config';
+import StoreRenderer from '@/app/[slug]/StoreRenderer';
 import { useDemo } from '@/context/DemoContext';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { supabase } from '@/lib/supabase';
@@ -2459,388 +2460,492 @@ export default function AdminPage() {
       </div>
     )}
 
-    {/* ─── EDITOR PANTALLA COMPLETA DE TIENDA ─── */}
+    {/* ─── WEBARCHITECT-THEMED FULL-SCREEN STORE EDITOR ─── */}
     {showStoreModal && (
-      <div className="fixed inset-0 z-[200] flex overflow-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
+      <div className="fixed inset-0 z-[200] flex bg-[#f6f8fc] overflow-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
+        
+        {/* ─── WEBARCHITECT-STYLE LEFT SIDEBAR ─── */}
+        <aside className="w-[240px] bg-white border-r border-[#ecedf7] flex flex-col shrink-0">
+          <div className="p-6">
+            <h1 className="text-xl font-black text-[#0058be] tracking-tight">WebArchitect</h1>
+            <p className="text-[10px] text-[#727785] font-bold uppercase tracking-wider mt-0.5">Site Customizer</p>
+          </div>
 
-        {/* ── LEFT: Live Preview ── */}
-        <div className="flex-1 bg-[#e6e7f2] flex flex-col overflow-hidden">
-          {/* Preview Topbar */}
-          <div className="h-14 bg-[#f2f3fd] border-b border-[#c2c6d6] flex items-center justify-between px-5 shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="flex gap-1">
-                {[
-                  { id: 'desktop', icon: 'desktop_windows' },
-                  { id: 'tablet', icon: 'tablet' },
-                  { id: 'mobile', icon: 'smartphone' }
-                ].map(({ id, icon }) => (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => setPreviewDevice(id as any)}
-                    className={`w-7 h-7 rounded-lg border flex items-center justify-center transition-colors ${
-                      previewDevice === id
-                        ? 'bg-white border-[#c2c6d6] text-[#0058be]'
-                        : 'bg-transparent border-transparent text-[#727785] hover:bg-white/60'
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-[16px]">{icon}</span>
-                  </button>
-                ))}
-              </div>
-              <span className="text-[10px] text-[#545f73] font-semibold">
-                bogamarket.com/<span className="text-[#0058be]">{storeForm.slug || '…'}</span>
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              {storeForm.slug && (
-                <a href={`/${storeForm.slug}`} target="_blank" className="flex items-center gap-1 text-[10px] font-bold text-[#0058be] hover:underline">
-                  <span className="material-symbols-outlined text-[13px]">open_in_new</span>
-                  Abrir en vivo
-                </a>
-              )}
+          <nav className="flex-1 px-4 space-y-1">
+            {[
+              { id: 'tiendas', label: 'Pages', icon: 'pages' },
+              { id: 'plantillas', label: 'Stores', icon: 'storefront' },
+              { id: 'paquetes', label: 'Packages', icon: 'inventory_2' },
+              { id: 'categorias', label: 'Categories', icon: 'category' },
+            ].map((item) => {
+              const isActive = item.id === 'tiendas'; // Highlight active tab
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-bold text-xs transition-colors text-left ${
+                    isActive
+                      ? 'bg-[#0058be] text-white'
+                      : 'text-[#424754] hover:bg-[#f2f3fd]'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+
+            <div className="pt-6 px-2">
               <button
                 type="button"
-                onClick={() => setShowStoreModal(false)}
-                className="w-7 h-7 rounded-lg bg-[#ecedf7] hover:bg-red-100 hover:text-red-600 flex items-center justify-center text-[#424754] transition-colors ml-2"
+                className="w-full py-2.5 bg-[#0058be] text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 hover:shadow-lg active:scale-95 transition-all"
               >
-                <span className="material-symbols-outlined text-[16px]">close</span>
+                <span className="material-symbols-outlined text-sm">add</span>
+                <span>Create New Site</span>
               </button>
             </div>
+          </nav>
+
+          <div className="p-4 border-t border-[#ecedf7] space-y-1">
+            {[
+              { label: 'Settings', icon: 'settings' },
+              { label: 'Support', icon: 'help' }
+            ].map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-bold text-xs text-[#727785] hover:bg-[#f2f3fd] hover:text-[#424754] transition-colors text-left"
+              >
+                <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
+                <span>{item.label}</span>
+              </button>
+            ))}
           </div>
+        </aside>
 
-          {/* Preview Canvas */}
-          <div className="flex-1 overflow-auto p-6 flex items-start justify-center">
-            {/* Device Mockup Wrapper */}
-            <div
-              className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-[#c2c6d6] transition-all duration-300 flex flex-col"
-              style={{
-                width: previewDevice === 'desktop' ? '100%' : previewDevice === 'tablet' ? '680px' : '375px',
-                maxWidth: '100%',
-                minWidth: '320px',
-                flexShrink: 0
-              }}
-            >
-              {/* Browser Header / Status Bar */}
-              {previewDevice === 'desktop' && (
-                <div className="h-8 bg-[#ecedf7] border-b border-[#c2c6d6] px-4 flex items-center gap-2 select-none shrink-0">
-                  <div className="flex gap-1.5 shrink-0">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
-                  </div>
-                  <div className="flex-1 max-w-md mx-auto bg-white/70 rounded h-5 flex items-center justify-center text-[9px] text-[#545f73] border border-[#c2c6d6]/60">
-                    bogamarket.com/{storeForm.slug || 'sunset'}
-                  </div>
-                </div>
-              )}
-
-              {previewDevice === 'tablet' && (
-                <div className="h-6 bg-[#191b23] text-white/80 px-4 flex items-center justify-between text-[10px] select-none shrink-0">
-                  <span className="font-semibold text-white">iPad</span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[10px] text-white">wifi</span>
-                    <span className="text-[9px] font-bold text-white">100%</span>
-                    <span className="material-symbols-outlined text-[10px] text-white">battery_full</span>
-                  </div>
-                </div>
-              )}
-
-              {previewDevice === 'mobile' && (
-                <div className="h-6 bg-[#191b23] text-white/80 px-4 flex items-center justify-between text-[10px] select-none shrink-0">
-                  <span className="font-semibold text-white">9:41</span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[10px] text-white">signal_cellular_4_bar</span>
-                    <span className="material-symbols-outlined text-[10px] text-white">wifi</span>
-                    <span className="material-symbols-outlined text-[10px] text-white">battery_5_bar</span>
-                  </div>
-                </div>
-              )}
-
-              {(() => {
-                const tplKey = storeForm.template as string;
-                const tplTheme = staticStores[tplKey]?.theme;
-                const heroImg = staticStores[tplKey]?.heroImage
-                  || adminTemplates.find(t => t.id === tplKey)?.previewUrl
-                  || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=800&q=80';
-                const primary = tplTheme?.primary || '#0058be';
-                const bg = tplTheme?.background || '#f9f9ff';
-                const onBg = tplTheme?.onBackground || '#191b23';
-                const surface = tplTheme?.surfaceContainer || '#ecedf7';
-                return (
-                  <div className="flex-1 overflow-y-auto min-h-0 flex flex-col">
-                    {/* Hero Preview */}
-                    <div className="relative h-52 overflow-hidden shrink-0">
-                      <img src={heroImg} alt="preview" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/45 flex flex-col items-center justify-center gap-3 text-white">
-                        <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center text-2xl shadow-lg">
-                          {storeForm.emoji || '🏪'}
-                        </div>
-                        <div className="text-center">
-                          <h2 className="font-bold text-xl tracking-tight text-white">{storeForm.name || 'Nombre de Tienda'}</h2>
-                          <p className="text-sm opacity-75 mt-0.5 text-white">{storeForm.tagline || 'Tu lema aquí'}</p>
-                        </div>
-                        <button className="px-6 py-2 rounded-full text-xs font-bold shadow-md transition-transform hover:scale-105" style={{ backgroundColor: primary, color: '#fff' }}>
-                          Ingresar al Comercio
-                        </button>
-                      </div>
-                    </div>
-                    {/* Body skeleton */}
-                    <div className="p-5 flex-1" style={{ backgroundColor: bg }}>
-                      <p className="text-[10px] font-bold mb-3 uppercase tracking-wider" style={{ color: onBg, opacity: 0.5 }}>Categorías</p>
-                      <div className="grid grid-cols-3 gap-2 mb-4">
-                        {[1,2,3].map(i => (
-                          <div key={i} className="rounded-xl p-3 flex flex-col items-center gap-2 border" style={{ backgroundColor: primary + '12', borderColor: primary + '25' }}>
-                            <div className="w-7 h-7 rounded-lg" style={{ backgroundColor: primary, opacity: 0.5 }} />
-                            <div className="h-1.5 w-12 rounded" style={{ backgroundColor: primary, opacity: 0.3 }} />
-                          </div>
-                        ))}
-                      </div>
-                      <p className="text-[10px] font-bold mb-3 uppercase tracking-wider" style={{ color: onBg, opacity: 0.5 }}>Productos</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        {[1,2,3,4].map(i => (
-                          <div key={i} className="rounded-xl overflow-hidden border" style={{ borderColor: primary + '20' }}>
-                            <div className="h-16" style={{ backgroundColor: surface }} />
-                            <div className="p-2 space-y-1">
-                              <div className="h-1.5 rounded w-3/4" style={{ backgroundColor: onBg, opacity: 0.15 }} />
-                              <div className="h-1.5 rounded w-1/2" style={{ backgroundColor: primary, opacity: 0.4 }} />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
+        {/* ─── MAIN EDITOR AREA ─── */}
+        <div className="flex-1 flex flex-col min-w-0 bg-[#f2f4f8]">
+          {/* Topbar */}
+          <header className="h-16 bg-white border-b border-[#ecedf7] flex items-center justify-between px-6 shrink-0 shadow-xs">
+            {/* Search components bar */}
+            <div className="flex items-center gap-3 bg-[#f2f3fd] border border-[#c2c6d6]/60 rounded-xl px-3.5 py-2 w-72">
+              <span className="material-symbols-outlined text-[16px] text-[#727785]">search</span>
+              <input
+                type="text"
+                placeholder="Search components..."
+                className="bg-transparent text-xs font-semibold placeholder-[#727785] text-[#191b23] outline-none w-full"
+                disabled
+              />
             </div>
-          </div>
-        </div>
 
-        {/* ── RIGHT: Config Panel ── */}
-        <aside className="w-[400px] shrink-0 bg-white border-l border-[#c2c6d6] flex flex-col overflow-hidden">
-          {/* Panel header */}
-          <div className="px-5 py-4 border-b border-[#c2c6d6] bg-white shrink-0">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[#0058be] text-[18px]">tune</span>
-              <h2 className="font-bold text-sm text-[#191b23]">
-                {editingStore ? 'Editar Tienda' : 'Nueva Tienda'}
-              </h2>
+            {/* User actions */}
+            <div className="flex items-center gap-4">
+              <span className="text-[11px] font-bold text-[#545f73] cursor-pointer hover:text-[#0058be] transition-colors">Preview</span>
+              <button
+                type="button"
+                onClick={handleSaveStore}
+                className="px-4 py-2.5 bg-[#0058be] text-white rounded-xl font-bold text-xs hover:shadow-lg active:scale-95 transition-all flex items-center gap-1.5"
+              >
+                <span className="material-symbols-outlined text-[14px]">publish</span>
+                Publish Changes
+              </button>
+              <div className="w-9 h-9 rounded-xl border border-[#c2c6d6]/60 flex items-center justify-center bg-white cursor-pointer hover:bg-[#f2f3fd] transition-colors text-[#545f73]">
+                <span className="material-symbols-outlined text-[18px]">notifications</span>
+              </div>
+              <div className="w-9 h-9 rounded-xl bg-[#0058be]/10 border border-[#0058be]/20 flex items-center justify-center text-xs font-bold text-[#0058be]">
+                UA
+              </div>
             </div>
-            <p className="text-[10px] text-[#545f73] font-semibold mt-0.5">Personaliza cada detalle de tu comercio</p>
-          </div>
+          </header>
 
-          <form onSubmit={handleSaveStore} className="flex-1 overflow-y-auto min-h-0 flex flex-col">
-            <div className="p-5 space-y-6 flex-1">
-
-              {/* ── Logo y Marca ── */}
-              <section>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="material-symbols-outlined text-[#0058be] text-[16px]">auto_awesome</span>
-                  <h3 className="text-[9px] font-bold text-[#424754] uppercase tracking-widest">Logo y Marca</h3>
-                </div>
-                <div className="space-y-2.5">
-                  <div>
-                    <label className="block text-[9px] font-bold text-[#424754] mb-1 uppercase tracking-wide">Nombre</label>
-                    <input
-                      required
-                      type="text"
-                      placeholder="Ej. Vintage Soul"
-                      value={storeForm.name}
-                      onChange={(e) => {
-                        const name = e.target.value;
-                        setStoreForm(prev => ({
-                          ...prev, name,
-                          slug: editingStore ? prev.slug : name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-                        }));
-                      }}
-                      className="w-full bg-[#f9f9ff] border border-[#c2c6d6] rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-[#0058be] transition-colors"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[9px] font-bold text-[#424754] mb-1 uppercase tracking-wide">URL / Slug</label>
-                    <div className="flex items-center bg-[#f9f9ff] border border-[#c2c6d6] rounded-lg px-3 py-2 gap-1 focus-within:border-[#0058be] transition-colors">
-                      <span className="text-[10px] text-[#727785] font-semibold shrink-0">boga.com/</span>
-                      <input
-                        required
-                        disabled={!!editingStore}
-                        type="text"
-                        placeholder="mi-tienda"
-                        value={storeForm.slug}
-                        onChange={(e) => setStoreForm(prev => ({ ...prev, slug: e.target.value.toLowerCase().replace(/[^a-z0-9\-]+/g, '') }))}
-                        className="flex-1 bg-transparent text-xs font-semibold outline-none text-[#191b23] disabled:opacity-50"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-[9px] font-bold text-[#424754] mb-1 uppercase tracking-wide">Lema</label>
-                    <input
-                      type="text"
-                      placeholder="Ej. Bar & Café de autor"
-                      value={storeForm.tagline}
-                      onChange={(e) => setStoreForm(prev => ({ ...prev, tagline: e.target.value }))}
-                      className="w-full bg-[#f9f9ff] border border-[#c2c6d6] rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-[#0058be] transition-colors"
-                    />
-                  </div>
-                  <div className="flex gap-2 items-center">
-                    <div className="w-10 h-10 rounded-xl bg-[#ecedf7] border border-[#c2c6d6] flex items-center justify-center text-xl shrink-0">
-                      {storeForm.emoji || '🏪'}
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="🏪 Emoji"
-                      maxLength={2}
-                      value={storeForm.emoji}
-                      onChange={(e) => setStoreForm(prev => ({ ...prev, emoji: e.target.value }))}
-                      className="flex-1 bg-[#f9f9ff] border border-[#c2c6d6] rounded-lg px-3 py-2 text-xs font-semibold text-center outline-none focus:border-[#0058be] transition-colors"
-                    />
-                  </div>
-                </div>
-              </section>
-
-              {/* ── Paleta de Colores ── */}
-              <section>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="material-symbols-outlined text-[#0058be] text-[16px]">palette</span>
-                  <h3 className="text-[9px] font-bold text-[#424754] uppercase tracking-widest">Paleta de Colores</h3>
-                </div>
-                {(() => {
-                  const tplTheme = staticStores[storeForm.template as string]?.theme;
-                  if (!tplTheme) return (
-                    <p className="text-[10px] text-[#727785] italic px-1">Elige un template para ver su paleta</p>
-                  );
-                  const swatches = [
-                    { color: tplTheme.primary, label: 'Principal' },
-                    { color: tplTheme.background, label: 'Fondo' },
-                    { color: tplTheme.surface, label: 'Superficie' },
-                    { color: tplTheme.secondary, label: 'Secundario' },
-                    { color: tplTheme.primaryContainer, label: 'Contenedor' },
-                  ];
-                  const isDark = tplTheme.background < '#888888';
-                  return (
-                    <>
-                      <div className="flex gap-1.5">
-                        {swatches.map(({ color, label }) => (
-                          <div key={label} title={`${label}: ${color}`}
-                            className="h-9 flex-1 rounded-lg border border-[#c2c6d6]/60 shadow-inner cursor-pointer hover:scale-110 transition-transform"
-                            style={{ backgroundColor: color }}
-                          />
-                        ))}
-                      </div>
-                      <div className="mt-3 flex items-center justify-between px-1">
-                        <span className="text-[10px] text-[#424754] font-semibold">Modo Oscuro</span>
-                        <div className={`w-9 h-5 rounded-full relative transition-colors ${isDark ? 'bg-[#0058be]' : 'bg-[#c2c6d6]'}`}>
-                          <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${isDark ? 'translate-x-4' : 'translate-x-0.5'}`} />
-                        </div>
-                      </div>
-                    </>
-                  );
-                })()}
-              </section>
-
-              {/* ── Plantilla ── */}
-              <section>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="material-symbols-outlined text-[#0058be] text-[16px]">layers</span>
-                  <h3 className="text-[9px] font-bold text-[#424754] uppercase tracking-widest">Plantilla Visual</h3>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {adminTemplates.map(t => (
+          {/* Sub-Editor Split Pane */}
+          <div className="flex-1 flex overflow-hidden min-h-0">
+            {/* LEFT: Live Preview Canvas */}
+            <div className="flex-1 flex flex-col overflow-hidden p-6">
+              {/* Device Selector Subbar */}
+              <div className="flex items-center justify-between mb-4 shrink-0">
+                <div className="flex gap-1.5">
+                  {[
+                    { id: 'desktop', icon: 'desktop_windows' },
+                    { id: 'tablet', icon: 'tablet' },
+                    { id: 'mobile', icon: 'smartphone' }
+                  ].map(({ id, icon }) => (
                     <button
-                      key={t.id}
+                      key={id}
                       type="button"
-                      onClick={() => setStoreForm(prev => ({ ...prev, template: t.id as any }))}
-                      className={`relative overflow-hidden rounded-xl border-2 transition-all text-left ${
-                        storeForm.template === t.id
-                          ? 'border-[#0058be] ring-2 ring-[#0058be]/20 shadow-md'
-                          : 'border-[#c2c6d6] hover:border-[#0058be]/50'
+                      onClick={() => setPreviewDevice(id as any)}
+                      className={`w-9 h-9 rounded-xl border flex items-center justify-center shadow-xs transition-all ${
+                        previewDevice === id
+                          ? 'bg-white border-[#0058be] text-[#0058be] font-bold ring-2 ring-[#0058be]/10'
+                          : 'bg-white border-[#ecedf7] text-[#727785] hover:bg-[#f2f3fd]'
                       }`}
                     >
-                      <img src={t.previewUrl} alt={t.name} className="w-full h-14 object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-2">
-                        <span className="text-[9px] font-bold text-white leading-tight">{t.name}</span>
-                      </div>
-                      {storeForm.template === t.id && (
-                        <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-[#0058be] flex items-center justify-center">
-                          <span className="material-symbols-outlined text-white" style={{ fontSize: '10px' }}>check</span>
-                        </div>
-                      )}
+                      <span className="material-symbols-outlined text-[18px]">{icon}</span>
                     </button>
                   ))}
                 </div>
-              </section>
+                <div className="text-[10px] text-[#545f73] font-bold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#27c93f] animate-pulse" />
+                  Live Preview: <span className="text-[#0058be] font-extrabold">{storeForm.slug || 'sunset'}.webarchitect.io</span>
+                </div>
+              </div>
 
-              {/* ── Info Comercial ── */}
-              <section>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="material-symbols-outlined text-[#0058be] text-[16px]">store</span>
-                  <h3 className="text-[9px] font-bold text-[#424754] uppercase tracking-widest">Info Comercial</h3>
+              {/* Canvas viewport container */}
+              <div className="flex-1 overflow-auto flex items-start justify-center p-2">
+                {/* Mockup screen containing original template */}
+                <div
+                  className="bg-white rounded-2xl shadow-xl overflow-hidden border border-[#c2c6d6] transition-all duration-300 flex flex-col"
+                  style={{
+                    width: previewDevice === 'desktop' ? '100%' : previewDevice === 'tablet' ? '768px' : '375px',
+                    height: '100%',
+                    maxHeight: '750px',
+                    maxWidth: '100%',
+                    minWidth: '320px',
+                    flexShrink: 0
+                  }}
+                >
+                  {/* Browser Header / Status Bar */}
+                  {previewDevice === 'desktop' && (
+                    <div className="h-8 bg-[#ecedf7] border-b border-[#c2c6d6] px-4 flex items-center gap-2 select-none shrink-0">
+                      <div className="flex gap-1.5 shrink-0">
+                        <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
+                      </div>
+                      <div className="flex-1 max-w-md mx-auto bg-white/70 rounded h-5 flex items-center justify-center text-[9px] text-[#545f73] border border-[#c2c6d6]/60">
+                        bogamarket.com/{storeForm.slug || 'sunset'}
+                      </div>
+                    </div>
+                  )}
+
+                  {previewDevice === 'tablet' && (
+                    <div className="h-6 bg-[#191b23] text-white/80 px-4 flex items-center justify-between text-[10px] select-none shrink-0">
+                      <span className="font-semibold text-white">iPad</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-[10px] text-white">wifi</span>
+                        <span className="text-[9px] font-bold text-white">100%</span>
+                        <span className="material-symbols-outlined text-[10px] text-white">battery_full</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {previewDevice === 'mobile' && (
+                    <div className="h-6 bg-[#191b23] text-white/80 px-4 flex items-center justify-between text-[10px] select-none shrink-0">
+                      <span className="font-semibold text-white">9:41</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-[10px] text-white">signal_cellular_4_bar</span>
+                        <span className="material-symbols-outlined text-[10px] text-white">wifi</span>
+                        <span className="material-symbols-outlined text-[10px] text-white">battery_5_bar</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── LIVE RENDERING THE ACTUAL ORIGINAL TEMPLATES ── */}
+                  <div className="flex-1 overflow-y-auto min-h-0 bg-[#f9f9ff]">
+                    {(() => {
+                      const tplKey = storeForm.template as string;
+                      const baseTheme = staticStores[tplKey]?.theme || {
+                        primary: '#0058be', onPrimary: '#ffffff', primaryContainer: '#2170e4',
+                        secondary: '#545f73', secondaryContainer: '#d5e0f8', background: '#f9f9ff',
+                        surface: '#ffffff', surfaceContainer: '#ecedf7', surfaceContainerLow: '#f2f3fd',
+                        surfaceContainerLowest: '#ffffff', surfaceContainerHigh: '#e6e7f2',
+                        onBackground: '#191b23', onSurface: '#191b23', onSurfaceVariant: '#424754',
+                        outlineVariant: '#c2c6d6', fontHeadline: "'Inter', sans-serif",
+                        fontBody: "'Inter', sans-serif", fontLabel: "'Inter', sans-serif"
+                      };
+
+                      const realStoreObj = staticStores[tplKey] || Object.values(stores).find(s => s.template === tplKey) || staticStores['sunset'];
+
+                      const activePreviewStore: StoreConfig = {
+                        slug: storeForm.slug || 'sunset',
+                        name: storeForm.name || 'Mi Tienda',
+                        tagline: storeForm.tagline || realStoreObj?.tagline || 'Lema Comercial',
+                        marketplaceCategory: storeForm.marketplaceCategory || 'Restaurantes',
+                        template: tplKey as any,
+                        heroImage: realStoreObj?.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=800&q=80',
+                        heroAlt: storeForm.name,
+                        theme: baseTheme,
+                        categories: realStoreObj?.categories || [
+                          { name: 'Entradas', icon: 'restaurant', href: '#entradas' },
+                          { name: 'Platos Fuertes', icon: 'local_bar', href: '#platos' }
+                        ]
+                      };
+
+                      return (
+                        <div className="h-full w-full">
+                          <StoreRenderer store={activePreviewStore} />
+                        </div>
+                      );
+                    })()}
+                  </div>
                 </div>
-                <div className="space-y-2.5">
-                  <div>
-                    <label className="block text-[9px] font-bold text-[#424754] mb-1 uppercase tracking-wide">Categoría del Portal</label>
-                    <select
-                      value={storeForm.marketplaceCategory}
-                      onChange={(e) => setStoreForm(prev => ({ ...prev, marketplaceCategory: e.target.value }))}
-                      className="w-full bg-[#f9f9ff] border border-[#c2c6d6] rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-[#0058be] transition-colors"
-                    >
-                      <option value="Restaurantes">Restaurantes</option>
-                      <option value="Mercado">Mercado</option>
-                      <option value="Salud y Bienestar">Salud y Bienestar</option>
-                      <option value="Moda y Belleza">Moda y Belleza</option>
-                      <option value="Moda">Moda</option>
-                      <option value="Servicios">Servicios</option>
-                      <option value="Tecnología">Tecnología</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[9px] font-bold text-[#424754] mb-1 uppercase tracking-wide">Ubicación</label>
-                    <input
-                      type="text"
-                      placeholder="Ej. Bogotá, CO"
-                      value={storeForm.location}
-                      onChange={(e) => setStoreForm(prev => ({ ...prev, location: e.target.value }))}
-                      className="w-full bg-[#f9f9ff] border border-[#c2c6d6] rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-[#0058be] transition-colors"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[9px] font-bold text-[#424754] mb-1 uppercase tracking-wide">Paquete Comercial</label>
-                    <select
-                      value={storeForm.tier}
-                      onChange={(e) => setStoreForm(prev => ({ ...prev, tier: e.target.value }))}
-                      className="w-full bg-[#f9f9ff] border border-[#c2c6d6] rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-[#0058be] transition-colors"
-                    >
-                      <option value="Basic Tier">Basic Tier</option>
-                      <option value="Professional">Professional</option>
-                      <option value="Enterprise Plus">Enterprise Plus</option>
-                    </select>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-[#f2f3fd] rounded-xl border border-[#c2c6d6]/60">
-                    <span className="text-xs font-bold text-[#424754]">¿Tienda Activa?</span>
-                    <Toggle on={storeForm.active} onChange={() => setStoreForm(prev => ({ ...prev, active: !prev.active }))} />
-                  </div>
-                </div>
-              </section>
+              </div>
             </div>
 
-            {/* ── Footer de acciones ── */}
-            <div className="px-5 py-4 border-t border-[#c2c6d6] bg-white flex gap-3 shrink-0">
-              <button
-                type="button"
-                onClick={() => setShowStoreModal(false)}
-                className="flex-1 py-2.5 bg-[#ecedf7] text-[#424754] rounded-xl font-bold text-xs hover:bg-[#e6e7f2] transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="flex-1 py-2.5 bg-[#0058be] text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 hover:opacity-90 hover:shadow-lg transition-all"
-              >
-                <span className="material-symbols-outlined text-[14px]">save</span>
-                {editingStore ? 'Guardar Cambios' : 'Crear Tienda'}
-              </button>
-            </div>
-          </form>
-        </aside>
+            {/* RIGHT: Config Panel */}
+            <aside className="w-[400px] shrink-0 bg-white border-l border-[#ecedf7] flex flex-col overflow-hidden">
+              {/* Header */}
+              <div className="p-6 border-b border-[#ecedf7] bg-white shrink-0">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#0058be] text-[18px]">tune</span>
+                  <h2 className="font-bold text-sm text-[#191b23]">Configuración</h2>
+                </div>
+                <p className="text-[10px] text-[#727785] font-bold uppercase tracking-wider mt-0.5">
+                  Personaliza cada detalle de tu tienda
+                </p>
+              </div>
+
+              {/* Form Scroll Container */}
+              <form onSubmit={handleSaveStore} className="flex-1 overflow-y-auto min-h-0 flex flex-col justify-between">
+                <div className="p-6 space-y-6">
+                  
+                  {/* LOGO Y MARCA */}
+                  <section className="space-y-4">
+                    <div className="flex items-center gap-2 border-b border-[#ecedf7] pb-2">
+                      <span className="material-symbols-outlined text-[#0058be] text-[16px] font-bold">auto_awesome</span>
+                      <h3 className="text-[10px] font-black text-[#424754] uppercase tracking-widest">Logo y Marca</h3>
+                    </div>
+
+                    {/* Logo container box */}
+                    <div className="border border-[#ecedf7] rounded-2xl p-4 bg-[#f8fafc] flex flex-col items-center justify-center gap-3">
+                      <div className="w-16 h-16 rounded-2xl bg-white border border-[#c2c6d6]/40 flex items-center justify-center text-3xl shadow-md">
+                        {storeForm.emoji || '🏪'}
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          maxLength={2}
+                          value={storeForm.emoji}
+                          onChange={(e) => setStoreForm(prev => ({ ...prev, emoji: e.target.value }))}
+                          placeholder="🏪"
+                          className="w-10 text-center bg-white border border-[#c2c6d6] rounded-xl py-1 text-sm font-bold focus:border-[#0058be] outline-none"
+                          title="Cambiar emoji"
+                        />
+                        <span className="text-[10px] text-[#727785] font-semibold flex items-center">Elegir emoji / logo</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Nombre de la Tienda</label>
+                        <input
+                          type="text"
+                          required
+                          value={storeForm.name}
+                          onChange={(e) => setStoreForm(prev => ({ ...prev, name: e.target.value }))}
+                          className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-xl px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] focus:bg-white transition-all shadow-xs"
+                          placeholder="Nombre comercial"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Lema / Subtítulo</label>
+                        <input
+                          type="text"
+                          value={storeForm.tagline}
+                          onChange={(e) => setStoreForm(prev => ({ ...prev, tagline: e.target.value }))}
+                          className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-xl px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] focus:bg-white transition-all shadow-xs"
+                          placeholder="Lema de tu tienda"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Enlace Personalizado (Slug)</label>
+                        <input
+                          type="text"
+                          required
+                          value={storeForm.slug}
+                          onChange={(e) => setStoreForm(prev => ({ ...prev, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-') }))}
+                          className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-xl px-4 py-2.5 text-xs font-bold text-[#0058be] outline-none focus:border-[#0058be] focus:bg-white transition-all shadow-xs"
+                          placeholder="enlace-tienda"
+                          disabled={!!editingStore}
+                        />
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* PALETA DE COLORES */}
+                  <section className="space-y-4">
+                    <div className="flex items-center gap-2 border-b border-[#ecedf7] pb-2">
+                      <span className="material-symbols-outlined text-[#0058be] text-[16px] font-bold">palette</span>
+                      <h3 className="text-[10px] font-black text-[#424754] uppercase tracking-widest">Paleta de Colores</h3>
+                    </div>
+
+                    {/* Color Swatches Grid from Template Theme */}
+                    {(() => {
+                      const tplKey = storeForm.template as string;
+                      const tplTheme = staticStores[tplKey]?.theme || {
+                        primary: '#0058be', secondary: '#545f73', background: '#f9f9ff', surface: '#ffffff'
+                      };
+                      return (
+                        <div className="space-y-3">
+                          <div className="flex gap-2.5">
+                            {[tplTheme.primary, tplTheme.secondary || '#545f73', tplTheme.background, tplTheme.surface].map((color, i) => (
+                              <div
+                                key={i}
+                                className="w-10 h-10 rounded-xl border border-[#ecedf7] flex items-center justify-center shadow-xs cursor-pointer hover:scale-105 transition-transform"
+                                style={{ backgroundColor: color }}
+                                title={`Color ${i + 1}: ${color}`}
+                              >
+                                <div className="w-2.5 h-2.5 rounded-full bg-white/40 border border-white/60" />
+                              </div>
+                            ))}
+                            {/* Dotted Plus Swatch */}
+                            <div className="w-10 h-10 rounded-xl border-2 border-dashed border-[#c2c6d6] flex items-center justify-center text-[#727785] cursor-pointer hover:bg-[#f2f3fd] transition-colors">
+                              <span className="material-symbols-outlined text-sm font-bold">add</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between p-3 bg-[#f8fafc] rounded-2xl border border-[#ecedf7]">
+                            <span className="text-[10px] font-bold text-[#424754] uppercase tracking-wider">Modo Oscuro</span>
+                            <Toggle on={tplTheme.background === '#191b23' || tplTheme.background === '#121212'} onChange={() => {}} />
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </section>
+
+                  {/* TIPOGRAFÍA */}
+                  <section className="space-y-4">
+                    <div className="flex items-center gap-2 border-b border-[#ecedf7] pb-2">
+                      <span className="material-symbols-outlined text-[#0058be] text-[16px] font-bold">font_download</span>
+                      <h3 className="text-[10px] font-black text-[#424754] uppercase tracking-widest">Tipografía</h3>
+                    </div>
+
+                    <div className="space-y-2">
+                      {[
+                        { name: 'Inter', desc: 'San Serif Moderno', fontClass: 'font-sans', selected: true },
+                        { name: 'Playfair Display', desc: 'Elegante Serif', fontClass: 'font-serif', selected: false }
+                      ].map((font) => (
+                        <div
+                          key={font.name}
+                          className={`p-3 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between ${
+                            font.selected
+                              ? 'border-[#0058be] bg-[#0058be]/5 ring-2 ring-[#0058be]/10'
+                              : 'border-[#ecedf7] hover:border-[#0058be]/30'
+                          }`}
+                        >
+                          <div>
+                            <h4 className={`text-xs font-bold text-[#191b23] ${font.fontClass}`}>{font.name}</h4>
+                            <p className="text-[9px] font-semibold text-[#727785] mt-0.5">{font.desc}</p>
+                          </div>
+                          {font.selected && (
+                            <span className="material-symbols-outlined text-[#0058be] text-[16px]">check_circle</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+
+                  {/* ESTRUCTURA DE PÁGINA (PLANTILLAS ORIGINALES) */}
+                  <section className="space-y-4">
+                    <div className="flex items-center gap-2 border-b border-[#ecedf7] pb-2">
+                      <span className="material-symbols-outlined text-[#0058be] text-[16px] font-bold">dashboard</span>
+                      <h3 className="text-[10px] font-black text-[#424754] uppercase tracking-widest">Estructura de Página</h3>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      {adminTemplates.map((t) => {
+                        const isSelected = storeForm.template === t.id;
+                        return (
+                          <div
+                            key={t.id}
+                            onClick={() => setStoreForm(prev => ({ ...prev, template: t.id as any }))}
+                            className={`rounded-2xl overflow-hidden border-2 cursor-pointer transition-all flex flex-col ${
+                              isSelected
+                                ? 'border-[#0058be] bg-[#0058be]/5 ring-2 ring-[#0058be]/10 shadow-xs'
+                                : 'border-[#ecedf7] hover:border-[#0058be]/30 bg-white'
+                            }`}
+                          >
+                            <img src={t.previewUrl} alt={t.name} className="w-full h-16 object-cover border-b border-[#ecedf7]" />
+                            <div className="p-2 flex flex-col justify-between flex-1">
+                              <span className="text-[9px] font-bold text-[#191b23] line-clamp-1">{t.name}</span>
+                              <span className="text-[7px] text-[#727785] font-bold uppercase mt-0.5 tracking-wider">{t.category}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+
+                  {/* INFO COMERCIAL */}
+                  <section className="space-y-4">
+                    <div className="flex items-center gap-2 border-b border-[#ecedf7] pb-2">
+                      <span className="material-symbols-outlined text-[#0058be] text-[16px] font-bold">store</span>
+                      <h3 className="text-[10px] font-black text-[#424754] uppercase tracking-widest">Info Comercial</h3>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Categoría del Portal</label>
+                        <select
+                          value={storeForm.marketplaceCategory}
+                          onChange={(e) => setStoreForm(prev => ({ ...prev, marketplaceCategory: e.target.value }))}
+                          className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-xl px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
+                        >
+                          <option value="Restaurantes">Restaurantes</option>
+                          <option value="Mercado">Mercado</option>
+                          <option value="Salud y Bienestar">Salud y Bienestar</option>
+                          <option value="Moda y Belleza">Moda y Belleza</option>
+                          <option value="Moda">Moda</option>
+                          <option value="Servicios">Servicios</option>
+                          <option value="Tecnología">Tecnología</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Ubicación</label>
+                        <input
+                          type="text"
+                          value={storeForm.location}
+                          onChange={(e) => setStoreForm(prev => ({ ...prev, location: e.target.value }))}
+                          className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-xl px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
+                          placeholder="Ej: Bogotá, CO"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Paquete Comercial</label>
+                        <select
+                          value={storeForm.tier}
+                          onChange={(e) => setStoreForm(prev => ({ ...prev, tier: e.target.value }))}
+                          className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-xl px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
+                        >
+                          <option value="Basic Tier">Basic Tier</option>
+                          <option value="Professional">Professional</option>
+                          <option value="Enterprise Plus">Enterprise Plus</option>
+                        </select>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3.5 bg-[#f2f3fd] rounded-2xl border border-[#c2c6d6]/60">
+                        <span className="text-xs font-bold text-[#424754]">¿Tienda Activa?</span>
+                        <Toggle on={storeForm.active} onChange={() => setStoreForm(prev => ({ ...prev, active: !prev.active }))} />
+                      </div>
+                    </div>
+                  </section>
+                </div>
+
+                {/* Footer Buttons */}
+                <div className="p-6 border-t border-[#ecedf7] bg-white flex gap-3 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setShowStoreModal(false)}
+                    className="flex-1 py-3 bg-[#ecedf7] text-[#424754] rounded-xl font-bold text-xs hover:bg-[#e6e7f2] transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-3 bg-[#0058be] text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 hover:opacity-90 hover:shadow-lg active:scale-95 transition-all"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">save</span>
+                    {editingStore ? 'Guardar Cambios' : 'Crear Tienda'}
+                  </button>
+                </div>
+              </form>
+            </aside>
+          </div>
+        </div>
       </div>
     )}
 
