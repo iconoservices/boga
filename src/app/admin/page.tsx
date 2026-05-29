@@ -2572,13 +2572,20 @@ export default function AdminPage() {
                   }}
                 >
                   <div
-                    className="bg-white shadow-xl overflow-hidden flex flex-col relative w-full h-full mx-auto"
+                    className="bg-white shadow-2xl overflow-hidden flex flex-col relative w-full h-full mx-auto"
                     style={{
-                      borderRadius: previewDevice === 'mobile' ? '40px' : '16px',
-                      border: previewDevice === 'mobile' ? '12px solid #000000' : '1px solid #c2c6d6',
+                      borderRadius: previewDevice === 'mobile' ? '44px' : previewDevice === 'tablet' ? '20px' : '12px',
+                      border: previewDevice === 'mobile'
+                        ? '14px solid #1a1a1a'
+                        : previewDevice === 'tablet'
+                        ? '10px solid #2a2a2a'
+                        : '1px solid #c2c6d6',
+                      boxShadow: previewDevice !== 'desktop'
+                        ? '0 0 0 1px #333, 0 30px 60px -10px rgba(0,0,0,0.4)'
+                        : '0 8px 32px rgba(0,0,0,0.12)',
                     }}
                   >
-                  {/* Browser Header / Status Bar */}
+                  {/* ── DESKTOP: browser chrome bar ── */}
                   {previewDevice === 'desktop' && (
                     <div className="h-8 bg-[#ecedf7] border-b border-[#c2c6d6] px-4 flex items-center gap-2 select-none shrink-0">
                       <div className="flex gap-1.5 shrink-0">
@@ -2592,9 +2599,10 @@ export default function AdminPage() {
                     </div>
                   )}
 
+                  {/* ── TABLET: top status bar ── */}
                   {previewDevice === 'tablet' && (
-                    <div className="h-6 bg-[#191b23] text-white/80 px-4 flex items-center justify-between text-[10px] select-none shrink-0">
-                      <span className="font-semibold text-white">iPad</span>
+                    <div className="h-6 bg-[#191b23] text-white/80 px-4 flex items-center justify-between text-[10px] select-none shrink-0 rounded-t-[10px]">
+                      <span className="font-semibold text-white">9:41</span>
                       <div className="flex items-center gap-1.5">
                         <span className="material-symbols-outlined text-[10px] text-white">wifi</span>
                         <span className="text-[9px] font-bold text-white">100%</span>
@@ -2603,103 +2611,52 @@ export default function AdminPage() {
                     </div>
                   )}
 
+                  {/* ── MOBILE: iPhone 13 Dynamic Island + Status Bar overlay ── */}
                   {previewDevice === 'mobile' && (
                     <>
-                      {/* iPhone 13 Notch */}
-                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-36 h-6 bg-black rounded-b-2xl z-[90] flex items-center justify-center">
-                        {/* Speaker line */}
-                        <div className="w-10 h-0.5 bg-[#222222] rounded-full absolute top-1" />
-                        {/* Front camera lens */}
-                        <div className="w-2 h-2 rounded-full bg-[#0d0f25] border border-white/5 absolute right-6 top-2 flex items-center justify-center">
-                          <div className="w-0.75 h-0.75 rounded-full bg-[#253da1]/40" />
-                        </div>
+                      {/* Dynamic Island */}
+                      <div className="absolute top-2 left-1/2 -translate-x-1/2 w-28 h-7 bg-black rounded-full z-[90] flex items-center justify-center gap-3 shadow-lg" style={{ boxShadow: '0 0 0 1px #000' }}>
+                        <div className="w-2 h-2 rounded-full bg-[#111]  border border-[#333]" />
+                        <div className="w-10 h-1 bg-[#111] rounded-full" />
                       </div>
-
-                      {/* iPhone 13 Status Bar (Overlay, Transparent) */}
-                      <div className="absolute top-0 left-0 right-0 h-11 px-6 flex items-center justify-between text-white text-[10px] font-bold z-[80] pointer-events-none select-none">
-                        <span className="text-white font-semibold">9:41</span>
+                      {/* Status Bar overlay (sits on top of iframe) */}
+                      <div className="absolute top-0 left-0 right-0 h-12 px-7 flex items-end pb-1 justify-between text-white text-[10px] font-bold z-[80] pointer-events-none select-none">
+                        <span className="font-semibold text-[11px]">9:41</span>
                         <div className="flex items-center gap-1.5">
-                          {/* iOS Signal strength bars */}
-                          <div className="flex items-end gap-[1px] h-2.5 shrink-0">
-                            <div className="w-[2px] h-[3px] bg-white rounded-2xs" />
-                            <div className="w-[2px] h-[5px] bg-white rounded-2xs" />
-                            <div className="w-[2px] h-[7px] bg-white rounded-2xs" />
-                            <div className="w-[2px] h-[9px] bg-white rounded-2xs" />
+                          <div className="flex items-end gap-[1.5px] h-3">
+                            <div className="w-[2.5px] h-[4px] bg-white rounded-sm opacity-40" />
+                            <div className="w-[2.5px] h-[6px] bg-white rounded-sm opacity-60" />
+                            <div className="w-[2.5px] h-[8px] bg-white rounded-sm opacity-80" />
+                            <div className="w-[2.5px] h-[10px] bg-white rounded-sm" />
                           </div>
-                          <span className="text-[8px] font-extrabold text-white leading-none">5G</span>
-                          {/* Wifi */}
-                          <span className="material-symbols-outlined text-[11px] text-white">wifi</span>
-                          {/* Battery Icon Outline */}
-                          <div className="w-5 h-2.5 rounded border border-white/70 p-[1px] flex items-center relative shrink-0">
-                            <div className="h-full w-3 bg-white rounded-xs" />
-                            <div className="w-[1.5px] h-[3px] bg-white/70 rounded-r-xs absolute -right-[2.5px] top-1/2 -translate-y-1/2" />
+                          <span className="text-[9px] font-black">5G</span>
+                          <svg width="15" height="12" viewBox="0 0 24 24" fill="white" className="opacity-90">
+                            <path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.8M10.71 5.05A16 16 0 0 1 22.56 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                          </svg>
+                          <div className="w-6 h-3 rounded-[3px] border border-white/80 p-[1.5px] flex items-center relative">
+                            <div className="h-full w-4 bg-white rounded-[1px]" />
+                            <div className="w-[1.5px] h-[5px] bg-white/70 absolute -right-[2px] top-1/2 -translate-y-1/2 rounded-r-sm" />
                           </div>
                         </div>
                       </div>
-
-                      {/* iPhone 13 Home Indicator Bar */}
-                      <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-32 h-1 bg-white rounded-full z-[80] pointer-events-none shadow-md" style={{ border: '1px solid rgba(0,0,0,0.15)' }} />
+                      {/* Home Indicator */}
+                      <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-28 h-1 bg-black/30 rounded-full z-[80] pointer-events-none" />
                     </>
                   )}
 
-                  {/* ── LIVE RENDERING THE ACTUAL ORIGINAL TEMPLATES ── */}
-                  <div 
-                    className="flex-1 overflow-y-auto min-h-0 bg-[#f9f9ff]" 
-                    style={{ 
-                      transform: 'translate3d(0,0,0)', 
-                      position: 'relative',
-                      scrollbarWidth: 'none',
-                      msOverflowStyle: 'none'
+                  {/* ── LIVE PREVIEW IFRAME (fully isolated CSS) ── */}
+                  <iframe
+                    key={`${storeForm.slug || 'sunset'}-${previewDevice}`}
+                    src={`/${storeForm.slug || 'sunset'}`}
+                    className="flex-1 w-full border-0 bg-white"
+                    style={{
+                      marginTop: previewDevice === 'mobile' ? '44px' : 0,
+                      marginBottom: previewDevice === 'mobile' ? '20px' : 0,
+                      borderRadius: previewDevice === 'mobile' ? '0 0 30px 30px' : previewDevice === 'tablet' ? '0 0 10px 10px' : 0,
                     }}
-                  >
-                    <style dangerouslySetInnerHTML={{__html: `
-                      /* Hide scrollbars inside emulator device */
-                      ::-webkit-scrollbar {
-                        display: none !important;
-                        width: 0px !important;
-                        background: transparent !important;
-                      }
-                      * {
-                        scrollbar-width: none !important;
-                        -ms-overflow-style: none !important;
-                      }
-                    `}} />
-                    {(() => {
-                      const tplKey = storeForm.template as string;
-                      const baseTheme = staticStores[tplKey]?.theme || {
-                        primary: '#0058be', onPrimary: '#ffffff', primaryContainer: '#2170e4',
-                        secondary: '#545f73', secondaryContainer: '#d5e0f8', background: '#f9f9ff',
-                        surface: '#ffffff', surfaceContainer: '#ecedf7', surfaceContainerLow: '#f2f3fd',
-                        surfaceContainerLowest: '#ffffff', surfaceContainerHigh: '#e6e7f2',
-                        onBackground: '#191b23', onSurface: '#191b23', onSurfaceVariant: '#424754',
-                        outlineVariant: '#c2c6d6', fontHeadline: "'Inter', sans-serif",
-                        fontBody: "'Inter', sans-serif", fontLabel: "'Inter', sans-serif"
-                      };
-
-                      const realStoreObj = staticStores[tplKey] || Object.values(stores).find(s => s.template === tplKey) || staticStores['sunset'];
-
-                      const activePreviewStore: StoreConfig = {
-                        slug: storeForm.slug || 'sunset',
-                        name: storeForm.name || 'Mi Tienda',
-                        tagline: storeForm.tagline || realStoreObj?.tagline || 'Lema Comercial',
-                        marketplaceCategory: storeForm.marketplaceCategory || 'Restaurantes',
-                        template: tplKey as any,
-                        heroImage: realStoreObj?.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=800&q=80',
-                        heroAlt: storeForm.name,
-                        theme: baseTheme,
-                        categories: realStoreObj?.categories || [
-                          { name: 'Entradas', icon: 'restaurant', href: '#entradas' },
-                          { name: 'Platos Fuertes', icon: 'local_bar', href: '#platos' }
-                        ]
-                      };
-
-                      return (
-                        <div className="h-full w-full">
-                          <StoreRenderer store={activePreviewStore} />
-                        </div>
-                      );
-                    })()}
-                  </div>
+                    title={`Preview: ${storeForm.name || 'Tienda'}`}
+                    sandbox="allow-scripts allow-same-origin allow-forms"
+                  />
                 </div>
                 </div>
               </div>
