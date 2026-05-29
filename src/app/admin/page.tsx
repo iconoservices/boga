@@ -2592,13 +2592,11 @@ export default function AdminPage() {
 
               {/* Canvas viewport container */}
               <div className="flex-1 overflow-auto flex items-center justify-center p-2 bg-[#f2f4f8]">
-                {/* Mockup screen containing original template */}
                 <div
                   className="bg-white shadow-xl overflow-hidden transition-all duration-300 flex flex-col relative"
                   style={{
                     width: previewDevice === 'desktop' ? '100%' : previewDevice === 'tablet' ? '768px' : '390px',
-                    height: '100%',
-                    maxHeight: previewDevice === 'desktop' ? '100%' : previewDevice === 'tablet' ? '750px' : '720px',
+                    height: previewDevice === 'desktop' ? '100%' : previewDevice === 'tablet' ? '700px' : '780px',
                     maxWidth: '100%',
                     minWidth: '320px',
                     flexShrink: 0,
