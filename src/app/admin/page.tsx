@@ -46,6 +46,20 @@ const INITIAL_CATEGORIES = [
   { id: 7, name: 'Combos & Promos', subs: ['Combos Comida', 'Packs Bebidas', 'Ofertas Flash'], storeSlugs: [] },
 ];
 
+const mapFormCategoryToCategoryName = (formCat: string): string => {
+  const mapping: Record<string, string> = {
+    'Restaurantes': 'Comida',
+    'Mercado': 'Mercado',
+    'Salud y Bienestar': 'Salud',
+    'Salud': 'Salud',
+    'Moda y Belleza': 'Moda',
+    'Moda': 'Moda',
+    'Servicios': 'Servicios',
+    'Tecnología': 'Servicios',
+  };
+  return mapping[formCat] || formCat;
+};
+
 const NAV = [
   { id: 'tiendas',         icon: 'storefront',    label: 'Tiendas' },
   { id: 'categorias',      icon: 'category',      label: 'Categorías' },
@@ -335,6 +349,171 @@ export default function AdminPage() {
   const { isDemoVisible, toggleDemoProducts } = useDemo();
   const { getSettings, updateSetting } = useStoreSettings();
 
+  React.useEffect(() => {
+    const fetchDbStores = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('stores')
+          .select('*');
+          
+        if (error) throw error;
+        
+        if (data) {
+          const mergedStores = { ...initialStores };
+          const mergedDetails = { ...STORE_DETAILS };
+          const mergedMeta = { ...META };
+          const mergedTiers = {
+            sunset: 'Professional',
+            delva: 'Enterprise Plus',
+            natura: 'Basic Tier',
+            amazonia: 'Professional',
+            estilosmirka: 'Enterprise Plus',
+            sweetkittynails: 'Basic Tier'
+          } as Record<string, string>;
+          const mergedActive = { ...Object.fromEntries(Object.keys(initialStores).map((k) => [k, true])) } as Record<string, boolean>;
+
+          data.forEach(dbStore => {
+            const slug = dbStore.slug;
+            const dbTheme = dbStore.theme || {};
+            const location = dbTheme.location || 'Ecosistema, Global';
+            const emoji = dbTheme.emoji || '🏪';
+            const tier = dbTheme.tier || 'Basic Tier';
+
+            mergedStores[slug] = {
+              slug,
+              name: dbStore.name,
+              tagline: dbStore.tagline || '',
+              marketplaceCategory: dbStore.marketplace_category || 'General',
+              template: (dbStore.template || 'default') as any,
+              heroImage: dbStore.hero_image || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
+              heroAlt: dbStore.hero_alt || 'store image',
+              theme: dbStore.theme && Object.keys(dbStore.theme).length > 0 ? dbStore.theme : {
+                primary: '#0058be',
+                onPrimary: '#ffffff',
+                primaryContainer: '#2170e4',
+                secondary: '#545f73',
+                secondaryContainer: '#d5e0f8',
+                background: '#f9f9ff',
+                surface: '#ffffff',
+                surfaceContainer: '#ecedf7',
+                surfaceContainerLow: '#f2f3fd',
+                surfaceContainerLowest: '#ffffff',
+                surfaceContainerHigh: '#e6e7f2',
+                onBackground: '#191b23',
+                onSurface: '#191b23',
+                onSurfaceVariant: '#424754',
+                outlineVariant: '#c2c6d6',
+                fontHeadline: "'Inter', sans-serif",
+                fontBody: "'Inter', sans-serif",
+                fontLabel: "'Inter', sans-serif",
+              },
+              categories: dbStore.categories || []
+            };
+
+            mergedDetails[slug] = {
+              location,
+              date: new Date(dbStore.created_at || Date.now()).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
+              icon: 'storefront'
+            };
+
+            mergedMeta[slug] = {
+              emoji,
+              cat: dbStore.marketplace_category || 'General'
+            };
+
+            mergedTiers[slug] = tier;
+            mergedActive[slug] = dbStore.status === 'active';
+          });
+
+          setStores(mergedStores);
+          setStoreDetails(mergedDetails);
+          setStoreMeta(mergedMeta);
+          setStoreTiers(mergedTiers);
+          setActiveStores(mergedActive);
+
+          setCategories(prevCats => {
+            return prevCats.map(c => {
+              const currentSlugs = [...(c.storeSlugs || [])];
+              data.forEach(dbStore => {
+                const slug = dbStore.slug;
+                const mappedCatName = mapFormCategoryToCategoryName(dbStore.marketplace_category || '');
+                if (c.name === mappedCatName && !currentSlugs.includes(slug)) {
+                  currentSlugs.push(slug);
+                }
+              });
+              return { ...c, storeSlugs: currentSlugs };
+            });
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching stores from Supabase:', err);
+      }
+    };
+    
+    fetchDbStores();
+  }, []);
+
+  const handleLinkStoreToCategory = async (catId: number, catName: string, slug: string) => {
+    setCategories(cats => cats.map(c => {
+      if (c.id === catId) {
+        const current = c.storeSlugs || [];
+        if (!current.includes(slug)) {
+          return { ...c, storeSlugs: [...current, slug] };
+        }
+      }
+      return c;
+    }));
+
+    setStores(prev => {
+      if (!prev[slug]) return prev;
+      return {
+        ...prev,
+        [slug]: {
+          ...prev[slug],
+          marketplaceCategory: catName
+        }
+      };
+    });
+
+    try {
+      await supabase
+        .from('stores')
+        .update({ marketplace_category: catName })
+        .eq('slug', slug);
+    } catch (err) {
+      console.error('Error linking store to category:', err);
+    }
+  };
+
+  const handleUnlinkStoreFromCategory = async (catId: number, slug: string) => {
+    setCategories(cats => cats.map(c => {
+      if (c.id === catId) {
+        return { ...c, storeSlugs: (c.storeSlugs || []).filter(s => s !== slug) };
+      }
+      return c;
+    }));
+
+    setStores(prev => {
+      if (!prev[slug]) return prev;
+      return {
+        ...prev,
+        [slug]: {
+          ...prev[slug],
+          marketplaceCategory: ''
+        }
+      };
+    });
+
+    try {
+      await supabase
+        .from('stores')
+        .update({ marketplace_category: '' })
+        .eq('slug', slug);
+    } catch (err) {
+      console.error('Error unlinking store from category:', err);
+    }
+  };
+
   const storeList = Object.values(stores);
   const filtered = storeList.filter((s) =>
     s.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -381,97 +560,164 @@ export default function AdminPage() {
     setShowStoreModal(true);
   };
 
-  const handleDeleteStore = (slug: string) => {
+  const handleDeleteStore = async (slug: string) => {
     if (confirm(`¿Estás seguro de que deseas eliminar la tienda "${stores[slug]?.name || slug}"?`)) {
-      setStores(prev => {
-        const next = { ...prev };
-        delete next[slug];
-        return next;
-      });
-      setActiveStores(prev => {
-        const next = { ...prev };
-        delete next[slug];
-        return next;
-      });
+      try {
+        const { error } = await supabase
+          .from('stores')
+          .delete()
+          .eq('slug', slug);
+          
+        if (error) throw error;
+
+        setStores(prev => {
+          const next = { ...prev };
+          delete next[slug];
+          return next;
+        });
+        setActiveStores(prev => {
+          const next = { ...prev };
+          delete next[slug];
+          return next;
+        });
+        
+        setCategories(prevCats => {
+          return prevCats.map(c => ({
+            ...c,
+            storeSlugs: (c.storeSlugs || []).filter(s => s !== slug)
+          }));
+        });
+      } catch (err: any) {
+        alert('Error al eliminar tienda de Supabase: ' + err.message);
+      }
     }
   };
 
-  const handleSaveStore = (e: React.FormEvent) => {
+  const handleSaveStore = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!storeForm.slug || !storeForm.name) return;
     
     const slug = storeForm.slug.trim().toLowerCase();
     
-    setStoreDetails(prev => ({
-      ...prev,
-      [slug]: {
-        location: storeForm.location,
-        date: editingStore ? (prev[slug]?.date || 'Hoy') : new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
-        icon: 'storefront'
-      }
-    }));
-    
-    setStoreMeta(prev => ({
-      ...prev,
-      [slug]: {
-        emoji: storeForm.emoji,
-        cat: storeForm.marketplaceCategory
-      }
-    }));
+    const defaultTheme = {
+      primary: '#0058be',
+      onPrimary: '#ffffff',
+      primaryContainer: '#2170e4',
+      secondary: '#545f73',
+      secondaryContainer: '#d5e0f8',
+      background: '#f9f9ff',
+      surface: '#ffffff',
+      surfaceContainer: '#ecedf7',
+      surfaceContainerLow: '#f2f3fd',
+      surfaceContainerLowest: '#ffffff',
+      surfaceContainerHigh: '#e6e7f2',
+      onBackground: '#191b23',
+      onSurface: '#191b23',
+      onSurfaceVariant: '#424754',
+      outlineVariant: '#c2c6d6',
+      fontHeadline: "'Inter', sans-serif",
+      fontBody: "'Inter', sans-serif",
+      fontLabel: "'Inter', sans-serif",
+    };
 
-    setStoreTiers(prev => ({
-      ...prev,
-      [slug]: storeForm.tier
-    }));
+    const existingStoreObj = stores[slug] || {};
+    const theme = {
+      ...(existingStoreObj.theme || defaultTheme),
+      location: storeForm.location,
+      emoji: storeForm.emoji,
+      tier: storeForm.tier
+    };
+    const heroImage = existingStoreObj.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80';
+    const heroAlt = existingStoreObj.heroAlt || 'store image';
+    const categoriesList = existingStoreObj.categories || [];
 
-    setActiveStores(prev => ({
-      ...prev,
-      [slug]: storeForm.active
-    }));
+    const upsertData = {
+      slug,
+      name: storeForm.name,
+      tagline: storeForm.tagline,
+      marketplace_category: storeForm.marketplaceCategory,
+      template: storeForm.template,
+      theme,
+      hero_image: heroImage,
+      hero_alt: heroAlt,
+      categories: categoriesList,
+      status: storeForm.active ? 'active' : 'inactive'
+    };
 
-    setStores(prev => {
-      const existing = prev[slug] || {
-        heroImage: 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
-        heroAlt: 'store image',
-        categories: []
-      };
+    try {
+      const { error } = await supabase
+        .from('stores')
+        .upsert(upsertData, { onConflict: 'slug' });
+        
+      if (error) throw error;
       
-      const updated = {
-        ...existing,
-        slug,
-        name: storeForm.name,
-        tagline: storeForm.tagline,
-        marketplaceCategory: storeForm.marketplaceCategory,
-        template: storeForm.template,
-        theme: existing.theme || {
-          primary: '#0058be',
-          onPrimary: '#ffffff',
-          primaryContainer: '#2170e4',
-          secondary: '#545f73',
-          secondaryContainer: '#d5e0f8',
-          background: '#f9f9ff',
-          surface: '#ffffff',
-          surfaceContainer: '#ecedf7',
-          surfaceContainerLow: '#f2f3fd',
-          surfaceContainerLowest: '#ffffff',
-          surfaceContainerHigh: '#e6e7f2',
-          onBackground: '#191b23',
-          onSurface: '#191b23',
-          onSurfaceVariant: '#424754',
-          outlineVariant: '#c2c6d6',
-          fontHeadline: "'Inter', sans-serif",
-          fontBody: "'Inter', sans-serif",
-          fontLabel: "'Inter', sans-serif",
-        }
-      };
-      
-      return {
+      setStoreDetails(prev => ({
         ...prev,
-        [slug]: updated
-      };
-    });
+        [slug]: {
+          location: storeForm.location,
+          date: editingStore ? (prev[slug]?.date || 'Hoy') : new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
+          icon: 'storefront'
+        }
+      }));
+      
+      setStoreMeta(prev => ({
+        ...prev,
+        [slug]: {
+          emoji: storeForm.emoji,
+          cat: storeForm.marketplaceCategory
+        }
+      }));
 
-    setShowStoreModal(false);
+      setStoreTiers(prev => ({
+        ...prev,
+        [slug]: storeForm.tier
+      }));
+
+      setActiveStores(prev => ({
+        ...prev,
+        [slug]: storeForm.active
+      }));
+
+      setStores(prev => {
+        const updated = {
+          ...existingStoreObj,
+          slug,
+          name: storeForm.name,
+          tagline: storeForm.tagline,
+          marketplaceCategory: storeForm.marketplaceCategory,
+          template: storeForm.template,
+          theme
+        };
+        
+        return {
+          ...prev,
+          [slug]: updated
+        };
+      });
+
+      const oldSlug = editingStore?.slug;
+      const mappedCatName = mapFormCategoryToCategoryName(storeForm.marketplaceCategory);
+      setCategories(prevCats => {
+        return prevCats.map(c => {
+          let storeSlugs = c.storeSlugs || [];
+          if (oldSlug) {
+            storeSlugs = storeSlugs.filter(s => s !== oldSlug);
+          }
+          if (c.name === mappedCatName) {
+            if (!storeSlugs.includes(slug)) {
+              storeSlugs = [...storeSlugs, slug];
+            }
+          } else {
+            storeSlugs = storeSlugs.filter(s => s !== slug);
+          }
+          return { ...c, storeSlugs };
+        });
+      });
+
+      setShowStoreModal(false);
+    } catch (err: any) {
+      alert('Error al guardar en Supabase: ' + err.message);
+    }
   };
 
   // Package Actions
@@ -1296,7 +1542,7 @@ export default function AdminPage() {
                                         <span>{META[slug]?.emoji || '🏪'}</span>
                                         <span className="truncate max-w-[80px]">{stores[slug]?.name || slug}</span>
                                         <button 
-                                          onClick={() => setCategories(cats => cats.map(c => c.id === cat.id ? { ...c, storeSlugs: c.storeSlugs.filter(s => s !== slug) } : c))}
+                                          onClick={() => handleUnlinkStoreFromCategory(cat.id, slug)}
                                           className="text-[#424754] hover:text-[#ba1a1a] shrink-0 flex items-center ml-0.5"
                                           title="Desvincular"
                                         >
@@ -1312,15 +1558,7 @@ export default function AdminPage() {
                                   onChange={(e) => {
                                     const val = e.target.value;
                                     if (!val) return;
-                                    setCategories(cats => cats.map(c => {
-                                      if (c.id === cat.id) {
-                                        const current = c.storeSlugs || [];
-                                        if (!current.includes(val)) {
-                                          return { ...c, storeSlugs: [...current, val] };
-                                        }
-                                      }
-                                      return c;
-                                    }));
+                                    handleLinkStoreToCategory(cat.id, cat.name, val);
                                   }}
                                   className="w-full bg-[#f9f9ff] border border-[#c2c6d6] text-[#424754] text-[9px] font-bold px-2 py-1 rounded-md outline-none focus:border-[#0058be] transition-colors cursor-pointer"
                                 >
@@ -1430,15 +1668,10 @@ export default function AdminPage() {
                                         onChange={(e) => {
                                           const catId = Number(e.target.value);
                                           if (!catId) return;
-                                          setCategories(cats => cats.map(c => {
-                                            if (c.id === catId) {
-                                              const current = c.storeSlugs || [];
-                                              if (!current.includes(s.slug)) {
-                                                return { ...c, storeSlugs: [...current, s.slug] };
-                                              }
-                                            }
-                                            return c;
-                                          }));
+                                          const catObj = categories.find(c => c.id === catId);
+                                          if (catObj) {
+                                            handleLinkStoreToCategory(catId, catObj.name, s.slug);
+                                          }
                                         }}
                                         className="bg-[#d5e0f8] hover:bg-[#2170e4] hover:text-white text-[#0058be] text-[10px] font-extrabold px-3 py-1.5 rounded-full border border-transparent outline-none transition-all cursor-pointer shadow-sm w-32"
                                       >

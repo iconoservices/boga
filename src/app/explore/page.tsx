@@ -44,10 +44,59 @@ export default function Explore() {
 
   useEffect(() => {
     const fetchRealData = async () => {
+      // 1. Fetch dynamic stores
+      const { data: dbStoresData } = await supabase.from('stores').select('*');
+      
+      const allStores = { ...stores } as any;
+      if (dbStoresData) {
+        dbStoresData.forEach((s: any) => {
+          if (!allStores[s.slug]) {
+            allStores[s.slug] = {
+              slug: s.slug,
+              name: s.name,
+              tagline: s.tagline || '',
+              marketplaceCategory: s.marketplace_category || 'General',
+              template: s.template || 'default',
+              heroImage: s.hero_image || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
+              heroAlt: s.hero_alt || 'store image',
+              theme: s.theme || {},
+              categories: s.categories || []
+            };
+          }
+        });
+      }
+
+      // Re-initialize storeData using allStores
+      setStoreData(
+        Object.values(allStores).map((s: any) => {
+          let macroCat = 'Mercado';
+          const storeCategory = s.marketplaceCategory?.toLowerCase() || '';
+          if (storeCategory.includes('moda') || storeCategory.includes('boutique')) macroCat = 'Moda';
+          else if (storeCategory.includes('salud') || storeCategory.includes('belleza')) macroCat = 'Salud';
+          else if (storeCategory.includes('restaurante') || storeCategory.includes('comida')) macroCat = 'Comida';
+          else if (storeCategory.includes('servicio')) macroCat = 'Servicios';
+          
+          return {
+            name: s.name,
+            slug: s.slug,
+            category: s.tagline || 'TIENDA OFICIAL',
+            macroCat,
+            time: '20-40 min',
+            delivery: 'S/ 5.00',
+            logo: s.heroImage,
+            products: [
+              { name: 'Producto Destacado', price: 'S/ 25.00', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400' },
+              { name: 'Oferta Especial', price: 'S/ 15.00', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400' },
+            ]
+          };
+        })
+      );
+
+      // 2. Fetch products
       const { data, error } = await supabase.from('products').select('*');
       if (data && !error && data.length > 0) {
         const formattedProducts = data.map((p: any) => {
-          const storeDef = stores[p.store as keyof typeof stores];
+          const storeDef = allStores[p.store];
           return {
             title: p.name,
             price: `S/ ${p.price.toFixed(2)}`,
@@ -78,7 +127,7 @@ export default function Explore() {
         };
 
         data.forEach((p: any) => {
-          const storeDef = stores[p.store as keyof typeof stores];
+          const storeDef = allStores[p.store];
           let macroCat = 'Mercado';
 
           const storeCategory = storeDef?.marketplaceCategory?.toLowerCase() || '';

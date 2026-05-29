@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { stores } from '@/lib/stores.config';
+import { stores as initialStores, StoreConfig } from '@/lib/stores.config';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { QRCodeSVG } from 'qrcode.react';
@@ -57,6 +57,45 @@ export default function DashboardPage() {
   const storeHeroInputRef = useRef<HTMLInputElement>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [dbStores, setDbStores] = useState<any[]>([]);
+
+  const stores = React.useMemo<Record<string, StoreConfig>>(() => {
+    const merged = { ...initialStores } as Record<string, StoreConfig>;
+    dbStores.forEach(s => {
+      if (!merged[s.slug]) {
+        merged[s.slug] = {
+          slug: s.slug,
+          name: s.name,
+          tagline: s.tagline || '',
+          marketplaceCategory: s.marketplace_category || 'General',
+          template: (s.template || 'default') as any,
+          heroImage: s.hero_image || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
+          heroAlt: s.hero_alt || 'store image',
+          categories: s.categories || [],
+          theme: s.theme || {
+            primary: '#0058be',
+            onPrimary: '#ffffff',
+            primaryContainer: '#2170e4',
+            secondary: '#545f73',
+            secondaryContainer: '#d5e0f8',
+            background: '#f9f9ff',
+            surface: '#ffffff',
+            surfaceContainer: '#ecedf7',
+            surfaceContainerLow: '#f2f3fd',
+            surfaceContainerLowest: '#ffffff',
+            surfaceContainerHigh: '#e6e7f2',
+            onBackground: '#191b23',
+            onSurface: '#191b23',
+            onSurfaceVariant: '#424754',
+            outlineVariant: '#c2c6d6',
+            fontHeadline: "'Inter', sans-serif",
+            fontBody: "'Inter', sans-serif",
+            fontLabel: "'Inter', sans-serif",
+          }
+        };
+      }
+    });
+    return merged;
+  }, [dbStores]);
   const [isStoreEditorOpen, setIsStoreEditorOpen] = useState(false);
   const [editingStoreSlug, setEditingStoreSlug] = useState<string | null>(null);
   const [isStoreSaving, setIsStoreSaving] = useState(false);
