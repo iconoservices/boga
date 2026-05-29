@@ -2526,17 +2526,7 @@ export default function AdminPage() {
         {/* ─── MAIN EDITOR AREA ─── */}
         <div className="flex-1 flex flex-col min-w-0 bg-[#f2f4f8]">
           {/* Topbar */}
-          <header className="h-16 bg-white border-b border-[#ecedf7] flex items-center justify-between px-6 shrink-0 shadow-xs">
-            {/* Search components bar */}
-            <div className="flex items-center gap-3 bg-[#f2f3fd] border border-[#c2c6d6]/60 rounded-xl px-3.5 py-2 w-72">
-              <span className="material-symbols-outlined text-[16px] text-[#727785]">search</span>
-              <input
-                type="text"
-                placeholder="Search components..."
-                className="bg-transparent text-xs font-semibold placeholder-[#727785] text-[#191b23] outline-none w-full"
-                disabled
-              />
-            </div>
+          <header className="h-12 bg-white border-b border-[#ecedf7] flex items-center justify-end px-6 shrink-0 shadow-xs">
 
             {/* User actions */}
             <div className="flex items-center gap-4">
