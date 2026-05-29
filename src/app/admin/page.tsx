@@ -2594,14 +2594,16 @@ export default function AdminPage() {
               <div className="flex-1 overflow-auto flex items-center justify-center p-2 bg-[#f2f4f8]">
                 {/* Mockup screen containing original template */}
                 <div
-                  className="bg-white rounded-2xl shadow-xl overflow-hidden border border-[#c2c6d6] transition-all duration-300 flex flex-col"
+                  className="bg-white shadow-xl overflow-hidden transition-all duration-300 flex flex-col relative"
                   style={{
-                    width: previewDevice === 'desktop' ? '100%' : previewDevice === 'tablet' ? '768px' : '360px',
+                    width: previewDevice === 'desktop' ? '100%' : previewDevice === 'tablet' ? '768px' : '390px',
                     height: '100%',
-                    maxHeight: previewDevice === 'desktop' ? '100%' : previewDevice === 'tablet' ? '750px' : '680px',
+                    maxHeight: previewDevice === 'desktop' ? '100%' : previewDevice === 'tablet' ? '750px' : '720px',
                     maxWidth: '100%',
                     minWidth: '320px',
-                    flexShrink: 0
+                    flexShrink: 0,
+                    borderRadius: previewDevice === 'mobile' ? '40px' : '16px',
+                    border: previewDevice === 'mobile' ? '12px solid #000000' : '1px solid #c2c6d6',
                   }}
                 >
                   {/* Browser Header / Status Bar */}
@@ -2630,14 +2632,42 @@ export default function AdminPage() {
                   )}
 
                   {previewDevice === 'mobile' && (
-                    <div className="h-6 bg-[#191b23] text-white/80 px-4 flex items-center justify-between text-[10px] select-none shrink-0">
-                      <span className="font-semibold text-white">9:41</span>
-                      <div className="flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-[10px] text-white">signal_cellular_4_bar</span>
-                        <span className="material-symbols-outlined text-[10px] text-white">wifi</span>
-                        <span className="material-symbols-outlined text-[10px] text-white">battery_5_bar</span>
+                    <>
+                      {/* iPhone 13 Notch */}
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-36 h-6 bg-black rounded-b-2xl z-[90] flex items-center justify-center">
+                        {/* Speaker line */}
+                        <div className="w-10 h-0.5 bg-[#222222] rounded-full absolute top-1" />
+                        {/* Front camera lens */}
+                        <div className="w-2 h-2 rounded-full bg-[#0d0f25] border border-white/5 absolute right-6 top-2 flex items-center justify-center">
+                          <div className="w-0.75 h-0.75 rounded-full bg-[#253da1]/40" />
+                        </div>
                       </div>
-                    </div>
+
+                      {/* iPhone 13 Status Bar (Overlay, Transparent) */}
+                      <div className="absolute top-0 left-0 right-0 h-11 px-6 flex items-center justify-between text-white text-[10px] font-bold z-[80] pointer-events-none select-none">
+                        <span className="text-white font-semibold">9:41</span>
+                        <div className="flex items-center gap-1.5">
+                          {/* iOS Signal strength bars */}
+                          <div className="flex items-end gap-[1px] h-2.5 shrink-0">
+                            <div className="w-[2px] h-[3px] bg-white rounded-2xs" />
+                            <div className="w-[2px] h-[5px] bg-white rounded-2xs" />
+                            <div className="w-[2px] h-[7px] bg-white rounded-2xs" />
+                            <div className="w-[2px] h-[9px] bg-white rounded-2xs" />
+                          </div>
+                          <span className="text-[8px] font-extrabold text-white leading-none">5G</span>
+                          {/* Wifi */}
+                          <span className="material-symbols-outlined text-[11px] text-white">wifi</span>
+                          {/* Battery Icon Outline */}
+                          <div className="w-5 h-2.5 rounded border border-white/70 p-[1px] flex items-center relative shrink-0">
+                            <div className="h-full w-3 bg-white rounded-xs" />
+                            <div className="w-[1.5px] h-[3px] bg-white/70 rounded-r-xs absolute -right-[2.5px] top-1/2 -translate-y-1/2" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* iPhone 13 Home Indicator Bar */}
+                      <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-32 h-1 bg-white rounded-full z-[80] pointer-events-none shadow-md" style={{ border: '1px solid rgba(0,0,0,0.15)' }} />
+                    </>
                   )}
 
                   {/* ── LIVE RENDERING THE ACTUAL ORIGINAL TEMPLATES ── */}
