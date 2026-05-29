@@ -7,6 +7,7 @@ import { Vibrant } from 'node-vibrant/node';
 
 interface Props {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ preview?: string }>;
 }
 
 /** Colores por defecto cuando no hay image ni template reconocido */
@@ -154,7 +155,7 @@ async function getDynamicStore(slug: string) {
   return store;
 }
 
-export async function generateMetadata({ params }: Props) {
+export async function generateMetadata({ params }: Omit<Props, 'searchParams'>) {
   const { slug } = await params;
   const store = await getDynamicStore(slug);
   if (!store) return { title: 'Tienda no encontrada' };
@@ -164,9 +165,29 @@ export async function generateMetadata({ params }: Props) {
   };
 }
 
-export default async function StorePage({ params }: Props) {
+export default async function StorePage({ params, searchParams }: Props) {
   const { slug } = await params;
-  const store = await getDynamicStore(slug);
-  if (!store) notFound();
+  const { preview } = await searchParams;
+  let store = await getDynamicStore(slug);
+  
+  if (!store) {
+    if (preview === 'true') {
+      const defaultStore = getStore('sunset');
+      store = defaultStore || {
+        slug: slug,
+        name: 'Nueva Tienda',
+        tagline: 'Lema de la Tienda',
+        marketplaceCategory: 'General',
+        template: 'sunset',
+        heroImage: 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
+        heroAlt: 'nueva tienda',
+        theme: DEFAULT_THEME,
+        categories: []
+      };
+    } else {
+      notFound();
+    }
+  }
+  
   return <StoreRenderer store={store} />;
 }

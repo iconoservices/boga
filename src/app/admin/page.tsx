@@ -194,6 +194,68 @@ export default function AdminPage() {
     tier: 'Basic Tier',
     active: true
   });
+
+  // Send preview updates to iframe in real time
+  const sendPreviewUpdate = React.useCallback(() => {
+    if (!storeForm.slug) return;
+    const templateKey = storeForm.template || 'default';
+    const existingStoreObj = stores[storeForm.slug] || {};
+    const resolvedBaseTheme =
+      staticStores[templateKey]?.theme ??
+      {
+        primary: '#0058be', onPrimary: '#ffffff', primaryContainer: '#2170e4',
+        secondary: '#545f73', secondaryContainer: '#d5e0f8', background: '#f9f9ff',
+        surface: '#ffffff', surfaceContainer: '#ecedf7', surfaceContainerLow: '#f2f3fd',
+        surfaceContainerLowest: '#ffffff', surfaceContainerHigh: '#e6e7f2',
+        onBackground: '#191b23', onSurface: '#191b23', onSurfaceVariant: '#424754',
+        outlineVariant: '#c2c6d6', fontHeadline: "'Inter', sans-serif",
+        fontBody: "'Inter', sans-serif", fontLabel: "'Inter', sans-serif",
+      };
+
+    const previewTheme = {
+      ...resolvedBaseTheme,
+      location: storeForm.location,
+      emoji: storeForm.emoji,
+      tier: storeForm.tier
+    };
+
+    const activePreviewStore = {
+      slug: storeForm.slug,
+      name: storeForm.name || 'Mi Tienda',
+      tagline: storeForm.tagline || '',
+      marketplaceCategory: storeForm.marketplaceCategory || 'General',
+      template: templateKey,
+      heroImage: existingStoreObj.heroImage || staticStores[templateKey]?.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
+      heroAlt: storeForm.name || 'store image',
+      theme: previewTheme,
+      categories: existingStoreObj.categories || [
+        { name: 'Entradas', icon: 'restaurant', href: '#entradas' },
+        { name: 'Platos Fuertes', icon: 'local_bar', href: '#platos' }
+      ]
+    };
+
+    const iframe = document.querySelector('iframe');
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.postMessage({
+        type: 'BOGA_STORE_PREVIEW_UPDATE',
+        store: activePreviewStore
+      }, '*');
+    }
+  }, [storeForm, stores]);
+
+  React.useEffect(() => {
+    sendPreviewUpdate();
+  }, [sendPreviewUpdate]);
+
+  React.useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'BOGA_STORE_PREVIEW_READY') {
+        sendPreviewUpdate();
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [sendPreviewUpdate]);
   
   // Categorias state
   const [categories, setCategories] = useState(INITIAL_CATEGORIES);
@@ -2571,93 +2633,130 @@ export default function AdminPage() {
                     height: previewDevice === 'desktop' ? '100%' : previewDevice === 'tablet' ? '1024px' : '844px',
                   }}
                 >
-                  <div
-                    className="bg-white shadow-2xl overflow-hidden flex flex-col relative w-full h-full mx-auto"
-                    style={{
-                      borderRadius: previewDevice === 'mobile' ? '44px' : previewDevice === 'tablet' ? '20px' : '12px',
-                      border: previewDevice === 'mobile'
-                        ? '14px solid #1a1a1a'
-                        : previewDevice === 'tablet'
-                        ? '10px solid #2a2a2a'
-                        : '1px solid #c2c6d6',
-                      boxShadow: previewDevice !== 'desktop'
-                        ? '0 0 0 1px #333, 0 30px 60px -10px rgba(0,0,0,0.4)'
-                        : '0 8px 32px rgba(0,0,0,0.12)',
-                    }}
-                  >
-                  {/* ── DESKTOP: browser chrome bar ── */}
-                  {previewDevice === 'desktop' && (
-                    <div className="h-8 bg-[#ecedf7] border-b border-[#c2c6d6] px-4 flex items-center gap-2 select-none shrink-0">
-                      <div className="flex gap-1.5 shrink-0">
-                        <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
-                        <div className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
-                        <div className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
-                      </div>
-                      <div className="flex-1 max-w-md mx-auto bg-white/70 rounded h-5 flex items-center justify-center text-[9px] text-[#545f73] border border-[#c2c6d6]/60">
-                        bogamarket.com/{storeForm.slug || 'sunset'}
-                      </div>
-                    </div>
-                  )}
+                  {(() => {
+                    const templateKey = storeForm.template || 'default';
+                    const resolvedBaseTheme =
+                      staticStores[templateKey]?.theme ??
+                      {
+                        primary: '#0058be', onPrimary: '#ffffff', primaryContainer: '#2170e4',
+                        secondary: '#545f73', secondaryContainer: '#d5e0f8', background: '#f9f9ff',
+                        surface: '#ffffff', surfaceContainer: '#ecedf7', surfaceContainerLow: '#f2f3fd',
+                        surfaceContainerLowest: '#ffffff', surfaceContainerHigh: '#e6e7f2',
+                        onBackground: '#191b23', onSurface: '#191b23', onSurfaceVariant: '#424754',
+                        outlineVariant: '#c2c6d6', fontHeadline: "'Inter', sans-serif",
+                        fontBody: "'Inter', sans-serif", fontLabel: "'Inter', sans-serif",
+                      };
+                    const bg = resolvedBaseTheme.background || '#ffffff';
+                    
+                    const isDarkColor = (hexColor: string) => {
+                      const color = hexColor.replace('#', '');
+                      if (color.length === 3) {
+                        const r = parseInt(color[0] + color[0], 16);
+                        const g = parseInt(color[1] + color[1], 16);
+                        const b = parseInt(color[2] + color[2], 16);
+                        return (r * 0.299 + g * 0.587 + b * 0.114) < 128;
+                      } else if (color.length === 6) {
+                        const r = parseInt(color.substring(0, 2), 16);
+                        const g = parseInt(color.substring(2, 4), 16);
+                        const b = parseInt(color.substring(4, 6), 16);
+                        return (r * 0.299 + g * 0.587 + b * 0.114) < 128;
+                      }
+                      return false;
+                    };
+                    const isDark = isDarkColor(bg);
 
-                  {/* ── TABLET: top status bar ── */}
-                  {previewDevice === 'tablet' && (
-                    <div className="h-6 bg-[#191b23] text-white/80 px-4 flex items-center justify-between text-[10px] select-none shrink-0 rounded-t-[10px]">
-                      <span className="font-semibold text-white">9:41</span>
-                      <div className="flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-[10px] text-white">wifi</span>
-                        <span className="text-[9px] font-bold text-white">100%</span>
-                        <span className="material-symbols-outlined text-[10px] text-white">battery_full</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* ── MOBILE: iPhone 13 Dynamic Island + Status Bar overlay ── */}
-                  {previewDevice === 'mobile' && (
-                    <>
-                      {/* Dynamic Island */}
-                      <div className="absolute top-2 left-1/2 -translate-x-1/2 w-28 h-7 bg-black rounded-full z-[90] flex items-center justify-center gap-3 shadow-lg" style={{ boxShadow: '0 0 0 1px #000' }}>
-                        <div className="w-2 h-2 rounded-full bg-[#111]  border border-[#333]" />
-                        <div className="w-10 h-1 bg-[#111] rounded-full" />
-                      </div>
-                      {/* Status Bar overlay (sits on top of iframe) */}
-                      <div className="absolute top-0 left-0 right-0 h-12 px-7 flex items-end pb-1 justify-between text-white text-[10px] font-bold z-[80] pointer-events-none select-none">
-                        <span className="font-semibold text-[11px]">9:41</span>
-                        <div className="flex items-center gap-1.5">
-                          <div className="flex items-end gap-[1.5px] h-3">
-                            <div className="w-[2.5px] h-[4px] bg-white rounded-sm opacity-40" />
-                            <div className="w-[2.5px] h-[6px] bg-white rounded-sm opacity-60" />
-                            <div className="w-[2.5px] h-[8px] bg-white rounded-sm opacity-80" />
-                            <div className="w-[2.5px] h-[10px] bg-white rounded-sm" />
+                    return (
+                      <div
+                        className="shadow-2xl overflow-hidden flex flex-col relative w-full h-full mx-auto"
+                        style={{
+                          backgroundColor: previewDevice === 'mobile' ? bg : '#ffffff',
+                          borderRadius: previewDevice === 'mobile' ? '44px' : previewDevice === 'tablet' ? '20px' : '12px',
+                          border: previewDevice === 'mobile'
+                            ? '14px solid #1a1a1a'
+                            : previewDevice === 'tablet'
+                            ? '10px solid #2a2a2a'
+                            : '1px solid #c2c6d6',
+                          boxShadow: previewDevice !== 'desktop'
+                            ? '0 0 0 1px #333, 0 30px 60px -10px rgba(0,0,0,0.4)'
+                            : '0 8px 32px rgba(0,0,0,0.12)',
+                        }}
+                      >
+                        {/* ── DESKTOP: browser chrome bar ── */}
+                        {previewDevice === 'desktop' && (
+                          <div className="h-8 bg-[#ecedf7] border-b border-[#c2c6d6] px-4 flex items-center gap-2 select-none shrink-0">
+                            <div className="flex gap-1.5 shrink-0">
+                              <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
+                              <div className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
+                              <div className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
+                            </div>
+                            <div className="flex-1 max-w-md mx-auto bg-white/70 rounded h-5 flex items-center justify-center text-[9px] text-[#545f73] border border-[#c2c6d6]/60">
+                              bogamarket.com/{storeForm.slug || 'sunset'}
+                            </div>
                           </div>
-                          <span className="text-[9px] font-black">5G</span>
-                          <svg width="15" height="12" viewBox="0 0 24 24" fill="white" className="opacity-90">
-                            <path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.8M10.71 5.05A16 16 0 0 1 22.56 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                          </svg>
-                          <div className="w-6 h-3 rounded-[3px] border border-white/80 p-[1.5px] flex items-center relative">
-                            <div className="h-full w-4 bg-white rounded-[1px]" />
-                            <div className="w-[1.5px] h-[5px] bg-white/70 absolute -right-[2px] top-1/2 -translate-y-1/2 rounded-r-sm" />
-                          </div>
-                        </div>
-                      </div>
-                      {/* Home Indicator */}
-                      <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-28 h-1 bg-black/30 rounded-full z-[80] pointer-events-none" />
-                    </>
-                  )}
+                        )}
 
-                  {/* ── LIVE PREVIEW IFRAME (fully isolated CSS) ── */}
-                  <iframe
-                    key={`${storeForm.slug || 'sunset'}-${previewDevice}`}
-                    src={`/${storeForm.slug || 'sunset'}`}
-                    className="flex-1 w-full border-0 bg-white"
-                    style={{
-                      marginTop: previewDevice === 'mobile' ? '44px' : 0,
-                      marginBottom: previewDevice === 'mobile' ? '20px' : 0,
-                      borderRadius: previewDevice === 'mobile' ? '0 0 30px 30px' : previewDevice === 'tablet' ? '0 0 10px 10px' : 0,
-                    }}
-                    title={`Preview: ${storeForm.name || 'Tienda'}`}
-                    sandbox="allow-scripts allow-same-origin allow-forms"
-                  />
-                </div>
+                        {/* ── TABLET: top status bar ── */}
+                        {previewDevice === 'tablet' && (
+                          <div className="h-6 bg-[#191b23] text-white/80 px-4 flex items-center justify-between text-[10px] select-none shrink-0 rounded-t-[10px]">
+                            <span className="font-semibold text-white">9:41</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="material-symbols-outlined text-[10px] text-white">wifi</span>
+                              <span className="text-[9px] font-bold text-white">100%</span>
+                              <span className="material-symbols-outlined text-[10px] text-white">battery_full</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* ── MOBILE: iPhone 13 Dynamic Island + Status Bar overlay ── */}
+                        {previewDevice === 'mobile' && (
+                          <>
+                            {/* Dynamic Island */}
+                            <div className="absolute top-2 left-1/2 -translate-x-1/2 w-28 h-7 bg-black rounded-full z-[90] flex items-center justify-center gap-3 shadow-lg" style={{ boxShadow: '0 0 0 1px #000' }}>
+                              <div className="w-2 h-2 rounded-full bg-[#111] border border-[#333]" />
+                              <div className="w-10 h-1 bg-[#111] rounded-full" />
+                            </div>
+                            {/* Status Bar overlay (sits on top of iframe) */}
+                            <div className={`absolute top-0 left-0 right-0 h-12 px-7 flex items-end pb-1 justify-between ${isDark ? 'text-white' : 'text-[#191b23]'} text-[10px] font-bold z-[80] pointer-events-none select-none`}>
+                              <span className="font-semibold text-[11px]">9:41</span>
+                              <div className="flex items-center gap-1.5">
+                                <div className="flex items-end gap-[1.5px] h-3">
+                                  <div className={`w-[2.5px] h-[4px] ${isDark ? 'bg-white' : 'bg-black'} rounded-sm opacity-40`} />
+                                  <div className={`w-[2.5px] h-[6px] ${isDark ? 'bg-white' : 'bg-black'} rounded-sm opacity-60`} />
+                                  <div className={`w-[2.5px] h-[8px] ${isDark ? 'bg-white' : 'bg-black'} rounded-sm opacity-80`} />
+                                  <div className={`w-[2.5px] h-[10px] ${isDark ? 'bg-white' : 'bg-black'} rounded-sm`} />
+                                </div>
+                                <span className="text-[9px] font-black">5G</span>
+                                <svg width="15" height="12" viewBox="0 0 24 24" fill={isDark ? "white" : "black"} className="opacity-90">
+                                  <path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.8M10.71 5.05A16 16 0 0 1 22.56 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01" stroke={isDark ? "white" : "black"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                                </svg>
+                                <div className={`w-6 h-3 rounded-[3px] border ${isDark ? 'border-white/80' : 'border-black/80'} p-[1.5px] flex items-center relative`}>
+                                  <div className={`h-full w-4 ${isDark ? 'bg-white' : 'bg-black'} rounded-[1px]`} />
+                                  <div className={`w-[1.5px] h-[5px] ${isDark ? 'bg-white/70' : 'bg-black/70'} absolute -right-[2px] top-1/2 -translate-y-1/2 rounded-r-sm`} />
+                                </div>
+                              </div>
+                            </div>
+                            {/* Home Indicator */}
+                            <div className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-28 h-1 ${isDark ? 'bg-white/30' : 'bg-black/30'} rounded-full z-[80] pointer-events-none`} />
+                          </>
+                        )}
+
+                        {/* ── LIVE PREVIEW IFRAME (fully isolated CSS) ── */}
+                        <iframe
+                          key={`${storeForm.slug || 'sunset'}-${previewDevice}`}
+                          src={`/${storeForm.slug || 'sunset'}?preview=true`}
+                          className="flex-1 w-full border-0"
+                          style={{
+                            marginTop: previewDevice === 'mobile' ? '44px' : 0,
+                            marginBottom: previewDevice === 'mobile' ? '20px' : 0,
+                            borderRadius: previewDevice === 'mobile' ? '0 0 30px 30px' : previewDevice === 'tablet' ? '0 0 10px 10px' : 0,
+                            backgroundColor: bg,
+                          }}
+                          title={`Preview: ${storeForm.name || 'Tienda'}`}
+                          sandbox="allow-scripts allow-same-origin allow-forms"
+                        />
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
