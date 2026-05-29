@@ -181,6 +181,7 @@ export default function AdminPage() {
   // Store modal states
   const [showStoreModal, setShowStoreModal] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('mobile');
+  const [previewZoom, setPreviewZoom] = useState(60);
   const [editingStore, setEditingStore] = useState<any | null>(null);
   const [storeForm, setStoreForm] = useState({
     slug: '',
@@ -2538,7 +2539,12 @@ export default function AdminPage() {
                   <button
                     key={id}
                     type="button"
-                    onClick={() => setPreviewDevice(id as any)}
+                    onClick={() => {
+                      setPreviewDevice(id as any);
+                      if (id === 'mobile') setPreviewZoom(60);
+                      if (id === 'tablet') setPreviewZoom(50);
+                      if (id === 'desktop') setPreviewZoom(100);
+                    }}
                     className={`w-9 h-9 rounded-xl border flex items-center justify-center shadow-xs transition-all ${
                       previewDevice === id
                         ? 'bg-white border-[#0058be] text-[#0058be] font-bold ring-2 ring-[#0058be]/10'
@@ -2549,6 +2555,32 @@ export default function AdminPage() {
                   </button>
                 ))}
               </div>
+              
+              {/* Zoom Controls */}
+              {previewDevice !== 'desktop' && (
+                <div className="flex gap-1.5 border-l border-[#ecedf7] pl-4">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewZoom(z => Math.max(20, z - 10))}
+                    className="w-9 h-9 rounded-xl border border-[#ecedf7] bg-white text-[#727785] hover:bg-[#f2f3fd] flex items-center justify-center transition-all"
+                    title="Zoom Out"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">remove</span>
+                  </button>
+                  <div className="w-12 h-9 flex items-center justify-center text-xs font-bold text-[#545f73]">
+                    {previewZoom}%
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewZoom(z => Math.min(150, z + 10))}
+                    className="w-9 h-9 rounded-xl border border-[#ecedf7] bg-white text-[#727785] hover:bg-[#f2f3fd] flex items-center justify-center transition-all"
+                    title="Zoom In"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">add</span>
+                  </button>
+                </div>
+              )}
+
               <div className="text-[10px] text-[#545f73] font-bold flex items-center gap-1.5 border-l border-[#ecedf7] pl-4">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#27c93f] animate-pulse" />
                 Live Preview: <span className="text-[#0058be] font-extrabold">{storeForm.slug || 'sunset'}.webarchitect.io</span>
@@ -2584,7 +2616,7 @@ export default function AdminPage() {
                 <div
                   className="transition-all duration-300 origin-top flex-shrink-0"
                   style={{
-                    transform: previewDevice === 'mobile' ? 'scale(0.55)' : previewDevice === 'tablet' ? 'scale(0.45)' : 'none',
+                    transform: previewDevice === 'desktop' ? 'none' : `scale(${previewZoom / 100})`,
                     width: previewDevice === 'desktop' ? '100%' : previewDevice === 'tablet' ? '768px' : '390px',
                     height: previewDevice === 'desktop' ? '100%' : previewDevice === 'tablet' ? '1024px' : '844px',
                   }}
