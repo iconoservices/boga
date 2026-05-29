@@ -2526,23 +2526,50 @@ export default function AdminPage() {
         {/* ─── MAIN EDITOR AREA ─── */}
         <div className="flex-1 flex flex-col min-w-0 bg-[#f2f4f8]">
           {/* Topbar */}
-          <header className="h-12 bg-white border-b border-[#ecedf7] flex items-center justify-end px-6 shrink-0 shadow-xs">
+          <header className="h-14 bg-white border-b border-[#ecedf7] flex items-center justify-between px-6 shrink-0 shadow-xs z-10">
+            {/* Left: Device Selector */}
+            <div className="flex items-center gap-4">
+              <div className="flex gap-1.5">
+                {[
+                  { id: 'desktop', icon: 'desktop_windows' },
+                  { id: 'tablet', icon: 'tablet' },
+                  { id: 'mobile', icon: 'smartphone' }
+                ].map(({ id, icon }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setPreviewDevice(id as any)}
+                    className={`w-9 h-9 rounded-xl border flex items-center justify-center shadow-xs transition-all ${
+                      previewDevice === id
+                        ? 'bg-white border-[#0058be] text-[#0058be] font-bold ring-2 ring-[#0058be]/10'
+                        : 'bg-white border-[#ecedf7] text-[#727785] hover:bg-[#f2f3fd]'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[18px]">{icon}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="text-[10px] text-[#545f73] font-bold flex items-center gap-1.5 border-l border-[#ecedf7] pl-4">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#27c93f] animate-pulse" />
+                Live Preview: <span className="text-[#0058be] font-extrabold">{storeForm.slug || 'sunset'}.webarchitect.io</span>
+              </div>
+            </div>
 
-            {/* User actions */}
+            {/* Right: User actions */}
             <div className="flex items-center gap-4">
               <span className="text-[11px] font-bold text-[#545f73] cursor-pointer hover:text-[#0058be] transition-colors">Preview</span>
               <button
                 type="button"
                 onClick={handleSaveStore}
-                className="px-4 py-2.5 bg-[#0058be] text-white rounded-xl font-bold text-xs hover:shadow-lg active:scale-95 transition-all flex items-center gap-1.5"
+                className="px-4 py-2 bg-[#0058be] text-white rounded-xl font-bold text-xs hover:shadow-lg active:scale-95 transition-all flex items-center gap-1.5"
               >
                 <span className="material-symbols-outlined text-[14px]">publish</span>
                 Publish Changes
               </button>
-              <div className="w-9 h-9 rounded-xl border border-[#c2c6d6]/60 flex items-center justify-center bg-white cursor-pointer hover:bg-[#f2f3fd] transition-colors text-[#545f73]">
+              <div className="w-8 h-8 rounded-xl border border-[#c2c6d6]/60 flex items-center justify-center bg-white cursor-pointer hover:bg-[#f2f3fd] transition-colors text-[#545f73]">
                 <span className="material-symbols-outlined text-[18px]">notifications</span>
               </div>
-              <div className="w-9 h-9 rounded-xl bg-[#0058be]/10 border border-[#0058be]/20 flex items-center justify-center text-xs font-bold text-[#0058be]">
+              <div className="w-8 h-8 rounded-xl bg-[#0058be]/10 border border-[#0058be]/20 flex items-center justify-center text-xs font-bold text-[#0058be]">
                 UA
               </div>
             </div>
@@ -2551,35 +2578,7 @@ export default function AdminPage() {
           {/* Sub-Editor Split Pane */}
           <div className="flex-1 flex overflow-hidden min-h-0">
             {/* LEFT: Live Preview Canvas */}
-            <div className="flex-1 flex flex-col overflow-hidden p-6">
-              {/* Device Selector Subbar */}
-              <div className="flex items-center justify-between mb-4 shrink-0">
-                <div className="flex gap-1.5">
-                  {[
-                    { id: 'desktop', icon: 'desktop_windows' },
-                    { id: 'tablet', icon: 'tablet' },
-                    { id: 'mobile', icon: 'smartphone' }
-                  ].map(({ id, icon }) => (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => setPreviewDevice(id as any)}
-                      className={`w-9 h-9 rounded-xl border flex items-center justify-center shadow-xs transition-all ${
-                        previewDevice === id
-                          ? 'bg-white border-[#0058be] text-[#0058be] font-bold ring-2 ring-[#0058be]/10'
-                          : 'bg-white border-[#ecedf7] text-[#727785] hover:bg-[#f2f3fd]'
-                      }`}
-                    >
-                      <span className="material-symbols-outlined text-[18px]">{icon}</span>
-                    </button>
-                  ))}
-                </div>
-                <div className="text-[10px] text-[#545f73] font-bold flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#27c93f] animate-pulse" />
-                  Live Preview: <span className="text-[#0058be] font-extrabold">{storeForm.slug || 'sunset'}.webarchitect.io</span>
-                </div>
-              </div>
-
+            <div className="flex-1 flex flex-col overflow-hidden">
               {/* Canvas viewport container */}
               <div className="flex-1 overflow-auto bg-[#f2f4f8] flex justify-center py-6 px-2">
                 <div
