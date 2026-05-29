@@ -2641,7 +2641,7 @@ export default function AdminPage() {
                   )}
 
                   {/* ── LIVE RENDERING THE ACTUAL ORIGINAL TEMPLATES ── */}
-                  <div className="flex-1 overflow-y-auto min-h-0 bg-[#f9f9ff]">
+                  <div className="flex-1 overflow-y-auto min-h-0 bg-[#f9f9ff]" style={{ transform: 'translate3d(0,0,0)', position: 'relative' }}>
                     {(() => {
                       const tplKey = storeForm.template as string;
                       const baseTheme = staticStores[tplKey]?.theme || {
