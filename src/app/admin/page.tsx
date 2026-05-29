@@ -595,11 +595,9 @@ export default function AdminPage() {
     const templateKey = storeForm.template as string;
 
     const existingStoreObj = stores[slug] || {};
-    // Prioridad: theme existente → template elegido → azul default
+    // El template elegido SIEMPRE define los colores — sin override del theme viejo
     const resolvedBaseTheme =
-      (existingStoreObj.theme && Object.keys(existingStoreObj.theme).length > 0
-        ? existingStoreObj.theme
-        : staticStores[templateKey]?.theme) ??
+      staticStores[templateKey]?.theme ??
       {
         primary: '#0058be', onPrimary: '#ffffff', primaryContainer: '#2170e4',
         secondary: '#545f73', secondaryContainer: '#d5e0f8', background: '#f9f9ff',
@@ -1199,11 +1197,18 @@ export default function AdminPage() {
                     <tbody className="divide-y divide-[#ecedf7]">
                       {filtered.map((store) => {
                         const meta = storeMeta[store.slug] || { emoji: '🏪', cat: 'Tienda' };
-                        const details = storeDetails[store.slug] || { location: 'General, ES', date: 'Hoy', icon: 'storefront' };
+                        const details = storeDetails[store.slug] || { location: '—', date: 'Hoy', icon: 'storefront' };
                         const tier = storeTiers[store.slug] || 'Basic Tier';
                         const storeOn = !!activeStores[store.slug];
 
-                        let tierBadgeClass = "bg-[#e0e3e5] text-[#444749]"; // Basic Tier
+                        // Detectar tiendas incompletas
+                        const missingFields = [];
+                        if (!store.tagline) missingFields.push('tagline');
+                        if (!store.marketplaceCategory || store.marketplaceCategory === 'General') missingFields.push('categoría');
+                        if (!store.template || store.template === 'default') missingFields.push('template');
+                        const isIncomplete = missingFields.length > 0;
+
+                        let tierBadgeClass = "bg-[#e0e3e5] text-[#444749]";
                         if (tier === 'Enterprise Plus' || tier === 'Enterprise') {
                           tierBadgeClass = "bg-[#d8e3fb] text-[#3c475a]";
                         } else if (tier === 'Professional') {
@@ -1211,23 +1216,36 @@ export default function AdminPage() {
                         }
 
                         return (
-                          <tr key={store.slug} className="hover:bg-[#f2f3fd]/40 transition-colors">
+                          <tr key={store.slug} className={`hover:bg-[#f2f3fd]/40 transition-colors ${isIncomplete ? 'bg-amber-50/40' : ''}`}>
                             <td className="px-5 py-3">
                               <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0 border border-[#c2c6d6]/60 bg-[#f9f9ff]">
                                   {meta.emoji}
                                 </div>
                                 <div>
-                                  <p className="font-bold text-xs text-[#191b23]">{store.name}</p>
-                                  <p className="text-[9px] text-[#424754] font-semibold tracking-wide">ID: STR-{store.slug.toUpperCase()}</p>
+                                  <div className="flex items-center gap-1.5">
+                                    <p className="font-bold text-xs text-[#191b23]">{store.name}</p>
+                                    {isIncomplete && (
+                                      <span
+                                        title={`Sin asignar: ${missingFields.join(', ')}`}
+                                        className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[8px] font-bold uppercase tracking-wide border border-amber-200"
+                                      >
+                                        <span className="material-symbols-outlined text-[10px]">warning</span>
+                                        Incompleta
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-[9px] text-[#424754] font-semibold tracking-wide">/{store.slug}</p>
                                 </div>
                               </div>
                             </td>
                             <td className="px-5 py-3 text-xs text-[#191b23] font-medium">
-                              {store.marketplaceCategory || meta.cat || 'General'}
+                              {store.marketplaceCategory && store.marketplaceCategory !== 'General'
+                                ? store.marketplaceCategory
+                                : <span className="text-amber-600 italic text-[10px] font-semibold">Sin categoría</span>}
                             </td>
                             <td className="px-5 py-3 text-xs text-[#191b23] font-medium">
-                              {details.location}
+                              {details.location !== '—' ? details.location : <span className="text-[#727785] italic text-[10px]">Sin ubicación</span>}
                             </td>
                             <td className="px-5 py-3">
                               <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-tight ${tierBadgeClass}`}>
