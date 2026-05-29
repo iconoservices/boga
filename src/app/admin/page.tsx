@@ -179,6 +179,7 @@ export default function AdminPage() {
 
   // Store modal states
   const [showStoreModal, setShowStoreModal] = useState(false);
+  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('mobile');
   const [editingStore, setEditingStore] = useState<any | null>(null);
   const [storeForm, setStoreForm] = useState({
     slug: '',
@@ -2468,8 +2469,21 @@ export default function AdminPage() {
           <div className="h-14 bg-[#f2f3fd] border-b border-[#c2c6d6] flex items-center justify-between px-5 shrink-0">
             <div className="flex items-center gap-3">
               <div className="flex gap-1">
-                {(['desktop_windows','tablet','smartphone'] as const).map((icon, i) => (
-                  <button key={icon} className={`w-7 h-7 rounded-lg border flex items-center justify-center transition-colors ${i === 0 ? 'bg-white border-[#c2c6d6] text-[#0058be]' : 'bg-transparent border-transparent text-[#727785] hover:bg-white/60'}`}>
+                {[
+                  { id: 'desktop', icon: 'desktop_windows' },
+                  { id: 'tablet', icon: 'tablet' },
+                  { id: 'mobile', icon: 'smartphone' }
+                ].map(({ id, icon }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setPreviewDevice(id as any)}
+                    className={`w-7 h-7 rounded-lg border flex items-center justify-center transition-colors ${
+                      previewDevice === id
+                        ? 'bg-white border-[#c2c6d6] text-[#0058be]'
+                        : 'bg-transparent border-transparent text-[#727785] hover:bg-white/60'
+                    }`}
+                  >
                     <span className="material-symbols-outlined text-[16px]">{icon}</span>
                   </button>
                 ))}
@@ -2486,6 +2500,7 @@ export default function AdminPage() {
                 </a>
               )}
               <button
+                type="button"
                 onClick={() => setShowStoreModal(false)}
                 className="w-7 h-7 rounded-lg bg-[#ecedf7] hover:bg-red-100 hover:text-red-600 flex items-center justify-center text-[#424754] transition-colors ml-2"
               >
@@ -2496,7 +2511,52 @@ export default function AdminPage() {
 
           {/* Preview Canvas */}
           <div className="flex-1 overflow-auto p-6 flex items-start justify-center">
-            <div className="w-full max-w-xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-[#c2c6d6]">
+            {/* Device Mockup Wrapper */}
+            <div
+              className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-[#c2c6d6] transition-all duration-300 flex flex-col"
+              style={{
+                width: previewDevice === 'desktop' ? '100%' : previewDevice === 'tablet' ? '680px' : '375px',
+                maxWidth: '100%',
+                minWidth: '320px',
+                flexShrink: 0
+              }}
+            >
+              {/* Browser Header / Status Bar */}
+              {previewDevice === 'desktop' && (
+                <div className="h-8 bg-[#ecedf7] border-b border-[#c2c6d6] px-4 flex items-center gap-2 select-none shrink-0">
+                  <div className="flex gap-1.5 shrink-0">
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
+                  </div>
+                  <div className="flex-1 max-w-md mx-auto bg-white/70 rounded h-5 flex items-center justify-center text-[9px] text-[#545f73] border border-[#c2c6d6]/60">
+                    bogamarket.com/{storeForm.slug || 'sunset'}
+                  </div>
+                </div>
+              )}
+
+              {previewDevice === 'tablet' && (
+                <div className="h-6 bg-[#191b23] text-white/80 px-4 flex items-center justify-between text-[10px] select-none shrink-0">
+                  <span className="font-semibold text-white">iPad</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[10px] text-white">wifi</span>
+                    <span className="text-[9px] font-bold text-white">100%</span>
+                    <span className="material-symbols-outlined text-[10px] text-white">battery_full</span>
+                  </div>
+                </div>
+              )}
+
+              {previewDevice === 'mobile' && (
+                <div className="h-6 bg-[#191b23] text-white/80 px-4 flex items-center justify-between text-[10px] select-none shrink-0">
+                  <span className="font-semibold text-white">9:41</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[10px] text-white">signal_cellular_4_bar</span>
+                    <span className="material-symbols-outlined text-[10px] text-white">wifi</span>
+                    <span className="material-symbols-outlined text-[10px] text-white">battery_5_bar</span>
+                  </div>
+                </div>
+              )}
+
               {(() => {
                 const tplKey = storeForm.template as string;
                 const tplTheme = staticStores[tplKey]?.theme;
@@ -2508,17 +2568,17 @@ export default function AdminPage() {
                 const onBg = tplTheme?.onBackground || '#191b23';
                 const surface = tplTheme?.surfaceContainer || '#ecedf7';
                 return (
-                  <>
+                  <div className="flex-1 overflow-y-auto min-h-0 flex flex-col">
                     {/* Hero Preview */}
-                    <div className="relative h-52 overflow-hidden">
+                    <div className="relative h-52 overflow-hidden shrink-0">
                       <img src={heroImg} alt="preview" className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-black/45 flex flex-col items-center justify-center gap-3 text-white">
                         <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center text-2xl shadow-lg">
                           {storeForm.emoji || '🏪'}
                         </div>
                         <div className="text-center">
-                          <h2 className="font-bold text-xl tracking-tight">{storeForm.name || 'Nombre de Tienda'}</h2>
-                          <p className="text-sm opacity-75 mt-0.5">{storeForm.tagline || 'Tu lema aquí'}</p>
+                          <h2 className="font-bold text-xl tracking-tight text-white">{storeForm.name || 'Nombre de Tienda'}</h2>
+                          <p className="text-sm opacity-75 mt-0.5 text-white">{storeForm.tagline || 'Tu lema aquí'}</p>
                         </div>
                         <button className="px-6 py-2 rounded-full text-xs font-bold shadow-md transition-transform hover:scale-105" style={{ backgroundColor: primary, color: '#fff' }}>
                           Ingresar al Comercio
@@ -2526,7 +2586,7 @@ export default function AdminPage() {
                       </div>
                     </div>
                     {/* Body skeleton */}
-                    <div className="p-5" style={{ backgroundColor: bg }}>
+                    <div className="p-5 flex-1" style={{ backgroundColor: bg }}>
                       <p className="text-[10px] font-bold mb-3 uppercase tracking-wider" style={{ color: onBg, opacity: 0.5 }}>Categorías</p>
                       <div className="grid grid-cols-3 gap-2 mb-4">
                         {[1,2,3].map(i => (
@@ -2549,7 +2609,7 @@ export default function AdminPage() {
                         ))}
                       </div>
                     </div>
-                  </>
+                  </div>
                 );
               })()}
             </div>
