@@ -2463,74 +2463,24 @@ export default function AdminPage() {
 
     {/* ─── WEBARCHITECT-THEMED FULL-SCREEN STORE EDITOR ─── */}
     {showStoreModal && (
-      <div className="fixed inset-0 z-[200] flex bg-[#f6f8fc] overflow-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
-        
-        {/* ─── WEBARCHITECT-STYLE LEFT SIDEBAR ─── */}
-        <aside className="w-[240px] bg-white border-r border-[#ecedf7] flex flex-col shrink-0">
-          <div className="p-6">
-            <h1 className="text-xl font-black text-[#0058be] tracking-tight">WebArchitect</h1>
-            <p className="text-[10px] text-[#727785] font-bold uppercase tracking-wider mt-0.5">Site Customizer</p>
-          </div>
+      <div className="fixed inset-0 z-[200] flex flex-col bg-[#f2f4f8] overflow-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
 
-          <nav className="flex-1 px-4 space-y-1">
-            {[
-              { id: 'tiendas', label: 'Pages', icon: 'pages' },
-              { id: 'plantillas', label: 'Stores', icon: 'storefront' },
-              { id: 'paquetes', label: 'Packages', icon: 'inventory_2' },
-              { id: 'categorias', label: 'Categories', icon: 'category' },
-            ].map((item) => {
-              const isActive = item.id === 'tiendas'; // Highlight active tab
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-bold text-xs transition-colors text-left ${
-                    isActive
-                      ? 'bg-[#0058be] text-white'
-                      : 'text-[#424754] hover:bg-[#f2f3fd]'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-
-            <div className="pt-6 px-2">
-              <button
-                type="button"
-                className="w-full py-2.5 bg-[#0058be] text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 hover:shadow-lg active:scale-95 transition-all"
-              >
-                <span className="material-symbols-outlined text-sm">add</span>
-                <span>Create New Site</span>
-              </button>
-            </div>
-          </nav>
-
-          <div className="p-4 border-t border-[#ecedf7] space-y-1">
-            {[
-              { label: 'Settings', icon: 'settings' },
-              { label: 'Support', icon: 'help' }
-            ].map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-bold text-xs text-[#727785] hover:bg-[#f2f3fd] hover:text-[#424754] transition-colors text-left"
-              >
-                <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
-                <span>{item.label}</span>
-              </button>
-            ))}
-          </div>
-        </aside>
-
-        {/* ─── MAIN EDITOR AREA ─── */}
-        <div className="flex-1 flex flex-col min-w-0 bg-[#f2f4f8]">
           {/* Topbar */}
-          <header className="h-14 bg-white border-b border-[#ecedf7] flex items-center justify-between px-6 shrink-0 shadow-xs z-10">
-            {/* Left: Device Selector */}
+          <header className="h-16 bg-white border-b border-[#ecedf7] flex items-center justify-between px-6 shrink-0 shadow-xs z-10">
+            {/* Left: Back Arrow & Titles */}
             <div className="flex items-center gap-4">
-              <div className="flex gap-1.5">
+              <button onClick={() => setShowStoreModal(false)} className="w-10 h-10 rounded-full flex items-center justify-center text-[#191b23] hover:bg-[#f2f3fd] transition-colors -ml-2">
+                <span className="material-symbols-outlined">arrow_back</span>
+              </button>
+              <div className="border-l border-[#ecedf7] pl-4">
+                <h1 className="text-sm font-black text-[#191b23]">Store Customizer</h1>
+                <p className="text-[10px] text-[#727785] font-bold mt-0.5">{storeForm.name || 'Store Name'}</p>
+              </div>
+            </div>
+
+            {/* Center: Device Selector */}
+            <div className="flex items-center gap-4 absolute left-1/2 -translate-x-1/2">
+              <div className="flex gap-1 bg-[#f2f4f8] p-1 rounded-xl">
                 {[
                   { id: 'desktop', icon: 'desktop_windows' },
                   { id: 'tablet', icon: 'tablet' },
@@ -2545,51 +2495,51 @@ export default function AdminPage() {
                       if (id === 'tablet') setPreviewZoom(50);
                       if (id === 'desktop') setPreviewZoom(100);
                     }}
-                    className={`w-9 h-9 rounded-xl border flex items-center justify-center shadow-xs transition-all ${
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${
                       previewDevice === id
-                        ? 'bg-white border-[#0058be] text-[#0058be] font-bold ring-2 ring-[#0058be]/10'
-                        : 'bg-white border-[#ecedf7] text-[#727785] hover:bg-[#f2f3fd]'
+                        ? 'bg-white text-[#0058be] shadow-sm'
+                        : 'text-[#727785] hover:text-[#424754]'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[18px]">{icon}</span>
+                    <span className="material-symbols-outlined text-[16px]">{icon}</span>
+                    <span className="capitalize">{id}</span>
                   </button>
                 ))}
               </div>
               
+              
               {/* Zoom Controls */}
               {previewDevice !== 'desktop' && (
-                <div className="flex gap-1.5 border-l border-[#ecedf7] pl-4">
+                <div className="flex gap-1.5 pl-2">
                   <button
                     type="button"
                     onClick={() => setPreviewZoom(z => Math.max(20, z - 10))}
-                    className="w-9 h-9 rounded-xl border border-[#ecedf7] bg-white text-[#727785] hover:bg-[#f2f3fd] flex items-center justify-center transition-all"
+                    className="w-8 h-8 rounded-lg text-[#727785] hover:bg-[#f2f3fd] flex items-center justify-center transition-all"
                     title="Zoom Out"
                   >
-                    <span className="material-symbols-outlined text-[18px]">remove</span>
+                    <span className="material-symbols-outlined text-[16px]">remove</span>
                   </button>
-                  <div className="w-12 h-9 flex items-center justify-center text-xs font-bold text-[#545f73]">
+                  <div className="w-10 h-8 flex items-center justify-center text-[11px] font-bold text-[#545f73]">
                     {previewZoom}%
                   </div>
                   <button
                     type="button"
                     onClick={() => setPreviewZoom(z => Math.min(150, z + 10))}
-                    className="w-9 h-9 rounded-xl border border-[#ecedf7] bg-white text-[#727785] hover:bg-[#f2f3fd] flex items-center justify-center transition-all"
+                    className="w-8 h-8 rounded-lg text-[#727785] hover:bg-[#f2f3fd] flex items-center justify-center transition-all"
                     title="Zoom In"
                   >
-                    <span className="material-symbols-outlined text-[18px]">add</span>
+                    <span className="material-symbols-outlined text-[16px]">add</span>
                   </button>
                 </div>
               )}
-
-              <div className="text-[10px] text-[#545f73] font-bold flex items-center gap-1.5 border-l border-[#ecedf7] pl-4">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#27c93f] animate-pulse" />
-                Live Preview: <span className="text-[#0058be] font-extrabold">{storeForm.slug || 'sunset'}.webarchitect.io</span>
-              </div>
             </div>
 
             {/* Right: User actions */}
             <div className="flex items-center gap-4">
-              <span className="text-[11px] font-bold text-[#545f73] cursor-pointer hover:text-[#0058be] transition-colors">Preview</span>
+              <div className="text-[10px] text-[#545f73] font-bold flex items-center gap-1.5 border-r border-[#ecedf7] pr-4">
+                <span className="material-symbols-outlined text-[16px] text-[#727785]">visibility</span>
+                Preview
+              </div>
               <button
                 type="button"
                 onClick={handleSaveStore}
@@ -2608,9 +2558,9 @@ export default function AdminPage() {
           </header>
 
           {/* Sub-Editor Split Pane */}
-          <div className="flex-1 flex overflow-hidden min-h-0">
-            {/* LEFT: Live Preview Canvas */}
-            <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 flex flex-row-reverse overflow-hidden min-h-0">
+            {/* RIGHT: Live Preview Canvas (Visually on Right due to flex-row-reverse) */}
+            <div className="flex-1 flex flex-col overflow-hidden relative">
               {/* Canvas viewport container */}
               <div className="flex-1 overflow-auto bg-[#f2f4f8] flex justify-center py-6 px-2">
                 <div
@@ -2755,8 +2705,8 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* RIGHT: Config Panel */}
-            <aside className="w-[400px] shrink-0 bg-white border-l border-[#ecedf7] flex flex-col overflow-hidden">
+            {/* LEFT: Config Panel */}
+            <aside className="w-[360px] shrink-0 bg-white border-r border-[#ecedf7] flex flex-col overflow-hidden">
               {/* Header */}
               <div className="p-6 border-b border-[#ecedf7] bg-white shrink-0">
                 <div className="flex items-center gap-2">
@@ -2772,6 +2722,20 @@ export default function AdminPage() {
               <form onSubmit={handleSaveStore} className="flex-1 overflow-y-auto min-h-0 flex flex-col justify-between">
                 <div className="p-6 space-y-6">
                   
+                  {/* OPTIMIZATION SCORE */}
+                  <div className="border border-[#ecedf7] bg-[#f8fafc] rounded-2xl p-4 shadow-sm">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[11px] font-extrabold text-[#191b23]">Optimization Score</span>
+                      <span className="text-sm font-black text-[#0058be]">75%</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-[#d5e0f8] rounded-full overflow-hidden mb-3">
+                      <div className="h-full bg-[#0058be] rounded-full" style={{ width: '75%' }} />
+                    </div>
+                    <p className="text-[10px] text-[#545f73] font-medium leading-relaxed">
+                      Your SEO and performance are looking good. Add alt text to images to reach 90%.
+                    </p>
+                  </div>
+
                   {/* LOGO Y MARCA */}
                   <section className="space-y-4">
                     <div className="flex items-center gap-2 border-b border-[#ecedf7] pb-2">
@@ -2999,27 +2963,23 @@ export default function AdminPage() {
                 </div>
 
                 {/* Footer Buttons */}
-                <div className="p-6 border-t border-[#ecedf7] bg-white flex gap-3 shrink-0">
+                <div className="p-6 border-t border-[#ecedf7] bg-white shrink-0">
                   <button
                     type="button"
-                    onClick={() => setShowStoreModal(false)}
-                    className="flex-1 py-3 bg-[#ecedf7] text-[#424754] rounded-xl font-bold text-xs hover:bg-[#e6e7f2] transition-colors"
+                    onClick={() => {
+                      if (confirm('Are you sure you want to reset all settings?')) {
+                        // Reset logic here if needed
+                      }
+                    }}
+                    className="w-full py-3 bg-white border border-[#c2c6d6] text-[#191b23] rounded-xl font-bold text-xs hover:bg-[#f8fafc] hover:border-[#191b23] transition-all"
                   >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 py-3 bg-[#0058be] text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 hover:opacity-90 hover:shadow-lg active:scale-95 transition-all"
-                  >
-                    <span className="material-symbols-outlined text-[14px]">save</span>
-                    {editingStore ? 'Guardar Cambios' : 'Crear Tienda'}
+                    Reset to Default Settings
                   </button>
                 </div>
               </form>
             </aside>
           </div>
         </div>
-      </div>
     )}
 
     {/* ── CREATE / EDIT TEMPLATE MODAL ── */}
