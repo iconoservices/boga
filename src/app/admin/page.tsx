@@ -2595,7 +2595,7 @@ export default function AdminPage() {
                 <div
                   className="transition-all duration-300 origin-top flex-shrink-0"
                   style={{
-                    transform: previewDevice === 'mobile' ? 'scale(0.85)' : previewDevice === 'tablet' ? 'scale(0.7)' : 'none',
+                    transform: previewDevice === 'mobile' ? 'scale(0.65)' : previewDevice === 'tablet' ? 'scale(0.55)' : 'none',
                     width: previewDevice === 'desktop' ? '100%' : previewDevice === 'tablet' ? '768px' : '390px',
                     height: previewDevice === 'desktop' ? '100%' : previewDevice === 'tablet' ? '1024px' : '844px',
                   }}
