@@ -2591,14 +2591,14 @@ export default function AdminPage() {
               </div>
 
               {/* Canvas viewport container */}
-              <div className="flex-1 overflow-auto flex items-start justify-center p-2">
+              <div className="flex-1 overflow-auto flex items-center justify-center p-2 bg-[#f2f4f8]">
                 {/* Mockup screen containing original template */}
                 <div
                   className="bg-white rounded-2xl shadow-xl overflow-hidden border border-[#c2c6d6] transition-all duration-300 flex flex-col"
                   style={{
-                    width: previewDevice === 'desktop' ? '100%' : previewDevice === 'tablet' ? '768px' : '375px',
+                    width: previewDevice === 'desktop' ? '100%' : previewDevice === 'tablet' ? '768px' : '360px',
                     height: '100%',
-                    maxHeight: '750px',
+                    maxHeight: previewDevice === 'desktop' ? '100%' : previewDevice === 'tablet' ? '750px' : '680px',
                     maxWidth: '100%',
                     minWidth: '320px',
                     flexShrink: 0
@@ -2641,7 +2641,27 @@ export default function AdminPage() {
                   )}
 
                   {/* ── LIVE RENDERING THE ACTUAL ORIGINAL TEMPLATES ── */}
-                  <div className="flex-1 overflow-y-auto min-h-0 bg-[#f9f9ff]" style={{ transform: 'translate3d(0,0,0)', position: 'relative' }}>
+                  <div 
+                    className="flex-1 overflow-y-auto min-h-0 bg-[#f9f9ff]" 
+                    style={{ 
+                      transform: 'translate3d(0,0,0)', 
+                      position: 'relative',
+                      scrollbarWidth: 'none',
+                      msOverflowStyle: 'none'
+                    }}
+                  >
+                    <style dangerouslySetInnerHTML={{__html: `
+                      /* Hide scrollbars inside emulator device */
+                      ::-webkit-scrollbar {
+                        display: none !important;
+                        width: 0px !important;
+                        background: transparent !important;
+                      }
+                      * {
+                        scrollbar-width: none !important;
+                        -ms-overflow-style: none !important;
+                      }
+                    `}} />
                     {(() => {
                       const tplKey = storeForm.template as string;
                       const baseTheme = staticStores[tplKey]?.theme || {
