@@ -251,7 +251,7 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
                     PODER DEL <span style={{ color: t.primary }}>FUEGO & CARBÓN</span>
                   </h3>
                   <p className="text-white/80 text-base md:text-lg mb-8 leading-relaxed font-medium">
-                    En {store.name}, creamos una experiencia sensorial extrema. Cada pieza es marinada por <span className="text-white font-extrabold underline decoration-2 underline-offset-4" style={{ decorationColor: t.primary }}>24 HORAS</span> en nuestra mezcla secreta de especias, para luego ser asada sobre brasas de carbón de algarrobo puro.
+                    En {store.name}, creamos una experiencia sensorial extrema. Cada pieza es marinada por <span className="text-white font-extrabold underline decoration-2 underline-offset-4" style={{ textDecorationColor: t.primary }}>24 HORAS</span> en nuestra mezcla secreta de especias, para luego ser asada sobre brasas de carbón de algarrobo puro.
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="bg-white/5 border border-white/10 p-5 rounded-2xl backdrop-blur-md hover:border-white/20 transition-all">
