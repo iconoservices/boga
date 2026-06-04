@@ -508,15 +508,15 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
               <form onSubmit={(e) => { e.preventDefault(); alert('Mensaje enviado (Simulación)'); }} className="space-y-3.5">
                 <div>
                   <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Nombre Completo</label>
-                  <input type="text" required className="w-full border rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none" style={{ focusBorderColor: t.primary }} />
+                  <input type="text" required className="w-full border rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none" onFocus={(e) => e.target.style.outline = `2px solid ${t.primary}`} onBlur={(e) => e.target.style.outline = 'none'} />
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Tu Teléfono</label>
-                  <input type="tel" required className="w-full border rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none" style={{ focusBorderColor: t.primary }} />
+                  <input type="tel" required className="w-full border rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none" onFocus={(e) => e.target.style.outline = `2px solid ${t.primary}`} onBlur={(e) => e.target.style.outline = 'none'} />
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Mensaje o Consulta</label>
-                  <textarea rows={3} required className="w-full border rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none" style={{ focusBorderColor: t.primary }}></textarea>
+                  <textarea rows={3} required className="w-full border rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none" onFocus={(e) => e.target.style.outline = `2px solid ${t.primary}`} onBlur={(e) => e.target.style.outline = 'none'}></textarea>
                 </div>
                 <button 
                   type="submit"
