@@ -10,20 +10,19 @@ interface AmazoniaTemplateProps {
 }
 
 const MOCK_PRODUCTS = [
-  { id: 'camu-camu', name: 'Camu Camu Amazónico', desc: 'Fruta silvestre con mayor vitamina C del mundo.', price: 'S/ 12.00', category: 'frutas', image: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400&q=80' },
-  { id: 'aguaje', name: 'Aguaje de la Selva', desc: 'Fruto amazónico rico en betacarotenos.', price: 'S/ 8.00', category: 'frutas', image: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=400&q=80' },
-  { id: 'copoazu', name: 'Copoazú Premium', desc: 'Pariente del cacao, pulpa cremosa tropical.', price: 'S/ 15.00', category: 'frutas', image: 'https://images.unsplash.com/photo-1560393464-5c69a73c5770?w=400&q=80' },
-  { id: 'yuca', name: 'Yuca Fresca', desc: 'Cosechada en chacras locales.', price: 'S/ 5.00', category: 'verduras', image: 'https://images.unsplash.com/photo-1600189261867-30e5ffe7b8da?w=400&q=80' },
-  { id: 'paiche', name: 'Paiche Amazónico', desc: 'El gigante del río Amazonas.', price: 'S/ 45.00', category: 'carnes', image: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=400&q=80' },
-  { id: 'ceramica', name: 'Cerámica Shipibo-Conibo', desc: 'Arte ancestral hecho a mano.', price: 'S/ 80.00', category: 'artesania', image: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=400&q=80' },
+  { id: 'ceramica', name: 'Cerámica Shipibo-Conibo', desc: 'Vasija de barro pintada a mano con arcilla blanca y tintes naturales.', price: 'S/ 120.00', category: 'artesania', image: 'https://images.unsplash.com/photo-1612196808214-b8e1d6145a8c?w=400&q=80' },
+  { id: 'manta-kene', name: 'Manta Kené Bordada', desc: 'Bordado tradicional de diseños geométricos sagrados del bosque.', price: 'S/ 180.00', category: 'artesania', image: 'https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=400&q=80' },
+  { id: 'collar-huayruro', name: 'Collar de Huayruro Semillas', desc: 'Amuleto protector elaborado a mano con hilos orgánicos.', price: 'S/ 35.00', category: 'artesania', image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&q=80' },
+  { id: 'aceite-copaiba', name: 'Aceite de Copaiba Puro', desc: 'Resina medicinal silvestre con propiedades cicatrizantes.', price: 'S/ 45.00', category: 'bienestar', image: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400&q=80' },
+  { id: 'cacao-chuncho', name: 'Chocolate Cacao Nativo 85%', desc: 'Elaborado artesanalmente con cacao fino de aroma.', price: 'S/ 18.00', category: 'alimentos', image: 'https://images.unsplash.com/photo-1548907040-4d42b52115ca?w=400&q=80' },
+  { id: 'cesta-chambira', name: 'Cesta Teñida en Chambira', desc: 'Tejida de forma tradicional con fibras de palmera.', price: 'S/ 75.00', category: 'artesania', image: 'https://images.unsplash.com/photo-1531835551805-16d864c8d311?w=400&q=80' },
 ];
 
 const CATEGORY_TABS = [
   { id: 'all', label: 'Todo', icon: 'apps' },
-  { id: 'frutas', label: 'Frutas', icon: 'nutrition' },
-  { id: 'verduras', label: 'Verduras', icon: 'eco' },
-  { id: 'carnes', label: 'Carnes', icon: 'set_meal' },
-  { id: 'artesania', label: 'Artesanía', icon: 'diamond' },
+  { id: 'artesania', label: 'Artesanía', icon: 'interests' },
+  { id: 'bienestar', label: 'Bienestar', icon: 'spa' },
+  { id: 'alimentos', label: 'Alimentos', icon: 'restaurant' },
 ];
 
 export default function AmazoniaTemplate({ store }: AmazoniaTemplateProps) {
@@ -50,7 +49,7 @@ export default function AmazoniaTemplate({ store }: AmazoniaTemplateProps) {
           desc: '',
           price: `S/ ${p.price.toFixed(2)}`,
           category: categoryObj ? categoryObj.href : p.category.toLowerCase(),
-          image: p.image || 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400&q=80',
+          image: p.image || 'https://images.unsplash.com/photo-1612196808214-b8e1d6145a8c?w=400&q=80',
         };
       }) : [];
       
@@ -76,7 +75,7 @@ export default function AmazoniaTemplate({ store }: AmazoniaTemplateProps) {
           {store.logoImage ? (
             <img src={store.logoImage} alt={store.name} className="w-7 h-7 rounded-lg object-cover border border-gray-100" />
           ) : (
-            <span className="material-symbols-outlined text-[22px]" style={{ color: t.primary, fontVariationSettings: "'FILL' 1" }}>forest</span>
+            <span className="material-symbols-outlined text-[22px]" style={{ color: t.primary, fontVariationSettings: "'FILL' 1" }}>interests</span>
           )}
           <span className="text-xl font-black tracking-tight uppercase" style={{ color: t.secondary }}>{store.name}</span>
         </div>
@@ -95,7 +94,7 @@ export default function AmazoniaTemplate({ store }: AmazoniaTemplateProps) {
           <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, transparent 30%, ${t.background})` }} />
           <div className="absolute bottom-0 left-0 px-4 pb-4">
             <p className="text-[10px] uppercase font-bold tracking-[0.25em] mb-1" style={{ color: t.primary }}>{store.tagline}</p>
-            <h1 className="text-3xl font-black leading-tight" style={{ color: '#ffffff' }}>Lo mejor de la<br />Amazonía 🌿</h1>
+            <h1 className="text-3xl font-black leading-tight" style={{ color: '#ffffff' }}>Arte y Tradición<br />de la Selva 🏺</h1>
           </div>
         </div>
 
@@ -127,7 +126,7 @@ export default function AmazoniaTemplate({ store }: AmazoniaTemplateProps) {
                 </div>
                 <div className="p-3">
                   <h3 className="font-bold text-[13px] leading-tight line-clamp-1" style={{ color: t.onSurface }}>{product.name}</h3>
-                  <p className="text-[11px] mt-0.5 line-clamp-1" style={{ color: t.onSurfaceVariant }}>{product.desc}</p>
+                  <p className="text-[11px] mt-0.5 line-clamp-2" style={{ color: t.onSurfaceVariant }}>{product.desc}</p>
                   <div className="flex items-center justify-between mt-2">
                     <span className="font-black text-[15px]" style={{ color: t.primary }}>{product.price}</span>
                     <button onClick={() => setCartCount((c) => c + 1)}

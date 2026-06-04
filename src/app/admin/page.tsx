@@ -378,6 +378,13 @@ export default function AdminPage() {
       category: 'Comercio',
       description: 'Diseño de boutique de moda premium con gran espacio para fotos de prendas, catálogos y colecciones de temporada.',
       previewUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&q=80'
+    },
+    {
+      id: 'polleria',
+      name: 'Pollería Bravoz',
+      category: 'Gourmet',
+      description: 'Estilo cálido y rústico optimizado para pollerías, parrilladas y restaurantes de comida rápida con fotos grandes y navegación fluida.',
+      previewUrl: 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=600&q=80'
     }
   ]);
 
@@ -2165,7 +2172,7 @@ export default function AdminPage() {
               </div>
 
               {/* Templates Grid */}
-              <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {adminTemplates
                   .filter(t => templateFilter === 'Todas' || t.category === templateFilter)
                   .map((tpl) => {
@@ -2176,7 +2183,7 @@ export default function AdminPage() {
                         className="group bg-white border border-[#c2c6d6] rounded-xl overflow-hidden hover:shadow-md transition-all duration-200 flex flex-col"
                       >
                         {/* Preview Image */}
-                        <div className="h-44 overflow-hidden relative bg-neutral-100 shrink-0">
+                        <div className="h-28 overflow-hidden relative bg-neutral-100 shrink-0">
                           {tpl.previewUrl ? (
                             <img 
                               alt={tpl.name}
@@ -2188,51 +2195,60 @@ export default function AdminPage() {
                               <span className="material-symbols-outlined text-4xl">broken_image</span>
                             </div>
                           )}
-                          <div className="absolute top-3 left-3">
-                            <span className="bg-[#0058be]/90 text-white text-[9px] font-extrabold px-2.5 py-1 rounded-md backdrop-blur-xs uppercase tracking-wider">
+                          <div className="absolute top-2 left-2">
+                            <span className="bg-[#0058be]/90 text-white text-[8px] font-extrabold px-1.5 py-0.5 rounded backdrop-blur-xs uppercase tracking-wider">
                               {tpl.category}
                             </span>
                           </div>
                         </div>
 
                         {/* Content */}
-                        <div className="p-4 flex flex-col gap-2 flex-1">
-                          <div className="flex justify-between items-start gap-2">
-                            <h4 className="text-sm font-bold text-[#191b23] leading-snug">{tpl.name}</h4>
-                            <span className="text-[9px] font-bold bg-[#f2f3fd] text-[#0058be] border border-[#c2c6d6]/60 px-2 py-0.5 rounded-full shrink-0">
-                              ID: {tpl.id}
+                        <div className="p-3 flex flex-col gap-1.5 flex-1">
+                          <div className="flex justify-between items-start gap-1">
+                            <h4 className="text-[13px] font-bold text-[#191b23] leading-tight line-clamp-1">{tpl.name}</h4>
+                            <span className="text-[8px] font-bold bg-[#f2f3fd] text-[#0058be] border border-[#c2c6d6]/60 px-1.5 py-0.2 rounded shrink-0">
+                              {tpl.id}
                             </span>
                           </div>
-                          <p className="text-xs text-[#424754] font-medium leading-relaxed line-clamp-2">
+                          <p className="text-[11px] text-[#424754] font-medium leading-normal line-clamp-2">
                             {tpl.description}
                           </p>
                           
-                          <div className="flex items-center gap-1.5 mt-auto pt-2 text-[10px] font-bold text-[#424754]">
-                            <span className="material-symbols-outlined text-sm text-[#0058be]">storefront</span>
-                            <span>Usado por {usage} {usage === 1 ? 'tienda' : 'tiendas'}</span>
+                          <div className="flex items-center gap-1 mt-auto pt-1 text-[9px] font-bold text-[#424754]">
+                            <span className="material-symbols-outlined text-xs text-[#0058be]">storefront</span>
+                            <span>{usage} {usage === 1 ? 'tienda' : 'tiendas'}</span>
                           </div>
                         </div>
 
                         {/* Actions Footer */}
-                        <div className="p-2 border-t border-[#ecedf7] bg-[#f2f3fd]/40 flex justify-end gap-1">
+                        <div className="p-1.5 border-t border-[#ecedf7] bg-[#f2f3fd]/40 flex justify-end gap-1">
+                          <a 
+                            href={`/preview/${tpl.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1 text-[#545f73] hover:text-[#0058be] hover:bg-[#ecedf7] rounded transition-colors flex items-center justify-center"
+                            title="Ver Vista Previa / Demo"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">visibility</span>
+                          </a>
                           <button 
                             onClick={() => handleOpenEditTemplate(tpl)} 
-                            className="p-1.5 text-[#545f73] hover:text-[#0058be] hover:bg-[#ecedf7] rounded transition-colors flex items-center justify-center"
+                            className="p-1 text-[#545f73] hover:text-[#0058be] hover:bg-[#ecedf7] rounded transition-colors flex items-center justify-center"
                             title="Editar"
                           >
-                            <span className="material-symbols-outlined text-[16px]">edit</span>
+                            <span className="material-symbols-outlined text-[14px]">edit</span>
                           </button>
                           <button 
                             onClick={() => handleDeleteTemplate(tpl.id)} 
                             disabled={usage > 0}
-                            className={`p-1.5 rounded transition-colors flex items-center justify-center ${
+                            className={`p-1 rounded transition-colors flex items-center justify-center ${
                               usage > 0 
                                 ? 'text-[#c2c6d6] cursor-not-allowed opacity-50' 
                                 : 'text-[#545f73] hover:text-[#ba1a1a] hover:bg-red-50'
                             }`}
                             title={usage > 0 ? "No se puede eliminar porque está en uso" : "Eliminar"}
                           >
-                            <span className="material-symbols-outlined text-[16px]">delete</span>
+                            <span className="material-symbols-outlined text-[14px]">delete</span>
                           </button>
                         </div>
                       </div>

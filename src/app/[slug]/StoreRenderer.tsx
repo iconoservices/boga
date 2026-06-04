@@ -10,6 +10,7 @@ const NaturaTemplate = dynamic(() => import('@/templates/natura/NaturaTemplate')
 const AmazoniaTemplate = dynamic(() => import('@/templates/amazonia/AmazoniaTemplate'));
 const SweetKittyNailsTemplate = dynamic(() => import('@/templates/sweetkittynails/SweetKittyNailsTemplate'));
 const EstilosMirkaTemplate = dynamic(() => import('@/templates/estilosmirka/EstilosMirkaTemplate'));
+const PolleriaTemplate = dynamic(() => import('@/templates/polleria/PolleriaTemplate'));
 
 interface Props {
   store: StoreConfig;
@@ -51,6 +52,8 @@ export default function StoreRenderer({ store: initialStore }: Props) {
       return <SweetKittyNailsTemplate store={store} />;
     case 'estilosmirka':
       return <EstilosMirkaTemplate store={store} />;
+    case 'polleria':
+      return <PolleriaTemplate store={store} />;
     default:
       return (
         <div className="flex items-center justify-center min-h-screen">
