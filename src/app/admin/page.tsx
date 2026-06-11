@@ -2183,7 +2183,7 @@ export default function AdminPage() {
                         className="group bg-white border border-[#c2c6d6] rounded-sm overflow-hidden hover:shadow-sm transition-all duration-200 flex flex-col"
                       >
                         {/* Preview Image */}
-                        <div className="h-20 sm:h-16 lg:h-12 overflow-hidden relative bg-neutral-100 shrink-0">
+                        <div className="h-20 sm:h-16 lg:h-10 xl:h-8 overflow-hidden relative bg-neutral-100 shrink-0">
                           {tpl.previewUrl ? (
                             <img 
                               alt={tpl.name}
