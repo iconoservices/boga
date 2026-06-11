@@ -239,7 +239,7 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
           <div className="animate-fade-in">
 
             {/* ══ HERO — Full bleed ══ */}
-            <section className="relative w-full h-[70vh] md:h-[820px] overflow-hidden flex items-center">
+            <section className="relative w-full h-[70vh] md:h-[520px] overflow-hidden flex items-center">
               <div className="absolute inset-0 z-0">
                 <img
                   className="w-full h-full object-cover saturate-[1.15] contrast-[1.05] scale-105"
