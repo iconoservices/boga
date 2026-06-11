@@ -49,14 +49,14 @@
   --color-surface-container-low: #fff0ee;
   --color-outline-variant: #ddc0ba;
 
-  --spacing-md: 24px;
+  --spacing-space-xs: 4px;
+  --spacing-space-sm: 12px;
+  --spacing-space-md: 24px;
+  --spacing-space-lg: 40px;
+  --spacing-space-xl: 64px;
   --spacing-container-max: 1200px;
-  --spacing-lg: 40px;
-  --spacing-xl: 64px;
-  --spacing-xs: 4px;
   --spacing-gutter: 16px;
   --spacing-base: 8px;
-  --spacing-sm: 12px;
 
   --font-label-md: "Plus Jakarta Sans";
   --font-display: "Plus Jakarta Sans";

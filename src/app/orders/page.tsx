@@ -34,7 +34,7 @@ export default function Orders() {
         onCartClick={() => setIsCartOpen(true)}
       />
 
-      <main className="px-gutter pt-6 flex flex-col gap-lg pb-10">
+      <main className="px-gutter pt-6 flex flex-col gap-space-lg pb-10">
         
         {/* Título de la sección */}
         <div className="flex flex-col gap-1">

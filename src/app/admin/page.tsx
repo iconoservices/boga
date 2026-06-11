@@ -2172,7 +2172,7 @@ export default function AdminPage() {
               </div>
 
               {/* Templates Grid */}
-              <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              <section className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                 {adminTemplates
                   .filter(t => templateFilter === 'Todas' || t.category === templateFilter)
                   .map((tpl) => {
@@ -2180,10 +2180,10 @@ export default function AdminPage() {
                     return (
                       <div 
                         key={tpl.id}
-                        className="group bg-white border border-[#c2c6d6] rounded-xl overflow-hidden hover:shadow-md transition-all duration-200 flex flex-col"
+                        className="group bg-white border border-[#c2c6d6] rounded-sm overflow-hidden hover:shadow-sm transition-all duration-200 flex flex-col"
                       >
                         {/* Preview Image */}
-                        <div className="h-28 overflow-hidden relative bg-neutral-100 shrink-0">
+                        <div className="h-20 sm:h-16 lg:h-12 overflow-hidden relative bg-neutral-100 shrink-0">
                           {tpl.previewUrl ? (
                             <img 
                               alt={tpl.name}
@@ -2192,36 +2192,36 @@ export default function AdminPage() {
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-[#c2c6d6]">
-                              <span className="material-symbols-outlined text-4xl">broken_image</span>
+                              <span className="material-symbols-outlined text-3xl">broken_image</span>
                             </div>
                           )}
-                          <div className="absolute top-2 left-2">
-                            <span className="bg-[#0058be]/90 text-white text-[8px] font-extrabold px-1.5 py-0.5 rounded backdrop-blur-xs uppercase tracking-wider">
+                          <div className="absolute top-1 left-1">
+                            <span className="bg-[#0058be]/90 text-white text-[7px] font-extrabold px-1 py-0.5 rounded backdrop-blur-xs uppercase tracking-wider">
                               {tpl.category}
                             </span>
                           </div>
                         </div>
 
                         {/* Content */}
-                        <div className="p-3 flex flex-col gap-1.5 flex-1">
+                        <div className="p-2 flex flex-col gap-1 flex-1">
                           <div className="flex justify-between items-start gap-1">
-                            <h4 className="text-[13px] font-bold text-[#191b23] leading-tight line-clamp-1">{tpl.name}</h4>
-                            <span className="text-[8px] font-bold bg-[#f2f3fd] text-[#0058be] border border-[#c2c6d6]/60 px-1.5 py-0.2 rounded shrink-0">
+                            <h4 className="text-[11px] font-bold text-[#191b23] leading-tight line-clamp-1">{tpl.name}</h4>
+                            <span className="text-[7px] font-bold bg-[#f2f3fd] text-[#0058be] border border-[#c2c6d6]/60 px-1 py-0.2 rounded shrink-0">
                               {tpl.id}
                             </span>
                           </div>
-                          <p className="text-[11px] text-[#424754] font-medium leading-normal line-clamp-2">
+                          <p className="text-[9px] text-[#424754] font-medium leading-normal line-clamp-2">
                             {tpl.description}
                           </p>
                           
-                          <div className="flex items-center gap-1 mt-auto pt-1 text-[9px] font-bold text-[#424754]">
+                          <div className="flex items-center gap-1 mt-auto pt-1 text-[8px] font-bold text-[#424754]">
                             <span className="material-symbols-outlined text-xs text-[#0058be]">storefront</span>
                             <span>{usage} {usage === 1 ? 'tienda' : 'tiendas'}</span>
                           </div>
                         </div>
 
                         {/* Actions Footer */}
-                        <div className="p-1.5 border-t border-[#ecedf7] bg-[#f2f3fd]/40 flex justify-end gap-1">
+                        <div className="p-1 border-t border-[#ecedf7] bg-[#f2f3fd]/40 flex justify-end gap-0.5">
                           <a 
                             href={`/preview/${tpl.id}`}
                             target="_blank"
@@ -2229,14 +2229,14 @@ export default function AdminPage() {
                             className="p-1 text-[#545f73] hover:text-[#0058be] hover:bg-[#ecedf7] rounded transition-colors flex items-center justify-center"
                             title="Ver Vista Previa / Demo"
                           >
-                            <span className="material-symbols-outlined text-[14px]">visibility</span>
+                            <span className="material-symbols-outlined text-[12px]">visibility</span>
                           </a>
                           <button 
                             onClick={() => handleOpenEditTemplate(tpl)} 
                             className="p-1 text-[#545f73] hover:text-[#0058be] hover:bg-[#ecedf7] rounded transition-colors flex items-center justify-center"
                             title="Editar"
                           >
-                            <span className="material-symbols-outlined text-[14px]">edit</span>
+                            <span className="material-symbols-outlined text-[12px]">edit</span>
                           </button>
                           <button 
                             onClick={() => handleDeleteTemplate(tpl.id)} 
@@ -2248,7 +2248,7 @@ export default function AdminPage() {
                             }`}
                             title={usage > 0 ? "No se puede eliminar porque está en uso" : "Eliminar"}
                           >
-                            <span className="material-symbols-outlined text-[14px]">delete</span>
+                            <span className="material-symbols-outlined text-[12px]">delete</span>
                           </button>
                         </div>
                       </div>
