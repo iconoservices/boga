@@ -6,19 +6,9 @@ export const metadata: Metadata = {
   title: 'Boga Dash',
   description: 'Boga Market App',
   manifest: '/manifest.json',
-  icons: {
-    icon: [
-      { url: '/pwa-icon.png', sizes: '512x512', type: 'image/png' },
-    ],
-    apple: [
-      { url: '/pwa-icon.png', sizes: '512x512', type: 'image/png' },
-    ],
-    shortcut: '/pwa-icon.png',
-  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Boga Dash',
   },
 };
 
