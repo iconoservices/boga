@@ -1,5 +1,5 @@
-import { getStore, stores as staticStores } from '@/lib/stores.config';
-import type { StoreTheme } from '@/lib/stores.config';
+import { getTemplate } from '@/lib/templates.config';
+import type { StoreTheme } from '@/lib/templates.config';
 import { notFound } from 'next/navigation';
 import StoreRenderer from './StoreRenderer';
 import { supabase } from '@/lib/supabase';
@@ -86,9 +86,7 @@ async function extractThemeFromImage(imageUrl: string): Promise<StoreTheme | nul
   }
 }
 
-async function getDynamicStore(slug: string) {
-  const store = getStore(slug);
-  
+async function getDynamicStore(slug: string) {  
   try {
     const { data: dbStore } = await supabase
       .from('stores')
@@ -97,36 +95,25 @@ async function getDynamicStore(slug: string) {
       .maybeSingle();
       
     if (dbStore) {
+      const tmpl = getTemplate(dbStore.template as string);
+
       const heroImage = (() => {
         if (dbStore.hero_image) return dbStore.hero_image;
-        const tk = dbStore.template as string;
-        if (tk && staticStores[tk]) return staticStores[tk].heroImage;
-        if (store) return store.heroImage;
+        if (tmpl) return tmpl.heroImage;
         return 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80';
       })();
 
-      // Resolución de theme en orden de prioridad:
-      // 1. Theme personalizado en DB
-      // 2. Colores del template seleccionado (sunset, natura, etc.)
-      // 3. ✨ Extracción automática de colores de la imagen hero
-      // 4. Azul genérico por defecto
       let resolvedTheme: StoreTheme;
       if (dbStore.theme && Object.keys(dbStore.theme).length > 0) {
         resolvedTheme = dbStore.theme;
+      } else if (tmpl) {
+        resolvedTheme = tmpl.theme;
       } else {
-        const templateKey = dbStore.template as string;
-        if (templateKey && staticStores[templateKey]) {
-          resolvedTheme = staticStores[templateKey].theme;
-        } else if (store) {
-          resolvedTheme = store.theme;
-        } else {
-          // Intentar extraer de la imagen
-          const extracted = await extractThemeFromImage(heroImage);
-          resolvedTheme = extracted ?? DEFAULT_THEME;
-        }
+        const extracted = await extractThemeFromImage(heroImage);
+        resolvedTheme = extracted ?? DEFAULT_THEME;
       }
 
-      const baseConfig = store || {
+      return {
         slug: dbStore.slug,
         name: dbStore.name,
         tagline: dbStore.tagline || '',
@@ -135,26 +122,15 @@ async function getDynamicStore(slug: string) {
         heroImage,
         heroAlt: dbStore.hero_alt || 'store image',
         theme: resolvedTheme,
-        categories: dbStore.categories || []
-      };
-      
-      return {
-        ...baseConfig,
-        name: dbStore.name || baseConfig.name,
-        tagline: dbStore.tagline || baseConfig.tagline,
-        heroImage,
-        logoImage: dbStore.logo_image || store?.logoImage || undefined,
-        marketplaceCategory: dbStore.marketplace_category || baseConfig.marketplaceCategory,
-        template: (dbStore.template || baseConfig.template) as any,
-        theme: resolvedTheme,
-        categories: dbStore.categories || baseConfig.categories
+        categories: dbStore.categories || [],
+        logoImage: dbStore.logo_image || undefined,
       };
     }
   } catch (err) {
     console.error('Error fetching dynamic store:', err);
   }
   
-  return store;
+  return null;
 }
 
 export async function generateMetadata({ params }: Omit<Props, 'searchParams'>) {
@@ -179,17 +155,18 @@ export default async function StorePage({ params, searchParams }: Props) {
   
   if (!store) {
     if (preview === 'true') {
-      const defaultStore = getStore('sunset');
-      store = defaultStore || {
+      const defaultTmpl = getTemplate('default');
+      store = {
         slug: slug,
         name: 'Nueva Tienda',
         tagline: 'Lema de la Tienda',
-        marketplaceCategory: 'General',
-        template: 'sunset',
-        heroImage: 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
-        heroAlt: 'nueva tienda',
-        theme: DEFAULT_THEME,
-        categories: []
+        marketplaceCategory: defaultTmpl?.category || 'General',
+        template: 'default',
+        heroImage: defaultTmpl?.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
+        heroAlt: defaultTmpl?.heroAlt || 'nueva tienda',
+        theme: defaultTmpl?.theme || DEFAULT_THEME,
+        categories: defaultTmpl?.categories || [],
+        logoImage: undefined,
       };
     } else {
       notFound();

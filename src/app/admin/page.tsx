@@ -2,7 +2,8 @@
 
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
-import { stores as initialStores, stores as staticStores, type StoreConfig } from '@/lib/stores.config';
+import { type StoreConfig } from '@/lib/stores.config';
+import { getTemplate } from '@/lib/templates.config';
 import StoreRenderer from '@/app/[slug]/StoreRenderer';
 import { useDemo } from '@/context/DemoContext';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
@@ -162,7 +163,7 @@ export default function AdminPage() {
   const [search, setSearch] = useState('');
   
   // Dynamic stores states
-  const [stores, setStores] = useState(initialStores);
+  const [stores, setStores] = useState<Record<string, StoreConfig>>({});
   const [storeDetails, setStoreDetails] = useState<Record<string, { location: string; date: string; icon: string }>>(STORE_DETAILS);
   const [storeMeta, setStoreMeta] = useState<Record<string, { emoji: string; cat: string }>>(META);
   const [storeTiers, setStoreTiers] = useState<Record<string, string>>({
@@ -174,9 +175,7 @@ export default function AdminPage() {
     sweetkittynails: 'Basic Tier'
   });
 
-  const [activeStores, setActiveStores] = useState<Record<string, boolean>>(
-    Object.fromEntries(Object.keys(initialStores).map((k) => [k, true]))
-  );
+  const [activeStores, setActiveStores] = useState<Record<string, boolean>>({});
 
   // Store modal states
   const [showStoreModal, setShowStoreModal] = useState(false);
@@ -200,8 +199,10 @@ export default function AdminPage() {
     if (!storeForm.slug) return;
     const templateKey = storeForm.template || 'default';
     const existingStoreObj = stores[storeForm.slug] || {};
+    const tpl = getTemplate(templateKey);
+
     const resolvedBaseTheme =
-      staticStores[templateKey]?.theme ??
+      tpl?.theme ??
       {
         primary: '#0058be', onPrimary: '#ffffff', primaryContainer: '#2170e4',
         secondary: '#545f73', secondaryContainer: '#d5e0f8', background: '#f9f9ff',
@@ -225,7 +226,7 @@ export default function AdminPage() {
       tagline: storeForm.tagline || '',
       marketplaceCategory: storeForm.marketplaceCategory || 'General',
       template: templateKey,
-      heroImage: existingStoreObj.heroImage || staticStores[templateKey]?.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
+      heroImage: existingStoreObj.heroImage || tpl?.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
       heroAlt: storeForm.name || 'store image',
       theme: previewTheme,
       categories: existingStoreObj.categories || [
@@ -431,18 +432,11 @@ export default function AdminPage() {
         if (error) throw error;
         
         if (data) {
-          const mergedStores = { ...initialStores };
+          const mergedStores = {} as Record<string, StoreConfig>;
           const mergedDetails = { ...STORE_DETAILS };
           const mergedMeta = { ...META };
-          const mergedTiers = {
-            sunset: 'Professional',
-            delva: 'Enterprise Plus',
-            natura: 'Basic Tier',
-            amazonia: 'Professional',
-            estilosmirka: 'Enterprise Plus',
-            sweetkittynails: 'Basic Tier'
-          } as Record<string, string>;
-          const mergedActive = { ...Object.fromEntries(Object.keys(initialStores).map((k) => [k, true])) } as Record<string, boolean>;
+          const mergedTiers = {} as Record<string, string>;
+          const mergedActive = {} as Record<string, boolean>;
 
           data.forEach(dbStore => {
             const slug = dbStore.slug;
@@ -457,12 +451,12 @@ export default function AdminPage() {
               tagline: dbStore.tagline || '',
               marketplaceCategory: dbStore.marketplace_category || 'General',
               template: (dbStore.template || 'default') as any,
-              heroImage: dbStore.hero_image || (staticStores[dbStore.template]?.heroImage) || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
+              heroImage: dbStore.hero_image || getTemplate(dbStore.template as string)?.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
               heroAlt: dbStore.hero_alt || 'store image',
               theme: (() => {
                 if (dbStore.theme && Object.keys(dbStore.theme).length > 0) return dbStore.theme;
                 const tmpl = dbStore.template as string;
-                if (tmpl && staticStores[tmpl]) return staticStores[tmpl].theme;
+                if (tmpl) { const tt = getTemplate(tmpl); if (tt) return tt.theme; }
                 return {
                   primary: '#0058be', onPrimary: '#ffffff', primaryContainer: '#2170e4',
                   secondary: '#545f73', secondaryContainer: '#d5e0f8', background: '#f9f9ff',
@@ -667,9 +661,9 @@ export default function AdminPage() {
     const templateKey = storeForm.template as string;
 
     const existingStoreObj = stores[slug] || {};
-    // El template elegido SIEMPRE define los colores — sin override del theme viejo
+    const tpl = getTemplate(templateKey);
     const resolvedBaseTheme =
-      staticStores[templateKey]?.theme ??
+      tpl?.theme ??
       {
         primary: '#0058be', onPrimary: '#ffffff', primaryContainer: '#2170e4',
         secondary: '#545f73', secondaryContainer: '#d5e0f8', background: '#f9f9ff',
@@ -686,7 +680,7 @@ export default function AdminPage() {
       emoji: storeForm.emoji,
       tier: storeForm.tier
     };
-    const heroImage = existingStoreObj.heroImage || staticStores[templateKey]?.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80';
+    const heroImage = existingStoreObj.heroImage || tpl?.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80';
     const heroAlt = existingStoreObj.heroAlt || 'store image';
     const categoriesList = existingStoreObj.categories || [];
 
@@ -2231,17 +2225,7 @@ export default function AdminPage() {
                           >
                             <span className="material-symbols-outlined text-[12px]">visibility</span>
                           </a>
-                          {staticStores[tpl.id]?.domain && (
-                            <a 
-                              href={`//${staticStores[tpl.id].domain}.${window.location.hostname}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-1 text-[#545f73] hover:text-[#0058be] hover:bg-[#ecedf7] rounded transition-colors flex items-center justify-center"
-                              title={`Abrir ${staticStores[tpl.id].domain}.${window.location.hostname}`}
-                            >
-                              <span className="material-symbols-outlined text-[12px]">language</span>
-                            </a>
-                          )}
+
                           <button 
                             onClick={() => handleOpenEditTemplate(tpl)} 
                             className="p-1 text-[#545f73] hover:text-[#0058be] hover:bg-[#ecedf7] rounded transition-colors flex items-center justify-center"
@@ -2663,7 +2647,7 @@ export default function AdminPage() {
                   {(() => {
                     const templateKey = storeForm.template || 'default';
                     const resolvedBaseTheme =
-                      staticStores[templateKey]?.theme ??
+                      getTemplate(templateKey)?.theme ??
                       {
                         primary: '#0058be', onPrimary: '#ffffff', primaryContainer: '#2170e4',
                         secondary: '#545f73', secondaryContainer: '#d5e0f8', background: '#f9f9ff',
@@ -2717,7 +2701,7 @@ export default function AdminPage() {
                               <div className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
                             </div>
                             <div className="flex-1 max-w-md mx-auto bg-white/70 rounded h-5 flex items-center justify-center text-[9px] text-[#545f73] border border-[#c2c6d6]/60">
-                              bogamarket.com/{storeForm.slug || 'sunset'}
+                              bogamarket.com/{storeForm.slug || 'estilosmirka'}
                             </div>
                           </div>
                         )}
@@ -2769,8 +2753,8 @@ export default function AdminPage() {
 
                         {/* ── LIVE PREVIEW IFRAME (fully isolated CSS) ── */}
                         <iframe
-                          key={`${storeForm.slug || 'sunset'}-${previewDevice}`}
-                          src={`/${storeForm.slug || 'sunset'}?preview=true`}
+                          key={`${storeForm.slug || 'estilosmirka'}-${previewDevice}`}
+                          src={`/${storeForm.slug || 'estilosmirka'}?preview=true`}
                           className="flex-1 w-full border-0"
                           style={{
                             marginTop: previewDevice === 'mobile' ? '44px' : 0,
@@ -2894,7 +2878,7 @@ export default function AdminPage() {
                     {/* Color Swatches Grid from Template Theme */}
                     {(() => {
                       const tplKey = storeForm.template as string;
-                      const tplTheme = staticStores[tplKey]?.theme || {
+                      const tplTheme = getTemplate(tplKey)?.theme || {
                         primary: '#0058be', secondary: '#545f73', background: '#f9f9ff', surface: '#ffffff'
                       };
                       return (

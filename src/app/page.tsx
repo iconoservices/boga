@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
-import { stores } from '@/lib/stores.config';
+
 import { supabase } from '@/lib/supabase';
 
 const BANNERS_RAW = [
@@ -30,42 +30,27 @@ export default function Home() {
   const [favorites, setFavorites] = useState<any[]>([]);
   const [marketplaceProducts, setMarketplaceProducts] = useState<any[]>([]);
 
-  const [storeData, setStoreData] = useState(() => 
-    Object.values(stores).map(s => ({
-      name: s.name,
-      slug: s.slug,
-      category: s.tagline || 'TIENDA OFICIAL',
-      time: '20-40 min',
-      delivery: 'S/ 5.00',
-      logo: s.heroImage,
-      products: [
-        { name: 'Producto Destacado', price: 'S/ 25.00', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400' },
-        { name: 'Oferta Especial', price: 'S/ 15.00', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400' },
-      ]
-    }))
-  );
+  const [storeData, setStoreData] = useState<{ name: string; slug: string; category: string; time: string; delivery: string; logo: string; products: { name: string; price: string; img: string }[] }[]>([]);
 
   useEffect(() => {
     const fetchRealData = async () => {
       // 1. Fetch dynamic stores
       const { data: dbStoresData } = await supabase.from('stores').select('*');
       
-      const allStores = { ...stores } as any;
+      const allStores: Record<string, any> = {};
       if (dbStoresData) {
         dbStoresData.forEach((s: any) => {
-          if (!allStores[s.slug]) {
-            allStores[s.slug] = {
-              slug: s.slug,
-              name: s.name,
-              tagline: s.tagline || '',
-              marketplaceCategory: s.marketplace_category || 'General',
-              template: s.template || 'default',
-              heroImage: s.hero_image || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
-              heroAlt: s.hero_alt || 'store image',
-              theme: s.theme || {},
-              categories: s.categories || []
-            };
-          }
+          allStores[s.slug] = {
+            slug: s.slug,
+            name: s.name,
+            tagline: s.tagline || '',
+            marketplaceCategory: s.marketplace_category || 'General',
+            template: s.template || 'default',
+            heroImage: s.hero_image || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
+            heroAlt: s.hero_alt || 'store image',
+            theme: s.theme || {},
+            categories: s.categories || []
+          };
         });
       }
 
@@ -215,22 +200,20 @@ export default function Home() {
     const fetchRealData = async () => {
       // 1. Fetch dynamic stores
       const { data: dbStoresData } = await supabase.from('stores').select('*');
-      const allStores = { ...stores } as any;
+      const allStores: Record<string, any> = {};
       if (dbStoresData) {
         dbStoresData.forEach((s: any) => {
-          if (!allStores[s.slug]) {
-            allStores[s.slug] = {
-              slug: s.slug,
-              name: s.name,
-              tagline: s.tagline || '',
-              marketplaceCategory: s.marketplace_category || 'General',
-              template: s.template || 'default',
-              heroImage: s.hero_image || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
-              heroAlt: s.hero_alt || 'store image',
-              theme: s.theme || {},
-              categories: s.categories || []
-            };
-          }
+          allStores[s.slug] = {
+            slug: s.slug,
+            name: s.name,
+            tagline: s.tagline || '',
+            marketplaceCategory: s.marketplace_category || 'General',
+            template: s.template || 'default',
+            heroImage: s.hero_image || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
+            heroAlt: s.hero_alt || 'store image',
+            theme: s.theme || {},
+            categories: s.categories || []
+          };
         });
       }
 

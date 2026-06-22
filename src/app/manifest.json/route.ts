@@ -1,47 +1,51 @@
 import { NextRequest } from 'next/server';
-import { getStoreByDomain, getStore } from '@/lib/stores.config';
+import { getTemplate } from '@/lib/templates.config';
 import { supabase } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
-  let store = null;
+  let tmpl = null;
+  let storeName: string | null = null;
+  let storeSlug: string | null = null;
 
-  // 1) Try slug from query param (most reliable — set by slug page metadata)
   const slug = request.nextUrl.searchParams.get('slug');
-  if (slug) store = getStore(slug);
+  if (slug) {
+    tmpl = getTemplate(slug);
+  }
 
-  // Try Supabase for dynamic data
   let dbLogo: string | null = null;
   if (slug) {
-    const { data } = await supabase.from('stores').select('logo_image').eq('slug', slug).maybeSingle();
-    if (data?.logo_image) dbLogo = data.logo_image;
+    const { data } = await supabase.from('stores').select('name, logo_image').eq('slug', slug).maybeSingle();
+    if (data) {
+      storeName = data.name;
+      storeSlug = slug;
+      if (data.logo_image) dbLogo = data.logo_image;
+    }
   }
 
-  // 2) Try subdomain (works for bravoz.bogaperu.vercel.app)
-  if (!store) {
-    const host = request.headers.get('host') || '';
-    const subdomain = host.split('.')[0];
-    store = getStoreByDomain(subdomain);
-  }
-
-  // 3) Try referer path (fallback)
-  if (!store) {
+  if (!tmpl) {
     const referer = request.headers.get('referer') || '';
     const match = referer.match(/\/(preview\/)?(\w+)/);
-    if (match) store = getStore(match[2]);
+    if (match) {
+      tmpl = getTemplate(match[2]);
+    }
   }
 
-  const iconSrc = dbLogo || store?.logoImage || '/pwa-icon.png';
+  const iconSrc = dbLogo || tmpl?.heroImage || '/pwa-icon.png';
   const isSvg = iconSrc.endsWith('.svg');
   const iconType = isSvg ? 'image/svg+xml' : 'image/png';
 
+  const displayName = storeName || tmpl?.name || 'Boga Dash';
+  const bgColor = tmpl?.theme?.background || '#ffffff';
+  const themeColor = tmpl?.theme?.primary || '#5244e1';
+
   const manifest = {
-    name: store?.name || 'Boga Dash',
-    short_name: store ? store.name.slice(0, 12) : 'BogaDash',
-    description: store?.tagline || 'Tu panel de administración empresarial.',
-    start_url: store ? `/${store.slug}` : '/dashboard',
+    name: displayName,
+    short_name: displayName.slice(0, 12),
+    description: storeName ? `${storeName} en Boga Market` : (tmpl ? `Plantilla: ${tmpl.name}` : 'Tu panel de administración empresarial.'),
+    start_url: storeSlug ? `/${storeSlug}` : (tmpl ? `/preview/${tmpl.id}` : '/dashboard'),
     display: 'standalone',
-    background_color: store?.theme.background || '#ffffff',
-    theme_color: store?.theme.primary || '#5244e1',
+    background_color: bgColor,
+    theme_color: themeColor,
     lang: 'es',
     scope: '/',
     orientation: 'portrait',

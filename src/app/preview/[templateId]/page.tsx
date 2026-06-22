@@ -1,4 +1,4 @@
-import { getStore } from '@/lib/stores.config';
+import { getTemplate } from '@/lib/templates.config';
 import { notFound } from 'next/navigation';
 import StoreRenderer from '@/app/[slug]/StoreRenderer';
 import type { Metadata } from 'next';
@@ -9,32 +9,30 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { templateId } = await params;
-  const store = getStore(templateId);
-  if (!store) return { title: 'Plantilla no encontrada' };
+  const tmpl = getTemplate(templateId);
   return {
+    title: tmpl ? `${tmpl.name} | Preview` : 'Plantilla no encontrada',
     manifest: `/manifest.json?slug=${templateId}`,
-    icons: {
-      icon: store.logoImage || '/pwa-icon.png',
-      apple: store.logoImage || '/pwa-icon.png',
-    },
+    icons: { icon: '/pwa-icon.png', apple: '/pwa-icon.png' },
   };
 }
 
 export default async function PreviewPage({ params }: Props) {
   const { templateId } = await params;
-  const baseStore = getStore(templateId);
+  const tmpl = getTemplate(templateId);
 
-  if (!baseStore) {
+  if (!tmpl) {
     notFound();
   }
 
-  // Adaptar dinámicamente los textos para que se sienta como una plantilla pura (Demo)
-  const store = {
-    ...baseStore,
-    name: `${baseStore.name} (Demo)`,
-    tagline: `Vista previa interactiva de la plantilla: ${templateId.toUpperCase()}`
+  const base = {
+    ...tmpl,
+    slug: templateId,
+    name: `${tmpl.name} (Demo)`,
+    tagline: `Vista previa interactiva de la plantilla: ${templateId.toUpperCase()}`,
+    marketplaceCategory: tmpl.category,
+    template: templateId,
   };
 
-  // Render using our flexible renderer with static demo config
-  return <StoreRenderer store={store} />;
+  return <StoreRenderer store={base} />;
 }

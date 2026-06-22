@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { stores as initialStores, StoreConfig } from '@/lib/stores.config';
+import { type StoreConfig } from '@/lib/stores.config';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { QRCodeSVG } from 'qrcode.react';
@@ -59,7 +59,7 @@ export default function DashboardPage() {
   const [dbStores, setDbStores] = useState<any[]>([]);
 
   const stores = React.useMemo<Record<string, StoreConfig>>(() => {
-    const merged = { ...initialStores } as Record<string, StoreConfig>;
+    const merged = {} as Record<string, StoreConfig>;
     dbStores.forEach(s => {
       if (!merged[s.slug]) {
         merged[s.slug] = {
@@ -110,7 +110,7 @@ export default function DashboardPage() {
 
   const [newProduct, setNewProduct] = useState({
     name: '',
-    store: selectedStore === 'all' ? 'sunset' : selectedStore,
+    store: selectedStore === 'all' ? '' : selectedStore,
     price: '',
     category: '',
     subcategory: '',
@@ -120,7 +120,7 @@ export default function DashboardPage() {
 
   const resetForm = () => {
     setEditingProductId(null);
-    setNewProduct({ name: '', store: selectedStore === 'all' ? 'sunset' : selectedStore, price: '', category: '', subcategory: '', image: '', desc: '' });
+    setNewProduct({ name: '', store: selectedStore === 'all' ? '' : selectedStore, price: '', category: '', subcategory: '', image: '', desc: '' });
     setSelectedFile(null);
     setPreviewUrl(null);
   };
@@ -176,7 +176,7 @@ export default function DashboardPage() {
     setIsPosSaving(true);
     
     // Si selectedStore es 'all', usamos el store del primer producto
-    const storeSlug = selectedStore === 'all' ? (posCart[0]?.product.store || 'sunset') : selectedStore;
+    const storeSlug = selectedStore === 'all' ? (posCart[0]?.product.store || '') : selectedStore;
     const cartTotal = posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
     const saleDetails = {

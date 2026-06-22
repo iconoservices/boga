@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { stores } from '@/lib/stores.config';
+import { getTemplate } from '@/lib/templates.config';
 
 // --- Mock user data (will be replaced with Supabase auth later) ---
 const MOCK_USER = {
@@ -12,14 +12,13 @@ const MOCK_USER = {
   address: 'Av. Larco 345, Miraflores',
   avatar: '', // empty = use initials
   isMerchant: true, // has a store on Boga
-  merchantStore: 'sunset', // which store slug
+  merchantStore: 'estilosmirka', // which store slug
   joinedDate: 'Mayo 2025',
 };
 
 const MOCK_ORDERS = [
-  { id: 'ORD-8821', store: 'sunset', storeName: 'Sunset Lounge', items: 'Ribeye + Mojito x2', total: 135.00, date: 'Hace 2 días', status: 'Entregado' },
   { id: 'ORD-7734', store: 'estilosmirka', storeName: 'Estilos Mirka', items: 'Vestido Floral + Blusa', total: 210.00, date: 'Hace 1 semana', status: 'Entregado' },
-  { id: 'ORD-6601', store: 'sweetkittynails', storeName: 'Sweet Kitty Nails', items: 'Manicura Gel + Nail Art', total: 75.00, date: 'Hace 2 semanas', status: 'Entregado' },
+  { id: 'ORD-5543', store: 'polleria', storeName: 'Pollería Bravoz', items: 'Pollo Brasa + Papas + Inca Kola', total: 55.00, date: 'Hace 3 días', status: 'Entregado' },
 ];
 
 const STATUS_COLORS: Record<string, string> = {
@@ -38,7 +37,7 @@ export default function ProfilePage() {
   const [darkMode, setDarkMode] = useState(false);
 
   const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-  const merchantConfig = stores[user.merchantStore];
+  const merchantConfig = getTemplate(user.merchantStore);
 
   const handleSave = () => {
     setUser(prev => ({ ...prev, ...editForm }));
