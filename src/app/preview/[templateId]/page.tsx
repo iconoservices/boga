@@ -1,9 +1,19 @@
 import { getStore } from '@/lib/stores.config';
 import { notFound } from 'next/navigation';
 import StoreRenderer from '@/app/[slug]/StoreRenderer';
+import type { Metadata } from 'next';
 
 interface Props {
   params: Promise<{ templateId: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { templateId } = await params;
+  const store = getStore(templateId);
+  if (!store) return { title: 'Plantilla no encontrada' };
+  return {
+    manifest: `/manifest.json?slug=${templateId}`,
+  };
 }
 
 export default async function PreviewPage({ params }: Props) {

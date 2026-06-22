@@ -162,6 +162,7 @@ export async function generateMetadata({ params }: Omit<Props, 'searchParams'>) 
   return {
     title: `${store.name} | Boga Market`,
     description: store.tagline,
+    manifest: `/manifest.json?slug=${slug}`,
   };
 }
 
