@@ -2231,6 +2231,17 @@ export default function AdminPage() {
                           >
                             <span className="material-symbols-outlined text-[12px]">visibility</span>
                           </a>
+                          {staticStores[tpl.id]?.domain && (
+                            <a 
+                              href={`//${staticStores[tpl.id].domain}.${window.location.hostname}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1 text-[#545f73] hover:text-[#0058be] hover:bg-[#ecedf7] rounded transition-colors flex items-center justify-center"
+                              title={`Abrir ${staticStores[tpl.id].domain}.${window.location.hostname}`}
+                            >
+                              <span className="material-symbols-outlined text-[12px]">language</span>
+                            </a>
+                          )}
                           <button 
                             onClick={() => handleOpenEditTemplate(tpl)} 
                             className="p-1 text-[#545f73] hover:text-[#0058be] hover:bg-[#ecedf7] rounded transition-colors flex items-center justify-center"
