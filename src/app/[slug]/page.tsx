@@ -143,7 +143,7 @@ async function getDynamicStore(slug: string) {
         name: dbStore.name || baseConfig.name,
         tagline: dbStore.tagline || baseConfig.tagline,
         heroImage,
-        logoImage: dbStore.logo_image || undefined,
+        logoImage: dbStore.logo_image || store?.logoImage || undefined,
         marketplaceCategory: dbStore.marketplace_category || baseConfig.marketplaceCategory,
         template: (dbStore.template || baseConfig.template) as any,
         theme: resolvedTheme,
