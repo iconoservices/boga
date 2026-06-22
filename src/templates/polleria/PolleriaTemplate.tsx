@@ -239,7 +239,7 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
           <div className="animate-fade-in">
 
             {/* ══ HERO — Full bleed ══ */}
-            <section className="relative w-full h-[38vh] md:h-[380px] overflow-hidden flex items-center">
+            <section className="relative w-full h-[45vh] md:h-[380px] overflow-hidden flex items-center">
               <div className="absolute inset-0 z-0">
                 <img
                   className="w-full h-full object-cover saturate-[1.15] contrast-[1.05] scale-105"
@@ -250,7 +250,7 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
               </div>
 
               {/* Hero content */}
-              <div className="relative z-10 w-full max-w-[1200px] mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-3 pb-10 md:pb-0 h-full">
+              <div className="relative z-10 w-full max-w-[1200px] mx-auto px-6 flex flex-col md:flex-row items-center justify-center md:justify-between gap-3 pb-0 md:pb-0 h-full">
 
                 {/* ══ PROFILE CARD — left side (desktop only) ══ */}
                 <div className="hidden md:flex flex-col items-center w-[190px] shrink-0 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-2xl text-center">
@@ -278,7 +278,7 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
                   </div>
                 </div>
 
-                <div className="max-w-2xl flex-1">
+                <div className="max-w-2xl flex-1 flex flex-col justify-center -mt-[3.25rem] md:mt-0">
                   <h2 className="text-white font-extrabold leading-tight tracking-tight uppercase italic drop-shadow-md mb-3"
                     style={{ fontSize: 'clamp(1.8rem, 5vw, 3rem)' }}>
                     EL SABOR<br />
