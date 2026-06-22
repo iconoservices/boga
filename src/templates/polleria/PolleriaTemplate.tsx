@@ -239,56 +239,112 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
           <div className="animate-fade-in">
 
             {/* ══ HERO — Full bleed ══ */}
-            <section className="relative w-full h-[70vh] md:h-[520px] overflow-hidden flex items-center">
+            <section className="relative w-full h-[38vh] md:h-[380px] overflow-hidden flex items-center">
               <div className="absolute inset-0 z-0">
                 <img
                   className="w-full h-full object-cover saturate-[1.15] contrast-[1.05] scale-105"
                   alt={store.heroAlt}
                   src={store.heroImage}
                 />
-                {/* Mobile gradient: bottom-up; Desktop: left-to-right */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/20 md:bg-gradient-to-r md:from-black/75 md:via-black/45 md:to-transparent" />
               </div>
 
               {/* Hero content */}
-              <div className="relative z-10 w-full max-w-[1200px] mx-auto px-6 flex flex-col justify-end md:justify-center pb-14 md:pb-0 h-full">
-                <div className="max-w-2xl">
-                  <h2 className="text-white font-extrabold leading-tight tracking-tight uppercase italic drop-shadow-md mb-4"
-                    style={{ fontSize: 'clamp(2.2rem, 6vw, 3.5rem)' }}>
+              <div className="relative z-10 w-full max-w-[1200px] mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-3 pb-10 md:pb-0 h-full">
+
+                {/* ══ PROFILE CARD — left side (desktop only) ══ */}
+                <div className="hidden md:flex flex-col items-center w-[190px] shrink-0 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-2xl text-center">
+                  {store.logoImage ? (
+                    <img src={store.logoImage} alt={store.name} className="w-16 h-16 rounded-xl object-cover border-[3px] shadow-lg mb-2" style={{ borderColor: t.primary }} />
+                  ) : (
+                    <div className="w-16 h-16 rounded-xl flex items-center justify-center shadow-lg mb-2" style={{ background: t.primary }}>
+                      <span className="font-black text-xl italic text-white">
+                        {store.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <h3 className="text-white font-extrabold text-base uppercase italic leading-tight mb-0.5">{store.name}</h3>
+                  <p className="text-white/70 text-[11px] font-medium mb-3">{store.tagline}</p>
+                  <div className="flex items-center gap-1 text-white/80 mb-2">
+                    {[...Array(4)].map((_, i) => (
+                      <span key={i} className="material-symbols-outlined text-sm">star</span>
+                    ))}
+                    <span className="material-symbols-outlined text-sm">star_half</span>
+                    <span className="text-white/60 text-[11px] font-bold ml-1">4.8</span>
+                  </div>
+                  <div className="flex gap-3 text-white/70 text-[11px]">
+                    <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[13px]">location_on</span>Miraflores</span>
+                    <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[13px]">schedule</span>12-11PM</span>
+                  </div>
+                </div>
+
+                <div className="max-w-2xl flex-1">
+                  <h2 className="text-white font-extrabold leading-tight tracking-tight uppercase italic drop-shadow-md mb-3"
+                    style={{ fontSize: 'clamp(1.8rem, 5vw, 3rem)' }}>
                     EL SABOR<br />
                     <span style={{ color: t.primary }}>QUE NOS UNE</span>
                   </h2>
-                  <p className="text-white/90 font-medium text-base md:text-lg mb-8 max-w-lg leading-relaxed">
-                    Disfruta del auténtico sabor al carbón, preparado con la receta secreta de la casa y los mejores ingredientes locales. Calidad que se siente en cada bocado.
+                  <p className="text-white/90 font-medium text-sm md:text-base mb-6 max-w-lg leading-relaxed">
+                    Disfruta del auténtico sabor al carbón, preparado con la receta secreta de la casa.
                   </p>
-                  <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <button
                       onClick={() => navToMenu()}
-                      className="text-white px-8 py-4 rounded-full font-bold text-base shadow-lg hover:brightness-110 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 uppercase w-full sm:w-auto"
-                      style={{ backgroundColor: t.primary, boxShadow: `0 10px 20px ${t.primary}50` }}
+                      className="text-white px-6 py-3 rounded-full font-bold text-sm shadow-lg hover:brightness-110 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 uppercase w-full sm:w-auto"
+                      style={{ backgroundColor: t.primary, boxShadow: `0 8px 16px ${t.primary}50` }}
                     >
                       Pedir Ahora
-                      <span className="material-symbols-outlined text-[20px]">shopping_cart</span>
+                      <span className="material-symbols-outlined text-[18px]">shopping_cart</span>
                     </button>
                     <button
                       onClick={() => navToMenu()}
-                      className="bg-white/10 backdrop-blur-md border border-white/30 text-white px-8 py-4 rounded-full font-bold text-base hover:bg-white hover:text-black transition-all flex items-center justify-center uppercase w-full sm:w-auto"
+                      className="bg-white/10 backdrop-blur-md border border-white/30 text-white px-6 py-3 rounded-full font-bold text-sm hover:bg-white hover:text-black transition-all flex items-center justify-center uppercase w-full sm:w-auto"
                     >
-                      Ver el Menú
+                      Ver Menú
                     </button>
                   </div>
                 </div>
               </div>
             </section>
 
+            {/* ══ PROFILE CARD — mobile only ══ */}
+            <div className="md:hidden px-5 -mt-8 relative z-20">
+              <div className="flex items-center gap-4 bg-white rounded-xl shadow-lg border p-4" style={{ borderColor: `${t.outlineVariant}40` }}>
+                {store.logoImage ? (
+                  <img src={store.logoImage} alt={store.name} className="w-14 h-14 rounded-xl object-cover border-[3px] shrink-0" style={{ borderColor: t.primary }} />
+                ) : (
+                  <div className="w-14 h-14 rounded-xl flex items-center justify-center shrink-0 shadow-md" style={{ background: t.primary }}>
+                    <span className="font-black text-lg italic text-white">
+                      {store.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-extrabold text-sm uppercase italic leading-tight truncate" style={{ color: t.onBackground }}>{store.name}</h3>
+                  <p className="text-[11px] font-medium truncate" style={{ color: t.onSurfaceVariant }}>{store.tagline}</p>
+                  <div className="flex items-center gap-1 mt-1">
+                    {[...Array(4)].map((_, i) => (
+                      <span key={i} className="material-symbols-outlined text-xs" style={{ color: '#f59e0b', fontSize: '12px' }}>star</span>
+                    ))}
+                    <span className="material-symbols-outlined text-xs" style={{ color: '#f59e0b', fontSize: '12px' }}>star_half</span>
+                    <span className="text-[10px] font-bold ml-1" style={{ color: t.onSurfaceVariant }}>4.8</span>
+                  </div>
+                </div>
+                <div className="text-[10px] font-medium shrink-0 text-right" style={{ color: t.onSurfaceVariant }}>
+                  <div className="flex items-center gap-1 justify-end"><span className="material-symbols-outlined" style={{ fontSize: '11px' }}>location_on</span>Miraflores</div>
+                  <div className="flex items-center gap-1 justify-end"><span className="material-symbols-outlined" style={{ fontSize: '11px' }}>schedule</span>12-11PM</div>
+                </div>
+              </div>
+            </div>
+
             {/* ══ CATEGORÍAS — 1 col mobile / 3 cols desktop ══ */}
-            <section className="max-w-[1200px] mx-auto px-5 md:px-6 py-16 md:py-24">
+            <section className="max-w-[1200px] mx-auto px-5 md:px-6 pt-8 md:pt-16 pb-6 md:pb-12">
               {/* Section header */}
-              <div className="text-center mb-10 md:mb-16">
-                <h2 className="font-extrabold uppercase italic tracking-tight mb-3" style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', color: t.onBackground }}>
+              <div className="text-center mb-6 md:mb-10">
+                <h2 className="font-extrabold uppercase italic tracking-tight mb-2" style={{ fontSize: 'clamp(1.3rem, 3.5vw, 1.8rem)', color: t.onBackground }}>
                   Explora nuestras delicias
                 </h2>
-                <div className="h-1 w-16 rounded-full mx-auto" style={{ background: t.primary }} />
+                <div className="h-0.5 w-12 rounded-full mx-auto" style={{ background: t.primary }} />
               </div>
 
               {/* Grid */}
@@ -316,111 +372,92 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
               </div>
             </section>
 
-            {/* ══ EL SECRETO BRAVOZ — 1 col mobile / 2 cols desktop ══ */}
-            <section className="py-16 md:py-24" style={{ background: '#f4f3f1' }}>
-              <div className="max-w-[1200px] mx-auto px-5 md:px-6 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
-
-                {/* Image side */}
-                <div className="relative">
-                  <div className="absolute -top-4 -left-4 w-24 h-24 rounded-full blur-2xl opacity-30" style={{ background: t.primary }} />
-                  <div className="rounded-2xl overflow-hidden shadow-xl aspect-square">
+            {/* ══ EL SECRETO BRAVOZ ══ */}
+            <section style={{ background: '#f4f3f1' }}>
+              <div className="max-w-[1200px] mx-auto px-5 md:px-6 py-10 md:py-20 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14 items-center">
+                <div className="relative order-2 md:order-1">
+                  <div className="rounded-2xl overflow-hidden shadow-lg aspect-[4/3]">
                     <img
-                      className="w-full h-full object-cover brightness-110 saturate-[1.15]"
+                      className="w-full h-full object-cover"
                       alt="Horno al carbón tradicional"
                       src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-2xl" />
                   </div>
-                  {/* Badge */}
-                  <div className="absolute -bottom-5 -right-2 md:-bottom-8 md:-right-8 bg-white p-4 md:p-6 rounded-2xl shadow-lg border hidden sm:block" style={{ borderColor: `${t.primary}25` }}>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: `${t.primary}20`, color: t.primary }}>
-                        <span className="material-symbols-outlined text-xl">local_fire_department</span>
+                  <div className="absolute -bottom-4 -right-3 md:-bottom-6 md:-right-6 bg-white px-4 py-3 rounded-xl shadow-md border hidden sm:block" style={{ borderColor: `${t.primary}25` }}>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: `${t.primary}20`, color: t.primary }}>
+                        <span className="material-symbols-outlined text-base">local_fire_department</span>
                       </div>
                       <div>
-                        <p className="font-bold text-sm" style={{ color: t.primary }}>100% Carbón</p>
-                        <p className="text-xs opacity-60" style={{ color: t.onSurfaceVariant }}>Sabor Ahumado Real</p>
+                        <p className="font-bold text-xs" style={{ color: t.primary }}>100% Carbón</p>
+                        <p className="text-[10px] opacity-60" style={{ color: t.onSurfaceVariant }}>Sabor Ahumado Real</p>
                       </div>
                     </div>
                   </div>
                 </div>
-
-                {/* Text side */}
-                <div>
-                  <span className="text-sm font-bold uppercase tracking-widest block mb-3" style={{ color: t.primary }}>
+                <div className="order-1 md:order-2">
+                  <span className="text-xs font-bold uppercase tracking-widest block mb-2" style={{ color: t.primary }}>
                     Nuestro Legado
                   </span>
-                  <h2 className="font-extrabold uppercase italic leading-tight mb-4"
-                    style={{ fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', color: t.onBackground }}>
+                  <h2 className="font-extrabold uppercase italic leading-tight mb-3"
+                    style={{ fontSize: 'clamp(1.5rem, 3.5vw, 2.2rem)', color: t.onBackground }}>
                     El Secreto Bravoz
                   </h2>
-                  <p className="text-base leading-relaxed mb-10" style={{ color: t.onSurfaceVariant }}>
-                    Nuestra especialidad nace del fuego. Utilizamos el auténtico carbón de algarrobo, que aporta un aroma inigualable y una textura crujiente por fuera mientras mantiene la jugosidad por dentro.
+                  <p className="text-sm leading-relaxed mb-8" style={{ color: t.onSurfaceVariant }}>
+                    Nuestra especialidad nace del fuego. Utilizamos el auténtico carbón de algarrobo para un aroma inigualable y una textura crujiente por fuera, jugosa por dentro.
                   </p>
-
-                  {/* Features list */}
-                  <div className="space-y-6 mb-10">
+                  <div className="space-y-4 mb-8">
                     {[
-                      { icon: 'forest', title: 'Brasas de Algarrobo', desc: 'Seleccionamos madera de calidad para un ahumado profundo y natural.' },
-                      { icon: 'timer', title: 'Asado Lento', desc: 'Cada pollo se cocina a su tiempo exacto para garantizar la perfección.' },
-                      { icon: 'restaurant', title: 'Marinado 24 Horas', desc: 'Mezcla secreta de especias que penetra hasta el corazón de la carne.' },
+                      { icon: 'forest', title: 'Brasas de Algarrobo', desc: 'Madera seleccionada para un ahumado profundo.' },
+                      { icon: 'timer', title: 'Asado Lento', desc: 'Cada pollo con su tiempo exacto de cocción.' },
+                      { icon: 'restaurant', title: 'Marinado 24 Horas', desc: 'Especias que penetran hasta el corazón.' },
                     ].map((feat) => (
-                      <div key={feat.icon} className="flex gap-5 items-start">
-                        <div
-                          className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center shadow-sm"
-                          style={{ background: 'white', color: t.primary }}
-                        >
-                          <span className="material-symbols-outlined text-2xl">{feat.icon}</span>
+                      <div key={feat.icon} className="flex gap-3 items-start">
+                        <div className="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center shadow-sm" style={{ background: 'white', color: t.primary }}>
+                          <span className="material-symbols-outlined text-lg">{feat.icon}</span>
                         </div>
                         <div>
-                          <h3 className="font-bold text-base mb-0.5" style={{ color: t.onBackground }}>{feat.title}</h3>
-                          <p className="text-sm" style={{ color: t.onSurfaceVariant }}>{feat.desc}</p>
+                          <h3 className="font-bold text-sm" style={{ color: t.onBackground }}>{feat.title}</h3>
+                          <p className="text-xs" style={{ color: t.onSurfaceVariant }}>{feat.desc}</p>
                         </div>
                       </div>
                     ))}
                   </div>
-
                   <button
                     onClick={() => navToMenu()}
-                    className="flex items-center gap-2 font-bold hover:gap-4 transition-all active:scale-95"
+                    className="flex items-center gap-1.5 font-bold text-sm hover:gap-3 transition-all active:scale-95"
                     style={{ color: t.primary }}
                   >
-                    <span>Ver nuestro menú completo</span>
-                    <span className="material-symbols-outlined">arrow_forward</span>
+                    <span>Ver menú completo</span>
+                    <span className="material-symbols-outlined text-base">arrow_forward</span>
                   </button>
                 </div>
               </div>
             </section>
 
             {/* ══ NEWSLETTER ══ */}
-            <section className="max-w-[1200px] mx-auto px-5 md:px-6 py-12 md:py-24">
-              <div
-                className="rounded-[1.5rem] md:rounded-[2rem] p-10 md:p-16 relative overflow-hidden text-center"
-                style={{ background: t.primary }}
-              >
-                {/* Decorative blobs */}
-                <div className="absolute top-0 right-0 w-64 h-64 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl bg-white/10 pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl bg-white/10 pointer-events-none" />
-
-                <div className="relative z-10 max-w-xl mx-auto text-white">
-                  <h2 className="font-extrabold uppercase italic leading-tight mb-4" style={{ fontSize: 'clamp(1.6rem, 4vw, 2.5rem)' }}>
+            <section className="max-w-[1200px] mx-auto px-5 md:px-6 py-10 md:py-20">
+              <div className="rounded-2xl md:rounded-[1.5rem] p-8 md:p-14 relative overflow-hidden text-center" style={{ background: t.primary }}>
+                <div className="absolute top-0 right-0 w-48 h-48 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl bg-white/10 pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-36 h-36 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl bg-white/10 pointer-events-none" />
+                <div className="relative z-10 max-w-lg mx-auto text-white">
+                  <h2 className="font-extrabold uppercase italic leading-tight mb-3" style={{ fontSize: 'clamp(1.3rem, 3.5vw, 2rem)' }}>
                     ¿Hambre de algo especial?
                   </h2>
-                  <p className="text-white/80 font-medium text-base mb-8">
-                    Únete a nuestra comunidad y recibe promociones exclusivas, nuevos lanzamientos y el secreto del mes directo en tu correo.
+                  <p className="text-white/80 text-sm font-medium mb-6">
+                    Recibe promociones exclusivas y novedades directo en tu correo.
                   </p>
-
                   {newsletterSubscribed ? (
-                    <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl p-6 text-white font-bold text-sm">
-                      🎉 ¡Listo! Ya eres parte de nuestro club VIP. ¡Pronto recibirás tu primer descuento!
+                    <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-xl p-5 text-white font-bold text-sm">
+                      ¡Listo! Bienvenido al club VIP.
                     </div>
                   ) : (
                     <form
                       onSubmit={(e) => { e.preventDefault(); if (newsletterEmail) setNewsletterSubscribed(true); }}
-                      className="flex flex-col sm:flex-row gap-4 bg-white p-2 rounded-full shadow-lg"
+                      className="flex flex-col sm:flex-row gap-3 bg-white p-1.5 rounded-full shadow-lg"
                     >
                       <input
-                        className="flex-grow px-6 py-3.5 rounded-full border-none bg-transparent text-sm font-bold focus:ring-0 outline-none"
+                        className="flex-grow px-5 py-3 rounded-full border-none bg-transparent text-sm font-bold focus:ring-0 outline-none"
                         style={{ color: t.onBackground }}
                         placeholder="Tu correo electrónico"
                         type="email"
@@ -430,7 +467,7 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
                       />
                       <button
                         type="submit"
-                        className="bg-[#b7150b] text-white px-8 py-3.5 rounded-full font-bold text-sm uppercase hover:brightness-110 active:scale-95 transition-all shadow-md shrink-0 w-full sm:w-auto"
+                        className="bg-[#b7150b] text-white px-6 py-3 rounded-full font-bold text-sm uppercase hover:brightness-110 active:scale-95 transition-all shadow-md shrink-0 w-full sm:w-auto"
                       >
                         Suscribirse
                       </button>
@@ -440,24 +477,21 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
               </div>
             </section>
 
-            {/* ══ FOOTER — Desktop only ══ */}
-            <footer className="hidden md:block w-full py-8" style={{ background: '#f4f3f1', borderTop: `1px solid ${t.outlineVariant}40` }}>
-              <div className="max-w-[1200px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-                {/* Brand */}
-                <div className="flex flex-col gap-1 items-center md:items-start">
-                  <span className="font-extrabold italic uppercase tracking-tight text-lg" style={{ color: t.primary }}>{store.name}</span>
-                  <p className="text-sm" style={{ color: t.onSurfaceVariant }}>© {new Date().getFullYear()} {store.name}. Todos los derechos reservados.</p>
+            {/* ══ FOOTER ══ */}
+            <footer className="w-full py-8" style={{ background: '#f4f3f1', borderTop: `1px solid ${t.outlineVariant}40` }}>
+              <div className="max-w-[1200px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div className="flex flex-col gap-0.5 items-center md:items-start">
+                  <span className="font-extrabold italic uppercase tracking-tight text-base" style={{ color: t.primary }}>{store.name}</span>
+                  <p className="text-xs" style={{ color: t.onSurfaceVariant }}>© {new Date().getFullYear()}. Todos los derechos reservados.</p>
                 </div>
-                {/* Links */}
-                <div className="flex gap-8">
+                <div className="flex gap-6">
                   {['Privacidad', 'Términos', 'Soporte'].map(link => (
-                    <a key={link} href="#" className="text-sm font-medium hover:underline transition-colors" style={{ color: t.onSurfaceVariant }}>
+                    <a key={link} href="#" className="text-xs font-medium hover:underline" style={{ color: t.onSurfaceVariant }}>
                       {link}
                     </a>
                   ))}
                 </div>
-                {/* Social */}
-                <div className="flex gap-3">
+                <div className="flex gap-2">
                   {[
                     { icon: 'share', label: 'Compartir' },
                     { icon: 'restaurant', label: 'Menú' },
@@ -466,13 +500,13 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
                     <a
                       key={s.icon}
                       href="#"
-                      className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:text-white"
+                      className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:text-white"
                       style={{ background: `${t.primary}15`, color: t.primary }}
                       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = t.primary; (e.currentTarget as HTMLElement).style.color = '#fff'; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = `${t.primary}15`; (e.currentTarget as HTMLElement).style.color = t.primary; }}
                       title={s.label}
                     >
-                      <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>{s.icon}</span>
+                      <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>{s.icon}</span>
                     </a>
                   ))}
                 </div>
