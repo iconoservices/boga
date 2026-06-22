@@ -14,7 +14,8 @@ export function middleware(request: NextRequest) {
   if (!store) return NextResponse.next();
 
   const url = new URL(request.url);
-  // Rewrite to the store's slug route so [slug]/page.tsx handles it
+  // Only rewrite root path for subdomains
+  // Other paths (preview, admin, etc) still work on the main domain
   url.pathname = `/${store.slug}`;
   return NextResponse.rewrite(url);
 }
