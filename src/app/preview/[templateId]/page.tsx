@@ -13,6 +13,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!store) return { title: 'Plantilla no encontrada' };
   return {
     manifest: `/manifest.json?slug=${templateId}`,
+    icons: {
+      icon: store.logoImage || '/pwa-icon.png',
+      apple: store.logoImage || '/pwa-icon.png',
+    },
   };
 }
 
