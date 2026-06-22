@@ -22,6 +22,10 @@ export async function GET(request: NextRequest) {
     if (match) store = getStore(match[2]);
   }
 
+  const iconSrc = store?.logoImage || '/pwa-icon.png';
+  const isSvg = iconSrc.endsWith('.svg');
+  const iconType = isSvg ? 'image/svg+xml' : 'image/png';
+
   const manifest = {
     name: store?.name || 'Boga Dash',
     short_name: store ? store.name.slice(0, 12) : 'BogaDash',
@@ -35,9 +39,9 @@ export async function GET(request: NextRequest) {
     orientation: 'portrait',
     icons: [
       {
-        src: store?.logoImage || '/pwa-icon.png',
+        src: iconSrc,
         sizes: '512x512',
-        type: 'image/png',
+        type: iconType,
         purpose: 'any maskable',
       },
     ],

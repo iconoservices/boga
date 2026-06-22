@@ -219,7 +219,7 @@ export const stores: Record<string, StoreConfig> = {
     marketplaceCategory: 'Restaurantes',
     template: 'polleria',
     domain: 'bravoz',
-    logoImage: 'https://ui-avatars.com/api/?name=Pollería+Bravoz&background=a43800&color=fff&size=512',
+    logoImage: '/icons/polleria.svg',
     heroImage: 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=1200&q=80',
     heroAlt: 'Pollo a la brasa dorado crujiente con papas fritas',
     theme: {
