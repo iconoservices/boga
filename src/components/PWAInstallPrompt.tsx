@@ -10,12 +10,37 @@ interface PWAStats {
     lastDismissed?: number;
 }
 
+function isStoreRoute(pathname: string): boolean {
+    if (!pathname) return false;
+    if (pathname.startsWith('/dashboard')) return true;
+    if (pathname.startsWith('/admin')) return false;
+    if (pathname.startsWith('/login')) return false;
+    if (pathname.startsWith('/explore')) return false;
+    if (pathname.startsWith('/profile')) return false;
+    if (pathname.startsWith('/orders')) return false;
+    if (pathname.startsWith('/promotions')) return false;
+    if (pathname.startsWith('/preview')) return false;
+    if (pathname.startsWith('/product')) return false;
+    if (pathname === '/') return false;
+    if (pathname === '/offline') return false;
+    return true;
+}
+
+function getStoreName(pathname: string): string {
+    if (pathname.startsWith('/dashboard')) return 'Boga Dash';
+    const slug = pathname.split('/')[1];
+    return slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : 'Boga Market';
+}
+
 export default function PWAInstallPrompt() {
     const pathname = usePathname();
     const [installPrompt, setInstallPrompt] = useState<any>(null);
     const [showBanner, setShowBanner] = useState(false);
     const [isIOS, setIsIOS] = useState(false);
     const [showIOSGuide, setShowIOSGuide] = useState(false);
+
+    const shouldShowPrompt = isStoreRoute(pathname);
+    const storeName = getStoreName(pathname);
 
     const getStats = (): PWAStats => {
         const saved = localStorage.getItem('bogadash_pwa_stats');
@@ -28,7 +53,7 @@ export default function PWAInstallPrompt() {
     };
 
     useEffect(() => {
-        if (!pathname?.startsWith('/dashboard')) return;
+        if (!shouldShowPrompt) return;
 
         const isPWA = window.matchMedia('(display-mode: standalone)').matches;
         if (isPWA) {
@@ -102,7 +127,7 @@ export default function PWAInstallPrompt() {
         });
 
         return () => window.removeEventListener('beforeinstallprompt', handler);
-    }, [showIOSGuide, pathname]);
+    }, [showIOSGuide, pathname, shouldShowPrompt]);
 
     const handleActionClick = async () => {
         if (isIOS) {
@@ -115,7 +140,7 @@ export default function PWAInstallPrompt() {
         }
     };
 
-    if (!pathname?.startsWith('/dashboard')) return null;
+    if (!shouldShowPrompt) return null;
     if (!showBanner && !showIOSGuide) return null;
 
     return (
@@ -133,10 +158,10 @@ export default function PWAInstallPrompt() {
                         <span className="material-symbols-outlined text-[14px]">close</span>
                     </button>
                     <div className="flex items-center gap-4">
-                        <img src="/pwa-icon.png" alt="Boga Dash" className="w-12 h-12 rounded-xl shadow-sm" />
+                        <img src="/pwa-icon.png" alt={storeName} className="w-12 h-12 rounded-xl shadow-sm" />
                         <div>
-                            <p className="font-extrabold text-[#5244e1] text-sm leading-tight">Boga Dash</p>
-                            <p className="text-xs text-gray-500 font-medium leading-tight mt-0.5">Instala la app para administrar</p>
+                            <p className="font-extrabold text-[#5244e1] text-sm leading-tight">{storeName}</p>
+                            <p className="text-xs text-gray-500 font-medium leading-tight mt-0.5">Instala la app para acceder rápido</p>
                         </div>
                     </div>
                     <button 
@@ -154,7 +179,7 @@ export default function PWAInstallPrompt() {
                         <span className="text-4xl">🍎</span>
                         <h2 className="text-xl font-extrabold mt-4 mb-2 text-[#5244e1]">Instalar en iPhone</h2>
                         <p className="text-sm text-gray-500 leading-relaxed mb-6">
-                            Para instalar <b>Boga Dash</b> en tu pantalla de inicio:
+                            Para instalar <b>{storeName}</b> en tu pantalla de inicio:
                         </p>
                         <div className="text-left bg-gray-50 p-5 rounded-2xl text-sm mb-8 border border-gray-100">
                             <p className="my-2 flex items-center gap-2">

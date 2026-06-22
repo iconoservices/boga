@@ -58,6 +58,7 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
@@ -658,6 +659,7 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
                 {filtered.map((product) => (
                   <div
                     key={product.id}
+                    onClick={() => setSelectedProduct(product)}
                     className="rounded-2xl overflow-hidden group relative cursor-pointer border hover:shadow-lg transition-all duration-300 flex flex-col"
                     style={{ background: t.surface, borderColor: `${t.outlineVariant}30` }}
                   >
@@ -857,6 +859,37 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
           Tu Pedido
         </span>
       </button>
+
+      {/* Product detail modal */}
+      {selectedProduct && (
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={() => setSelectedProduct(null)}>
+          <div className="w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()} style={{ background: t.surface }}>
+            <div className="relative">
+              <button onClick={() => setSelectedProduct(null)}
+                className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center z-10"
+                style={{ background: 'rgba(0,0,0,0.4)', color: '#fff' }}>
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+              <div className="aspect-square">
+                <img className="w-full h-full object-cover" alt={selectedProduct.name} src={selectedProduct.image} />
+              </div>
+            </div>
+            <div className="p-5">
+              <h2 className="font-bold text-lg" style={{ color: t.onSurface }}>{selectedProduct.name}</h2>
+              <p className="text-[13px] mt-2 leading-relaxed" style={{ color: t.onSurfaceVariant }}>{selectedProduct.desc}</p>
+              <div className="flex items-center justify-between mt-5">
+                <span className="font-black text-xl" style={{ color: t.primary }}>{selectedProduct.price}</span>
+                <button onClick={() => { setCartCount((c) => c + 1); setSelectedProduct(null); }}
+                  className="px-6 py-2.5 rounded-xl font-bold text-sm flex items-center gap-1.5 transition-transform active:scale-95"
+                  style={{ background: t.primary, color: t.onPrimary }}>
+                  <span className="material-symbols-outlined text-[18px]">add</span>
+                  Agregar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

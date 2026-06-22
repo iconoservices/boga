@@ -30,6 +30,7 @@ export default function AmazoniaTemplate({ store }: AmazoniaTemplateProps) {
   const [activeCategory, setActiveCategory] = useState('all');
   const [cartCount, setCartCount] = useState(0);
   const [products, setProducts] = useState<any[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -119,6 +120,7 @@ export default function AmazoniaTemplate({ store }: AmazoniaTemplateProps) {
             const isFeatured = idx === 0 && activeCategory === 'all';
             return (
               <div key={product.id}
+                onClick={() => setSelectedProduct(product)}
                 className={`rounded-2xl overflow-hidden cursor-pointer active:scale-95 transition-transform ${isFeatured ? 'col-span-2' : 'col-span-1'}`}
                 style={{ background: t.surface, border: `1px solid ${t.outlineVariant}`, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
                 <div className={isFeatured ? 'aspect-[2/1]' : 'aspect-square'}>
@@ -141,6 +143,37 @@ export default function AmazoniaTemplate({ store }: AmazoniaTemplateProps) {
           })}
         </div>
       </main>
+
+      {/* Product detail modal */}
+      {selectedProduct && (
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={() => setSelectedProduct(null)}>
+          <div className="w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()} style={{ background: t.surface }}>
+            <div className="relative">
+              <button onClick={() => setSelectedProduct(null)}
+                className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center z-10"
+                style={{ background: 'rgba(0,0,0,0.4)', color: '#fff' }}>
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+              <div className="aspect-square">
+                <img className="w-full h-full object-cover" alt={selectedProduct.name} src={selectedProduct.image} />
+              </div>
+            </div>
+            <div className="p-5">
+              <h2 className="font-bold text-lg" style={{ color: t.onSurface }}>{selectedProduct.name}</h2>
+              <p className="text-[13px] mt-2 leading-relaxed" style={{ color: t.onSurfaceVariant }}>{selectedProduct.desc}</p>
+              <div className="flex items-center justify-between mt-5">
+                <span className="font-black text-xl" style={{ color: t.primary }}>{selectedProduct.price}</span>
+                <button onClick={() => { setCartCount((c) => c + 1); setSelectedProduct(null); }}
+                  className="px-6 py-2.5 rounded-xl font-bold text-sm flex items-center gap-1.5 transition-transform active:scale-95"
+                  style={{ background: t.primary, color: t.onPrimary }}>
+                  <span className="material-symbols-outlined text-[18px]">add</span>
+                  Agregar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 h-16"
