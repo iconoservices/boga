@@ -1,10 +1,22 @@
 import { NextRequest } from 'next/server';
-import { getStoreByDomain } from '@/lib/stores.config';
+import { getStoreByDomain, getStore } from '@/lib/stores.config';
 
 export async function GET(request: NextRequest) {
+  let store = null;
+
+  // 1) Try subdomain (works for bravoz.bogaperu.vercel.app)
   const host = request.headers.get('host') || '';
   const subdomain = host.split('.')[0];
-  const store = getStoreByDomain(subdomain);
+  store = getStoreByDomain(subdomain);
+
+  // 2) Try referer path (works for bogaperu.vercel.app/polleria)
+  if (!store) {
+    const referer = request.headers.get('referer') || '';
+    const match = referer.match(/\/(preview\/)?(\w+)/);
+    if (match) {
+      store = getStore(match[2]);
+    }
+  }
 
   const manifest = {
     name: store?.name || 'Boga Dash',
