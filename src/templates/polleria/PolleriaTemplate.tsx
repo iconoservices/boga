@@ -103,6 +103,24 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
   };
 
   useEffect(() => {
+    const link = document.querySelector('link[rel="icon"]') || document.createElement('link');
+    const appleLink = document.querySelector('link[rel="apple-touch-icon"]') || document.createElement('link');
+    const icon = store.logoImage || '/pwa-icon.png';
+
+    if (!link.parentNode) {
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+    link.href = icon;
+
+    if (!appleLink.parentNode) {
+      appleLink.rel = 'apple-touch-icon';
+      document.head.appendChild(appleLink);
+    }
+    appleLink.href = icon;
+  }, [store.logoImage]);
+
+  useEffect(() => {
     const fetchProducts = async () => {
       const showDemo = isDemoVisible(store.slug);
       setProducts(showDemo ? MOCK_PRODUCTS : []);
