@@ -280,6 +280,22 @@ export default function DashboardPage() {
     }
   };
 
+  const handleStoreReset = async () => {
+    if (!editingStoreSlug) return;
+    if (!window.confirm('¿Estás seguro? Se eliminarán los datos personalizados y la tienda volverá a su configuración por defecto.')) return;
+    setIsStoreSaving(true);
+    try {
+      const { error } = await supabase.from('stores').delete().eq('slug', editingStoreSlug);
+      if (error) throw error;
+      await fetchStores();
+      setIsStoreEditorOpen(false);
+    } catch (err: any) {
+      alert('Error al resetear: ' + err.message);
+    } finally {
+      setIsStoreSaving(false);
+    }
+  };
+
   const toggleStatus = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === 'Activo' ? 'Agotado' : 'Activo';
     setProducts(prev => prev.map(p => p.id === id ? { ...p, status: newStatus } : p));
@@ -2157,26 +2173,36 @@ export default function DashboardPage() {
             </div>
 
             {/* Footer */}
-            <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-end gap-3 sticky bottom-0">
+            <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-between gap-3 sticky bottom-0">
               <button
-                onClick={() => setIsStoreEditorOpen(false)}
+                onClick={handleStoreReset}
                 disabled={isStoreSaving}
-                className="px-6 py-3.5 rounded-xl font-bold text-gray-600 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 px-4 py-3.5 rounded-xl font-bold text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 text-sm"
               >
-                Cancelar
+                <span className="material-symbols-outlined text-[18px]">restart_alt</span>
+                Resetear
               </button>
-              <button
-                onClick={handleStoreSave}
-                disabled={isStoreSaving}
-                className="flex items-center gap-2 px-8 py-3.5 bg-black text-white rounded-xl font-bold shadow-lg shadow-black/15 hover:shadow-black/25 transition-all hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0"
-              >
-                {isStoreSaving ? (
-                  <>
-                    <span className="material-symbols-outlined animate-spin text-[20px]">refresh</span>
-                    Guardando...
-                  </>
-                ) : 'Guardar Cambios'}
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsStoreEditorOpen(false)}
+                  disabled={isStoreSaving}
+                  className="px-6 py-3.5 rounded-xl font-bold text-gray-600 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleStoreSave}
+                  disabled={isStoreSaving}
+                  className="flex items-center gap-2 px-8 py-3.5 bg-black text-white rounded-xl font-bold shadow-lg shadow-black/15 hover:shadow-black/25 transition-all hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0"
+                >
+                  {isStoreSaving ? (
+                    <>
+                      <span className="material-symbols-outlined animate-spin text-[20px]">refresh</span>
+                      Guardando...
+                    </>
+                  ) : 'Guardar Cambios'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
