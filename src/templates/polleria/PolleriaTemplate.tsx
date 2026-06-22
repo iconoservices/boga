@@ -72,6 +72,8 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
     if (deferredPrompt) {
       deferredPrompt.prompt();
       deferredPrompt.userChoice.then(() => setDeferredPrompt(null));
+    } else {
+      alert('Para instalar esta app:\n\n1. Tocá el ícono de Compartir (📤) en Safari\n2. Deslizá hacia abajo y tocá "Agregar a pantalla de inicio"\n3. Tocá "Agregar"');
     }
   };
 
@@ -247,16 +249,14 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
         >
           <span className="material-symbols-outlined text-[20px]">share</span>
         </button>
-        {deferredPrompt && (
-          <button
-            onClick={handleInstall}
-            className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all"
-            style={{ background: t.secondary, color: t.onPrimary }}
-            title="Instalar"
-          >
-            <span className="material-symbols-outlined text-[20px]">download</span>
-          </button>
-        )}
+        <button
+          onClick={handleInstall}
+          className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all"
+          style={{ background: t.secondary, color: t.onPrimary }}
+          title="Instalar"
+        >
+          <span className="material-symbols-outlined text-[20px]">download</span>
+        </button>
       </div>
 
       {/* ════════════════════════════════════════════
