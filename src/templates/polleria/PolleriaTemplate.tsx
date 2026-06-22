@@ -58,14 +58,33 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
     };
+
+    const checkInstalled = () => {
+      if (localStorage.getItem('boga_pwa_installed') === 'true') return true;
+      if ((window.navigator as any).standalone) return true;
+      if (window.matchMedia('(display-mode: standalone)').matches) return true;
+      return false;
+    };
+
+    setIsInstalled(checkInstalled());
+
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
-    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+    window.addEventListener('appinstalled', () => {
+      localStorage.setItem('boga_pwa_installed', 'true');
+      setIsInstalled(true);
+    });
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('appinstalled', () => setIsInstalled(true));
+    };
   }, []);
 
   const handleInstall = () => {
@@ -73,7 +92,13 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
       deferredPrompt.prompt();
       deferredPrompt.userChoice.then(() => setDeferredPrompt(null));
     } else {
-      alert('Para instalar esta app:\n\n1. Tocá el ícono de Compartir (📤) en Safari\n2. Deslizá hacia abajo y tocá "Agregar a pantalla de inicio"\n3. Tocá "Agregar"');
+      const ua = navigator.userAgent.toLowerCase();
+      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+      if (/iphone|ipad|ipod/.test(ua) && isSafari) {
+        alert('Para instalar:\n\n1. Tocá el icono Compartir (📤) abajo\n2. Deslizá y tocá "Agregar a pantalla de inicio"\n3. Tocá "Agregar"');
+      } else {
+        alert('Para instalar:\n\n1. Abrí el menú del navegador (⋯)\n2. Buscá "Agregar a pantalla de inicio"\n3. Confirmá la instalación');
+      }
     }
   };
 
@@ -249,14 +274,16 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
         >
           <span className="material-symbols-outlined text-[20px]">share</span>
         </button>
-        <button
-          onClick={handleInstall}
-          className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all"
-          style={{ background: t.secondary, color: t.onPrimary }}
-          title="Instalar"
-        >
-          <span className="material-symbols-outlined text-[20px]">download</span>
-        </button>
+        {!isInstalled && (
+          <button
+            onClick={handleInstall}
+            className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all"
+            style={{ background: t.secondary, color: t.onPrimary }}
+            title="Instalar"
+          >
+            <span className="material-symbols-outlined text-[20px]">download</span>
+          </button>
+        )}
       </div>
 
       {/* ════════════════════════════════════════════
