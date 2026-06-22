@@ -165,6 +165,10 @@ export async function generateMetadata({ params }: Omit<Props, 'searchParams'>) 
     title: `${store.name} | Boga Market`,
     description: store.tagline,
     manifest: `/manifest.json?slug=${slug}`,
+    icons: {
+      icon: store.logoImage || '/pwa-icon.png',
+      apple: store.logoImage || '/pwa-icon.png',
+    },
   };
 }
 
