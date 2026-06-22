@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     orientation: 'portrait',
     icons: [
       {
-        src: '/pwa-icon.png',
+        src: store?.logoImage || '/pwa-icon.png',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any maskable',
