@@ -5,6 +5,8 @@ import StoreRenderer from './StoreRenderer';
 import { supabase } from '@/lib/supabase';
 import { Vibrant } from 'node-vibrant/node';
 
+export const dynamic = 'force-dynamic';
+
 interface Props {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ preview?: string }>;

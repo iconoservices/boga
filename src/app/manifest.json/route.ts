@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getStoreByDomain, getStore } from '@/lib/stores.config';
+import { supabase } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   let store = null;
@@ -7,6 +8,13 @@ export async function GET(request: NextRequest) {
   // 1) Try slug from query param (most reliable — set by slug page metadata)
   const slug = request.nextUrl.searchParams.get('slug');
   if (slug) store = getStore(slug);
+
+  // Try Supabase for dynamic data
+  let dbLogo: string | null = null;
+  if (slug) {
+    const { data } = await supabase.from('stores').select('logo_image').eq('slug', slug).maybeSingle();
+    if (data?.logo_image) dbLogo = data.logo_image;
+  }
 
   // 2) Try subdomain (works for bravoz.bogaperu.vercel.app)
   if (!store) {
@@ -22,7 +30,7 @@ export async function GET(request: NextRequest) {
     if (match) store = getStore(match[2]);
   }
 
-  const iconSrc = store?.logoImage || '/pwa-icon.png';
+  const iconSrc = dbLogo || store?.logoImage || '/pwa-icon.png';
   const isSvg = iconSrc.endsWith('.svg');
   const iconType = isSvg ? 'image/svg+xml' : 'image/png';
 
