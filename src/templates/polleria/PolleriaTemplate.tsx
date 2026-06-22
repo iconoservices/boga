@@ -103,6 +103,14 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
   };
 
   useEffect(() => {
+    const existing = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+    const apple = document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement;
+    const icon = store.logoImage || '/pwa-icon.png';
+    if (existing) existing.href = icon;
+    if (apple) apple.href = icon;
+  }, [store.logoImage]);
+
+  useEffect(() => {
     const fetchProducts = async () => {
       const showDemo = isDemoVisible(store.slug);
       setProducts(showDemo ? MOCK_PRODUCTS : []);
