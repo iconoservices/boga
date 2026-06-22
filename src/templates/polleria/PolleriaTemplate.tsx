@@ -57,6 +57,23 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
   const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+  }, []);
+
+  const handleInstall = () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(() => setDeferredPrompt(null));
+    }
+  };
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -214,20 +231,33 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
             <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: t.onSurfaceVariant }}>{store.tagline}</p>
           </div>
         </div>
+      </header>
+
+      {/* ══ FLOATING BUTTONS — mobile only, top-right ══ */}
+      <div className="md:hidden fixed top-20 right-4 z-50 flex flex-col gap-2">
         <button
-          className="font-bold px-3 py-1.5 rounded-full text-xs transition-all active:scale-95"
-          style={{ color: t.primary }}
           onClick={() => {
             if (navigator.share) {
               navigator.share({ title: store.name, text: store.tagline, url: window.location.href });
-            } else {
-              alert('Copiado al portapapeles!');
             }
           }}
+          className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all"
+          style={{ background: t.primary, color: t.onPrimary }}
+          title="Compartir"
         >
-          Compartir
+          <span className="material-symbols-outlined text-[20px]">share</span>
         </button>
-      </header>
+        {deferredPrompt && (
+          <button
+            onClick={handleInstall}
+            className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all"
+            style={{ background: t.secondary, color: t.onPrimary }}
+            title="Instalar"
+          >
+            <span className="material-symbols-outlined text-[20px]">download</span>
+          </button>
+        )}
+      </div>
 
       {/* ════════════════════════════════════════════
           MAIN CONTENT
