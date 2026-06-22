@@ -19,6 +19,15 @@ export interface StoreTheme {
   fontLabel: string;
 }
 
+export interface DemoProduct {
+  name: string;
+  price: number;
+  category: string;
+  subcategory?: string;
+  image: string;
+  description?: string;
+}
+
 export interface TemplateConfig {
   id: string;
   name: string;
@@ -27,6 +36,7 @@ export interface TemplateConfig {
   heroImage: string;
   heroAlt: string;
   categories: { name: string; icon: string; href: string }[];
+  demoProducts: DemoProduct[];
 }
 
 const TEMPLATES: Record<string, TemplateConfig> = {
@@ -57,6 +67,10 @@ const TEMPLATES: Record<string, TemplateConfig> = {
       fontLabel: "'Outfit', sans-serif",
     },
     categories: [],
+    demoProducts: [
+      { name: 'Producto Ejemplo', price: 25.00, category: 'General', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80', description: 'Descripción del producto' },
+      { name: 'Servicio Premium', price: 50.00, category: 'General', image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&q=80', description: 'Servicio profesional de alta calidad' },
+    ],
   },
 
   sunset: {
@@ -89,6 +103,11 @@ const TEMPLATES: Record<string, TemplateConfig> = {
       { name: 'Cocina', icon: 'restaurant', href: 'kitchen' },
       { name: 'Bar', icon: 'local_bar', href: 'bar' },
       { name: 'Café', icon: 'coffee', href: 'cafe' },
+    ],
+    demoProducts: [
+      { name: 'Ribeye Steak', price: 45.00, category: 'Cocina', image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=400&q=80', description: 'Corte angus con guarnición' },
+      { name: 'Mojito Clásico', price: 18.00, category: 'Bar', image: 'https://images.unsplash.com/photo-1551538827-9c037cb4f1c2?w=400&q=80', description: 'Ron, hierbabuena, limón' },
+      { name: 'Café Especial', price: 12.00, category: 'Café', image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&q=80', description: 'Café de especialidad filtrado' },
     ],
   },
 
@@ -123,6 +142,11 @@ const TEMPLATES: Record<string, TemplateConfig> = {
       { name: 'Verduras', icon: 'eco', href: 'verduras' },
       { name: 'Carnes', icon: 'set_meal', href: 'carnes' },
     ],
+    demoProducts: [
+      { name: 'Frutas del Día', price: 8.50, category: 'Frutas', image: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=400&q=80', description: 'Selección de frutas frescas' },
+      { name: 'Verduras Orgánicas', price: 12.00, category: 'Verduras', image: 'https://images.unsplash.com/photo-1557844352-761f2565b576?w=400&q=80', description: 'Pack de verduras de temporada' },
+      { name: 'Carne de Res', price: 28.00, category: 'Carnes', image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=400&q=80', description: 'Carne de res premium 1kg' },
+    ],
   },
 
   amazonia: {
@@ -155,6 +179,11 @@ const TEMPLATES: Record<string, TemplateConfig> = {
       { name: 'Artesanía', icon: 'interests', href: 'artesania' },
       { name: 'Bienestar', icon: 'spa', href: 'bienestar' },
       { name: 'Alimentos', icon: 'restaurant', href: 'alimentos' },
+    ],
+    demoProducts: [
+      { name: 'Canasta Artesanal', price: 35.00, category: 'Artesanía', image: 'https://images.unsplash.com/photo-1590005354167-6da9783c12f4?w=400&q=80', description: 'Tejido a mano por artesanos locales' },
+      { name: 'Aceite de Sacha Inchi', price: 22.00, category: 'Bienestar', image: 'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=400&q=80', description: 'Aceite natural amazónico 250ml' },
+      { name: 'Miel de Selva', price: 18.00, category: 'Alimentos', image: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&q=80', description: 'Miel pura de abejas nativas' },
     ],
   },
 
@@ -190,6 +219,11 @@ const TEMPLATES: Record<string, TemplateConfig> = {
       { name: 'Nail Art 3D', icon: 'palette', href: 'nailart' },
       { name: 'Pedicura Spa', icon: 'spa', href: 'pedicura' },
     ],
+    demoProducts: [
+      { name: 'Manicura Gel', price: 35.00, category: 'Manicura Gel', image: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=400&q=80', description: 'Esmaltado en gel duradero' },
+      { name: 'Uñas Acrílicas', price: 55.00, category: 'Uñas Acrílicas', image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&q=80', description: 'Diseño personalizado' },
+      { name: 'Nail Art 3D', price: 45.00, category: 'Nail Art 3D', image: 'https://images.unsplash.com/photo-1632345031435-8727f6897d53?w=400&q=80', description: 'Decoración 3D exclusiva' },
+    ],
   },
 
   estilosmirka: {
@@ -223,6 +257,11 @@ const TEMPLATES: Record<string, TemplateConfig> = {
       { name: 'Blusas', icon: 'checkroom', href: 'blusas' },
       { name: 'Pantalones', icon: 'accessibility_new', href: 'pantalones' },
       { name: 'Accesorios', icon: 'diamond', href: 'accesorios' },
+    ],
+    demoProducts: [
+      { name: 'Vestido Floral', price: 89.00, category: 'Vestidos', image: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400&q=80', description: 'Vestido largo con estampado floral' },
+      { name: 'Blusa Seda', price: 65.00, category: 'Blusas', image: 'https://images.unsplash.com/photo-1554568218-0f1715e72254?w=400&q=80', description: 'Blusa de seda natural' },
+      { name: 'Pantalón Palazzo', price: 75.00, category: 'Pantalones', image: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&q=80', description: 'Pantalón ancho de tiro alto' },
     ],
   },
 
@@ -258,9 +297,20 @@ const TEMPLATES: Record<string, TemplateConfig> = {
       { name: 'Parrillas', icon: 'outdoor_grill', href: 'parrillas' },
       { name: 'Bebidas', icon: 'local_bar', href: 'bebidas' },
     ],
+    demoProducts: [
+      { name: '1/4 Pollo a la Brasa', price: 22.90, category: 'Pollos a la Brasa', image: 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=400&q=80', description: 'Con papas y ensalada fresca' },
+      { name: 'Combo 6 Alitas', price: 18.00, category: 'Combos', image: 'https://images.unsplash.com/photo-1610614819513-58e34989848b?w=400&q=80', description: 'Bañadas en salsa BBQ o Spicy' },
+      { name: 'Parrilla Mixta', price: 54.00, category: 'Parrillas', image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&q=80', description: 'Pollo, res y embutidos' },
+      { name: 'Inca Kola 1L', price: 7.00, category: 'Bebidas', image: 'https://images.unsplash.com/photo-1625943553852-781c6dd46faa?w=400&q=80', description: 'Gaseosa peruana bien helada' },
+    ],
   },
 };
 
 export function getTemplate(id: string): TemplateConfig | null {
   return TEMPLATES[id] ?? null;
+}
+
+export function getDemoProducts(templateId: string): DemoProduct[] {
+  const tmpl = TEMPLATES[templateId];
+  return tmpl?.demoProducts ?? [];
 }

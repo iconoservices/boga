@@ -3,7 +3,7 @@
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { type StoreConfig } from '@/lib/stores.config';
-import { getTemplate } from '@/lib/templates.config';
+import { getTemplate, getDemoProducts } from '@/lib/templates.config';
 import StoreRenderer from '@/app/[slug]/StoreRenderer';
 import { useDemo } from '@/context/DemoContext';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
@@ -177,6 +177,9 @@ export default function AdminPage() {
 
   const [activeStores, setActiveStores] = useState<Record<string, boolean>>({});
 
+  const [showDiagnosticModal, setShowDiagnosticModal] = useState(false);
+  const [diagnosticStore, setDiagnosticStore] = useState<any | null>(null);
+
   // Store modal states
   const [showStoreModal, setShowStoreModal] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('mobile');
@@ -193,6 +196,11 @@ export default function AdminPage() {
     tier: 'Basic Tier',
     active: true
   });
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
+  const [slugChecking, setSlugChecking] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   // Send preview updates to iframe in real time
   const sendPreviewUpdate = React.useCallback(() => {
@@ -257,7 +265,33 @@ export default function AdminPage() {
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, [sendPreviewUpdate]);
-  
+
+  // Auto-generar slug desde el nombre
+  React.useEffect(() => {
+    if (!editingStore && !slugManuallyEdited && storeForm.name) {
+      const generated = storeForm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      if (generated !== storeForm.slug) {
+        setStoreForm(prev => ({ ...prev, slug: generated }));
+      }
+    }
+  }, [storeForm.name, editingStore, slugManuallyEdited]);
+
+  // Verificar disponibilidad del slug
+  React.useEffect(() => {
+    if (!storeForm.slug || storeForm.slug.length < 2) {
+      setSlugAvailable(null);
+      setSlugChecking(false);
+      return;
+    }
+    setSlugChecking(true);
+    const timer = setTimeout(async () => {
+      const { data } = await supabase.from('stores').select('slug').eq('slug', storeForm.slug).maybeSingle();
+      setSlugAvailable(!data);
+      setSlugChecking(false);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [storeForm.slug]);
+
   // Categorias state
   const [categories, setCategories] = useState(INITIAL_CATEGORIES);
   const [editingCatId, setEditingCatId] = useState<number | null>(null);
@@ -589,6 +623,10 @@ export default function AdminPage() {
   // Store Actions
   const handleOpenCreateStore = () => {
     setEditingStore(null);
+    setSlugManuallyEdited(false);
+    setSlugAvailable(null);
+    setLogoFile(null);
+    setLogoPreview(null);
     setStoreForm({
       slug: '',
       name: '',
@@ -606,6 +644,10 @@ export default function AdminPage() {
   const handleOpenEditStore = (store: any) => {
     const slug = store.slug;
     setEditingStore(store);
+    setSlugManuallyEdited(true);
+    setSlugAvailable(null);
+    setLogoFile(null);
+    setLogoPreview(null);
     setStoreForm({
       slug: store.slug,
       name: store.name,
@@ -684,7 +726,18 @@ export default function AdminPage() {
     const heroAlt = existingStoreObj.heroAlt || 'store image';
     const categoriesList = existingStoreObj.categories || [];
 
-    const upsertData = {
+    let logoUrl: string | null = null;
+    if (logoFile && slug) {
+      const ext = logoFile.name.split('.').pop();
+      const path = `${slug}/logo-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from('store-assets').upload(path, logoFile, { upsert: true });
+      if (!upErr) {
+        const { data: pubData } = supabase.storage.from('store-assets').getPublicUrl(path);
+        logoUrl = pubData.publicUrl;
+      }
+    }
+
+    const upsertData: Record<string, any> = {
       slug,
       name: storeForm.name,
       tagline: storeForm.tagline,
@@ -696,6 +749,7 @@ export default function AdminPage() {
       categories: categoriesList,
       status: storeForm.active ? 'active' : 'inactive'
     };
+    if (logoUrl) upsertData.logo_image = logoUrl;
 
     try {
       const { error } = await supabase
@@ -768,6 +822,25 @@ export default function AdminPage() {
       });
 
       setShowStoreModal(false);
+
+      // Si es una tienda nueva, insertar productos demo de la plantilla
+      if (!editingStore) {
+        const demoProducts = getDemoProducts(templateKey);
+        if (demoProducts.length > 0) {
+          const demoInserts = demoProducts.map(p => ({
+            name: p.name,
+            price: p.price,
+            category: p.category,
+            subcategory: p.subcategory || null,
+            image: p.image,
+            description: p.description || null,
+            store: slug,
+            stock: 0,
+            status: 'Activo',
+          }));
+          await supabase.from('products').insert(demoInserts);
+        }
+      }
     } catch (err: any) {
       alert('Error al guardar en Supabase: ' + err.message);
     }
@@ -1268,10 +1341,13 @@ export default function AdminPage() {
                         const storeOn = !!activeStores[store.slug];
 
                         // Detectar tiendas incompletas
-                        const missingFields = [];
-                        if (!store.tagline) missingFields.push('tagline');
-                        if (!store.marketplaceCategory || store.marketplaceCategory === 'General') missingFields.push('categoría');
-                        if (!store.template || store.template === 'default') missingFields.push('template');
+                        const missingFields: { field: string; label: string }[] = [];
+                        if (!store.name) missingFields.push({ field: 'name', label: 'Nombre de tienda' });
+                        if (!store.slug) missingFields.push({ field: 'slug', label: 'Slug / URL' });
+                        if (!store.tagline) missingFields.push({ field: 'tagline', label: 'Frase corta / tagline' });
+                        if (!store.marketplaceCategory || store.marketplaceCategory === 'General') missingFields.push({ field: 'categoría', label: 'Categoría en el marketplace' });
+                        if (!store.template || store.template === 'default') missingFields.push({ field: 'template', label: 'Plantilla visual (usa default)' });
+                        if (details.location === '—') missingFields.push({ field: 'location', label: 'Ubicación / dirección' });
                         const isIncomplete = missingFields.length > 0;
 
                         let tierBadgeClass = "bg-[#e0e3e5] text-[#444749]";
@@ -1292,13 +1368,13 @@ export default function AdminPage() {
                                   <div className="flex items-center gap-1.5">
                                     <p className="font-bold text-xs text-[#191b23]">{store.name}</p>
                                     {isIncomplete && (
-                                      <span
-                                        title={`Sin asignar: ${missingFields.join(', ')}`}
-                                        className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[8px] font-bold uppercase tracking-wide border border-amber-200"
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); setDiagnosticStore(store); setShowDiagnosticModal(true); }}
+                                        className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[8px] font-bold uppercase tracking-wide border border-amber-200 hover:bg-amber-200 transition-colors cursor-pointer"
                                       >
                                         <span className="material-symbols-outlined text-[10px]">warning</span>
                                         Incompleta
-                                      </span>
+                                      </button>
                                     )}
                                   </div>
                                   <p className="text-[9px] text-[#424754] font-semibold tracking-wide">/{store.slug}</p>
@@ -2701,7 +2777,7 @@ export default function AdminPage() {
                               <div className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
                             </div>
                             <div className="flex-1 max-w-md mx-auto bg-white/70 rounded h-5 flex items-center justify-center text-[9px] text-[#545f73] border border-[#c2c6d6]/60">
-                              bogamarket.com/{storeForm.slug || 'estilosmirka'}
+                              bogamarket.com/{storeForm.slug || 'nueva-tienda'}
                             </div>
                           </div>
                         )}
@@ -2753,8 +2829,8 @@ export default function AdminPage() {
 
                         {/* ── LIVE PREVIEW IFRAME (fully isolated CSS) ── */}
                         <iframe
-                          key={`${storeForm.slug || 'estilosmirka'}-${previewDevice}`}
-                          src={`/${storeForm.slug || 'estilosmirka'}?preview=true`}
+                          key={`${storeForm.slug || 'preview'}-${previewDevice}`}
+                          src={`/${storeForm.slug || 'default'}?preview=true`}
                           className="flex-1 w-full border-0"
                           style={{
                             marginTop: previewDevice === 'mobile' ? '44px' : 0,
@@ -2812,20 +2888,41 @@ export default function AdminPage() {
 
                     {/* Logo container box */}
                     <div className="border border-[#ecedf7] rounded-2xl p-4 bg-[#f8fafc] flex flex-col items-center justify-center gap-3">
-                      <div className="w-16 h-16 rounded-2xl bg-white border border-[#c2c6d6]/40 flex items-center justify-center text-3xl shadow-md">
-                        {storeForm.emoji || '🏪'}
-                      </div>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          maxLength={2}
-                          value={storeForm.emoji}
-                          onChange={(e) => setStoreForm(prev => ({ ...prev, emoji: e.target.value }))}
-                          placeholder="🏪"
-                          className="w-10 text-center bg-white border border-[#c2c6d6] rounded-xl py-1 text-sm font-bold focus:border-[#0058be] outline-none"
-                          title="Cambiar emoji"
-                        />
-                        <span className="text-[10px] text-[#727785] font-semibold flex items-center">Elegir emoji / logo</span>
+                      {logoPreview ? (
+                        <img src={logoPreview} className="w-16 h-16 rounded-2xl object-cover border border-[#c2c6d6]/40 shadow-md" />
+                      ) : (
+                        <div className="w-16 h-16 rounded-2xl bg-white border border-[#c2c6d6]/40 flex items-center justify-center text-3xl shadow-md">
+                          {storeForm.emoji || '🏪'}
+                        </div>
+                      )}
+                      <div className="flex flex-col gap-2 w-full">
+                        <div className="flex items-center gap-2">
+                          <label className="flex-1 flex items-center gap-2 px-3 py-2 bg-white border border-[#c2c6d6] rounded-xl cursor-pointer hover:bg-[#f2f3fd] transition-colors text-xs font-bold text-[#545f73]">
+                            <span className="material-symbols-outlined text-[16px]">upload</span>
+                            Subir logo
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  setLogoFile(file);
+                                  setLogoPreview(URL.createObjectURL(file));
+                                }
+                              }}
+                            />
+                          </label>
+                          {logoPreview && (
+                            <button
+                              type="button"
+                              onClick={() => { setLogoFile(null); setLogoPreview(null); }}
+                              className="p-2 text-[#dc2626] hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <span className="material-symbols-outlined text-[16px]">delete</span>
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -2855,15 +2952,36 @@ export default function AdminPage() {
 
                       <div>
                         <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Enlace Personalizado (Slug)</label>
-                        <input
-                          type="text"
-                          required
-                          value={storeForm.slug}
-                          onChange={(e) => setStoreForm(prev => ({ ...prev, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-') }))}
-                          className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-xl px-4 py-2.5 text-xs font-bold text-[#0058be] outline-none focus:border-[#0058be] focus:bg-white transition-all shadow-xs"
-                          placeholder="enlace-tienda"
-                          disabled={!!editingStore}
-                        />
+                        <div className="relative">
+                          <input
+                            type="text"
+                            required
+                            value={storeForm.slug}
+                            onChange={(e) => { setSlugManuallyEdited(true); setStoreForm(prev => ({ ...prev, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-') })); }}
+                            className={`w-full bg-[#f8fafc] border rounded-xl px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:bg-white transition-all shadow-xs pr-8 ${
+                              slugChecking ? 'border-[#c2c6d6]' :
+                              slugAvailable === null ? 'border-[#ecedf7]' :
+                              slugAvailable ? 'border-[#16a34a]' : 'border-[#dc2626]'
+                            }`}
+                            placeholder="enlace-tienda"
+                            disabled={!!editingStore}
+                          />
+                          <span className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                            {slugChecking ? (
+                              <span className="material-symbols-outlined text-[16px] text-[#727785] animate-spin">sync</span>
+                            ) : slugAvailable === true ? (
+                              <span className="material-symbols-outlined text-[16px] text-[#16a34a]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                            ) : slugAvailable === false ? (
+                              <span className="material-symbols-outlined text-[16px] text-[#dc2626]" style={{ fontVariationSettings: "'FILL' 1" }}>cancel</span>
+                            ) : null}
+                          </span>
+                        </div>
+                        {slugAvailable === false && (
+                          <p className="text-[10px] font-bold text-[#dc2626] mt-1">Este enlace ya está en uso</p>
+                        )}
+                        {slugAvailable === true && (
+                          <p className="text-[10px] font-bold text-[#16a34a] mt-1">Disponible</p>
+                        )}
                       </div>
                     </div>
                   </section>
@@ -3030,7 +3148,37 @@ export default function AdminPage() {
                 </div>
 
                 {/* Footer Buttons */}
-                <div className="p-6 border-t border-[#ecedf7] bg-white shrink-0">
+                <div className="p-6 border-t border-[#ecedf7] bg-white shrink-0 space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (confirm('¿Insertar productos demo de la plantilla? Los productos existentes no se borrarán.')) {
+                        const demo = getDemoProducts(storeForm.template as string);
+                        if (demo.length > 0) {
+                          supabase.from('products').insert(
+                            demo.map(p => ({
+                              name: p.name,
+                              price: p.price,
+                              category: p.category,
+                              subcategory: p.subcategory || null,
+                              image: p.image,
+                              description: p.description || null,
+                              store: storeForm.slug,
+                              stock: 0,
+                              status: 'Activo',
+                            }))
+                          ).then(({ error }) => {
+                            if (error) alert('Error: ' + error.message);
+                            else alert(`✅ ${demo.length} productos demo insertados`);
+                          });
+                        }
+                      }
+                    }}
+                    className="w-full py-3 bg-[#f0f7ff] border border-[#0058be]/20 text-[#0058be] rounded-xl font-bold text-xs hover:bg-[#e0efff] transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">playlist_add</span>
+                    Insertar Productos Demo
+                  </button>
                   <button
                     type="button"
                     onClick={() => {
@@ -3048,6 +3196,86 @@ export default function AdminPage() {
           </div>
         </div>
     )}
+
+    {/* ── DIAGNÓSTICO DE TIENDA ── */}
+    {showDiagnosticModal && diagnosticStore && (() => {
+      const ds = diagnosticStore;
+      const dMeta = storeMeta[ds.slug] || { emoji: '🏪', cat: 'Tienda' };
+      const dDetails = storeDetails[ds.slug] || { location: '—', date: 'Hoy', icon: 'storefront' };
+      const issues = [
+        { ok: !!ds.name,         label: 'Nombre de tienda',     hint: 'Agrega un nombre para identificar la tienda' },
+        { ok: !!ds.slug,         label: 'Slug / URL',           hint: 'Define un slug único para la URL de la tienda' },
+        { ok: !!ds.tagline,      label: 'Frase corta (tagline)', hint: 'Una frase breve que describa tu negocio' },
+        { ok: !!(ds.marketplaceCategory && ds.marketplaceCategory !== 'General'), label: 'Categoría en marketplace', hint: 'Elige una categoría específica para aparecer en explorar' },
+        { ok: !!(ds.template && ds.template !== 'default'), label: 'Plantilla visual',  hint: 'Selecciona una plantilla que no sea "default" para personalizar' },
+        { ok: dDetails.location !== '—', label: 'Ubicación / dirección', hint: 'Indica la ubicación física de tu tienda' },
+      ];
+      const missingCount = issues.filter(i => !i.ok).length;
+      return (
+      <div className="fixed inset-0 z-[200] bg-[#191b23]/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl border border-[#c2c6d6] shadow-2xl w-[90vw] md:w-[460px] max-w-[460px] max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="px-5 py-4 border-b border-[#c2c6d6] bg-[#f2f3fd] flex items-center justify-between shrink-0">
+            <h3 className="font-bold text-sm text-[#191b23] flex items-center gap-2">
+              <span className="material-symbols-outlined text-amber-500 text-base">report</span>
+              Diagnóstico de tienda
+            </h3>
+            <button 
+              onClick={() => setShowDiagnosticModal(false)}
+              className="w-7 h-7 flex items-center justify-center text-[#424754] hover:bg-[#e6e7f2] rounded-lg transition-colors"
+            >
+              <span className="material-symbols-outlined text-base">close</span>
+            </button>
+          </div>
+          <div className="p-5 space-y-4 flex-1 overflow-y-auto min-h-0">
+            <div className="flex items-center gap-3 pb-2 border-b border-[#c2c6d6]">
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0 border border-[#c2c6d6]/60 bg-[#f9f9ff]">
+                {dMeta.emoji}
+              </div>
+              <div>
+                <p className="font-bold text-sm text-[#191b23]">{ds.name || 'Sin nombre'}</p>
+                <p className="text-[10px] text-[#727785] font-semibold">/{ds.slug}</p>
+              </div>
+            </div>
+
+            {missingCount === 0 ? (
+              <div className="flex flex-col items-center py-6 text-center">
+                <span className="material-symbols-outlined text-4xl text-emerald-500 mb-2">check_circle</span>
+                <p className="text-xs font-bold text-[#191b23]">¡Tienda completa!</p>
+                <p className="text-[10px] text-[#727785]">No se encontraron problemas.</p>
+              </div>
+            ) : (
+              <>
+                <p className="text-[10px] font-bold text-[#424754] uppercase tracking-wide">
+                  {missingCount} {missingCount === 1 ? 'pendiente' : 'pendientes'} por resolver
+                </p>
+                <div className="space-y-1.5">
+                  {issues.map((issue, i) => (
+                    <div key={i} className={`flex items-start gap-2.5 p-2.5 rounded-lg text-xs ${issue.ok ? 'bg-emerald-50/40' : 'bg-amber-50/60 border border-amber-200/60'}`}>
+                      <span className={`material-symbols-outlined text-[14px] mt-0.5 ${issue.ok ? 'text-emerald-600' : 'text-amber-600'}`}>
+                        {issue.ok ? 'check_circle' : 'error_outline'}
+                      </span>
+                      <div>
+                        <p className={`font-bold ${issue.ok ? 'text-emerald-800' : 'text-amber-900'}`}>{issue.label}</p>
+                        {!issue.ok && <p className="text-[10px] text-amber-700 mt-0.5">{issue.hint}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+          <div className="px-5 py-3 border-t border-[#c2c6d6] flex justify-end bg-[#f9f9ff]">
+            <button
+              onClick={() => setShowDiagnosticModal(false)}
+              className="px-4 py-2 bg-[#0058be] text-white rounded-lg font-bold text-xs hover:bg-[#004395] transition-colors"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </div>
+      );
+    })()}
 
     {/* ── CREATE / EDIT TEMPLATE MODAL ── */}
     {showTemplateModal && (
