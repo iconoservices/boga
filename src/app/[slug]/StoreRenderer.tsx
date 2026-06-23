@@ -24,6 +24,43 @@ export default function StoreRenderer({ store: initialStore }: Props) {
     setStore(initialStore);
   }, [initialStore]);
 
+  // Update favicon dynamically when store changes
+  useEffect(() => {
+    const iconUrl = store.logoImage || store.heroImage || '/pwa-icon.png';
+    
+    // Add timestamp to force browser to reload favicon (bypass cache)
+    const timestampedIcon = `${iconUrl}${iconUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
+    
+    // Update existing favicon link or create new one
+    let faviconLink = document.querySelector("link[rel='icon']") as HTMLLinkElement;
+    if (!faviconLink) {
+      faviconLink = document.createElement('link');
+      faviconLink.rel = 'icon';
+      faviconLink.type = 'image/png';
+      document.head.appendChild(faviconLink);
+    }
+    faviconLink.href = timestampedIcon;
+
+    // Update or create apple touch icon
+    let appleLink = document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement;
+    if (!appleLink) {
+      appleLink = document.createElement('link');
+      appleLink.rel = 'apple-touch-icon';
+      document.head.appendChild(appleLink);
+    }
+    appleLink.href = timestampedIcon;
+
+    // Update manifest to ensure it has the latest icon
+    const manifestLink = document.querySelector("link[rel='manifest']") as HTMLLinkElement;
+    if (manifestLink) {
+      const currentHref = manifestLink.href;
+      const slug = window.location.pathname.split('/')[1];
+      if (slug && !currentHref.includes(`slug=${slug}`)) {
+        manifestLink.href = `/manifest.json?slug=${slug}`;
+      }
+    }
+  }, [store.logoImage, store.heroImage]);
+
   // Listen to postMessage from parent customizer for live updates
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {

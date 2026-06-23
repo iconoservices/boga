@@ -137,13 +137,22 @@ export async function generateMetadata({ params }: Omit<Props, 'searchParams'>) 
   const { slug } = await params;
   const store = await getDynamicStore(slug);
   if (!store) return { title: 'Tienda no encontrada' };
+  
+  const iconUrl = store.logoImage || store.heroImage || '/pwa-icon.png';
+  
   return {
     title: `${store.name} | Boga Market`,
     description: store.tagline,
     manifest: `/manifest.json?slug=${slug}`,
     icons: {
-      icon: store.logoImage || '/pwa-icon.png',
-      apple: store.logoImage || '/pwa-icon.png',
+      icon: [
+        { url: iconUrl, sizes: 'any' },
+        { url: iconUrl, sizes: '192x192', type: 'image/png' },
+        { url: iconUrl, sizes: '512x512', type: 'image/png' },
+      ],
+      apple: [
+        { url: iconUrl, sizes: '180x180', type: 'image/png' },
+      ],
     },
   };
 }
