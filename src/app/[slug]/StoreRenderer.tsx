@@ -1,6 +1,6 @@
 'use client';
 
-import { StoreConfig } from '@/lib/stores.config';
+import { StoreConfig, BOGA_DEFAULT_ICON } from '@/lib/stores.config';
 import dynamic from 'next/dynamic';
 import React, { useState, useEffect } from 'react';
 
@@ -26,7 +26,7 @@ export default function StoreRenderer({ store: initialStore }: Props) {
 
   // Update favicon dynamically when store changes
   useEffect(() => {
-    const iconUrl = store.logoImage || store.heroImage || '/pwa-icon.png';
+    const iconUrl = store.logoImage || store.iconImage || store.heroImage || BOGA_DEFAULT_ICON;
     
     // Add timestamp to force browser to reload favicon (bypass cache)
     const timestampedIcon = `${iconUrl}${iconUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
@@ -54,7 +54,8 @@ export default function StoreRenderer({ store: initialStore }: Props) {
     const manifestLink = document.querySelector("link[rel='manifest']") as HTMLLinkElement;
     if (manifestLink) {
       const currentHref = manifestLink.href;
-      const slug = window.location.pathname.split('/')[1];
+      const pathParts = window.location.pathname.split('/').filter(Boolean);
+      const slug = pathParts[0] === 'preview' ? pathParts[1] : pathParts[0];
       if (slug && !currentHref.includes(`slug=${slug}`)) {
         manifestLink.href = `/manifest.json?slug=${slug}`;
       }

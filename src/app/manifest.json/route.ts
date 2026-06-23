@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getTemplate } from '@/lib/templates.config';
+import { BOGA_DEFAULT_ICON } from '@/lib/stores.config';
 import { supabase } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const iconSrc = dbLogo || tmpl?.heroImage || '/pwa-icon.png';
+  const iconSrc = dbLogo || tmpl?.iconImage || tmpl?.heroImage || BOGA_DEFAULT_ICON;
   const isSvg = iconSrc.endsWith('.svg');
   const iconType = isSvg ? 'image/svg+xml' : 'image/png';
 

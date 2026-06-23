@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { BOGA_DEFAULT_ICON } from '@/lib/stores.config';
 import './globals.css';
 import BottomNav from '@/components/BottomNav';
 
@@ -9,6 +10,16 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
+  },
+  icons: {
+    icon: [
+      { url: BOGA_DEFAULT_ICON, sizes: 'any' },
+      { url: BOGA_DEFAULT_ICON, sizes: '192x192', type: 'image/png' },
+      { url: BOGA_DEFAULT_ICON, sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: BOGA_DEFAULT_ICON, sizes: '180x180', type: 'image/png' },
+    ],
   },
 };
 

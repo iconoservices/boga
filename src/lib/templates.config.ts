@@ -35,6 +35,7 @@ export interface TemplateConfig {
   theme: StoreTheme;
   heroImage: string;
   heroAlt: string;
+  iconImage?: string;
   categories: { name: string; icon: string; href: string }[];
   demoProducts: DemoProduct[];
 }
@@ -271,6 +272,7 @@ const TEMPLATES: Record<string, TemplateConfig> = {
     category: 'Restaurantes',
     heroImage: 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=1200&q=80',
     heroAlt: 'Pollo a la brasa dorado crujiente con papas fritas',
+    iconImage: '/icons/polleria.svg',
     theme: {
       primary: '#a43800',
       onPrimary: '#ffffff',

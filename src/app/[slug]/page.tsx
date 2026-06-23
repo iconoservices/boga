@@ -1,5 +1,6 @@
 import { getTemplate } from '@/lib/templates.config';
 import type { StoreTheme } from '@/lib/templates.config';
+import { BOGA_DEFAULT_ICON } from '@/lib/stores.config';
 import { notFound } from 'next/navigation';
 import StoreRenderer from './StoreRenderer';
 import { supabase } from '@/lib/supabase';
@@ -121,6 +122,7 @@ async function getDynamicStore(slug: string) {
         template: (dbStore.template || 'default') as any,
         heroImage,
         heroAlt: dbStore.hero_alt || 'store image',
+        iconImage: tmpl?.iconImage || undefined,
         theme: resolvedTheme,
         categories: dbStore.categories || [],
         logoImage: dbStore.logo_image || undefined,
@@ -138,7 +140,7 @@ export async function generateMetadata({ params }: Omit<Props, 'searchParams'>) 
   const store = await getDynamicStore(slug);
   if (!store) return { title: 'Tienda no encontrada' };
   
-  const iconUrl = store.logoImage || store.heroImage || '/pwa-icon.png';
+  const iconUrl = store.logoImage || store.iconImage || store.heroImage || BOGA_DEFAULT_ICON;
   
   return {
     title: `${store.name} | Boga Market`,
@@ -173,6 +175,7 @@ export default async function StorePage({ params, searchParams }: Props) {
         template: 'default',
         heroImage: defaultTmpl?.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
         heroAlt: defaultTmpl?.heroAlt || 'nueva tienda',
+        iconImage: defaultTmpl?.iconImage || undefined,
         theme: defaultTmpl?.theme || DEFAULT_THEME,
         categories: defaultTmpl?.categories || [],
         logoImage: undefined,
