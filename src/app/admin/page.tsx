@@ -3210,6 +3210,33 @@ export default function AdminPage() {
                     <span className="material-symbols-outlined text-[14px]">playlist_add</span>
                     Insertar Productos Demo
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (confirm('¿Restablecer todos los campos a sus valores por defecto? Se perderán los cambios no guardados.')) {
+                        const tpl = getTemplate(storeForm.template as string);
+                        setStoreForm({
+                          slug: editingStore ? storeForm.slug : '',
+                          name: '',
+                          tagline: '',
+                          marketplaceCategory: 'Restaurantes',
+                          template: 'default',
+                          location: '',
+                          emoji: '🏪',
+                          tier: 'Basic Tier',
+                          active: true
+                        });
+                        if (logoPreview?.startsWith('blob:')) URL.revokeObjectURL(logoPreview);
+                        setLogoFile(null);
+                        setLogoPreview(null);
+                        setLogoRemoved(false);
+                      }
+                    }}
+                    className="w-full py-3 bg-white border border-[#c2c6d6] text-[#191b23] rounded-xl font-bold text-xs hover:bg-[#f8fafc] hover:border-[#191b23] transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">restart_alt</span>
+                    Restablecer valores por defecto
+                  </button>
                 </div>
               </form>
             </aside>
