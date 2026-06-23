@@ -202,6 +202,7 @@ export default function AdminPage() {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoRemoved, setLogoRemoved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   // Send preview updates to iframe in real time
   const sendPreviewUpdate = React.useCallback(() => {
@@ -280,8 +281,8 @@ export default function AdminPage() {
 
   // Verificar disponibilidad del slug
   React.useEffect(() => {
-    if (!storeForm.slug || storeForm.slug.length < 2) {
-      setSlugAvailable(null);
+    if (!storeForm.slug || storeForm.slug.length < 2 || editingStore) {
+      setSlugAvailable(editingStore ? true : null);
       setSlugChecking(false);
       return;
     }
@@ -292,7 +293,7 @@ export default function AdminPage() {
       setSlugChecking(false);
     }, 400);
     return () => clearTimeout(timer);
-  }, [storeForm.slug]);
+  }, [storeForm.slug, editingStore]);
 
   // Categorias state
   const [categories, setCategories] = useState(INITIAL_CATEGORIES);
@@ -687,6 +688,9 @@ export default function AdminPage() {
           delete next[slug];
           return next;
         });
+        setStoreDetails(prev => { const next = { ...prev }; delete next[slug]; return next; });
+        setStoreMeta(prev => { const next = { ...prev }; delete next[slug]; return next; });
+        setStoreTiers(prev => { const next = { ...prev }; delete next[slug]; return next; });
         
         setCategories(prevCats => {
           return prevCats.map(c => ({
@@ -703,6 +707,8 @@ export default function AdminPage() {
   const handleSaveStore = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!storeForm.slug || !storeForm.name) return;
+    if (saving) return;
+    setSaving(true);
     
     const slug = storeForm.slug.trim().toLowerCase();
     const templateKey = storeForm.template as string;
@@ -804,6 +810,10 @@ export default function AdminPage() {
           tagline: storeForm.tagline,
           marketplaceCategory: storeForm.marketplaceCategory,
           template: storeForm.template,
+          heroImage,
+          heroAlt,
+          categories: categoriesList,
+          logoImage: logoUrl || (logoRemoved ? undefined : existingStoreObj.logoImage),
           theme
         };
         
@@ -854,6 +864,8 @@ export default function AdminPage() {
       }
     } catch (err: any) {
       alert('Error al guardar en Supabase: ' + err.message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -2702,11 +2714,16 @@ export default function AdminPage() {
               </div>
               <button
                 type="button"
-                onClick={handleSaveStore}
-                className="px-4 py-2 bg-[#0058be] text-white rounded-xl font-bold text-xs hover:shadow-lg active:scale-95 transition-all flex items-center gap-1.5"
+                onClick={() => {
+                  const form = document.querySelector('form') as HTMLFormElement | null;
+                  if (form && !form.reportValidity()) return;
+                  handleSaveStore({ preventDefault: () => {} } as React.FormEvent);
+                }}
+                disabled={saving}
+                className="px-4 py-2 bg-[#0058be] text-white rounded-xl font-bold text-xs hover:shadow-lg active:scale-95 transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span className="material-symbols-outlined text-[14px]">publish</span>
-                Publish Changes
+                <span className="material-symbols-outlined text-[14px]">{saving ? 'progress_activity' : 'publish'}</span>
+                {saving ? 'Guardando...' : 'Publish Changes'}
               </button>
               <div className="w-8 h-8 rounded-xl border border-[#c2c6d6]/60 flex items-center justify-center bg-white cursor-pointer hover:bg-[#f2f3fd] transition-colors text-[#545f73]">
                 <span className="material-symbols-outlined text-[18px]">notifications</span>
@@ -2918,6 +2935,7 @@ export default function AdminPage() {
                               onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
+                                  if (logoPreview?.startsWith('blob:')) URL.revokeObjectURL(logoPreview);
                                   setLogoFile(file);
                                   setLogoPreview(URL.createObjectURL(file));
                                   setLogoRemoved(false);
@@ -2928,7 +2946,7 @@ export default function AdminPage() {
                           {logoPreview && (
                             <button
                               type="button"
-                              onClick={() => { setLogoFile(null); setLogoPreview(null); setLogoRemoved(true); }}
+                              onClick={() => { if (logoPreview?.startsWith('blob:')) URL.revokeObjectURL(logoPreview); setLogoFile(null); setLogoPreview(null); setLogoRemoved(true); }}
                               className="p-2 text-[#dc2626] hover:bg-red-50 rounded-lg transition-colors"
                             >
                               <span className="material-symbols-outlined text-[16px]">delete</span>
@@ -3164,6 +3182,7 @@ export default function AdminPage() {
                   <button
                     type="button"
                     onClick={() => {
+                      if (!storeForm.slug) { alert('Primero ingresa el nombre de la tienda'); return; }
                       if (confirm('¿Insertar productos demo de la plantilla? Los productos existentes no se borrarán.')) {
                         const demo = getDemoProducts(storeForm.template as string);
                         if (demo.length > 0) {
@@ -3190,17 +3209,6 @@ export default function AdminPage() {
                   >
                     <span className="material-symbols-outlined text-[14px]">playlist_add</span>
                     Insertar Productos Demo
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (confirm('Are you sure you want to reset all settings?')) {
-                        // Reset logic here if needed
-                      }
-                    }}
-                    className="w-full py-3 bg-white border border-[#c2c6d6] text-[#191b23] rounded-xl font-bold text-xs hover:bg-[#f8fafc] hover:border-[#191b23] transition-all"
-                  >
-                    Reset to Default Settings
                   </button>
                 </div>
               </form>
