@@ -201,6 +201,7 @@ export default function AdminPage() {
   const [slugChecking, setSlugChecking] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoRemoved, setLogoRemoved] = useState(false);
 
   // Send preview updates to iframe in real time
   const sendPreviewUpdate = React.useCallback(() => {
@@ -236,6 +237,7 @@ export default function AdminPage() {
       template: templateKey,
       heroImage: existingStoreObj.heroImage || tpl?.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
       heroAlt: storeForm.name || 'store image',
+      logoImage: logoPreview || undefined,
       theme: previewTheme,
       categories: existingStoreObj.categories || [
         { name: 'Entradas', icon: 'restaurant', href: '#entradas' },
@@ -250,7 +252,7 @@ export default function AdminPage() {
         store: activePreviewStore
       }, '*');
     }
-  }, [storeForm, stores]);
+  }, [storeForm, stores, logoPreview]);
 
   React.useEffect(() => {
     sendPreviewUpdate();
@@ -487,6 +489,7 @@ export default function AdminPage() {
               template: (dbStore.template || 'default') as any,
               heroImage: dbStore.hero_image || getTemplate(dbStore.template as string)?.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
               heroAlt: dbStore.hero_alt || 'store image',
+              logoImage: dbStore.logo_image || undefined,
               theme: (() => {
                 if (dbStore.theme && Object.keys(dbStore.theme).length > 0) return dbStore.theme;
                 const tmpl = dbStore.template as string;
@@ -627,6 +630,7 @@ export default function AdminPage() {
     setSlugAvailable(null);
     setLogoFile(null);
     setLogoPreview(null);
+    setLogoRemoved(false);
     setStoreForm({
       slug: '',
       name: '',
@@ -647,7 +651,8 @@ export default function AdminPage() {
     setSlugManuallyEdited(true);
     setSlugAvailable(null);
     setLogoFile(null);
-    setLogoPreview(null);
+    setLogoPreview(store.logoImage || null);
+    setLogoRemoved(false);
     setStoreForm({
       slug: store.slug,
       name: store.name,
@@ -749,7 +754,13 @@ export default function AdminPage() {
       categories: categoriesList,
       status: storeForm.active ? 'active' : 'inactive'
     };
-    if (logoUrl) upsertData.logo_image = logoUrl;
+    if (logoUrl) {
+      upsertData.logo_image = logoUrl;
+    } else if (logoRemoved) {
+      upsertData.logo_image = null;
+    } else if (editingStore?.logoImage) {
+      upsertData.logo_image = editingStore.logoImage;
+    }
 
     try {
       const { error } = await supabase
@@ -2909,6 +2920,7 @@ export default function AdminPage() {
                                 if (file) {
                                   setLogoFile(file);
                                   setLogoPreview(URL.createObjectURL(file));
+                                  setLogoRemoved(false);
                                 }
                               }}
                             />
@@ -2916,7 +2928,7 @@ export default function AdminPage() {
                           {logoPreview && (
                             <button
                               type="button"
-                              onClick={() => { setLogoFile(null); setLogoPreview(null); }}
+                              onClick={() => { setLogoFile(null); setLogoPreview(null); setLogoRemoved(true); }}
                               className="p-2 text-[#dc2626] hover:bg-red-50 rounded-lg transition-colors"
                             >
                               <span className="material-symbols-outlined text-[16px]">delete</span>
