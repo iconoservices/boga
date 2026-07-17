@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     name: displayName,
     short_name: displayName.slice(0, 12),
     description: storeName ? `${storeName} en Boga Market` : (tmpl ? `Plantilla: ${tmpl.name}` : 'Tu panel de administración empresarial.'),
-    start_url: storeSlug ? `/${storeSlug}` : (tmpl ? `/preview/${tmpl.id}` : '/dashboard'),
+    start_url: storeSlug ? `/${storeSlug}` : (tmpl ? `/preview/${tmpl.id}` : '/admin'),
     display: 'standalone',
     background_color: bgColor,
     theme_color: themeColor,

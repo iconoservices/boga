@@ -12,8 +12,8 @@ interface PWAStats {
 
 function isStoreRoute(pathname: string): boolean {
     if (!pathname) return false;
-    if (pathname.startsWith('/dashboard')) return true;
-    if (pathname.startsWith('/admin')) return false;
+    if (pathname.startsWith('/admin')) return true;
+    if (pathname.startsWith('/superadmin')) return false;
     if (pathname.startsWith('/login')) return false;
     if (pathname.startsWith('/explore')) return false;
     if (pathname.startsWith('/profile')) return false;
@@ -27,7 +27,7 @@ function isStoreRoute(pathname: string): boolean {
 }
 
 function getStoreName(pathname: string): string {
-    if (pathname.startsWith('/dashboard')) return 'Boga Dash';
+    if (pathname.startsWith('/admin')) return 'Boga Dash';
     const slug = pathname.split('/')[1];
     return slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : 'Boga Market';
 }

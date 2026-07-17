@@ -10,8 +10,16 @@ CREATE TABLE IF NOT EXISTS public.orders (
   items JSONB NOT NULL,
   total_amount NUMERIC NOT NULL,
   status VARCHAR NOT NULL DEFAULT 'Pendiente', -- Pendiente, Preparando, Listo, Entregado, Cancelado
+  payment_method VARCHAR, -- Efectivo, Yape, Plin, Tarjeta (ventas POS)
+  seller_name VARCHAR, -- Vendedor que registró la venta (ventas POS)
+  order_source VARCHAR DEFAULT 'App', -- App, POS, WhatsApp
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Migración: si la tabla ya existía, agregar las columnas del POS
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS payment_method VARCHAR;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS seller_name VARCHAR;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS order_source VARCHAR DEFAULT 'App';
 
 -- Habilitar RLS (Row Level Security) para mayor seguridad
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;

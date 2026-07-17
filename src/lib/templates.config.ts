@@ -308,6 +308,10 @@ const TEMPLATES: Record<string, TemplateConfig> = {
   },
 };
 
+export function getAllTemplates(): TemplateConfig[] {
+  return Object.values(TEMPLATES).filter((t) => t.id !== 'default');
+}
+
 export function getTemplate(id: string): TemplateConfig | null {
   return TEMPLATES[id] ?? null;
 }

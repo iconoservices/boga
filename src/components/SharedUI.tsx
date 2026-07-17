@@ -3,7 +3,8 @@
 import React from 'react';
 import { useCart } from '@/context/CartContext';
 import CartDrawer from '@/components/CartDrawer';
-import PWAInstallPrompt from '@/components/PWAInstallPrompt';
+// PWAInstallPrompt oculto por ahora — se reemplazará por un ícono fijo minimalista
+// import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 
 export default function SharedUI() {
   const { 
@@ -46,7 +47,6 @@ export default function SharedUI() {
         onUpdateQuantity={updateQuantity}
         onRemove={removeItem}
       />
-      <PWAInstallPrompt />
     </>
   );
 }

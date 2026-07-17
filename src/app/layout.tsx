@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { BOGA_DEFAULT_ICON } from '@/lib/stores.config';
 import './globals.css';
 import BottomNav from '@/components/BottomNav';
+import AppFooter from '@/components/AppFooter';
 
 export const metadata: Metadata = {
   title: 'Boga Dash',
@@ -45,7 +46,7 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning>
       <head>
         <link
-          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Plus+Jakarta+Sans:wght@100..900&display=swap"
           rel="stylesheet"
         />
         <link
@@ -58,6 +59,7 @@ export default function RootLayout({
           <DemoProvider>
             <CartProvider>
               {children}
+              <AppFooter />
               <BottomNav />
               <SharedUI />
             </CartProvider>
