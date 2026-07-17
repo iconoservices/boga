@@ -8,19 +8,19 @@ import { useCart } from '@/context/CartContext';
 import { supabase } from '@/lib/supabase';
 
 const BANNERS_RAW = [
-  { id: 'deliv', bg: '#E9826D', img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800", textColor: '#3A1409', darkText: true, tag: null, title1: 'DELIVERY', title2: 'GRATIS', sub: 'En tu primera orden' },
-  { id: 'burger', bg: '#4A1D13', img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800", textColor: 'white', darkText: false, tag: 'Promo Exclusiva', title1: '2x1 EN', title2: 'HAMBURGUESAS', sub: 'Solo por hoy en locales seleccionados' },
-  { id: 'salad', bg: '#2E7D32', img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800", textColor: 'white', darkText: false, tag: 'Saludable', title1: '30% OFF', title2: 'EN ENSALADAS', sub: 'Empieza la semana con energía natural' },
+  { id: 'deliv',  img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1200", tag: null,            title1: 'DELIVERY', title2: 'GRATIS',        sub: 'En tu primera orden' },
+  { id: 'burger', img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1200", tag: 'Promo Exclusiva', title1: '2x1 EN',    title2: 'HAMBURGUESAS',  sub: 'Solo por hoy en locales seleccionados' },
+  { id: 'salad',  img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1200", tag: 'Saludable',      title1: '30% OFF',   title2: 'EN ENSALADAS',  sub: 'Empieza la semana con energía natural' },
 ];
 
-const BANNERS = [BANNERS_RAW[BANNERS_RAW.length - 1], ...BANNERS_RAW, BANNERS_RAW[0]];
-const REAL_COUNT = BANNERS_RAW.length;
 
 export default function Home() {
-  const [index, setIndex] = useState(1);
-  const [animated, setAnimated] = useState(true);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const indexRef = useRef(1);
+  // Banner slider
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const [bannerIdx, setBannerIdx] = useState(0);
+  const bannerIdxRef = useRef(0);
+  const bannerCount = BANNERS_RAW.length;
+
   const [activeCategory, setActiveCategory] = useState('Todas');
   const [showAllSubCategories, setShowAllSubCategories] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
@@ -177,103 +177,70 @@ export default function Home() {
     fetchRealData();
   }, []);
 
-  const goTo = useCallback((i: number, animate = true) => {
-    indexRef.current = i;
-    setAnimated(animate);
-    setIndex(i);
+  // Scroll-based banner navigation
+  const scrollToBanner = useCallback((idx: number, smooth = true) => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+    const w = slider.clientWidth;
+    slider.scrollTo({ left: idx * w, behavior: smooth ? 'smooth' : 'instant' as ScrollBehavior });
+    bannerIdxRef.current = idx;
+    setBannerIdx(idx);
   }, []);
 
-  // Helper: width of one slide = width of the overflow container (section)
-  const getSlideWidth = () => {
-    const container = trackRef.current?.parentElement;
-    return container ? container.getBoundingClientRect().width : 0;
-  };
-
-  // On mount: set slide widths and position track correctly
-  useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
-    const w = getSlideWidth();
-    if (w === 0) return;
-    // Force each slide to exactly match container width
-    Array.from(track.children).forEach((child) => {
-      (child as HTMLElement).style.width = `${w}px`;
-      (child as HTMLElement).style.minWidth = `${w}px`;
-      (child as HTMLElement).style.flexShrink = '0';
-    });
-    track.style.transition = 'none';
-    track.style.transform = `translateX(-${indexRef.current * w}px)`;
-  }, []);
-
-  useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
-    const w = getSlideWidth();
-    if (w === 0) return;
-    track.style.transition = animated ? 'transform 0.45s cubic-bezier(0.25,0.46,0.45,0.94)' : 'none';
-    track.style.transform = `translateX(-${index * w}px)`;
-  }, [index, animated]);
-
-  // Recalibrate on resize (no animation snap)
-  useEffect(() => {
-    const onResize = () => {
-      const track = trackRef.current;
-      if (!track) return;
-      const w = getSlideWidth();
-      if (w === 0) return;
-      // Re-set each slide's explicit width
-      Array.from(track.children).forEach((child) => {
-        (child as HTMLElement).style.width = `${w}px`;
-        (child as HTMLElement).style.minWidth = `${w}px`;
-      });
-      track.style.transition = 'none';
-      track.style.transform = `translateX(-${indexRef.current * w}px)`;
-    };
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
-
-  // Infinite loop snap-back when transition ends
-  useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
-    const onEnd = () => {
-      const total = BANNERS.length;
-      if (indexRef.current >= total - 1) {
-        goTo(1, false);
-      } else if (indexRef.current <= 0) {
-        goTo(total - 2, false);
-      }
-    };
-    track.addEventListener('transitionend', onEnd);
-    return () => track.removeEventListener('transitionend', onEnd);
-  }, [goTo]);
-
-  // Auto-advance every 4 s
+  // Auto-advance every 4s
   useEffect(() => {
     const id = setInterval(() => {
-      goTo(indexRef.current + 1);
+      const next = (bannerIdxRef.current + 1) % bannerCount;
+      scrollToBanner(next);
     }, 4000);
     return () => clearInterval(id);
-  }, [goTo]);
+  }, [scrollToBanner, bannerCount]);
 
-  // Swipe / drag support
+  // Swipe support
   useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
+    const slider = sliderRef.current;
+    if (!slider) return;
     let startX = 0;
     const onTouchStart = (e: TouchEvent) => { startX = e.touches[0].clientX; };
     const onTouchEnd   = (e: TouchEvent) => {
       const diff = startX - e.changedTouches[0].clientX;
-      if (Math.abs(diff) > 40) goTo(indexRef.current + (diff > 0 ? 1 : -1));
+      if (Math.abs(diff) > 40) {
+        const next = Math.max(0, Math.min(bannerCount - 1, bannerIdxRef.current + (diff > 0 ? 1 : -1)));
+        scrollToBanner(next);
+      }
     };
-    track.addEventListener('touchstart', onTouchStart, { passive: true });
-    track.addEventListener('touchend',   onTouchEnd,   { passive: true });
+    slider.addEventListener('touchstart', onTouchStart, { passive: true });
+    slider.addEventListener('touchend',   onTouchEnd,   { passive: true });
     return () => {
-      track.removeEventListener('touchstart', onTouchStart);
-      track.removeEventListener('touchend',   onTouchEnd);
+      slider.removeEventListener('touchstart', onTouchStart);
+      slider.removeEventListener('touchend',   onTouchEnd);
     };
-  }, [goTo]);
+  }, [scrollToBanner, bannerCount]);
+
+  // Track scroll position to update active dot
+  useEffect(() => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const w = slider.clientWidth;
+        if (w === 0) { ticking = false; return; }
+        const idx = Math.round(slider.scrollLeft / w);
+        if (idx !== bannerIdxRef.current) {
+          bannerIdxRef.current = idx;
+          setBannerIdx(idx);
+        }
+        ticking = false;
+      });
+    };
+    slider.addEventListener('scroll', onScroll, { passive: true });
+    return () => slider.removeEventListener('scroll', onScroll);
+  }, []);
+
+
 
 
   useEffect(() => {
@@ -346,36 +313,6 @@ export default function Home() {
     fetchRealData();
   }, []);
 
-  useEffect(() => {
-    const t = setInterval(() => {
-      const next = indexRef.current + 1;
-      indexRef.current = next;
-      setAnimated(true);
-      setIndex(next);
-    }, 4000);
-    return () => clearInterval(t);
-  }, []);
-
-  useEffect(() => {
-    if (index === 0) {
-      const t = setTimeout(() => goTo(REAL_COUNT, false), 460);
-      return () => clearTimeout(t);
-    }
-    if (index === REAL_COUNT + 1) {
-      const t = setTimeout(() => goTo(1, false), 460);
-      return () => clearTimeout(t);
-    }
-  }, [index, goTo]);
-
-  useEffect(() => {
-    if (!trackRef.current) return;
-    trackRef.current.style.transition = animated ? 'transform 0.45s cubic-bezier(0.4, 0, 0.2, 1)' : 'none';
-    if (isDesktop) {
-      trackRef.current.style.transform = `translateX(-${(index * 100) / BANNERS.length}%)`;
-    } else {
-      trackRef.current.style.transform = `translateX(calc(7.5vw - ${index} * (85vw + 12px)))`;
-    }
-  }, [index, animated, isDesktop]);
 
   const handleAddToCartWithAnim = (product: any) => {
     addToCart(product);
@@ -514,12 +451,18 @@ export default function Home() {
 
       <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-4 lg:gap-6 mt-4 lg:mt-5 pb-12">
         {/* Banners Section */}
-        <section className="overflow-hidden px-container-margin lg:px-6">
-          <div ref={trackRef} className="flex gap-3 lg:gap-0 will-change-transform" style={{ willChange: 'transform' }}>
-            {BANNERS.map((b, idx) => (
+        <section className="px-container-margin lg:px-6">
+          {/* Scroll-snap slider — clientWidth based, no clone tricks */}
+          <div
+            ref={sliderRef}
+            className="flex overflow-x-auto hide-scrollbar rounded-2xl"
+            style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
+          >
+            {BANNERS_RAW.map((b, idx) => (
               <div
-                key={`${b.id}-${idx}`}
-                className="relative aspect-[21/9] lg:aspect-[21/5.5] rounded-2xl overflow-hidden shadow-lg shrink-0 group w-[85vw] min-w-[85vw] lg:w-full lg:min-w-full"
+                key={b.id}
+                className="relative aspect-[21/9] lg:aspect-[21/5.5] overflow-hidden shadow-lg shrink-0 group"
+                style={{ scrollSnapAlign: 'start', minWidth: '85vw', flex: isDesktop ? '0 0 100%' : '0 0 85vw' }}
               >
                 <img alt="" className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" src={b.img} />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent flex flex-col justify-center p-6 lg:px-16 z-10">
@@ -538,18 +481,15 @@ export default function Home() {
           </div>
 
           <div className="flex justify-center gap-1.5 mt-1.5">
-            {BANNERS_RAW.map((_, i) => {
-              const realIndex = ((index - 1) % REAL_COUNT + REAL_COUNT) % REAL_COUNT;
-              return (
-                <button
-                  key={i}
-                  onClick={() => goTo(i + 1)}
-                  className={`rounded-full transition-all duration-300 ${
-                    realIndex === i ? 'w-4 h-1.5 bg-primary' : 'w-1.5 h-1.5 bg-surface-container-highest'
-                  }`}
-                />
-              );
-            })}
+            {BANNERS_RAW.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => scrollToBanner(i)}
+                className={`rounded-full transition-all duration-300 ${
+                  bannerIdx === i ? 'w-4 h-1.5 bg-primary' : 'w-1.5 h-1.5 bg-surface-container-highest'
+                }`}
+              />
+            ))}
           </div>
         </section>
         
