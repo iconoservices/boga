@@ -70,7 +70,8 @@ export default function Explore() {
       // 2. Fetch products
       const { data, error } = await supabase.from('products').select('*');
       if (data && !error && data.length > 0) {
-        const formattedProducts = data.map((p: any) => {
+        const filteredData = data.filter((p: any) => allStores[p.store] !== undefined);
+        const formattedProducts = filteredData.map((p: any) => {
           const storeDef = allStores[p.store];
           return {
             title: p.name,
@@ -101,7 +102,7 @@ export default function Explore() {
           'Servicios': []
         };
 
-        data.forEach((p: any) => {
+        filteredData.forEach((p: any) => {
           const storeDef = allStores[p.store];
           let macroCat = 'Mercado';
 

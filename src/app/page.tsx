@@ -81,7 +81,8 @@ export default function Home() {
       // 2. Fetch products
       const { data, error } = await supabase.from('products').select('*');
       if (data && !error && data.length > 0) {
-        const formattedProducts = data.map((p: any) => {
+        const filteredData = data.filter((p: any) => allStores[p.store] !== undefined);
+        const formattedProducts = filteredData.map((p: any) => {
           const storeDef = allStores[p.store];
           return {
             id: p.id || p.name,
@@ -117,7 +118,7 @@ export default function Home() {
           'Servicios': []
         };
 
-        data.forEach((p: any) => {
+        filteredData.forEach((p: any) => {
           const storeDef = allStores[p.store];
           let macroCat = 'Mercado';
 
@@ -288,9 +289,9 @@ export default function Home() {
       // 2. Fetch products
       const { data, error } = await supabase.from('products').select('*');
       if (data && !error && data.length > 0) {
-        
+        const filteredData = data.filter((p: any) => allStores[p.store] !== undefined);
         // Build real products array using allStores
-        const formattedProducts = data.map((p: any) => {
+        const formattedProducts = filteredData.map((p: any) => {
           const storeDef = allStores[p.store];
           return {
             id: p.id,
