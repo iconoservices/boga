@@ -1,21 +1,32 @@
 "use client";
 
 import React from 'react';
+import { usePathname } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import CartDrawer from '@/components/CartDrawer';
 // PWAInstallPrompt oculto por ahora — se reemplazará por un ícono fijo minimalista
 // import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 
 export default function SharedUI() {
-  const { 
-    cartItems, 
-    cartCount, 
-    cartTotal, 
-    isCartOpen, 
-    setIsCartOpen, 
-    updateQuantity, 
-    removeItem 
+  const pathname = usePathname();
+  const {
+    cartItems,
+    cartCount,
+    cartTotal,
+    isCartOpen,
+    setIsCartOpen,
+    updateQuantity,
+    removeItem
   } = useCart();
+
+  // El carrito del marketplace no aplica en los paneles de gestión ni en el registro de negocios
+  if (
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/superadmin') ||
+    pathname.startsWith('/vende-con-boga')
+  ) {
+    return null;
+  }
 
   return (
     <>

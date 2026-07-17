@@ -38,8 +38,8 @@ export default function CartDrawer({
 
       {/* Drawer Panel */}
       <div 
-        className={`fixed top-0 right-0 h-full w-full max-w-[400px] bg-white z-[70] shadow-2xl transition-transform duration-500 ease-out flex flex-col ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
+        className={`fixed top-0 right-0 h-full w-full max-w-[400px] bg-white z-[70] shadow-2xl transition-[transform,visibility] duration-500 ease-out flex flex-col ${
+          isOpen ? 'translate-x-0 visible' : 'translate-x-full invisible pointer-events-none'
         }`}
       >
         {/* Header */}

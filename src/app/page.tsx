@@ -183,14 +183,55 @@ export default function Home() {
     setIndex(i);
   }, []);
 
-  // Apply translateX whenever index changes
+  // Helper: width of one slide = width of the overflow container (section)
+  const getSlideWidth = () => {
+    const container = trackRef.current?.parentElement;
+    return container ? container.getBoundingClientRect().width : 0;
+  };
+
+  // On mount: set slide widths and position track correctly
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
-    const itemWidth = track.children[0]?.getBoundingClientRect().width ?? 0;
+    const w = getSlideWidth();
+    if (w === 0) return;
+    // Force each slide to exactly match container width
+    Array.from(track.children).forEach((child) => {
+      (child as HTMLElement).style.width = `${w}px`;
+      (child as HTMLElement).style.minWidth = `${w}px`;
+      (child as HTMLElement).style.flexShrink = '0';
+    });
+    track.style.transition = 'none';
+    track.style.transform = `translateX(-${indexRef.current * w}px)`;
+  }, []);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    const w = getSlideWidth();
+    if (w === 0) return;
     track.style.transition = animated ? 'transform 0.45s cubic-bezier(0.25,0.46,0.45,0.94)' : 'none';
-    track.style.transform = `translateX(-${index * itemWidth}px)`;
+    track.style.transform = `translateX(-${index * w}px)`;
   }, [index, animated]);
+
+  // Recalibrate on resize (no animation snap)
+  useEffect(() => {
+    const onResize = () => {
+      const track = trackRef.current;
+      if (!track) return;
+      const w = getSlideWidth();
+      if (w === 0) return;
+      // Re-set each slide's explicit width
+      Array.from(track.children).forEach((child) => {
+        (child as HTMLElement).style.width = `${w}px`;
+        (child as HTMLElement).style.minWidth = `${w}px`;
+      });
+      track.style.transition = 'none';
+      track.style.transform = `translateX(-${indexRef.current * w}px)`;
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   // Infinite loop snap-back when transition ends
   useEffect(() => {
@@ -233,6 +274,7 @@ export default function Home() {
       track.removeEventListener('touchend',   onTouchEnd);
     };
   }, [goTo]);
+
 
   useEffect(() => {
     const saved = localStorage.getItem('boga_favorites');
