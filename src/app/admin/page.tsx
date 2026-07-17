@@ -1315,6 +1315,24 @@ export default function DashboardPage() {
                           <span className="material-symbols-outlined text-[18px]">open_in_new</span>
                         </a>
                         <button
+                          onClick={() => {
+                            setSelectedStore(store.slug);
+                            setIsQRModalOpen(true);
+                          }}
+                          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition-colors"
+                          title="Código QR"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">qr_code_2</span>
+                        </button>
+                        <button
+                          onClick={() => exportStoreMenuPDF(store.slug)}
+                          disabled={isExporting}
+                          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                          title="Exportar PDF"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+                        </button>
+                        <button
                           onClick={() => openStoreEditor(store.slug)}
                           className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition-colors"
                           title="Editar tienda"
