@@ -14,12 +14,22 @@ export async function GET(request: NextRequest) {
   }
 
   let dbLogo: string | null = null;
+  let dbHero: string | null = null;
+  let dbTheme: Record<string, string> | null = null;
   if (slug) {
-    const { data } = await supabase.from('stores').select('name, logo_image').eq('slug', slug).maybeSingle();
+    const { data } = await supabase
+      .from('stores')
+      .select('name, logo_image, hero_image, theme, template')
+      .eq('slug', slug)
+      .maybeSingle();
     if (data) {
       storeName = data.name;
       storeSlug = slug;
       if (data.logo_image) dbLogo = data.logo_image;
+      if (data.hero_image) dbHero = data.hero_image;
+      if (data.theme && Object.keys(data.theme).length > 0) dbTheme = data.theme;
+      // La tienda guarda el id de su plantilla; el slug de la tienda no es el id de la plantilla
+      if (!tmpl && data.template) tmpl = getTemplate(data.template);
     }
   }
 
@@ -31,13 +41,18 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const iconSrc = dbLogo || tmpl?.iconImage || tmpl?.heroImage || BOGA_DEFAULT_ICON;
+  const iconSrc = dbLogo || dbHero || tmpl?.iconImage || tmpl?.heroImage || BOGA_DEFAULT_ICON;
   const isSvg = iconSrc.endsWith('.svg');
   const iconType = isSvg ? 'image/svg+xml' : 'image/png';
 
   const displayName = storeName || tmpl?.name || 'Boga Dash';
-  const bgColor = tmpl?.theme?.background || '#ffffff';
-  const themeColor = tmpl?.theme?.primary || '#5244e1';
+  // El tema propio de la tienda manda sobre el de su plantilla
+  const bgColor = dbTheme?.background || tmpl?.theme?.background || '#ffffff';
+  const themeColor = dbTheme?.primary || tmpl?.theme?.primary || '#5244e1';
+
+  // Cada tienda se instala como su propia app: scope propio para que el navegador
+  // no las trate como una sola PWA compartida
+  const scope = storeSlug ? `/${storeSlug}` : (tmpl ? `/preview/${tmpl.id}` : '/');
 
   const manifest = {
     name: displayName,
@@ -48,7 +63,7 @@ export async function GET(request: NextRequest) {
     background_color: bgColor,
     theme_color: themeColor,
     lang: 'es',
-    scope: '/',
+    scope,
     orientation: 'portrait',
     icons: [
       {
