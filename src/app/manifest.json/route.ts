@@ -3,6 +3,20 @@ import { getTemplate } from '@/lib/templates.config';
 import { BOGA_DEFAULT_ICON } from '@/lib/stores.config';
 import { supabase } from '@/lib/supabase';
 
+// El icono puede venir de una subida del comercio (jpg, png, webp) o de un
+// asset propio (svg). Declarar un tipo que no corresponde hace que el navegador
+// pueda descartar el icono y dejar la tienda sin poder instalarse.
+function mimeFromUrl(url: string): string {
+  const ext = url.split('?')[0].split('.').pop()?.toLowerCase();
+  switch (ext) {
+    case 'svg': return 'image/svg+xml';
+    case 'jpg':
+    case 'jpeg': return 'image/jpeg';
+    case 'webp': return 'image/webp';
+    default: return 'image/png';
+  }
+}
+
 export async function GET(request: NextRequest) {
   let tmpl = null;
   let storeName: string | null = null;
@@ -47,7 +61,7 @@ export async function GET(request: NextRequest) {
           {
             src: BOGA_DEFAULT_ICON,
             sizes: '512x512',
-            type: BOGA_DEFAULT_ICON.endsWith('.svg') ? 'image/svg+xml' : 'image/png',
+            type: mimeFromUrl(BOGA_DEFAULT_ICON),
             purpose: 'any maskable',
           },
         ],
@@ -85,8 +99,7 @@ export async function GET(request: NextRequest) {
   }
 
   const iconSrc = dbLogo || dbHero || tmpl?.iconImage || tmpl?.heroImage || BOGA_DEFAULT_ICON;
-  const isSvg = iconSrc.endsWith('.svg');
-  const iconType = isSvg ? 'image/svg+xml' : 'image/png';
+  const iconType = mimeFromUrl(iconSrc);
 
   const displayName = storeName || tmpl?.name || 'Boga Dash';
   // El tema propio de la tienda manda sobre el de su plantilla
