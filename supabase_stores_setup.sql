@@ -45,6 +45,12 @@ CREATE INDEX IF NOT EXISTS stores_slug_idx ON public.stores (slug);
 ALTER TABLE public.stores
 ADD COLUMN IF NOT EXISTS logo_image TEXT;
 
+-- Migration: Add whatsapp column (run this if the table already exists)
+-- Sin esta columna el admin no puede guardar NINGUNA tienda: handleStoreSave
+-- manda `whatsapp` en el upsert y PostgREST rechaza el write completo.
+ALTER TABLE public.stores
+ADD COLUMN IF NOT EXISTS whatsapp TEXT;
+
 -- Create the 'store-assets' bucket for logos and hero images if it doesn't exist
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('store-assets', 'store-assets', true)
