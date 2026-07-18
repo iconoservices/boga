@@ -570,48 +570,48 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] font-['Outfit'] flex flex-col md:flex-row">
+    <div className="min-h-screen bg-[#f8f9fa] font-['Outfit'] flex flex-col md:flex-row">
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
       {/* Sidebar (Visible en Desktop) */}
       <aside className="hidden md:flex w-64 bg-white border-r border-gray-100 flex-col h-screen sticky top-0">
         <div className="p-6 flex items-center gap-3 border-b border-gray-50">
-          <div className="w-8 h-8 rounded-lg bg-black text-white flex items-center justify-center font-bold text-xl">B</div>
+          <div className="w-8 h-8 rounded-lg bg-[#b8130e] text-white flex items-center justify-center font-bold text-xl">B</div>
           <span className="font-extrabold text-xl tracking-tight text-gray-900">Workspace</span>
         </div>
         <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
           <button 
             onClick={() => setActiveTab('products')}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold transition-colors ${activeTab === 'products' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md font-semibold transition-colors ${activeTab === 'products' ? 'bg-[#b8130e] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <span className="material-symbols-outlined text-[20px]">inventory_2</span>
             Productos
           </button>
           <button 
             onClick={() => setActiveTab('pos')}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold transition-colors ${activeTab === 'pos' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md font-semibold transition-colors ${activeTab === 'pos' ? 'bg-[#b8130e] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <span className="material-symbols-outlined text-[20px]">point_of_sale</span>
             Vender (POS)
           </button>
           <button 
             onClick={() => setActiveTab('orders')}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold transition-colors ${activeTab === 'orders' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md font-semibold transition-colors ${activeTab === 'orders' ? 'bg-[#b8130e] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <span className="material-symbols-outlined text-[20px]">shopping_cart</span>
             Pedidos
           </button>
           <button 
             onClick={() => setActiveTab('metrics')}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold transition-colors ${activeTab === 'metrics' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md font-semibold transition-colors ${activeTab === 'metrics' ? 'bg-[#b8130e] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <span className="material-symbols-outlined text-[20px]">bar_chart</span>
             Métricas
           </button>
           <button 
             onClick={() => setActiveTab('stores')}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold transition-colors ${activeTab === 'stores' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md font-semibold transition-colors ${activeTab === 'stores' ? 'bg-[#b8130e] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <span className="material-symbols-outlined text-[20px]">store</span>
             Mis Tiendas
@@ -625,7 +625,7 @@ export default function DashboardPage() {
                 window.location.reload();
               }
             }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 text-[#5244e1] hover:bg-[#5244e1]/10 rounded-xl font-bold transition-colors mt-4"
+            className="w-full flex items-center gap-3 px-3 py-2.5 text-[#b8130e] hover:bg-[#b8130e]/10 rounded-md font-bold transition-colors mt-4"
           >
             <span className="material-symbols-outlined text-[20px]">install_mobile</span>
             Instalar App
@@ -640,7 +640,8 @@ export default function DashboardPage() {
       </aside>
 
       {/* Main Content */}
-      <main className={`flex-1 px-3 py-4 md:p-6 w-full pb-28 md:pb-6 ${activeTab === 'pos' ? 'max-w-none md:px-6' : 'max-w-7xl mx-auto'}`}>
+      {/* min-w-0: sin esto el flex item no baja de su ancho de contenido y desborda la pagina */}
+      <main className={`flex-1 min-w-0 px-3 py-4 md:p-6 w-full pb-28 md:pb-6 ${activeTab === 'pos' ? 'max-w-none md:px-6' : 'max-w-7xl mx-auto'}`}>
         <header className={`hidden md:flex flex-col md:flex-row md:items-center justify-between gap-4 ${activeTab === 'pos' ? 'mb-2' : 'mb-6'}`}>
           <div>
             <h1 className={`${activeTab === 'pos' ? 'text-lg font-black' : 'text-2xl font-extrabold'} text-gray-900 tracking-tight`}>
@@ -657,7 +658,7 @@ export default function DashboardPage() {
               <select
                 value={selectedStore}
                 onChange={(e) => setSelectedStore(e.target.value)}
-                className={`bg-white border border-gray-200 text-gray-900 rounded-xl font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-black/5 cursor-pointer ${activeTab === 'pos' ? 'px-3 py-1.5 text-xs h-9' : 'px-4 py-2.5 text-sm'}`}
+                className={`bg-white border border-gray-200 text-gray-900 rounded-md font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-black/5 cursor-pointer ${activeTab === 'pos' ? 'px-3 py-1.5 text-xs h-9' : 'px-4 py-2.5 text-sm'}`}
               >
                 <option value="all">Todas mis tiendas</option>
                 {Object.values(stores).map(s => (
@@ -667,28 +668,29 @@ export default function DashboardPage() {
               <button
                 onClick={() => { setPickerDraft(managedSlugs || []); setIsStorePickerOpen(true); }}
                 title="Elegir qué tiendas administro"
-                className={`bg-white border border-gray-200 text-gray-500 hover:text-gray-900 hover:border-gray-300 rounded-xl shadow-sm transition-colors flex items-center justify-center shrink-0 ${activeTab === 'pos' ? 'w-9 h-9' : 'w-11 h-11'}`}
+                className={`bg-white border border-gray-200 text-gray-500 hover:text-gray-900 hover:border-gray-300 rounded-md shadow-sm transition-colors flex items-center justify-center shrink-0 ${activeTab === 'pos' ? 'w-9 h-9' : 'w-11 h-11'}`}
               >
                 <span className="material-symbols-outlined text-[18px]">checklist</span>
               </button>
             </div>
+            {/* Cada pestaña muestra solo su accion principal */}
             {activeTab === 'pos' ? (
-              <button 
+              <button
                 onClick={() => setPosCart([])}
-                className="flex items-center justify-center gap-1.5 bg-red-50 text-red-600 hover:bg-red-100 px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all w-full md:w-auto h-9 cursor-pointer"
+                className="flex items-center justify-center gap-1.5 bg-white text-[#8c0009] border border-[#8c0009]/25 hover:bg-[#8c0009]/5 px-3.5 py-1.5 rounded-md font-bold text-xs transition-all w-full md:w-auto h-9 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[16px]">delete_sweep</span>
                 Limpiar Carrito
               </button>
-            ) : (
-              <button 
+            ) : activeTab === 'products' ? (
+              <button
                 onClick={() => { resetForm(); setIsModalOpen(true); }}
-                className="flex items-center justify-center gap-2 bg-black text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-black/15 hover:shadow-black/25 transition-all hover:-translate-y-0.5 active:translate-y-0 w-full md:w-auto"
+                className="flex items-center justify-center gap-2 bg-[#b8130e] text-white px-5 py-2.5 rounded-md font-bold shadow-lg shadow-[#b8130e]/20 hover:shadow-[#b8130e]/30 transition-all hover:-translate-y-0.5 active:translate-y-0 w-full md:w-auto"
               >
                 <span className="material-symbols-outlined text-[18px]">add</span>
                 Nuevo Producto
               </button>
-            )}
+            ) : null}
           </div>
         </header>
         {activeTab === 'products' && (
@@ -697,9 +699,9 @@ export default function DashboardPage() {
             <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2 mb-6" style={{ scrollbarWidth: 'none' }}>
               <button
                 onClick={() => setSelectedStore('all')}
-                className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-2 ${
+                className={`px-4 py-2 rounded-md text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-2 ${
                   selectedStore === 'all' 
-                    ? 'bg-black text-white shadow-md' 
+                    ? 'bg-[#b8130e] text-white shadow-md' 
                     : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
                 }`}
               >
@@ -710,9 +712,9 @@ export default function DashboardPage() {
                 <button
                   key={store.slug}
                   onClick={() => setSelectedStore(store.slug)}
-                  className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-2 border ${
+                  className={`px-4 py-2 rounded-md text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-2 border ${
                     selectedStore === store.slug 
-                      ? 'bg-black text-white border-black shadow-md' 
+                      ? 'bg-[#b8130e] text-white border-[#b8130e] shadow-md' 
                       : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200'
                   }`}
                 >
@@ -759,11 +761,11 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     )}
-                    <div className="hidden lg:block flex-1 border-2 border-dashed border-gray-200 rounded-xl bg-transparent"></div>
+                    <div className="hidden lg:block flex-1 border-2 border-dashed border-gray-200 rounded-md bg-transparent"></div>
                   </div>
 
                   {/* Products Table */}
-                  <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+                  <div className="bg-white border border-gray-100 rounded-md overflow-hidden shadow-sm">
                     <div className="p-4 border-b border-gray-100 flex flex-col gap-4 bg-white">
                       <div className="flex items-center justify-between flex-wrap gap-4">
                         <h2 className="text-base font-bold text-gray-900">Catálogo Actual {selectedStore !== 'all' ? `- ${stores[selectedStore]?.name}` : ''}</h2>
@@ -772,14 +774,14 @@ export default function DashboardPage() {
                           <div className="flex flex-row items-center gap-1.5">
                             <button
                               onClick={() => setIsQRModalOpen(true)}
-                              className="px-2.5 py-1.5 text-[11px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 bg-black text-white hover:bg-gray-800 whitespace-nowrap active:scale-95 cursor-pointer shadow-sm"
+                              className="px-2.5 py-1.5 text-[11px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 bg-[#b8130e] text-white hover:bg-[#8f0f0b] whitespace-nowrap active:scale-95 cursor-pointer shadow-sm"
                             >
                               <span className="material-symbols-outlined text-[14px]">qr_code_2</span>
                               Código QR
                             </button>
                             <button
                               onClick={() => setIsPDFModalOpen(true)}
-                              className="px-2.5 py-1.5 text-[11px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 bg-red-50 text-red-600 hover:bg-red-100 whitespace-nowrap active:scale-95 cursor-pointer border border-red-100 shadow-sm"
+                              className="px-2.5 py-1.5 text-[11px] font-bold rounded-md transition-all flex items-center justify-center gap-1 bg-white text-[#8c0009] hover:bg-[#8c0009]/5 whitespace-nowrap active:scale-95 cursor-pointer border border-[#8c0009]/25 shadow-sm"
                             >
                               <span className="material-symbols-outlined text-[14px]">picture_as_pdf</span>
                               Exportar PDF
@@ -797,7 +799,7 @@ export default function DashboardPage() {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Buscar nombre o categoría..." 
-                            className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-1 focus:ring-black focus:border-black transition-all"
+                            className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm font-medium focus:outline-none focus:ring-1 focus:ring-black focus:border-black transition-all"
                           />
                         </div>
                         <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1 md:pb-0" style={{ scrollbarWidth: 'none' }}>
@@ -805,7 +807,7 @@ export default function DashboardPage() {
                             onClick={() => setSelectedFilterCategory('all')}
                             className={`px-4 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition-colors uppercase tracking-wider border ${
                               selectedFilterCategory === 'all' 
-                                ? 'bg-[#FF6B00] text-white border-transparent' 
+                                ? 'bg-[#b8130e] text-white border-transparent' 
                                 : 'bg-transparent text-gray-600 border-gray-200 hover:bg-gray-50'
                             }`}
                           >
@@ -817,7 +819,7 @@ export default function DashboardPage() {
                               onClick={() => setSelectedFilterCategory(cat)}
                               className={`px-4 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap uppercase tracking-wider transition-colors border ${
                                 selectedFilterCategory === cat 
-                                  ? 'bg-[#FF6B00] text-white border-transparent' 
+                                  ? 'bg-[#b8130e] text-white border-transparent' 
                                   : 'bg-transparent text-gray-600 border-gray-200 hover:bg-gray-50'
                               }`}
                             >
@@ -840,7 +842,7 @@ export default function DashboardPage() {
                       <p className="text-gray-500 text-sm max-w-sm">No se encontraron productos para esta tienda. Empieza añadiendo el primero.</p>
                       <button 
                         onClick={() => { resetForm(); setIsModalOpen(true); }}
-                        className="mt-6 px-4 py-2 bg-gray-900 text-white font-semibold rounded-lg hover:bg-black transition-colors"
+                        className="mt-6 px-4 py-2 bg-[#b8130e] text-white font-semibold rounded-lg hover:bg-[#8f0f0b] transition-colors"
                       >
                         Añadir Producto
                       </button>
@@ -851,7 +853,7 @@ export default function DashboardPage() {
                       <div className="hidden md:block">
                         <table className="w-full text-left border-collapse min-w-[800px]">
                           <thead>
-                            <tr className="bg-[#F8F9FA] text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-100">
+                            <tr className="bg-[#f8f9fa] text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-100">
                               <th className="p-3 font-bold w-1/3">Producto</th>
                               {selectedStore === 'all' && <th className="p-3 font-bold">Tienda</th>}
                               <th className="p-3 font-bold">Categoría</th>
@@ -919,7 +921,7 @@ export default function DashboardPage() {
                                     <button 
                                       onClick={() => handleDelete(p.id, p.name)}
                                       disabled={isDeleting === p.id}
-                                      className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                      className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-[#8c0009] hover:bg-[#8c0009]/8 rounded-lg transition-colors"
                                       title="Eliminar"
                                     >
                                       <span className={`material-symbols-outlined text-[18px] ${isDeleting === p.id ? 'animate-spin' : ''}`}>
@@ -937,9 +939,9 @@ export default function DashboardPage() {
                       {/* Mobile Cards View */}
                       <div className="md:hidden flex flex-col p-4 gap-3">
                         {filteredProducts.map((p) => (
-                          <div key={p.id} className={`bg-white border border-gray-100 rounded-xl p-3 flex gap-4 shadow-sm relative ${p.status === 'Agotado' ? 'opacity-70 grayscale-[0.3]' : ''}`}>
+                          <div key={p.id} className={`bg-white border border-gray-100 rounded-md p-3 flex gap-4 shadow-sm relative ${p.status === 'Agotado' ? 'opacity-70 grayscale-[0.3]' : ''}`}>
                             {/* Image */}
-                            <div className="w-20 h-20 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden shrink-0">
+                            <div className="w-20 h-20 rounded-md bg-gray-50 border border-gray-100 overflow-hidden shrink-0">
                               {p.image ? (
                                 <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
                               ) : (
@@ -976,7 +978,7 @@ export default function DashboardPage() {
                                   <button onClick={() => handleEdit(p)} className="p-1.5 text-gray-400 hover:text-black rounded-lg hover:bg-gray-100 transition-colors">
                                     <span className="material-symbols-outlined text-[16px]">edit</span>
                                   </button>
-                                  <button onClick={() => handleDelete(p.id, p.name)} className="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors">
+                                  <button onClick={() => handleDelete(p.id, p.name)} className="p-1.5 text-gray-400 hover:text-[#8c0009] rounded-lg hover:bg-[#8c0009]/8 transition-colors">
                                     <span className={`material-symbols-outlined text-[16px] ${isDeleting === p.id ? 'animate-spin' : ''}`}>
                                       {isDeleting === p.id ? 'refresh' : 'delete'}
                                     </span>
@@ -1006,25 +1008,25 @@ export default function DashboardPage() {
                 <input 
                   type="text" 
                   placeholder="Buscar ID de Pedido, Cliente..." 
-                  className="w-full h-12 pl-11 pr-4 bg-white border border-[#c7c4d8]/60 rounded-xl focus:ring-2 focus:ring-[#3525cd] focus:border-transparent focus:outline-none transition-all text-sm font-medium text-[#111c2d]"
+                  className="w-full h-12 pl-11 pr-4 bg-white border border-[#e1e3e4]/60 rounded-md focus:ring-2 focus:ring-[#b8130e] focus:border-transparent focus:outline-none transition-all text-sm font-medium text-[#191c1d]"
                 />
               </div>
               
               <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
-                <button className="px-5 py-2 rounded-full text-xs font-bold bg-[#5244e1] text-white">Todos</button>
-                <button className="px-5 py-2 rounded-full text-xs font-bold bg-[#e6ebf5] text-[#4a5568]">Pendiente</button>
-                <button className="px-5 py-2 rounded-full text-xs font-bold bg-[#e6ebf5] text-[#4a5568]">Enviado</button>
-                <button className="px-5 py-2 rounded-full text-xs font-bold bg-[#e6ebf5] text-[#4a5568]">Entregado</button>
+                <button className="px-5 py-2 rounded-full text-xs font-bold bg-[#b8130e] text-white">Todos</button>
+                <button className="px-5 py-2 rounded-full text-xs font-bold bg-[#e1e3e4] text-[#5f5e5e]">Pendiente</button>
+                <button className="px-5 py-2 rounded-full text-xs font-bold bg-[#e1e3e4] text-[#5f5e5e]">Enviado</button>
+                <button className="px-5 py-2 rounded-full text-xs font-bold bg-[#e1e3e4] text-[#5f5e5e]">Entregado</button>
               </div>
 
               <h3 className="text-[11px] font-bold text-gray-400 tracking-wider uppercase mt-2">Pedidos Recientes</h3>
 
               <div className="flex flex-col gap-3">
                 {/* Mock Order 1 */}
-                <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm flex flex-col gap-3">
+                <div className="bg-white rounded-md border border-gray-100 p-4 shadow-sm flex flex-col gap-3">
                   <div className="flex justify-between items-start">
                     <div className="flex flex-col">
-                      <span className="text-[#5244e1] font-bold text-xs tracking-wide">#ORD-94210</span>
+                      <span className="text-[#b8130e] font-bold text-xs tracking-wide">#ORD-94210</span>
                       <span className="text-gray-900 font-extrabold text-base mt-1">Elena Rodriguez</span>
                     </div>
                     <span className="text-[10px] font-bold text-orange-600 border border-orange-200 bg-orange-50 px-2.5 py-1 rounded-full uppercase tracking-wider">PENDIENTE</span>
@@ -1036,10 +1038,10 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Mock Order 2 */}
-                <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm flex flex-col gap-3">
+                <div className="bg-white rounded-md border border-gray-100 p-4 shadow-sm flex flex-col gap-3">
                   <div className="flex justify-between items-start">
                     <div className="flex flex-col">
-                      <span className="text-[#5244e1] font-bold text-xs tracking-wide">#ORD-94209</span>
+                      <span className="text-[#b8130e] font-bold text-xs tracking-wide">#ORD-94209</span>
                       <span className="text-gray-900 font-extrabold text-base mt-1">Marcus Sterling</span>
                     </div>
                     <span className="text-[10px] font-bold text-blue-600 border border-blue-200 bg-blue-50 px-2.5 py-1 rounded-full uppercase tracking-wider">ENVIADO</span>
@@ -1051,10 +1053,10 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Mock Order 3 */}
-                <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm flex flex-col gap-3">
+                <div className="bg-white rounded-md border border-gray-100 p-4 shadow-sm flex flex-col gap-3">
                   <div className="flex justify-between items-start">
                     <div className="flex flex-col">
-                      <span className="text-[#5244e1] font-bold text-xs tracking-wide">#ORD-94208</span>
+                      <span className="text-[#b8130e] font-bold text-xs tracking-wide">#ORD-94208</span>
                       <span className="text-gray-900 font-extrabold text-base mt-1">Sarah Chen</span>
                     </div>
                     <span className="text-[10px] font-bold text-green-600 border border-green-200 bg-green-50 px-2.5 py-1 rounded-full uppercase tracking-wider">ENTREGADO</span>
@@ -1069,13 +1071,10 @@ export default function DashboardPage() {
 
             {/* Desktop View (Stich Dash PC UI) */}
             <div className="hidden md:flex flex-col gap-6 w-full">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-black tracking-tight text-gray-900">Gestión de Pedidos</h2>
-                  <p className="text-sm text-gray-500 font-medium mt-1">Rastrea y administra el ciclo de vida de los pedidos de tus clientes.</p>
-                </div>
+              {/* El titulo de la seccion ya lo pone el header de la pagina */}
+              <div className="flex items-center justify-end">
                 <div className="flex gap-2">
-                  <button className="px-5 py-2 rounded-lg text-sm font-bold bg-[#5244e1] text-white">Todos los Pedidos</button>
+                  <button className="px-5 py-2 rounded-lg text-sm font-bold bg-[#b8130e] text-white">Todos los Pedidos</button>
                   <button className="px-5 py-2 rounded-lg text-sm font-bold bg-white text-gray-600 hover:bg-gray-50 border border-gray-200 transition-colors">Pendiente</button>
                   <button className="px-5 py-2 rounded-lg text-sm font-bold bg-white text-gray-600 hover:bg-gray-50 border border-gray-200 transition-colors">Enviado</button>
                   <button className="px-5 py-2 rounded-lg text-sm font-bold bg-white text-gray-600 hover:bg-gray-50 border border-gray-200 transition-colors">Entregado</button>
@@ -1084,17 +1083,17 @@ export default function DashboardPage() {
 
               {/* KPI Cards */}
               <div className="grid grid-cols-4 gap-4">
-                <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                <div className="bg-white border border-gray-100 rounded-md p-5 shadow-sm flex flex-col justify-between">
                   <div>
                     <h4 className="text-[11px] font-bold text-gray-500 tracking-wider uppercase mb-1">Ingresos Totales</h4>
                     <span className="text-3xl font-black text-gray-900">S/ 12,840.00</span>
                   </div>
-                  <div className="mt-4 flex items-center gap-1 text-[#5244e1] font-bold text-[13px]">
+                  <div className="mt-4 flex items-center gap-1 text-[#b8130e] font-bold text-[13px]">
                     <span className="material-symbols-outlined text-[16px]">trending_up</span>
                     +14.2% desde el mes pasado
                   </div>
                 </div>
-                <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                <div className="bg-white border border-gray-100 rounded-md p-5 shadow-sm flex flex-col justify-between">
                   <div>
                     <h4 className="text-[11px] font-bold text-gray-500 tracking-wider uppercase mb-1">Pedidos Activos</h4>
                     <span className="text-3xl font-black text-gray-900">154</span>
@@ -1104,17 +1103,17 @@ export default function DashboardPage() {
                     12 pedidos requieren atención
                   </div>
                 </div>
-                <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                <div className="bg-white border border-gray-100 rounded-md p-5 shadow-sm flex flex-col justify-between">
                   <div>
                     <h4 className="text-[11px] font-bold text-gray-500 tracking-wider uppercase mb-1">Tiempo Promedio</h4>
                     <span className="text-3xl font-black text-gray-900">1.2 Días</span>
                   </div>
-                  <div className="mt-4 flex items-center gap-1 text-[#5244e1] font-bold text-[13px]">
+                  <div className="mt-4 flex items-center gap-1 text-[#b8130e] font-bold text-[13px]">
                     <span className="material-symbols-outlined text-[16px]">bolt</span>
                     20% más rápido que el promedio
                   </div>
                 </div>
-                <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                <div className="bg-white border border-gray-100 rounded-md p-5 shadow-sm flex flex-col justify-between">
                   <div>
                     <h4 className="text-[11px] font-bold text-gray-500 tracking-wider uppercase mb-1">Tasa de Devolución</h4>
                     <span className="text-3xl font-black text-gray-900">2.4%</span>
@@ -1127,7 +1126,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Table */}
-              <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden mt-2">
+              <div className="bg-white border border-gray-100 rounded-md shadow-sm overflow-hidden mt-2">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-gray-50 border-b border-gray-100 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
@@ -1141,10 +1140,10 @@ export default function DashboardPage() {
                   </thead>
                   <tbody className="text-sm font-medium">
                     <tr className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                      <td className="p-4 text-[#5244e1] font-bold">#ORD-9021</td>
+                      <td className="p-4 text-[#b8130e] font-bold">#ORD-9021</td>
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-[#5244e1]/10 text-[#5244e1] flex items-center justify-center font-bold text-xs shrink-0">ED</div>
+                          <div className="w-8 h-8 rounded-full bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center font-bold text-xs shrink-0">ED</div>
                           <span className="text-gray-900">Eleanor Donahue</span>
                         </div>
                       </td>
@@ -1158,7 +1157,7 @@ export default function DashboardPage() {
                       <td className="p-4 text-right text-gray-900 font-bold">S/ 245.99</td>
                     </tr>
                     <tr className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                      <td className="p-4 text-[#5244e1] font-bold">#ORD-9020</td>
+                      <td className="p-4 text-[#b8130e] font-bold">#ORD-9020</td>
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center font-bold text-xs shrink-0">JM</div>
@@ -1175,7 +1174,7 @@ export default function DashboardPage() {
                       <td className="p-4 text-right text-gray-900 font-bold">S/ 89.00</td>
                     </tr>
                     <tr className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                      <td className="p-4 text-[#5244e1] font-bold">#ORD-9019</td>
+                      <td className="p-4 text-[#b8130e] font-bold">#ORD-9019</td>
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center font-bold text-xs shrink-0">SW</div>
@@ -1192,10 +1191,10 @@ export default function DashboardPage() {
                       <td className="p-4 text-right text-gray-900 font-bold">S/ 1,024.50</td>
                     </tr>
                     <tr className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                      <td className="p-4 text-[#5244e1] font-bold">#ORD-9018</td>
+                      <td className="p-4 text-[#b8130e] font-bold">#ORD-9018</td>
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-[#5244e1]/10 text-[#5244e1] flex items-center justify-center font-bold text-xs shrink-0">BB</div>
+                          <div className="w-8 h-8 rounded-full bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center font-bold text-xs shrink-0">BB</div>
                           <span className="text-gray-900">Benson Bernard</span>
                         </div>
                       </td>
@@ -1209,7 +1208,7 @@ export default function DashboardPage() {
                       <td className="p-4 text-right text-gray-900 font-bold">S/ 112.20</td>
                     </tr>
                     <tr className="hover:bg-gray-50/50 transition-colors">
-                      <td className="p-4 text-[#5244e1] font-bold">#ORD-9017</td>
+                      <td className="p-4 text-[#b8130e] font-bold">#ORD-9017</td>
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center font-bold text-xs shrink-0">KT</div>
@@ -1231,7 +1230,7 @@ export default function DashboardPage() {
                   <span className="text-sm text-gray-500">Mostrando 1 a 5 de 154 pedidos</span>
                   <div className="flex gap-1">
                     <button className="w-8 h-8 rounded bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-black transition-colors"><span className="material-symbols-outlined text-[18px]">chevron_left</span></button>
-                    <button className="w-8 h-8 rounded bg-[#5244e1] text-white flex items-center justify-center font-bold text-sm">1</button>
+                    <button className="w-8 h-8 rounded bg-[#b8130e] text-white flex items-center justify-center font-bold text-sm">1</button>
                     <button className="w-8 h-8 rounded bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 font-bold text-sm transition-colors">2</button>
                     <button className="w-8 h-8 rounded bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 font-bold text-sm transition-colors">3</button>
                     <button className="w-8 h-8 rounded bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors"><span className="material-symbols-outlined text-[18px]">chevron_right</span></button>
@@ -1241,14 +1240,14 @@ export default function DashboardPage() {
 
               {/* Promotional Cards Area */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-2">
-                <div className="lg:col-span-2 bg-gradient-to-r from-gray-50 to-white border border-gray-100 rounded-xl p-6 shadow-sm flex flex-col justify-center">
+                <div className="lg:col-span-2 bg-gradient-to-r from-gray-50 to-white border border-gray-100 rounded-md p-6 shadow-sm flex flex-col justify-center">
                   <h3 className="text-lg font-bold text-gray-900 mb-2">Automatizar Etiquetas de Envío</h3>
                   <p className="text-sm text-gray-500 mb-4 w-full">Conecta tu proveedor preferido para generar etiquetas de envío automáticamente tan pronto como un pedido sea marcado como 'Empacado'.</p>
-                  <a href="#" className="text-[#5244e1] font-bold text-sm flex items-center gap-1 hover:underline">
+                  <a href="#" className="text-[#b8130e] font-bold text-sm flex items-center gap-1 hover:underline">
                     Ver integraciones <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                   </a>
                 </div>
-                <div className="bg-[#5244e1] rounded-xl p-6 shadow-md text-white flex flex-col justify-between relative overflow-hidden">
+                <div className="bg-[#b8130e] rounded-md p-6 shadow-md text-white flex flex-col justify-between relative overflow-hidden">
                   <span className="material-symbols-outlined absolute -right-4 -top-4 text-7xl opacity-10">verified_user</span>
                   <div className="relative z-10">
                     <h3 className="text-lg font-bold mb-2">Protección contra Fraude</h3>
@@ -1280,7 +1279,7 @@ export default function DashboardPage() {
                 const heroImg = dbStore?.hero_image || store.heroImage;
                 const productCount = products.filter(p => p.store === store.slug).length;
                 return (
-                  <div key={store.slug} className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
+                  <div key={store.slug} className="bg-white border border-gray-100 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
                     {/* Hero */}
                     <div className="h-36 relative overflow-hidden bg-gray-100">
                       {heroImg && <img src={heroImg} alt={displayName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />}
@@ -1327,7 +1326,7 @@ export default function DashboardPage() {
                         <button
                           onClick={() => exportStoreMenuPDF(store.slug)}
                           disabled={isExporting}
-                          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-[#8c0009] hover:bg-[#8c0009]/8 rounded-lg transition-colors disabled:opacity-50"
                           title="Exportar PDF"
                         >
                           <span className="material-symbols-outlined text-[18px]">picture_as_pdf</span>
@@ -1347,8 +1346,8 @@ export default function DashboardPage() {
             </div>
 
             {/* Info banner */}
-            <div className="bg-gray-50 border border-dashed border-gray-200 rounded-2xl p-5 flex items-start gap-4">
-              <div className="w-10 h-10 rounded-full bg-[#5244e1]/10 text-[#5244e1] flex items-center justify-center shrink-0">
+            <div className="bg-gray-50 border border-dashed border-gray-200 rounded-lg p-5 flex items-start gap-4">
+              <div className="w-10 h-10 rounded-full bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center shrink-0">
                 <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>tips_and_updates</span>
               </div>
               <div>
@@ -1361,24 +1360,24 @@ export default function DashboardPage() {
 
         {activeTab === 'metrics' && (
           <div className="flex flex-col gap-6">
-            <h2 className="text-2xl font-black tracking-tight text-gray-900">Métricas y Rendimiento</h2>
-            
+            {/* El titulo de la seccion ya lo pone el header de la pagina */}
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+              <div className="bg-white p-6 rounded-md border border-gray-100 shadow-sm">
                 <div className="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center mb-4">
                   <span className="material-symbols-outlined">payments</span>
                 </div>
                 <p className="text-sm font-bold text-gray-500">Ventas de Hoy</p>
                 <h3 className="text-3xl font-black text-gray-900 mt-1">S/ 0.00</h3>
               </div>
-              <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+              <div className="bg-white p-6 rounded-md border border-gray-100 shadow-sm">
                 <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
                   <span className="material-symbols-outlined">shopping_bag</span>
                 </div>
                 <p className="text-sm font-bold text-gray-500">Pedidos Completados</p>
                 <h3 className="text-3xl font-black text-gray-900 mt-1">0</h3>
               </div>
-              <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+              <div className="bg-white p-6 rounded-md border border-gray-100 shadow-sm">
                 <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center mb-4">
                   <span className="material-symbols-outlined">visibility</span>
                 </div>
@@ -1387,7 +1386,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm mt-4">
+            <div className="bg-white border border-gray-100 rounded-md overflow-hidden shadow-sm mt-4">
               <div className="p-4 border-b border-gray-100 bg-gray-50">
                 <h3 className="font-bold text-gray-900">Productos Más Vendidos</h3>
               </div>
@@ -1397,7 +1396,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Install App Card for Mobile users */}
-            <div className="md:hidden bg-[#5244e1] text-white p-6 rounded-xl shadow-md mt-2 flex flex-col items-center text-center">
+            <div className="md:hidden bg-[#b8130e] text-white p-6 rounded-md shadow-md mt-2 flex flex-col items-center text-center">
               <span className="material-symbols-outlined text-4xl mb-2">install_mobile</span>
               <h3 className="font-bold text-lg mb-1">Instalar Boga Dash</h3>
               <p className="text-white/80 text-sm mb-4">Instala la app en tu celular para una experiencia más rápida y nativa.</p>
@@ -1408,7 +1407,7 @@ export default function DashboardPage() {
                     window.location.reload();
                   }
                 }}
-                className="w-full py-3 bg-white text-[#5244e1] rounded-xl font-bold hover:bg-gray-50 transition-colors"
+                className="w-full py-3 bg-white text-[#b8130e] rounded-md font-bold hover:bg-gray-50 transition-colors"
               >
                 Instalar Ahora
               </button>
@@ -1417,11 +1416,12 @@ export default function DashboardPage() {
         )}
 
         {activeTab === 'pos' && (
-          <div className="flex flex-col lg:flex-row gap-3 w-full items-stretch lg:items-start bg-[#f9f9ff] p-2 md:p-3 min-h-[calc(100vh-100px)] rounded-2xl">
-            {/* Catalog Grid (Left Side) */}
-            <div className="flex-1 w-full flex flex-col gap-3 pb-60 lg:pb-0">
+          <div className="flex flex-col lg:flex-row gap-3 w-full items-stretch lg:items-start bg-[#f8f9fa] p-2 md:p-3 min-h-[calc(100vh-100px)] rounded-lg">
+            {/* Catalog Grid (Left Side) — min-w-0 para que ceda espacio al carrito
+                en vez de empujarlo fuera de la pantalla */}
+            <div className="flex-1 min-w-0 w-full flex flex-col gap-3 pb-60 lg:pb-0">
               {/* Row 1: Unified Search Bar & Categories */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center w-full gap-2 bg-white p-1 md:p-1.5 rounded-xl border border-[#c7c4d8]/40 shadow-sm shrink-0">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center w-full gap-2 bg-white p-1 md:p-1.5 rounded-md border border-[#e1e3e4]/40 shadow-sm shrink-0">
                 <div className="relative w-full sm:w-56 shrink-0 group">
                   <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[16px]">search</span>
                   <input 
@@ -1429,7 +1429,7 @@ export default function DashboardPage() {
                     value={posProductSearch}
                     onChange={(e) => setPosProductSearch(e.target.value)}
                     placeholder="Buscar productos..." 
-                    className="w-full h-8 pl-8 pr-2.5 bg-gray-50 border border-[#c7c4d8]/40 rounded-lg focus:ring-1 focus:ring-[#3525cd] focus:border-[#3525cd] focus:outline-none transition-all text-xs font-medium text-[#111c2d]"
+                    className="w-full h-8 pl-8 pr-2.5 bg-gray-50 border border-[#e1e3e4]/40 rounded-lg focus:ring-1 focus:ring-[#b8130e] focus:border-[#b8130e] focus:outline-none transition-all text-xs font-medium text-[#191c1d]"
                   />
                 </div>
                 <div className="flex-1 flex gap-1 overflow-x-auto hide-scrollbar py-0.5" style={{ scrollbarWidth: 'none' }}>
@@ -1437,7 +1437,7 @@ export default function DashboardPage() {
                     onClick={() => setPosProductCategory('all')}
                     className={`px-2.5 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all border ${
                       posProductCategory === 'all' 
-                        ? 'bg-[#3525cd] text-white border-transparent shadow-sm' 
+                        ? 'bg-[#b8130e] text-white border-transparent shadow-sm' 
                         : 'bg-transparent text-gray-600 border-gray-100 hover:bg-gray-50'
                     }`}
                   >
@@ -1449,7 +1449,7 @@ export default function DashboardPage() {
                       onClick={() => setPosProductCategory(cat)}
                       className={`px-2.5 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all border ${
                         posProductCategory === cat 
-                          ? 'bg-[#3525cd] text-white border-transparent shadow-sm' 
+                          ? 'bg-[#b8130e] text-white border-transparent shadow-sm' 
                           : 'bg-transparent text-gray-600 border-gray-100 hover:bg-gray-50'
                       }`}
                     >
@@ -1471,7 +1471,7 @@ export default function DashboardPage() {
 
                 if (posProducts.length === 0) {
                   return (
-                    <div className="p-12 text-center flex flex-col items-center justify-center bg-white border border-[#c7c4d8]/40 rounded-2xl shadow-sm">
+                    <div className="p-12 text-center flex flex-col items-center justify-center bg-white border border-[#e1e3e4]/40 rounded-lg shadow-sm">
                       <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">shopping_basket</span>
                       <p className="text-gray-500 font-bold text-sm">No se encontraron productos.</p>
                     </div>
@@ -1487,11 +1487,11 @@ export default function DashboardPage() {
                         <div 
                           key={p.id} 
                           onClick={() => addToCart(p)}
-                          className={`product-card text-left flex flex-col bg-white border rounded-xl overflow-hidden hover:shadow-sm transition-all active:scale-[0.98] cursor-pointer group ${
-                            quantity > 0 ? 'border-[#3525cd] ring-1 ring-[#3525cd]/20' : 'border-[#c7c4d8]/30'
+                          className={`product-card text-left flex flex-col bg-white border rounded-md overflow-hidden hover:shadow-sm transition-all active:scale-[0.98] cursor-pointer group ${
+                            quantity > 0 ? 'border-[#b8130e] ring-1 ring-[#b8130e]/20' : 'border-[#e1e3e4]/30'
                           }`}
                         >
-                          <div className="h-20 w-full bg-[#f0f3ff] relative overflow-hidden shrink-0">
+                          <div className="h-20 w-full bg-[#ffece9] relative overflow-hidden shrink-0">
                             {p.image ? (
                               <img src={p.image} alt={p.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                             ) : (
@@ -1499,27 +1499,27 @@ export default function DashboardPage() {
                                 <span className="material-symbols-outlined text-xl">image</span>
                               </div>
                             )}
-                            <div className="absolute top-1 right-1 px-1 py-0.5 bg-white/90 backdrop-blur rounded font-bold text-[7px] text-[#3525cd]">
+                            <div className="absolute top-1 right-1 px-1 py-0.5 bg-white/90 backdrop-blur rounded font-bold text-[7px] text-[#b8130e]">
                               {quantity > 0 ? `${quantity} EN CARRO` : 'EN STOCK'}
                             </div>
                           </div>
                           <div className="p-1.5 flex-1 flex flex-col justify-between">
-                            <h3 className="font-bold text-[11px] text-[#111c2d] truncate leading-tight" title={p.name}>{p.name}</h3>
+                            <h3 className="font-bold text-[11px] text-[#191c1d] truncate leading-tight" title={p.name}>{p.name}</h3>
                             <div className="flex items-center justify-between mt-1">
-                              <p className="font-extrabold text-xs text-[#3525cd]">S/ {p.price.toFixed(2)}</p>
+                              <p className="font-extrabold text-xs text-[#b8130e]">S/ {p.price.toFixed(2)}</p>
                               {quantity > 0 && (
-                                <div className="flex items-center gap-0.5 bg-[#f0f3ff] border border-[#c7c4d8]/20 p-0.5 rounded" onClick={e => e.stopPropagation()}>
+                                <div className="flex items-center gap-0.5 bg-[#ffece9] border border-[#e1e3e4]/20 p-0.5 rounded" onClick={e => e.stopPropagation()}>
                                   <button 
                                     onClick={() => removeFromCart(p.id)}
-                                    className="text-gray-500 hover:text-red-500 transition-colors flex items-center justify-center font-bold text-[10px] bg-white rounded shadow-sm cursor-pointer"
+                                    className="text-gray-500 hover:text-[#8c0009] transition-colors flex items-center justify-center font-bold text-[10px] bg-white rounded shadow-sm cursor-pointer"
                                     style={{ width: '18px', height: '18px' }}
                                   >
                                     -
                                   </button>
-                                  <span className="text-[10px] font-black text-[#111c2d] w-3 text-center">{quantity}</span>
+                                  <span className="text-[10px] font-black text-[#191c1d] w-3 text-center">{quantity}</span>
                                   <button 
                                     onClick={() => addToCart(p)}
-                                    className="text-gray-500 hover:text-[#3525cd] transition-colors flex items-center justify-center font-bold text-[10px] bg-white rounded shadow-sm cursor-pointer"
+                                    className="text-gray-500 hover:text-[#b8130e] transition-colors flex items-center justify-center font-bold text-[10px] bg-white rounded shadow-sm cursor-pointer"
                                     style={{ width: '18px', height: '18px' }}
                                   >
                                     +
@@ -1537,21 +1537,21 @@ export default function DashboardPage() {
             </div>
 
             {/* Sidebar (Right Side) - Desktop Only */}
-            <aside className="hidden lg:flex w-full lg:w-[320px] lg:h-[calc(100vh-100px)] lg:sticky lg:top-[80px] bg-white border border-[#c7c4d8]/40 rounded-2xl flex-col shrink-0 overflow-hidden shadow-sm">
+            <aside className="hidden lg:flex w-full lg:w-[320px] lg:h-[calc(100vh-100px)] lg:sticky lg:top-[80px] bg-white border border-[#e1e3e4]/40 rounded-lg flex-col shrink-0 overflow-hidden shadow-sm">
               {/* Receipt Header */}
-              <div className="p-2 border-b border-[#c7c4d8]/30 bg-[#f9f9ff]">
+              <div className="p-2 border-b border-[#e1e3e4]/30 bg-[#f8f9fa]">
                 <div className="flex items-center justify-between">
-                  <h2 className="font-extrabold text-[11px] text-[#111c2d]">Venta Actual</h2>
+                  <h2 className="font-extrabold text-[11px] text-[#191c1d]">Venta Actual</h2>
                   <button 
                     onClick={() => setPosCart([])}
-                    className="text-red-500 hover:text-red-700 font-bold text-[9px] hover:underline cursor-pointer"
+                    className="text-[#8c0009] hover:text-[#6b0007] font-bold text-[9px] hover:underline cursor-pointer"
                   >
                     Limpiar Todo
                   </button>
                 </div>
                 <button 
                   onClick={() => setIsCustomerDetailsOpen(!isCustomerDetailsOpen)}
-                  className="flex items-center gap-1 text-[#3525cd] font-bold text-[9px] mt-0.5 hover:underline cursor-pointer"
+                  className="flex items-center gap-1 text-[#b8130e] font-bold text-[9px] mt-0.5 hover:underline cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-[13px]">person_add</span>
                   {posCustomerName ? `${posCustomerName} (${posCustomerPhone || 'Sin Celular'})` : 'Agregar Cliente'}
@@ -1560,7 +1560,7 @@ export default function DashboardPage() {
 
               {/* Collapsible Customer Form */}
               {isCustomerDetailsOpen && (
-                <div className="p-2 border-b border-[#c7c4d8]/20 bg-white flex flex-col gap-1">
+                <div className="p-2 border-b border-[#e1e3e4]/20 bg-white flex flex-col gap-1">
                   <h4 className="text-[7px] font-extrabold text-gray-400 uppercase tracking-widest">Datos del Cliente</h4>
                   <div className="grid grid-cols-2 gap-1.5">
                     <input 
@@ -1568,27 +1568,27 @@ export default function DashboardPage() {
                       value={posCustomerName}
                       onChange={(e) => setPosCustomerName(e.target.value)}
                       placeholder="Nombre" 
-                      className="w-full px-1.5 py-0.5 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd] h-7"
+                      className="w-full px-1.5 py-0.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#b8130e] h-7"
                     />
                     <input 
                       type="text" 
                       value={posCustomerPhone}
                       onChange={(e) => setPosCustomerPhone(e.target.value)}
                       placeholder="WhatsApp" 
-                      className="w-full px-1.5 py-0.5 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd] h-7"
+                      className="w-full px-1.5 py-0.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#b8130e] h-7"
                     />
                   </div>
                 </div>
               )}
 
               {/* Seller Selection */}
-              <div className="p-2 border-b border-[#c7c4d8]/10 bg-white/65 flex items-center justify-between gap-2 shrink-0">
+              <div className="p-2 border-b border-[#e1e3e4]/10 bg-white/65 flex items-center justify-between gap-2 shrink-0">
                 <span className="text-[8px] font-extrabold text-gray-400 uppercase tracking-widest shrink-0">Vendedor:</span>
                 <div className="flex-1 flex gap-1 justify-end">
                   <select 
                     value={posSeller} 
                     onChange={(e) => setPosSeller(e.target.value)}
-                    className="px-1.5 py-0.5 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd] cursor-pointer h-7"
+                    className="px-1.5 py-0.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#b8130e] cursor-pointer h-7"
                   >
                     <option value="Administrador">Admin</option>
                     <option value="Juan">Juan</option>
@@ -1603,7 +1603,7 @@ export default function DashboardPage() {
                       value={customSeller}
                       onChange={(e) => setCustomSeller(e.target.value)}
                       placeholder="Nombre" 
-                      className="w-24 px-1.5 py-0.5 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd] h-7"
+                      className="w-24 px-1.5 py-0.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#b8130e] h-7"
                     />
                   )}
                 </div>
@@ -1620,23 +1620,23 @@ export default function DashboardPage() {
                   posCart.map((item, index) => (
                     <div key={item.product.id} className="flex items-center justify-between gap-2 pb-1.5 border-b border-gray-100 last:border-0 last:pb-0">
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-xs text-[#111c2d] truncate">{item.product.name}</h4>
+                        <h4 className="font-semibold text-xs text-[#191c1d] truncate">{item.product.name}</h4>
                         <p className="text-[10px] text-gray-500">S/ {item.product.price.toFixed(2)} x {item.quantity}</p>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="font-bold text-xs text-[#111c2d]">S/ {(item.product.price * item.quantity).toFixed(2)}</span>
-                        <div className="flex items-center gap-0.5 bg-[#f0f3ff] border border-[#c7c4d8]/20 p-0.5 rounded">
+                        <span className="font-bold text-xs text-[#191c1d]">S/ {(item.product.price * item.quantity).toFixed(2)}</span>
+                        <div className="flex items-center gap-0.5 bg-[#ffece9] border border-[#e1e3e4]/20 p-0.5 rounded">
                           <button 
                             onClick={() => removeFromCart(item.product.id)}
-                            className="text-gray-500 hover:text-red-500 transition-colors flex items-center justify-center font-bold text-[10px] bg-white rounded shadow-sm cursor-pointer"
+                            className="text-gray-500 hover:text-[#8c0009] transition-colors flex items-center justify-center font-bold text-[10px] bg-white rounded shadow-sm cursor-pointer"
                             style={{ width: '18px', height: '18px' }}
                           >
                             -
                           </button>
-                          <span className="text-[10px] font-black text-[#111c2d] w-3 text-center">{item.quantity}</span>
+                          <span className="text-[10px] font-black text-[#191c1d] w-3 text-center">{item.quantity}</span>
                           <button 
                             onClick={() => addToCart(item.product)}
-                            className="text-gray-500 hover:text-[#3525cd] transition-colors flex items-center justify-center font-bold text-[10px] bg-white rounded shadow-sm cursor-pointer"
+                            className="text-gray-500 hover:text-[#b8130e] transition-colors flex items-center justify-center font-bold text-[10px] bg-white rounded shadow-sm cursor-pointer"
                             style={{ width: '18px', height: '18px' }}
                           >
                             +
@@ -1649,7 +1649,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Checkout Summary Footer */}
-              <div className="p-2 bg-[#f9f9ff] border-t border-[#c7c4d8]/30">
+              <div className="p-2 bg-[#f8f9fa] border-t border-[#e1e3e4]/30">
                 <div className="space-y-0.5 mb-1.5">
                   <div className="flex justify-between text-gray-500 font-semibold text-[9px]">
                     <span>Subtotal</span>
@@ -1659,7 +1659,7 @@ export default function DashboardPage() {
                     <span>IGV (18% Incluido)</span>
                     <span>S/ {(posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0) * 0.18 / 1.18).toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-[#111c2d] font-black text-[11px] mt-0.5 pt-0.5 border-t border-[#c7c4d8]/20">
+                  <div className="flex justify-between text-[#191c1d] font-black text-[11px] mt-0.5 pt-0.5 border-t border-[#e1e3e4]/20">
                     <span>Total</span>
                     <span>S/ {posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0).toFixed(2)}</span>
                   </div>
@@ -1675,8 +1675,8 @@ export default function DashboardPage() {
                         onClick={() => setPosPaymentMethod('Efectivo')}
                         className={`py-1 px-1 rounded-lg border transition-all flex items-center justify-center gap-1 cursor-pointer ${
                           posPaymentMethod === 'Efectivo' 
-                            ? 'border-[#3525cd] bg-[#3525cd]/5 text-[#3525cd]' 
-                            : 'border-[#c7c4d8]/30 bg-[#f0f3ff]/40 text-gray-500 hover:border-gray-300'
+                            ? 'border-[#b8130e] bg-[#b8130e]/5 text-[#b8130e]' 
+                            : 'border-[#e1e3e4]/30 bg-[#ffece9]/40 text-gray-500 hover:border-gray-300'
                         }`}
                       >
                         <span className="material-symbols-outlined text-[15px]">payments</span>
@@ -1687,8 +1687,8 @@ export default function DashboardPage() {
                         onClick={() => setPosPaymentMethod('Yape/Plin')}
                         className={`py-1 px-1 rounded-lg border transition-all flex items-center justify-center gap-1 cursor-pointer ${
                           posPaymentMethod === 'Yape/Plin' 
-                            ? 'border-[#3525cd] bg-[#3525cd]/5 text-[#3525cd]' 
-                            : 'border-[#c7c4d8]/30 bg-[#f0f3ff]/40 text-gray-500 hover:border-gray-300'
+                            ? 'border-[#b8130e] bg-[#b8130e]/5 text-[#b8130e]' 
+                            : 'border-[#e1e3e4]/30 bg-[#ffece9]/40 text-gray-500 hover:border-gray-300'
                         }`}
                       >
                         <span className="material-symbols-outlined text-[15px]">qr_code_2</span>
@@ -1699,8 +1699,8 @@ export default function DashboardPage() {
                         onClick={() => setPosPaymentMethod('Tarjeta')}
                         className={`py-1 px-1 rounded-lg border transition-all flex items-center justify-center gap-1 cursor-pointer ${
                           posPaymentMethod === 'Tarjeta' 
-                            ? 'border-[#3525cd] bg-[#3525cd]/5 text-[#3525cd]' 
-                            : 'border-[#c7c4d8]/30 bg-[#f0f3ff]/40 text-gray-500 hover:border-gray-300'
+                            ? 'border-[#b8130e] bg-[#b8130e]/5 text-[#b8130e]' 
+                            : 'border-[#e1e3e4]/30 bg-[#ffece9]/40 text-gray-500 hover:border-gray-300'
                         }`}
                       >
                         <span className="material-symbols-outlined text-[15px]">credit_card</span>
@@ -1712,7 +1712,7 @@ export default function DashboardPage() {
                   <button 
                     onClick={handlePosCheckout}
                     disabled={posCart.length === 0 || isPosSaving}
-                    className="w-full py-2 bg-[#3525cd] text-white rounded-lg font-bold text-[13px] shadow-lg shadow-[#3525cd]/20 hover:scale-[1.01] active:scale-95 transition-all disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none cursor-pointer flex items-center justify-center gap-1.5"
+                    className="w-full py-2 bg-[#b8130e] text-white rounded-lg font-bold text-[13px] shadow-lg shadow-[#b8130e]/20 hover:scale-[1.01] active:scale-95 transition-all disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     {isPosSaving ? (
                       <>
@@ -1731,15 +1731,15 @@ export default function DashboardPage() {
             </aside>
 
             {/* Mobile Pinned Checkout Bar */}
-            <div className="lg:hidden fixed bottom-[76px] md:bottom-0 left-0 right-0 bg-white border-t border-[#c7c4d8]/20 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] px-4 py-3 z-40 flex items-center justify-between">
+            <div className="lg:hidden fixed bottom-[76px] md:bottom-0 left-0 right-0 bg-white border-t border-[#e1e3e4]/20 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] px-4 py-3 z-40 flex items-center justify-between">
               <div className="flex flex-col">
                 <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Total</span>
-                <span className="text-base font-black text-[#3525cd]">S/ {posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0).toFixed(2)}</span>
+                <span className="text-base font-black text-[#b8130e]">S/ {posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0).toFixed(2)}</span>
               </div>
               <button 
                 onClick={() => setIsMobileCheckoutOpen(true)}
                 disabled={posCart.length === 0}
-                className="bg-[#3525cd] text-white px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-1.5 active:scale-95 transition-transform disabled:bg-gray-200 disabled:text-gray-400 cursor-pointer shadow-md"
+                className="bg-[#b8130e] text-white px-5 py-2.5 rounded-md font-bold text-xs flex items-center gap-1.5 active:scale-95 transition-transform disabled:bg-gray-200 disabled:text-gray-400 cursor-pointer shadow-md"
               >
                 <span className="material-symbols-outlined text-[16px]">shopping_cart</span>
                 Cobrar ({posCart.reduce((sum, item) => sum + item.quantity, 0)})
@@ -1751,10 +1751,10 @@ export default function DashboardPage() {
               <div className="lg:hidden fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex flex-col justify-end" onClick={() => setIsMobileCheckoutOpen(false)}>
                 <div className="bg-white rounded-t-[24px] shadow-2xl flex flex-col max-h-[85vh] w-full" onClick={e => e.stopPropagation()}>
                   {/* Drawer Header */}
-                  <div className="p-4 border-b border-[#c7c4d8]/30 bg-white flex items-center justify-between shrink-0">
+                  <div className="p-4 border-b border-[#e1e3e4]/30 bg-white flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[#3525cd] text-[20px]">shopping_cart</span>
-                      <h3 className="font-extrabold text-base text-[#111c2d]">Confirmar Venta</h3>
+                      <span className="material-symbols-outlined text-[#b8130e] text-[20px]">shopping_cart</span>
+                      <h3 className="font-extrabold text-base text-[#191c1d]">Confirmar Venta</h3>
                     </div>
                     <button onClick={() => setIsMobileCheckoutOpen(false)} className="text-gray-400 hover:text-black">
                       <span className="material-symbols-outlined">close</span>
@@ -1762,26 +1762,26 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Drawer Scrollable Content */}
-                  <div className="overflow-y-auto flex-1 bg-[#f9f9ff]">
+                  <div className="overflow-y-auto flex-1 bg-[#f8f9fa]">
                     {/* Receipt Header Actions (like Limpiar Todo) */}
-                    <div className="p-3 border-b border-[#c7c4d8]/30 bg-white flex items-center justify-between">
+                    <div className="p-3 border-b border-[#e1e3e4]/30 bg-white flex items-center justify-between">
                       <span className="text-xs font-bold text-gray-500">Detalles de Venta</span>
                       <button 
                         onClick={() => {
                           setPosCart([]);
                           setIsMobileCheckoutOpen(false);
                         }}
-                        className="text-red-500 hover:text-red-700 font-bold text-xs hover:underline cursor-pointer"
+                        className="text-[#8c0009] hover:text-[#6b0007] font-bold text-xs hover:underline cursor-pointer"
                       >
                         Limpiar Todo
                       </button>
                     </div>
 
                     {/* Client Add button & form */}
-                    <div className="p-3 border-b border-[#c7c4d8]/30 bg-white">
+                    <div className="p-3 border-b border-[#e1e3e4]/30 bg-white">
                       <button 
                         onClick={() => setIsCustomerDetailsOpen(!isCustomerDetailsOpen)}
-                        className="flex items-center gap-1 text-[#3525cd] font-bold text-xs hover:underline cursor-pointer"
+                        className="flex items-center gap-1 text-[#b8130e] font-bold text-xs hover:underline cursor-pointer"
                       >
                         <span className="material-symbols-outlined text-[16px]">person_add</span>
                         {posCustomerName ? `${posCustomerName} (${posCustomerPhone || 'Sin Celular'})` : 'Agregar Cliente'}
@@ -1794,14 +1794,14 @@ export default function DashboardPage() {
                               value={posCustomerName}
                               onChange={(e) => setPosCustomerName(e.target.value)}
                               placeholder="Nombre" 
-                              className="w-full px-2.5 py-1.5 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd]"
+                              className="w-full px-2.5 py-1.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#b8130e]"
                             />
                             <input 
                               type="text" 
                               value={posCustomerPhone}
                               onChange={(e) => setPosCustomerPhone(e.target.value)}
                               placeholder="WhatsApp" 
-                              className="w-full px-2.5 py-1.5 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd]"
+                              className="w-full px-2.5 py-1.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#b8130e]"
                             />
                           </div>
                         </div>
@@ -1809,13 +1809,13 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Seller Selector */}
-                    <div className="p-3 border-b border-[#c7c4d8]/10 bg-white flex flex-col gap-1.5">
+                    <div className="p-3 border-b border-[#e1e3e4]/10 bg-white flex flex-col gap-1.5">
                       <h4 className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Vendedor</h4>
                       <div className="grid grid-cols-2 gap-2">
                         <select 
                           value={posSeller} 
                           onChange={(e) => setPosSeller(e.target.value)}
-                          className="w-full px-2.5 py-1.5 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd] cursor-pointer"
+                          className="w-full px-2.5 py-1.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#b8130e] cursor-pointer"
                         >
                           <option value="Administrador">Administrador</option>
                           <option value="Juan">Juan</option>
@@ -1830,34 +1830,34 @@ export default function DashboardPage() {
                             value={customSeller}
                             onChange={(e) => setCustomSeller(e.target.value)}
                             placeholder="Nombre" 
-                            className="w-full px-2.5 py-1.5 bg-[#f0f3ff]/40 border border-[#c7c4d8]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#3525cd]"
+                            className="w-full px-2.5 py-1.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#b8130e]"
                           />
                         )}
                       </div>
                     </div>
 
                     {/* Cart Items List */}
-                    <div className="p-3 bg-white border-b border-[#c7c4d8]/10 space-y-3">
+                    <div className="p-3 bg-white border-b border-[#e1e3e4]/10 space-y-3">
                       <h4 className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Productos</h4>
                       {posCart.map((item, index) => (
                         <div key={item.product.id} className="flex items-center justify-between gap-3 group">
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-xs text-[#111c2d] truncate">{item.product.name}</h4>
+                            <h4 className="font-semibold text-xs text-[#191c1d] truncate">{item.product.name}</h4>
                             <p className="text-[11px] text-gray-500 mt-0.5">S/ {item.product.price.toFixed(2)} x {item.quantity}</p>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
-                            <span className="font-bold text-xs text-[#111c2d]">S/ {(item.product.price * item.quantity).toFixed(2)}</span>
-                            <div className="flex items-center gap-0.5 bg-[#f0f3ff] border border-[#c7c4d8]/20 p-0.5 rounded-lg">
+                            <span className="font-bold text-xs text-[#191c1d]">S/ {(item.product.price * item.quantity).toFixed(2)}</span>
+                            <div className="flex items-center gap-0.5 bg-[#ffece9] border border-[#e1e3e4]/20 p-0.5 rounded-lg">
                               <button 
                                 onClick={() => removeFromCart(item.product.id)}
-                                className="text-gray-500 hover:text-red-500 transition-colors w-5.5 h-5.5 flex items-center justify-center font-bold text-xs"
+                                className="text-gray-500 hover:text-[#8c0009] transition-colors w-5.5 h-5.5 flex items-center justify-center font-bold text-xs"
                               >
                                 -
                               </button>
-                              <span className="text-[11px] font-black text-[#111c2d] w-3 text-center">{item.quantity}</span>
+                              <span className="text-[11px] font-black text-[#191c1d] w-3 text-center">{item.quantity}</span>
                               <button 
                                 onClick={() => addToCart(item.product)}
-                                className="text-gray-500 hover:text-[#3525cd] transition-colors w-5.5 h-5.5 flex items-center justify-center font-bold text-xs"
+                                className="text-gray-500 hover:text-[#b8130e] transition-colors w-5.5 h-5.5 flex items-center justify-center font-bold text-xs"
                               >
                                 +
                               </button>
@@ -1869,7 +1869,7 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Payment & Action Footer */}
-                  <div className="p-4 bg-white border-t border-[#c7c4d8]/30 shrink-0">
+                  <div className="p-4 bg-white border-t border-[#e1e3e4]/30 shrink-0">
                       <div className="space-y-1 mb-2.5">
                         <div className="flex justify-between text-gray-500 font-semibold text-[11px]">
                           <span>Subtotal</span>
@@ -1879,7 +1879,7 @@ export default function DashboardPage() {
                           <span>IGV (18% Incluido)</span>
                           <span>S/ {(posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0) * 0.18 / 1.18).toFixed(2)}</span>
                         </div>
-                        <div className="flex justify-between text-[#111c2d] font-black text-sm mt-1.5 pt-1.5 border-t border-[#c7c4d8]/20">
+                        <div className="flex justify-between text-[#191c1d] font-black text-sm mt-1.5 pt-1.5 border-t border-[#e1e3e4]/20">
                           <span>Total</span>
                           <span>S/ {posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0).toFixed(2)}</span>
                         </div>
@@ -1895,8 +1895,8 @@ export default function DashboardPage() {
                               onClick={() => setPosPaymentMethod('Efectivo')}
                               className={`py-1.5 px-2 rounded-lg border-2 transition-all flex flex-col items-center gap-0.5 cursor-pointer ${
                                 posPaymentMethod === 'Efectivo' 
-                                  ? 'border-[#3525cd] bg-[#3525cd]/5 text-[#3525cd]' 
-                                  : 'border-[#c7c4d8]/30 bg-[#f0f3ff]/40 text-gray-500 hover:border-gray-300'
+                                  ? 'border-[#b8130e] bg-[#b8130e]/5 text-[#b8130e]' 
+                                  : 'border-[#e1e3e4]/30 bg-[#ffece9]/40 text-gray-500 hover:border-gray-300'
                               }`}
                             >
                               <span className="material-symbols-outlined text-[16px]">payments</span>
@@ -1907,8 +1907,8 @@ export default function DashboardPage() {
                               onClick={() => setPosPaymentMethod('Yape/Plin')}
                               className={`py-1.5 px-2 rounded-lg border-2 transition-all flex flex-col items-center gap-0.5 cursor-pointer ${
                                 posPaymentMethod === 'Yape/Plin' 
-                                  ? 'border-[#3525cd] bg-[#3525cd]/5 text-[#3525cd]' 
-                                  : 'border-[#c7c4d8]/30 bg-[#f0f3ff]/40 text-gray-500 hover:border-gray-300'
+                                  ? 'border-[#b8130e] bg-[#b8130e]/5 text-[#b8130e]' 
+                                  : 'border-[#e1e3e4]/30 bg-[#ffece9]/40 text-gray-500 hover:border-gray-300'
                               }`}
                             >
                               <span className="material-symbols-outlined text-[16px]">qr_code_2</span>
@@ -1919,8 +1919,8 @@ export default function DashboardPage() {
                               onClick={() => setPosPaymentMethod('Tarjeta')}
                               className={`py-1.5 px-2 rounded-lg border-2 transition-all flex flex-col items-center gap-0.5 cursor-pointer ${
                                 posPaymentMethod === 'Tarjeta' 
-                                  ? 'border-[#3525cd] bg-[#3525cd]/5 text-[#3525cd]' 
-                                  : 'border-[#c7c4d8]/30 bg-[#f0f3ff]/40 text-gray-500 hover:border-gray-300'
+                                  ? 'border-[#b8130e] bg-[#b8130e]/5 text-[#b8130e]' 
+                                  : 'border-[#e1e3e4]/30 bg-[#ffece9]/40 text-gray-500 hover:border-gray-300'
                               }`}
                             >
                               <span className="material-symbols-outlined text-[16px]">credit_card</span>
@@ -1935,7 +1935,7 @@ export default function DashboardPage() {
                             setIsMobileCheckoutOpen(false);
                           }}
                           disabled={posCart.length === 0 || isPosSaving}
-                          className="w-full py-3 bg-[#3525cd] text-white rounded-lg font-bold text-sm shadow-lg shadow-[#3525cd]/20 hover:scale-[1.01] active:scale-95 transition-all disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none cursor-pointer flex items-center justify-center gap-1.5"
+                          className="w-full py-3 bg-[#b8130e] text-white rounded-lg font-bold text-sm shadow-lg shadow-[#b8130e]/20 hover:scale-[1.01] active:scale-95 transition-all disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none cursor-pointer flex items-center justify-center gap-1.5"
                         >
                           {isPosSaving ? (
                             <>
@@ -1964,7 +1964,7 @@ export default function DashboardPage() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => !isSaving && setIsModalOpen(false)}></div>
           
-          <div className="relative bg-white w-[90vw] md:w-[550px] rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="relative bg-white w-[90vw] md:w-[550px] rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="p-6 md:p-8 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
               <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">{editingProductId ? 'Editar Producto' : 'Añadir Producto'}</h2>
               <button 
@@ -1988,7 +1988,7 @@ export default function DashboardPage() {
               />
               <div 
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full h-48 border-2 border-dashed border-gray-200 rounded-2xl mb-8 flex flex-col items-center justify-center text-gray-400 hover:border-black hover:text-black transition-colors cursor-pointer bg-gray-50/50 overflow-hidden relative group"
+                className="w-full h-48 border-2 border-dashed border-gray-200 rounded-lg mb-8 flex flex-col items-center justify-center text-gray-400 hover:border-black hover:text-black transition-colors cursor-pointer bg-gray-50/50 overflow-hidden relative group"
               >
                 {previewUrl ? (
                   <>
@@ -2015,7 +2015,7 @@ export default function DashboardPage() {
                     value={newProduct.name}
                     onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
                     placeholder="Ej: Sunset Ribeye"
-                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
                   />
                 </div>
 
@@ -2026,7 +2026,7 @@ export default function DashboardPage() {
                     onChange={(e) => setNewProduct({...newProduct, desc: e.target.value})}
                     placeholder="Breve descripción de los ingredientes o detalles..."
                     rows={2}
-                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all resize-none"
+                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all resize-none"
                   />
                 </div>
 
@@ -2040,7 +2040,7 @@ export default function DashboardPage() {
                       value={newProduct.price}
                       onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
                       placeholder="0.00"
-                      className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:border-black transition-all"
+                      className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black transition-all"
                     />
                   </div>
                   <div>
@@ -2057,7 +2057,7 @@ export default function DashboardPage() {
                           category: storeObj?.categories[0]?.name || ''
                         });
                       }}
-                      className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:border-black transition-all appearance-none cursor-pointer"
+                      className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black transition-all appearance-none cursor-pointer"
                       style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'black\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.2em' }}
                     >
                       {Object.values(stores).map(store => (
@@ -2074,7 +2074,7 @@ export default function DashboardPage() {
                       required
                       value={newProduct.category}
                       onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
-                      className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:border-black transition-all appearance-none cursor-pointer"
+                      className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black transition-all appearance-none cursor-pointer"
                       style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'black\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.2em' }}
                     >
                       <option value="" disabled>Selecciona...</option>
@@ -2091,7 +2091,7 @@ export default function DashboardPage() {
                       value={newProduct.subcategory}
                       onChange={(e) => setNewProduct({...newProduct, subcategory: e.target.value})}
                       placeholder="Título separador..."
-                      className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:border-black transition-all"
+                      className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black transition-all"
                     />
                     <datalist id="existing-subcategories">
                       {Array.from(new Set(products.filter(p => p.store === newProduct.store && p.category === newProduct.category && p.subcategory).map(p => p.subcategory))).map(sub => (
@@ -2108,14 +2108,14 @@ export default function DashboardPage() {
                 type="button"
                 onClick={() => { setIsModalOpen(false); resetForm(); }}
                 disabled={isSaving}
-                className="px-6 py-3.5 rounded-xl font-bold text-gray-600 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                className="px-6 py-3.5 rounded-md font-bold text-gray-600 hover:bg-gray-200 transition-colors disabled:opacity-50"
               >
                 Cancelar
               </button>
               <button 
                 onClick={handleSave}
                 disabled={isSaving}
-                className="flex items-center gap-2 px-8 py-3.5 bg-black text-white rounded-xl font-bold shadow-lg shadow-black/15 hover:shadow-black/25 transition-all hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0"
+                className="flex items-center gap-2 px-8 py-3.5 bg-[#b8130e] text-white rounded-md font-bold shadow-lg shadow-[#b8130e]/20 hover:shadow-[#b8130e]/30 transition-all hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0"
               >
                 {isSaving ? (
                   <>
@@ -2137,7 +2137,7 @@ export default function DashboardPage() {
       {isStoreEditorOpen && editingStoreSlug && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => !isStoreSaving && setIsStoreEditorOpen(false)} />
-          <div className="relative bg-white w-[90vw] md:w-[560px] rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="relative bg-white w-[90vw] md:w-[560px] rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             {/* Header */}
             <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
               <div>
@@ -2160,7 +2160,7 @@ export default function DashboardPage() {
                 <input type="file" ref={storeHeroInputRef} onChange={e => { if (e.target.files?.[0]) { setStoreHeroFile(e.target.files[0]); setStoreHeroPreview(URL.createObjectURL(e.target.files[0])); }}} accept="image/*" className="hidden" />
                 <div
                   onClick={() => storeHeroInputRef.current?.click()}
-                  className="w-full h-36 rounded-2xl border-2 border-dashed border-gray-200 overflow-hidden cursor-pointer relative group hover:border-black transition-colors bg-gray-50"
+                  className="w-full h-36 rounded-lg border-2 border-dashed border-gray-200 overflow-hidden cursor-pointer relative group hover:border-black transition-colors bg-gray-50"
                 >
                   {storeHeroPreview ? (
                     <>
@@ -2186,12 +2186,12 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-4">
                   <div
                     onClick={() => storeLogoInputRef.current?.click()}
-                    className="w-20 h-20 rounded-2xl border-2 border-dashed border-gray-200 overflow-hidden cursor-pointer relative group hover:border-black transition-colors bg-gray-50 shrink-0"
+                    className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-200 overflow-hidden cursor-pointer relative group hover:border-black transition-colors bg-gray-50 shrink-0"
                   >
                     {storeLogoPreview ? (
                       <>
                         <img src={storeLogoPreview} className="w-full h-full object-cover" alt="Logo" />
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white font-bold transition-opacity text-xs text-center rounded-2xl">
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white font-bold transition-opacity text-xs text-center rounded-lg">
                           Cambiar
                         </div>
                       </>
@@ -2215,7 +2215,7 @@ export default function DashboardPage() {
                   type="text"
                   value={storeForm.name}
                   onChange={e => setStoreForm({...storeForm, name: e.target.value})}
-                  className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                  className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
                   placeholder="Ej: Sunset Lounge"
                 />
               </div>
@@ -2227,7 +2227,7 @@ export default function DashboardPage() {
                   type="text"
                   value={storeForm.tagline}
                   onChange={e => setStoreForm({...storeForm, tagline: e.target.value})}
-                  className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                  className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
                   placeholder="Ej: Bar & Café"
                 />
               </div>
@@ -2239,7 +2239,7 @@ export default function DashboardPage() {
                   type="text"
                   value={storeForm.marketplace_category}
                   onChange={e => setStoreForm({...storeForm, marketplace_category: e.target.value})}
-                  className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                  className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
                   placeholder="Ej: Restaurantes, Moda, Salud..."
                 />
               </div>
@@ -2250,7 +2250,7 @@ export default function DashboardPage() {
               <button
                 onClick={handleStoreReset}
                 disabled={isStoreSaving}
-                className="flex items-center gap-1.5 px-4 py-3.5 rounded-xl font-bold text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 text-sm"
+                className="flex items-center gap-1.5 px-4 py-3.5 rounded-md font-bold text-[#8c0009] hover:bg-[#8c0009]/8 transition-colors disabled:opacity-50 text-sm"
               >
                 <span className="material-symbols-outlined text-[18px]">restart_alt</span>
                 Resetear
@@ -2259,14 +2259,14 @@ export default function DashboardPage() {
                 <button
                   onClick={() => setIsStoreEditorOpen(false)}
                   disabled={isStoreSaving}
-                  className="px-6 py-3.5 rounded-xl font-bold text-gray-600 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                  className="px-6 py-3.5 rounded-md font-bold text-gray-600 hover:bg-gray-200 transition-colors disabled:opacity-50"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleStoreSave}
                   disabled={isStoreSaving}
-                  className="flex items-center gap-2 px-8 py-3.5 bg-black text-white rounded-xl font-bold shadow-lg shadow-black/15 hover:shadow-black/25 transition-all hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0"
+                  className="flex items-center gap-2 px-8 py-3.5 bg-[#b8130e] text-white rounded-md font-bold shadow-lg shadow-[#b8130e]/20 hover:shadow-[#b8130e]/30 transition-all hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0"
                 >
                   {isStoreSaving ? (
                     <>
@@ -2284,7 +2284,7 @@ export default function DashboardPage() {
       {/* QR Modal */}
       {isQRModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/40 backdrop-blur-sm" onClick={() => setIsQRModalOpen(false)}>
-          <div className="bg-white rounded-[24px] shadow-2xl overflow-hidden flex flex-col w-[350px]" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col w-[350px]" onClick={e => e.stopPropagation()}>
             <div className="p-6 text-center border-b border-gray-100 relative">
               <button onClick={() => setIsQRModalOpen(false)} className="absolute right-4 top-4 text-gray-400 hover:text-black">
                 <span className="material-symbols-outlined">close</span>
@@ -2293,7 +2293,7 @@ export default function DashboardPage() {
               <p className="text-xs text-gray-500 mt-1">Imprímelo para tus mesas o local</p>
             </div>
             <div className="p-8 flex flex-col items-center gap-6" id="qr-container">
-              <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col items-center">
+              <div className="p-4 bg-white rounded-md shadow-sm border border-gray-100 flex flex-col items-center">
                 <div className="text-lg font-black tracking-tight mb-4">{selectedStore !== 'all' ? stores[selectedStore]?.name : 'Boga Market'}</div>
                 <QRCodeSVG 
                   value={selectedStore !== 'all' ? `https://boga.com/${selectedStore}` : `https://boga.com/explore`}
@@ -2324,7 +2324,7 @@ export default function DashboardPage() {
                     img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
                   }
                 }}
-                className="w-full flex items-center justify-center gap-2 bg-black text-white px-5 py-3 rounded-xl font-bold shadow-lg hover:shadow-black/25 transition-all"
+                className="w-full flex items-center justify-center gap-2 bg-[#b8130e] text-white px-5 py-3 rounded-md font-bold shadow-lg hover:shadow-[#b8130e]/30 transition-all"
               >
                 <span className="material-symbols-outlined text-[18px]">download</span>
                 Descargar PNG
@@ -2337,7 +2337,7 @@ export default function DashboardPage() {
       {/* PDF Export Modal */}
       {isPDFModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/40 backdrop-blur-sm" onClick={() => setIsPDFModalOpen(false)}>
-          <div className="bg-white rounded-[24px] shadow-2xl overflow-hidden flex flex-col w-[420px]" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col w-[420px]" onClick={e => e.stopPropagation()}>
             <div className="p-6 border-b border-gray-100 relative text-center">
               <button onClick={() => setIsPDFModalOpen(false)} className="absolute right-4 top-4 text-gray-400 hover:text-black">
                 <span className="material-symbols-outlined">close</span>
@@ -2356,10 +2356,10 @@ export default function DashboardPage() {
                       setIsPDFModalOpen(false);
                     }}
                     disabled={isExporting}
-                    className="w-full flex items-center justify-between p-4 bg-[#f8f9fa] hover:bg-[#3525cd]/5 border border-gray-100 hover:border-[#3525cd]/20 rounded-2xl transition-all text-left group cursor-pointer"
+                    className="w-full flex items-center justify-between p-4 bg-[#f8f9fa] hover:bg-[#b8130e]/5 border border-gray-100 hover:border-[#b8130e]/20 rounded-lg transition-all text-left group cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-red-500 shadow-sm">
+                      <div className="w-10 h-10 rounded-md bg-white border border-gray-100 flex items-center justify-center text-red-500 shadow-sm">
                         <span className="material-symbols-outlined text-[24px]">picture_as_pdf</span>
                       </div>
                       <div>
@@ -2367,7 +2367,7 @@ export default function DashboardPage() {
                         <p className="text-[11px] text-gray-500 mt-0.5">Catálogo listo para descargar</p>
                       </div>
                     </div>
-                    <span className="material-symbols-outlined text-gray-400 group-hover:text-[#3525cd] transition-colors">download</span>
+                    <span className="material-symbols-outlined text-gray-400 group-hover:text-[#b8130e] transition-colors">download</span>
                   </button>
                 ))}
             </div>
@@ -2380,7 +2380,7 @@ export default function DashboardPage() {
         <div className="md:hidden fixed right-4 bottom-24 z-40">
           <button 
             onClick={() => { setIsModalOpen(true); resetForm(); }}
-            className="w-14 h-14 bg-[#5244e1] text-white rounded-full flex items-center justify-center shadow-lg hover:bg-[#4338ca] transition-colors"
+            className="w-14 h-14 bg-[#b8130e] text-white rounded-full flex items-center justify-center shadow-lg hover:bg-[#8f0f0b] transition-colors"
           >
             <span className="material-symbols-outlined text-3xl">add</span>
           </button>
@@ -2391,28 +2391,28 @@ export default function DashboardPage() {
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 flex justify-between items-center z-50 rounded-t-2xl shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
         <button 
           onClick={() => setActiveTab('orders')} 
-          className={`flex flex-col items-center gap-1 w-16 py-2 rounded-[20px] transition-all ${activeTab === 'orders' ? 'bg-[#5244e1] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+          className={`flex flex-col items-center gap-1 w-16 py-2 rounded-[20px] transition-all ${activeTab === 'orders' ? 'bg-[#b8130e] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
         >
           <span className="material-symbols-outlined text-[22px]">receipt_long</span>
           <span className="text-[10px] font-bold">Pedidos</span>
         </button>
         <button 
           onClick={() => setActiveTab('products')} 
-          className={`flex flex-col items-center gap-1 w-16 py-2 rounded-[20px] transition-all ${activeTab === 'products' ? 'bg-[#5244e1] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+          className={`flex flex-col items-center gap-1 w-16 py-2 rounded-[20px] transition-all ${activeTab === 'products' ? 'bg-[#b8130e] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
         >
           <span className="material-symbols-outlined text-[22px]">inventory_2</span>
           <span className="text-[10px] font-bold">Productos</span>
         </button>
         <button 
           onClick={() => setActiveTab('pos')} 
-          className={`flex flex-col items-center gap-1 w-16 py-2 rounded-[20px] transition-all ${activeTab === 'pos' ? 'bg-[#5244e1] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+          className={`flex flex-col items-center gap-1 w-16 py-2 rounded-[20px] transition-all ${activeTab === 'pos' ? 'bg-[#b8130e] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
         >
           <span className="material-symbols-outlined text-[22px]">point_of_sale</span>
           <span className="text-[10px] font-bold">Vender</span>
         </button>
         <button 
           onClick={() => setActiveTab('metrics')} 
-          className={`flex flex-col items-center gap-1 w-16 py-2 rounded-[20px] transition-all ${activeTab === 'metrics' ? 'bg-[#5244e1] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+          className={`flex flex-col items-center gap-1 w-16 py-2 rounded-[20px] transition-all ${activeTab === 'metrics' ? 'bg-[#b8130e] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
         >
           <span className="material-symbols-outlined text-[22px]">bar_chart</span>
           <span className="text-[10px] font-bold">Métricas</span>
@@ -2421,7 +2421,7 @@ export default function DashboardPage() {
           onClick={() => setIsMobileMenuOpen(true)}
           className="flex flex-col items-center gap-1 w-16 py-2 transition-all text-gray-500 hover:bg-gray-50 rounded-[20px]"
         >
-          <div className="w-6 h-6 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold text-xs mb-[2px]">B</div>
+          <div className="w-6 h-6 rounded-full bg-[#b8130e] text-white flex items-center justify-center font-bold text-xs mb-[2px]">B</div>
           <span className="text-[10px] font-bold">Perfil</span>
         </button>
       </div>
@@ -2430,7 +2430,7 @@ export default function DashboardPage() {
       {isMobileMenuOpen && (
         <div className="md:hidden fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
-          <div className="relative bg-white w-full rounded-t-[32px] sm:rounded-[32px] sm:w-[400px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-[slideDown_0.3s_ease-out]">
+          <div className="relative bg-white w-full rounded-t-lg sm:rounded-lg sm:w-[400px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-[slideDown_0.3s_ease-out]">
             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
               <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">Menú</h2>
               <button 
@@ -2449,7 +2449,7 @@ export default function DashboardPage() {
                     setSelectedStore(e.target.value);
                     setIsMobileMenuOpen(false);
                   }}
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-900 px-4 py-3 rounded-xl font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-black/5"
+                  className="w-full bg-gray-50 border border-gray-200 text-gray-900 px-4 py-3 rounded-md font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-black/5"
                 >
                   <option value="all">Todas mis tiendas</option>
                   {Object.values(stores).map(s => (
@@ -2468,7 +2468,7 @@ export default function DashboardPage() {
               <div className="space-y-2 border-t border-gray-100 pt-6">
                 <button
                   onClick={() => { setActiveTab('pos'); setIsMobileMenuOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors ${activeTab === 'pos' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-md font-semibold transition-colors ${activeTab === 'pos' ? 'bg-[#b8130e] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
                 >
                   <span className="material-symbols-outlined text-[20px]">point_of_sale</span>
                   Vender (POS)
@@ -2476,13 +2476,13 @@ export default function DashboardPage() {
 
                 <button
                   onClick={() => { setActiveTab('stores'); setIsMobileMenuOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors ${activeTab === 'stores' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-md font-semibold transition-colors ${activeTab === 'stores' ? 'bg-[#b8130e] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
                 >
                   <span className="material-symbols-outlined text-[20px]">store</span>
                   Mis Tiendas
                 </button>
 
-                <Link href="/" className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl font-semibold transition-colors">
+                <Link href="/" className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-md font-semibold transition-colors">
                   <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                   Volver a Boga
                 </Link>
@@ -2494,7 +2494,7 @@ export default function DashboardPage() {
                       window.location.reload();
                     }
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-[#5244e1] bg-[#5244e1]/5 hover:bg-[#5244e1]/10 rounded-xl font-bold transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-[#b8130e] bg-[#b8130e]/5 hover:bg-[#b8130e]/10 rounded-md font-bold transition-colors"
                 >
                   <span className="material-symbols-outlined text-[20px]">install_mobile</span>
                   Instalar App
@@ -2508,7 +2508,7 @@ export default function DashboardPage() {
       {/* Ticket Modal */}
       {isTicketModalOpen && lastCompletedSale && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center px-4 bg-black/55 backdrop-blur-sm">
-          <div className="bg-white rounded-[32px] shadow-2xl overflow-hidden flex flex-col w-full max-w-[400px] max-h-[90vh]">
+          <div className="bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col w-full max-w-[400px] max-h-[90vh]">
             {/* Header */}
             <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
               <h3 className="font-extrabold text-gray-900 flex items-center gap-2">
@@ -2528,7 +2528,7 @@ export default function DashboardPage() {
               {/* Receipt Visual Container */}
               <div 
                 id="thermal-ticket"
-                className="bg-white border border-gray-200 shadow-sm rounded-xl p-5 w-full font-mono text-xs text-gray-800 flex flex-col gap-4 relative overflow-hidden"
+                className="bg-white border border-gray-200 shadow-sm rounded-md p-5 w-full font-mono text-xs text-gray-800 flex flex-col gap-4 relative overflow-hidden"
               >
                 {/* Decorative cut details */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-200 via-transparent to-transparent"></div>
@@ -2617,7 +2617,7 @@ export default function DashboardPage() {
                     window.print();
                   }
                 }}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-black text-white hover:bg-gray-800 font-bold rounded-xl transition-all shadow-md cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 py-3 bg-[#b8130e] text-white hover:bg-[#8f0f0b] font-bold rounded-md transition-all shadow-md cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[18px]">print</span>
                 Imprimir Ticket (Impresora Térmica)
@@ -2655,7 +2655,7 @@ export default function DashboardPage() {
                     window.open(whatsappUrl, '_blank');
                   }
                 }}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-[#25D366] text-white hover:bg-[#20ba59] font-bold rounded-xl transition-all shadow-md cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 py-3 bg-[#25D366] text-white hover:bg-[#20ba59] font-bold rounded-md transition-all shadow-md cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[18px]">share</span>
                 Compartir por WhatsApp
@@ -2691,7 +2691,7 @@ export default function DashboardPage() {
       {/* ── Selector de Tiendas Administradas ── */}
       {isStorePickerOpen && (
         <div className="fixed inset-0 z-[300] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[420px] overflow-hidden flex flex-col max-h-[85vh]">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-[420px] overflow-hidden flex flex-col max-h-[85vh]">
             <div className="px-6 py-5 border-b border-gray-100">
               <h3 className="font-extrabold text-lg text-gray-900">¿Qué tiendas administras?</h3>
               <p className="text-gray-500 text-xs font-medium mt-1">
@@ -2704,7 +2704,7 @@ export default function DashboardPage() {
                 return (
                   <label
                     key={s.slug}
-                    className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                    className={`flex items-center gap-3 p-3 rounded-md border-2 cursor-pointer transition-all ${
                       checked ? 'border-black bg-gray-50' : 'border-gray-100 hover:border-gray-200'
                     }`}
                   >
@@ -2741,7 +2741,7 @@ export default function DashboardPage() {
                 {managedSlugs !== null && (
                   <button
                     onClick={() => setIsStorePickerOpen(false)}
-                    className="px-4 py-2.5 rounded-xl font-bold text-xs text-gray-500 hover:bg-gray-50 transition-colors"
+                    className="px-4 py-2.5 rounded-md font-bold text-xs text-gray-500 hover:bg-gray-50 transition-colors"
                   >
                     Cancelar
                   </button>
@@ -2749,10 +2749,10 @@ export default function DashboardPage() {
                 <button
                   onClick={() => saveManagedStores(pickerDraft)}
                   disabled={pickerDraft.length === 0}
-                  className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all ${
+                  className={`px-5 py-2.5 rounded-md font-bold text-xs transition-all ${
                     pickerDraft.length === 0
                       ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-black text-white shadow-lg shadow-black/15 hover:-translate-y-0.5 active:translate-y-0'
+                      : 'bg-[#b8130e] text-white shadow-lg shadow-[#b8130e]/20 hover:-translate-y-0.5 active:translate-y-0'
                   }`}
                 >
                   Guardar selección
