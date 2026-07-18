@@ -13,6 +13,49 @@ export async function GET(request: NextRequest) {
     tmpl = getTemplate(slug);
   }
 
+  // Sin slug de tienda hay dos apps propias de la plataforma: el marketplace
+  // publico (raiz) y el panel de administracion. Por defecto, el marketplace.
+  const app = request.nextUrl.searchParams.get('app');
+  if (!slug) {
+    const isAdmin = app === 'admin';
+    const manifest = isAdmin
+      ? {
+          name: 'Boga Dash',
+          short_name: 'Boga Dash',
+          description: 'Tu panel de administración empresarial.',
+          start_url: '/admin',
+          scope: '/admin',
+          theme_color: '#5244e1',
+        }
+      : {
+          name: 'Boga Market',
+          short_name: 'Boga Market',
+          description: 'Descubre tiendas y productos cerca de ti.',
+          start_url: '/',
+          scope: '/',
+          theme_color: '#b8130e',
+        };
+
+    return new Response(
+      JSON.stringify({
+        ...manifest,
+        display: 'standalone',
+        background_color: '#ffffff',
+        lang: 'es',
+        orientation: 'portrait',
+        icons: [
+          {
+            src: BOGA_DEFAULT_ICON,
+            sizes: '512x512',
+            type: BOGA_DEFAULT_ICON.endsWith('.svg') ? 'image/svg+xml' : 'image/png',
+            purpose: 'any maskable',
+          },
+        ],
+      }),
+      { headers: { 'Content-Type': 'application/manifest+json' } }
+    );
+  }
+
   let dbLogo: string | null = null;
   let dbHero: string | null = null;
   let dbTheme: Record<string, string> | null = null;
