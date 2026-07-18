@@ -12,6 +12,51 @@ import { supabase } from '@/lib/supabase';
 // Plantillas que ya tienen botón de pedido por WhatsApp implementado en su código
 const TEMPLATES_WITH_WHATSAPP = new Set(['polleria', 'estilosmirka', 'sweetkittynails', 'mercado']);
 
+// Datos de presentacion comercial que no viven en templates.config (descripcion
+// e imagen de portada). Si una plantilla no esta aca, cae a su heroImage.
+const TEMPLATE_PRESENTATION: Record<string, { category?: string; description: string; previewUrl: string }> = {
+  default: {
+    category: 'Negocios',
+    description: 'Diseño minimalista que prioriza el contenido visual y la simplicidad estructural.',
+    previewUrl: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=600&q=80',
+  },
+  sunset: {
+    category: 'Gourmet',
+    description: 'Enfoque visual y misterioso en gastronomía y bar, ideal para restaurantes con menús dinámicos y luz tenue.',
+    previewUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=80',
+  },
+  natura: {
+    category: 'Salud',
+    description: 'Estilo claro y fresco con toques verdes ideal para clínicas, consultorios y venta de productos orgánicos.',
+    previewUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&q=80',
+  },
+  amazonia: {
+    category: 'Comercio',
+    description: 'Experiencia de compra vibrante con galerías de alta resolución y colores inspirados en la naturaleza.',
+    previewUrl: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&q=80',
+  },
+  sweetkittynails: {
+    category: 'Salud',
+    description: 'Estilo rosa pastel optimizado para reservas de citas y servicios estéticos o salones de belleza.',
+    previewUrl: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&q=80',
+  },
+  estilosmirka: {
+    category: 'Comercio',
+    description: 'Diseño de boutique de moda premium con gran espacio para fotos de prendas, catálogos y colecciones de temporada.',
+    previewUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&q=80',
+  },
+  polleria: {
+    category: 'Gourmet',
+    description: 'Estilo cálido y rústico optimizado para pollerías, parrilladas y restaurantes de comida rápida con fotos grandes y navegación fluida.',
+    previewUrl: 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=600&q=80',
+  },
+  mercado: {
+    category: 'Comercio',
+    description: 'El look del marketplace de Boga para una sola tienda: banners, categorías y catálogo amplio. Ideal para minimarket, ferretería, farmacia o distribuidora.',
+    previewUrl: 'https://images.unsplash.com/photo-1580913428735-bd3c269d6a82?w=600&q=80',
+  },
+};
+
 // Plantillas que ya tienen los botones flotantes de compartir e instalar (PWA) en su código
 const TEMPLATES_WITH_SHARE_INSTALL = new Set(['polleria', 'estilosmirka', 'mercado']);
 
@@ -430,57 +475,31 @@ export default function AdminPage() {
     previewUrl: string;
   }
 
-  const [adminTemplates, setAdminTemplates] = useState<AdminTemplate[]>([
-    {
-      id: 'default',
-      name: 'Default Minimal',
-      category: 'Negocios',
-      description: 'Diseño minimalista que prioriza el contenido visual y la simplicidad estructural.',
-      previewUrl: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=600&q=80'
-    },
-    {
-      id: 'sunset',
-      name: 'Sunset Dark',
-      category: 'Gourmet',
-      description: 'Enfoque visual y misterioso en gastronomía y bar, ideal para restaurantes con menús dinámicos y luz tenue.',
-      previewUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=80'
-    },
-    {
-      id: 'natura',
-      name: 'Natura Organic',
-      category: 'Salud',
-      description: 'Estilo claro y fresco con toques verdes ideal para clínicas, consultorios y venta de productos orgánicos.',
-      previewUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&q=80'
-    },
-    {
-      id: 'amazonia',
-      name: 'Amazonia Fresh',
-      category: 'Comercio',
-      description: 'Experiencia de compra vibrante con galerías de alta resolución y colores inspirados en la naturaleza.',
-      previewUrl: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&q=80'
-    },
-    {
-      id: 'sweetkittynails',
-      name: 'Kitty Beauty Pink',
-      category: 'Salud',
-      description: 'Estilo rosa pastel optimizado para reservas de citas y servicios estéticos o salones de belleza.',
-      previewUrl: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&q=80'
-    },
-    {
-      id: 'estilosmirka',
-      name: 'Mirka Elegant',
-      category: 'Comercio',
-      description: 'Diseño de boutique de moda premium con gran espacio para fotos de prendas, catálogos y colecciones de temporada.',
-      previewUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&q=80'
-    },
-    {
-      id: 'polleria',
-      name: 'Pollería Bravoz',
-      category: 'Gourmet',
-      description: 'Estilo cálido y rústico optimizado para pollerías, parrilladas y restaurantes de comida rápida con fotos grandes y navegación fluida.',
-      previewUrl: 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=600&q=80'
-    }
-  ]);
+  // La lista se deriva de templates.config (fuente unica). Antes estaba duplicada
+  // a mano aca, asi que cada plantilla nueva no aparecia y los nombres se
+  // desincronizaban. Aca solo viven los campos que la config no tiene:
+  // la descripcion comercial y la imagen de portada.
+  const [templateOverrides, setTemplateOverrides] = useState<Record<string, Partial<AdminTemplate>>>({});
+  const [hiddenTemplates, setHiddenTemplates] = useState<string[]>([]);
+
+  const adminTemplates: AdminTemplate[] = React.useMemo(() => {
+    const base = getTemplate('default');
+    const todas = base ? [base, ...getAllTemplates()] : getAllTemplates();
+
+    return todas
+      .filter(t => !hiddenTemplates.includes(t.id))
+      .map(t => {
+        const extra = TEMPLATE_PRESENTATION[t.id];
+        const override = templateOverrides[t.id] || {};
+        return {
+          id: t.id,
+          name: override.name ?? t.name,
+          category: override.category ?? extra?.category ?? t.category,
+          description: override.description ?? extra?.description ?? `Plantilla ${t.name} para el rubro ${t.category}.`,
+          previewUrl: override.previewUrl ?? extra?.previewUrl ?? t.heroImage,
+        };
+      });
+  }, [templateOverrides, hiddenTemplates]);
 
   const [templateFilter, setTemplateFilter] = useState<string>('Todas');
   const [showTemplateModal, setShowTemplateModal] = useState(false);
@@ -1026,29 +1045,33 @@ export default function AdminPage() {
     if (!templateForm.id || !templateForm.name) return;
 
     if (editingTemplate) {
-      setAdminTemplates(prev => prev.map(t => t.id === editingTemplate.id ? {
-        ...t,
-        id: templateForm.id,
-        name: templateForm.name,
-        category: templateForm.category,
-        description: templateForm.description,
-        previewUrl: templateForm.previewUrl
-      } : t));
-    } else {
-      setAdminTemplates(prev => [...prev, {
-        id: templateForm.id,
-        name: templateForm.name,
-        category: templateForm.category,
-        description: templateForm.description,
-        previewUrl: templateForm.previewUrl
-      }]);
+      setTemplateOverrides(prev => ({
+        ...prev,
+        [editingTemplate.id]: {
+          name: templateForm.name,
+          category: templateForm.category,
+          description: templateForm.description,
+          previewUrl: templateForm.previewUrl,
+        },
+      }));
+      setShowTemplateModal(false);
+      return;
     }
-    setShowTemplateModal(false);
+
+    // Una plantilla no es un registro: es un componente en src/templates/ mas su
+    // entrada en templates.config.ts. No se puede crear desde aca.
+    alert(
+      'Las plantillas se crean en el código, no desde el panel.\n\n' +
+      'Para agregar una:\n' +
+      '1. Creá el componente en src/templates/<id>/\n' +
+      '2. Registralo en src/lib/templates.config.ts y en StoreRenderer\n\n' +
+      'Una vez hecho eso aparece acá automáticamente.'
+    );
   };
 
   const handleDeleteTemplate = (id: string) => {
-    if (confirm(`¿Estás seguro de que deseas eliminar la plantilla "${id}"?`)) {
-      setAdminTemplates(prev => prev.filter(t => t.id !== id));
+    if (confirm(`¿Ocultar la plantilla "${id}" del panel?\n\nNo se borra del código: seguirá disponible hasta que la quites de templates.config.ts.`)) {
+      setHiddenTemplates(prev => [...prev, id]);
     }
   };
 
