@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
     const isAdmin = app === 'admin';
     const manifest = isAdmin
       ? {
+          id: '/admin',
           name: 'Boga Dash',
           short_name: 'Boga Dash',
           description: 'Tu panel de administración empresarial.',
@@ -42,6 +43,7 @@ export async function GET(request: NextRequest) {
           theme_color: '#5244e1',
         }
       : {
+          id: '/',
           name: 'Boga Market',
           short_name: 'Boga Market',
           description: 'Descubre tiendas y productos cerca de ti.',
@@ -111,6 +113,10 @@ export async function GET(request: NextRequest) {
   const scope = storeSlug ? `/${storeSlug}` : (tmpl ? `/preview/${tmpl.id}` : '/');
 
   const manifest = {
+    // Identidad de la app. Sin `id`, dos tiendas del mismo dominio pueden
+    // terminar tratadas como la misma PWA instalada (y el acceso directo de
+    // una abre la otra, o el marketplace).
+    id: storeSlug ? `/${storeSlug}` : (tmpl ? `/preview/${tmpl.id}` : '/admin'),
     name: displayName,
     short_name: displayName.slice(0, 12),
     description: storeName ? `${storeName} en Boga Market` : (tmpl ? `Plantilla: ${tmpl.name}` : 'Tu panel de administración empresarial.'),

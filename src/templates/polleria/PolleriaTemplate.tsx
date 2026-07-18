@@ -1,343 +1,81 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
-import { supabase } from '@/lib/supabase';
-import { useDemo } from '@/context/DemoContext';
-import { getDemoProducts } from '@/lib/templates.config';
-import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
+import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
+import StoreHeader from '../shared/StoreHeader';
+import { useCatalogo } from '../shared/useCatalogo';
+import { TXT, ICON, INFO_LOCAL, inicialesDe, type Producto } from '../shared/tokens';
+import {
+  CategoryChips, ProductGrid, ProductModal, CartPanel, ContactPanel, BottomNav, StoreFooter,
+} from '../shared/CatalogoUI';
 
 interface PolleriaTemplateProps {
   store: StoreConfig;
 }
 
-interface Producto {
-  id: string;
-  name: string;
-  desc: string;
-  /** Numerico: el carrito necesita sumar, no puede guardar "S/ 22.90". */
-  price: number;
-  /** Siempre el `href` de la categoria de la tienda, para que case con los chips. */
-  category: string;
-  image: string;
-}
-
 /**
- * Escala tipografica unica de la plantilla.
- * Antes convivian text-[9px], text-[10px], text-[11px], text-[13px], text-xs y
- * text-sm sin criterio; cualquier ajuste habia que perseguirlo por todo el archivo.
+ * Plantilla "Pollería Bravoz".
+ *
+ * Su inicio es de marca, no de catalogo: hero, ficha del local, categorias, la
+ * historia de la casa y newsletter. Sirve para el negocio que quiere contar su
+ * tradicion antes de vender. Para el que quiere que el cliente vea platos de
+ * entrada estan "Menú Directo" e "Inicio con Catálogo", que comparten este
+ * mismo motor.
  */
-const TXT = {
-  micro: 'text-[11px]',
-  small: 'text-xs',
-  body: 'text-sm',
-  lead: 'text-base',
-  title: 'text-lg',
-} as const;
-
-/**
- * Escala de iconos. Antes se mezclaban clases (text-sm, text-base, text-lg) con
- * `style={{ fontSize: '11px' }}`, asi que dos iconos "iguales" no median igual.
- */
-const ICON = {
-  xs: 'text-[13px]',
-  sm: 'text-[16px]',
-  md: 'text-[20px]',
-  lg: 'text-[24px]',
-  xl: 'text-[32px]',
-} as const;
-
-/**
- * Datos que la plantilla muestra pero que todavia no existen en StoreConfig.
- * Estan aca juntos y no repartidos por el JSX para que se vea que son de relleno
- * y para poder reemplazarlos de una sola vez cuando la tienda pueda cargarlos.
- */
-const INFO_LOCAL = {
-  zona: 'Miraflores',
-  horarioCorto: '12–11PM',
-  horarioLargo: 'Lunes a Domingo: 12:00 PM – 11:00 PM',
-  direccion: 'Av. Fuego y Brasa 1995, Miraflores, Lima',
-  rating: 4.8,
-};
-
-const soles = (n: number) => `S/ ${n.toFixed(2)}`;
-
 export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
   const t = store.theme;
-  const { isDemoVisible } = useDemo();
-  // Booleano estable: isDemoVisible cambia de identidad en cada render del
-  // provider y como dependencia del efecto disparaba refetches en bucle.
-  const demoActivo = isDemoVisible(store.slug);
+  const c = useCatalogo(store);
 
   const [activeTab, setActiveTab] = useState('home');
-  const [activeCategory, setActiveCategory] = useState('all');
-  const [products, setProducts] = useState<Producto[]>([]);
-  // id del producto -> cantidad. Antes era un contador suelto y el resumen del
-  // pedido mostraba siempre "Pollo a la Brasa" a S/ 22.90 sin importar que agregaras.
-  const [cart, setCart] = useState<Record<string, number>>({});
+  const [selectedProduct, setSelectedProduct] = useState<Producto | null>(null);
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Producto | null>(null);
 
-  // Clave estable de las categorias: store.categories es un array nuevo en cada
-  // render del padre y como dependencia reejecutaba la carga sin parar.
-  const catsKey = JSON.stringify(store.categories ?? []);
-  const categorias = useMemo(
-    () => JSON.parse(catsKey) as { name: string; icon: string; href: string }[],
-    [catsKey]
-  );
+  const iniciales = inicialesDe(store.name);
+  const categoriasDestacadas = c.categoriasConFoto(3);
 
-  // ── Carga de productos ──
-  // Los demo salen de templates.config (getDemoProducts) y no de una lista propia:
-  // la lista propia de esta plantilla se habia desincronizado del config y por eso
-  // la categoria "Bebidas" quedaba vacia.
-  useEffect(() => {
-    const hrefDeCategoria = (nombre: string) =>
-      categorias.find((c) => c.name === nombre)?.href ?? (nombre || '').toLowerCase();
-
-    const cargar = async () => {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('store', store.slug);
-
-      const deLaBase: Producto[] = data && !error
-        ? data.map((p) => ({
-            id: String(p.id),
-            name: p.name,
-            // Antes se descartaba y las fichas quedaban con un hueco vacio.
-            desc: p.description || '',
-            price: Number(p.price) || 0,
-            category: hrefDeCategoria(p.category),
-            image: p.image || store.heroImage,
-          }))
-        : [];
-
-      const demo: Producto[] = demoActivo
-        ? getDemoProducts(store.template).map((p, i) => ({
-            id: `demo-${i}`,
-            name: p.name,
-            desc: p.description || '',
-            price: p.price,
-            category: hrefDeCategoria(p.category),
-            image: p.image,
-          }))
-        : [];
-
-      setProducts([...deLaBase, ...demo]);
-    };
-
-    cargar();
-  }, [store.slug, store.template, store.heroImage, demoActivo, categorias]);
-
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Modal: bloquea el scroll del fondo y cierra con Escape.
-  useEffect(() => {
-    if (!selectedProduct) return;
-    const previo = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setSelectedProduct(null); };
-    window.addEventListener('keydown', onKey);
-    return () => {
-      document.body.style.overflow = previo;
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [selectedProduct]);
-
-  // ── Carrito derivado ──
-  const cartItems = useMemo(
-    () =>
-      Object.entries(cart)
-        .map(([id, qty]) => ({ producto: products.find((p) => p.id === id), qty }))
-        .filter((l): l is { producto: Producto; qty: number } => Boolean(l.producto)),
-    [cart, products]
-  );
-  const cartCount = cartItems.reduce((n, l) => n + l.qty, 0);
-  const subtotal = cartItems.reduce((n, l) => n + l.producto.price * l.qty, 0);
-
-  const addToCart = (p: Producto) => setCart((c) => ({ ...c, [p.id]: (c[p.id] ?? 0) + 1 }));
-  const removeFromCart = (id: string) =>
-    setCart((c) => {
-      const qty = (c[id] ?? 0) - 1;
-      const next = { ...c };
-      if (qty <= 0) delete next[id];
-      else next[id] = qty;
-      return next;
-    });
-
-  const confirmarPedido = () => {
-    const lineas = cartItems
-      .map((l) => `• ${l.qty}x ${l.producto.name} — ${soles(l.producto.price * l.qty)}`)
-      .join('\n');
-    enviarPedidoPorWhatsApp(
-      store,
-      `¡Hola ${store.name}! Quiero hacer este pedido:\n\n${lineas}\n\nTotal: ${soles(subtotal)}`
-    );
-  };
-
-  // ── Categorias y filtrado ──
-  // Los chips salen de las categorias reales de la tienda. Antes estaban escritos
-  // a mano ('brasa', 'combos'...) asi que los productos cargados desde el panel
-  // no casaban con ningun chip y solo aparecian en "Todos".
-  // Si la tienda no cargo categorias, se deducen del catalogo (mismo criterio que Mercado)
-  // para no dejar el menu con un unico chip "Todos".
-  const categoriasEfectivas = categorias.length
-    ? categorias.map((c) => ({ id: c.href, label: c.name, icon: c.icon }))
-    : [...new Set(products.map((p) => p.category))]
-        .filter(Boolean)
-        .map((c) => ({ id: c, label: c.charAt(0).toUpperCase() + c.slice(1), icon: 'category' }));
-
-  const categoryTabs = [{ id: 'all', label: 'Todos', icon: 'apps' }, ...categoriasEfectivas];
-
-  const filtered = activeCategory === 'all' ? products : products.filter((p) => p.category === activeCategory);
-
-  // Las tarjetas del home usan las categorias de la tienda y una foto real del
-  // catalogo, en vez de tres imagenes fijas que podian no tener que ver con nada.
-  const categoriasDestacadas = categoriasEfectivas.slice(0, 3).map((c) => ({
-    ...c,
-    image: products.find((p) => p.category === c.id)?.image || store.heroImage,
-  }));
-
-  const whatsappVisible = tieneWhatsApp(store);
-  const telefonoVisible = whatsappVisible ? `+${(store.whatsapp || '').replace(/\D/g, '')}` : null;
+  const TABS = [
+    { id: 'home', label: 'Inicio' },
+    { id: 'menu', label: 'Menú' },
+    { id: 'pedidos', label: 'Pedidos' },
+    { id: 'contacto', label: 'Contacto' },
+  ];
 
   const navToMenu = (cat?: string) => {
     setActiveTab('menu');
-    if (cat) setActiveCategory(cat);
+    if (cat) c.setActiveCategory(cat);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const compartir = () => {
     if (navigator.share) {
-      navigator.share({ title: store.name, text: store.tagline, url: window.location.href });
+      navigator.share({ title: store.name, text: store.tagline, url: window.location.href }).catch(() => {});
+    } else {
+      navigator.clipboard?.writeText(window.location.href);
+      alert('Enlace copiado ✅');
     }
   };
 
-  const iniciales = store.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
-
   return (
-    <div
-      className="min-h-screen"
-      style={{ background: t.background, color: t.onBackground, fontFamily: t.fontBody }}
-    >
+    <div className="min-h-screen" style={{ background: t.background, color: t.onBackground, fontFamily: t.fontBody }}>
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
-      {/* ════════════════════════════════════════════
-          DESKTOP HEADER (md+)  — hidden on mobile
-          ════════════════════════════════════════════ */}
-      <header
-        className={`hidden md:flex fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ${isScrolled ? 'shadow-md py-2' : 'py-3'}`}
-        style={{ background: `${t.surface}F8`, backdropFilter: 'blur(20px)', borderBottom: `1px solid ${t.outlineVariant}30` }}
-      >
-        <div className="max-w-[1200px] mx-auto px-6 w-full flex items-center justify-between gap-6">
-          {/* Logo */}
-          <div className="flex items-center gap-3 min-w-0">
-            {store.logoImage ? (
-              <img src={store.logoImage} alt={store.name} className="w-9 h-9 rounded-lg object-cover border-2 shrink-0" style={{ borderColor: t.primary }} />
-            ) : (
-              <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 shadow-md" style={{ background: t.primary }}>
-                <span className={`font-black ${TXT.body} italic`} style={{ color: t.onPrimary }}>{iniciales}</span>
-              </div>
-            )}
-            {/* truncate: los nombres largos empujaban el nav y el carrito fuera de pantalla */}
-            <span
-              className="text-xl font-black italic tracking-tight uppercase truncate max-w-[240px]"
-              style={{ color: t.primary }}
-            >
-              {store.name}
-            </span>
-          </div>
-
-          {/* Nav links */}
-          <nav className="flex items-center gap-8 shrink-0">
-            {[
-              { id: 'home', label: 'Inicio' },
-              { id: 'menu', label: 'Menú' },
-              { id: 'pedidos', label: 'Pedidos' },
-              { id: 'contacto', label: 'Contacto' },
-            ].map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`font-bold ${TXT.body} uppercase tracking-wide transition-all relative`}
-                style={{
-                  color: activeTab === item.id ? t.primary : t.onSurfaceVariant,
-                  fontWeight: activeTab === item.id ? 700 : 500,
-                }}
-              >
-                {item.label}
-                {activeTab === item.id && (
-                  <span className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full" style={{ background: t.primary }} />
-                )}
-              </button>
-            ))}
-          </nav>
-
-          {/* CTA + Cart */}
-          <div className="flex items-center gap-3 shrink-0">
-            <button
-              onClick={() => navToMenu()}
-              className={`font-bold px-6 py-2.5 rounded-full ${TXT.body} transition-all hover:brightness-110 active:scale-95 shadow-md`}
-              style={{ background: t.primary, color: t.onPrimary, boxShadow: `0 4px 14px ${t.primary}40` }}
-            >
-              Pedir ahora
-            </button>
-            <button
-              onClick={() => setActiveTab('pedidos')}
-              className="relative w-10 h-10 rounded-full flex items-center justify-center transition-all"
-              style={{ background: `${t.primary}15`, color: t.primary }}
-              aria-label={`Ver pedido (${cartCount})`}
-            >
-              <span className={`material-symbols-outlined ${ICON.md}`} style={{ fontVariationSettings: "'FILL' 1" }}>shopping_cart</span>
-              {cartCount > 0 && (
-                <span
-                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-[9px] font-black flex items-center justify-center"
-                  style={{ background: t.primary, color: t.onPrimary }}
-                >
-                  {cartCount}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* ════════════════════════════════════════════
-          MOBILE HEADER — hidden on md+
-          ════════════════════════════════════════════ */}
-      <header
-        className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 h-16 shadow-sm transition-all duration-300"
-        style={{ background: `${t.surface}F8`, backdropFilter: 'blur(20px)', borderBottom: `1px solid ${t.outlineVariant}30` }}
-      >
-        <div className="flex items-center gap-3 min-w-0">
-          {store.logoImage ? (
-            <img src={store.logoImage} alt={store.name} className="w-9 h-9 rounded-lg object-cover border-2 shrink-0" style={{ borderColor: t.primary }} />
-          ) : (
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 shadow-md" style={{ background: t.primary }}>
-              <span className={`font-black ${TXT.body} italic`} style={{ color: t.onPrimary }}>{iniciales}</span>
-            </div>
-          )}
-          <div className="flex flex-col min-w-0">
-            <h1 className={`${TXT.lead} font-black italic tracking-tighter uppercase leading-none truncate`} style={{ color: t.primary }}>{store.name}</h1>
-            <p className={`${TXT.micro} font-bold uppercase tracking-wider truncate`} style={{ color: t.onSurfaceVariant }}>{store.tagline}</p>
-          </div>
-        </div>
-      </header>
+      <StoreHeader
+        store={store}
+        tabs={TABS}
+        active={activeTab}
+        onSelect={setActiveTab}
+        cartCount={c.cartCount}
+        onCarrito={() => setActiveTab('pedidos')}
+        onCta={() => navToMenu()}
+      />
 
       {/* ══ COMPARTIR / INSTALAR — en movil y escritorio ══ */}
       <StoreFloatingActions store={store} />
 
-      {/* ════════════════════════════════════════════
-          MAIN CONTENT
-          ════════════════════════════════════════════ */}
       <main className="pt-16 md:pt-[60px] pb-24 md:pb-12">
 
         {/* ─── TAB: INICIO ─── */}
@@ -356,10 +94,9 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/65 to-black/40 md:bg-gradient-to-r md:from-black/85 md:via-black/60 md:to-black/25" />
               </div>
 
-              {/* Hero content */}
               <div className="relative z-10 w-full max-w-[1200px] mx-auto px-6 flex flex-col md:flex-row items-center justify-center md:justify-between gap-3 h-full">
 
-                {/* ══ PROFILE CARD — left side (desktop only) ══ */}
+                {/* ══ FICHA DEL LOCAL — escritorio ══ */}
                 <div className="hidden md:flex flex-col items-center w-[190px] shrink-0 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-2xl text-center">
                   {store.logoImage ? (
                     <img src={store.logoImage} alt={store.name} className="w-16 h-16 rounded-xl object-cover border-[3px] shadow-lg mb-2" style={{ borderColor: t.primary }} />
@@ -414,7 +151,7 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
               </div>
             </section>
 
-            {/* ══ PROFILE CARD — mobile only ══ */}
+            {/* ══ FICHA DEL LOCAL — movil ══ */}
             <div className="md:hidden px-5 -mt-8 relative z-20">
               <div className="flex items-center gap-4 rounded-xl shadow-lg border p-4" style={{ background: t.surface, borderColor: `${t.outlineVariant}40` }}>
                 {store.logoImage ? (
@@ -443,7 +180,7 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
               </div>
             </div>
 
-            {/* ══ CATEGORÍAS — 2 col mobile / 3 cols desktop ══ */}
+            {/* ══ CATEGORÍAS — 2 col movil / 3 cols escritorio ══ */}
             {categoriasDestacadas.length > 0 && (
               <section className="max-w-[1200px] mx-auto px-5 md:px-6 pt-8 md:pt-16 pb-6 md:pb-12">
                 <div className="text-center mb-6 md:mb-10">
@@ -589,7 +326,6 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
         {/* ─── TAB: MENÚ ─── */}
         {activeTab === 'menu' && (
           <div className="animate-fade-in">
-            {/* Desktop menu header */}
             <div className="hidden md:block max-w-[1200px] mx-auto px-6 pt-8 pb-4">
               <h2 className="font-extrabold uppercase italic text-3xl mb-1" style={{ color: t.onBackground }}>Nuestro Menú</h2>
               <p className={TXT.body} style={{ color: t.onSurfaceVariant }}>Selecciona una categoría para explorar</p>
@@ -609,7 +345,7 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
                     {store.tagline || 'Directo de la brasa a tu mesa'}
                   </h2>
                   <button
-                    onClick={() => setActiveCategory('all')}
+                    onClick={() => c.setActiveCategory('all')}
                     className={`mt-4 ${TXT.small} font-bold px-6 py-2.5 rounded-full w-fit transition-colors shadow-md uppercase active:scale-95`}
                     style={{ background: t.primary, color: t.onPrimary }}
                   >
@@ -619,396 +355,83 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
               </div>
             </section>
 
-            {/* Category Chips */}
-            <nav
-              className="px-5 md:px-6 md:max-w-[1200px] md:mx-auto overflow-x-auto flex gap-3 whitespace-nowrap sticky top-16 md:top-[60px] py-3 z-40"
-              style={{ background: `${t.background}F0`, backdropFilter: 'blur(12px)' }}
-            >
-              {categoryTabs.map((tab) => {
-                const isActive = activeCategory === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveCategory(tab.id)}
-                    className={`flex items-center gap-1.5 px-5 py-2.5 rounded-full shrink-0 ${TXT.small} font-bold transition-all active:scale-95 shadow-sm border`}
-                    style={{
-                      background: isActive ? t.primary : t.surface,
-                      color: isActive ? t.onPrimary : t.onSurfaceVariant,
-                      borderColor: isActive ? 'transparent' : `${t.outlineVariant}60`,
-                      boxShadow: isActive ? `0 4px 12px ${t.primary}40` : 'none',
-                    }}
-                  >
-                    <span className={`material-symbols-outlined ${ICON.sm}`} style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>{tab.icon}</span>
-                    {tab.label}
-                  </button>
-                );
-              })}
-            </nav>
+            <CategoryChips
+              t={t}
+              tabs={c.categoryTabs}
+              active={c.activeCategory}
+              onSelect={c.setActiveCategory}
+            />
 
             <div className="px-5 md:px-6 md:max-w-[1200px] md:mx-auto">
               <h3 className={`${TXT.title} font-black uppercase italic tracking-tighter mb-4`} style={{ color: t.onSurface }}>
-                {activeCategory === 'all' ? 'Nuestros Favoritos' : categoryTabs.find((c) => c.id === activeCategory)?.label}
+                {c.activeCategory === 'all' ? 'Nuestros Favoritos' : c.categoryTabs.find((x) => x.id === c.activeCategory)?.label}
               </h3>
             </div>
 
-            {/* Product Grid */}
             <section className="px-5 md:px-6 md:max-w-[1200px] md:mx-auto pb-8">
-              {filtered.length === 0 ? (
-                // Antes una categoria sin productos dejaba la pantalla en blanco
-                <div className="py-16 text-center">
-                  <span className={`material-symbols-outlined ${ICON.xl} mb-3 block`} style={{ color: `${t.onSurfaceVariant}80` }}>restaurant_menu</span>
-                  <p className={`font-bold ${TXT.body}`} style={{ color: t.onSurface }}>Todavía no hay platos en esta categoría</p>
-                  <button
-                    onClick={() => setActiveCategory('all')}
-                    className={`mt-4 px-6 py-2.5 rounded-full font-bold ${TXT.small} uppercase active:scale-95 transition-all`}
-                    style={{ background: t.primary, color: t.onPrimary }}
-                  >
-                    Ver todo el menú
-                  </button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {filtered.map((product) => (
-                    <div
-                      key={product.id}
-                      onClick={() => setSelectedProduct(product)}
-                      className="rounded-2xl overflow-hidden group relative cursor-pointer border hover:shadow-lg transition-all duration-300 flex flex-col"
-                      style={{ background: t.surface, borderColor: `${t.outlineVariant}30` }}
-                    >
-                      <div className="aspect-square overflow-hidden relative">
-                        <img
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                          alt={product.name}
-                          src={product.image}
-                        />
-                      </div>
-                      <div className="p-3 flex flex-col flex-1">
-                        <h4 className={`font-bold ${TXT.body} leading-tight mb-1 line-clamp-2`} style={{ color: t.onSurface }}>{product.name}</h4>
-                        <p className={`${TXT.micro} mb-3 line-clamp-2 flex-1`} style={{ color: t.onSurfaceVariant }}>{product.desc}</p>
-                        <div className="flex justify-between items-center mt-auto">
-                          <span className={`font-extrabold ${TXT.lead}`} style={{ color: t.primary }}>{soles(product.price)}</span>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); addToCart(product); }}
-                            className="w-8 h-8 rounded-full flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all"
-                            style={{ background: t.primary, color: t.onPrimary }}
-                            aria-label={`Agregar ${product.name} al pedido`}
-                          >
-                            <span className={`material-symbols-outlined ${ICON.sm}`}>add</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <ProductGrid
+                t={t}
+                productos={c.filtered}
+                onSelect={setSelectedProduct}
+                onAdd={c.addToCart}
+                onVerTodo={() => c.setActiveCategory('all')}
+              />
             </section>
           </div>
         )}
 
         {/* ─── TAB: PEDIDOS ─── */}
         {activeTab === 'pedidos' && (
-          <div className="animate-fade-in px-5 py-8 max-w-[600px] mx-auto text-center space-y-6">
-            <div className="w-20 h-20 mx-auto rounded-full flex items-center justify-center shadow-inner" style={{ backgroundColor: `${t.primary}15` }}>
-              <span className={`material-symbols-outlined ${ICON.xl}`} style={{ color: t.primary }}>shopping_cart_checkout</span>
-            </div>
-            {cartItems.length > 0 ? (
-              <div className="space-y-5 text-left p-6 rounded-3xl border shadow-sm" style={{ background: t.surface, borderColor: `${t.outlineVariant}40` }}>
-                <h3 className="font-black text-xl uppercase italic border-b pb-3" style={{ color: t.primary, borderColor: `${t.outlineVariant}60` }}>
-                  Resumen de tu Pedido
-                </h3>
-
-                {/* Lineas reales del carrito, con su cantidad y su precio */}
-                <div className="space-y-3">
-                  {cartItems.map((l) => (
-                    <div key={l.producto.id} className="flex items-center gap-3 pb-3 border-b" style={{ borderColor: `${t.outlineVariant}40` }}>
-                      <img src={l.producto.image} alt={l.producto.name} className="w-12 h-12 rounded-lg object-cover shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className={`font-bold ${TXT.body} leading-tight line-clamp-2`} style={{ color: t.onSurface }}>{l.producto.name}</p>
-                        <p className={TXT.micro} style={{ color: t.onSurfaceVariant }}>{soles(l.producto.price)} c/u</p>
-                      </div>
-                      {/* Total y controles apilados: en una sola fila el nombre quedaba en "Pa..." a 375px */}
-                      <div className="flex flex-col items-end gap-1.5 shrink-0">
-                        <span className={`font-black ${TXT.body}`} style={{ color: t.primary }}>
-                          {soles(l.producto.price * l.qty)}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => removeFromCart(l.producto.id)}
-                            className="w-7 h-7 rounded-full flex items-center justify-center active:scale-90 transition-all"
-                            style={{ background: `${t.primary}15`, color: t.primary }}
-                            aria-label={`Quitar uno de ${l.producto.name}`}
-                          >
-                            <span className={`material-symbols-outlined ${ICON.sm}`}>remove</span>
-                          </button>
-                          <span className={`font-black ${TXT.body} w-5 text-center`} style={{ color: t.onSurface }}>{l.qty}</span>
-                          <button
-                            onClick={() => addToCart(l.producto)}
-                            className="w-7 h-7 rounded-full flex items-center justify-center active:scale-90 transition-all"
-                            style={{ background: t.primary, color: t.onPrimary }}
-                            aria-label={`Agregar otro ${l.producto.name}`}
-                          >
-                            <span className={`material-symbols-outlined ${ICON.sm}`}>add</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="p-4 rounded-2xl flex justify-between items-center" style={{ background: t.surfaceContainer }}>
-                  <span className={`font-bold ${TXT.small} uppercase`} style={{ color: t.onSurfaceVariant }}>Total</span>
-                  <span className={`font-black ${TXT.title}`} style={{ color: t.primary }}>{soles(subtotal)}</span>
-                </div>
-
-                <button
-                  onClick={confirmarPedido}
-                  className={`w-full py-4 rounded-full font-bold ${TXT.lead} shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 uppercase`}
-                  style={{ backgroundColor: t.primary, color: t.onPrimary }}
-                >
-                  <span className={`material-symbols-outlined ${ICON.md}`}>chat</span>
-                  Confirmar por WhatsApp
-                </button>
-                {!whatsappVisible && (
-                  <p className={`${TXT.micro} text-center`} style={{ color: t.onSurfaceVariant }}>
-                    Esta tienda todavía no configuró su WhatsApp de pedidos.
-                  </p>
-                )}
-                <button
-                  onClick={() => setCart({})}
-                  className={`w-full py-2 rounded-full font-bold ${TXT.small} uppercase transition-colors hover:opacity-70`}
-                  style={{ color: t.onSurfaceVariant }}
-                >
-                  Vaciar Carrito
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <h3 className={`font-bold ${TXT.title}`}>Tu carrito está vacío</h3>
-                <p className={`${TXT.body} max-w-xs mx-auto`} style={{ color: t.onSurfaceVariant }}>
-                  Explora nuestro delicioso menú y agrega tus combos o pollos favoritos.
-                </p>
-                <button
-                  onClick={() => setActiveTab('menu')}
-                  className={`px-8 py-3 rounded-full font-bold ${TXT.body} shadow-md uppercase inline-block active:scale-95 transition-all`}
-                  style={{ backgroundColor: t.primary, color: t.onPrimary }}
-                >
-                  Ir al Menú
-                </button>
-              </div>
-            )}
-          </div>
+          <CartPanel
+            t={t}
+            cartItems={c.cartItems}
+            subtotal={c.subtotal}
+            onAdd={c.addToCart}
+            onRemove={c.removeFromCart}
+            onVaciar={c.vaciarCarrito}
+            onConfirmar={c.confirmarPedido}
+            onIrAlMenu={() => navToMenu()}
+            whatsappVisible={c.whatsappVisible}
+          />
         )}
 
         {/* ─── TAB: CONTACTO ─── */}
         {activeTab === 'contacto' && (
-          <div className="animate-fade-in px-5 py-8 max-w-[800px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
-            <div className="space-y-6">
-              <h3 className="font-black text-2xl uppercase italic" style={{ color: t.primary }}>¡Visítanos o Escríbenos!</h3>
-              <p className={`${TXT.body} leading-relaxed`} style={{ color: t.onSurfaceVariant }}>
-                Estamos listos para llevarte la mejor experiencia crujiente a tu mesa. Si tienes dudas, eventos especiales o pedidos corporativos, ponte en contacto.
-              </p>
-              <div className="space-y-4">
-                {[
-                  { icon: 'location_on', title: 'Nuestra Sede Central', desc: INFO_LOCAL.direccion },
-                  // El telefono sale del WhatsApp que la tienda cargo en su panel;
-                  // antes estaba escrito +51 999 999 999 para todas las tiendas.
-                  ...(telefonoVisible ? [{ icon: 'call', title: 'Teléfono / WhatsApp', desc: telefonoVisible }] : []),
-                  { icon: 'schedule', title: 'Horario de Atención', desc: INFO_LOCAL.horarioLargo },
-                ].map((item) => (
-                  <div key={item.icon} className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-md" style={{ backgroundColor: t.primary, color: t.onPrimary }}>
-                      <span className={`material-symbols-outlined ${ICON.md}`}>{item.icon}</span>
-                    </div>
-                    <div>
-                      <h4 className={`font-bold ${TXT.body}`} style={{ color: t.onSurface }}>{item.title}</h4>
-                      <p className={`${TXT.small} mt-0.5`} style={{ color: t.onSurfaceVariant }}>{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="p-6 rounded-3xl border shadow-sm space-y-4" style={{ background: t.surface, borderColor: `${t.outlineVariant}40` }}>
-              <h4 className={`font-bold ${TXT.lead} uppercase`} style={{ color: t.onSurface }}>Déjanos un Mensaje</h4>
-              {/* El mensaje se abre en WhatsApp de la tienda. Antes era un alert de mentira. */}
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const f = new FormData(e.currentTarget);
-                  enviarPedidoPorWhatsApp(
-                    store,
-                    `Hola ${store.name}, soy ${f.get('nombre')} (${f.get('telefono')}).\n\n${f.get('mensaje')}`
-                  );
-                }}
-                className="space-y-3.5"
-              >
-                {[
-                  { name: 'nombre', label: 'Nombre Completo', type: 'text' },
-                  { name: 'telefono', label: 'Tu Teléfono', type: 'tel' },
-                ].map((f) => (
-                  <div key={f.name}>
-                    <label htmlFor={`contacto-${f.name}`} className={`block ${TXT.micro} font-bold uppercase mb-1`} style={{ color: t.onSurfaceVariant }}>{f.label}</label>
-                    <input
-                      id={`contacto-${f.name}`}
-                      name={f.name}
-                      type={f.type}
-                      required
-                      className={`w-full border rounded-xl px-3 py-2 ${TXT.small} font-semibold focus:outline-none`}
-                      style={{ borderColor: `${t.outlineVariant}80`, background: t.surface, color: t.onSurface }}
-                      onFocus={(e) => (e.target.style.outline = `2px solid ${t.primary}`)}
-                      onBlur={(e) => (e.target.style.outline = 'none')}
-                    />
-                  </div>
-                ))}
-                <div>
-                  <label htmlFor="contacto-mensaje" className={`block ${TXT.micro} font-bold uppercase mb-1`} style={{ color: t.onSurfaceVariant }}>Mensaje o Consulta</label>
-                  <textarea
-                    id="contacto-mensaje"
-                    name="mensaje"
-                    rows={3}
-                    required
-                    className={`w-full border rounded-xl px-3 py-2 ${TXT.small} font-semibold focus:outline-none`}
-                    style={{ borderColor: `${t.outlineVariant}80`, background: t.surface, color: t.onSurface }}
-                    onFocus={(e) => (e.target.style.outline = `2px solid ${t.primary}`)}
-                    onBlur={(e) => (e.target.style.outline = 'none')}
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className={`w-full py-3 rounded-full font-bold ${TXT.small} shadow-md uppercase active:scale-95 transition-all`}
-                  style={{ backgroundColor: t.primary, color: t.onPrimary }}
-                >
-                  Enviar por WhatsApp
-                </button>
-              </form>
-            </div>
-          </div>
+          <ContactPanel
+            t={t}
+            telefonoVisible={c.telefonoVisible}
+            onEnviar={(d) =>
+              enviarPedidoPorWhatsApp(store, `Hola ${store.name}, soy ${d.nombre} (${d.telefono}).\n\n${d.mensaje}`)
+            }
+          />
         )}
 
         {/* ══ FOOTER — en todas las pestañas, no solo en Inicio ══ */}
-        <footer className="w-full py-8 mt-10" style={{ background: t.surfaceContainer, borderTop: `1px solid ${t.outlineVariant}40` }}>
-          <div className="max-w-[1200px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex flex-col gap-0.5 items-center md:items-start">
-              <span className={`font-extrabold italic uppercase tracking-tight ${TXT.lead}`} style={{ color: t.primary }}>{store.name}</span>
-              <p className={TXT.small} style={{ color: t.onSurfaceVariant }}>© {new Date().getFullYear()}. Todos los derechos reservados.</p>
-            </div>
-            <div className="flex gap-2">
-              {/* Botones con accion real; antes eran <a href="#"> que no hacian nada */}
-              {[
-                { icon: 'share', label: 'Compartir', onClick: compartir },
-                { icon: 'restaurant', label: 'Menú', onClick: () => navToMenu() },
-                { icon: 'chat', label: 'Contacto', onClick: () => setActiveTab('contacto') },
-              ].map((s) => (
-                <button
-                  key={s.icon}
-                  onClick={s.onClick}
-                  className="w-9 h-9 rounded-full flex items-center justify-center transition-all"
-                  style={{ background: `${t.primary}15`, color: t.primary }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = t.primary; e.currentTarget.style.color = t.onPrimary; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = `${t.primary}15`; e.currentTarget.style.color = t.primary; }}
-                  aria-label={s.label}
-                  title={s.label}
-                >
-                  <span className={`material-symbols-outlined ${ICON.sm}`}>{s.icon}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </footer>
+        <StoreFooter
+          t={t}
+          storeName={store.name}
+          acciones={[
+            { icon: 'share', label: 'Compartir', onClick: compartir },
+            { icon: 'restaurant', label: 'Menú', onClick: () => navToMenu() },
+            { icon: 'chat', label: 'Contacto', onClick: () => setActiveTab('contacto') },
+          ]}
+        />
       </main>
 
-      {/* ════════════════════════════════════════════
-          MOBILE BOTTOM NAV — hidden on md+
-          ════════════════════════════════════════════ */}
-      <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-16 flex justify-around items-center px-4 rounded-t-2xl shadow-lg"
-        style={{ background: `${t.surface}F8`, backdropFilter: 'blur(20px)', borderTop: `1px solid ${t.outlineVariant}25` }}
-      >
-        {[
+      <BottomNav
+        t={t}
+        tabs={[
           { id: 'home', icon: 'home', label: 'Inicio' },
           { id: 'menu', icon: 'restaurant_menu', label: 'Menú' },
-          { id: 'pedidos', icon: 'shopping_cart', label: 'Pedidos', badge: cartCount },
+          { id: 'pedidos', icon: 'shopping_cart', label: 'Pedidos' },
           { id: 'contacto', icon: 'chat', label: 'Contacto' },
-        ].map((item) => {
-          const isActive = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className="flex flex-col items-center justify-center gap-0.5 transition-all relative flex-1"
-              style={{
-                color: isActive ? t.primary : t.onSurfaceVariant,
-                fontWeight: isActive ? 700 : 400,
-                opacity: isActive ? 1 : 0.7,
-              }}
-            >
-              <span
-                className={`material-symbols-outlined ${ICON.lg} transition-all`}
-                style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}
-              >
-                {item.icon}
-              </span>
-              <span className="text-[10px] font-bold uppercase tracking-tighter">{item.label}</span>
-              {item.badge != null && item.badge > 0 && (
-                <span
-                  className="absolute top-0.5 right-[15%] w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center"
-                  style={{ background: t.primary, color: t.onPrimary }}
-                >
-                  {item.badge}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </nav>
+        ]}
+        active={activeTab}
+        onSelect={setActiveTab}
+        cartCount={c.cartCount}
+      />
 
-      {/* Product detail modal */}
-      {selectedProduct && (
-        <div
-          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center"
-          style={{ background: 'rgba(0,0,0,0.5)' }}
-          onClick={() => setSelectedProduct(null)}
-          role="dialog"
-          aria-modal="true"
-          aria-label={selectedProduct.name}
-        >
-          <div
-            className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-            style={{ background: t.surface }}
-          >
-            <div className="relative">
-              <button
-                onClick={() => setSelectedProduct(null)}
-                className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center z-10"
-                style={{ background: 'rgba(0,0,0,0.4)', color: '#fff' }}
-                aria-label="Cerrar"
-              >
-                <span className={`material-symbols-outlined ${ICON.sm}`}>close</span>
-              </button>
-              <div className="aspect-square">
-                <img className="w-full h-full object-cover" alt={selectedProduct.name} src={selectedProduct.image} />
-              </div>
-            </div>
-            <div className="p-5">
-              <h2 className={`font-bold ${TXT.title}`} style={{ color: t.onSurface }}>{selectedProduct.name}</h2>
-              {selectedProduct.desc && (
-                <p className={`${TXT.body} mt-2 leading-relaxed`} style={{ color: t.onSurfaceVariant }}>{selectedProduct.desc}</p>
-              )}
-              <div className="flex items-center justify-between mt-5">
-                <span className="font-black text-xl" style={{ color: t.primary }}>{soles(selectedProduct.price)}</span>
-                <button
-                  onClick={() => { addToCart(selectedProduct); setSelectedProduct(null); }}
-                  className={`px-6 py-2.5 rounded-full font-bold ${TXT.body} flex items-center gap-1.5 transition-transform active:scale-95`}
-                  style={{ background: t.primary, color: t.onPrimary }}
-                >
-                  <span className={`material-symbols-outlined ${ICON.sm}`}>add</span>
-                  Agregar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ProductModal t={t} producto={selectedProduct} onClose={() => setSelectedProduct(null)} onAdd={c.addToCart} />
     </div>
   );
 }

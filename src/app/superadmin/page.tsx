@@ -9,11 +9,23 @@ import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { supabase } from '@/lib/supabase';
 
 // Plantillas que ya tienen botón de pedido por WhatsApp implementado en su código
-const TEMPLATES_WITH_WHATSAPP = new Set(['polleria', 'estilosmirka', 'sweetkittynails', 'mercado']);
+const TEMPLATES_WITH_WHATSAPP = new Set([
+  'polleria', 'estilosmirka', 'sweetkittynails', 'mercado', 'menudirecto', 'iniciocatalogo',
+]);
 
 // Datos de presentacion comercial que no viven en templates.config (descripcion
 // e imagen de portada). Si una plantilla no esta aca, cae a su heroImage.
 const TEMPLATE_PRESENTATION: Record<string, { category?: string; description: string; previewUrl: string }> = {
+  menudirecto: {
+    category: 'Restaurantes',
+    description: 'Abre directo en la carta, sin pantalla de inicio. Menos pasos entre entrar y pedir: ideal para delivery y comida rápida.',
+    previewUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&q=80',
+  },
+  iniciocatalogo: {
+    category: 'Restaurantes',
+    description: 'Portada de bienvenida con los platos justo debajo. El home clásico de tienda: presenta el local y muestra qué se puede pedir.',
+    previewUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&q=80',
+  },
   default: {
     category: 'Negocios',
     description: 'Diseño minimalista que prioriza el contenido visual y la simplicidad estructural.',
@@ -59,6 +71,7 @@ const TEMPLATE_PRESENTATION: Record<string, { category?: string; description: st
 // Todas las plantillas montan <StoreFloatingActions/>, en movil y en escritorio.
 const TEMPLATES_WITH_SHARE_INSTALL = new Set([
   'polleria', 'estilosmirka', 'mercado', 'sunset', 'natura', 'amazonia', 'sweetkittynails',
+  'menudirecto', 'iniciocatalogo',
 ]);
 
 const META: Record<string, { emoji: string; cat: string }> = {
@@ -68,6 +81,8 @@ const META: Record<string, { emoji: string; cat: string }> = {
   amazonia: { emoji: '🏺', cat: 'Artesanía' },
   estilosmirka: { emoji: '👗', cat: 'Boutique' },
   sweetkittynails: { emoji: '💅', cat: 'Beauty' },
+  menudirecto: { emoji: '🍔', cat: 'Restaurantes' },
+  iniciocatalogo: { emoji: '🔥', cat: 'Restaurantes' },
 };
 
 const CATEGORY_ICONS: Record<string, string> = {
