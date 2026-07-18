@@ -16,6 +16,8 @@ export interface StoreConfig {
   categories: { name: string; icon: string; href: string }[];
   logoImage?: string;
   domain?: string;
+  /** Numero al que llegan los pedidos, con codigo de pais y sin signos: 51987654321 */
+  whatsapp?: string;
 }
 
 export const stores: Record<string, StoreConfig> = {};

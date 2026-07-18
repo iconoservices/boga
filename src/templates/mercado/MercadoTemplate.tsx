@@ -5,6 +5,7 @@ import { StoreConfig } from '@/lib/stores.config';
 import { supabase } from '@/lib/supabase';
 import { getDemoProducts } from '@/lib/templates.config';
 import { useDemo } from '@/context/DemoContext';
+import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 
 interface MercadoTemplateProps {
   store: StoreConfig;
@@ -181,8 +182,10 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
 
   const enviarPorWhatsApp = () => {
     const lineas = carrito.map((i) => `- ${i.producto.name} (x${i.cantidad}): S/ ${(i.producto.price * i.cantidad).toFixed(2)}`).join('\n');
-    const texto = encodeURIComponent(`*Pedido de ${store.name}*\n-------------------------\n${lineas}\n-------------------------\n*Total:* S/ ${total.toFixed(2)}`);
-    window.open(`https://wa.me/51999999999?text=${texto}`, '_blank');
+    enviarPedidoPorWhatsApp(
+      store,
+      `*Pedido de ${store.name}*\n-------------------------\n${lineas}\n-------------------------\n*Total:* S/ ${total.toFixed(2)}`
+    );
   };
 
   // ── Compartir / Instalar (PWA) ──

@@ -145,7 +145,7 @@ export default function DashboardPage() {
   const [isStoreEditorOpen, setIsStoreEditorOpen] = useState(false);
   const [editingStoreSlug, setEditingStoreSlug] = useState<string | null>(null);
   const [isStoreSaving, setIsStoreSaving] = useState(false);
-  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '' });
+  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '' });
   const [storeLogoFile, setStoreLogoFile] = useState<File | null>(null);
   const [storeHeroFile, setStoreHeroFile] = useState<File | null>(null);
   const [storeLogoPreview, setStoreLogoPreview] = useState<string | null>(null);
@@ -269,6 +269,7 @@ export default function DashboardPage() {
       name: dbData?.name || config?.name || '',
       tagline: dbData?.tagline || config?.tagline || '',
       marketplace_category: dbData?.marketplace_category || config?.marketplaceCategory || '',
+      whatsapp: dbData?.whatsapp || '',
     });
     setStoreHeroPreview(dbData?.hero_image || config?.heroImage || null);
     setStoreLogoPreview(dbData?.logo_image || config?.logoImage || null);
@@ -309,6 +310,7 @@ export default function DashboardPage() {
         name: storeForm.name,
         tagline: storeForm.tagline,
         marketplace_category: storeForm.marketplace_category,
+        whatsapp: storeForm.whatsapp || null,
         status: 'active',
       };
       if (heroUrl) upsertData.hero_image = heroUrl;
@@ -2242,6 +2244,28 @@ export default function DashboardPage() {
                   className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
                   placeholder="Ej: Restaurantes, Moda, Salud..."
                 />
+              </div>
+
+              {/* WhatsApp de pedidos */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">WhatsApp de Pedidos</label>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  value={storeForm.whatsapp}
+                  onChange={e => setStoreForm({ ...storeForm, whatsapp: e.target.value.replace(/\D/g, '') })}
+                  className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                  placeholder="51987654321"
+                />
+                <p className="text-xs text-gray-500 mt-1.5">
+                  Con código de país y sin espacios ni signos. Es el número al que te llegan los pedidos de tu tienda.
+                </p>
+                {!storeForm.whatsapp && (
+                  <p className="text-xs text-[#8c0009] font-semibold mt-1.5 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[14px]">warning</span>
+                    Sin este número, el botón de pedir de tu tienda no llega a nadie.
+                  </p>
+                )}
               </div>
             </div>
 

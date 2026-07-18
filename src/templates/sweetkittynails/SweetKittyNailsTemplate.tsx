@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
 import { supabase } from '@/lib/supabase';
 import { useDemo } from '@/context/DemoContext';
+import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 
 interface SweetKittyNailsTemplateProps {
   store: StoreConfig;
@@ -176,16 +177,16 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
 
   // WhatsApp integrations
   const sendCartToWhatsApp = () => {
-    const header = `*Pedido de Sweet Kitty Nails*\n-------------------------\n`;
+    const header = `*Pedido de ${store.name}*\n-------------------------\n`;
     const itemsText = cart.map(item => `- ${item.product.title} (x${item.quantity}): S/ ${(item.product.price * item.quantity).toFixed(2)}`).join('\n');
     const footer = `\n-------------------------\n*Total:* S/ ${cartTotal.toFixed(2)}`;
-    const text = encodeURIComponent(header + itemsText + footer);
-    window.open(`https://wa.me/51999999999?text=${text}`, '_blank');
+    enviarPedidoPorWhatsApp(store, header + itemsText + footer);
   };
 
   const sendBookingToWhatsApp = () => {
-    const text = encodeURIComponent(
-      `*Nueva Reserva en Sweet Kitty Nails*\n` +
+    enviarPedidoPorWhatsApp(
+      store,
+      `*Nueva Reserva en ${store.name}*\n` +
       `-------------------------\n` +
       `*Código:* ${bookingCode}\n` +
       `*Servicio:* ${selectedService.title}\n` +
@@ -197,7 +198,6 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
       `*Teléfono:* ${clientPhone}\n` +
       `*Nota:* ${clientNote || 'Ninguna'}`
     );
-    window.open(`https://wa.me/51999999999?text=${text}`, '_blank');
   };
 
   return (

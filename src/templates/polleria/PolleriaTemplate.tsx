@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
 import { supabase } from '@/lib/supabase';
 import { useDemo } from '@/context/DemoContext';
+import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 
 interface PolleriaTemplateProps {
   store: StoreConfig;
@@ -693,7 +694,7 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
                 <button
                   onClick={() => {
                     const message = `¡Hola! Me gustaría hacer un pedido de ${cartCount}x Pollos a la Brasa por ${store.name}.`;
-                    window.open(`https://wa.me/51999999999?text=${encodeURIComponent(message)}`, '_blank');
+                    enviarPedidoPorWhatsApp(store, message);
                   }}
                   className="w-full text-white py-4 rounded-full font-bold text-base shadow-md hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 uppercase"
                   style={{ backgroundColor: t.primary }}

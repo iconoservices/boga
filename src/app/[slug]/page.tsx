@@ -126,6 +126,7 @@ async function getDynamicStore(slug: string) {
         theme: resolvedTheme,
         categories: dbStore.categories || [],
         logoImage: dbStore.logo_image || undefined,
+        whatsapp: dbStore.whatsapp || undefined,
       };
     }
   } catch (err) {
@@ -179,6 +180,7 @@ export default async function StorePage({ params, searchParams }: Props) {
         theme: defaultTmpl?.theme || DEFAULT_THEME,
         categories: defaultTmpl?.categories || [],
         logoImage: undefined,
+        whatsapp: undefined,
       };
     } else {
       notFound();
