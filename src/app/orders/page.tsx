@@ -16,7 +16,7 @@ export default function Orders() {
     if (saved) {
       try {
         setFavorites(JSON.parse(saved));
-      } catch (e) {}
+      } catch {}
     }
   }, []);
 

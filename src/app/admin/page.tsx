@@ -547,7 +547,7 @@ export default function DashboardPage() {
                 try {
                   // The image format can usually be detected, but we specify 'JPEG' as a fallback
                   doc.addImage(b64, 'JPEG', data.cell.x + 2, data.cell.y + 2, 14, 14);
-                } catch(e) {}
+                } catch {}
               }
             }
           }
@@ -1619,7 +1619,7 @@ export default function DashboardPage() {
                     <p className="text-[10px] font-semibold">El carrito está vacío</p>
                   </div>
                 ) : (
-                  posCart.map((item, index) => (
+                  posCart.map((item) => (
                     <div key={item.product.id} className="flex items-center justify-between gap-2 pb-1.5 border-b border-gray-100 last:border-0 last:pb-0">
                       <div className="flex-1 min-w-0">
                         <h4 className="font-semibold text-xs text-[#191c1d] truncate">{item.product.name}</h4>
@@ -1841,7 +1841,7 @@ export default function DashboardPage() {
                     {/* Cart Items List */}
                     <div className="p-3 bg-white border-b border-[#e1e3e4]/10 space-y-3">
                       <h4 className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Productos</h4>
-                      {posCart.map((item, index) => (
+                      {posCart.map((item) => (
                         <div key={item.product.id} className="flex items-center justify-between gap-3 group">
                           <div className="flex-1 min-w-0">
                             <h4 className="font-semibold text-xs text-[#191c1d] truncate">{item.product.name}</h4>

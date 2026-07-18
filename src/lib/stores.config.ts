@@ -20,12 +20,5 @@ export interface StoreConfig {
   whatsapp?: string;
 }
 
-export const stores: Record<string, StoreConfig> = {};
-
-export function getStore(slug: string): StoreConfig | null {
-  return stores[slug] ?? null;
-}
-
-export function getStoreByDomain(domain: string): StoreConfig | null {
-  return null;
-}
+// Las tiendas viven en Supabase, no aca. Cada consumidor las carga por su lado:
+// la tienda publica en app/[slug]/page.tsx, el panel en app/admin/page.tsx.

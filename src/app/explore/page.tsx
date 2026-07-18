@@ -72,7 +72,6 @@ export default function Explore() {
       if (data && !error && data.length > 0) {
         const filteredData = data.filter((p: any) => allStores[p.store] !== undefined);
         const formattedProducts = filteredData.map((p: any) => {
-          const storeDef = allStores[p.store];
           return {
             title: p.name,
             price: `S/ ${p.price.toFixed(2)}`,
@@ -507,7 +506,7 @@ export default function Explore() {
             </div>
             
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {storeData.filter(s => activeCategory === 'Todas' || s.macroCat === activeCategory).map((store, idx) => (
+              {storeData.filter(s => activeCategory === 'Todas' || s.macroCat === activeCategory).map((store) => (
                 <Link href={`/${store.slug}`} key={store.slug} className="bg-white rounded-2xl p-3 shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col gap-3 group hover:border-primary/20 transition-all">
                   <div className="flex gap-2">
                     {store.products.slice(0, 2).map((p, i) => (

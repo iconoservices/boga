@@ -4,7 +4,6 @@ import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { type StoreConfig } from '@/lib/stores.config';
 import { getTemplate, getDemoProducts, getAllTemplates } from '@/lib/templates.config';
-import StoreRenderer from '@/app/[slug]/StoreRenderer';
 import { useDemo } from '@/context/DemoContext';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { supabase } from '@/lib/supabase';
@@ -400,7 +399,6 @@ export default function AdminPage() {
   const [categories, setCategories] = useState(INITIAL_CATEGORIES);
   const [editingCatId, setEditingCatId] = useState<number | null>(null);
   const [editingSubId, setEditingSubId] = useState<{catId: number, index: number} | null>(null);
-  const [activeCategoryMenu, setActiveCategoryMenu] = useState<number | null>(null);
 
   // Usuarios state
   const ROLES = ['super_admin', 'store_admin'] as const;
@@ -410,7 +408,6 @@ export default function AdminPage() {
     { id: 2, email: 'pedro@sunsetlounge.com', name: 'Pedro Ramírez',  role: 'store_admin' as UserRole, store: 'sunset', status: 'activo' },
     { id: 3, email: 'maria@delva.com',      name: 'María López',     role: 'store_admin' as UserRole, store: 'delva',  status: 'pendiente' },
   ]);
-  const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteStore, setInviteStore] = useState('');
   const [inviteRole, setInviteRole] = useState<UserRole>('store_admin');
@@ -448,10 +445,11 @@ export default function AdminPage() {
       bannerUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB9g-m183JnnrY_f0N5rXywD-xM13gkYKvVFKXrodlMe2Wl-cVJBt_FnbbOL6au82hjOYtmUSwIqKmxiEaV72Jc7jTvkYft1B57f1TDvU_1OaE4Vy6PL_ONz-APy0X1nepCQyhOsvc14BSmsgTB_W2VfezRBB-vXsIAI-SH5_4QCnyEV-4745oJKr5t8PWBcfvo1Hee7Q0dZHZe2e1wAGtUK1DoXwU3nnH9W3H_dMaXPzOjv7OKBH-CMZvQShSxIQeORMn2gqKR3w'
     }
   ]);
-  const [archivedPackages, setArchivedPackages] = useState([
+  // Fijos: nada los modifica, solo se listan.
+  const archivedPackages = [
     { id: 'archive-1', name: 'Legacy Basic (v1)', price: 29, usersCount: '1,240', active: false },
     { id: 'archive-2', name: 'Early Adopter Special', price: 15, usersCount: '450', active: true },
-  ]);
+  ];
 
   // Packages management modals state
   const [showPackageModal, setShowPackageModal] = useState(false);
@@ -520,7 +518,6 @@ export default function AdminPage() {
     }]);
     setInviteSent(true);
     setTimeout(() => {
-      setShowInviteModal(false);
       setInviteEmail(''); setInviteStore(''); setInviteRole('store_admin'); setInviteSent(false);
     }, 1800);
   };
@@ -692,9 +689,6 @@ export default function AdminPage() {
     s.name.toLowerCase().includes(search.toLowerCase()) ||
     s.slug.toLowerCase().includes(search.toLowerCase())
   );
-
-  const toggleStore = (slug: string) =>
-    setActiveStores((prev) => ({ ...prev, [slug]: !prev[slug] }));
 
   const activeCount = storeList.filter(s => activeStores[s.slug]).length;
   const pausedCount = storeList.length - activeCount;
@@ -3365,7 +3359,6 @@ export default function AdminPage() {
                     type="button"
                     onClick={() => {
                       if (confirm('¿Restablecer todos los campos a sus valores por defecto? Se perderán los cambios no guardados.')) {
-                        const tpl = getTemplate(storeForm.template as string);
                         setStoreForm({
                           slug: editingStore ? storeForm.slug : '',
                           name: '',

@@ -11,7 +11,6 @@ interface EstilosMirkaTemplateProps {
 
 export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProps) {
   const [activeCategory, setActiveCategory] = useState<string>('all');
-  const [searchTerm, setSearchTerm] = useState('');
 
   // Product Detail Sheet
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
@@ -114,11 +113,11 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
   const theme = store.theme;
   const allProducts = supabaseProducts;
 
-  const filteredProducts = allProducts.filter((prod) => {
-    const matchCat = activeCategory === 'all' || prod.category === activeCategory;
-    const matchSearch = prod.title.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchCat && matchSearch;
-  });
+  // Habia un filtro por searchTerm, pero nunca se construyo el input que lo
+  // alimentara: el termino era siempre '' y la condicion siempre true.
+  const filteredProducts = allProducts.filter(
+    (prod) => activeCategory === 'all' || prod.category === activeCategory
+  );
 
   // Cart Handlers
   const addToCart = (product: any) => {

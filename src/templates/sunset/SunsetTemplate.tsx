@@ -69,13 +69,6 @@ const MENU_ITEMS = [
   },
 ];
 
-const NAV_TABS = [
-  { id: 'all', label: 'Todo' },
-  { id: 'kitchen', label: 'Cocina' },
-  { id: 'bar', label: 'Bar' },
-  { id: 'cafe', label: 'Café' },
-];
-
 export default function SunsetTemplate({ store }: SunsetTemplateProps) {
   const [activeTab, setActiveTab] = useState('all');
   const [entered, setEntered] = useState(false);

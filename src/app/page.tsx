@@ -250,7 +250,7 @@ export default function Home() {
     if (saved) {
       try {
         setFavorites(JSON.parse(saved));
-      } catch (e) {}
+      } catch {}
     }
   }, []);
 
@@ -462,7 +462,7 @@ export default function Home() {
             className="flex overflow-x-auto hide-scrollbar rounded-2xl"
             style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
           >
-            {BANNERS_RAW.map((b, idx) => (
+            {BANNERS_RAW.map((b) => (
               <div
                 key={b.id}
                 className="relative aspect-[21/9] lg:aspect-[21/5.5] overflow-hidden shadow-lg shrink-0 group"
