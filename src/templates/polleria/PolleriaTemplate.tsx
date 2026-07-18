@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useDemo } from '@/context/DemoContext';
 import { getDemoProducts } from '@/lib/templates.config';
 import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
+import StoreFloatingActions from '@/components/StoreFloatingActions';
 
 interface PolleriaTemplateProps {
   store: StoreConfig;
@@ -78,9 +79,7 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [selectedProduct, setSelectedProduct] = useState<Producto | null>(null);
-  const [isInstalled, setIsInstalled] = useState(false);
 
   // Clave estable de las categorias: store.categories es un array nuevo en cada
   // render del padre y como dependencia reejecutaba la carga sin parar.
@@ -89,51 +88,6 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
     () => JSON.parse(catsKey) as { name: string; icon: string; href: string }[],
     [catsKey]
   );
-
-  useEffect(() => {
-    const handleBeforeInstall = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-
-    const handleInstalled = () => {
-      localStorage.setItem('boga_pwa_installed', 'true');
-      setIsInstalled(true);
-    };
-
-    const checkInstalled = () => {
-      if (localStorage.getItem('boga_pwa_installed') === 'true') return true;
-      if ((window.navigator as any).standalone) return true;
-      if (window.matchMedia('(display-mode: standalone)').matches) return true;
-      return false;
-    };
-
-    setIsInstalled(checkInstalled());
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
-    window.addEventListener('appinstalled', handleInstalled);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
-      // Antes se pasaba una funcion nueva y el listener quedaba colgado.
-      window.removeEventListener('appinstalled', handleInstalled);
-    };
-  }, []);
-
-  const handleInstall = () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then(() => setDeferredPrompt(null));
-    } else {
-      const ua = navigator.userAgent.toLowerCase();
-      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-      if (/iphone|ipad|ipod/.test(ua) && isSafari) {
-        alert('Para instalar:\n\n1. Tocá el icono Compartir (📤) abajo\n2. Deslizá y tocá "Agregar a pantalla de inicio"\n3. Tocá "Agregar"');
-      } else {
-        alert('Para instalar:\n\n1. Abrí el menú del navegador (⋯)\n2. Buscá "Agregar a pantalla de inicio"\n3. Confirmá la instalación');
-      }
-    }
-  };
 
   // ── Carga de productos ──
   // Los demo salen de templates.config (getDemoProducts) y no de una lista propia:
@@ -378,29 +332,8 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
         </div>
       </header>
 
-      {/* ══ FLOATING BUTTONS — mobile only, top-right ══ */}
-      <div className="md:hidden fixed top-20 right-4 z-50 flex flex-col gap-2">
-        <button
-          onClick={compartir}
-          className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all"
-          style={{ background: t.primary, color: t.onPrimary }}
-          aria-label="Compartir"
-          title="Compartir"
-        >
-          <span className={`material-symbols-outlined ${ICON.md}`}>share</span>
-        </button>
-        {!isInstalled && (
-          <button
-            onClick={handleInstall}
-            className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all"
-            style={{ background: t.secondary, color: t.onPrimary }}
-            aria-label="Instalar aplicación"
-            title="Instalar"
-          >
-            <span className={`material-symbols-outlined ${ICON.md}`}>download</span>
-          </button>
-        )}
-      </div>
+      {/* ══ COMPARTIR / INSTALAR — en movil y escritorio ══ */}
+      <StoreFloatingActions store={store} />
 
       {/* ════════════════════════════════════════════
           MAIN CONTENT

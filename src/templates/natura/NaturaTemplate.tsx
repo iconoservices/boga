@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
 import { supabase } from '@/lib/supabase';
 import { useDemo } from '@/context/DemoContext';
+import StoreFloatingActions from '@/components/StoreFloatingActions';
 
 interface NaturaTemplateProps {
   store: StoreConfig;
@@ -69,6 +70,9 @@ export default function NaturaTemplate({ store }: NaturaTemplateProps) {
     <div className="min-h-screen" style={{ background: t.background, color: t.onBackground, fontFamily: t.fontBody }}>
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+
+      {/* ── COMPARTIR / INSTALAR ── */}
+      <StoreFloatingActions store={store} />
 
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-4"

@@ -5,6 +5,7 @@ import { StoreConfig } from '@/lib/stores.config';
 import { supabase } from '@/lib/supabase';
 import { useDemo } from '@/context/DemoContext';
 import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
+import StoreFloatingActions from '@/components/StoreFloatingActions';
 
 interface SweetKittyNailsTemplateProps {
   store: StoreConfig;
@@ -205,6 +206,9 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
       {/* External CSS imports */}
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet" />
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+
+      {/* ── COMPARTIR / INSTALAR ─────────────────────── */}
+      <StoreFloatingActions store={store} />
 
       {/* ── HEADER ───────────────────────────────────── */}
       <header className="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-pink-100 shadow-sm transition-all duration-300">

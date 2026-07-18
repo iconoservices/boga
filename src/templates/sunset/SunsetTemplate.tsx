@@ -6,6 +6,7 @@ import { StoreConfig } from '@/lib/stores.config';
 import { supabase } from '@/lib/supabase';
 import { useDemo } from '@/context/DemoContext';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
+import StoreFloatingActions from '@/components/StoreFloatingActions';
 
 interface SunsetTemplateProps {
   store: StoreConfig;
@@ -282,6 +283,9 @@ export default function SunsetTemplate({ store }: SunsetTemplateProps) {
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet"
       />
+
+      {/* ── COMPARTIR / INSTALAR ── (solo en el catalogo, no sobre el splash) */}
+      <StoreFloatingActions store={store} />
 
       {/* Top bar */}
       <header

@@ -56,8 +56,10 @@ const TEMPLATE_PRESENTATION: Record<string, { category?: string; description: st
   },
 };
 
-// Plantillas que ya tienen los botones flotantes de compartir e instalar (PWA) en su código
-const TEMPLATES_WITH_SHARE_INSTALL = new Set(['polleria', 'estilosmirka', 'mercado']);
+// Todas las plantillas montan <StoreFloatingActions/>, en movil y en escritorio.
+const TEMPLATES_WITH_SHARE_INSTALL = new Set([
+  'polleria', 'estilosmirka', 'mercado', 'sunset', 'natura', 'amazonia', 'sweetkittynails',
+]);
 
 const META: Record<string, { emoji: string; cat: string }> = {
   sunset:   { emoji: '🥂', cat: 'Bar & Café' },

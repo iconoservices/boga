@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { getDemoProducts } from '@/lib/templates.config';
 import { useDemo } from '@/context/DemoContext';
 import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
+import StoreFloatingActions from '@/components/StoreFloatingActions';
 
 interface MercadoTemplateProps {
   store: StoreConfig;
@@ -188,59 +189,6 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
     );
   };
 
-  // ── Compartir / Instalar (PWA) ──
-  const [promptInstalar, setPromptInstalar] = useState<any>(null);
-  const [instalada, setInstalada] = useState(false);
-
-  useEffect(() => {
-    const alInstalar = (e: Event) => {
-      e.preventDefault();
-      setPromptInstalar(e);
-    };
-    const yaInstalada = () => {
-      if (localStorage.getItem('boga_pwa_installed') === 'true') return true;
-      if ((window.navigator as any).standalone) return true;
-      return window.matchMedia('(display-mode: standalone)').matches;
-    };
-    setInstalada(yaInstalada());
-
-    const marcarInstalada = () => {
-      localStorage.setItem('boga_pwa_installed', 'true');
-      setInstalada(true);
-    };
-
-    window.addEventListener('beforeinstallprompt', alInstalar);
-    window.addEventListener('appinstalled', marcarInstalada);
-    return () => {
-      window.removeEventListener('beforeinstallprompt', alInstalar);
-      window.removeEventListener('appinstalled', marcarInstalada);
-    };
-  }, []);
-
-  const instalar = () => {
-    if (promptInstalar) {
-      promptInstalar.prompt();
-      promptInstalar.userChoice.then(() => setPromptInstalar(null));
-    } else {
-      const ua = navigator.userAgent.toLowerCase();
-      const esSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-      if (/iphone|ipad|ipod/.test(ua) && esSafari) {
-        alert('Para instalar:\n\n1. Tocá el icono Compartir (📤) abajo\n2. Deslizá y tocá "Agregar a pantalla de inicio"\n3. Tocá "Agregar"');
-      } else {
-        alert('Para instalar:\n\n1. Abrí el menú del navegador (⋯)\n2. Buscá "Agregar a pantalla de inicio"\n3. Confirmá la instalación');
-      }
-    }
-  };
-
-  const compartir = () => {
-    if (navigator.share) {
-      navigator.share({ title: store.name, text: store.tagline, url: window.location.href }).catch(() => {});
-    } else {
-      navigator.clipboard?.writeText(window.location.href);
-      alert('Enlace copiado ✅');
-    }
-  };
-
   const iniciales = store.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
 
   return (
@@ -295,26 +243,7 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
       </header>
 
       {/* ── COMPARTIR / INSTALAR ── */}
-      <div className="fixed top-32 right-3 z-50 flex flex-col gap-2">
-        <button
-          onClick={compartir}
-          className="w-10 h-10 rounded-full flex items-center justify-center bg-white/40 backdrop-blur-md border border-white/50 shadow-lg active:scale-90 hover:bg-white/60 transition-all"
-          style={{ color: t.onBackground }}
-          title="Compartir"
-        >
-          <span className="material-symbols-outlined text-[20px]">share</span>
-        </button>
-        {!instalada && (
-          <button
-            onClick={instalar}
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-white/40 backdrop-blur-md border border-white/50 shadow-lg active:scale-90 hover:bg-white/60 transition-all"
-            style={{ color: t.primary }}
-            title="Instalar"
-          >
-            <span className="material-symbols-outlined text-[20px]">download</span>
-          </button>
-        )}
-      </div>
+      <StoreFloatingActions store={store} top="top-32" />
 
       <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-6 mt-4 px-4 lg:px-6">
         {/* ── BANNERS ── */}
