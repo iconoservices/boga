@@ -49,7 +49,7 @@ export default async function PreviewPage({ params }: Props) {
     ...tmpl,
     slug: templateId,
     name: `${tmpl.name} (Demo)`,
-    tagline: `Vista previa interactiva de la plantilla: ${templateId.toUpperCase()}`,
+    tagline: `Plantilla "${tmpl.name}" — /preview/${templateId}`,
     marketplaceCategory: tmpl.category,
     template: templateId,
   };

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
+import HomeFloatingActions from '@/components/HomeFloatingActions';
 import { useCart } from '@/context/CartContext';
 
 import { supabase } from '@/lib/supabase';
@@ -449,6 +450,8 @@ export default function Home() {
         cartCount={cartCount}
         onCartClick={() => setIsCartOpen(true)}
       />
+
+      <HomeFloatingActions />
 
       <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-4 lg:gap-6 mt-4 lg:mt-5 pb-12">
         {/* Banners Section */}

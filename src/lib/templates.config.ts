@@ -190,7 +190,7 @@ const TEMPLATES: Record<string, TemplateConfig> = {
 
   sweetkittynails: {
     id: 'sweetkittynails',
-    name: 'Kitty Beauty Pink',
+    name: 'Sweet Kitty Nails',
     category: 'Moda y Belleza',
     heroImage: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=1200&q=80',
     heroAlt: 'Sweet Kitty Nails premium pink glossy salon',
