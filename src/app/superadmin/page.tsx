@@ -1113,7 +1113,7 @@ export default function AdminPage() {
               <button
                 key={n.id}
                 onClick={() => setActiveTab(n.id)}
-                className={`flex items-center gap-3 px-4 py-2.5 text-xs font-semibold transition-all rounded-xl active:scale-95 duration-150 ${
+                className={`flex items-center gap-3 px-4 py-2.5 text-xs font-semibold transition-all rounded-md active:scale-95 duration-150 ${
                   isActive 
                     ? 'bg-[#2170e4] text-[#fefcff] shadow-[0_4px_12px_-2px_rgba(33,112,228,0.2)] font-bold' 
                     : 'text-[#424754] hover:bg-[#e6e7f2]'
@@ -1146,7 +1146,7 @@ export default function AdminPage() {
                 setTimeout(handleOpenCreatePackage, 100);
               }
             }}
-            className="w-full py-2.5 px-4 bg-[#0058be] text-white rounded-xl font-semibold text-xs flex items-center justify-center gap-2 hover:opacity-90 transition-opacity active:scale-[0.98]"
+            className="w-full py-2.5 px-4 bg-[#0058be] text-white rounded-md font-semibold text-xs flex items-center justify-center gap-2 hover:opacity-90 transition-opacity active:scale-[0.98]"
           >
             <span className="material-symbols-outlined text-[18px]">add</span>
             {activeTab === 'plantillas' ? 'Nueva Plantilla' : 'Nuevo Paquete'}
@@ -1190,7 +1190,7 @@ export default function AdminPage() {
                 </div>
                 <button 
                   onClick={handleOpenCreatePackage}
-                  className="h-10 px-4 bg-[#0058be] text-white font-bold text-xs rounded-xl flex items-center gap-1.5 hover:shadow-lg transition-all active:scale-95 shrink-0 self-start"
+                  className="h-10 px-4 bg-[#0058be] text-white font-bold text-xs rounded-md flex items-center gap-1.5 hover:shadow-lg transition-all active:scale-95 shrink-0 self-start"
                 >
                   <span className="material-symbols-outlined text-sm">add_box</span>
                   Crear Nuevo Paquete
@@ -1199,7 +1199,7 @@ export default function AdminPage() {
 
               {/* Metrics Bento Grid */}
               <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="md:col-span-2 p-5 bg-white border border-[#c2c6d6] rounded-xl flex flex-col justify-between relative overflow-hidden">
+                <div className="md:col-span-2 p-5 bg-white border border-[#c2c6d6] rounded-md flex flex-col justify-between relative overflow-hidden">
                   <div className="z-10">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-[#424754]">Total de Paquetes</span>
                     <div className="text-2xl font-bold mt-1 text-[#191b23]">{packages.length}</div>
@@ -1213,7 +1213,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                <div className="p-5 bg-white border border-[#c2c6d6] rounded-xl flex flex-col justify-between">
+                <div className="p-5 bg-white border border-[#c2c6d6] rounded-md flex flex-col justify-between">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-[#424754]">Activos</span>
                     <div className="text-2xl font-bold mt-1 text-[#0058be]">{packages.filter(p => p.active).length}</div>
@@ -1223,7 +1223,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                <div className="p-5 bg-white border border-[#c2c6d6] rounded-xl flex flex-col justify-between">
+                <div className="p-5 bg-white border border-[#c2c6d6] rounded-md flex flex-col justify-between">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-[#424754]">Inactivos</span>
                     <div className="text-2xl font-bold mt-1 text-[#595c5e]">{packages.filter(p => !p.active).length}</div>
@@ -1246,7 +1246,7 @@ export default function AdminPage() {
                     return (
                       <div 
                         key={pkg.id} 
-                        className={`group bg-white border rounded-xl overflow-hidden transition-all duration-200 flex flex-col hover:translate-y-[-2px] hover:shadow-md ${
+                        className={`group bg-white border rounded-md overflow-hidden transition-all duration-200 flex flex-col hover:translate-y-[-2px] hover:shadow-md ${
                           isPopular ? 'border-[#0058be] ring-1 ring-[#0058be]' : 'border-[#c2c6d6]'
                         }`}
                       >
@@ -1324,7 +1324,7 @@ export default function AdminPage() {
               </section>
 
               {/* Archive Table */}
-              <section className="bg-white border border-[#c2c6d6] rounded-xl overflow-hidden">
+              <section className="bg-white border border-[#c2c6d6] rounded-md overflow-hidden">
                 <div className="px-4 py-3 border-b border-[#c2c6d6] bg-[#f2f3fd] flex items-center justify-between">
                   <span className="text-xs font-bold text-[#191b23]">Archivo e Historial de Paquetes</span>
                 </div>
@@ -1375,7 +1375,7 @@ export default function AdminPage() {
                 </div>
                 <button
                   onClick={handleOpenCreateStore}
-                  className="bg-[#0058be] hover:bg-[#2170e4] text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95 shrink-0"
+                  className="bg-[#0058be] hover:bg-[#2170e4] text-white px-4 py-2.5 rounded-md font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95 shrink-0"
                 >
                   <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>add</span>
                   Registrar Nueva Tienda
@@ -1384,7 +1384,7 @@ export default function AdminPage() {
 
               {/* Solicitudes Pendientes (formulario público /vende-con-boga) */}
               {!requestsLoading && storeRequests.length > 0 && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl overflow-hidden shadow-sm">
+                <div className="bg-amber-50 border border-amber-200 rounded-md overflow-hidden shadow-sm">
                   <div className="px-5 py-3 border-b border-amber-200 flex justify-between items-center bg-amber-100/60">
                     <span className="text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
                       <span className="material-symbols-outlined text-[16px]">pending_actions</span>
@@ -1422,7 +1422,7 @@ export default function AdminPage() {
 
               {/* Summary Metrics Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white border border-[#c2c6d6] p-4 rounded-xl flex flex-col gap-1 group hover:border-[#0058be] transition-colors">
+                <div className="bg-white border border-[#c2c6d6] p-4 rounded-md flex flex-col gap-1 group hover:border-[#0058be] transition-colors">
                   <span className="text-[10px] font-bold text-[#424754] uppercase tracking-wider">Total Tiendas</span>
                   <div className="flex items-center justify-between">
                     <span className="text-2xl font-bold text-[#191b23]">{storeList.length}</span>
@@ -1432,7 +1432,7 @@ export default function AdminPage() {
                   </div>
                 </div>
                 
-                <div className="bg-white border border-[#c2c6d6] p-4 rounded-xl flex flex-col gap-1 group hover:border-[#0058be] transition-colors">
+                <div className="bg-white border border-[#c2c6d6] p-4 rounded-md flex flex-col gap-1 group hover:border-[#0058be] transition-colors">
                   <span className="text-[10px] font-bold text-[#424754] uppercase tracking-wider">Tiendas Activas</span>
                   <div className="flex items-center justify-between">
                     <span className="text-2xl font-bold text-[#191b23]">{activeCount}</span>
@@ -1442,7 +1442,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                <div className="bg-white border border-[#c2c6d6] p-4 rounded-xl flex flex-col gap-1 group hover:border-[#0058be] transition-colors">
+                <div className="bg-white border border-[#c2c6d6] p-4 rounded-md flex flex-col gap-1 group hover:border-[#0058be] transition-colors">
                   <span className="text-[10px] font-bold text-[#424754] uppercase tracking-wider">Tiendas en Pausa</span>
                   <div className="flex items-center justify-between">
                     <span className="text-2xl font-bold text-[#191b23]">{pausedCount}</span>
@@ -1454,7 +1454,7 @@ export default function AdminPage() {
               </div>
 
               {/* Search & Filter bar */}
-              <div className="bg-white border border-[#c2c6d6] rounded-xl px-4 py-2.5 flex items-center gap-2">
+              <div className="bg-white border border-[#c2c6d6] rounded-md px-4 py-2.5 flex items-center gap-2">
                 <span className="material-symbols-outlined text-[#424754] text-[18px]">search</span>
                 <input
                   placeholder="Buscar tienda por nombre o id..."
@@ -1465,7 +1465,7 @@ export default function AdminPage() {
               </div>
 
               {/* Stores Data Table */}
-              <div className="bg-white border border-[#c2c6d6] rounded-xl overflow-hidden shadow-sm">
+              <div className="bg-white border border-[#c2c6d6] rounded-md overflow-hidden shadow-sm">
                 <div className="px-5 py-3 border-b border-[#c2c6d6] flex justify-between items-center bg-[#f2f3fd]">
                   <span className="text-xs font-bold text-[#191b23] uppercase tracking-wider">Directorio de Comercios</span>
                   <div className="flex items-center gap-2">
@@ -1622,7 +1622,7 @@ export default function AdminPage() {
               </div>
 
               {/* Legend info banner */}
-              <div className="flex items-start gap-2 bg-[#f2f3fd]/60 border border-[#c2c6d6]/60 p-3.5 rounded-xl">
+              <div className="flex items-start gap-2 bg-[#f2f3fd]/60 border border-[#c2c6d6]/60 p-3.5 rounded-md">
                 <span className="material-symbols-outlined text-[#0058be] text-[16px] mt-0.5">info</span>
                 <span className="text-[10px] text-[#424754] font-medium leading-relaxed">
                   <strong>Control Ecosistema:</strong> Puedes cambiar el estado de activación de cada comercio desde el formulario de edición. Las tiendas inactivas/pausadas no se listarán en el portal de Boga Market.
@@ -1637,7 +1637,7 @@ export default function AdminPage() {
               {/* Metrics Summary */}
               <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Total Categorías */}
-                <div className="bg-white border border-[#c2c6d6] p-4 rounded-xl flex items-center gap-4">
+                <div className="bg-white border border-[#c2c6d6] p-4 rounded-md flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-[#2170e4] flex items-center justify-center text-white shrink-0">
                     <span className="material-symbols-outlined text-lg">grid_view</span>
                   </div>
@@ -1648,7 +1648,7 @@ export default function AdminPage() {
                 </div>
 
                 {/* Total Tiendas */}
-                <div className="bg-white border border-[#c2c6d6] p-4 rounded-xl flex items-center gap-4">
+                <div className="bg-white border border-[#c2c6d6] p-4 rounded-md flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-[#d5e0f8] flex items-center justify-center text-[#586377] shrink-0">
                     <span className="material-symbols-outlined text-lg">store</span>
                   </div>
@@ -1664,7 +1664,7 @@ export default function AdminPage() {
                   const unassignedStores = Object.values(stores).filter(s => !allCategoryStoreSlugs.has(s.slug));
                   const count = unassignedStores.length;
                   return (
-                    <div className="bg-white border border-[#c2c6d6] p-4 rounded-xl flex items-center gap-4">
+                    <div className="bg-white border border-[#c2c6d6] p-4 rounded-md flex items-center gap-4">
                       <div className="w-12 h-12 rounded-full bg-[#ffdad6] flex items-center justify-center text-[#93000a] shrink-0">
                         <span className="material-symbols-outlined text-lg">warning</span>
                       </div>
@@ -1678,7 +1678,7 @@ export default function AdminPage() {
               </section>
 
               {/* Categories Notion-style Database Table */}
-              <section className="bg-white border border-[#c2c6d6] rounded-xl overflow-hidden shadow-sm">
+              <section className="bg-white border border-[#c2c6d6] rounded-md overflow-hidden shadow-sm">
                 <div className="p-4 border-b border-[#c2c6d6] bg-[#f2f3fd] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
                     <h2 className="font-extrabold text-xs text-[#191b23] uppercase tracking-wider">Base de Datos de Categorías</h2>
@@ -1911,7 +1911,7 @@ export default function AdminPage() {
                 const unlinkedStores = Object.values(stores).filter(s => !allCategoryStoreSlugs.has(s.slug));
 
                 return (
-                  <section className="bg-white border border-[#c2c6d6] rounded-xl overflow-hidden shadow-sm animate-fade-in">
+                  <section className="bg-white border border-[#c2c6d6] rounded-md overflow-hidden shadow-sm animate-fade-in">
                     <div className="p-4 border-b border-[#c2c6d6] bg-[#f2f3fd] flex justify-between items-center">
                       <h2 className="font-extrabold text-xs text-[#191b23] uppercase tracking-wider">Tiendas sin Categoría</h2>
                       <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
@@ -2007,7 +2007,7 @@ export default function AdminPage() {
                 <p className="text-xs text-[#424754] font-semibold">
                   {users.length} usuario{users.length !== 1 ? 's' : ''} con acceso al panel
                 </p>
-                <div className="bg-white rounded-xl border border-[#c2c6d6] shadow-sm overflow-hidden">
+                <div className="bg-white rounded-md border border-[#c2c6d6] shadow-sm overflow-hidden">
                   {/* Table header */}
                   <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr 130px 160px 72px', gap: '12px' }} className="px-4 py-2 bg-[#f2f3fd] border-b border-[#c2c6d6]">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-[#424754]">Nombre</span>
@@ -2065,7 +2065,7 @@ export default function AdminPage() {
                 </div>
 
                 {/* Info strip */}
-                <div className="flex items-start gap-3 bg-[#d5e0f8]/30 border border-[#adc6ff] rounded-xl p-4">
+                <div className="flex items-start gap-3 bg-[#d5e0f8]/30 border border-[#adc6ff] rounded-md p-4">
                   <span className="material-symbols-outlined text-[#0058be] text-[18px] shrink-0 mt-0.5">info</span>
                   <p className="text-xs text-[#004395] font-semibold leading-relaxed">
                     Los <strong>Admin de Tienda</strong> solo ven y modifican los productos y la personalización de su tienda asignada. Los <strong>Super Admins</strong> tienen control absoluto sobre todo el ecosistema.
@@ -2075,7 +2075,7 @@ export default function AdminPage() {
 
               {/* Right Panel (Edit / Invite Form) */}
               <div className="w-full lg:w-80 shrink-0">
-                <div className="bg-white rounded-xl border border-[#c2c6d6] shadow-sm overflow-hidden">
+                <div className="bg-white rounded-md border border-[#c2c6d6] shadow-sm overflow-hidden">
                   
                   {/* EDIT USER */}
                   {editingUser ? (
@@ -2215,7 +2215,7 @@ export default function AdminPage() {
                 <p className="text-xs text-[#424754] mt-1">Ajusta la apariencia visual, banners promocionales y contenido demostrativo de cada comercio.</p>
               </div>
 
-              <div className="bg-white rounded-xl border border-[#c2c6d6] overflow-hidden divide-y divide-[#ecedf7] shadow-sm">
+              <div className="bg-white rounded-md border border-[#c2c6d6] overflow-hidden divide-y divide-[#ecedf7] shadow-sm">
                 {storeList.map((store) => {
                   const settings = getSettings(store.slug);
                   const demoOn = isDemoVisible(store.slug);
@@ -2233,7 +2233,7 @@ export default function AdminPage() {
 
                       <div className="flex-1 flex flex-col gap-4">
                         {/* Option toggles */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3 bg-[#f2f3fd]/35 p-4 rounded-xl border border-[#c2c6d6]/60">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3 bg-[#f2f3fd]/35 p-4 rounded-md border border-[#c2c6d6]/60">
                           {[
                             { label: 'Productos Demo',   on: demoOn,                          toggle: () => toggleDemoProducts(store.slug) },
                             { label: 'Fotos Productos',  on: settings.showProductImages,       toggle: () => updateSetting(store.slug, 'showProductImages', !settings.showProductImages) },
@@ -2250,14 +2250,14 @@ export default function AdminPage() {
 
                         {/* Manual Category Banners */}
                         {!settings.useCategoryFeaturedImage && (
-                          <div className="bg-[#f2f3fd]/20 rounded-xl p-4 border border-[#c2c6d6] space-y-4">
+                          <div className="bg-[#f2f3fd]/20 rounded-md p-4 border border-[#c2c6d6] space-y-4">
                             <div className="border-b border-[#c2c6d6] pb-2 flex justify-between items-center">
                               <span className="text-[10px] font-bold uppercase tracking-wider text-[#424754]">Banners Promocionales por Sección</span>
                               <span className="text-[9px] font-bold text-[#0058be] bg-[#d8e2ff] px-2 py-0.5 rounded">Manuales</span>
                             </div>
                             
                             {[{ href: 'all', name: 'Todas las secciones' }, ...store.categories].map(cat => (
-                              <div key={cat.href} className="bg-white rounded-xl p-3 border border-[#c2c6d6] space-y-2.5 shadow-sm">
+                              <div key={cat.href} className="bg-white rounded-md p-3 border border-[#c2c6d6] space-y-2.5 shadow-sm">
                                 <p className="text-[10px] font-extrabold text-[#0058be] uppercase tracking-wide">{cat.name}</p>
                                 <ImageUploadInput
                                   value={settings.categoryBannerUrls[cat.href] || ''}
@@ -2327,7 +2327,7 @@ export default function AdminPage() {
                 </div>
                 <button 
                   onClick={handleOpenCreateTemplate}
-                  className="h-10 px-4 bg-[#0058be] text-white font-bold text-xs rounded-xl flex items-center gap-1.5 hover:shadow-lg transition-all active:scale-95 shrink-0 self-start"
+                  className="h-10 px-4 bg-[#0058be] text-white font-bold text-xs rounded-md flex items-center gap-1.5 hover:shadow-lg transition-all active:scale-95 shrink-0 self-start"
                 >
                   <span className="material-symbols-outlined text-sm">add_box</span>
                   Crear Nueva Plantilla
@@ -2336,7 +2336,7 @@ export default function AdminPage() {
 
               {/* Summary Cards (Bento Style) */}
               <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-5 bg-white border border-[#c2c6d6] rounded-xl flex flex-col justify-between relative overflow-hidden">
+                <div className="p-5 bg-white border border-[#c2c6d6] rounded-md flex flex-col justify-between relative overflow-hidden">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-[#424754]">Total Plantillas</span>
                     <div className="text-2xl font-bold mt-1 text-[#191b23]">{adminTemplates.length}</div>
@@ -2347,7 +2347,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                <div className="p-5 bg-white border border-[#c2c6d6] rounded-xl flex flex-col justify-between">
+                <div className="p-5 bg-white border border-[#c2c6d6] rounded-md flex flex-col justify-between">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-[#424754]">Más Populares</span>
                     <div className="text-base font-bold mt-1 text-[#0058be] truncate">
@@ -2360,7 +2360,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                <div className="p-5 bg-white border border-[#c2c6d6] rounded-xl flex flex-col justify-between">
+                <div className="p-5 bg-white border border-[#c2c6d6] rounded-md flex flex-col justify-between">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-[#424754]">Tasa de Adopción</span>
                     <div className="text-2xl font-bold mt-1 text-[#191b23]">
@@ -2486,8 +2486,8 @@ export default function AdminPage() {
 
           {/* ─── FACTURACION ─── */}
           {activeTab === 'facturacion' && (
-            <div className="bg-white rounded-xl border border-[#c2c6d6] flex flex-col items-center justify-center py-16 px-4 gap-4 animate-fade-in">
-              <div className="w-14 h-14 bg-[#d5e0f8] rounded-2xl flex items-center justify-center shadow-inner">
+            <div className="bg-white rounded-md border border-[#c2c6d6] flex flex-col items-center justify-center py-16 px-4 gap-4 animate-fade-in">
+              <div className="w-14 h-14 bg-[#d5e0f8] rounded-lg flex items-center justify-center shadow-inner">
                 <span className="material-symbols-outlined text-3xl text-[#0058be]">payments</span>
               </div>
               <div className="text-center max-w-[320px]">
@@ -2503,7 +2503,7 @@ export default function AdminPage() {
           {activeTab === 'mapa' && (
             <div className="space-y-4 animate-fade-in">
               {/* Global Ecosystem Stats */}
-              <div className="bg-gradient-to-r from-neutral-900 to-neutral-800 text-white rounded-2xl p-5 shadow-lg border border-neutral-700">
+              <div className="bg-gradient-to-r from-neutral-900 to-neutral-800 text-white rounded-lg p-5 shadow-lg border border-neutral-700">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   <div>
                     <div className="flex items-center gap-2">
@@ -2514,7 +2514,7 @@ export default function AdminPage() {
                       Las tiendas se crean dinámicamente a partir de una plantilla base. Por eso la taxonomía de cumplimiento audita cada plantilla, no cada tienda: si la plantilla cumple una regla, toda tienda que la use hereda ese cumplimiento.
                     </p>
                   </div>
-                  <div className="bg-white/10 px-4 py-2 rounded-xl border border-white/10 shrink-0 text-center md:text-right">
+                  <div className="bg-white/10 px-4 py-2 rounded-md border border-white/10 shrink-0 text-center md:text-right">
                     <p className="text-[9px] uppercase tracking-wider font-extrabold text-neutral-400 leading-none">Promedio Global</p>
                     <p className="text-2xl font-black text-white mt-1">
                       {`${Math.round(
@@ -2533,7 +2533,7 @@ export default function AdminPage() {
                 {/* Left column: Rules glossary + Ajustes roadmap, stacked */}
                 <div className="col-span-1 flex flex-col gap-6">
                 {/* Rules List Sidebar */}
-                <div className="bg-white border border-[#c2c6d6] rounded-2xl p-4 shadow-sm space-y-4">
+                <div className="bg-white border border-[#c2c6d6] rounded-lg p-4 shadow-sm space-y-4">
                   <h3 className="font-extrabold text-xs text-[#191b23] border-b border-[#ecedf7] pb-2 flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-[15px] text-[#424754] font-bold">menu_book</span>
                     Glosario de Reglas
@@ -2548,7 +2548,7 @@ export default function AdminPage() {
                       { title: "6. Estilos y Branding", desc: "Tema de color HSL único configurado en el archivo de diseño para adaptar la apariencia visual a la identidad de la tienda." },
                       { title: "7. Botones de Compartir e Instalar", desc: "Botones flotantes transparentes al costado de la pantalla para compartir la tienda (menú nativo del celular) e instalar la app (PWA) con un toque." }
                     ].map((rule, idx) => (
-                      <div key={idx} className="space-y-1 bg-[#f2f3fd]/55 p-2.5 rounded-xl border border-[#c2c6d6]/65">
+                      <div key={idx} className="space-y-1 bg-[#f2f3fd]/55 p-2.5 rounded-md border border-[#c2c6d6]/65">
                         <p className="font-bold text-[11px] text-[#191b23]">{rule.title}</p>
                         <p className="text-[10px] text-[#424754] leading-relaxed font-semibold">{rule.desc}</p>
                       </div>
@@ -2557,7 +2557,7 @@ export default function AdminPage() {
                 </div>
 
                 {/* Ajustes: funciones en camino (no cuentan en el % porque todavía no existen en la plataforma) */}
-                <div className="bg-white border border-[#c2c6d6] rounded-2xl p-4 shadow-sm space-y-3">
+                <div className="bg-white border border-[#c2c6d6] rounded-lg p-4 shadow-sm space-y-3">
                   <h3 className="font-extrabold text-xs text-[#191b23] border-b border-[#ecedf7] pb-2 flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-[15px] text-[#424754] font-bold">tune</span>
                     Ajustes · Próximas funciones
@@ -2570,7 +2570,7 @@ export default function AdminPage() {
                       { title: 'Idiomas', desc: 'Que cada tienda pueda mostrarse en más de un idioma al cliente final.', icon: 'translate' },
                       { title: 'Modo Oscuro', desc: 'Adaptar cada plantilla de tienda a modo oscuro real.', icon: 'dark_mode' },
                     ].map((item, idx) => (
-                      <div key={idx} className="flex items-center justify-between gap-2 bg-[#f2f3fd]/55 p-2.5 rounded-xl border border-[#c2c6d6]/65">
+                      <div key={idx} className="flex items-center justify-between gap-2 bg-[#f2f3fd]/55 p-2.5 rounded-md border border-[#c2c6d6]/65">
                         <div className="flex items-center gap-2 min-w-0">
                           <span className="material-symbols-outlined text-[15px] text-[#745853] shrink-0">{item.icon}</span>
                           <div className="min-w-0">
@@ -2589,7 +2589,7 @@ export default function AdminPage() {
 
                 {/* Compliance Table / Status */}
                 <div className="lg:col-span-2 space-y-3">
-                  <div className="bg-white border border-[#c2c6d6] rounded-2xl shadow-sm overflow-hidden">
+                  <div className="bg-white border border-[#c2c6d6] rounded-lg shadow-sm overflow-hidden">
                     <div className="px-4 py-3 bg-[#f2f3fd] border-b border-[#c2c6d6] flex justify-between items-center">
                       <h3 className="font-bold text-xs text-[#191b23]">Estado de Cumplimiento por Plantilla</h3>
                       <span className="text-[9px] font-bold text-[#424754] bg-[#ecedf7] px-2 py-0.5 rounded border border-[#c2c6d6] leading-none">Auditoría Real</span>
@@ -2677,7 +2677,7 @@ export default function AdminPage() {
     {/* ── CREATE / EDIT PACKAGE MODAL ── */}
     {showPackageModal && (
       <div className="fixed inset-0 z-[200] bg-[#191b23]/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl border border-[#c2c6d6] shadow-2xl w-[90vw] md:w-[460px] max-w-[460px] max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="bg-white rounded-lg border border-[#c2c6d6] shadow-2xl w-[90vw] md:w-[460px] max-w-[460px] max-h-[90vh] overflow-hidden flex flex-col">
           <div className="px-5 py-4 border-b border-[#c2c6d6] bg-[#f2f3fd] flex items-center justify-between shrink-0">
             <h3 className="font-bold text-sm text-[#191b23]">
               {editingPackage ? 'Editar Nivel de Suscripción' : 'Crear Nuevo Nivel'}
@@ -2752,7 +2752,7 @@ export default function AdminPage() {
               />
             </div>
 
-            <div className="space-y-3 bg-[#f2f3fd]/55 p-4 rounded-xl border border-[#c2c6d6]/60">
+            <div className="space-y-3 bg-[#f2f3fd]/55 p-4 rounded-md border border-[#c2c6d6]/60">
               <div className="flex items-center justify-between gap-4">
                 <span className="text-xs font-bold text-[#424754]">¿Plan Destacado / Popular?</span>
                 <Toggle on={packageForm.isPopular} onChange={() => setPackageForm(prev => ({ ...prev, isPopular: !prev.isPopular }))} />
@@ -2803,7 +2803,7 @@ export default function AdminPage() {
 
             {/* Center: Device Selector */}
             <div className="flex items-center gap-4 absolute left-1/2 -translate-x-1/2">
-              <div className="flex gap-1 bg-[#f2f4f8] p-1 rounded-xl">
+              <div className="flex gap-1 bg-[#f2f4f8] p-1 rounded-md">
                 {[
                   { id: 'desktop', icon: 'desktop_windows' },
                   { id: 'tablet', icon: 'tablet' },
@@ -2871,15 +2871,15 @@ export default function AdminPage() {
                   handleSaveStore({ preventDefault: () => {} } as React.FormEvent);
                 }}
                 disabled={saving}
-                className="px-4 py-2 bg-[#0058be] text-white rounded-xl font-bold text-xs hover:shadow-lg active:scale-95 transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-[#0058be] text-white rounded-md font-bold text-xs hover:shadow-lg active:scale-95 transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span className="material-symbols-outlined text-[14px]">{saving ? 'progress_activity' : 'publish'}</span>
                 {saving ? 'Guardando...' : 'Publish Changes'}
               </button>
-              <div className="w-8 h-8 rounded-xl border border-[#c2c6d6]/60 flex items-center justify-center bg-white cursor-pointer hover:bg-[#f2f3fd] transition-colors text-[#545f73]">
+              <div className="w-8 h-8 rounded-md border border-[#c2c6d6]/60 flex items-center justify-center bg-white cursor-pointer hover:bg-[#f2f3fd] transition-colors text-[#545f73]">
                 <span className="material-symbols-outlined text-[18px]">notifications</span>
               </div>
-              <div className="w-8 h-8 rounded-xl bg-[#0058be]/10 border border-[#0058be]/20 flex items-center justify-center text-xs font-bold text-[#0058be]">
+              <div className="w-8 h-8 rounded-md bg-[#0058be]/10 border border-[#0058be]/20 flex items-center justify-center text-xs font-bold text-[#0058be]">
                 UA
               </div>
             </div>
@@ -3045,7 +3045,7 @@ export default function AdminPage() {
                 <div className="p-6 space-y-6">
                   
                   {/* OPTIMIZATION SCORE */}
-                  <div className="border border-[#ecedf7] bg-[#f8fafc] rounded-2xl p-4 shadow-sm">
+                  <div className="border border-[#ecedf7] bg-[#f8fafc] rounded-lg p-4 shadow-sm">
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-[11px] font-extrabold text-[#191b23]">Optimization Score</span>
                       <span className="text-sm font-black text-[#0058be]">75%</span>
@@ -3066,17 +3066,17 @@ export default function AdminPage() {
                     </div>
 
                     {/* Logo container box */}
-                    <div className="border border-[#ecedf7] rounded-2xl p-4 bg-[#f8fafc] flex flex-col items-center justify-center gap-3">
+                    <div className="border border-[#ecedf7] rounded-lg p-4 bg-[#f8fafc] flex flex-col items-center justify-center gap-3">
                       {logoPreview ? (
-                        <img src={logoPreview} className="w-16 h-16 rounded-2xl object-cover border border-[#c2c6d6]/40 shadow-md" />
+                        <img src={logoPreview} className="w-16 h-16 rounded-lg object-cover border border-[#c2c6d6]/40 shadow-md" />
                       ) : (
-                        <div className="w-16 h-16 rounded-2xl bg-white border border-[#c2c6d6]/40 flex items-center justify-center text-3xl shadow-md">
+                        <div className="w-16 h-16 rounded-lg bg-white border border-[#c2c6d6]/40 flex items-center justify-center text-3xl shadow-md">
                           {storeForm.emoji || '🏪'}
                         </div>
                       )}
                       <div className="flex flex-col gap-2 w-full">
                         <div className="flex items-center gap-2">
-                          <label className="flex-1 flex items-center gap-2 px-3 py-2 bg-white border border-[#c2c6d6] rounded-xl cursor-pointer hover:bg-[#f2f3fd] transition-colors text-xs font-bold text-[#545f73]">
+                          <label className="flex-1 flex items-center gap-2 px-3 py-2 bg-white border border-[#c2c6d6] rounded-md cursor-pointer hover:bg-[#f2f3fd] transition-colors text-xs font-bold text-[#545f73]">
                             <span className="material-symbols-outlined text-[16px]">upload</span>
                             Subir logo
                             <input
@@ -3115,7 +3115,7 @@ export default function AdminPage() {
                           required
                           value={storeForm.name}
                           onChange={(e) => setStoreForm(prev => ({ ...prev, name: e.target.value }))}
-                          className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-xl px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] focus:bg-white transition-all shadow-xs"
+                          className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] focus:bg-white transition-all shadow-xs"
                           placeholder="Nombre comercial"
                         />
                       </div>
@@ -3126,7 +3126,7 @@ export default function AdminPage() {
                           type="text"
                           value={storeForm.tagline}
                           onChange={(e) => setStoreForm(prev => ({ ...prev, tagline: e.target.value }))}
-                          className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-xl px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] focus:bg-white transition-all shadow-xs"
+                          className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] focus:bg-white transition-all shadow-xs"
                           placeholder="Lema de tu tienda"
                         />
                       </div>
@@ -3139,7 +3139,7 @@ export default function AdminPage() {
                             required
                             value={storeForm.slug}
                             onChange={(e) => { setSlugManuallyEdited(true); setStoreForm(prev => ({ ...prev, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-') })); }}
-                            className={`w-full bg-[#f8fafc] border rounded-xl px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:bg-white transition-all shadow-xs pr-8 ${
+                            className={`w-full bg-[#f8fafc] border rounded-md px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:bg-white transition-all shadow-xs pr-8 ${
                               slugChecking ? 'border-[#c2c6d6]' :
                               slugAvailable === null ? 'border-[#ecedf7]' :
                               slugAvailable ? 'border-[#16a34a]' : 'border-[#dc2626]'
@@ -3186,7 +3186,7 @@ export default function AdminPage() {
                             {[tplTheme.primary, tplTheme.secondary || '#545f73', tplTheme.background, tplTheme.surface].map((color, i) => (
                               <div
                                 key={i}
-                                className="w-10 h-10 rounded-xl border border-[#ecedf7] flex items-center justify-center shadow-xs cursor-pointer hover:scale-105 transition-transform"
+                                className="w-10 h-10 rounded-md border border-[#ecedf7] flex items-center justify-center shadow-xs cursor-pointer hover:scale-105 transition-transform"
                                 style={{ backgroundColor: color }}
                                 title={`Color ${i + 1}: ${color}`}
                               >
@@ -3194,12 +3194,12 @@ export default function AdminPage() {
                               </div>
                             ))}
                             {/* Dotted Plus Swatch */}
-                            <div className="w-10 h-10 rounded-xl border-2 border-dashed border-[#c2c6d6] flex items-center justify-center text-[#727785] cursor-pointer hover:bg-[#f2f3fd] transition-colors">
+                            <div className="w-10 h-10 rounded-md border-2 border-dashed border-[#c2c6d6] flex items-center justify-center text-[#727785] cursor-pointer hover:bg-[#f2f3fd] transition-colors">
                               <span className="material-symbols-outlined text-sm font-bold">add</span>
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between p-3 bg-[#f8fafc] rounded-2xl border border-[#ecedf7]">
+                          <div className="flex items-center justify-between p-3 bg-[#f8fafc] rounded-lg border border-[#ecedf7]">
                             <span className="text-[10px] font-bold text-[#424754] uppercase tracking-wider">Modo Oscuro</span>
                             <Toggle on={tplTheme.background === '#191b23' || tplTheme.background === '#121212'} onChange={() => {}} />
                           </div>
@@ -3222,7 +3222,7 @@ export default function AdminPage() {
                       ].map((font) => (
                         <div
                           key={font.name}
-                          className={`p-3 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between ${
+                          className={`p-3 rounded-lg border-2 cursor-pointer transition-all flex items-center justify-between ${
                             font.selected
                               ? 'border-[#0058be] bg-[#0058be]/5 ring-2 ring-[#0058be]/10'
                               : 'border-[#ecedf7] hover:border-[#0058be]/30'
@@ -3254,7 +3254,7 @@ export default function AdminPage() {
                           <div
                             key={t.id}
                             onClick={() => setStoreForm(prev => ({ ...prev, template: t.id as any }))}
-                            className={`rounded-2xl overflow-hidden border-2 cursor-pointer transition-all flex flex-col ${
+                            className={`rounded-lg overflow-hidden border-2 cursor-pointer transition-all flex flex-col ${
                               isSelected
                                 ? 'border-[#0058be] bg-[#0058be]/5 ring-2 ring-[#0058be]/10 shadow-xs'
                                 : 'border-[#ecedf7] hover:border-[#0058be]/30 bg-white'
@@ -3284,7 +3284,7 @@ export default function AdminPage() {
                         <select
                           value={storeForm.marketplaceCategory}
                           onChange={(e) => setStoreForm(prev => ({ ...prev, marketplaceCategory: e.target.value }))}
-                          className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-xl px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
+                          className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
                         >
                           <option value="Restaurantes">Restaurantes</option>
                           <option value="Mercado">Mercado</option>
@@ -3302,7 +3302,7 @@ export default function AdminPage() {
                           type="text"
                           value={storeForm.location}
                           onChange={(e) => setStoreForm(prev => ({ ...prev, location: e.target.value }))}
-                          className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-xl px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
+                          className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
                           placeholder="Ej: Bogotá, CO"
                         />
                       </div>
@@ -3312,7 +3312,7 @@ export default function AdminPage() {
                         <select
                           value={storeForm.tier}
                           onChange={(e) => setStoreForm(prev => ({ ...prev, tier: e.target.value }))}
-                          className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-xl px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
+                          className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
                         >
                           <option value="Basic Tier">Basic Tier</option>
                           <option value="Professional">Professional</option>
@@ -3320,7 +3320,7 @@ export default function AdminPage() {
                         </select>
                       </div>
 
-                      <div className="flex items-center justify-between p-3.5 bg-[#f2f3fd] rounded-2xl border border-[#c2c6d6]/60">
+                      <div className="flex items-center justify-between p-3.5 bg-[#f2f3fd] rounded-lg border border-[#c2c6d6]/60">
                         <span className="text-xs font-bold text-[#424754]">¿Tienda Activa?</span>
                         <Toggle on={storeForm.active} onChange={() => setStoreForm(prev => ({ ...prev, active: !prev.active }))} />
                       </div>
@@ -3356,7 +3356,7 @@ export default function AdminPage() {
                         }
                       }
                     }}
-                    className="w-full py-3 bg-[#f0f7ff] border border-[#0058be]/20 text-[#0058be] rounded-xl font-bold text-xs hover:bg-[#e0efff] transition-all flex items-center justify-center gap-1.5"
+                    className="w-full py-3 bg-[#f0f7ff] border border-[#0058be]/20 text-[#0058be] rounded-md font-bold text-xs hover:bg-[#e0efff] transition-all flex items-center justify-center gap-1.5"
                   >
                     <span className="material-symbols-outlined text-[14px]">playlist_add</span>
                     Insertar Productos Demo
@@ -3383,7 +3383,7 @@ export default function AdminPage() {
                         setLogoRemoved(false);
                       }
                     }}
-                    className="w-full py-3 bg-white border border-[#c2c6d6] text-[#191b23] rounded-xl font-bold text-xs hover:bg-[#f8fafc] hover:border-[#191b23] transition-all flex items-center justify-center gap-1.5"
+                    className="w-full py-3 bg-white border border-[#c2c6d6] text-[#191b23] rounded-md font-bold text-xs hover:bg-[#f8fafc] hover:border-[#191b23] transition-all flex items-center justify-center gap-1.5"
                   >
                     <span className="material-symbols-outlined text-[14px]">restart_alt</span>
                     Restablecer valores por defecto
@@ -3411,7 +3411,7 @@ export default function AdminPage() {
       const missingCount = issues.filter(i => !i.ok).length;
       return (
       <div className="fixed inset-0 z-[200] bg-[#191b23]/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl border border-[#c2c6d6] shadow-2xl w-[90vw] md:w-[460px] max-w-[460px] max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="bg-white rounded-lg border border-[#c2c6d6] shadow-2xl w-[90vw] md:w-[460px] max-w-[460px] max-h-[90vh] overflow-hidden flex flex-col">
           <div className="px-5 py-4 border-b border-[#c2c6d6] bg-[#f2f3fd] flex items-center justify-between shrink-0">
             <h3 className="font-bold text-sm text-[#191b23] flex items-center gap-2">
               <span className="material-symbols-outlined text-amber-500 text-base">report</span>
@@ -3478,7 +3478,7 @@ export default function AdminPage() {
     {/* ── CREATE / EDIT TEMPLATE MODAL ── */}
     {showTemplateModal && (
       <div className="fixed inset-0 z-[200] bg-[#191b23]/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl border border-[#c2c6d6] shadow-2xl w-[90vw] md:w-[460px] max-w-[460px] max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="bg-white rounded-lg border border-[#c2c6d6] shadow-2xl w-[90vw] md:w-[460px] max-w-[460px] max-h-[90vh] overflow-hidden flex flex-col">
           <div className="px-5 py-4 border-b border-[#c2c6d6] bg-[#f2f3fd] flex items-center justify-between shrink-0">
             <h3 className="font-bold text-sm text-[#191b23]">
               {editingTemplate ? 'Editar Plantilla Visual' : 'Crear Nueva Plantilla'}
