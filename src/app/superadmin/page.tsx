@@ -12,6 +12,9 @@ import { supabase } from '@/lib/supabase';
 // Plantillas que ya tienen botón de pedido por WhatsApp implementado en su código
 const TEMPLATES_WITH_WHATSAPP = new Set(['polleria', 'estilosmirka', 'sweetkittynails']);
 
+// Plantillas que ya tienen los botones flotantes de compartir e instalar (PWA) en su código
+const TEMPLATES_WITH_SHARE_INSTALL = new Set(['polleria', 'estilosmirka']);
+
 const META: Record<string, { emoji: string; cat: string }> = {
   sunset:   { emoji: '🥂', cat: 'Bar & Café' },
   delva:    { emoji: '🌿', cat: 'Mercado' },
@@ -1064,6 +1067,7 @@ export default function AdminPage() {
       (tpl?.categories?.length || 0) >= 3, // Categorías Estructuradas
       TEMPLATES_WITH_WHATSAPP.has(templateId), // Botón de Pedidos WhatsApp
       true, // Estilos y Branding: toda plantilla trae un tema completo
+      TEMPLATES_WITH_SHARE_INSTALL.has(templateId), // Botones de Compartir e Instalar (PWA)
     ];
   };
 
@@ -2518,7 +2522,8 @@ export default function AdminPage() {
                       { title: "3. Recuadro de Características", desc: "Los productos deben llevar especificaciones claras: tallas, colores, materiales, peso o descripciones ricas de ficha técnica." },
                       { title: "4. Categorías Estructuradas", desc: "Cada aplicación debe tener al menos 3 categorías en su menú para permitir navegación fluida (ej. Sunset: Cocina, Bar, Café)." },
                       { title: "5. Botón de Pedidos WhatsApp", desc: "Un botón activo de WhatsApp en el carrito/reserva para derivar la orden directamente al comercio y concretar la transacción." },
-                      { title: "6. Estilos y Branding", desc: "Tema de color HSL único configurado en el archivo de diseño para adaptar la apariencia visual a la identidad de la tienda." }
+                      { title: "6. Estilos y Branding", desc: "Tema de color HSL único configurado en el archivo de diseño para adaptar la apariencia visual a la identidad de la tienda." },
+                      { title: "7. Botones de Compartir e Instalar", desc: "Botones flotantes transparentes al costado de la pantalla para compartir la tienda (menú nativo del celular) e instalar la app (PWA) con un toque." }
                     ].map((rule, idx) => (
                       <div key={idx} className="space-y-1 bg-[#f2f3fd]/55 p-2.5 rounded-xl border border-[#c2c6d6]/65">
                         <p className="font-bold text-[11px] text-[#191b23]">{rule.title}</p>
@@ -2574,6 +2579,7 @@ export default function AdminPage() {
                         const missing: string[] = [];
                         if (!checks[2]) missing.push('ficha técnica de producto');
                         if (!checks[4]) missing.push('botón de pedidos por WhatsApp');
+                        if (!checks[6]) missing.push('botones de compartir/instalar');
                         const app = {
                           slug: tpl.id,
                           name: tpl.name,
@@ -2597,7 +2603,7 @@ export default function AdminPage() {
                                   {pct}%
                                 </span>
                               </div>
-                              <p className="text-[10px] text-[#424754] font-semibold truncate leading-tight">plantilla/{app.slug} · {passedCount} de 6 reglas</p>
+                              <p className="text-[10px] text-[#424754] font-semibold truncate leading-tight">plantilla/{app.slug} · {passedCount} de {app.checks.length} reglas</p>
                               <p className="text-[10px] text-[#424754] leading-normal italic">{app.notes}</p>
                             </div>
 
@@ -2609,7 +2615,8 @@ export default function AdminPage() {
                                 { label: 'FICHA', icon: 'assignment' },
                                 { label: 'CAT', icon: 'category' },
                                 { label: 'WSP', icon: 'chat' },
-                                { label: 'ESTILO', icon: 'palette' }
+                                { label: 'ESTILO', icon: 'palette' },
+                                { label: 'SHARE', icon: 'ios_share' }
                               ].map((rule, idx) => {
                                 const checked = app.checks[idx];
                                 return (
