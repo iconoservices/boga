@@ -10,10 +10,10 @@ import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { supabase } from '@/lib/supabase';
 
 // Plantillas que ya tienen botón de pedido por WhatsApp implementado en su código
-const TEMPLATES_WITH_WHATSAPP = new Set(['polleria', 'estilosmirka', 'sweetkittynails']);
+const TEMPLATES_WITH_WHATSAPP = new Set(['polleria', 'estilosmirka', 'sweetkittynails', 'mercado']);
 
 // Plantillas que ya tienen los botones flotantes de compartir e instalar (PWA) en su código
-const TEMPLATES_WITH_SHARE_INSTALL = new Set(['polleria', 'estilosmirka']);
+const TEMPLATES_WITH_SHARE_INSTALL = new Set(['polleria', 'estilosmirka', 'mercado']);
 
 const META: Record<string, { emoji: string; cat: string }> = {
   sunset:   { emoji: '🥂', cat: 'Bar & Café' },
