@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
 import { supabase } from '@/lib/supabase';
-import { useDemo } from '@/context/DemoContext';
+import { debeMostrarDemo } from '@/lib/demo';
 import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 
@@ -41,7 +41,6 @@ const STORIES = [
 ];
 
 export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTemplateProps) {
-  const { isDemoVisible } = useDemo();
   const [activeTab, setActiveTab] = useState<'servicios' | 'productos'>('servicios');
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -97,7 +96,10 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
   }, []);
 
   const theme = store.theme;
-  const allProducts = isDemoVisible('sweetkittynails')
+  // Los de ejemplo solo se ven mientras la tienda no cargo los suyos (lib/demo.ts).
+  // Ademas antes preguntaba por el slug fijo 'sweetkittynails', asi que cualquier
+  // otra tienda con esta plantilla ignoraba su propia configuracion.
+  const allProducts = debeMostrarDemo(store, supabaseProducts.length)
     ? [...supabaseProducts, ...MOCK_PRODUCTS]
     : supabaseProducts;
 

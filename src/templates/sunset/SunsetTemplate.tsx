@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { StoreConfig } from '@/lib/stores.config';
 import { supabase } from '@/lib/supabase';
-import { useDemo } from '@/context/DemoContext';
+import { debeMostrarDemo } from '@/lib/demo';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 
@@ -76,10 +76,11 @@ export default function SunsetTemplate({ store }: SunsetTemplateProps) {
   const [isMounted, setIsMounted] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<typeof MENU_ITEMS[0] | null>(null);
   const [products, setProducts] = useState<typeof MENU_ITEMS>(MENU_ITEMS);
-  const { isDemoVisible } = useDemo();
   const { getSettings } = useStoreSettings();
-  
-  const demoOn = isDemoVisible(store.slug);
+
+  // Productos que la tienda cargo de verdad (los MENU_ITEMS son los de ejemplo).
+  const propios = products.filter((p) => !MENU_ITEMS.find((m) => m.id === p.id));
+  const demoOn = debeMostrarDemo(store, propios.length);
   const settings = getSettings(store.slug);
   const heroUrl = settings.customHeroUrl || store.heroImage;
 
@@ -119,8 +120,8 @@ export default function SunsetTemplate({ store }: SunsetTemplateProps) {
 
   const t = store.theme;
 
-  // Show demo items only if enabled from admin
-  const visibleProducts = demoOn ? products : products.filter(p => !MENU_ITEMS.find(m => m.id === p.id));
+  // Los de ejemplo solo se ven mientras la tienda no cargo los suyos (lib/demo.ts)
+  const visibleProducts = demoOn ? products : propios;
 
   const filtered =
     activeTab === 'all' ? visibleProducts : visibleProducts.filter((m) => m.category === activeTab);

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
 import { supabase } from '@/lib/supabase';
-import { useDemo } from '@/context/DemoContext';
+import { debeMostrarDemo } from '@/lib/demo';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 
 interface AmazoniaTemplateProps {
@@ -27,7 +27,7 @@ const CATEGORY_TABS = [
 ];
 
 export default function AmazoniaTemplate({ store }: AmazoniaTemplateProps) {
-  const { isDemoVisible } = useDemo();
+  const demoPermitido = store.showDemoProducts !== false;
   const [activeCategory, setActiveCategory] = useState('all');
   const [cartCount, setCartCount] = useState(0);
   const [products, setProducts] = useState<any[]>([]);
@@ -35,8 +35,6 @@ export default function AmazoniaTemplate({ store }: AmazoniaTemplateProps) {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const showDemo = isDemoVisible(store.slug);
-      setProducts(showDemo ? MOCK_PRODUCTS : []);
 
       const { data, error } = await supabase
         .from('products')
@@ -55,11 +53,13 @@ export default function AmazoniaTemplate({ store }: AmazoniaTemplateProps) {
         };
       }) : [];
       
-      setProducts(showDemo ? [...dbProducts, ...MOCK_PRODUCTS] : dbProducts);
+      // Los demo solo entran si la tienda esta vacia (ver lib/demo.ts).
+      const conDemo = debeMostrarDemo({ showDemoProducts: demoPermitido }, dbProducts.length);
+      setProducts(conDemo ? [...dbProducts, ...MOCK_PRODUCTS] : dbProducts);
     };
     
     fetchProducts();
-  }, [store.slug, store.categories, isDemoVisible]);
+  }, [store.slug, store.categories, demoPermitido]);
 
   const t = store.theme;
 

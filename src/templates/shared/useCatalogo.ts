@@ -3,8 +3,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { StoreConfig } from '@/lib/stores.config';
 import { supabase } from '@/lib/supabase';
-import { useDemo } from '@/context/DemoContext';
 import { getDemoProducts } from '@/lib/templates.config';
+import { debeMostrarDemo } from '@/lib/demo';
 import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
 import { soles, type Producto, type Categoria } from './tokens';
 
@@ -17,10 +17,7 @@ import { soles, type Producto, type Categoria } from './tokens';
  * todas las plantillas que lo usan.
  */
 export function useCatalogo(store: StoreConfig) {
-  const { isDemoVisible } = useDemo();
-  // Booleano estable: isDemoVisible cambia de identidad en cada render del
-  // provider y como dependencia del efecto disparaba refetches en bucle.
-  const demoActivo = isDemoVisible(store.slug);
+  const demoPermitido = store.showDemoProducts !== false;
 
   const [products, setProducts] = useState<Producto[]>([]);
   const [activeCategory, setActiveCategory] = useState('all');
@@ -61,7 +58,9 @@ export function useCatalogo(store: StoreConfig) {
           }))
         : [];
 
-      const demo: Producto[] = demoActivo
+      // Los demo solo entran si la tienda esta vacia: si ya cargo lo suyo, el
+      // cliente final no puede terminar pidiendo un plato que no existe.
+      const demo: Producto[] = debeMostrarDemo({ showDemoProducts: demoPermitido }, deLaBase.length)
         ? getDemoProducts(store.template).map((p, i) => ({
             id: `demo-${i}`,
             name: p.name,
@@ -76,7 +75,7 @@ export function useCatalogo(store: StoreConfig) {
     };
 
     cargar();
-  }, [store.slug, store.template, store.heroImage, demoActivo, categorias]);
+  }, [store.slug, store.template, store.heroImage, demoPermitido, categorias]);
 
   // ── Carrito derivado ──
   const cartItems = useMemo(

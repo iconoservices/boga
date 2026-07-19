@@ -18,6 +18,11 @@ export interface StoreConfig {
   domain?: string;
   /** Numero al que llegan los pedidos, con codigo de pais y sin signos: 51987654321 */
   whatsapp?: string;
+  /**
+   * Mostrar los productos de ejemplo de la plantilla mientras la tienda esta
+   * vacia. Solo aplica si no cargo productos propios (ver lib/demo.ts).
+   */
+  showDemoProducts?: boolean;
 }
 
 // Las tiendas viven en Supabase, no aca. Cada consumidor las carga por su lado:

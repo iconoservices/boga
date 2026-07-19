@@ -145,7 +145,7 @@ export default function DashboardPage() {
   const [isStoreEditorOpen, setIsStoreEditorOpen] = useState(false);
   const [editingStoreSlug, setEditingStoreSlug] = useState<string | null>(null);
   const [isStoreSaving, setIsStoreSaving] = useState(false);
-  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '' });
+  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '', show_demo_products: true });
   const [storeLogoFile, setStoreLogoFile] = useState<File | null>(null);
   const [storeHeroFile, setStoreHeroFile] = useState<File | null>(null);
   const [storeLogoPreview, setStoreLogoPreview] = useState<string | null>(null);
@@ -270,6 +270,7 @@ export default function DashboardPage() {
       tagline: dbData?.tagline || config?.tagline || '',
       marketplace_category: dbData?.marketplace_category || config?.marketplaceCategory || '',
       whatsapp: dbData?.whatsapp || '',
+      show_demo_products: dbData?.show_demo_products ?? true,
     });
     setStoreHeroPreview(dbData?.hero_image || config?.heroImage || null);
     setStoreLogoPreview(dbData?.logo_image || config?.logoImage || null);
@@ -311,12 +312,28 @@ export default function DashboardPage() {
         tagline: storeForm.tagline,
         marketplace_category: storeForm.marketplace_category,
         whatsapp: storeForm.whatsapp || null,
+        show_demo_products: storeForm.show_demo_products,
         status: 'active',
       };
       if (heroUrl) upsertData.hero_image = heroUrl;
       if (logoUrl) upsertData.logo_image = logoUrl;
 
-      const { error } = await supabase.from('stores').upsert(upsertData, { onConflict: 'slug' });
+      let { error } = await supabase.from('stores').upsert(upsertData, { onConflict: 'slug' });
+
+      // Si la columna todavia no existe en la base, reintenta sin ella en vez de
+      // perder todo el guardado. Paso exactamente esto con `whatsapp`: el panel
+      // quedo sin poder guardar NADA de ninguna tienda hasta correr la migracion.
+      if (error && /show_demo_products/.test(error.message || '')) {
+        delete upsertData.show_demo_products;
+        ({ error } = await supabase.from('stores').upsert(upsertData, { onConflict: 'slug' }));
+        if (!error) {
+          alert(
+            'Tienda guardada, pero falta un paso para que funcione "Productos de ejemplo":\n\n' +
+            'Corré esto en el SQL editor de Supabase:\n' +
+            'ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS show_demo_products BOOLEAN DEFAULT true;'
+          );
+        }
+      }
       if (error) throw error;
 
       await fetchStores();
@@ -2266,6 +2283,27 @@ export default function DashboardPage() {
                     Sin este número, el botón de pedir de tu tienda no llega a nadie.
                   </p>
                 )}
+              </div>
+
+              {/* Productos de ejemplo */}
+              <div>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={storeForm.show_demo_products}
+                    onChange={e => setStoreForm({ ...storeForm, show_demo_products: e.target.checked })}
+                    className="mt-0.5 w-4 h-4 shrink-0 accent-black"
+                  />
+                  <span>
+                    <span className="block text-sm font-bold text-gray-700">
+                      Mostrar productos de ejemplo mientras mi tienda está vacía
+                    </span>
+                    <span className="block text-xs text-gray-500 mt-1">
+                      Sirve para ver cómo queda el diseño antes de cargar tu catálogo. En cuanto
+                      subas tu primer producto propio, los de ejemplo dejan de mostrarse solos.
+                    </span>
+                  </span>
+                </label>
               </div>
             </div>
 

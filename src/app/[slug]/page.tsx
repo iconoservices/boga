@@ -127,6 +127,7 @@ async function getDynamicStore(slug: string) {
         categories: dbStore.categories || [],
         logoImage: dbStore.logo_image || undefined,
         whatsapp: dbStore.whatsapp || undefined,
+        showDemoProducts: dbStore.show_demo_products ?? undefined,
       };
     }
   } catch (err) {
@@ -181,6 +182,7 @@ export default async function StorePage({ params, searchParams }: Props) {
         categories: defaultTmpl?.categories || [],
         logoImage: undefined,
         whatsapp: undefined,
+        showDemoProducts: undefined,
       };
     } else {
       notFound();

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
 import { supabase } from '@/lib/supabase';
 import { getDemoProducts } from '@/lib/templates.config';
-import { useDemo } from '@/context/DemoContext';
+import { debeMostrarDemo } from '@/lib/demo';
 import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 
@@ -29,10 +29,7 @@ interface Producto {
  */
 export default function MercadoTemplate({ store }: MercadoTemplateProps) {
   const t = store.theme;
-  const { isDemoVisible } = useDemo();
-  // Booleano estable: isDemoVisible cambia de identidad en cada render del
-  // provider, y como dependencia del efecto dispararia refetches en bucle.
-  const demoActivo = isDemoVisible(store.slug);
+  const demoPermitido = store.showDemoProducts !== false;
 
   const [productos, setProductos] = useState<Producto[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -43,8 +40,8 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
   const [agregados, setAgregados] = useState<Record<string, boolean>>({});
 
   // ── Carga de productos de esta tienda ──
-  // Los productos demo de la plantilla se suman solo si el demo esta activo
-  // para esta tienda (se apaga desde el superadmin), igual que en las demas.
+  // Los productos demo de la plantilla solo se suman si la tienda todavia esta
+  // vacia; la decision viaja en los datos de la tienda, no en localStorage.
   useEffect(() => {
     const cargar = async () => {
       const { data, error } = await supabase
@@ -63,7 +60,8 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
           }))
         : [];
 
-      const demo: Producto[] = demoActivo
+      // Los demo solo entran si la tienda esta vacia (ver lib/demo.ts).
+      const demo: Producto[] = debeMostrarDemo({ showDemoProducts: demoPermitido }, deLaBase.length)
         ? getDemoProducts(store.template).map((p, i) => ({
             id: `demo-${i}`,
             name: p.name,
@@ -78,7 +76,7 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
       setCargando(false);
     };
     cargar();
-  }, [store.slug, store.template, store.heroImage, demoActivo]);
+  }, [store.slug, store.template, store.heroImage, demoPermitido]);
 
   // ── Banners: se arman con las mejores imagenes del catalogo ──
   const banners = React.useMemo(() => {

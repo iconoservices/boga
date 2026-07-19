@@ -45,6 +45,13 @@ CREATE INDEX IF NOT EXISTS stores_slug_idx ON public.stores (slug);
 ALTER TABLE public.stores
 ADD COLUMN IF NOT EXISTS logo_image TEXT;
 
+-- Migration: Add show_demo_products column (run this if the table already exists)
+-- Controla si la tienda muestra los productos de ejemplo de su plantilla
+-- MIENTRAS esta vacia. Si ya cargo productos propios, no se muestran nunca,
+-- tenga esta columna el valor que tenga (ver src/lib/demo.ts).
+ALTER TABLE public.stores
+ADD COLUMN IF NOT EXISTS show_demo_products BOOLEAN DEFAULT true;
+
 -- Migration: Add whatsapp column (run this if the table already exists)
 -- Sin esta columna el admin no puede guardar NINGUNA tienda: handleStoreSave
 -- manda `whatsapp` en el upsert y PostgREST rechaza el write completo.
