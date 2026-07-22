@@ -35,6 +35,7 @@ export const viewport: Viewport = {
 import { CartProvider } from '@/context/CartContext';
 import { DemoProvider } from '@/context/DemoContext';
 import { StoreSettingsProvider } from '@/context/StoreSettingsContext';
+import { AuthProvider } from '@/context/AuthContext';
 import SharedUI from '@/components/SharedUI';
 
 export default function RootLayout({
@@ -55,16 +56,18 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-background text-on-background font-body-md min-h-screen">
-        <StoreSettingsProvider>
-          <DemoProvider>
-            <CartProvider>
-              {children}
-              <AppFooter />
-              <BottomNav />
-              <SharedUI />
-            </CartProvider>
-          </DemoProvider>
-        </StoreSettingsProvider>
+        <AuthProvider>
+          <StoreSettingsProvider>
+            <DemoProvider>
+              <CartProvider>
+                {children}
+                <AppFooter />
+                <BottomNav />
+                <SharedUI />
+              </CartProvider>
+            </DemoProvider>
+          </StoreSettingsProvider>
+        </AuthProvider>
       </body>
     </html>
   );

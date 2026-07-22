@@ -2,11 +2,21 @@
 
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { type StoreConfig } from '@/lib/stores.config';
 import { getTemplate, getDemoProducts, getAllTemplates } from '@/lib/templates.config';
 import { useDemo } from '@/context/DemoContext';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
+import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+
+// Correos con acceso al superadmin. A diferencia de /admin (donde cualquier
+// cuenta puede entrar y solo ve sus propias tiendas), este panel puede editar
+// y borrar CUALQUIER tienda del ecosistema — la lista, no solo estar logueado,
+// es lo que decide el acceso. Coincide con el email permitido en las políticas
+// RLS de Supabase (ver supabase_auth_setup.sql): si agregas uno acá, agrégalo
+// también allá.
+const SUPERADMIN_EMAILS = ['jnmcsky@gmail.com'];
 
 // Plantillas que ya tienen botón de pedido por WhatsApp implementado en su código
 const TEMPLATES_WITH_WHATSAPP = new Set([
@@ -226,6 +236,28 @@ function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
 }
 
 export default function AdminPage() {
+  const { user, loading, signOut } = useAuth();
+  const router = useRouter();
+  const isSuperadmin = !!user?.email && SUPERADMIN_EMAILS.includes(user.email);
+
+  React.useEffect(() => {
+    if (loading) return;
+    if (!user) { router.replace('/login'); return; }
+    if (!isSuperadmin) { router.replace('/admin'); }
+  }, [loading, user, isSuperadmin, router]);
+
+  if (loading || !user || !isSuperadmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f9f9ff]">
+        <div className="w-8 h-8 border-2 border-[#c2c6d6] border-t-[#0058be] rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return <SuperadminDashboard onSignOut={async () => { await signOut(); router.replace('/login'); }} />;
+}
+
+function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   const [activeTab, setActiveTab] = useState<'tiendas' | 'categorias' | 'usuarios' | 'personalizacion' | 'facturacion' | 'mapa' | 'paquetes' | 'plantillas'>('tiendas');
   const [search, setSearch] = useState('');
   
@@ -1245,9 +1277,9 @@ export default function AdminPage() {
             <button className="p-1 text-[#424754] hover:bg-[#e1e2ec] hover:opacity-80 transition-all rounded-full flex items-center justify-center">
               <span className="material-symbols-outlined text-[18px]">notifications</span>
             </button>
-            <Link href="/" className="p-1 text-[#424754] hover:bg-[#e1e2ec] hover:text-[#ba1a1a] transition-all rounded-full flex items-center justify-center" title="Salir">
+            <button onClick={onSignOut} className="p-1 text-[#424754] hover:bg-[#e1e2ec] hover:text-[#ba1a1a] transition-all rounded-full flex items-center justify-center" title="Salir">
               <span className="material-symbols-outlined text-[18px]">logout</span>
-            </Link>
+            </button>
           </div>
         </header>
 

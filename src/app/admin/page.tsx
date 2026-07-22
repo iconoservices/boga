@@ -2,11 +2,14 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { type StoreConfig } from '@/lib/stores.config';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { QRCodeSVG } from 'qrcode.react';
+import { useAuth } from '@/context/AuthContext';
+import type { User } from '@supabase/supabase-js';
 
 interface Product {
   id: string;
@@ -23,6 +26,27 @@ interface Product {
 }
 
 export default function DashboardPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) router.replace('/login');
+  }, [loading, user, router]);
+
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f9f9ff]">
+        <div className="w-8 h-8 border-2 border-[#c2c6d6] border-t-[#b8130e] rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return <AdminDashboard user={user} />;
+}
+
+function AdminDashboard({ user }: { user: User }) {
+  const { signOut } = useAuth();
+  const router = useRouter();
   const [selectedStore, setSelectedStore] = useState<string>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,43 +82,45 @@ export default function DashboardPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [dbStores, setDbStores] = useState<any[]>([]);
 
-  // Tiendas que este cliente administra (persistido en el dispositivo).
-  // null = todavía no eligió → se muestra el selector al entrar.
-  const [managedSlugs, setManagedSlugs] = useState<string[] | null>(null);
+  // Tiendas que este usuario administra: las que tienen su user_id en la
+  // base (RLS ya solo deja editar las propias). Antes esto era una lista
+  // guardada en localStorage sin ninguna verificacion real de dueño — cualquiera
+  // que abriera /admin podia "elegir" y editar la tienda de otro comercio.
   const [isStorePickerOpen, setIsStorePickerOpen] = useState(false);
   const [pickerDraft, setPickerDraft] = useState<string[]>([]);
-  const [managedLoaded, setManagedLoaded] = useState(false);
+  const [claiming, setClaiming] = useState(false);
 
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('boga_admin_my_stores');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) setManagedSlugs(parsed);
-      }
-    } catch {}
-    setManagedLoaded(true);
-  }, []);
+  const myStoreSlugs = React.useMemo(
+    () => dbStores.filter((s: any) => s.user_id === user.id).map((s: any) => s.slug),
+    [dbStores, user.id]
+  );
+  const unclaimedStores = React.useMemo(
+    () => dbStores.filter((s: any) => !s.user_id),
+    [dbStores]
+  );
+  const managedSlugs = myStoreSlugs.length > 0 ? myStoreSlugs : null;
 
-  // Si nunca eligió tiendas, abrir el selector apenas carguen las tiendas
+  // Si todavia no tiene ninguna tienda propia, ofrecer reclamar una sin dueño.
   useEffect(() => {
-    if (managedLoaded && managedSlugs === null && dbStores.length > 0) {
+    if (myStoreSlugs.length === 0 && dbStores.length > 0 && !isStorePickerOpen) {
       setPickerDraft([]);
       setIsStorePickerOpen(true);
     }
-  }, [managedLoaded, managedSlugs, dbStores]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myStoreSlugs.length, dbStores.length]);
 
-  const saveManagedStores = (slugs: string[]) => {
+  const claimStores = async (slugs: string[]) => {
     if (slugs.length === 0) return;
-    setManagedSlugs(slugs);
-    localStorage.setItem('boga_admin_my_stores', JSON.stringify(slugs));
+    setClaiming(true);
+    const { error } = await supabase.from('stores').update({ user_id: user.id }).in('slug', slugs);
+    setClaiming(false);
+    if (error) { alert('No se pudo reclamar la tienda: ' + error.message); return; }
+    await fetchStores();
     setIsStorePickerOpen(false);
-    // Si la tienda seleccionada quedó fuera de la lista, volver a "todas"
-    setSelectedStore(prev => (prev !== 'all' && !slugs.includes(prev)) ? 'all' : prev);
   };
 
   const visibleDbStores = React.useMemo(() => {
-    if (!managedSlugs) return dbStores;
+    if (!managedSlugs) return [];
     return dbStores.filter((s: any) => managedSlugs.includes(s.slug));
   }, [dbStores, managedSlugs]);
 
@@ -139,7 +165,7 @@ export default function DashboardPage() {
 
   // Productos visibles: solo los de las tiendas que administra este cliente
   const visibleProducts = React.useMemo(() => {
-    if (!managedSlugs) return products;
+    if (!managedSlugs) return [];
     return products.filter(p => managedSlugs.includes(p.store));
   }, [products, managedSlugs]);
   const [isStoreEditorOpen, setIsStoreEditorOpen] = useState(false);
@@ -663,11 +689,19 @@ export default function DashboardPage() {
             Instalar App
           </button>
         </nav>
-        <div className="p-4 border-t border-gray-100">
+        <div className="p-4 border-t border-gray-100 space-y-1">
+          <p className="px-4 text-[11px] text-gray-400 font-semibold truncate">{user.email}</p>
           <Link href="/" className="flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-gray-900 font-semibold transition-colors">
             <span className="material-symbols-outlined text-[20px]">arrow_back</span>
             Volver a Boga
           </Link>
+          <button
+            onClick={async () => { await signOut(); router.replace('/login'); }}
+            className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-gray-900 font-semibold transition-colors"
+          >
+            <span className="material-symbols-outlined text-[20px]">logout</span>
+            Cerrar sesión
+          </button>
         </div>
       </aside>
 
@@ -698,8 +732,8 @@ export default function DashboardPage() {
                 ))}
               </select>
               <button
-                onClick={() => { setPickerDraft(managedSlugs || []); setIsStorePickerOpen(true); }}
-                title="Elegir qué tiendas administro"
+                onClick={() => { setPickerDraft([]); setIsStorePickerOpen(true); }}
+                title="Reclamar otra tienda"
                 className={`bg-white border border-gray-200 text-gray-500 hover:text-gray-900 hover:border-gray-300 rounded-md shadow-sm transition-colors flex items-center justify-center shrink-0 ${activeTab === 'pos' ? 'w-9 h-9' : 'w-11 h-11'}`}
               >
                 <span className="material-symbols-outlined text-[18px]">checklist</span>
@@ -2587,11 +2621,11 @@ export default function DashboardPage() {
                   ))}
                 </select>
                 <button
-                  onClick={() => { setPickerDraft(managedSlugs || []); setIsStorePickerOpen(true); setIsMobileMenuOpen(false); }}
+                  onClick={() => { setPickerDraft([]); setIsStorePickerOpen(true); setIsMobileMenuOpen(false); }}
                   className="mt-2 text-xs font-bold text-gray-500 hover:text-gray-900 flex items-center gap-1.5 transition-colors"
                 >
                   <span className="material-symbols-outlined text-[15px]">checklist</span>
-                  Elegir qué tiendas administro
+                  Reclamar otra tienda
                 </button>
               </div>
 
@@ -2629,6 +2663,17 @@ export default function DashboardPage() {
                   <span className="material-symbols-outlined text-[20px]">install_mobile</span>
                   Instalar App
                 </button>
+
+                <div className="pt-2 mt-2 border-t border-gray-100">
+                  <p className="px-4 text-[11px] text-gray-400 font-semibold truncate">{user.email}</p>
+                  <button
+                    onClick={async () => { await signOut(); router.replace('/login'); }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-md font-semibold transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">logout</span>
+                    Cerrar sesión
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -2823,13 +2868,13 @@ export default function DashboardPage() {
         <div className="fixed inset-0 z-[300] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-2xl w-full max-w-[420px] overflow-hidden flex flex-col max-h-[85vh]">
             <div className="px-6 py-5 border-b border-gray-100">
-              <h3 className="font-extrabold text-lg text-gray-900">¿Qué tiendas administras?</h3>
+              <h3 className="font-extrabold text-lg text-gray-900">¿Cuál es tu tienda?</h3>
               <p className="text-gray-500 text-xs font-medium mt-1">
-                Tu panel solo mostrará los productos, ventas y datos de las tiendas que marques. Puedes cambiarlo cuando quieras desde "Elegir mis tiendas".
+                Reclama la tienda que te creó el equipo de Boga: queda asociada a tu cuenta ({user.email}) y nadie más va a poder editarla.
               </p>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
-              {dbStores.map((s: any) => {
+              {unclaimedStores.map((s: any) => {
                 const checked = pickerDraft.includes(s.slug);
                 return (
                   <label
@@ -2862,6 +2907,11 @@ export default function DashboardPage() {
               {dbStores.length === 0 && (
                 <p className="text-gray-400 text-sm text-center py-6 font-medium">Cargando tiendas...</p>
               )}
+              {dbStores.length > 0 && unclaimedStores.length === 0 && (
+                <p className="text-gray-400 text-sm text-center py-6 font-medium">
+                  No hay tiendas sin reclamar. Si el equipo de Boga ya te creó la tuya y no aparece acá, escribile para que la verifique.
+                </p>
+              )}
             </div>
             <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between gap-3">
               <span className="text-[11px] font-bold text-gray-400">
@@ -2877,15 +2927,15 @@ export default function DashboardPage() {
                   </button>
                 )}
                 <button
-                  onClick={() => saveManagedStores(pickerDraft)}
-                  disabled={pickerDraft.length === 0}
+                  onClick={() => claimStores(pickerDraft)}
+                  disabled={pickerDraft.length === 0 || claiming}
                   className={`px-5 py-2.5 rounded-md font-bold text-xs transition-all ${
-                    pickerDraft.length === 0
+                    pickerDraft.length === 0 || claiming
                       ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                       : 'bg-[#b8130e] text-white shadow-lg shadow-[#b8130e]/20 hover:-translate-y-0.5 active:translate-y-0'
                   }`}
                 >
-                  Guardar selección
+                  {claiming ? 'Reclamando...' : 'Reclamar tienda'}
                 </button>
               </div>
             </div>
