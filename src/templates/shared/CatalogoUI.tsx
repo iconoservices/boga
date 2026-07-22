@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import type { StoreTheme } from '@/lib/templates.config';
-import { TXT, ICON, INFO_LOCAL, soles, type Producto, type Categoria } from './tokens';
+import { TXT, ICON, soles, type Producto, type Categoria } from './tokens';
 
 /* ════════════════════════════════════════════
    CHIPS DE CATEGORIA
@@ -338,10 +338,12 @@ export function CartPanel({
    ════════════════════════════════════════════ */
 
 export function ContactPanel({
-  t, telefonoVisible, onEnviar,
+  t, telefonoVisible, direccionVisible, horarioVisible, onEnviar,
 }: {
   t: StoreTheme;
   telefonoVisible: string | null;
+  direccionVisible?: string | null;
+  horarioVisible?: string | null;
   onEnviar: (datos: { nombre: string; telefono: string; mensaje: string }) => void;
 }) {
   const campos = [
@@ -359,10 +361,11 @@ export function ContactPanel({
         </p>
         <div className="space-y-4">
           {[
-            { icon: 'location_on', title: 'Nuestra Sede Central', desc: INFO_LOCAL.direccion },
-            // El telefono sale del WhatsApp que la tienda cargo en su panel.
+            // Direccion, telefono y horario: cada uno solo aparece si la tienda lo cargo
+            // en su panel. Antes eran datos de relleno que salian igual para todas.
+            ...(direccionVisible ? [{ icon: 'location_on', title: 'Nuestra Sede', desc: direccionVisible }] : []),
             ...(telefonoVisible ? [{ icon: 'call', title: 'Teléfono / WhatsApp', desc: telefonoVisible }] : []),
-            { icon: 'schedule', title: 'Horario de Atención', desc: INFO_LOCAL.horarioLargo },
+            ...(horarioVisible ? [{ icon: 'schedule', title: 'Horario de Atención', desc: horarioVisible }] : []),
           ].map((item) => (
             <div key={item.icon} className="flex items-start gap-4">
               <div

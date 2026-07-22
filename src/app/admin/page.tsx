@@ -145,7 +145,7 @@ export default function DashboardPage() {
   const [isStoreEditorOpen, setIsStoreEditorOpen] = useState(false);
   const [editingStoreSlug, setEditingStoreSlug] = useState<string | null>(null);
   const [isStoreSaving, setIsStoreSaving] = useState(false);
-  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '', show_demo_products: true });
+  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '', show_demo_products: true, zona: '', direccion: '', horario: '', rating: '' });
   const [storeLogoFile, setStoreLogoFile] = useState<File | null>(null);
   const [storeHeroFile, setStoreHeroFile] = useState<File | null>(null);
   const [storeLogoPreview, setStoreLogoPreview] = useState<string | null>(null);
@@ -271,6 +271,10 @@ export default function DashboardPage() {
       marketplace_category: dbData?.marketplace_category || config?.marketplaceCategory || '',
       whatsapp: dbData?.whatsapp || '',
       show_demo_products: dbData?.show_demo_products ?? true,
+      zona: dbData?.zona || config?.zona || '',
+      direccion: dbData?.direccion || config?.direccion || '',
+      horario: dbData?.horario || config?.horario || '',
+      rating: dbData?.rating != null ? String(dbData.rating) : (config?.rating != null ? String(config.rating) : ''),
     });
     setStoreHeroPreview(dbData?.hero_image || config?.heroImage || null);
     setStoreLogoPreview(dbData?.logo_image || config?.logoImage || null);
@@ -313,6 +317,10 @@ export default function DashboardPage() {
         marketplace_category: storeForm.marketplace_category,
         whatsapp: storeForm.whatsapp || null,
         show_demo_products: storeForm.show_demo_products,
+        zona: storeForm.zona || null,
+        direccion: storeForm.direccion || null,
+        horario: storeForm.horario || null,
+        rating: storeForm.rating !== '' ? Number(storeForm.rating) : null,
         status: 'active',
       };
       if (heroUrl) upsertData.hero_image = heroUrl;
@@ -320,19 +328,24 @@ export default function DashboardPage() {
 
       let { error } = await supabase.from('stores').upsert(upsertData, { onConflict: 'slug' });
 
-      // Si la columna todavia no existe en la base, reintenta sin ella en vez de
-      // perder todo el guardado. Paso exactamente esto con `whatsapp`: el panel
-      // quedo sin poder guardar NADA de ninguna tienda hasta correr la migracion.
-      if (error && /show_demo_products/.test(error.message || '')) {
-        delete upsertData.show_demo_products;
+      // Si alguna columna nueva todavia no existe en la base, reintenta sin ella
+      // en vez de perder todo el guardado. Paso exactamente esto con `whatsapp`:
+      // el panel quedo sin poder guardar NADA de ninguna tienda hasta correr la
+      // migracion. Columnas opcionales porque llegaron despues del lanzamiento.
+      const columnasOpcionales = ['show_demo_products', 'zona', 'direccion', 'horario', 'rating'];
+      const columnasFaltantes: string[] = [];
+      let faltante = columnasOpcionales.find((col) => col in upsertData && new RegExp(col).test(error?.message || ''));
+      while (error && faltante) {
+        delete upsertData[faltante];
+        columnasFaltantes.push(faltante);
         ({ error } = await supabase.from('stores').upsert(upsertData, { onConflict: 'slug' }));
-        if (!error) {
-          alert(
-            'Tienda guardada, pero falta un paso para que funcione "Productos de ejemplo":\n\n' +
-            'Corré esto en el SQL editor de Supabase:\n' +
-            'ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS show_demo_products BOOLEAN DEFAULT true;'
-          );
-        }
+        faltante = columnasOpcionales.find((col) => col in upsertData && new RegExp(col).test(error?.message || ''));
+      }
+      if (!error && columnasFaltantes.length) {
+        alert(
+          `Tienda guardada, pero estos campos todavía no se guardaron: ${columnasFaltantes.join(', ')}.\n\n` +
+          'Corré la migración pendiente en el SQL editor de Supabase (ver supabase_stores_setup.sql).'
+        );
       }
       if (error) throw error;
 
@@ -2283,6 +2296,61 @@ export default function DashboardPage() {
                     Sin este número, el botón de pedir de tu tienda no llega a nadie.
                   </p>
                 )}
+              </div>
+
+              {/* Ficha del local: todo opcional, para negocios sin sede fisica (puro delivery) */}
+              <div className="space-y-4 pt-2 border-t border-gray-100">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">Ficha del local (opcional)</label>
+                  <p className="text-xs text-gray-500">
+                    Si tu negocio no tiene local a la calle o no querés mostrar estos datos, dejalos vacíos: tu tienda simplemente no los muestra.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Zona / Distrito</label>
+                    <input
+                      type="text"
+                      value={storeForm.zona}
+                      onChange={e => setStoreForm({ ...storeForm, zona: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                      placeholder="Ej: Miraflores"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Horario de atención</label>
+                    <input
+                      type="text"
+                      value={storeForm.horario}
+                      onChange={e => setStoreForm({ ...storeForm, horario: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                      placeholder="Ej: Lun a Dom, 12pm - 11pm"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5">Dirección completa</label>
+                  <input
+                    type="text"
+                    value={storeForm.direccion}
+                    onChange={e => setStoreForm({ ...storeForm, direccion: e.target.value })}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                    placeholder="Ej: Av. Larco 123, Miraflores, Lima"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5">Calificación (0 a 5, opcional)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={5}
+                    step={0.1}
+                    value={storeForm.rating}
+                    onChange={e => setStoreForm({ ...storeForm, rating: e.target.value })}
+                    className="w-full sm:w-40 px-4 py-3 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                    placeholder="Ej: 4.8"
+                  />
+                </div>
               </div>
 
               {/* Productos de ejemplo */}

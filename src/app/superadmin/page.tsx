@@ -266,7 +266,12 @@ export default function AdminPage() {
     location: '',
     emoji: '🏪',
     tier: 'Basic Tier',
-    active: true
+    active: true,
+    whatsapp: '',
+    zona: '',
+    direccion: '',
+    horario: '',
+    rating: ''
   });
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
@@ -311,6 +316,11 @@ export default function AdminPage() {
       heroImage: existingStoreObj.heroImage || tpl?.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
       heroAlt: storeForm.name || 'store image',
       logoImage: logoPreview || undefined,
+      whatsapp: storeForm.whatsapp || undefined,
+      zona: storeForm.zona || undefined,
+      direccion: storeForm.direccion || undefined,
+      horario: storeForm.horario || undefined,
+      rating: storeForm.rating !== '' ? Number(storeForm.rating) : undefined,
       theme: previewTheme,
       categories: existingStoreObj.categories || [
         { name: 'Entradas', icon: 'restaurant', href: '#entradas' },
@@ -362,7 +372,14 @@ export default function AdminPage() {
       location: '',
       emoji: '🏪',
       tier: 'Basic Tier',
-      active: true
+      active: true,
+      // El comercio ya lo dejo en su solicitud (/vende-con-boga): que no lo tenga
+      // que volver a escribir.
+      whatsapp: req.whatsapp || '',
+      zona: '',
+      direccion: '',
+      horario: '',
+      rating: ''
     });
     setShowStoreModal(true);
     supabase.from('store_requests').update({ status: 'approved' }).eq('id', req.id).then(() => {
@@ -516,6 +533,15 @@ export default function AdminPage() {
       });
   }, [templateOverrides, hiddenTemplates]);
 
+  // Se deriva de las categorias reales de adminTemplates (antes era una lista
+  // fija a mano que se desincronizo: le faltaba "Restaurantes" -por eso Menu
+  // Directo y Pollería nunca aparecian al filtrar- y sobraba "Tecnología", que
+  // ninguna plantilla usa.
+  const templateCategories = React.useMemo(
+    () => ['Todas', ...Array.from(new Set(adminTemplates.map(t => t.category))).sort()],
+    [adminTemplates]
+  );
+
   const [templateFilter, setTemplateFilter] = useState<string>('Todas');
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<AdminTemplate | null>(null);
@@ -580,6 +606,11 @@ export default function AdminPage() {
               heroImage: dbStore.hero_image || getTemplate(dbStore.template as string)?.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
               heroAlt: dbStore.hero_alt || 'store image',
               logoImage: dbStore.logo_image || undefined,
+              whatsapp: dbStore.whatsapp || undefined,
+              zona: dbStore.zona || undefined,
+              direccion: dbStore.direccion || undefined,
+              horario: dbStore.horario || undefined,
+              rating: dbStore.rating ?? undefined,
               theme: (() => {
                 if (dbStore.theme && Object.keys(dbStore.theme).length > 0) return dbStore.theme;
                 const tmpl = dbStore.template as string;
@@ -727,7 +758,12 @@ export default function AdminPage() {
       location: '',
       emoji: '🏪',
       tier: 'Basic Tier',
-      active: true
+      active: true,
+      whatsapp: '',
+      zona: '',
+      direccion: '',
+      horario: '',
+      rating: ''
     });
     setShowStoreModal(true);
   };
@@ -749,7 +785,12 @@ export default function AdminPage() {
       location: storeDetails[slug]?.location || '',
       emoji: storeMeta[slug]?.emoji || '🏪',
       tier: storeTiers[slug] || 'Basic Tier',
-      active: !!activeStores[slug]
+      active: !!activeStores[slug],
+      whatsapp: store.whatsapp || '',
+      zona: store.zona || '',
+      direccion: store.direccion || '',
+      horario: store.horario || '',
+      rating: store.rating != null ? String(store.rating) : ''
     });
     setShowStoreModal(true);
   };
@@ -844,7 +885,12 @@ export default function AdminPage() {
       hero_image: heroImage,
       hero_alt: heroAlt,
       categories: categoriesList,
-      status: storeForm.active ? 'active' : 'inactive'
+      status: storeForm.active ? 'active' : 'inactive',
+      whatsapp: storeForm.whatsapp || null,
+      zona: storeForm.zona || null,
+      direccion: storeForm.direccion || null,
+      horario: storeForm.horario || null,
+      rating: storeForm.rating !== '' ? Number(storeForm.rating) : null,
     };
     if (logoUrl) {
       upsertData.logo_image = logoUrl;
@@ -855,12 +901,30 @@ export default function AdminPage() {
     }
 
     try {
-      const { error } = await supabase
+      let { error } = await supabase
         .from('stores')
         .upsert(upsertData, { onConflict: 'slug' });
-        
+
+      // Mismo problema que ya paso con `whatsapp` en el panel del cliente: si una
+      // columna nueva todavia no existe en la base, reintenta sin ella en vez de
+      // perder el guardado completo de la tienda.
+      const columnasOpcionales = ['whatsapp', 'zona', 'direccion', 'horario', 'rating', 'show_demo_products'];
+      const columnasFaltantes: string[] = [];
+      let faltante = columnasOpcionales.find((col) => col in upsertData && new RegExp(col).test(error?.message || ''));
+      while (error && faltante) {
+        delete upsertData[faltante];
+        columnasFaltantes.push(faltante);
+        ({ error } = await supabase.from('stores').upsert(upsertData, { onConflict: 'slug' }));
+        faltante = columnasOpcionales.find((col) => col in upsertData && new RegExp(col).test(error?.message || ''));
+      }
+      if (!error && columnasFaltantes.length) {
+        alert(
+          `Tienda guardada, pero estos campos todavía no se guardaron: ${columnasFaltantes.join(', ')}.\n\n` +
+          'Corré la migración pendiente en el SQL editor de Supabase (ver supabase_stores_setup.sql).'
+        );
+      }
       if (error) throw error;
-      
+
       setStoreDetails(prev => ({
         ...prev,
         [slug]: {
@@ -2389,7 +2453,7 @@ export default function AdminPage() {
 
               {/* Filter Bar */}
               <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
-                {['Todas', 'Comercio', 'Negocios', 'Gourmet', 'Tecnología', 'Salud'].map(cat => {
+                {templateCategories.map(cat => {
                   const isActive = templateFilter === cat;
                   return (
                     <button
@@ -2419,7 +2483,7 @@ export default function AdminPage() {
                         className="group bg-white border border-[#c2c6d6] rounded-sm overflow-hidden hover:shadow-sm transition-all duration-200 flex flex-col"
                       >
                         {/* Preview Image */}
-                        <div className="h-20 sm:h-16 lg:h-10 xl:h-[11px] overflow-hidden relative bg-neutral-100 shrink-0">
+                        <div className="h-24 overflow-hidden relative bg-neutral-100 shrink-0">
                           {tpl.previewUrl ? (
                             <img 
                               alt={tpl.name}
@@ -3055,18 +3119,42 @@ export default function AdminPage() {
               <form onSubmit={handleSaveStore} className="flex-1 overflow-y-auto min-h-0 flex flex-col justify-between">
                 <div className="p-6 space-y-6">
                   
-                  {/* OPTIMIZATION SCORE */}
+                  {/* COMPLETITUD DE LA TIENDA — calculado en vivo, antes decia "75%" fijo
+                      sin importar la tienda. */}
                   <div className="border border-[#ecedf7] bg-[#f8fafc] rounded-lg p-4 shadow-sm">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-[11px] font-extrabold text-[#191b23]">Optimization Score</span>
-                      <span className="text-sm font-black text-[#0058be]">75%</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-[#d5e0f8] rounded-full overflow-hidden mb-3">
-                      <div className="h-full bg-[#0058be] rounded-full" style={{ width: '75%' }} />
-                    </div>
-                    <p className="text-[10px] text-[#545f73] font-medium leading-relaxed">
-                      Your SEO and performance are looking good. Add alt text to images to reach 90%.
-                    </p>
+                    {(() => {
+                      const checks = [
+                        !!storeForm.name,
+                        !!storeForm.slug,
+                        !!storeForm.tagline,
+                        storeForm.template !== 'default',
+                        !!storeForm.whatsapp,
+                        !!logoPreview,
+                        !!(storeForm.zona || storeForm.direccion),
+                      ];
+                      const pct = Math.round((checks.filter(Boolean).length / checks.length) * 100);
+                      const faltantes = [
+                        !storeForm.tagline && 'un lema',
+                        storeForm.template === 'default' && 'una plantilla visual',
+                        !storeForm.whatsapp && 'el WhatsApp de pedidos',
+                        !logoPreview && 'un logo',
+                        !(storeForm.zona || storeForm.direccion) && 'la ficha del local',
+                      ].filter(Boolean) as string[];
+                      return (
+                        <>
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-[11px] font-extrabold text-[#191b23]">Completitud de la Tienda</span>
+                            <span className="text-sm font-black text-[#0058be]">{pct}%</span>
+                          </div>
+                          <div className="w-full h-1.5 bg-[#d5e0f8] rounded-full overflow-hidden mb-3">
+                            <div className="h-full bg-[#0058be] rounded-full transition-all" style={{ width: `${pct}%` }} />
+                          </div>
+                          <p className="text-[10px] text-[#545f73] font-medium leading-relaxed">
+                            {faltantes.length === 0 ? 'Todo lo esencial está cargado.' : `Falta: ${faltantes.join(', ')}.`}
+                          </p>
+                        </>
+                      );
+                    })()}
                   </div>
 
                   {/* LOGO Y MARCA */}
@@ -3178,77 +3266,61 @@ export default function AdminPage() {
                     </div>
                   </section>
 
-                  {/* PALETA DE COLORES */}
+                  {/* PALETA DE COLORES — de momento solo lectura: son los colores fijos de
+                      la plantilla elegida abajo. Antes los swatches y el "+" tenian
+                      cursor-pointer y hover pero ningun onClick: parecian editables y no
+                      hacian nada. */}
                   <section className="space-y-4">
                     <div className="flex items-center gap-2 border-b border-[#ecedf7] pb-2">
                       <span className="material-symbols-outlined text-[#0058be] text-[16px] font-bold">palette</span>
                       <h3 className="text-[10px] font-black text-[#424754] uppercase tracking-widest">Paleta de Colores</h3>
                     </div>
+                    <p className="text-[10px] text-[#727785] font-semibold -mt-2">
+                      Vienen fijos con la plantilla que elijas en "Estructura de Página". Personalizar colores por tienda todavía no existe.
+                    </p>
 
-                    {/* Color Swatches Grid from Template Theme */}
                     {(() => {
                       const tplKey = storeForm.template as string;
                       const tplTheme = getTemplate(tplKey)?.theme || {
-                        primary: '#0058be', secondary: '#545f73', background: '#f9f9ff', surface: '#ffffff'
+                        primary: '#0058be', secondary: '#545f73', background: '#f9f9ff', surface: '#ffffff',
+                        fontHeadline: "'Inter', sans-serif", fontBody: "'Inter', sans-serif",
                       };
                       return (
-                        <div className="space-y-3">
-                          <div className="flex gap-2.5">
-                            {[tplTheme.primary, tplTheme.secondary || '#545f73', tplTheme.background, tplTheme.surface].map((color, i) => (
-                              <div
-                                key={i}
-                                className="w-10 h-10 rounded-md border border-[#ecedf7] flex items-center justify-center shadow-xs cursor-pointer hover:scale-105 transition-transform"
-                                style={{ backgroundColor: color }}
-                                title={`Color ${i + 1}: ${color}`}
-                              >
-                                <div className="w-2.5 h-2.5 rounded-full bg-white/40 border border-white/60" />
-                              </div>
-                            ))}
-                            {/* Dotted Plus Swatch */}
-                            <div className="w-10 h-10 rounded-md border-2 border-dashed border-[#c2c6d6] flex items-center justify-center text-[#727785] cursor-pointer hover:bg-[#f2f3fd] transition-colors">
-                              <span className="material-symbols-outlined text-sm font-bold">add</span>
+                        <div className="flex gap-2.5">
+                          {[tplTheme.primary, tplTheme.secondary || '#545f73', tplTheme.background, tplTheme.surface].map((color, i) => (
+                            <div
+                              key={i}
+                              className="w-10 h-10 rounded-md border border-[#ecedf7] flex items-center justify-center shadow-xs"
+                              style={{ backgroundColor: color }}
+                              title={`Color ${i + 1}: ${color}`}
+                            >
+                              <div className="w-2.5 h-2.5 rounded-full bg-white/40 border border-white/60" />
                             </div>
-                          </div>
-
-                          <div className="flex items-center justify-between p-3 bg-[#f8fafc] rounded-lg border border-[#ecedf7]">
-                            <span className="text-[10px] font-bold text-[#424754] uppercase tracking-wider">Modo Oscuro</span>
-                            <Toggle on={tplTheme.background === '#191b23' || tplTheme.background === '#121212'} onChange={() => {}} />
-                          </div>
+                          ))}
                         </div>
                       );
                     })()}
                   </section>
 
-                  {/* TIPOGRAFÍA */}
+                  {/* TIPOGRAFÍA — igual que arriba, de solo lectura: es la que trae la
+                      plantilla. Antes "Inter" salia siempre marcada como seleccionada y
+                      "Playfair Display" siempre sin marcar, sin ningun onClick real. */}
                   <section className="space-y-4">
                     <div className="flex items-center gap-2 border-b border-[#ecedf7] pb-2">
                       <span className="material-symbols-outlined text-[#0058be] text-[16px] font-bold">font_download</span>
                       <h3 className="text-[10px] font-black text-[#424754] uppercase tracking-widest">Tipografía</h3>
                     </div>
-
-                    <div className="space-y-2">
-                      {[
-                        { name: 'Inter', desc: 'San Serif Moderno', fontClass: 'font-sans', selected: true },
-                        { name: 'Playfair Display', desc: 'Elegante Serif', fontClass: 'font-serif', selected: false }
-                      ].map((font) => (
-                        <div
-                          key={font.name}
-                          className={`p-3 rounded-lg border-2 cursor-pointer transition-all flex items-center justify-between ${
-                            font.selected
-                              ? 'border-[#0058be] bg-[#0058be]/5 ring-2 ring-[#0058be]/10'
-                              : 'border-[#ecedf7] hover:border-[#0058be]/30'
-                          }`}
-                        >
-                          <div>
-                            <h4 className={`text-xs font-bold text-[#191b23] ${font.fontClass}`}>{font.name}</h4>
-                            <p className="text-[9px] font-semibold text-[#727785] mt-0.5">{font.desc}</p>
-                          </div>
-                          {font.selected && (
-                            <span className="material-symbols-outlined text-[#0058be] text-[16px]">check_circle</span>
-                          )}
+                    {(() => {
+                      const tplTheme = getTemplate(storeForm.template as string)?.theme;
+                      const headline = (tplTheme?.fontHeadline || "'Inter', sans-serif").replace(/['"]/g, '').split(',')[0];
+                      const body = (tplTheme?.fontBody || "'Inter', sans-serif").replace(/['"]/g, '').split(',')[0];
+                      return (
+                        <div className="p-3 rounded-lg border-2 border-[#0058be] bg-[#0058be]/5">
+                          <h4 className="text-xs font-bold text-[#191b23]">{headline}{body !== headline ? ` / ${body}` : ''}</h4>
+                          <p className="text-[9px] font-semibold text-[#727785] mt-0.5">De la plantilla — elegir tipografía por tienda todavía no existe.</p>
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })()}
                   </section>
 
                   {/* ESTRUCTURA DE PÁGINA (PLANTILLAS ORIGINALES) */}
@@ -3308,7 +3380,7 @@ export default function AdminPage() {
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Ubicación</label>
+                        <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Ubicación (interna)</label>
                         <input
                           type="text"
                           value={storeForm.location}
@@ -3316,6 +3388,26 @@ export default function AdminPage() {
                           className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
                           placeholder="Ej: Bogotá, CO"
                         />
+                        <p className="text-[9px] text-[#727785] font-semibold mt-1">Solo para vos, uso interno del ecosistema. No aparece en el sitio público de la tienda.</p>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">WhatsApp de Pedidos</label>
+                        <input
+                          type="tel"
+                          inputMode="numeric"
+                          value={storeForm.whatsapp}
+                          onChange={(e) => setStoreForm(prev => ({ ...prev, whatsapp: e.target.value.replace(/\D/g, '') }))}
+                          className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
+                          placeholder="51987654321"
+                        />
+                        <p className="text-[9px] text-[#727785] font-semibold mt-1">Con código de país y sin espacios. El cliente puede cambiarlo despues desde su propio panel.</p>
+                        {!storeForm.whatsapp && (
+                          <p className="text-[10px] text-[#dc2626] font-bold mt-1 flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[13px]">warning</span>
+                            Sin esto, el botón de pedir de la tienda no le llega a nadie.
+                          </p>
+                        )}
                       </div>
 
                       <div>
@@ -3335,6 +3427,66 @@ export default function AdminPage() {
                         <span className="text-xs font-bold text-[#424754]">¿Tienda Activa?</span>
                         <Toggle on={storeForm.active} onChange={() => setStoreForm(prev => ({ ...prev, active: !prev.active }))} />
                       </div>
+                    </div>
+                  </section>
+
+                  {/* FICHA DEL LOCAL: publica, opcional. No confundir con "Ubicación (interna)" de
+                      arriba, que es solo para el directorio del ecosistema. */}
+                  <section className="space-y-4">
+                    <div className="flex items-center gap-2 border-b border-[#ecedf7] pb-2">
+                      <span className="material-symbols-outlined text-[#0058be] text-[16px] font-bold">location_on</span>
+                      <h3 className="text-[10px] font-black text-[#424754] uppercase tracking-widest">Ficha del Local (Opcional)</h3>
+                    </div>
+                    <p className="text-[10px] text-[#727785] font-semibold -mt-2">
+                      Se ve en el sitio público de la tienda. Si no tiene local a la calle, dejalo vacío.
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Zona / Distrito</label>
+                        <input
+                          type="text"
+                          value={storeForm.zona}
+                          onChange={(e) => setStoreForm(prev => ({ ...prev, zona: e.target.value }))}
+                          className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
+                          placeholder="Ej: Miraflores"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Calificación</label>
+                        <input
+                          type="number"
+                          min={0}
+                          max={5}
+                          step={0.1}
+                          value={storeForm.rating}
+                          onChange={(e) => setStoreForm(prev => ({ ...prev, rating: e.target.value }))}
+                          className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
+                          placeholder="Ej: 4.8"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Horario de Atención</label>
+                      <input
+                        type="text"
+                        value={storeForm.horario}
+                        onChange={(e) => setStoreForm(prev => ({ ...prev, horario: e.target.value }))}
+                        className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
+                        placeholder="Ej: Lun a Dom, 12pm - 11pm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Dirección Completa</label>
+                      <input
+                        type="text"
+                        value={storeForm.direccion}
+                        onChange={(e) => setStoreForm(prev => ({ ...prev, direccion: e.target.value }))}
+                        className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
+                        placeholder="Ej: Av. Larco 123, Miraflores, Lima"
+                      />
                     </div>
                   </section>
                 </div>

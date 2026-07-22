@@ -58,6 +58,17 @@ ADD COLUMN IF NOT EXISTS show_demo_products BOOLEAN DEFAULT true;
 ALTER TABLE public.stores
 ADD COLUMN IF NOT EXISTS whatsapp TEXT;
 
+-- Migration: Add "ficha del local" columns (run this if the table already exists)
+-- Todos opcionales: antes las plantillas de comida mostraban una direccion,
+-- horario y rating de relleno (fijos, iguales para toda tienda). Ahora cada
+-- tienda carga los suyos desde el panel, o los deja vacios si no tiene sede
+-- fisica, y la plantilla oculta esa fila en vez de inventar un dato.
+ALTER TABLE public.stores
+ADD COLUMN IF NOT EXISTS zona TEXT,
+ADD COLUMN IF NOT EXISTS direccion TEXT,
+ADD COLUMN IF NOT EXISTS horario TEXT,
+ADD COLUMN IF NOT EXISTS rating NUMERIC(2,1);
+
 -- Create the 'store-assets' bucket for logos and hero images if it doesn't exist
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('store-assets', 'store-assets', true)

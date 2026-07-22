@@ -6,7 +6,7 @@ import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import StoreHeader from '../shared/StoreHeader';
 import { useCatalogo } from '../shared/useCatalogo';
-import { TXT, ICON, INFO_LOCAL, type Producto } from '../shared/tokens';
+import { TXT, ICON, type Producto } from '../shared/tokens';
 import {
   CategoryChips, ProductGrid, ProductModal, CartPanel, ContactPanel, BottomNav, StoreFooter,
 } from '../shared/CatalogoUI';
@@ -101,16 +101,22 @@ export default function InicioCatalogoTemplate({ store }: Props) {
                 <p className={`text-white/90 font-medium ${TXT.body} md:text-base mb-5 max-w-lg leading-relaxed line-clamp-2`}>
                   {store.tagline || 'Disfruta del auténtico sabor al carbón, preparado con la receta secreta de la casa.'}
                 </p>
-                <div className={`flex flex-wrap items-center gap-4 mb-6 text-white/85 ${TXT.small} font-semibold`}>
-                  <span className="flex items-center gap-1">
-                    <span className={`material-symbols-outlined ${ICON.sm}`}>location_on</span>
-                    {INFO_LOCAL.zona}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className={`material-symbols-outlined ${ICON.sm}`}>schedule</span>
-                    {INFO_LOCAL.horarioCorto}
-                  </span>
-                </div>
+                {(store.zona || store.horario) && (
+                  <div className={`flex flex-wrap items-center gap-4 mb-6 text-white/85 ${TXT.small} font-semibold`}>
+                    {store.zona && (
+                      <span className="flex items-center gap-1">
+                        <span className={`material-symbols-outlined ${ICON.sm}`}>location_on</span>
+                        {store.zona}
+                      </span>
+                    )}
+                    {store.horario && (
+                      <span className="flex items-center gap-1">
+                        <span className={`material-symbols-outlined ${ICON.sm}`}>schedule</span>
+                        {store.horario}
+                      </span>
+                    )}
+                  </div>
+                )}
                 <button
                   onClick={() => navToMenu()}
                   className={`px-6 py-3 rounded-full font-bold ${TXT.body} shadow-lg hover:brightness-110 hover:scale-105 active:scale-95 transition-all inline-flex items-center justify-center gap-2 uppercase`}
@@ -228,6 +234,8 @@ export default function InicioCatalogoTemplate({ store }: Props) {
           <ContactPanel
             t={t}
             telefonoVisible={c.telefonoVisible}
+            direccionVisible={store.direccion}
+            horarioVisible={store.horario}
             onEnviar={(d) =>
               enviarPedidoPorWhatsApp(store, `Hola ${store.name}, soy ${d.nombre} (${d.telefono}).\n\n${d.mensaje}`)
             }

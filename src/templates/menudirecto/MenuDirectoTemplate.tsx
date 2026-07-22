@@ -6,7 +6,7 @@ import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import StoreHeader from '../shared/StoreHeader';
 import { useCatalogo } from '../shared/useCatalogo';
-import { TXT, ICON, INFO_LOCAL, type Producto } from '../shared/tokens';
+import { TXT, ICON, type Producto } from '../shared/tokens';
 import {
   CategoryChips, ProductGrid, ProductModal, CartPanel, ContactPanel, BottomNav, StoreFooter,
 } from '../shared/CatalogoUI';
@@ -89,16 +89,22 @@ export default function MenuDirectoTemplate({ store }: Props) {
                   <p className={`text-white/85 ${TXT.body} font-medium mt-1 max-w-sm line-clamp-2`}>
                     {store.tagline || 'Directo de la brasa a tu mesa'}
                   </p>
-                  <div className={`flex items-center gap-4 mt-3 text-white/80 ${TXT.micro} font-semibold`}>
-                    <span className="flex items-center gap-1">
-                      <span className={`material-symbols-outlined ${ICON.xs}`}>location_on</span>
-                      {INFO_LOCAL.zona}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <span className={`material-symbols-outlined ${ICON.xs}`}>schedule</span>
-                      {INFO_LOCAL.horarioCorto}
-                    </span>
-                  </div>
+                  {(store.zona || store.horario) && (
+                    <div className={`flex items-center gap-4 mt-3 text-white/80 ${TXT.micro} font-semibold`}>
+                      {store.zona && (
+                        <span className="flex items-center gap-1">
+                          <span className={`material-symbols-outlined ${ICON.xs}`}>location_on</span>
+                          {store.zona}
+                        </span>
+                      )}
+                      {store.horario && (
+                        <span className="flex items-center gap-1">
+                          <span className={`material-symbols-outlined ${ICON.xs}`}>schedule</span>
+                          {store.horario}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </section>
@@ -150,6 +156,8 @@ export default function MenuDirectoTemplate({ store }: Props) {
           <ContactPanel
             t={t}
             telefonoVisible={c.telefonoVisible}
+            direccionVisible={store.direccion}
+            horarioVisible={store.horario}
             onEnviar={(d) =>
               enviarPedidoPorWhatsApp(store, `Hola ${store.name}, soy ${d.nombre} (${d.telefono}).\n\n${d.mensaje}`)
             }

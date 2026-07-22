@@ -38,6 +38,11 @@ export interface TemplateConfig {
   iconImage?: string;
   categories: { name: string; icon: string; href: string }[];
   demoProducts: DemoProduct[];
+  /** Solo para el preview de la plantilla (/preview/:id): asi la demo no se ve vacia. Cada tienda real carga los suyos, o los deja vacios. */
+  zona?: string;
+  direccion?: string;
+  horario?: string;
+  rating?: number;
 }
 
 const TEMPLATES: Record<string, TemplateConfig> = {
@@ -349,6 +354,10 @@ const TEMPLATES: Record<string, TemplateConfig> = {
       { name: 'Parrilla Mixta', price: 54.00, category: 'Parrillas', image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&q=80', description: 'Pollo, res y embutidos' },
       { name: 'Inca Kola 1L', price: 7.00, category: 'Bebidas', image: 'https://images.unsplash.com/photo-1625943553852-781c6dd46faa?w=400&q=80', description: 'Gaseosa peruana bien helada' },
     ],
+    zona: 'Miraflores',
+    direccion: 'Av. Fuego y Brasa 1995, Miraflores, Lima',
+    horario: 'Lunes a Domingo: 12:00 PM – 11:00 PM',
+    rating: 4.8,
   },
 
   // Comparte motor con "polleria" (templates/shared): cambia como se arma la
@@ -391,6 +400,9 @@ const TEMPLATES: Record<string, TemplateConfig> = {
       { name: 'Piqueo para 2', price: 45.00, category: 'Para Compartir', image: 'https://images.unsplash.com/photo-1610614819513-58e34989848b?w=400&q=80', description: 'Alitas, tequeños y papas rústicas' },
       { name: 'Limonada Frozen', price: 9.50, category: 'Bebidas', image: 'https://images.unsplash.com/photo-1625943553852-781c6dd46faa?w=400&q=80', description: 'Jarra de medio litro bien helada' },
     ],
+    zona: 'Miraflores',
+    direccion: 'Av. Fuego y Brasa 1995, Miraflores, Lima',
+    horario: '12–11PM',
   },
 
   iniciocatalogo: {
@@ -433,6 +445,9 @@ const TEMPLATES: Record<string, TemplateConfig> = {
       { name: 'Suspiro Limeño', price: 14.00, category: 'Postres', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&q=80', description: 'Manjar blanco y merengue al oporto' },
       { name: 'Chicha Morada 1L', price: 10.00, category: 'Bebidas', image: 'https://images.unsplash.com/photo-1625943553852-781c6dd46faa?w=400&q=80', description: 'Preparada en casa, sin polvos' },
     ],
+    zona: 'Miraflores',
+    direccion: 'Av. Fuego y Brasa 1995, Miraflores, Lima',
+    horario: '12–11PM',
   },
 };
 

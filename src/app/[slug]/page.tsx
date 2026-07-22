@@ -128,6 +128,10 @@ async function getDynamicStore(slug: string) {
         logoImage: dbStore.logo_image || undefined,
         whatsapp: dbStore.whatsapp || undefined,
         showDemoProducts: dbStore.show_demo_products ?? undefined,
+        zona: dbStore.zona || undefined,
+        direccion: dbStore.direccion || undefined,
+        horario: dbStore.horario || undefined,
+        rating: dbStore.rating ?? undefined,
       };
     }
   } catch (err) {

@@ -22,24 +22,13 @@ export const ICON = {
   xl: 'text-[32px]',
 } as const;
 
-/**
- * Datos que las plantillas muestran pero que todavia no existen en StoreConfig.
- * Estan aca juntos, y no repartidos por el JSX, para que se vea que son de
- * relleno y para poder reemplazarlos de una sola vez cuando la tienda pueda
- * cargar los suyos desde el panel.
- *
- * OJO: mientras esto siga hardcodeado, TODA tienda que use estas plantillas
- * publica la direccion y el rating de abajo como si fueran suyos.
- */
-export const INFO_LOCAL = {
-  zona: 'Miraflores',
-  horarioCorto: '12–11PM',
-  horarioLargo: 'Lunes a Domingo: 12:00 PM – 11:00 PM',
-  direccion: 'Av. Fuego y Brasa 1995, Miraflores, Lima',
-  rating: 4.8,
-};
-
 export const soles = (n: number) => `S/ ${n.toFixed(2)}`;
+
+/** Cuantas estrellas llenas/media pintar para un rating real (ya no uno de relleno). */
+export const estrellasDe = (rating: number) => ({
+  llenas: Math.floor(rating),
+  media: rating - Math.floor(rating) >= 0.5,
+});
 
 export const inicialesDe = (nombre: string) =>
   nombre.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();

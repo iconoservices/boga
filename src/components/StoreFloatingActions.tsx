@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import type { StoreConfig } from '@/lib/stores.config';
 
 interface StoreFloatingActionsProps {
-  store: Pick<StoreConfig, 'name' | 'tagline' | 'theme'>;
+  store: Pick<StoreConfig, 'slug' | 'name' | 'tagline' | 'theme'>;
   /**
    * Separacion desde arriba, en clases de Tailwind. Cada plantilla tiene su
    * header con distinta altura, asi que el default no le sirve a todas.
@@ -30,6 +30,9 @@ export default function StoreFloatingActions({ store, top = 'top-20' }: StoreFlo
   const [isInstalled, setIsInstalled] = useState(false);
 
   const t = store.theme;
+  // Con clave fija, instalar UNA tienda escondia el boton de instalar en TODAS
+  // las demas (todas viven bajo el mismo dominio, y localStorage es por origen).
+  const installKey = `boga_pwa_installed_${store.slug}`;
 
   useEffect(() => {
     const handleBeforeInstall = (e: Event) => {
@@ -38,12 +41,12 @@ export default function StoreFloatingActions({ store, top = 'top-20' }: StoreFlo
     };
 
     const handleInstalled = () => {
-      localStorage.setItem('boga_pwa_installed', 'true');
+      localStorage.setItem(installKey, 'true');
       setIsInstalled(true);
     };
 
     const checkInstalled = () => {
-      if (localStorage.getItem('boga_pwa_installed') === 'true') return true;
+      if (localStorage.getItem(installKey) === 'true') return true;
       if ((window.navigator as any).standalone) return true;
       if (window.matchMedia('(display-mode: standalone)').matches) return true;
       return false;
@@ -58,7 +61,7 @@ export default function StoreFloatingActions({ store, top = 'top-20' }: StoreFlo
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
       window.removeEventListener('appinstalled', handleInstalled);
     };
-  }, []);
+  }, [installKey]);
 
   const instalar = () => {
     if (deferredPrompt) {

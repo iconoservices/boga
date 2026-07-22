@@ -6,7 +6,7 @@ import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import StoreHeader from '../shared/StoreHeader';
 import { useCatalogo } from '../shared/useCatalogo';
-import { TXT, ICON, INFO_LOCAL, inicialesDe, type Producto } from '../shared/tokens';
+import { TXT, ICON, estrellasDe, inicialesDe, type Producto } from '../shared/tokens';
 import {
   CategoryChips, ProductGrid, ProductModal, CartPanel, ContactPanel, BottomNav, StoreFooter,
 } from '../shared/CatalogoUI';
@@ -108,17 +108,23 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
                   <h3 className={`text-white font-extrabold ${TXT.lead} uppercase italic leading-tight mb-0.5 line-clamp-2`}>{store.name}</h3>
                   <p className={`text-white/70 ${TXT.micro} font-medium mb-3 line-clamp-2`}>{store.tagline}</p>
                   {/* Mismo color de estrellas que en movil; antes eran blancas aca y ambar alla */}
-                  <div className="flex items-center gap-1 mb-2" style={{ color: '#f59e0b' }}>
-                    {[...Array(4)].map((_, i) => (
-                      <span key={i} className={`material-symbols-outlined ${ICON.sm}`} style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                    ))}
-                    <span className={`material-symbols-outlined ${ICON.sm}`} style={{ fontVariationSettings: "'FILL' 1" }}>star_half</span>
-                    <span className={`text-white/80 ${TXT.micro} font-bold ml-1`}>{INFO_LOCAL.rating}</span>
-                  </div>
-                  <div className={`flex gap-3 text-white/70 ${TXT.micro}`}>
-                    <span className="flex items-center gap-1"><span className={`material-symbols-outlined ${ICON.sm}`}>location_on</span>{INFO_LOCAL.zona}</span>
-                    <span className="flex items-center gap-1"><span className={`material-symbols-outlined ${ICON.sm}`}>schedule</span>{INFO_LOCAL.horarioCorto}</span>
-                  </div>
+                  {store.rating != null && (
+                    <div className="flex items-center gap-1 mb-2" style={{ color: '#f59e0b' }}>
+                      {[...Array(estrellasDe(store.rating).llenas)].map((_, i) => (
+                        <span key={i} className={`material-symbols-outlined ${ICON.sm}`} style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                      ))}
+                      {estrellasDe(store.rating).media && (
+                        <span className={`material-symbols-outlined ${ICON.sm}`} style={{ fontVariationSettings: "'FILL' 1" }}>star_half</span>
+                      )}
+                      <span className={`text-white/80 ${TXT.micro} font-bold ml-1`}>{store.rating.toFixed(1)}</span>
+                    </div>
+                  )}
+                  {(store.zona || store.horario) && (
+                    <div className={`flex gap-3 text-white/70 ${TXT.micro}`}>
+                      {store.zona && <span className="flex items-center gap-1"><span className={`material-symbols-outlined ${ICON.sm}`}>location_on</span>{store.zona}</span>}
+                      {store.horario && <span className="flex items-center gap-1"><span className={`material-symbols-outlined ${ICON.sm}`}>schedule</span>{store.horario}</span>}
+                    </div>
+                  )}
                 </div>
 
                 <div className="max-w-2xl flex-1 flex flex-col justify-center -mt-[3.25rem] md:mt-0">
@@ -165,18 +171,24 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
                   <h3 className={`font-extrabold ${TXT.body} uppercase italic leading-tight truncate`} style={{ color: t.onBackground }}>{store.name}</h3>
                   <p className={`${TXT.micro} font-medium truncate`} style={{ color: t.onSurfaceVariant }}>{store.tagline}</p>
                   {/* Estrellas en ICON.xs: en la ficha compacta las de 16px empujaban al 4.8 contra la columna de la derecha */}
-                  <div className="flex items-center gap-0.5 mt-1" style={{ color: '#f59e0b' }}>
-                    {[...Array(4)].map((_, i) => (
-                      <span key={i} className={`material-symbols-outlined ${ICON.xs}`} style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                    ))}
-                    <span className={`material-symbols-outlined ${ICON.xs}`} style={{ fontVariationSettings: "'FILL' 1" }}>star_half</span>
-                    <span className={`${TXT.micro} font-bold ml-1`} style={{ color: t.onSurfaceVariant }}>{INFO_LOCAL.rating}</span>
+                  {store.rating != null && (
+                    <div className="flex items-center gap-0.5 mt-1" style={{ color: '#f59e0b' }}>
+                      {[...Array(estrellasDe(store.rating).llenas)].map((_, i) => (
+                        <span key={i} className={`material-symbols-outlined ${ICON.xs}`} style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                      ))}
+                      {estrellasDe(store.rating).media && (
+                        <span className={`material-symbols-outlined ${ICON.xs}`} style={{ fontVariationSettings: "'FILL' 1" }}>star_half</span>
+                      )}
+                      <span className={`${TXT.micro} font-bold ml-1`} style={{ color: t.onSurfaceVariant }}>{store.rating.toFixed(1)}</span>
+                    </div>
+                  )}
+                </div>
+                {(store.zona || store.horario) && (
+                  <div className={`${TXT.micro} font-medium shrink-0 text-right`} style={{ color: t.onSurfaceVariant }}>
+                    {store.zona && <div className="flex items-center gap-1 justify-end"><span className={`material-symbols-outlined ${ICON.xs}`}>location_on</span>{store.zona}</div>}
+                    {store.horario && <div className="flex items-center gap-1 justify-end"><span className={`material-symbols-outlined ${ICON.xs}`}>schedule</span>{store.horario}</div>}
                   </div>
-                </div>
-                <div className={`${TXT.micro} font-medium shrink-0 text-right`} style={{ color: t.onSurfaceVariant }}>
-                  <div className="flex items-center gap-1 justify-end"><span className={`material-symbols-outlined ${ICON.xs}`}>location_on</span>{INFO_LOCAL.zona}</div>
-                  <div className="flex items-center gap-1 justify-end"><span className={`material-symbols-outlined ${ICON.xs}`}>schedule</span>{INFO_LOCAL.horarioCorto}</div>
-                </div>
+                )}
               </div>
             </div>
 
@@ -400,6 +412,8 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
           <ContactPanel
             t={t}
             telefonoVisible={c.telefonoVisible}
+            direccionVisible={store.direccion}
+            horarioVisible={store.horario}
             onEnviar={(d) =>
               enviarPedidoPorWhatsApp(store, `Hola ${store.name}, soy ${d.nombre} (${d.telefono}).\n\n${d.mensaje}`)
             }

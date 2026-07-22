@@ -19,6 +19,16 @@ export interface StoreConfig {
   /** Numero al que llegan los pedidos, con codigo de pais y sin signos: 51987654321 */
   whatsapp?: string;
   /**
+   * Ficha del local: todos opcionales porque no todo negocio tiene sede
+   * fisica (hay tiendas que son puro delivery). Si el comercio no carga
+   * alguno, la plantilla oculta esa fila en vez de inventar un dato.
+   */
+  zona?: string;
+  direccion?: string;
+  horario?: string;
+  /** 0 a 5. Sin decidir todavia de donde sale (manual vs. promedio de reseñas real); por ahora lo carga el comercio a mano. */
+  rating?: number;
+  /**
    * Mostrar los productos de ejemplo de la plantilla mientras la tienda esta
    * vacia. Solo aplica si no cargo productos propios (ver lib/demo.ts).
    */
