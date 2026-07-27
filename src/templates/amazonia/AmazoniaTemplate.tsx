@@ -70,9 +70,6 @@ export default function AmazoniaTemplate({ store }: AmazoniaTemplateProps) {
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
-      {/* ── COMPARTIR / INSTALAR ── */}
-      <StoreFloatingActions store={store} />
-
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-4"
         style={{ background: `${t.surface}F0`, backdropFilter: 'blur(20px)', borderBottom: `1px solid ${t.outlineVariant}`, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
@@ -96,6 +93,8 @@ export default function AmazoniaTemplate({ store }: AmazoniaTemplateProps) {
         {/* Hero banner */}
         <div className="relative h-52 overflow-hidden">
           <img className="w-full h-full object-cover" style={{ filter: 'brightness(0.6)' }} alt={store.heroAlt} src={store.heroImage} />
+          {/* ── COMPARTIR / INSTALAR — solo sobre el banner, se va con el scroll ── */}
+          <StoreFloatingActions store={store} />
           <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, transparent 30%, ${t.background})` }} />
           <div className="absolute bottom-0 left-0 px-4 pb-4">
             <p className="text-[10px] uppercase font-bold tracking-[0.25em] mb-1" style={{ color: t.primary }}>{store.tagline}</p>

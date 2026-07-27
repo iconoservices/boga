@@ -209,9 +209,6 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet" />
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
-      {/* ── COMPARTIR / INSTALAR ─────────────────────── */}
-      <StoreFloatingActions store={store} />
-
       {/* ── HEADER ───────────────────────────────────── */}
       <header className="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-pink-100 shadow-sm transition-all duration-300">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -254,6 +251,8 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
 
       {/* ── HERO BANNER ──────────────────────────────── */}
       <section className="relative overflow-hidden bg-pink-900 py-16 md:py-24">
+        {/* ── COMPARTIR / INSTALAR — solo sobre el banner, se va con el scroll ── */}
+        <StoreFloatingActions store={store} />
         <div className="absolute inset-0 z-0">
           <img 
             src={store.heroImage} 

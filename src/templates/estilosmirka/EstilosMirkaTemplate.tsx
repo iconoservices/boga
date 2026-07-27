@@ -165,11 +165,10 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
         </div>
       </header>
 
-      {/* ── FLOATING SHARE / INSTALL ─────────────────── */}
-      <StoreFloatingActions store={store} />
-
       {/* ── HERO BANNER ──────────────────────────────── */}
       <section className="relative overflow-hidden" style={{ height: '52vw', maxHeight: '380px', minHeight: '220px' }}>
+        {/* ── FLOATING SHARE / INSTALL — solo sobre el banner, se va con el scroll ── */}
+        <StoreFloatingActions store={store} />
         <div className="absolute inset-0 z-0">
           <img 
             src={store.heroImage} 

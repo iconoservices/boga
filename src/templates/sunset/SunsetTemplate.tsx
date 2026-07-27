@@ -285,9 +285,6 @@ export default function SunsetTemplate({ store }: SunsetTemplateProps) {
         rel="stylesheet"
       />
 
-      {/* ── COMPARTIR / INSTALAR ── (solo en el catalogo, no sobre el splash) */}
-      <StoreFloatingActions store={store} />
-
       {/* Top bar */}
       <header
         className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-6"
@@ -297,6 +294,10 @@ export default function SunsetTemplate({ store }: SunsetTemplateProps) {
           borderBottom: `1px solid ${t.outlineVariant}26`,
         }}
       >
+        {/* ── COMPARTIR / INSTALAR ── (solo en el catalogo, no sobre el splash).
+            Este template no tiene banner en el catalogo (header fijo + lista),
+            asi que va anclado al header en vez de suelto sobre toda la pagina. */}
+        <StoreFloatingActions store={store} />
         <button
           onClick={() => setEntered(false)}
           className="flex items-center gap-3 transition-opacity hover:opacity-70"

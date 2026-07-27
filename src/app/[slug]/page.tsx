@@ -187,6 +187,10 @@ export default async function StorePage({ params, searchParams }: Props) {
         logoImage: undefined,
         whatsapp: undefined,
         showDemoProducts: undefined,
+        zona: undefined,
+        direccion: undefined,
+        horario: undefined,
+        rating: undefined,
       };
     } else {
       notFound();

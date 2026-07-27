@@ -240,12 +240,12 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
         </div>
       </header>
 
-      {/* ── COMPARTIR / INSTALAR ── */}
-      <StoreFloatingActions store={store} top="top-32" />
-
       <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-6 mt-4 px-4 lg:px-6">
         {/* ── BANNERS ── */}
-        <section>
+        <section className="relative">
+          {/* ── COMPARTIR / INSTALAR — solo sobre los banners, se va con el scroll ── */}
+          <StoreFloatingActions store={store} />
+
           <div
             ref={sliderRef}
             className="flex overflow-x-auto rounded-lg"

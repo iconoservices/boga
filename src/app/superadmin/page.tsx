@@ -3827,12 +3827,22 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           location: '',
                           emoji: '🏪',
                           tier: 'Basic Tier',
-                          active: true
+                          active: true,
+                          whatsapp: '',
+                          zona: '',
+                          direccion: '',
+                          horario: '',
+                          rating: ''
                         });
                         if (logoPreview?.startsWith('blob:')) URL.revokeObjectURL(logoPreview);
                         setLogoFile(null);
                         setLogoPreview(null);
                         setLogoRemoved(false);
+                        if (heroPreview?.startsWith('blob:')) URL.revokeObjectURL(heroPreview);
+                        setHeroFile(null);
+                        setHeroPreview(null);
+                        setColorPreset(null);
+                        setLogoTheme(null);
                       }
                     }}
                     className="w-full py-3 bg-white border border-[#c2c6d6] text-[#191b23] rounded-md font-bold text-xs hover:bg-[#f8fafc] hover:border-[#191b23] transition-all flex items-center justify-center gap-1.5"
