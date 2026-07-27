@@ -72,65 +72,62 @@ export default function InicioCatalogoTemplate({ store }: Props) {
         onCta={() => navToMenu()}
       />
 
-      <StoreFloatingActions store={store} />
-
       <main className="pt-16 md:pt-[60px] pb-24 md:pb-12">
 
         {/* ─── INICIO ─── */}
         {activeTab === 'home' && (
           <div className="animate-fade-in">
 
-            {/* ══ HERO ══ */}
-            <section className="relative w-full h-[42vh] md:h-[360px] overflow-hidden flex items-center">
-              <div className="absolute inset-0 z-0">
-                <img
-                  className="w-full h-full object-cover saturate-[1.15] contrast-[1.05] scale-105"
-                  alt={store.heroAlt}
-                  src={store.heroImage}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/65 to-black/40 md:bg-gradient-to-r md:from-black/85 md:via-black/60 md:to-black/25" />
-              </div>
+            {/* ══ HERO ══ Sin filtro negro encima: es el banner del comercio, tiene
+                que verse entero. El texto va debajo, no superpuesto. */}
+            <section className="relative w-full h-[32vh] md:h-[320px] overflow-hidden">
+              <img
+                className="w-full h-full object-cover"
+                alt={store.heroAlt}
+                src={store.heroImage}
+              />
+              <StoreFloatingActions store={store} />
+            </section>
 
-              <div className="relative z-10 w-full max-w-[1200px] mx-auto px-6">
-                <h1
-                  className="text-white font-extrabold leading-tight tracking-tight uppercase italic drop-shadow-md mb-3 max-w-2xl line-clamp-3"
-                  style={{ fontSize: 'clamp(1.8rem, 5vw, 3rem)' }}
-                >
-                  {store.name}
-                </h1>
-                <p className={`text-white/90 font-medium ${TXT.body} md:text-base mb-5 max-w-lg leading-relaxed line-clamp-2`}>
-                  {store.tagline || 'Disfruta del auténtico sabor al carbón, preparado con la receta secreta de la casa.'}
-                </p>
-                {(store.zona || store.horario) && (
-                  <div className={`flex flex-wrap items-center gap-4 mb-6 text-white/85 ${TXT.small} font-semibold`}>
-                    {store.zona && (
-                      <span className="flex items-center gap-1">
-                        <span className={`material-symbols-outlined ${ICON.sm}`}>location_on</span>
-                        {store.zona}
-                      </span>
-                    )}
-                    {store.horario && (
-                      <span className="flex items-center gap-1">
-                        <span className={`material-symbols-outlined ${ICON.sm}`}>schedule</span>
-                        {store.horario}
-                      </span>
-                    )}
-                  </div>
-                )}
-                <button
-                  onClick={() => navToMenu()}
-                  className={`px-6 py-3 rounded-full font-bold ${TXT.body} shadow-lg hover:brightness-110 hover:scale-105 active:scale-95 transition-all inline-flex items-center justify-center gap-2 uppercase`}
-                  style={{ backgroundColor: t.primary, color: t.onPrimary, boxShadow: `0 8px 16px ${t.primary}50` }}
-                >
-                  Pedir Ahora
-                  <span className={`material-symbols-outlined ${ICON.sm}`}>shopping_cart</span>
-                </button>
-              </div>
+            <section className="px-5 md:px-6 pt-6">
+              <h1
+                className="font-extrabold leading-tight tracking-tight uppercase italic mb-3"
+                style={{ fontSize: 'clamp(1.8rem, 5vw, 3rem)', color: t.onBackground }}
+              >
+                {store.name}
+              </h1>
+              <p className={`font-medium ${TXT.body} md:text-base mb-5 max-w-lg leading-relaxed`} style={{ color: t.onSurfaceVariant }}>
+                {store.tagline || 'Disfruta del auténtico sabor al carbón, preparado con la receta secreta de la casa.'}
+              </p>
+              {(store.zona || store.horario) && (
+                <div className={`flex flex-wrap items-center gap-4 mb-6 ${TXT.small} font-semibold`} style={{ color: t.onSurfaceVariant }}>
+                  {store.zona && (
+                    <span className="flex items-center gap-1">
+                      <span className={`material-symbols-outlined ${ICON.sm}`}>location_on</span>
+                      {store.zona}
+                    </span>
+                  )}
+                  {store.horario && (
+                    <span className="flex items-center gap-1">
+                      <span className={`material-symbols-outlined ${ICON.sm}`}>schedule</span>
+                      {store.horario}
+                    </span>
+                  )}
+                </div>
+              )}
+              <button
+                onClick={() => navToMenu()}
+                className={`px-6 py-3 rounded-full font-bold ${TXT.body} shadow-lg hover:brightness-110 hover:scale-105 active:scale-95 transition-all inline-flex items-center justify-center gap-2 uppercase`}
+                style={{ backgroundColor: t.primary, color: t.onPrimary, boxShadow: `0 8px 16px ${t.primary}50` }}
+              >
+                Pedir Ahora
+                <span className={`material-symbols-outlined ${ICON.sm}`}>shopping_cart</span>
+              </button>
             </section>
 
             {/* ══ CATEGORÍAS ══ */}
             {c.categoriasEfectivas.length > 0 && (
-              <section className="max-w-[1200px] mx-auto px-5 md:px-6 pt-8 md:pt-12">
+              <section className="px-5 md:px-6 pt-8 md:pt-12">
                 <div className="flex items-end justify-between mb-4">
                   <h2 className="font-extrabold uppercase italic tracking-tight" style={{ fontSize: 'clamp(1.2rem, 3vw, 1.6rem)', color: t.onBackground }}>
                     Categorías
@@ -159,7 +156,7 @@ export default function InicioCatalogoTemplate({ store }: Props) {
             )}
 
             {/* ══ PRODUCTOS — lo que la plantilla Pollería no tenia en su inicio ══ */}
-            <section className="max-w-[1200px] mx-auto px-5 md:px-6 pt-8 pb-10">
+            <section className="px-5 md:px-6 pt-8 pb-10">
               <div className="flex items-end justify-between mb-4">
                 <h2 className="font-extrabold uppercase italic tracking-tight" style={{ fontSize: 'clamp(1.2rem, 3vw, 1.6rem)', color: t.onBackground }}>
                   Nuestros Favoritos
@@ -186,7 +183,7 @@ export default function InicioCatalogoTemplate({ store }: Props) {
         {/* ─── MENÚ ─── (sin banner: el hero del inicio ya cumple esa funcion) */}
         {activeTab === 'menu' && (
           <div className="animate-fade-in">
-            <div className="max-w-[1200px] mx-auto px-5 md:px-6 pt-6 pb-2">
+            <div className="px-5 md:px-6 pt-6 pb-2">
               <h2 className="font-extrabold uppercase italic text-2xl md:text-3xl mb-1" style={{ color: t.onBackground }}>
                 Nuestro Menú
               </h2>
@@ -202,7 +199,7 @@ export default function InicioCatalogoTemplate({ store }: Props) {
               onSelect={c.setActiveCategory}
             />
 
-            <section className="px-5 md:px-6 md:max-w-[1200px] md:mx-auto pb-8">
+            <section className="px-5 md:px-6 pb-8">
               <ProductGrid
                 t={t}
                 productos={c.filtered}
@@ -266,7 +263,7 @@ export default function InicioCatalogoTemplate({ store }: Props) {
         cartCount={c.cartCount}
       />
 
-      <ProductModal t={t} producto={selectedProduct} onClose={() => setSelectedProduct(null)} onAdd={c.addToCart} />
+      <ProductModal t={t} producto={selectedProduct} productos={c.products} onSelect={setSelectedProduct} onClose={() => setSelectedProduct(null)} onAdd={c.addToCart} />
     </div>
   );
 }

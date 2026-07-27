@@ -43,8 +43,7 @@ export default function StoreHeader({
       <img
         src={store.logoImage}
         alt={store.name}
-        className={`${size} ${rounded} object-cover border-2 shrink-0`}
-        style={{ borderColor: t.primary }}
+        className={`${size} rounded-full object-cover shrink-0`}
       />
     ) : (
       <div
@@ -62,9 +61,9 @@ export default function StoreHeader({
         className={`hidden md:flex fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ${isScrolled ? 'shadow-md py-2' : 'py-3'}`}
         style={{ background: `${t.surface}F8`, backdropFilter: 'blur(20px)', borderBottom: `1px solid ${t.outlineVariant}30` }}
       >
-        <div className="max-w-[1200px] mx-auto px-6 w-full flex items-center justify-between gap-6">
+        <div className="px-6 w-full flex items-center justify-between gap-6">
           <div className="flex items-center gap-3 min-w-0">
-            {logo('w-9 h-9', 'rounded-lg')}
+            {logo('w-9 h-9', 'rounded-full')}
             {/* truncate: los nombres largos empujaban el nav y el carrito fuera de pantalla */}
             <span className="text-xl font-black italic tracking-tight uppercase truncate max-w-[240px]" style={{ color: t.primary }}>
               {store.name}
@@ -126,7 +125,7 @@ export default function StoreHeader({
         style={{ background: `${t.surface}F8`, backdropFilter: 'blur(20px)', borderBottom: `1px solid ${t.outlineVariant}30` }}
       >
         <div className="flex items-center gap-3 min-w-0">
-          {logo('w-9 h-9', 'rounded-lg')}
+          {logo('w-9 h-9', 'rounded-full')}
           <div className="flex flex-col min-w-0">
             <h1 className={`${TXT.lead} font-black italic tracking-tighter uppercase leading-none truncate`} style={{ color: t.primary }}>
               {store.name}

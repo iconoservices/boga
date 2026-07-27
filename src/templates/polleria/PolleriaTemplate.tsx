@@ -73,9 +73,6 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
         onCta={() => navToMenu()}
       />
 
-      {/* ══ COMPARTIR / INSTALAR — en movil y escritorio ══ */}
-      <StoreFloatingActions store={store} />
-
       <main className="pt-16 md:pt-[60px] pb-24 md:pb-12">
 
         {/* ─── TAB: INICIO ─── */}
@@ -94,7 +91,10 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/65 to-black/40 md:bg-gradient-to-r md:from-black/85 md:via-black/60 md:to-black/25" />
               </div>
 
-              <div className="relative z-10 w-full max-w-[1200px] mx-auto px-6 flex flex-col md:flex-row items-center justify-center md:justify-between gap-3 h-full">
+              {/* ══ COMPARTIR / INSTALAR — solo sobre el banner, se va con el scroll ══ */}
+              <StoreFloatingActions store={store} />
+
+              <div className="relative z-10 w-full px-6 flex flex-col md:flex-row items-center justify-center md:justify-between gap-3 h-full">
 
                 {/* ══ FICHA DEL LOCAL — escritorio ══ */}
                 <div className="hidden md:flex flex-col items-center w-[190px] shrink-0 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-4 shadow-2xl text-center">
@@ -194,7 +194,7 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
 
             {/* ══ CATEGORÍAS — 2 col movil / 3 cols escritorio ══ */}
             {categoriasDestacadas.length > 0 && (
-              <section className="max-w-[1200px] mx-auto px-5 md:px-6 pt-8 md:pt-16 pb-6 md:pb-12">
+              <section className="px-5 md:px-6 pt-8 md:pt-16 pb-6 md:pb-12">
                 <div className="text-center mb-6 md:mb-10">
                   <h2 className="font-extrabold uppercase italic tracking-tight mb-2" style={{ fontSize: 'clamp(1.3rem, 3.5vw, 1.8rem)', color: t.onBackground }}>
                     Explora nuestras delicias
@@ -231,7 +231,7 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
 
             {/* ══ EL SECRETO DE LA CASA ══ */}
             <section style={{ background: t.surfaceContainer }}>
-              <div className="max-w-[1200px] mx-auto px-5 md:px-6 py-10 md:py-20 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14 items-center">
+              <div className="px-5 md:px-6 py-10 md:py-20 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14 items-center">
                 <div className="relative order-2 md:order-1">
                   <div className="rounded-2xl overflow-hidden shadow-lg aspect-[4/3]">
                     <img className="w-full h-full object-cover" alt={store.heroAlt} src={store.heroImage} />
@@ -289,7 +289,7 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
             </section>
 
             {/* ══ NEWSLETTER ══ */}
-            <section className="max-w-[1200px] mx-auto px-5 md:px-6 py-10 md:py-20">
+            <section className="px-5 md:px-6 py-10 md:py-20">
               <div className="rounded-2xl md:rounded-[1.5rem] p-8 md:p-14 relative overflow-hidden text-center" style={{ background: t.primary }}>
                 <div className="absolute top-0 right-0 w-48 h-48 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl bg-white/10 pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-36 h-36 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl bg-white/10 pointer-events-none" />
@@ -338,13 +338,13 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
         {/* ─── TAB: MENÚ ─── */}
         {activeTab === 'menu' && (
           <div className="animate-fade-in">
-            <div className="hidden md:block max-w-[1200px] mx-auto px-6 pt-8 pb-4">
+            <div className="hidden md:block px-6 pt-8 pb-4">
               <h2 className="font-extrabold uppercase italic text-3xl mb-1" style={{ color: t.onBackground }}>Nuestro Menú</h2>
               <p className={TXT.body} style={{ color: t.onSurfaceVariant }}>Selecciona una categoría para explorar</p>
             </div>
 
             {/* Banner — habla de la tienda, no de un descuento inventado que nadie va a honrar */}
-            <section className="px-5 md:px-6 md:max-w-[1200px] md:mx-auto">
+            <section className="px-5 md:px-6">
               <div className="relative w-full h-48 md:h-56 overflow-hidden rounded-2xl shadow-md group">
                 <img
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
@@ -374,13 +374,13 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
               onSelect={c.setActiveCategory}
             />
 
-            <div className="px-5 md:px-6 md:max-w-[1200px] md:mx-auto">
+            <div className="px-5 md:px-6">
               <h3 className={`${TXT.title} font-black uppercase italic tracking-tighter mb-4`} style={{ color: t.onSurface }}>
                 {c.activeCategory === 'all' ? 'Nuestros Favoritos' : c.categoryTabs.find((x) => x.id === c.activeCategory)?.label}
               </h3>
             </div>
 
-            <section className="px-5 md:px-6 md:max-w-[1200px] md:mx-auto pb-8">
+            <section className="px-5 md:px-6 pb-8">
               <ProductGrid
                 t={t}
                 productos={c.filtered}
@@ -445,7 +445,7 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
         cartCount={c.cartCount}
       />
 
-      <ProductModal t={t} producto={selectedProduct} onClose={() => setSelectedProduct(null)} onAdd={c.addToCart} />
+      <ProductModal t={t} producto={selectedProduct} productos={c.products} onSelect={setSelectedProduct} onClose={() => setSelectedProduct(null)} onAdd={c.addToCart} />
     </div>
   );
 }

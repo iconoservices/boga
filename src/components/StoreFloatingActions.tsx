@@ -5,11 +5,6 @@ import type { StoreConfig } from '@/lib/stores.config';
 
 interface StoreFloatingActionsProps {
   store: Pick<StoreConfig, 'slug' | 'name' | 'tagline' | 'theme'>;
-  /**
-   * Separacion desde arriba, en clases de Tailwind. Cada plantilla tiene su
-   * header con distinta altura, asi que el default no le sirve a todas.
-   */
-  top?: string;
 }
 
 /**
@@ -24,8 +19,12 @@ interface StoreFloatingActionsProps {
  * y Edge de escritorio, asi que ahi la instalacion funciona igual que en el
  * celular. Compartir cae al portapapeles cuando no hay `navigator.share`,
  * que es justamente el caso de la mayoria de los navegadores de escritorio.
+ *
+ * `absolute`, no `fixed`: vive dentro del contenedor del banner (el padre debe
+ * ser `relative`), asi que se va con el banner al hacer scroll en vez de
+ * quedar flotando encima de toda la pagina.
  */
-export default function StoreFloatingActions({ store, top = 'top-20' }: StoreFloatingActionsProps) {
+export default function StoreFloatingActions({ store }: StoreFloatingActionsProps) {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstalled, setIsInstalled] = useState(false);
 
@@ -88,7 +87,7 @@ export default function StoreFloatingActions({ store, top = 'top-20' }: StoreFlo
   };
 
   return (
-    <div className={`fixed ${top} right-3 z-50 flex flex-col gap-2`}>
+    <div className="absolute top-3 right-3 z-30 flex flex-col gap-2">
       <button
         onClick={compartir}
         className="w-10 h-10 rounded-full flex items-center justify-center bg-white/40 backdrop-blur-md border border-white/50 shadow-lg active:scale-90 hover:bg-white/60 transition-all"

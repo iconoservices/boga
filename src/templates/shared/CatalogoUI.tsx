@@ -19,7 +19,7 @@ export function CategoryChips({
 }) {
   return (
     <nav
-      className={`px-5 md:px-6 md:max-w-[1200px] md:mx-auto overflow-x-auto flex gap-3 whitespace-nowrap sticky ${sticky} py-3 z-40`}
+      className={`px-5 md:px-6 overflow-x-auto flex gap-3 whitespace-nowrap sticky ${sticky} py-3 z-40`}
       style={{ background: `${t.background}F0`, backdropFilter: 'blur(12px)' }}
     >
       {tabs.map((tab) => {
@@ -134,12 +134,16 @@ export function ProductGrid({
    ════════════════════════════════════════════ */
 
 export function ProductModal({
-  t, producto, onClose, onAdd,
+  t, producto, productos = [], onClose, onAdd, onSelect,
 }: {
   t: StoreTheme;
   producto: Producto | null;
+  /** Catalogo completo de la tienda: de aca salen los "Tambien te puede interesar". */
+  productos?: Producto[];
   onClose: () => void;
   onAdd: (p: Producto) => void;
+  /** Para poder tocar un sugerido y que el modal cambie al producto elegido. */
+  onSelect?: (p: Producto) => void;
 }) {
   // Bloquea el scroll del fondo y cierra con Escape.
   useEffect(() => {
@@ -154,51 +158,63 @@ export function ProductModal({
     };
   }, [producto, onClose]);
 
+  const sugeridos = producto
+    ? productos.filter((p) => p.id !== producto.id && p.category === producto.category).slice(0, 6)
+    : [];
+
   if (!producto) return null;
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center"
-      style={{ background: 'rgba(0,0,0,0.5)' }}
-      onClick={onClose}
+      className="fixed inset-0 z-[100] overflow-y-auto"
+      style={{ background: t.surface }}
       role="dialog"
       aria-modal="true"
       aria-label={producto.name}
     >
-      <div
-        className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-        style={{ background: t.surface }}
+      <button
+        onClick={onClose}
+        className="fixed top-4 right-4 z-20 w-9 h-9 rounded-full flex items-center justify-center shadow-lg"
+        style={{ background: 'rgba(0,0,0,0.45)', color: '#fff' }}
+        aria-label="Cerrar"
       >
-        <div className="relative">
+        <span className={`material-symbols-outlined ${ICON.md}`}>close</span>
+      </button>
+
+      <div className="w-full h-64 md:h-[420px]">
+        <img className="w-full h-full object-cover" alt={producto.name} src={producto.image} />
+      </div>
+
+      <div className="max-w-2xl mx-auto px-5 pt-5 pb-28">
+        <h2 className={`font-bold ${TXT.title}`} style={{ color: t.onSurface }}>{producto.name}</h2>
+        {producto.desc && (
+          <p className={`${TXT.body} mt-2 leading-relaxed`} style={{ color: t.onSurfaceVariant }}>{producto.desc}</p>
+        )}
+
+        {sugeridos.length > 0 && (
+          <div className="mt-10">
+            <h3 className={`font-black uppercase italic tracking-tight mb-4 ${TXT.title}`} style={{ color: t.onBackground }}>
+              También te puede interesar
+            </h3>
+            <ProductGrid t={t} productos={sugeridos} onSelect={(p) => onSelect?.(p)} onAdd={onAdd} />
+          </div>
+        )}
+      </div>
+
+      <div
+        className="fixed bottom-0 left-0 right-0 p-4 flex justify-center"
+        style={{ background: `${t.surface}F5`, backdropFilter: 'blur(12px)', borderTop: `1px solid ${t.outlineVariant}40` }}
+      >
+        <div className="w-full max-w-2xl flex items-center justify-between gap-4 px-1">
+          <span className="font-black text-xl" style={{ color: t.primary }}>{soles(producto.price)}</span>
           <button
-            onClick={onClose}
-            className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center z-10"
-            style={{ background: 'rgba(0,0,0,0.4)', color: '#fff' }}
-            aria-label="Cerrar"
+            onClick={() => { onAdd(producto); onClose(); }}
+            className={`px-6 py-2.5 rounded-full font-bold ${TXT.body} flex items-center gap-1.5 transition-transform active:scale-95`}
+            style={{ background: t.primary, color: t.onPrimary }}
           >
-            <span className={`material-symbols-outlined ${ICON.sm}`}>close</span>
+            <span className={`material-symbols-outlined ${ICON.sm}`}>add</span>
+            Agregar
           </button>
-          <div className="aspect-square">
-            <img className="w-full h-full object-cover" alt={producto.name} src={producto.image} />
-          </div>
-        </div>
-        <div className="p-5">
-          <h2 className={`font-bold ${TXT.title}`} style={{ color: t.onSurface }}>{producto.name}</h2>
-          {producto.desc && (
-            <p className={`${TXT.body} mt-2 leading-relaxed`} style={{ color: t.onSurfaceVariant }}>{producto.desc}</p>
-          )}
-          <div className="flex items-center justify-between mt-5">
-            <span className="font-black text-xl" style={{ color: t.primary }}>{soles(producto.price)}</span>
-            <button
-              onClick={() => { onAdd(producto); onClose(); }}
-              className={`px-6 py-2.5 rounded-full font-bold ${TXT.body} flex items-center gap-1.5 transition-transform active:scale-95`}
-              style={{ background: t.primary, color: t.onPrimary }}
-            >
-              <span className={`material-symbols-outlined ${ICON.sm}`}>add</span>
-              Agregar
-            </button>
-          </div>
         </div>
       </div>
     </div>
@@ -517,7 +533,7 @@ export function StoreFooter({
 }) {
   return (
     <footer className="w-full py-8 mt-10" style={{ background: t.surfaceContainer, borderTop: `1px solid ${t.outlineVariant}40` }}>
-      <div className="max-w-[1200px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div className="px-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="flex flex-col gap-0.5 items-center md:items-start">
           <span className={`font-extrabold italic uppercase tracking-tight ${TXT.lead}`} style={{ color: t.primary }}>
             {storeName}

@@ -10,6 +10,9 @@ import autoTable from 'jspdf-autotable';
 import { QRCodeSVG } from 'qrcode.react';
 import { useAuth } from '@/context/AuthContext';
 import type { User } from '@supabase/supabase-js';
+import { COLOR_PRESETS, getColorPreset } from '@/lib/colorPresets';
+import { extractThemeFromImageClient } from '@/lib/extractThemeClient';
+import type { StoreTheme } from '@/lib/templates.config';
 
 interface Product {
   id: string;
@@ -176,6 +179,13 @@ function AdminDashboard({ user }: { user: User }) {
   const [storeHeroFile, setStoreHeroFile] = useState<File | null>(null);
   const [storeLogoPreview, setStoreLogoPreview] = useState<string | null>(null);
   const [storeHeroPreview, setStoreHeroPreview] = useState<string | null>(null);
+  // null = no tocar el color: se deja el que ya tenia (de la plantilla o de
+  // un preset elegido antes). Con un id, ese preset pisa el primary al guardar.
+  // 'logo' es dinamico: el color sale de logoTheme (extraido de una imagen),
+  // no de COLOR_PRESETS.
+  const [colorPreset, setColorPreset] = useState<string | null>(null);
+  const [logoTheme, setLogoTheme] = useState<StoreTheme | null>(null);
+  const [extractingTheme, setExtractingTheme] = useState(false);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -306,7 +316,29 @@ function AdminDashboard({ user }: { user: User }) {
     setStoreLogoPreview(dbData?.logo_image || config?.logoImage || null);
     setStoreLogoFile(null);
     setStoreHeroFile(null);
+    const currentPrimary = (dbData?.theme || config?.theme)?.primary;
+    setColorPreset(COLOR_PRESETS.find((p) => p.theme.primary === currentPrimary)?.id ?? null);
+    setLogoTheme(null);
     setIsStoreEditorOpen(true);
+  };
+
+  // Preset dinamico: saca la paleta de la imagen que el comercio ya cargo
+  // (logo si tiene, si no el banner) en vez de un color fijo elegido a mano.
+  const handlePickLogoColor = async () => {
+    const imageUrl = storeLogoPreview || storeHeroPreview;
+    if (!imageUrl) {
+      alert('Subí un logo o una portada primero para poder sacar sus colores.');
+      return;
+    }
+    setExtractingTheme(true);
+    const extracted = await extractThemeFromImageClient(imageUrl);
+    setExtractingTheme(false);
+    if (!extracted) {
+      alert('No se pudieron sacar colores de esa imagen. Probá con otra.');
+      return;
+    }
+    setLogoTheme(extracted);
+    setColorPreset('logo');
   };
 
   const handleStoreSave = async () => {
@@ -351,6 +383,24 @@ function AdminDashboard({ user }: { user: User }) {
       };
       if (heroUrl) upsertData.hero_image = heroUrl;
       if (logoUrl) upsertData.logo_image = logoUrl;
+
+      // Solo se manda el theme si el comercio eligio un preset (incluido "logo",
+      // el extraido de una imagen): sin esto, no tocar el color no rompe el que
+      // ya venia de la plantilla o de un preset anterior (el upsert es parcial,
+      // no pisa columnas que no se incluyen).
+      if (colorPreset) {
+        const preset = colorPreset !== 'logo' ? getColorPreset(colorPreset) : null;
+        const chosenColors = colorPreset === 'logo' ? logoTheme : preset?.theme;
+        const currentTheme = stores[editingStoreSlug]?.theme;
+        if (chosenColors) {
+          upsertData.theme = {
+            ...chosenColors,
+            fontHeadline: currentTheme?.fontHeadline ?? chosenColors.fontHeadline,
+            fontBody: currentTheme?.fontBody ?? chosenColors.fontBody,
+            fontLabel: currentTheme?.fontLabel ?? chosenColors.fontLabel,
+          };
+        }
+      }
 
       let { error } = await supabase.from('stores').upsert(upsertData, { onConflict: 'slug' });
 
@@ -2271,6 +2321,72 @@ function AdminDashboard({ user }: { user: User }) {
                     <p className="text-sm font-semibold text-gray-700">Logo cuadrado</p>
                     <p className="text-xs text-gray-500 mt-1">Aparece como miniatura en el marketplace. Recomendado: 200×200px, fondo transparente o color sólido.</p>
                   </div>
+                </div>
+              </div>
+
+              {/* Paleta de colores */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Color de la Tienda</label>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setColorPreset(null)}
+                    className="flex flex-col items-center gap-1.5"
+                    title="Dejar el color actual"
+                  >
+                    <div
+                      className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${
+                        colorPreset === null ? 'ring-2 ring-offset-2 ring-black' : 'border-gray-200 hover:scale-105'
+                      }`}
+                      style={{ background: stores[editingStoreSlug || '']?.theme?.primary || '#0058be' }}
+                    >
+                      {colorPreset === null && <span className="material-symbols-outlined text-white text-[16px] drop-shadow">check</span>}
+                    </div>
+                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wide">Actual</span>
+                  </button>
+
+                  {COLOR_PRESETS.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setColorPreset(p.id)}
+                      className="flex flex-col items-center gap-1.5"
+                      title={p.name}
+                    >
+                      <div
+                        className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${
+                          colorPreset === p.id ? 'ring-2 ring-offset-2 ring-black' : 'border-gray-200 hover:scale-105'
+                        }`}
+                        style={{ background: p.swatch }}
+                      >
+                        {colorPreset === p.id && <span className="material-symbols-outlined text-white text-[16px] drop-shadow">check</span>}
+                      </div>
+                      <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wide">{p.name}</span>
+                    </button>
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={handlePickLogoColor}
+                    disabled={extractingTheme}
+                    className="flex flex-col items-center gap-1.5 disabled:opacity-60"
+                    title="Sacar los colores del logo o portada ya cargados"
+                  >
+                    <div
+                      className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all bg-[conic-gradient(from_180deg,#f43f5e,#f59e0b,#22c55e,#3b82f6,#a855f7,#f43f5e)] ${
+                        colorPreset === 'logo' ? 'ring-2 ring-offset-2 ring-black' : 'border-gray-200 hover:scale-105'
+                      }`}
+                    >
+                      {extractingTheme ? (
+                        <span className="material-symbols-outlined text-white text-[16px] animate-spin drop-shadow">progress_activity</span>
+                      ) : colorPreset === 'logo' ? (
+                        <span className="material-symbols-outlined text-white text-[16px] drop-shadow">check</span>
+                      ) : (
+                        <span className="material-symbols-outlined text-white text-[16px] drop-shadow">colorize</span>
+                      )}
+                    </div>
+                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wide">Del logo</span>
+                  </button>
                 </div>
               </div>
 

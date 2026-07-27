@@ -68,8 +68,6 @@ export default function MenuDirectoTemplate({ store }: Props) {
         onCta={irAlMenu}
       />
 
-      <StoreFloatingActions store={store} />
-
       <main className="pt-16 md:pt-[60px] pb-24 md:pb-12">
 
         {/* ─── MENÚ ─── */}
@@ -77,35 +75,39 @@ export default function MenuDirectoTemplate({ store }: Props) {
           <div className="animate-fade-in">
 
             {/* Portada compacta: aca es el unico hero de la plantilla, asi que se
-                queda. En las plantillas con Inicio se saca para no repetir foto. */}
-            <section className="px-5 md:px-6 md:max-w-[1200px] md:mx-auto pt-4">
-              <div className="relative w-full h-44 md:h-60 overflow-hidden rounded-2xl shadow-md">
-                <img className="w-full h-full object-cover" alt={store.heroAlt} src={store.heroImage} />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-transparent" />
-                <div className="absolute inset-0 flex flex-col justify-center px-6">
-                  <h1 className="text-white font-black text-2xl md:text-4xl uppercase italic leading-tight max-w-md line-clamp-2">
-                    {store.name}
-                  </h1>
-                  <p className={`text-white/85 ${TXT.body} font-medium mt-1 max-w-sm line-clamp-2`}>
-                    {store.tagline || 'Directo de la brasa a tu mesa'}
-                  </p>
-                  {(store.zona || store.horario) && (
-                    <div className={`flex items-center gap-4 mt-3 text-white/80 ${TXT.micro} font-semibold`}>
-                      {store.zona && (
-                        <span className="flex items-center gap-1">
-                          <span className={`material-symbols-outlined ${ICON.xs}`}>location_on</span>
-                          {store.zona}
-                        </span>
-                      )}
-                      {store.horario && (
-                        <span className="flex items-center gap-1">
-                          <span className={`material-symbols-outlined ${ICON.xs}`}>schedule</span>
-                          {store.horario}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
+                queda. En las plantillas con Inicio se saca para no repetir foto.
+                De borde a borde, sin padding ni esquinas redondeadas, igual que
+                el hero de Pollería: es el banner que carga el comercio, tiene que
+                verse entero y sin filtro negro encima. El texto va debajo. */}
+            <section className="relative w-full h-44 md:h-60 overflow-hidden">
+              <img className="w-full h-full object-cover" alt={store.heroAlt} src={store.heroImage} />
+              <StoreFloatingActions store={store} />
+            </section>
+
+            <section className="px-5 md:px-6">
+              <div className="pt-4 px-1">
+                <h1 className="font-black text-2xl md:text-4xl uppercase italic leading-tight" style={{ color: t.onBackground }}>
+                  {store.name}
+                </h1>
+                <p className={`${TXT.body} font-medium mt-1`} style={{ color: t.onSurfaceVariant }}>
+                  {store.tagline || 'Directo de la brasa a tu mesa'}
+                </p>
+                {(store.zona || store.horario) && (
+                  <div className={`flex items-center gap-4 mt-3 ${TXT.micro} font-semibold`} style={{ color: t.onSurfaceVariant }}>
+                    {store.zona && (
+                      <span className="flex items-center gap-1">
+                        <span className={`material-symbols-outlined ${ICON.xs}`}>location_on</span>
+                        {store.zona}
+                      </span>
+                    )}
+                    {store.horario && (
+                      <span className="flex items-center gap-1">
+                        <span className={`material-symbols-outlined ${ICON.xs}`}>schedule</span>
+                        {store.horario}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </section>
 
@@ -116,7 +118,7 @@ export default function MenuDirectoTemplate({ store }: Props) {
               onSelect={c.setActiveCategory}
             />
 
-            <div className="px-5 md:px-6 md:max-w-[1200px] md:mx-auto">
+            <div className="px-5 md:px-6">
               <h2 className={`${TXT.title} font-black uppercase italic tracking-tighter mb-4`} style={{ color: t.onSurface }}>
                 {c.activeCategory === 'all'
                   ? 'Nuestra Carta'
@@ -124,7 +126,7 @@ export default function MenuDirectoTemplate({ store }: Props) {
               </h2>
             </div>
 
-            <section className="px-5 md:px-6 md:max-w-[1200px] md:mx-auto pb-8">
+            <section className="px-5 md:px-6 pb-8">
               <ProductGrid
                 t={t}
                 productos={c.filtered}
@@ -187,7 +189,7 @@ export default function MenuDirectoTemplate({ store }: Props) {
         cartCount={c.cartCount}
       />
 
-      <ProductModal t={t} producto={selectedProduct} onClose={() => setSelectedProduct(null)} onAdd={c.addToCart} />
+      <ProductModal t={t} producto={selectedProduct} productos={c.products} onSelect={setSelectedProduct} onClose={() => setSelectedProduct(null)} onAdd={c.addToCart} />
     </div>
   );
 }

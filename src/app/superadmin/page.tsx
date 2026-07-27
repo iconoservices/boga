@@ -9,6 +9,9 @@ import { useDemo } from '@/context/DemoContext';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { COLOR_PRESETS, getColorPreset } from '@/lib/colorPresets';
+import { extractThemeFromImageClient } from '@/lib/extractThemeClient';
+import type { StoreTheme } from '@/lib/templates.config';
 
 // Correos con acceso al superadmin. A diferencia de /admin (donde cualquier
 // cuenta puede entrar y solo ve sus propias tiendas), este panel puede editar
@@ -76,6 +79,17 @@ const TEMPLATE_PRESENTATION: Record<string, { category?: string; description: st
     description: 'El look del marketplace de Boga para una sola tienda: banners, categorías y catálogo amplio. Ideal para minimarket, ferretería, farmacia o distribuidora.',
     previewUrl: 'https://images.unsplash.com/photo-1580913428735-bd3c269d6a82?w=600&q=80',
   },
+};
+
+// Que significa cada categoria visual: se muestra como ayuda al elegir la
+// categoria de una plantilla y al filtrar la grilla. Deriva de como se usan
+// hoy en TEMPLATE_PRESENTATION, no es una taxonomia inventada aparte.
+const CATEGORY_DESCRIPTIONS: Record<string, string> = {
+  Comercio: 'Venta de productos físicos con catálogo visual: moda, mercado, artesanías. Fotos grandes, checkout simple.',
+  Gourmet: 'Restaurantes y bares de ambiente cuidado, con identidad visual fuerte propia (no genérica).',
+  Negocios: 'Diseño neutro y minimalista para cualquier rubro que todavía no tiene una plantilla especializada.',
+  Restaurantes: 'Comida rápida y delivery: menos pasos entre entrar y pedir, categorías de platos siempre a la vista.',
+  Salud: 'Servicios con cita previa: clínicas, salones de belleza, bienestar. Foco en horarios y reservas.',
 };
 
 // Todas las plantillas montan <StoreFloatingActions/>, en movil y en escritorio.
@@ -275,6 +289,10 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   });
 
   const [activeStores, setActiveStores] = useState<Record<string, boolean>>({});
+  // id real de fila en Supabase por slug: sin esto, renombrar el slug de una
+  // tienda existente no se puede distinguir de crear una tienda nueva (el
+  // upsert por slug simplemente insertaria una fila aparte).
+  const [storeIds, setStoreIds] = useState<Record<string, string>>({});
 
   // Solicitudes de negocios (formulario público /vende-con-boga)
   const [storeRequests, setStoreRequests] = useState<any[]>([]);
@@ -308,9 +326,17 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
   const [slugChecking, setSlugChecking] = useState(false);
+  // null = usar los colores que trae la plantilla elegida (comportamiento de
+  // siempre). Con un id de preset, ese color pisa al de la plantilla. 'logo'
+  // es un preset dinamico: el color sale de logoTheme, no de COLOR_PRESETS.
+  const [colorPreset, setColorPreset] = useState<string | null>(null);
+  const [logoTheme, setLogoTheme] = useState<StoreTheme | null>(null);
+  const [extractingTheme, setExtractingTheme] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoRemoved, setLogoRemoved] = useState(false);
+  const [heroFile, setHeroFile] = useState<File | null>(null);
+  const [heroPreview, setHeroPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Send preview updates to iframe in real time
@@ -319,18 +345,28 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     const templateKey = storeForm.template || 'default';
     const existingStoreObj = stores[storeForm.slug] || {};
     const tpl = getTemplate(templateKey);
+    const defaultTheme = {
+      primary: '#0058be', onPrimary: '#ffffff', primaryContainer: '#2170e4',
+      secondary: '#545f73', secondaryContainer: '#d5e0f8', background: '#f9f9ff',
+      surface: '#ffffff', surfaceContainer: '#ecedf7', surfaceContainerLow: '#f2f3fd',
+      surfaceContainerLowest: '#ffffff', surfaceContainerHigh: '#e6e7f2',
+      onBackground: '#191b23', onSurface: '#191b23', onSurfaceVariant: '#424754',
+      outlineVariant: '#c2c6d6', fontHeadline: "'Inter', sans-serif",
+      fontBody: "'Inter', sans-serif", fontLabel: "'Inter', sans-serif",
+    };
 
-    const resolvedBaseTheme =
-      tpl?.theme ??
-      {
-        primary: '#0058be', onPrimary: '#ffffff', primaryContainer: '#2170e4',
-        secondary: '#545f73', secondaryContainer: '#d5e0f8', background: '#f9f9ff',
-        surface: '#ffffff', surfaceContainer: '#ecedf7', surfaceContainerLow: '#f2f3fd',
-        surfaceContainerLowest: '#ffffff', surfaceContainerHigh: '#e6e7f2',
-        onBackground: '#191b23', onSurface: '#191b23', onSurfaceVariant: '#424754',
-        outlineVariant: '#c2c6d6', fontHeadline: "'Inter', sans-serif",
-        fontBody: "'Inter', sans-serif", fontLabel: "'Inter', sans-serif",
-      };
+    // Mismo criterio que al guardar: un preset elegido pisa el color de la
+    // plantilla, la tipografia sigue viniendo de la plantilla. Sin esto, el
+    // preview de la derecha no reflejaba el preset recien tocado.
+    const preset = colorPreset ? getColorPreset(colorPreset) : null;
+    const resolvedBaseTheme = preset
+      ? {
+          ...preset.theme,
+          fontHeadline: tpl?.theme.fontHeadline ?? defaultTheme.fontHeadline,
+          fontBody: tpl?.theme.fontBody ?? defaultTheme.fontBody,
+          fontLabel: tpl?.theme.fontLabel ?? defaultTheme.fontLabel,
+        }
+      : (tpl?.theme ?? defaultTheme);
 
     const previewTheme = {
       ...resolvedBaseTheme,
@@ -345,7 +381,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       tagline: storeForm.tagline || '',
       marketplaceCategory: storeForm.marketplaceCategory || 'General',
       template: templateKey,
-      heroImage: existingStoreObj.heroImage || tpl?.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
+      heroImage: heroPreview || existingStoreObj.heroImage || tpl?.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
       heroAlt: storeForm.name || 'store image',
       logoImage: logoPreview || undefined,
       whatsapp: storeForm.whatsapp || undefined,
@@ -367,7 +403,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         store: activePreviewStore
       }, '*');
     }
-  }, [storeForm, stores, logoPreview]);
+  }, [storeForm, stores, logoPreview, heroPreview, colorPreset]);
 
   React.useEffect(() => {
     sendPreviewUpdate();
@@ -445,10 +481,17 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     }
   }, [storeForm.name, editingStore, slugManuallyEdited]);
 
-  // Verificar disponibilidad del slug
+  // Verificar disponibilidad del slug. Al editar, el slug propio no cuenta
+  // como "ocupado" (es la misma fila) — solo se consulta a Supabase cuando
+  // realmente difiere del que tenia la tienda al abrir el editor.
   React.useEffect(() => {
-    if (!storeForm.slug || storeForm.slug.length < 2 || editingStore) {
-      setSlugAvailable(editingStore ? true : null);
+    if (!storeForm.slug || storeForm.slug.length < 2) {
+      setSlugAvailable(null);
+      setSlugChecking(false);
+      return;
+    }
+    if (editingStore && storeForm.slug === editingStore.slug) {
+      setSlugAvailable(true);
       setSlugChecking(false);
       return;
     }
@@ -537,6 +580,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     category: string;
     description: string;
     previewUrl: string;
+    featured: boolean;
   }
 
   // La lista se deriva de templates.config (fuente unica). Antes estaba duplicada
@@ -545,6 +589,13 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   // la descripcion comercial y la imagen de portada.
   const [templateOverrides, setTemplateOverrides] = useState<Record<string, Partial<AdminTemplate>>>({});
   const [hiddenTemplates, setHiddenTemplates] = useState<string[]>([]);
+
+  // Plantillas en foco de trabajo activo (no es popularidad de uso real, eso ya
+  // lo muestra "usage" por tienda). Arranca con las dos de Restaurantes mas
+  // nuevas para diferenciarlas del resto mientras se terminan de pulir.
+  const [featuredTemplates, setFeaturedTemplates] = useState<string[]>(['menudirecto', 'iniciocatalogo']);
+  const toggleFeaturedTemplate = (id: string) =>
+    setFeaturedTemplates(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
   const adminTemplates: AdminTemplate[] = React.useMemo(() => {
     const base = getTemplate('default');
@@ -561,9 +612,10 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
           category: override.category ?? extra?.category ?? t.category,
           description: override.description ?? extra?.description ?? `Plantilla ${t.name} para el rubro ${t.category}.`,
           previewUrl: override.previewUrl ?? extra?.previewUrl ?? t.heroImage,
+          featured: featuredTemplates.includes(t.id),
         };
       });
-  }, [templateOverrides, hiddenTemplates]);
+  }, [templateOverrides, hiddenTemplates, featuredTemplates]);
 
   // Se deriva de las categorias reales de adminTemplates (antes era una lista
   // fija a mano que se desincronizo: le faltaba "Restaurantes" -por eso Menu
@@ -584,6 +636,9 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     description: '',
     previewUrl: ''
   });
+  const [templateImageFile, setTemplateImageFile] = useState<File | null>(null);
+  const [isTemplateSaving, setIsTemplateSaving] = useState(false);
+  const templateImageInputRef = useRef<HTMLInputElement>(null);
 
   const handleSendInvite = () => {
     if (!inviteEmail) return;
@@ -621,9 +676,11 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
           const mergedMeta = { ...META };
           const mergedTiers = {} as Record<string, string>;
           const mergedActive = {} as Record<string, boolean>;
+          const mergedIds = {} as Record<string, string>;
 
           data.forEach(dbStore => {
             const slug = dbStore.slug;
+            mergedIds[slug] = dbStore.id;
             const dbTheme = dbStore.theme || {};
             const location = dbTheme.location || 'Ecosistema, Global';
             const emoji = dbTheme.emoji || '🏪';
@@ -680,6 +737,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
           setStoreMeta(mergedMeta);
           setStoreTiers(mergedTiers);
           setActiveStores(mergedActive);
+          setStoreIds(mergedIds);
 
           setCategories(prevCats => {
             return prevCats.map(c => {
@@ -781,6 +839,10 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     setLogoFile(null);
     setLogoPreview(null);
     setLogoRemoved(false);
+    setHeroFile(null);
+    setHeroPreview(null);
+    setColorPreset(null);
+    setLogoTheme(null);
     setStoreForm({
       slug: '',
       name: '',
@@ -802,12 +864,20 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
 
   const handleOpenEditStore = (store: any) => {
     const slug = store.slug;
-    setEditingStore(store);
+    setEditingStore({ ...store, id: storeIds[slug] });
     setSlugManuallyEdited(true);
     setSlugAvailable(null);
     setLogoFile(null);
     setLogoPreview(store.logoImage || null);
     setLogoRemoved(false);
+    setHeroFile(null);
+    setHeroPreview(store.heroImage || null);
+    // Si el primary guardado matchea un preset conocido, lo pre-selecciona.
+    // Si no (viene de la plantilla o de extraccion automatica de imagen), el
+    // picker arranca en "colores de la plantilla" para no falsear el origen.
+    const matchedPreset = COLOR_PRESETS.find((p) => p.theme.primary === store.theme?.primary);
+    setColorPreset(matchedPreset?.id ?? null);
+    setLogoTheme(null);
     setStoreForm({
       slug: store.slug,
       name: store.name,
@@ -825,6 +895,25 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       rating: store.rating != null ? String(store.rating) : ''
     });
     setShowStoreModal(true);
+  };
+
+  // Preset dinamico: saca la paleta de la imagen que ya cargo el comercio (logo
+  // si tiene, si no el banner) en vez de un color fijo elegido a mano.
+  const handlePickLogoColor = async () => {
+    const imageUrl = logoPreview || heroPreview || getTemplate(storeForm.template as string)?.heroImage;
+    if (!imageUrl) {
+      alert('Subí un logo o un banner primero para poder sacar sus colores.');
+      return;
+    }
+    setExtractingTheme(true);
+    const extracted = await extractThemeFromImageClient(imageUrl);
+    setExtractingTheme(false);
+    if (!extracted) {
+      alert('No se pudieron sacar colores de esa imagen. Probá con otra.');
+      return;
+    }
+    setLogoTheme(extracted);
+    setColorPreset('logo');
   };
 
   const handleDeleteStore = async (slug: string) => {
@@ -850,6 +939,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         setStoreDetails(prev => { const next = { ...prev }; delete next[slug]; return next; });
         setStoreMeta(prev => { const next = { ...prev }; delete next[slug]; return next; });
         setStoreTiers(prev => { const next = { ...prev }; delete next[slug]; return next; });
+        setStoreIds(prev => { const next = { ...prev }; delete next[slug]; return next; });
         
         setCategories(prevCats => {
           return prevCats.map(c => ({
@@ -871,20 +961,36 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     
     const slug = storeForm.slug.trim().toLowerCase();
     const templateKey = storeForm.template as string;
+    const oldSlug = editingStore?.slug as string | undefined;
+    const isRename = !!editingStore && !!oldSlug && oldSlug !== slug;
 
-    const existingStoreObj = stores[slug] || {};
+    // Si se esta renombrando, la fila vieja todavia vive bajo oldSlug: stores[slug]
+    // (el slug nuevo) esta vacio hasta que se guarde. Usar editingStore como base
+    // evita perder heroImage/categorias que ya tenia la tienda.
+    const existingStoreObj = editingStore || stores[slug] || {};
     const tpl = getTemplate(templateKey);
-    const resolvedBaseTheme =
-      tpl?.theme ??
-      {
-        primary: '#0058be', onPrimary: '#ffffff', primaryContainer: '#2170e4',
-        secondary: '#545f73', secondaryContainer: '#d5e0f8', background: '#f9f9ff',
-        surface: '#ffffff', surfaceContainer: '#ecedf7', surfaceContainerLow: '#f2f3fd',
-        surfaceContainerLowest: '#ffffff', surfaceContainerHigh: '#e6e7f2',
-        onBackground: '#191b23', onSurface: '#191b23', onSurfaceVariant: '#424754',
-        outlineVariant: '#c2c6d6', fontHeadline: "'Inter', sans-serif",
-        fontBody: "'Inter', sans-serif", fontLabel: "'Inter', sans-serif",
-      };
+    const defaultTheme = {
+      primary: '#0058be', onPrimary: '#ffffff', primaryContainer: '#2170e4',
+      secondary: '#545f73', secondaryContainer: '#d5e0f8', background: '#f9f9ff',
+      surface: '#ffffff', surfaceContainer: '#ecedf7', surfaceContainerLow: '#f2f3fd',
+      surfaceContainerLowest: '#ffffff', surfaceContainerHigh: '#e6e7f2',
+      onBackground: '#191b23', onSurface: '#191b23', onSurfaceVariant: '#424754',
+      outlineVariant: '#c2c6d6', fontHeadline: "'Inter', sans-serif",
+      fontBody: "'Inter', sans-serif", fontLabel: "'Inter', sans-serif",
+    };
+    // Con un preset de color elegido (incluido "logo", el extraido de la
+    // imagen), sus colores pisan a los de la plantilla; la tipografia sigue
+    // viniendo de la plantilla (todavia no es algo que el comercio elija aparte).
+    const preset = colorPreset && colorPreset !== 'logo' ? getColorPreset(colorPreset) : null;
+    const chosenColors = colorPreset === 'logo' ? logoTheme : preset?.theme;
+    const resolvedBaseTheme = chosenColors
+      ? {
+          ...chosenColors,
+          fontHeadline: tpl?.theme.fontHeadline ?? defaultTheme.fontHeadline,
+          fontBody: tpl?.theme.fontBody ?? defaultTheme.fontBody,
+          fontLabel: tpl?.theme.fontLabel ?? defaultTheme.fontLabel,
+        }
+      : (tpl?.theme ?? defaultTheme);
 
     const theme = {
       ...resolvedBaseTheme,
@@ -892,7 +998,6 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       emoji: storeForm.emoji,
       tier: storeForm.tier
     };
-    const heroImage = existingStoreObj.heroImage || tpl?.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80';
     const heroAlt = existingStoreObj.heroAlt || 'store image';
     const categoriesList = existingStoreObj.categories || [];
 
@@ -906,6 +1011,18 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         logoUrl = pubData.publicUrl;
       }
     }
+
+    let heroUrl: string | null = null;
+    if (heroFile && slug) {
+      const ext = heroFile.name.split('.').pop();
+      const path = `${slug}/hero-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from('store-assets').upload(path, heroFile, { upsert: true });
+      if (!upErr) {
+        const { data: pubData } = supabase.storage.from('store-assets').getPublicUrl(path);
+        heroUrl = pubData.publicUrl;
+      }
+    }
+    const heroImage = heroUrl || existingStoreObj.heroImage || tpl?.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80';
 
     const upsertData: Record<string, any> = {
       slug,
@@ -933,9 +1050,16 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     }
 
     try {
-      let { error } = await supabase
-        .from('stores')
-        .upsert(upsertData, { onConflict: 'slug' });
+      // Editar una tienda existente actualiza por id, no por slug: si se
+      // renombra el slug, un upsert por slug no encontraria conflicto y
+      // crearia una fila nueva, dejando la vieja huerfana con sus datos.
+      // Crear tienda nueva si sigue usando upsert por slug (no hay id todavia).
+      const writeStore = () =>
+        editingStore?.id
+          ? supabase.from('stores').update(upsertData).eq('id', editingStore.id)
+          : supabase.from('stores').upsert(upsertData, { onConflict: 'slug' });
+
+      let { error } = await writeStore();
 
       // Mismo problema que ya paso con `whatsapp` en el panel del cliente: si una
       // columna nueva todavia no existe en la base, reintenta sin ella en vez de
@@ -946,7 +1070,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       while (error && faltante) {
         delete upsertData[faltante];
         columnasFaltantes.push(faltante);
-        ({ error } = await supabase.from('stores').upsert(upsertData, { onConflict: 'slug' }));
+        ({ error } = await writeStore());
         faltante = columnasOpcionales.find((col) => col in upsertData && new RegExp(col).test(error?.message || ''));
       }
       if (!error && columnasFaltantes.length) {
@@ -957,55 +1081,58 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       }
       if (error) throw error;
 
-      setStoreDetails(prev => ({
-        ...prev,
-        [slug]: {
-          location: storeForm.location,
-          date: editingStore ? (prev[slug]?.date || 'Hoy') : new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
-          icon: 'storefront'
+      // Los productos se enlazan a la tienda por el texto del slug (columna
+      // `store`), no por id. Si el slug cambio, hay que migrarlos o quedan
+      // apuntando a un slug que ya no existe.
+      if (isRename && oldSlug) {
+        const { error: productsErr } = await supabase.from('products').update({ store: slug }).eq('store', oldSlug);
+        if (productsErr) {
+          alert(`Tienda renombrada, pero no se pudieron migrar sus productos: ${productsErr.message}\n\nMigralos a mano cambiando "store" de "${oldSlug}" a "${slug}" en la tabla products.`);
         }
-      }));
-      
-      setStoreMeta(prev => ({
-        ...prev,
-        [slug]: {
-          emoji: storeForm.emoji,
-          cat: storeForm.marketplaceCategory
-        }
-      }));
+      }
 
-      setStoreTiers(prev => ({
-        ...prev,
-        [slug]: storeForm.tier
-      }));
+      // Al renombrar, sacar la clave vieja de cada mapa local ademas de poner
+      // la nueva: si no, la fila queda duplicada en la UI hasta el proximo fetch.
+      const rekey = <T,>(prev: Record<string, T>, value: T): Record<string, T> => {
+        const next = { ...prev };
+        if (isRename && oldSlug) delete next[oldSlug];
+        next[slug] = value;
+        return next;
+      };
 
-      setActiveStores(prev => ({
-        ...prev,
-        [slug]: storeForm.active
+      setStoreDetails(prev => rekey(prev, {
+        location: storeForm.location,
+        date: editingStore ? (prev[oldSlug || slug]?.date || 'Hoy') : new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
+        icon: 'storefront'
       }));
 
-      setStores(prev => {
-        const updated = {
-          ...existingStoreObj,
-          slug,
-          name: storeForm.name,
-          tagline: storeForm.tagline,
-          marketplaceCategory: storeForm.marketplaceCategory,
-          template: storeForm.template,
-          heroImage,
-          heroAlt,
-          categories: categoriesList,
-          logoImage: logoUrl || (logoRemoved ? undefined : existingStoreObj.logoImage),
-          theme
-        };
-        
-        return {
-          ...prev,
-          [slug]: updated
-        };
-      });
+      setStoreMeta(prev => rekey(prev, {
+        emoji: storeForm.emoji,
+        cat: storeForm.marketplaceCategory
+      }));
 
-      const oldSlug = editingStore?.slug;
+      setStoreTiers(prev => rekey(prev, storeForm.tier));
+
+      setActiveStores(prev => rekey(prev, storeForm.active));
+
+      if (editingStore?.id) {
+        setStoreIds(prev => rekey(prev, editingStore.id));
+      }
+
+      setStores(prev => rekey(prev, {
+        ...existingStoreObj,
+        slug,
+        name: storeForm.name,
+        tagline: storeForm.tagline,
+        marketplaceCategory: storeForm.marketplaceCategory,
+        template: storeForm.template,
+        heroImage,
+        heroAlt,
+        categories: categoriesList,
+        logoImage: logoUrl || (logoRemoved ? undefined : existingStoreObj.logoImage),
+        theme
+      }));
+
       const mappedCatName = mapFormCategoryToCategoryName(storeForm.marketplaceCategory);
       setCategories(prevCats => {
         return prevCats.map(c => {
@@ -1132,6 +1259,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       description: '',
       previewUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&q=80'
     });
+    setTemplateImageFile(null);
     setShowTemplateModal(true);
   };
 
@@ -1144,23 +1272,42 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       description: tpl.description,
       previewUrl: tpl.previewUrl
     });
+    setTemplateImageFile(null);
     setShowTemplateModal(true);
   };
 
-  const handleSaveTemplate = (e: React.FormEvent) => {
+  const handleSaveTemplate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!templateForm.id || !templateForm.name) return;
 
     if (editingTemplate) {
+      let previewUrl = templateForm.previewUrl;
+
+      // Si el superadmin subio un archivo, va al mismo bucket que usan las
+      // portadas de tienda ('store-assets'); si falla la subida se guarda con
+      // la URL que ya estaba en el campo en vez de perder el resto del cambio.
+      if (templateImageFile) {
+        setIsTemplateSaving(true);
+        const ext = templateImageFile.name.split('.').pop();
+        const path = `templates/${editingTemplate.id}-${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage.from('store-assets').upload(path, templateImageFile, { upsert: true });
+        if (!upErr) {
+          const { data: pubData } = supabase.storage.from('store-assets').getPublicUrl(path);
+          previewUrl = pubData.publicUrl;
+        }
+        setIsTemplateSaving(false);
+      }
+
       setTemplateOverrides(prev => ({
         ...prev,
         [editingTemplate.id]: {
           name: templateForm.name,
           category: templateForm.category,
           description: templateForm.description,
-          previewUrl: templateForm.previewUrl,
+          previewUrl,
         },
       }));
+      setTemplateImageFile(null);
       setShowTemplateModal(false);
       return;
     }
@@ -2532,6 +2679,14 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                               {tpl.category}
                             </span>
                           </div>
+                          {tpl.featured && (
+                            <div className="absolute top-1 right-1">
+                              <span className="bg-[#f2ca50]/95 text-[#3c2f00] text-[7px] font-extrabold px-1 py-0.5 rounded backdrop-blur-xs uppercase tracking-wider flex items-center gap-0.5">
+                                <span className="material-symbols-outlined text-[9px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                                Destacada
+                              </span>
+                            </div>
+                          )}
                         </div>
 
                         {/* Content */}
@@ -2554,7 +2709,20 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
 
                         {/* Actions Footer */}
                         <div className="p-1 border-t border-[#ecedf7] bg-[#f2f3fd]/40 flex justify-end gap-0.5">
-                          <a 
+                          <button
+                            onClick={() => toggleFeaturedTemplate(tpl.id)}
+                            className={`p-1 rounded transition-colors flex items-center justify-center ${
+                              tpl.featured
+                                ? 'text-[#f2ca50] hover:bg-[#f2ca50]/10'
+                                : 'text-[#545f73] hover:text-[#f2ca50] hover:bg-[#ecedf7]'
+                            }`}
+                            title={tpl.featured ? 'Quitar de destacadas' : 'Marcar como destacada'}
+                          >
+                            <span className="material-symbols-outlined text-[12px]" style={tpl.featured ? { fontVariationSettings: "'FILL' 1" } : undefined}>
+                              {tpl.featured ? 'star' : 'star_outline'}
+                            </span>
+                          </button>
+                          <a
                             href={`/preview/${tpl.id}`}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -3238,6 +3406,52 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                       </div>
                     </div>
 
+                    {/* Banner / portada — es el fondo del hero de la tienda, sin esto
+                        el comercio quedaba pegado a la foto de stock de Unsplash o a
+                        la de la plantilla, sin forma de subir la suya. */}
+                    <div className="border border-[#ecedf7] rounded-lg p-4 bg-[#f8fafc] flex flex-col gap-3">
+                      <div className="w-full h-24 rounded-lg overflow-hidden border border-[#c2c6d6]/40 bg-white">
+                        <img
+                          src={heroPreview || getTemplate(storeForm.template as string)?.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80'}
+                          className="w-full h-full object-cover"
+                          alt="Banner"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label className="flex-1 flex items-center gap-2 px-3 py-2 bg-white border border-[#c2c6d6] rounded-md cursor-pointer hover:bg-[#f2f3fd] transition-colors text-xs font-bold text-[#545f73]">
+                          <span className="material-symbols-outlined text-[16px]">upload</span>
+                          Subir banner
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                if (heroPreview?.startsWith('blob:')) URL.revokeObjectURL(heroPreview);
+                                setHeroFile(file);
+                                setHeroPreview(URL.createObjectURL(file));
+                              }
+                            }}
+                          />
+                        </label>
+                        {heroFile && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (heroPreview?.startsWith('blob:')) URL.revokeObjectURL(heroPreview);
+                              setHeroFile(null);
+                              setHeroPreview(stores[storeForm.slug]?.heroImage || null);
+                            }}
+                            className="p-2 text-[#dc2626] hover:bg-red-50 rounded-lg transition-colors"
+                            title="Deshacer"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">undo</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
                     <div className="space-y-3">
                       <div>
                         <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Nombre de la Tienda</label>
@@ -3276,7 +3490,6 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                               slugAvailable ? 'border-[#16a34a]' : 'border-[#dc2626]'
                             }`}
                             placeholder="enlace-tienda"
-                            disabled={!!editingStore}
                           />
                           <span className="absolute right-2.5 top-1/2 -translate-y-1/2">
                             {slugChecking ? (
@@ -3294,44 +3507,89 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                         {slugAvailable === true && (
                           <p className="text-[10px] font-bold text-[#16a34a] mt-1">Disponible</p>
                         )}
+                        {editingStore && storeForm.slug !== editingStore.slug && slugAvailable === true && (
+                          <p className="text-[10px] font-bold text-amber-600 mt-1">
+                            Vas a renombrar /{editingStore.slug} → /{storeForm.slug}. Los links viejos con el slug anterior dejan de funcionar.
+                          </p>
+                        )}
                       </div>
                     </div>
                   </section>
 
-                  {/* PALETA DE COLORES — de momento solo lectura: son los colores fijos de
-                      la plantilla elegida abajo. Antes los swatches y el "+" tenian
-                      cursor-pointer y hover pero ningun onClick: parecian editables y no
-                      hacian nada. */}
+                  {/* PALETA DE COLORES — un preset con nombre pisa el color de la
+                      plantilla elegida abajo (la tipografia sigue viniendo de la
+                      plantilla). "Colores de la plantilla" deja el comportamiento
+                      de siempre para quien no quiere elegir nada. */}
                   <section className="space-y-4">
                     <div className="flex items-center gap-2 border-b border-[#ecedf7] pb-2">
                       <span className="material-symbols-outlined text-[#0058be] text-[16px] font-bold">palette</span>
                       <h3 className="text-[10px] font-black text-[#424754] uppercase tracking-widest">Paleta de Colores</h3>
                     </div>
                     <p className="text-[10px] text-[#727785] font-semibold -mt-2">
-                      Vienen fijos con la plantilla que elijas en "Estructura de Página". Personalizar colores por tienda todavía no existe.
+                      Elegí un color por rubro, o dejá los de la plantilla elegida en "Estructura de Página".
                     </p>
 
-                    {(() => {
-                      const tplKey = storeForm.template as string;
-                      const tplTheme = getTemplate(tplKey)?.theme || {
-                        primary: '#0058be', secondary: '#545f73', background: '#f9f9ff', surface: '#ffffff',
-                        fontHeadline: "'Inter', sans-serif", fontBody: "'Inter', sans-serif",
-                      };
-                      return (
-                        <div className="flex gap-2.5">
-                          {[tplTheme.primary, tplTheme.secondary || '#545f73', tplTheme.background, tplTheme.surface].map((color, i) => (
-                            <div
-                              key={i}
-                              className="w-10 h-10 rounded-md border border-[#ecedf7] flex items-center justify-center shadow-xs"
-                              style={{ backgroundColor: color }}
-                              title={`Color ${i + 1}: ${color}`}
-                            >
-                              <div className="w-2.5 h-2.5 rounded-full bg-white/40 border border-white/60" />
-                            </div>
-                          ))}
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setColorPreset(null)}
+                        className={`flex flex-col items-center gap-1.5 group`}
+                        title="Usar los colores de la plantilla"
+                      >
+                        <div
+                          className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${
+                            colorPreset === null ? 'ring-2 ring-offset-2 ring-[#0058be]' : 'hover:scale-105'
+                          }`}
+                          style={{ borderColor: '#c2c6d6', background: `conic-gradient(from 0deg, ${getTemplate(storeForm.template as string)?.theme.primary || '#0058be'}, ${getTemplate(storeForm.template as string)?.theme.secondary || '#545f73'})` }}
+                        >
+                          {colorPreset === null && <span className="material-symbols-outlined text-white text-[16px] drop-shadow">check</span>}
                         </div>
-                      );
-                    })()}
+                        <span className="text-[8px] font-bold text-[#727785] uppercase tracking-wide">Plantilla</span>
+                      </button>
+
+                      {COLOR_PRESETS.map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => setColorPreset(p.id)}
+                          className="flex flex-col items-center gap-1.5"
+                          title={p.name}
+                        >
+                          <div
+                            className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${
+                              colorPreset === p.id ? 'ring-2 ring-offset-2 ring-[#0058be]' : 'border-[#ecedf7] hover:scale-105'
+                            }`}
+                            style={{ background: p.swatch, borderColor: colorPreset === p.id ? p.swatch : '#ecedf7' }}
+                          >
+                            {colorPreset === p.id && <span className="material-symbols-outlined text-white text-[16px] drop-shadow">check</span>}
+                          </div>
+                          <span className="text-[8px] font-bold text-[#727785] uppercase tracking-wide">{p.name}</span>
+                        </button>
+                      ))}
+
+                      <button
+                        type="button"
+                        onClick={handlePickLogoColor}
+                        disabled={extractingTheme}
+                        className="flex flex-col items-center gap-1.5 disabled:opacity-60"
+                        title="Sacar los colores del logo o banner ya cargado"
+                      >
+                        <div
+                          className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all bg-[conic-gradient(from_180deg,#f43f5e,#f59e0b,#22c55e,#3b82f6,#a855f7,#f43f5e)] ${
+                            colorPreset === 'logo' ? 'ring-2 ring-offset-2 ring-[#0058be]' : 'border-[#ecedf7] hover:scale-105'
+                          }`}
+                        >
+                          {extractingTheme ? (
+                            <span className="material-symbols-outlined text-white text-[16px] animate-spin drop-shadow">progress_activity</span>
+                          ) : colorPreset === 'logo' ? (
+                            <span className="material-symbols-outlined text-white text-[16px] drop-shadow">check</span>
+                          ) : (
+                            <span className="material-symbols-outlined text-white text-[16px] drop-shadow">colorize</span>
+                          )}
+                        </div>
+                        <span className="text-[8px] font-bold text-[#727785] uppercase tracking-wide">Del logo</span>
+                      </button>
+                    </div>
                   </section>
 
                   {/* TIPOGRAFÍA — igual que arriba, de solo lectura: es la que trae la
@@ -3722,12 +3980,15 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                 onChange={(e) => setTemplateForm(prev => ({ ...prev, category: e.target.value }))}
                 className="w-full bg-[#f9f9ff] border border-[#c2c6d6] rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-[#0058be] transition-colors"
               >
-                <option value="Comercio">Comercio</option>
-                <option value="Negocios">Negocios</option>
-                <option value="Gourmet">Gourmet</option>
-                <option value="Tecnología">Tecnología</option>
-                <option value="Salud">Salud</option>
+                {templateCategories.filter(cat => cat !== 'Todas').map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
               </select>
+              {CATEGORY_DESCRIPTIONS[templateForm.category] && (
+                <p className="text-[10px] text-[#424754] mt-1.5 leading-snug">
+                  {CATEGORY_DESCRIPTIONS[templateForm.category]}
+                </p>
+              )}
             </div>
 
             <div>
@@ -3743,20 +4004,37 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold text-[#424754] mb-1.5 uppercase tracking-wide font-sans">Imagen de Vista Previa (URL)</label>
+              <label className="block text-[10px] font-bold text-[#424754] mb-1.5 uppercase tracking-wide font-sans">Imagen de Vista Previa</label>
               <input
-                type="text"
-                required
-                placeholder="URL de la imagen (de Unsplash u otra fuente)..."
-                value={templateForm.previewUrl}
-                onChange={(e) => setTemplateForm(prev => ({ ...prev, previewUrl: e.target.value }))}
-                className="w-full bg-[#f9f9ff] border border-[#c2c6d6] rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-[#0058be] transition-colors"
+                type="file"
+                ref={templateImageInputRef}
+                onChange={e => {
+                  if (e.target.files?.[0]) {
+                    setTemplateImageFile(e.target.files[0]);
+                    setTemplateForm(prev => ({ ...prev, previewUrl: URL.createObjectURL(e.target.files![0]) }));
+                  }
+                }}
+                accept="image/*"
+                className="hidden"
               />
-              {templateForm.previewUrl && (
-                <div className="mt-2 w-full h-24 rounded-lg overflow-hidden border border-[#c2c6d6]">
-                  <img src={templateForm.previewUrl} className="w-full h-full object-cover" alt="Preview" />
-                </div>
-              )}
+              <div
+                onClick={() => templateImageInputRef.current?.click()}
+                className="w-full h-24 rounded-lg border-2 border-dashed border-[#c2c6d6] overflow-hidden cursor-pointer relative group hover:border-[#0058be] transition-colors bg-[#f9f9ff]"
+              >
+                {templateForm.previewUrl ? (
+                  <>
+                    <img src={templateForm.previewUrl} className="w-full h-full object-cover" alt="Preview" />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white font-bold text-xs transition-opacity">
+                      Cambiar Imagen
+                    </div>
+                  </>
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-[#424754]">
+                    <span className="material-symbols-outlined text-2xl mb-1">landscape</span>
+                    <span className="text-xs font-bold">Clic para subir imagen</span>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="flex gap-3 pt-2">
@@ -3769,10 +4047,11 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
               </button>
               <button 
                 type="submit"
-                className="flex-1 py-2.5 bg-[#0058be] text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 hover:shadow-lg transition-all"
+                disabled={isTemplateSaving}
+                className="flex-1 py-2.5 bg-[#0058be] text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 hover:shadow-lg transition-all disabled:opacity-60"
               >
                 <span className="material-symbols-outlined text-[14px]">save</span>
-                Guardar Plantilla
+                {isTemplateSaving ? 'Subiendo imagen...' : 'Guardar Plantilla'}
               </button>
             </div>
           </form>
