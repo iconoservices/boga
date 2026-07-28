@@ -1056,10 +1056,10 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       // Crear tienda nueva si sigue usando upsert por slug (no hay id todavia).
       const writeStore = () =>
         editingStore?.id
-          ? supabase.from('stores').update(upsertData).eq('id', editingStore.id)
-          : supabase.from('stores').upsert(upsertData, { onConflict: 'slug' });
+          ? supabase.from('stores').update(upsertData).eq('id', editingStore.id).select('id')
+          : supabase.from('stores').upsert(upsertData, { onConflict: 'slug' }).select('id');
 
-      let { error } = await writeStore();
+      let { error, data: writeData } = await writeStore();
 
       // Mismo problema que ya paso con `whatsapp` en el panel del cliente: si una
       // columna nueva todavia no existe en la base, reintenta sin ella en vez de
@@ -1070,7 +1070,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       while (error && faltante) {
         delete upsertData[faltante];
         columnasFaltantes.push(faltante);
-        ({ error } = await writeStore());
+        ({ error, data: writeData } = await writeStore());
         faltante = columnasOpcionales.find((col) => col in upsertData && new RegExp(col).test(error?.message || ''));
       }
       if (!error && columnasFaltantes.length) {
@@ -1080,6 +1080,15 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         );
       }
       if (error) throw error;
+
+      // Si Supabase acepta el request pero RLS bloquea la fila, no devuelve error:
+      // simplemente no actualiza (ni crea) nada, y el panel seguiria de largo
+      // como si hubiese guardado. Cortar aca y avisar en vez de mentirle al admin.
+      if (!writeData || writeData.length === 0) {
+        throw new Error(
+          'Supabase no devolvió ninguna fila guardada. Probablemente una política de Row Level Security (RLS) de la tabla "stores" está bloqueando el guardado. Revisá las políticas de UPDATE/INSERT en el dashboard de Supabase.'
+        );
+      }
 
       // Los productos se enlazan a la tienda por el texto del slug (columna
       // `store`), no por id. Si el slug cambio, hay que migrarlos o quedan
