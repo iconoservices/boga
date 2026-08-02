@@ -14,6 +14,7 @@ const PolleriaTemplate = dynamic(() => import('@/templates/polleria/PolleriaTemp
 const MercadoTemplate = dynamic(() => import('@/templates/mercado/MercadoTemplate'));
 const MenuDirectoTemplate = dynamic(() => import('@/templates/menudirecto/MenuDirectoTemplate'));
 const InicioCatalogoTemplate = dynamic(() => import('@/templates/iniciocatalogo/InicioCatalogoTemplate'));
+const FloresTemplate = dynamic(() => import('@/templates/flores/FloresTemplate'));
 
 interface Props {
   store: StoreConfig;
@@ -101,6 +102,8 @@ export default function StoreRenderer({ store: initialStore }: Props) {
       return <MenuDirectoTemplate store={store} />;
     case 'iniciocatalogo':
       return <InicioCatalogoTemplate store={store} />;
+    case 'flores':
+      return <FloresTemplate store={store} />;
     default:
       return (
         <div className="flex items-center justify-center min-h-screen">

@@ -23,7 +23,7 @@ const SUPERADMIN_EMAILS = ['jnmcsky@gmail.com'];
 
 // Plantillas que ya tienen botón de pedido por WhatsApp implementado en su código
 const TEMPLATES_WITH_WHATSAPP = new Set([
-  'polleria', 'estilosmirka', 'sweetkittynails', 'mercado', 'menudirecto', 'iniciocatalogo',
+  'polleria', 'estilosmirka', 'sweetkittynails', 'mercado', 'menudirecto', 'iniciocatalogo', 'flores',
 ]);
 
 // Datos de presentacion comercial que no viven en templates.config (descripcion
@@ -79,6 +79,11 @@ const TEMPLATE_PRESENTATION: Record<string, { category?: string; description: st
     description: 'El look del marketplace de Boga para una sola tienda: banners, categorías y catálogo amplio. Ideal para minimarket, ferretería, farmacia o distribuidora.',
     previewUrl: 'https://images.unsplash.com/photo-1580913428735-bd3c269d6a82?w=600&q=80',
   },
+  flores: {
+    category: 'Comercio',
+    description: 'Estilo delicado en tonos rosa con categorías para ramos, arreglos, plantas y detalles. Pensado para florerías y regalos.',
+    previewUrl: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=600&q=80',
+  },
 };
 
 // Que significa cada categoria visual: se muestra como ayuda al elegir la
@@ -95,7 +100,7 @@ const CATEGORY_DESCRIPTIONS: Record<string, string> = {
 // Todas las plantillas montan <StoreFloatingActions/>, en movil y en escritorio.
 const TEMPLATES_WITH_SHARE_INSTALL = new Set([
   'polleria', 'estilosmirka', 'mercado', 'sunset', 'natura', 'amazonia', 'sweetkittynails',
-  'menudirecto', 'iniciocatalogo',
+  'menudirecto', 'iniciocatalogo', 'flores',
 ]);
 
 const META: Record<string, { emoji: string; cat: string }> = {
@@ -107,6 +112,7 @@ const META: Record<string, { emoji: string; cat: string }> = {
   sweetkittynails: { emoji: '💅', cat: 'Beauty' },
   menudirecto: { emoji: '🍔', cat: 'Restaurantes' },
   iniciocatalogo: { emoji: '🔥', cat: 'Restaurantes' },
+  flores: { emoji: '🌸', cat: 'Comercio' },
 };
 
 const CATEGORY_ICONS: Record<string, string> = {
