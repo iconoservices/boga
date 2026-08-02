@@ -66,18 +66,6 @@ export default function AppHeader({
             <button className="p-2 bg-white rounded-full shadow-sm hover:shadow-md transition-all active:scale-90 flex items-center justify-center">
               <span className="material-symbols-outlined text-on-surface text-[20px]">notifications</span>
             </button>
-
-            {/* Profile link */}
-            <Link 
-              href="/profile" 
-              className="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden border border-surface-container-highest shadow-sm active:scale-90 transition-transform flex items-center justify-center"
-            >
-              <img 
-                className="w-full h-full object-cover" 
-                alt="Perfil de usuario" 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-IfEzGRk920DvtCpRmfZp9bbKbjxdF27v3TAFmrFvsQkVlD9adL1G9__Y4T63prwK0SpZ_e8eC0ZzjfdXwOmfi3w33M2hw9ALsqO-dEj7G_H8GUHkbE4DRAdO0EevAXO7oYcJ66uwpr1wxs4jobjXK8FnMkmc7l0_-iXvrRC36FyaBjUem3f-02cQhz-mES9QLNpYrclwkPRjdwnZ7lQUhLlJVY_O2mDIM933yELXAuOKN08bMAxdsZlKlqpY45x1nO_U-iiLM9I"
-              />
-            </Link>
           </div>
         </div>
 
