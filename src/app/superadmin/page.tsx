@@ -515,19 +515,59 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   const [editingCatId, setEditingCatId] = useState<number | null>(null);
   const [editingSubId, setEditingSubId] = useState<{catId: number, index: number} | null>(null);
 
-  // Usuarios state
+  // Usuarios state — se arma de datos reales (perfiles + dueños de tienda), no
+  // de una lista inventada: ver `derivedUsers` mas abajo.
   const ROLES = ['super_admin', 'store_admin'] as const;
   type UserRole = typeof ROLES[number];
-  const [users, setUsers] = useState([
-    { id: 1, email: 'tu@bogamarket.com',    name: 'Super Admin',      role: 'super_admin' as UserRole, store: '',       status: 'activo' },
-    { id: 2, email: 'pedro@sunsetlounge.com', name: 'Pedro Ramírez',  role: 'store_admin' as UserRole, store: 'sunset', status: 'activo' },
-    { id: 3, email: 'maria@delva.com',      name: 'María López',     role: 'store_admin' as UserRole, store: 'delva',  status: 'pendiente' },
-  ]);
+  interface UserRow { id: string; email: string; name: string; role: UserRole; store: string; status: 'activo' | 'pendiente' }
+  const [profiles, setProfiles] = useState<{ id: string; email: string; name: string | null }[]>([]);
+  const [storeOwners, setStoreOwners] = useState<Record<string, string | null>>({});
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteStore, setInviteStore] = useState('');
   const [inviteRole, setInviteRole] = useState<UserRole>('store_admin');
   const [inviteSent, setInviteSent] = useState(false);
-  const [editingUser, setEditingUser] = useState<typeof users[0] | null>(null);
+  const [isSendingInvite, setIsSendingInvite] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserRow | null>(null);
+  const [editingUserOriginalStore, setEditingUserOriginalStore] = useState('');
+
+  React.useEffect(() => {
+    supabase.from('profiles').select('*').then(({ data, error }) => {
+      if (error) { console.error('Error fetching profiles:', error); return; }
+      setProfiles(data || []);
+    });
+  }, []);
+
+  // Un usuario real (con cuenta) por fila: primero los superadmins (email en
+  // el codigo), despues una fila por cada tienda que administra cada quien, y
+  // por ultimo quien ya tiene cuenta pero todavia no administra ninguna
+  // tienda (se registro solo, o vos lo invitaste y ya entro).
+  const derivedUsers = React.useMemo<UserRow[]>(() => {
+    const rows: UserRow[] = [];
+    const idsConFila = new Set<string>();
+
+    SUPERADMIN_EMAILS.forEach((email) => {
+      const p = profiles.find((pr) => pr.email === email);
+      rows.push({ id: p?.id || email, email, name: p?.name || 'Super Admin', role: 'super_admin', store: '', status: p ? 'activo' : 'pendiente' });
+      if (p) idsConFila.add(p.id);
+    });
+
+    Object.entries(storeOwners).forEach(([slug, ownerId]) => {
+      if (!ownerId) return;
+      const p = profiles.find((pr) => pr.id === ownerId);
+      if (p && SUPERADMIN_EMAILS.includes(p.email)) return; // ya esta arriba como superadmin
+      rows.push({ id: ownerId, email: p?.email || ownerId, name: p?.name || p?.email || '(sin perfil todavía)', role: 'store_admin', store: slug, status: 'activo' });
+      idsConFila.add(ownerId);
+    });
+
+    // Tiene cuenta pero ninguna tienda todavia: aca es donde vos lo "ascendes"
+    // con Editar, sin mandarle nada de nuevo.
+    profiles.forEach((p) => {
+      if (idsConFila.has(p.id) || SUPERADMIN_EMAILS.includes(p.email)) return;
+      rows.push({ id: p.id, email: p.email, name: p.name || p.email, role: 'store_admin', store: '', status: 'activo' });
+    });
+
+    return rows;
+  }, [profiles, storeOwners]);
 
   // Paquetes state
   const [packages, setPackages] = useState<Package[]>([
@@ -646,22 +686,66 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   const [isTemplateSaving, setIsTemplateSaving] = useState(false);
   const templateImageInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSendInvite = () => {
+  // Manda un link de acceso real (magic link: si el correo no tiene cuenta,
+  // Supabase la crea sola al tocarlo). No usa la service_role key — esa nunca
+  // debe tocar el navegador — asi que no podemos asignarle la tienda de una,
+  // recien sabemos quien es cuando entra por primera vez.
+  const handleSendInvite = async () => {
     if (!inviteEmail) return;
-    setUsers(prev => [...prev, {
-      id: Date.now(), email: inviteEmail, name: '(pendiente)',
-      role: inviteRole, store: inviteStore, status: 'pendiente'
-    }]);
+    setIsSendingInvite(true);
+    const redirectTo = `${window.location.origin}${inviteRole === 'super_admin' ? '/superadmin' : '/admin'}`;
+    const { error } = await supabase.auth.signInWithOtp({ email: inviteEmail, options: { emailRedirectTo: redirectTo } });
+    setIsSendingInvite(false);
+    if (error) {
+      alert('No se pudo enviar la invitación: ' + error.message);
+      return;
+    }
     setInviteSent(true);
     setTimeout(() => {
       setInviteEmail(''); setInviteStore(''); setInviteRole('store_admin'); setInviteSent(false);
-    }, 1800);
+    }, 2600);
   };
 
-  const handleSaveUser = () => {
+  const handleSaveUser = async () => {
     if (!editingUser) return;
-    setUsers(prev => prev.map(u => u.id === editingUser.id ? editingUser : u));
+    if (editingUser.role === 'super_admin') {
+      alert(
+        'El acceso de Super Admin sale de una lista fija en el código (SUPERADMIN_EMAILS), no de esta tabla.\n\n' +
+        'Para dar acceso total a otra persona hay que agregar su correo ahí y volver a desplegar — avisame y lo hago.'
+      );
+      return;
+    }
+    await supabase.from('profiles').update({ name: editingUser.name }).eq('id', editingUser.id);
+    // Le quita la tienda anterior (si tenia otra) y le asigna la nueva.
+    if (editingUserOriginalStore && editingUserOriginalStore !== editingUser.store) {
+      await supabase.from('stores').update({ user_id: null }).eq('slug', editingUserOriginalStore);
+    }
+    if (editingUser.store) {
+      const { error } = await supabase.from('stores').update({ user_id: editingUser.id }).eq('slug', editingUser.store);
+      if (error) { alert('No se pudo guardar: ' + error.message); return; }
+    }
+    setStoreOwners(prev => {
+      const next = { ...prev };
+      if (editingUserOriginalStore) next[editingUserOriginalStore] = null;
+      if (editingUser.store) next[editingUser.store] = editingUser.id;
+      return next;
+    });
+    setProfiles(prev => prev.map(p => p.id === editingUser.id ? { ...p, name: editingUser.name } : p));
     setEditingUser(null);
+  };
+
+  // "Revocar" acá significa quitarle la tienda asignada — no se puede borrar
+  // la cuenta de auth.users desde el navegador sin la service_role key.
+  const handleRevokeAccess = async (u: UserRow) => {
+    if (u.role === 'super_admin') {
+      alert('El acceso de Super Admin sale del código (SUPERADMIN_EMAILS), no se puede revocar desde acá.');
+      return;
+    }
+    if (!confirm(`¿Quitarle a ${u.email} el acceso a "${stores[u.store]?.name || u.store}"?`)) return;
+    const { error } = await supabase.from('stores').update({ user_id: null }).eq('slug', u.store);
+    if (error) { alert('No se pudo revocar: ' + error.message); return; }
+    setStoreOwners(prev => ({ ...prev, [u.store]: null }));
+    if (editingUser?.id === u.id) setEditingUser(null);
   };
 
   const { isDemoVisible, toggleDemoProducts } = useDemo();
@@ -683,10 +767,12 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
           const mergedTiers = {} as Record<string, string>;
           const mergedActive = {} as Record<string, boolean>;
           const mergedIds = {} as Record<string, string>;
+          const mergedOwners = {} as Record<string, string | null>;
 
           data.forEach(dbStore => {
             const slug = dbStore.slug;
             mergedIds[slug] = dbStore.id;
+            mergedOwners[slug] = dbStore.user_id || null;
             const dbTheme = dbStore.theme || {};
             const location = dbTheme.location || 'Ecosistema, Global';
             const emoji = dbTheme.emoji || '🏪';
@@ -744,6 +830,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
           setStoreTiers(mergedTiers);
           setActiveStores(mergedActive);
           setStoreIds(mergedIds);
+          setStoreOwners(mergedOwners);
 
           setCategories(prevCats => {
             return prevCats.map(c => {
@@ -2274,7 +2361,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
               {/* Left: User Table */}
               <div className="flex-1 w-full min-w-0 space-y-3">
                 <p className="text-xs text-[#424754] font-semibold">
-                  {users.length} usuario{users.length !== 1 ? 's' : ''} con acceso al panel
+                  {derivedUsers.length} usuario{derivedUsers.length !== 1 ? 's' : ''} con acceso al panel
                 </p>
                 <div className="bg-white rounded-md border border-[#c2c6d6] shadow-sm overflow-hidden">
                   {/* Table header */}
@@ -2286,9 +2373,14 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                     <span />
                   </div>
                   {/* Rows */}
-                  {users.map((u) => (
-                    <div 
-                      key={u.id} 
+                  {derivedUsers.length === 0 && (
+                    <div className="px-4 py-8 text-center text-xs text-[#727785] font-semibold italic">
+                      Todavía no hay perfiles registrados.
+                    </div>
+                  )}
+                  {derivedUsers.map((u) => (
+                    <div
+                      key={`${u.id}-${u.store || u.role}`}
                       style={{ display: 'grid', gridTemplateColumns: '160px 1fr 130px 160px 72px', gap: '12px' }} 
                       className={`items-center px-4 py-3.5 border-b border-[#ecedf7] last:border-0 transition-colors group cursor-pointer ${ 
                         editingUser?.id === u.id ? 'bg-[#ecedf7]/30' : 'hover:bg-[#f2f3fd]/20'
@@ -2315,14 +2407,14 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                       </div>
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
-                          onClick={() => { setEditingUser({...u}); setInviteSent(false); }}
+                          onClick={() => { setEditingUser({...u}); setEditingUserOriginalStore(u.store); setInviteSent(false); }}
                           className="w-7 h-7 flex items-center justify-center text-[#424754] hover:text-[#0058be] hover:bg-[#ecedf7] rounded-lg transition-colors"
                           title="Editar usuario"
                         >
                           <span className="material-symbols-outlined text-[15px]">edit</span>
                         </button>
                         <button
-                          onClick={() => { setUsers(prev => prev.filter(x => x.id !== u.id)); if(editingUser?.id === u.id) setEditingUser(null); }}
+                          onClick={() => handleRevokeAccess(u)}
                           className="w-7 h-7 flex items-center justify-center text-[#c2c6d6] hover:text-[#ba1a1a] hover:bg-red-50 rounded-lg transition-colors"
                           title="Revocar acceso"
                         >
@@ -2390,15 +2482,6 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                             </select>
                           </div>
                         )}
-                        <div>
-                          <label className="block text-[10px] font-bold text-[#424754] mb-1.5 uppercase tracking-wide">Estado</label>
-                          <select value={editingUser.status} onChange={(e) => setEditingUser(prev => prev ? {...prev, status: e.target.value} : prev)}
-                            className="w-full bg-[#f2f3fd] border border-[#c2c6d6] rounded-lg px-3 py-2 text-xs font-bold outline-none focus:border-[#0058be] focus:bg-white transition-colors">
-                            <option value="activo">Activo</option>
-                            <option value="pendiente">Pendiente</option>
-                            <option value="suspendido">Suspendido</option>
-                          </select>
-                        </div>
                         <div className="flex gap-2 pt-2">
                           <button onClick={() => setEditingUser(null)}
                             className="flex-1 py-2 bg-[#ecedf7] text-[#424754] rounded-lg font-bold text-xs hover:bg-[#e6e7f2] transition-colors">
@@ -2417,8 +2500,12 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                       <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-3 border border-emerald-100">
                         <span className="material-symbols-outlined text-emerald-600 text-2xl">check_circle</span>
                       </div>
-                      <h3 className="text-sm font-bold text-[#191b23] mb-1">¡Invitación enviada!</h3>
-                      <p className="text-xs text-[#424754] font-semibold">El usuario recibirá un email para configurar su acceso.</p>
+                      <h3 className="text-sm font-bold text-[#191b23] mb-1">¡Link enviado!</h3>
+                      <p className="text-xs text-[#424754] font-semibold">
+                        {inviteRole === 'store_admin' && inviteStore
+                          ? `Cuando entre por primera vez, volvé acá y editalo para asignarle "${stores[inviteStore]?.name || inviteStore}" — el correo solo abre la puerta, la tienda se asigna a mano.`
+                          : 'Recibió un correo con un link para entrar directo, sin contraseña.'}
+                      </p>
                     </div>
                   ) : (
                     /* INVITE USER */
@@ -2461,11 +2548,11 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                         )}
                         <button
                           onClick={handleSendInvite}
-                          disabled={!inviteEmail || (inviteRole === 'store_admin' && !inviteStore)}
+                          disabled={isSendingInvite || !inviteEmail || (inviteRole === 'store_admin' && !inviteStore)}
                           className="w-full py-2.5 bg-[#0058be] text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 hover:shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed mt-2"
                         >
-                          <span className="material-symbols-outlined text-[16px]">send</span>
-                          Enviar Invitación
+                          <span className={`material-symbols-outlined text-[16px] ${isSendingInvite ? 'animate-spin' : ''}`}>{isSendingInvite ? 'progress_activity' : 'send'}</span>
+                          {isSendingInvite ? 'Enviando...' : 'Enviar Invitación'}
                         </button>
                       </div>
                     </>
