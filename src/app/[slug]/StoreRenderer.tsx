@@ -15,6 +15,8 @@ const MercadoTemplate = dynamic(() => import('@/templates/mercado/MercadoTemplat
 const MenuDirectoTemplate = dynamic(() => import('@/templates/menudirecto/MenuDirectoTemplate'));
 const InicioCatalogoTemplate = dynamic(() => import('@/templates/iniciocatalogo/InicioCatalogoTemplate'));
 const FloresTemplate = dynamic(() => import('@/templates/flores/FloresTemplate'));
+const FichaDigitalTemplate = dynamic(() => import('@/templates/fichadigital/FichaDigitalTemplate'));
+const FichaPlanaTemplate = dynamic(() => import('@/templates/fichaplana/FichaPlanaTemplate'));
 
 interface Props {
   store: StoreConfig;
@@ -104,6 +106,10 @@ export default function StoreRenderer({ store: initialStore }: Props) {
       return <InicioCatalogoTemplate store={store} />;
     case 'flores':
       return <FloresTemplate store={store} />;
+    case 'fichadigital':
+      return <FichaDigitalTemplate store={store} />;
+    case 'fichaplana':
+      return <FichaPlanaTemplate store={store} />;
     default:
       return (
         <div className="flex items-center justify-center min-h-screen">
