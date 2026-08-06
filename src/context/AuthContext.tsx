@@ -11,6 +11,7 @@ interface AuthContextValue {
   signUp: (email: string, password: string, name: string) => Promise<{ error: string | null; needsEmailConfirm: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signInWithMagicLink: (email: string, redirectTo: string) => Promise<{ error: string | null }>;
+  resetPassword: (email: string, redirectTo: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -59,12 +60,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: error ? error.message : null };
   };
 
+  // Manda un correo con un link para poner una contraseña nueva. Al tocarlo,
+  // Supabase abre redirectTo con una sesion de recuperacion en la URL — ahi
+  // recien se puede llamar updateUser({ password }) para fijarla.
+  const resetPassword: AuthContextValue['resetPassword'] = async (email, redirectTo) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+    return { error: error ? error.message : null };
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
 
   return (
-    <AuthContext.Provider value={{ user: session?.user ?? null, session, loading, signUp, signIn, signInWithMagicLink, signOut }}>
+    <AuthContext.Provider value={{ user: session?.user ?? null, session, loading, signUp, signIn, signInWithMagicLink, resetPassword, signOut }}>
       {children}
     </AuthContext.Provider>
   );

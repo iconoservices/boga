@@ -1,13 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signIn, signUp, signInWithMagicLink } = useAuth();
+  const { signIn, signUp, signInWithMagicLink, resetPassword } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -48,6 +47,18 @@ export default function LoginPage() {
     setIsLoading(false);
     if (signInError) { setError('Correo o contraseña incorrectos.'); return; }
     router.push('/admin');
+  };
+
+  const handleForgotPassword = async () => {
+    setError(null);
+    setConfirmMessage(null);
+    if (!email) { setError('Escribí tu correo arriba primero.'); return; }
+    setIsLoading(true);
+    const redirectTo = `${window.location.origin}/reset-password`;
+    const { error: resetError } = await resetPassword(email, redirectTo);
+    setIsLoading(false);
+    if (resetError) { setError(resetError); return; }
+    setConfirmMessage('Listo. Revisa tu correo y tocá el link para poner una contraseña nueva.');
   };
 
   return (
@@ -171,7 +182,13 @@ export default function LoginPage() {
                     <div className="flex justify-between items-center mb-1.5">
                       <label className="text-[10px] font-bold text-secondary uppercase tracking-wider">Contraseña</label>
                       {!isSignUp && (
-                        <Link href="#" className="text-[10px] font-bold text-primary hover:underline">¿La olvidaste?</Link>
+                        <button
+                          type="button"
+                          onClick={handleForgotPassword}
+                          className="text-[10px] font-bold text-primary hover:underline"
+                        >
+                          ¿La olvidaste?
+                        </button>
                       )}
                     </div>
                     <div className="relative">
