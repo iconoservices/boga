@@ -57,6 +57,9 @@ function AdminDashboard({ user }: { user: User }) {
   const [isExporting, setIsExporting] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [orderStatusFilter, setOrderStatusFilter] = useState<'all' | 'Pendiente' | 'Enviado' | 'Entregado'>('all');
+  const [orderSearch, setOrderSearch] = useState('');
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilterCategory, setSelectedFilterCategory] = useState('all');
@@ -171,6 +174,45 @@ function AdminDashboard({ user }: { user: User }) {
     if (!managedSlugs) return [];
     return products.filter(p => managedSlugs.includes(p.store));
   }, [products, managedSlugs]);
+
+  // Pedidos visibles: solo los de las tiendas que administra este cliente, y
+  // acotados a la tienda elegida en el selector "Todas mis tiendas".
+  const visibleOrders = React.useMemo(() => {
+    if (!managedSlugs) return [];
+    const scoped = orders.filter(o => managedSlugs.includes(o.store));
+    return selectedStore === 'all' ? scoped : scoped.filter(o => o.store === selectedStore);
+  }, [orders, managedSlugs, selectedStore]);
+
+  const filteredOrders = React.useMemo(() => {
+    const q = orderSearch.trim().toLowerCase();
+    return visibleOrders.filter(o => {
+      const matchesStatus = orderStatusFilter === 'all' || o.status === orderStatusFilter;
+      const matchesSearch = !q || o.id.toLowerCase().includes(q) || (o.customer_name || '').toLowerCase().includes(q);
+      return matchesStatus && matchesSearch;
+    });
+  }, [visibleOrders, orderStatusFilter, orderSearch]);
+
+  // KPIs de la pestaña Pedidos: se calculan de todos los pedidos visibles
+  // (sin el filtro de estado/busqueda de la tabla), como en cualquier dashboard.
+  const ordersRevenue = React.useMemo(() => visibleOrders.reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0), [visibleOrders]);
+  const ordersActiveCount = React.useMemo(() => visibleOrders.filter(o => o.status !== 'Entregado' && o.status !== 'Cancelado').length, [visibleOrders]);
+  const ordersPendingCount = React.useMemo(() => visibleOrders.filter(o => o.status === 'Pendiente').length, [visibleOrders]);
+  const ordersCancelledCount = React.useMemo(() => visibleOrders.filter(o => o.status === 'Cancelado').length, [visibleOrders]);
+  const ordersAvgTicket = visibleOrders.length > 0 ? ordersRevenue / visibleOrders.length : 0;
+  const ordersReturnRate = visibleOrders.length > 0 ? (ordersCancelledCount / visibleOrders.length) * 100 : 0;
+
+  const orderStatusStyle = (status: string) => {
+    if (status === 'Entregado') return { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200', dot: 'bg-blue-500' };
+    if (status === 'Cancelado') return { bg: 'bg-red-50', text: 'text-red-600', border: 'border-red-200', dot: 'bg-red-500' };
+    if (status === 'Enviado' || status === 'Preparando' || status === 'Listo') return { bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-200', dot: 'bg-green-500' };
+    return { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200', dot: 'bg-orange-500' };
+  };
+
+  const formatOrderDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
+
+  const inicialesDeCliente = (nombre: string) =>
+    (nombre || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   const [isStoreEditorOpen, setIsStoreEditorOpen] = useState(false);
   const [editingStoreSlug, setEditingStoreSlug] = useState<string | null>(null);
   const [isStoreSaving, setIsStoreSaving] = useState(false);
@@ -211,6 +253,7 @@ function AdminDashboard({ user }: { user: User }) {
   useEffect(() => {
     fetchProducts();
     fetchStores();
+    fetchOrders();
   }, []);
 
   const fetchProducts = async () => {
@@ -219,13 +262,26 @@ function AdminDashboard({ user }: { user: User }) {
       .from('products')
       .select('*')
       .order('created_at', { ascending: false });
-      
+
     if (error) {
       console.error('Error fetching products:', error);
     } else {
       setProducts(data || []);
     }
     setIsLoading(false);
+  };
+
+  const fetchOrders = async () => {
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching orders:', error);
+    } else {
+      setOrders(data || []);
+    }
   };
 
   const fetchStores = async () => {
@@ -293,6 +349,7 @@ function AdminDashboard({ user }: { user: User }) {
       setPosCustomerName('');
       setPosCustomerPhone('');
       setIsTicketModalOpen(true);
+      fetchOrders();
     }
     setIsPosSaving(false);
   };
@@ -678,12 +735,14 @@ function AdminDashboard({ user }: { user: User }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] font-['Outfit'] flex flex-col md:flex-row">
+    <div className="min-h-screen md:h-screen md:overflow-hidden bg-[#f8f9fa] font-['Outfit'] flex flex-col md:flex-row">
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
-      {/* Sidebar (Visible en Desktop) */}
-      <aside className="hidden md:flex w-64 bg-white border-r border-gray-100 flex-col h-screen sticky top-0">
+      {/* Sidebar (Visible en Desktop) — el padre ya no scrollea (md:overflow-hidden),
+          asi que se queda fijo sin depender de `sticky`: antes se despegaba al
+          bajar con la rueda del mouse porque el documento entero scrolleaba. */}
+      <aside className="hidden md:flex w-64 shrink-0 bg-white border-r border-gray-100 flex-col h-screen">
         <div className="p-6 flex items-center gap-3 border-b border-gray-50">
           <div className="w-8 h-8 rounded-lg bg-[#b8130e] text-white flex items-center justify-center font-bold text-xl">B</div>
           <span className="font-extrabold text-xl tracking-tight text-gray-900">Workspace</span>
@@ -757,7 +816,7 @@ function AdminDashboard({ user }: { user: User }) {
 
       {/* Main Content */}
       {/* min-w-0: sin esto el flex item no baja de su ancho de contenido y desborda la pagina */}
-      <main className={`flex-1 min-w-0 px-3 py-4 md:p-6 w-full pb-28 md:pb-6 ${activeTab === 'pos' ? 'max-w-none md:px-6' : 'max-w-7xl mx-auto'}`}>
+      <main className={`flex-1 min-w-0 px-3 py-4 md:p-6 w-full pb-28 md:pb-6 md:h-screen md:overflow-y-auto ${activeTab === 'pos' ? 'max-w-none md:px-6' : 'max-w-7xl mx-auto'}`}>
         <header className={`hidden md:flex flex-col md:flex-row md:items-center justify-between gap-4 ${activeTab === 'pos' ? 'mb-2' : 'mb-6'}`}>
           <div>
             <h1 className={`${activeTab === 'pos' ? 'text-lg font-black' : 'text-2xl font-extrabold'} text-gray-900 tracking-tight`}>
@@ -1121,79 +1180,90 @@ function AdminDashboard({ user }: { user: User }) {
             <div className="flex flex-col gap-4 w-full md:hidden">
               <div className="relative w-full">
                 <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
-                <input 
-                  type="text" 
-                  placeholder="Buscar ID de Pedido, Cliente..." 
+                <input
+                  type="text"
+                  value={orderSearch}
+                  onChange={(e) => setOrderSearch(e.target.value)}
+                  placeholder="Buscar ID de Pedido, Cliente..."
                   className="w-full h-12 pl-11 pr-4 bg-white border border-[#e1e3e4]/60 rounded-md focus:ring-2 focus:ring-[#b8130e] focus:border-transparent focus:outline-none transition-all text-sm font-medium text-[#191c1d]"
                 />
               </div>
-              
+
               <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
-                <button className="px-5 py-2 rounded-full text-xs font-bold bg-[#b8130e] text-white">Todos</button>
-                <button className="px-5 py-2 rounded-full text-xs font-bold bg-[#e1e3e4] text-[#5f5e5e]">Pendiente</button>
-                <button className="px-5 py-2 rounded-full text-xs font-bold bg-[#e1e3e4] text-[#5f5e5e]">Enviado</button>
-                <button className="px-5 py-2 rounded-full text-xs font-bold bg-[#e1e3e4] text-[#5f5e5e]">Entregado</button>
+                {(['all', 'Pendiente', 'Enviado', 'Entregado'] as const).map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setOrderStatusFilter(f)}
+                    className={`px-5 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${
+                      orderStatusFilter === f ? 'bg-[#b8130e] text-white' : 'bg-[#e1e3e4] text-[#5f5e5e]'
+                    }`}
+                  >
+                    {f === 'all' ? 'Todos' : f}
+                  </button>
+                ))}
               </div>
 
               <h3 className="text-[11px] font-bold text-gray-400 tracking-wider uppercase mt-2">Pedidos Recientes</h3>
 
               <div className="flex flex-col gap-3">
-                {/* Mock Order 1 */}
-                <div className="bg-white rounded-md border border-gray-100 p-4 shadow-sm flex flex-col gap-3">
-                  <div className="flex justify-between items-start">
-                    <div className="flex flex-col">
-                      <span className="text-[#b8130e] font-bold text-xs tracking-wide">#ORD-94210</span>
-                      <span className="text-gray-900 font-extrabold text-base mt-1">Elena Rodriguez</span>
-                    </div>
-                    <span className="text-[10px] font-bold text-orange-600 border border-orange-200 bg-orange-50 px-2.5 py-1 rounded-full uppercase tracking-wider">PENDIENTE</span>
+                {filteredOrders.length === 0 ? (
+                  <div className="bg-white rounded-md border border-gray-100 p-8 text-center">
+                    <span className="material-symbols-outlined text-3xl text-gray-300 mb-2 block">receipt_long</span>
+                    <p className="text-gray-500 font-semibold text-sm">
+                      {visibleOrders.length === 0 ? 'Todavía no tienes pedidos.' : 'Ningún pedido coincide con este filtro.'}
+                    </p>
                   </div>
-                  <div className="flex justify-between items-end mt-1">
-                    <span className="text-gray-500 text-xs font-medium">24 Oct, 2023 • 2 Ítems</span>
-                    <span className="text-gray-900 font-black text-xl">S/ 142.50</span>
-                  </div>
-                </div>
-
-                {/* Mock Order 2 */}
-                <div className="bg-white rounded-md border border-gray-100 p-4 shadow-sm flex flex-col gap-3">
-                  <div className="flex justify-between items-start">
-                    <div className="flex flex-col">
-                      <span className="text-[#b8130e] font-bold text-xs tracking-wide">#ORD-94209</span>
-                      <span className="text-gray-900 font-extrabold text-base mt-1">Marcus Sterling</span>
-                    </div>
-                    <span className="text-[10px] font-bold text-blue-600 border border-blue-200 bg-blue-50 px-2.5 py-1 rounded-full uppercase tracking-wider">ENVIADO</span>
-                  </div>
-                  <div className="flex justify-between items-end mt-1">
-                    <span className="text-gray-500 text-xs font-medium">23 Oct, 2023 • 1 Ítem</span>
-                    <span className="text-gray-900 font-black text-xl">S/ 89.00</span>
-                  </div>
-                </div>
-
-                {/* Mock Order 3 */}
-                <div className="bg-white rounded-md border border-gray-100 p-4 shadow-sm flex flex-col gap-3">
-                  <div className="flex justify-between items-start">
-                    <div className="flex flex-col">
-                      <span className="text-[#b8130e] font-bold text-xs tracking-wide">#ORD-94208</span>
-                      <span className="text-gray-900 font-extrabold text-base mt-1">Sarah Chen</span>
-                    </div>
-                    <span className="text-[10px] font-bold text-green-600 border border-green-200 bg-green-50 px-2.5 py-1 rounded-full uppercase tracking-wider">ENTREGADO</span>
-                  </div>
-                  <div className="flex justify-between items-end mt-1">
-                    <span className="text-gray-500 text-xs font-medium">23 Oct, 2023 • 4 Ítems</span>
-                    <span className="text-gray-900 font-black text-xl">S/ 310.25</span>
-                  </div>
-                </div>
+                ) : (
+                  filteredOrders.map((o) => {
+                    const st = orderStatusStyle(o.status);
+                    const itemCount = Array.isArray(o.items) ? o.items.length : 0;
+                    return (
+                      <div key={o.id} className="bg-white rounded-md border border-gray-100 p-4 shadow-sm flex flex-col gap-3">
+                        <div className="flex justify-between items-start">
+                          <div className="flex flex-col">
+                            <span className="text-[#b8130e] font-bold text-xs tracking-wide">#{o.id.slice(0, 8).toUpperCase()}</span>
+                            <span className="text-gray-900 font-extrabold text-base mt-1">{o.customer_name}</span>
+                          </div>
+                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border ${st.bg} ${st.text} ${st.border}`}>{o.status}</span>
+                        </div>
+                        <div className="flex justify-between items-end mt-1">
+                          <span className="text-gray-500 text-xs font-medium">{formatOrderDate(o.created_at)} • {itemCount} {itemCount === 1 ? 'Ítem' : 'Ítems'}</span>
+                          <span className="text-gray-900 font-black text-xl">S/ {Number(o.total_amount).toFixed(2)}</span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
 
             {/* Desktop View (Stich Dash PC UI) */}
             <div className="hidden md:flex flex-col gap-6 w-full">
-              {/* El titulo de la seccion ya lo pone el header de la pagina */}
-              <div className="flex items-center justify-end">
+              <div className="flex items-center justify-between gap-3">
+                <div className="relative w-full max-w-xs">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">search</span>
+                  <input
+                    type="text"
+                    value={orderSearch}
+                    onChange={(e) => setOrderSearch(e.target.value)}
+                    placeholder="Buscar ID de Pedido, Cliente..."
+                    className="w-full h-10 pl-9 pr-3 bg-white border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-[#b8130e] focus:border-transparent focus:outline-none transition-all"
+                  />
+                </div>
                 <div className="flex gap-2">
-                  <button className="px-5 py-2 rounded-lg text-sm font-bold bg-[#b8130e] text-white">Todos los Pedidos</button>
-                  <button className="px-5 py-2 rounded-lg text-sm font-bold bg-white text-gray-600 hover:bg-gray-50 border border-gray-200 transition-colors">Pendiente</button>
-                  <button className="px-5 py-2 rounded-lg text-sm font-bold bg-white text-gray-600 hover:bg-gray-50 border border-gray-200 transition-colors">Enviado</button>
-                  <button className="px-5 py-2 rounded-lg text-sm font-bold bg-white text-gray-600 hover:bg-gray-50 border border-gray-200 transition-colors">Entregado</button>
+                  {(['all', 'Pendiente', 'Enviado', 'Entregado'] as const).map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setOrderStatusFilter(f)}
+                      className={`px-5 py-2 rounded-lg text-sm font-bold transition-colors ${
+                        orderStatusFilter === f
+                          ? 'bg-[#b8130e] text-white'
+                          : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                      }`}
+                    >
+                      {f === 'all' ? 'Todos los Pedidos' : f}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -1202,156 +1272,100 @@ function AdminDashboard({ user }: { user: User }) {
                 <div className="bg-white border border-gray-100 rounded-md p-5 shadow-sm flex flex-col justify-between">
                   <div>
                     <h4 className="text-[11px] font-bold text-gray-500 tracking-wider uppercase mb-1">Ingresos Totales</h4>
-                    <span className="text-3xl font-black text-gray-900">S/ 12,840.00</span>
+                    <span className="text-3xl font-black text-gray-900">S/ {ordersRevenue.toFixed(2)}</span>
                   </div>
-                  <div className="mt-4 flex items-center gap-1 text-[#b8130e] font-bold text-[13px]">
-                    <span className="material-symbols-outlined text-[16px]">trending_up</span>
-                    +14.2% desde el mes pasado
+                  <div className="mt-4 flex items-center gap-1 text-gray-400 font-bold text-[13px]">
+                    <span className="material-symbols-outlined text-[16px]">receipt_long</span>
+                    {visibleOrders.length} {visibleOrders.length === 1 ? 'pedido' : 'pedidos'} en total
                   </div>
                 </div>
                 <div className="bg-white border border-gray-100 rounded-md p-5 shadow-sm flex flex-col justify-between">
                   <div>
                     <h4 className="text-[11px] font-bold text-gray-500 tracking-wider uppercase mb-1">Pedidos Activos</h4>
-                    <span className="text-3xl font-black text-gray-900">154</span>
+                    <span className="text-3xl font-black text-gray-900">{ordersActiveCount}</span>
                   </div>
                   <div className="mt-4 flex items-center gap-1 text-gray-500 font-bold text-[13px]">
                     <span className="material-symbols-outlined text-[16px]">schedule</span>
-                    12 pedidos requieren atención
+                    {ordersPendingCount} {ordersPendingCount === 1 ? 'pedido requiere' : 'pedidos requieren'} atención
                   </div>
                 </div>
                 <div className="bg-white border border-gray-100 rounded-md p-5 shadow-sm flex flex-col justify-between">
                   <div>
-                    <h4 className="text-[11px] font-bold text-gray-500 tracking-wider uppercase mb-1">Tiempo Promedio</h4>
-                    <span className="text-3xl font-black text-gray-900">1.2 Días</span>
+                    <h4 className="text-[11px] font-bold text-gray-500 tracking-wider uppercase mb-1">Ticket Promedio</h4>
+                    <span className="text-3xl font-black text-gray-900">S/ {ordersAvgTicket.toFixed(2)}</span>
                   </div>
-                  <div className="mt-4 flex items-center gap-1 text-[#b8130e] font-bold text-[13px]">
-                    <span className="material-symbols-outlined text-[16px]">bolt</span>
-                    20% más rápido que el promedio
+                  <div className="mt-4 flex items-center gap-1 text-gray-400 font-bold text-[13px]">
+                    <span className="material-symbols-outlined text-[16px]">payments</span>
+                    Por pedido
                   </div>
                 </div>
                 <div className="bg-white border border-gray-100 rounded-md p-5 shadow-sm flex flex-col justify-between">
                   <div>
-                    <h4 className="text-[11px] font-bold text-gray-500 tracking-wider uppercase mb-1">Tasa de Devolución</h4>
-                    <span className="text-3xl font-black text-gray-900">2.4%</span>
+                    <h4 className="text-[11px] font-bold text-gray-500 tracking-wider uppercase mb-1">Tasa de Cancelación</h4>
+                    <span className="text-3xl font-black text-gray-900">{ordersReturnRate.toFixed(1)}%</span>
                   </div>
-                  <div className="mt-4 flex items-center gap-1 text-red-500 font-bold text-[13px]">
-                    <span className="material-symbols-outlined text-[16px]">trending_down</span>
-                    +0.3% desde la semana pasada
+                  <div className="mt-4 flex items-center gap-1 text-gray-400 font-bold text-[13px]">
+                    <span className="material-symbols-outlined text-[16px]">cancel</span>
+                    {ordersCancelledCount} {ordersCancelledCount === 1 ? 'cancelado' : 'cancelados'}
                   </div>
                 </div>
               </div>
 
               {/* Table */}
               <div className="bg-white border border-gray-100 rounded-md shadow-sm overflow-hidden mt-2">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-gray-50 border-b border-gray-100 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                      <th className="p-4">ID Pedido</th>
-                      <th className="p-4">Nombre del Cliente</th>
-                      <th className="p-4">Fecha</th>
-                      <th className="p-4">Ítems</th>
-                      <th className="p-4">Estado</th>
-                      <th className="p-4 text-right">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-sm font-medium">
-                    <tr className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                      <td className="p-4 text-[#b8130e] font-bold">#ORD-9021</td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center font-bold text-xs shrink-0">ED</div>
-                          <span className="text-gray-900">Eleanor Donahue</span>
-                        </div>
-                      </td>
-                      <td className="p-4 text-gray-500">24 Oct, 2023</td>
-                      <td className="p-4 text-gray-500">3 Ítems</td>
-                      <td className="p-4">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 text-orange-600 border border-orange-200 text-xs font-bold">
-                          <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span> Pendiente
-                        </span>
-                      </td>
-                      <td className="p-4 text-right text-gray-900 font-bold">S/ 245.99</td>
-                    </tr>
-                    <tr className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                      <td className="p-4 text-[#b8130e] font-bold">#ORD-9020</td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center font-bold text-xs shrink-0">JM</div>
-                          <span className="text-gray-900">Julian Marshall</span>
-                        </div>
-                      </td>
-                      <td className="p-4 text-gray-500">24 Oct, 2023</td>
-                      <td className="p-4 text-gray-500">1 Ítem</td>
-                      <td className="p-4">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 text-green-600 border border-green-200 text-xs font-bold">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Enviado
-                        </span>
-                      </td>
-                      <td className="p-4 text-right text-gray-900 font-bold">S/ 89.00</td>
-                    </tr>
-                    <tr className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                      <td className="p-4 text-[#b8130e] font-bold">#ORD-9019</td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center font-bold text-xs shrink-0">SW</div>
-                          <span className="text-gray-900">Sarah Waters</span>
-                        </div>
-                      </td>
-                      <td className="p-4 text-gray-500">23 Oct, 2023</td>
-                      <td className="p-4 text-gray-500">5 Ítems</td>
-                      <td className="p-4">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-200 text-xs font-bold">
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Entregado
-                        </span>
-                      </td>
-                      <td className="p-4 text-right text-gray-900 font-bold">S/ 1,024.50</td>
-                    </tr>
-                    <tr className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                      <td className="p-4 text-[#b8130e] font-bold">#ORD-9018</td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center font-bold text-xs shrink-0">BB</div>
-                          <span className="text-gray-900">Benson Bernard</span>
-                        </div>
-                      </td>
-                      <td className="p-4 text-gray-500">23 Oct, 2023</td>
-                      <td className="p-4 text-gray-500">2 Ítems</td>
-                      <td className="p-4">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 text-orange-600 border border-orange-200 text-xs font-bold">
-                          <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span> Pendiente
-                        </span>
-                      </td>
-                      <td className="p-4 text-right text-gray-900 font-bold">S/ 112.20</td>
-                    </tr>
-                    <tr className="hover:bg-gray-50/50 transition-colors">
-                      <td className="p-4 text-[#b8130e] font-bold">#ORD-9017</td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center font-bold text-xs shrink-0">KT</div>
-                          <span className="text-gray-900">Kira Thompson</span>
-                        </div>
-                      </td>
-                      <td className="p-4 text-gray-500">22 Oct, 2023</td>
-                      <td className="p-4 text-gray-500">12 Ítems</td>
-                      <td className="p-4">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 text-green-600 border border-green-200 text-xs font-bold">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Enviado
-                        </span>
-                      </td>
-                      <td className="p-4 text-right text-gray-900 font-bold">S/ 2,410.00</td>
-                    </tr>
-                  </tbody>
-                </table>
-                <div className="p-4 border-t border-gray-100 flex items-center justify-between bg-white">
-                  <span className="text-sm text-gray-500">Mostrando 1 a 5 de 154 pedidos</span>
-                  <div className="flex gap-1">
-                    <button className="w-8 h-8 rounded bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-black transition-colors"><span className="material-symbols-outlined text-[18px]">chevron_left</span></button>
-                    <button className="w-8 h-8 rounded bg-[#b8130e] text-white flex items-center justify-center font-bold text-sm">1</button>
-                    <button className="w-8 h-8 rounded bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 font-bold text-sm transition-colors">2</button>
-                    <button className="w-8 h-8 rounded bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 font-bold text-sm transition-colors">3</button>
-                    <button className="w-8 h-8 rounded bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors"><span className="material-symbols-outlined text-[18px]">chevron_right</span></button>
+                {filteredOrders.length === 0 ? (
+                  <div className="p-12 text-center flex flex-col items-center justify-center">
+                    <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">receipt_long</span>
+                    <p className="text-gray-500 font-bold text-sm">
+                      {visibleOrders.length === 0 ? 'Todavía no tienes pedidos.' : 'Ningún pedido coincide con este filtro.'}
+                    </p>
                   </div>
-                </div>
+                ) : (
+                  <>
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50 border-b border-gray-100 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                          <th className="p-4">ID Pedido</th>
+                          <th className="p-4">Nombre del Cliente</th>
+                          <th className="p-4">Fecha</th>
+                          <th className="p-4">Ítems</th>
+                          <th className="p-4">Estado</th>
+                          <th className="p-4 text-right">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-sm font-medium">
+                        {filteredOrders.map((o) => {
+                          const st = orderStatusStyle(o.status);
+                          const itemCount = Array.isArray(o.items) ? o.items.length : 0;
+                          return (
+                            <tr key={o.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
+                              <td className="p-4 text-[#b8130e] font-bold">#{o.id.slice(0, 8).toUpperCase()}</td>
+                              <td className="p-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-full bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center font-bold text-xs shrink-0">
+                                    {inicialesDeCliente(o.customer_name)}
+                                  </div>
+                                  <span className="text-gray-900">{o.customer_name}</span>
+                                </div>
+                              </td>
+                              <td className="p-4 text-gray-500">{formatOrderDate(o.created_at)}</td>
+                              <td className="p-4 text-gray-500">{itemCount} {itemCount === 1 ? 'Ítem' : 'Ítems'}</td>
+                              <td className="p-4">
+                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${st.bg} ${st.text} ${st.border}`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`}></span> {o.status}
+                                </span>
+                              </td>
+                              <td className="p-4 text-right text-gray-900 font-bold">S/ {Number(o.total_amount).toFixed(2)}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                    <div className="p-4 border-t border-gray-100 flex items-center justify-between bg-white">
+                      <span className="text-sm text-gray-500">Mostrando {filteredOrders.length} de {visibleOrders.length} pedidos</span>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Promotional Cards Area */}
