@@ -392,54 +392,16 @@ export default function Home() {
     ? Object.values(subCategories).flat() 
     : subCategories[activeCategory] || [];
 
-  const [sections, setSections] = useState([
-    {
-      id: 'Combos & Promos',
-      title: 'Promos & Combos 🏷️',
-      link: '/promotions',
-      products: [
-        { name: 'Classic Burger', price: 'S/ 18.50', original: 'S/ 30.00', badge: '-40%', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400' },
-        { name: 'Pizza Pepperoni', price: 'S/ 24.00', original: 'S/ 32.00', badge: '-25%', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400' },
-        { name: 'Green Salad',    price: 'S/ 12.00', original: 'S/ 24.00', badge: '-50%', img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400' },
-        { name: 'Combo Familiar', price: 'S/ 55.00', original: 'S/ 80.00', badge: 'Popular', img: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=400' },
-      ]
-    },
-    {
-      id: 'Comida',
-      title: 'Comida Destacada 🍱',
-      products: [
-        { name: 'Ají de Gallina', price: 'S/ 22.00', badge: 'Popular', img: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=400' },
-        { name: 'Lomo Saltado',  price: 'S/ 28.50', badge: 'Top 1',  img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400' },
-        { name: 'Menú Criollo',  price: 'S/ 15.00', badge: 'Económico', img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400' },
-        { name: 'Arroz con Pollo',price: 'S/ 18.00', badge: 'Clásico', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400' },
-        { name: 'Tallarines Verdes',price: 'S/ 20.00', badge: 'Nuevo', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400' },
-        { name: 'Ceviche Mixto',  price: 'S/ 35.00', badge: 'Fresco', img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400' },
-      ]
-    },
-    {
-      id: 'Bebidas',
-      title: 'Bebidas & Piqueos 🥤',
-      products: [
-        { name: 'Cerveza Pilsen', price: 'S/ 7.50', badge: 'Helada', img: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=400' },
-        { name: 'Piqueo Snack',  price: 'S/ 5.00', badge: 'Nuevo',  img: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=400' },
-        { name: 'Jugos Surtido', price: 'S/ 10.00', badge: 'Natural', img: 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=400' },
-        { name: 'Vino Tinto',    price: 'S/ 45.00', badge: 'Premium', img: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=400' },
-        { name: 'Whisky Black',  price: 'S/ 120.00', badge: 'Oferta', img: 'https://images.unsplash.com/photo-1527281473222-793895bf44b9?w=400' },
-        { name: 'Agua Mineral',  price: 'S/ 2.50',  badge: 'Fresco', img: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=400' },
-      ]
-    },
-    {
-      id: 'Mercado',
-      title: 'Mercado Fresco 🥬',
-      products: [
-        { name: 'Pack de Carnes', price: 'S/ 45.00', badge: 'Parrilla', img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400' },
-        { name: 'Frutas Mix',     price: 'S/ 12.00', badge: 'Fresco',   img: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=400' },
-        { name: 'Pan de Masa',    price: 'S/ 3.50',  badge: 'Caliente', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400' },
-        { name: 'Leche Pack 6',  price: 'S/ 22.00', badge: 'Ahorro',  img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400' },
-        { name: 'Huevos x 30',   price: 'S/ 18.00', badge: 'Fresco',  img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400' },
-        { name: 'Arroz 5kg',     price: 'S/ 16.50', badge: 'Esencial', img: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=400' },
-      ]
-    }
+  // Arranca vacio: antes tenia productos de ejemplo (Classic Burger, Ají de
+  // Gallina, etc.) que no eran de ninguna tienda real, y "Combos & Promos"
+  // nunca los reemplazaba porque el fetch de abajo no arma esa categoria (no
+  // hay ningun campo de "promo" en products todavia). Se llena solo con lo
+  // que sí vino de una tienda dinamica.
+  const [sections, setSections] = useState<{ id: string; title: string; link?: string; products: any[] }[]>([
+    { id: 'Combos & Promos', title: 'Promos & Combos 🏷️', link: '/promotions', products: [] },
+    { id: 'Comida',          title: 'Comida Destacada 🍱',                     products: [] },
+    { id: 'Bebidas',         title: 'Bebidas & Piqueos 🥤',                    products: [] },
+    { id: 'Mercado',         title: 'Mercado Fresco 🥬',                       products: [] },
   ]);
 
   return (
@@ -787,6 +749,12 @@ export default function Home() {
               </div>
             </div>
             
+            {(sections.find(s => s.id === activeCategory)?.products || []).length === 0 && (
+              <div className="py-16 flex flex-col items-center justify-center text-center gap-2">
+                <span className="material-symbols-outlined text-4xl text-secondary/40">storefront</span>
+                <p className="text-secondary font-body-md text-sm">Todavía no hay productos de tiendas dinámicas en esta categoría.</p>
+              </div>
+            )}
             <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-stack-lg">
               {(sections.find(s => s.id === activeCategory)?.products || []).map((p, idx) => {
                 const isFav = favorites.some(f => String(f.id) === String((p as any).id || p.name));
