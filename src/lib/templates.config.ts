@@ -270,6 +270,10 @@ const TEMPLATES: Record<string, TemplateConfig> = {
       { name: 'Blusa Seda', price: 65.00, category: 'Blusas', image: 'https://images.unsplash.com/photo-1554568218-0f1715e72254?w=400&q=80', description: 'Blusa de seda natural' },
       { name: 'Pantalón Palazzo', price: 75.00, category: 'Pantalones', image: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&q=80', description: 'Pantalón ancho de tiro alto' },
     ],
+    zona: 'Miraflores',
+    direccion: 'Av. Larco 345, Miraflores, Lima',
+    horario: 'Lunes a Sábado: 10:00 AM – 08:00 PM',
+    rating: 4.8,
   },
 
   mercado: {

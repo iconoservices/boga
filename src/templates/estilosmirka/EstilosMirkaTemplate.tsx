@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
 import { supabase } from '@/lib/supabase';
-import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
+import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
+import { estrellasDe } from '../shared/tokens';
 
 interface EstilosMirkaTemplateProps {
   store: StoreConfig;
@@ -57,11 +58,29 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
   const theme = store.theme;
   const allProducts = supabaseProducts;
 
+  // Categorias de la ficha real de la tienda (panel admin), no una lista fija
+  // de rubro de ropa: antes "Faldas"/"Blazers" salian aunque la tienda hubiera
+  // cargado categorias distintas, y las suyas no aparecian como filtro. Si la
+  // tienda no configuro categorias, se deducen del catalogo (igual que hace
+  // useCatalogo para el resto de plantillas) en vez de dejar un unico "Todo".
+  const categoriasTienda = (store.categories || []).length
+    ? (store.categories || []).map((c) => ({ id: c.href, label: c.name }))
+    : [...new Set(allProducts.map((p) => p.category))]
+        .filter(Boolean)
+        .map((c) => ({ id: c, label: c.charAt(0).toUpperCase() + c.slice(1) }));
+
   // Habia un filtro por searchTerm, pero nunca se construyo el input que lo
   // alimentara: el termino era siempre '' y la condicion siempre true.
   const filteredProducts = allProducts.filter(
     (prod) => activeCategory === 'all' || prod.category === activeCategory
   );
+
+  const whatsappVisible = tieneWhatsApp(store);
+  const telefonoVisible = whatsappVisible ? `+${(store.whatsapp || '').replace(/\D/g, '')}` : null;
+
+  const [contactoNombre, setContactoNombre] = useState('');
+  const [contactoTelefono, setContactoTelefono] = useState('');
+  const [contactoMensaje, setContactoMensaje] = useState('');
 
   // Cart Handlers
   const addToCart = (product: any) => {
@@ -129,18 +148,32 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
             </span>
           </div>
 
-          {/* Nav links — desktop only */}
+          {/* Nav links — desktop only, categorias reales de la tienda */}
           <nav className="hidden md:flex items-center gap-6">
-            {['Nuevos', 'Colección', 'Vestidos', 'Blusas', 'Blazers'].map((item) => (
+            <button
+              onClick={() => setActiveCategory('all')}
+              className="text-xs font-semibold uppercase tracking-wider hover:opacity-60 transition-opacity cursor-pointer"
+              style={{ color: theme.onBackground }}
+            >
+              Colección
+            </button>
+            {categoriasTienda.map((cat) => (
               <button
-                key={item}
-                onClick={() => setActiveCategory(item === 'Nuevos' || item === 'Colección' ? 'all' : item.toLowerCase())}
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
                 className="text-xs font-semibold uppercase tracking-wider hover:opacity-60 transition-opacity cursor-pointer"
                 style={{ color: theme.onBackground }}
               >
-                {item}
+                {cat.label}
               </button>
             ))}
+            <button
+              onClick={() => document.getElementById('contacto')?.scrollIntoView({ behavior: 'smooth' })}
+              className="text-xs font-semibold uppercase tracking-wider hover:opacity-60 transition-opacity cursor-pointer"
+              style={{ color: theme.onBackground }}
+            >
+              Contacto
+            </button>
           </nav>
 
           {/* Right icons */}
@@ -187,6 +220,23 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
             <p className="text-sm text-white/75 font-light leading-relaxed">
               {store.tagline}
             </p>
+            {(store.rating != null || store.zona) && (
+              <div className="flex items-center gap-3 text-white/85">
+                {store.rating != null && (
+                  <div className="flex items-center gap-1">
+                    {[...Array(estrellasDe(store.rating).llenas)].map((_, i) => (
+                      <span key={i} className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1", color: '#f59e0b' }}>star</span>
+                    ))}
+                    <span className="text-xs font-semibold">{store.rating.toFixed(1)}</span>
+                  </div>
+                )}
+                {store.zona && (
+                  <span className="text-xs font-medium flex items-center gap-1">
+                    <span className="material-symbols-outlined text-sm">location_on</span>{store.zona}
+                  </span>
+                )}
+              </div>
+            )}
             <div className="flex flex-wrap gap-3 pt-1">
               <button 
                 onClick={() => {
@@ -219,16 +269,9 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
           </h2>
         </div>
 
-        {/* Category Ribbon */}
+        {/* Category Ribbon — categorias reales de la tienda */}
         <div className="flex gap-2 overflow-x-auto pb-4 mb-6" style={{ scrollbarWidth: 'none' }}>
-          {[
-            { id: 'all', label: 'Todo' },
-            { id: 'vestidos', label: 'Vestidos' },
-            { id: 'blusas', label: 'Blusas' },
-            { id: 'blazers', label: 'Blazers' },
-            { id: 'pantalones', label: 'Pantalones' },
-            { id: 'faldas', label: 'Faldas' },
-          ].map((cat) => (
+          {[{ id: 'all', label: 'Todo' }, ...categoriasTienda].map((cat) => (
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
@@ -246,6 +289,12 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
         </div>
 
         {/* Product Grid — 4 columns on desktop, 2 on mobile */}
+        {filteredProducts.length === 0 && (
+          <div className="py-16 text-center">
+            <span className="material-symbols-outlined text-4xl mb-3 block" style={{ color: `${theme.onSurfaceVariant}80` }}>styler</span>
+            <p className="font-semibold text-sm" style={{ color: theme.onSurface }}>Todavía no hay prendas en esta categoría</p>
+          </div>
+        )}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 {filteredProducts.map((prod) => (
                   <div
@@ -533,37 +582,106 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
 
 
 
+      {/* ── CONTACTO ─────────────────────────────────── */}
+      {(store.direccion || store.horario || telefonoVisible) && (
+        <section id="contacto" className="max-w-6xl mx-auto px-4 py-10 border-t border-black/5 grid md:grid-cols-2 gap-10">
+          <div className="space-y-4">
+            <h3 className="text-lg font-bold" style={{ fontFamily: theme.fontHeadline, color: theme.primaryContainer }}>
+              Visítanos o Escríbenos
+            </h3>
+            <div className="space-y-3">
+              {store.direccion && (
+                <div className="flex items-start gap-3">
+                  <span className="material-symbols-outlined text-lg" style={{ color: theme.primary }}>location_on</span>
+                  <span className="text-sm" style={{ color: theme.onSurfaceVariant }}>{store.direccion}</span>
+                </div>
+              )}
+              {telefonoVisible && (
+                <div className="flex items-start gap-3">
+                  <span className="material-symbols-outlined text-lg" style={{ color: theme.primary }}>call</span>
+                  <span className="text-sm" style={{ color: theme.onSurfaceVariant }}>{telefonoVisible}</span>
+                </div>
+              )}
+              {store.horario && (
+                <div className="flex items-start gap-3">
+                  <span className="material-symbols-outlined text-lg" style={{ color: theme.primary }}>schedule</span>
+                  <span className="text-sm" style={{ color: theme.onSurfaceVariant }}>{store.horario}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              enviarPedidoPorWhatsApp(store, `Hola ${store.name}, soy ${contactoNombre} (${contactoTelefono}).\n\n${contactoMensaje}`);
+            }}
+            className="space-y-3 p-5 border border-black/5 rounded-lg"
+            style={{ background: theme.surfaceContainer }}
+          >
+            <input
+              type="text" required placeholder="Nombre completo"
+              value={contactoNombre} onChange={(e) => setContactoNombre(e.target.value)}
+              className="w-full border border-black/10 rounded-md px-3 py-2 text-sm bg-white outline-none focus:border-[currentColor]"
+              style={{ color: theme.primary }}
+            />
+            <input
+              type="tel" required placeholder="Tu teléfono"
+              value={contactoTelefono} onChange={(e) => setContactoTelefono(e.target.value)}
+              className="w-full border border-black/10 rounded-md px-3 py-2 text-sm bg-white outline-none"
+            />
+            <textarea
+              required rows={3} placeholder="Mensaje o consulta"
+              value={contactoMensaje} onChange={(e) => setContactoMensaje(e.target.value)}
+              className="w-full border border-black/10 rounded-md px-3 py-2 text-sm bg-white outline-none"
+            />
+            <button
+              type="submit"
+              className="w-full py-2.5 rounded-full text-xs font-bold uppercase text-white shadow-md active:scale-95 transition-all cursor-pointer"
+              style={{ background: theme.primary }}
+            >
+              Enviar por WhatsApp
+            </button>
+            {!whatsappVisible && (
+              <p className="text-[11px] text-center" style={{ color: theme.onSurfaceVariant }}>
+                Esta tienda todavía no configuró su WhatsApp de pedidos.
+              </p>
+            )}
+          </form>
+        </section>
+      )}
+
       {/* ── FOOTER ───────────────────────────────────── */}
-      <footer className="bg-gray-900 text-white/50 text-xs py-10 border-t border-white/5 mt-16">
+      <footer className="bg-gray-900 text-white/50 text-xs py-10 border-t border-white/5 mt-8">
         <div className="max-w-6xl mx-auto px-4 grid md:grid-cols-3 gap-8">
           <div className="space-y-3">
             <span style={{ fontSize: '1.3rem', fontWeight: 900, fontFamily: theme.fontHeadline, color: 'white' }}>
               {store.name}
             </span>
             <p className="text-[11px] leading-relaxed">
-              Tu boutique de moda de confianza. Ofrecemos prendas exclusivas, calidad premium y las últimas tendencias para que deslumbres con cada look.
+              {store.tagline || 'Tu boutique de moda de confianza.'}
             </p>
           </div>
 
-          <div className="space-y-3">
-            <h4 className="font-bold text-white uppercase tracking-wider text-[11px]">Horario de Atención</h4>
-            <ul className="space-y-1 text-[11px]">
-              <li>Lunes a Sábado: 09:00 AM - 08:00 PM</li>
-              <li>Domingos: Cerrado</li>
-            </ul>
-          </div>
+          {store.horario && (
+            <div className="space-y-3">
+              <h4 className="font-bold text-white uppercase tracking-wider text-[11px]">Horario de Atención</h4>
+              <p className="text-[11px]">{store.horario}</p>
+            </div>
+          )}
 
-          <div className="space-y-3">
-            <h4 className="font-bold text-white uppercase tracking-wider text-[11px]">Ubicación & Contacto</h4>
-            <ul className="space-y-1 text-[11px]">
-              <li>📍 Av. Benavides 1240, Miraflores, Lima, Perú</li>
-              <li>📞 +51 999 999 999</li>
-              <li>✉️ contacto@estilosmirka.com</li>
-            </ul>
-          </div>
+          {(store.direccion || telefonoVisible) && (
+            <div className="space-y-3">
+              <h4 className="font-bold text-white uppercase tracking-wider text-[11px]">Ubicación & Contacto</h4>
+              <ul className="space-y-1 text-[11px]">
+                {store.direccion && <li>📍 {store.direccion}</li>}
+                {telefonoVisible && <li>📞 {telefonoVisible}</li>}
+              </ul>
+            </div>
+          )}
         </div>
         <div className="max-w-6xl mx-auto px-4 border-t border-white/5 mt-8 pt-6 text-center text-[10px]">
-          © {new Date().getFullYear()} Estilos Mirka. Todos los derechos reservados. Powered by Boga Market.
+          © {new Date().getFullYear()} {store.name}. Todos los derechos reservados. Powered by Boga Market.
         </div>
       </footer>
     </div>
