@@ -163,12 +163,306 @@ const NAV = [
   { id: 'tiendas',         icon: 'storefront',    label: 'Tiendas' },
   { id: 'categorias',      icon: 'category',      label: 'Categorías' },
   { id: 'paquetes',        icon: 'inventory_2',   label: 'Paquetes' },
+  { id: 'modulos',         icon: 'extension',     label: 'Módulos y Estrategia' },
   { id: 'usuarios',        icon: 'group',         label: 'Usuarios' },
   { id: 'personalizacion', icon: 'tune',          label: 'Personalización' },
   { id: 'plantillas',      icon: 'layers',        label: 'Plantillas' },
   { id: 'facturacion',     icon: 'payments',      label: 'Facturación' },
   { id: 'mapa',            icon: 'account_tree',  label: 'Mapa de Apps' },
 ] as const;
+
+// Notas de modelo de negocio: por qué se cobra así, no qué es cada campo (eso
+// ya lo dice la UI). Vive en código porque es criterio del socio fundador,
+// no dato operativo que cambie tienda a tienda.
+// Agrupado por tema (no por orden de llegada) para que se pueda escanear:
+// primero cómo se cobra, después por qué no te dejan, después cómo escala,
+// al final la salida. "Impuesto al Éxito" se fusionó dentro de "Modelo
+// Híbrido" — eran la misma idea con dos redacciones distintas.
+const BUSINESS_STRATEGY = [
+  {
+    category: 'Cómo Cobrar',
+    icon: 'stars',
+    title: 'El Modelo Híbrido — la solución ganadora',
+    body: 'Suscripción base fija (ej. S/ 80-100/mes) que cubre servidores y soporte y asegura flujo de caja, + una comisión de éxito de 1-2% sobre la venta bruta procesada por la app — bajísimo comparado al 30% de Rappi, así que el dueño lo acepta feliz. El contrato debe fijar el % sobre venta bruta, no sobre ganancia neta. Si vende S/ 10,000/mes, el 1% son S/ 100 — casi no se siente; si escala a S/ 1,000,000/mes, son S/ 10,000 mensuales por un solo cliente.',
+  },
+  {
+    category: 'Cómo Cobrar',
+    icon: 'layers',
+    title: 'Cobrar por "escalones de capacidad", no por ancho de banda',
+    body: 'Nunca le hables de tráfico o bandwidth, es muy técnico para el dueño. Cobrá por escalones: Plan Básico (hasta 500 usuarios registrados), Plan Pro (usuarios ilimitados + mapas de calor de dónde viven sus clientes), Plan Enterprise (varias sedes sincronizadas). Es justo para los dos: si el negocio crece a 5,000 usuarios, gasta más de tus servidores, así que le toca pasar al siguiente plan.',
+  },
+  {
+    category: 'Cómo Cobrar',
+    icon: 'request_quote',
+    title: 'La psicología del cobro Enterprise',
+    body: 'A un cliente grande no se le habla de soles sueltos. Se le habla de: Licenciamiento Anual (ej. USD 5,000/año), Costo por Pedido (ej. S/ 0.20 por cada pedido procesado) y Soporte Premium 24/7 como extra fijo.',
+  },
+  {
+    category: 'Por Qué No Te Van a Dejar',
+    icon: 'lock',
+    title: 'Lock-in (Retención)',
+    body: 'Cambiar de software le cuesta al negocio meses y miles de dólares. La data histórica, los puntos de fidelización de sus clientes y las costumbres de sus empleados viven en tu sistema. Eso da poder de negociación real para ajustar precios cada año sin perder al cliente.',
+  },
+  {
+    category: 'Por Qué No Te Van a Dejar',
+    icon: 'shield',
+    title: 'Arquitectura anti-bypass',
+    body: 'La app que tiene el cliente es solo un "cascarón". El cálculo de puntos, los algoritmos de fidelización y la base de datos viven en tu servidor central. Si intentan copiar la app, no se llevan el "cerebro" — reconstruirlo desde cero les sale más caro que seguir pagándote.',
+  },
+  {
+    category: 'Por Qué No Te Van a Dejar',
+    icon: 'power_settings_new',
+    title: 'El "Kill Switch" — lo valioso es la data',
+    body: 'Controlar la infraestructura da poder real: si no pagan la comisión o la mensualidad, el sistema se suspende automáticamente. Y en B2B lo más valioso no es la app, es la data — si el dueño tiene 100,000 clientes registrados con correos, gustos, direcciones y cumpleaños, jamás va a querer dejar de pagar, porque perder el acceso es perder su activo más grande: su comunidad fiel.',
+  },
+  {
+    category: 'Cómo Escala el Negocio',
+    icon: 'extension',
+    title: 'Módulos de Expansión',
+    body: 'Una tienda de barrio no necesita lo mismo que una franquicia. A medida que el negocio crece, se cobra por necesidades nuevas: panel de franquicias, facturación electrónica, Business Intelligence predictivo y el resto del catálogo de abajo.',
+  },
+  {
+    category: 'Cómo Escala el Negocio',
+    icon: 'dns',
+    title: '¿Servidores propios o SaaS? El dilema de la propiedad',
+    body: 'Vender el software e instalarlo en el servidor del cliente no conviene: te pagan una vez y si el negocio explota a 1 millón de usuarios, vos no ganás nada extra. Mejor White Label multi-tenant en tu propia infraestructura — la app lleva su logo y su nombre, pero el motor y los datos corren en tus servidores. Cobrás mensualidad Enterprise + mantenimiento, y si se quieren ir se llevan sus datos, no el código: la tecnología sigue siendo tuya.',
+  },
+  {
+    category: 'Cómo Escala el Negocio',
+    icon: 'hub',
+    title: 'Escalabilidad a 100k usuarios (Isolating)',
+    body: 'Con base de datos compartida, un cliente que llega a 100,000 usuarios puede volver lenta la app de la tienda chica que recién empieza. Se lo aísla en una instancia de servidor dedicada solo para él, vendido como "Plan Infraestructura Dedicada": sus costos de servidor los paga él dentro de su mensualidad, y vos te quedás con la ganancia.',
+  },
+  {
+    category: 'La Salida',
+    icon: 'sell',
+    title: '¿Y si quieren comprarte el software?',
+    body: 'Cuando el cliente crece, a veces pide comprar la app entera para dejar de pagar mensualidad. No vendas el código barato: pedí una cifra de 6 o 7 dígitos, o mejor — no vendas el código, dales una licencia exclusiva de por vida por un pago único (ej. $50,000) + mantenimiento mensual.',
+  },
+] as const;
+
+interface StoreModule {
+  id: string;
+  name: string;
+  icon: string;
+  price: string;
+  description: string;
+  active: boolean;
+  // Desde qué plan de Paquetes conviene ofrecerlo — sugerencia editorial, no
+  // gatea nada todavía (Paquetes sigue con sus features sueltas, sin leer
+  // esto). Sirve para ordenar la matriz visual de abajo.
+  tier: 'Basic' | 'Pro' | 'Enterprise';
+}
+
+const INITIAL_MODULES: StoreModule[] = [
+  {
+    id: 'franquicias',
+    name: 'Módulo de Franquicias',
+    icon: 'account_tree',
+    price: 'S/ 299 /mes',
+    description: 'El dueño ve cuánto vende cada sede desde su celular: ranking entre locales y comparativas. Solo tiene sentido una vez que hay más de una sede.',
+    active: true,
+    tier: 'Enterprise',
+  },
+  {
+    id: 'facturacion-electronica',
+    name: 'Facturación Electrónica SUNAT',
+    icon: 'receipt_long',
+    price: 'S/ 0.15 /boleta',
+    description: 'Emisión de boletas y facturas electrónicas directo a SUNAT por cada venta procesada en el sistema. Se cobra por boleta enviada, no por mes.',
+    active: true,
+    tier: 'Pro',
+  },
+  {
+    id: 'business-intelligence',
+    name: 'Business Intelligence',
+    icon: 'insights',
+    price: 'S/ 199 /mes',
+    description: 'Predicción de demanda: qué días y en qué sedes conviene contratar más personal, según el historial de ventas.',
+    active: false,
+    tier: 'Enterprise',
+  },
+  {
+    id: 'inventario-inteligente',
+    name: 'Inventario Inteligente',
+    icon: 'inventory',
+    price: 'S/ 149 /mes',
+    description: 'No solo dice "hay 10 pollos": avisa "según tus ventas de los últimos 3 viernes, mañana te quedas sin papas a las 8pm — compra más ahora". Alerta predictiva por insumo, no solo conteo de stock.',
+    active: false,
+    tier: 'Pro',
+  },
+  {
+    id: 'repartidores-propios',
+    name: 'Repartidores Propios',
+    icon: 'moped',
+    price: 'S/ 249 /mes',
+    description: 'App mini para que los motorizados del local vean su ruta y marquen "entregado", con mapa en tiempo real para el cliente — un Uber Eats propio del negocio, sin comisión a terceros.',
+    active: false,
+    tier: 'Enterprise',
+  },
+  {
+    id: 'marketing-automatizado',
+    name: 'Marketing Automatizado',
+    icon: 'campaign',
+    price: 'S/ 129 /mes',
+    description: 'Correos y SMS automáticos por fecha o comportamiento: "Feliz cumpleaños Juan, hoy tu cuarto de pollo es gratis" o reactivación de clientes que no piden hace semanas.',
+    active: false,
+    tier: 'Pro',
+  },
+  {
+    id: 'presencia-marketplace',
+    name: 'Presencia en el Marketplace Boga',
+    icon: 'storefront',
+    price: 'S/ 99 /mes',
+    description: 'Aparecer también en el marketplace compartido de Boga (búsqueda y categorías cruzadas entre tiendas), no solo en la tienda propia del negocio. Más alcance, pero comparte vidriera con otros comercios.',
+    active: true,
+    tier: 'Basic',
+  },
+  {
+    id: 'notificaciones-inteligentes',
+    name: 'Notificaciones Inteligentes ("Vecino Cercano")',
+    icon: 'notifications_active',
+    price: 'S/ 179 /mes',
+    description: 'Geofencing: si el cliente pasa a 300m del local, le llega "estás a 2 minutos, ven ahora y te regalamos el café". Es lo mismo que hace Starbucks y les sale carísimo — acá viene incluido. Gamificación: "te faltan 2 pedidos para ser Cliente Oro" — el cliente abre la app solo, sin invadir por WhatsApp.',
+    active: false,
+    tier: 'Pro',
+  },
+  {
+    id: 'lealtad-digital',
+    name: 'Sistema de Lealtad Digital ("Socio Fiel")',
+    icon: 'military_tech',
+    price: 'S/ 99 /mes',
+    description: 'La tarjeta de cartón que sellan y se pierde, digital y sin que se pierda nunca: compra 5 y el 6to gratis, o 1 sol = 1 punto canjeable por extras. Niveles Bronce/Plata/Oro según cuánto vuelve. El valor real para el dueño: "Juan ya tiene 4 sellos, mandale una notificación ahora para que venga hoy por el 5to" — reactivación con nombre y apellido, no un descuento genérico.',
+    active: false,
+    tier: 'Basic',
+  },
+  {
+    id: 'racha-envio-gratis',
+    name: 'Racha de Envío Gratis',
+    icon: 'local_fire_department',
+    price: 'S/ 89 /mes',
+    description: 'Mientras el cliente mantenga su racha de pedidos (ej. 1 por semana) tiene envío gratis. Si la corta, la pierde y tiene que reconstruirla desde cero — el mismo gancho que hace que nadie quiera perder su racha en Duolingo.',
+    active: false,
+    tier: 'Basic',
+  },
+  {
+    id: 'app-nativa',
+    name: 'App Nativa (Play Store / App Store)',
+    icon: 'apps',
+    price: 'S/ 1,500 pago único + S/ 79 /mes',
+    description: 'Va más allá del PWA (que ya es gratis para todos): empaqueta la tienda como app real, publicada en Google Play y App Store con su propio ícono y ficha. El mantenimiento mensual cubre las actualizaciones que piden ambas tiendas cada tanto.',
+    active: false,
+    tier: 'Enterprise',
+  },
+  {
+    id: 'pasarela-pago-propia',
+    name: 'Pasarela de Pago Propia',
+    icon: 'credit_card',
+    price: 'S/ 0.30 /transacción',
+    description: 'Checkout con tarjeta dentro de la misma app (Culqi/Niubiz) en vez de derivar todo a WhatsApp para coordinar el pago. Se cobra por transacción procesada, no por mes.',
+    active: false,
+    tier: 'Pro',
+  },
+  {
+    id: 'reservas-citas',
+    name: 'Reservas y Citas',
+    icon: 'calendar_month',
+    price: 'S/ 129 /mes',
+    description: 'Calendario de turnos con hora fija en vez de solo catálogo de productos — pensado para salones, clínicas y servicios con cita previa.',
+    active: false,
+    tier: 'Pro',
+  },
+  {
+    id: 'programa-referidos',
+    name: 'Programa de Referidos',
+    icon: 'group_add',
+    price: 'S/ 89 /mes',
+    description: '"Invita a un amigo y ambos ganan": código de referido con recompensa automática tanto para quien invita como para el invitado en su primer pedido.',
+    active: false,
+    tier: 'Basic',
+  },
+  {
+    id: 'marca-blanca-total',
+    name: 'Marca 100% Blanca',
+    icon: 'visibility_off',
+    price: 'S/ 149 /mes',
+    description: 'Saca cualquier rastro de "Powered by Boga" de la tienda — para el comercio que no quiere que se note qué tecnología usa por debajo.',
+    active: false,
+    tier: 'Enterprise',
+  },
+  {
+    id: 'resenas-reales',
+    name: 'Reseñas Reales de Clientes',
+    icon: 'rate_review',
+    price: 'S/ 79 /mes',
+    description: 'Hoy el rating de cada tienda lo carga el comercio a mano en el panel — no sale de compras reales. Este módulo pide reseña al cliente después de cada pedido y calcula el promedio solo, con historial de comentarios.',
+    active: false,
+    tier: 'Basic',
+  },
+  {
+    id: 'analitica-favoritos',
+    name: 'Analítica de Favoritos',
+    icon: 'favorite',
+    price: 'S/ 119 /mes',
+    description: 'Los "Me Gusta" del cliente hoy quedan solo en el celular de quien los guardó — el dueño nunca se entera. Este módulo los sincroniza y le muestra qué productos guarda la gente pero no compra: la señal de remarketing más barata que existe.',
+    active: false,
+    tier: 'Pro',
+  },
+  {
+    id: 'auto-branding-ia',
+    name: 'Auto-Branding con IA',
+    icon: 'auto_awesome',
+    price: 'S/ 59 /mes',
+    description: 'La extracción de colores de logo que hoy solo usás vos desde superadmin, self-service para el dueño: sube su logo o una foto de un plato y la tienda se retematiza sola, sin tener que pedírtelo.',
+    active: false,
+    tier: 'Basic',
+  },
+  {
+    id: 'delivery-zonas-dinamico',
+    name: 'Delivery por Zonas con Tarifa Dinámica',
+    icon: 'pin_drop',
+    price: 'S/ 99 /mes',
+    description: 'La "zona" de cada tienda hoy es un texto decorativo. Este módulo la convierte en zonas reales de reparto, cada una con su propio costo de envío y tiempo estimado — en vez de un dato suelto que no cobra nada.',
+    active: false,
+    tier: 'Pro',
+  },
+  {
+    id: 'happy-hour-automatico',
+    name: 'Happy Hour Automático',
+    icon: 'bolt',
+    price: 'S/ 139 /mes',
+    description: 'Detecta las horas muertas del local (ej. martes 3-5pm) y lanza sola un 2x1 o descuento por los próximos 60 minutos. Liquida stock que se iba a malograr y llena el local en horarios flojos, sin que el dueño tenga que acordarse de activarlo.',
+    active: false,
+    tier: 'Pro',
+  },
+  {
+    id: 'suscripcion-vip',
+    name: 'Suscripción VIP (estilo Amazon Prime)',
+    icon: 'workspace_premium',
+    price: 'S/ 199 /mes + 5% de lo cobrado en suscripciones',
+    description: 'El cliente le paga al comercio, por ejemplo S/ 20/mes, y a cambio tiene delivery gratis siempre + 10% de descuento fijo. El dueño gana ingreso asegurado todos los meses aunque el cliente no compre; vos ganás una comisión por administrar esa suscripción dentro de tu plataforma.',
+    active: false,
+    tier: 'Enterprise',
+  },
+  {
+    id: 'reserva-y-pide',
+    name: 'Reserva y Pide (Pre-order)',
+    icon: 'restaurant_menu',
+    price: 'S/ 129 /mes',
+    description: '"Llego en 15 minutos, quiero mi pedido servido apenas me siente". El cliente paga desde la app, la cocina recibe la orden al toque, y cuando llega la comida ya está lista — cero colas, cero espera.',
+    active: false,
+    tier: 'Pro',
+  },
+  {
+    id: 'sitio-web-propio',
+    name: 'Página Web / Sitio Propio',
+    icon: 'language',
+    price: 'Desde S/ 199 pago único + S/ 39 /mes',
+    description: 'Landing page o catálogo con dominio propio, fuera del ecosistema Boga — para SEO y para compartir un link "serio" en redes. El esfuerzo no es el mismo para todos los rubros: una carta de restaurante con pocos platos es mucho más simple que un catálogo de ecommerce con cientos de productos, así que el precio final se cotiza según cuánto tiene la tienda.',
+    active: false,
+    tier: 'Pro',
+  },
+];
 
 interface Package {
   id: string | number;
@@ -278,7 +572,7 @@ export default function AdminPage() {
 }
 
 function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
-  const [activeTab, setActiveTab] = useState<'tiendas' | 'categorias' | 'usuarios' | 'personalizacion' | 'facturacion' | 'mapa' | 'paquetes' | 'plantillas'>('tiendas');
+  const [activeTab, setActiveTab] = useState<'tiendas' | 'categorias' | 'usuarios' | 'personalizacion' | 'facturacion' | 'mapa' | 'paquetes' | 'plantillas' | 'modulos'>('tiendas');
   const [search, setSearch] = useState('');
   
   // Dynamic stores states
@@ -605,6 +899,26 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     { id: 'archive-1', name: 'Legacy Basic (v1)', price: 29, usersCount: '1,240', active: false },
     { id: 'archive-2', name: 'Early Adopter Special', price: 15, usersCount: '450', active: true },
   ];
+
+  // Módulos de expansión + qué tiendas los tienen activos. Igual que
+  // "packages", vive solo en memoria por ahora (no hay tabla en Supabase
+  // todavía) — se resetea al recargar. Cuando haya que persistirlo de verdad,
+  // es una tabla store_modules (store_id, module_id, active).
+  const [modules, setModules] = useState<StoreModule[]>(INITIAL_MODULES);
+  const [moduleStoreLinks, setModuleStoreLinks] = useState<Record<string, string[]>>({});
+  const [strategyOpen, setStrategyOpen] = useState<string | null>(BUSINESS_STRATEGY[0]?.title ?? null);
+
+  const toggleModuleActive = (id: string) => {
+    setModules(prev => prev.map(m => (m.id === id ? { ...m, active: !m.active } : m)));
+  };
+
+  const toggleModuleForStore = (moduleId: string, slug: string) => {
+    setModuleStoreLinks(prev => {
+      const current = prev[moduleId] || [];
+      const next = current.includes(slug) ? current.filter(s => s !== slug) : [...current, slug];
+      return { ...prev, [moduleId]: next };
+    });
+  };
 
   // Packages management modals state
   const [showPackageModal, setShowPackageModal] = useState(false);
@@ -1679,6 +1993,135 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                 </div>
               </section>
 
+              {/* Qué incluye cada plan: cruza los paquetes de arriba con el catálogo de
+                  módulos pagos de "Módulos y Estrategia" (modules.tier los ordena). Los
+                  ids 'starter'/'pro'/'enterprise' son los 3 paquetes de fábrica — si se
+                  borran o renombran, cae al nombre genérico Basic/Pro/Enterprise. */}
+              <section className="flex flex-col gap-4">
+                <div>
+                  <h3 className="text-sm font-bold text-[#191b23]">¿Qué Incluye Cada Plan?</h3>
+                  <p className="text-xs text-[#424754] mt-1">
+                    Cruce entre estos paquetes y el catálogo de módulos pagos (pestaña "Módulos y Estrategia"). Sugerencia editorial: todavía no gatea nada automáticamente.
+                  </p>
+                </div>
+
+                <div className="bg-[#f2f3fd] border border-[#c2c6d6] rounded-md p-3 flex items-start gap-2">
+                  <span className="material-symbols-outlined text-[16px] text-[#0058be] shrink-0">check_circle</span>
+                  <p className="text-[10px] text-[#424754] leading-relaxed">
+                    <span className="font-bold text-[#191b23]">Incluido siempre, en cualquier plan: </span>
+                    App Instalable (PWA), Catálogo de Productos, Categorías Estructuradas, Botón de WhatsApp, Estilos y Branding — el detalle está en el Glosario de Reglas, dentro de Mapa de Apps.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {(['Basic', 'Pro', 'Enterprise'] as const).map((tier) => {
+                    const packageIdByTier: Record<'Basic' | 'Pro' | 'Enterprise', string> = { Basic: 'starter', Pro: 'pro', Enterprise: 'enterprise' };
+                    const linkedPackage = packages.find(p => p.id === packageIdByTier[tier]);
+                    const tierMods = modules.filter(m => m.tier === tier);
+                    const cumulativeCount = modules.filter(m =>
+                      tier === 'Basic' ? m.tier === 'Basic' :
+                      tier === 'Pro' ? (m.tier === 'Basic' || m.tier === 'Pro') :
+                      true
+                    ).length;
+                    return (
+                      <div key={tier} className="bg-white border border-[#c2c6d6] rounded-md overflow-hidden flex flex-col">
+                        <div className={`px-4 py-3 border-b border-[#c2c6d6] ${
+                          tier === 'Basic' ? 'bg-emerald-50' : tier === 'Pro' ? 'bg-amber-50' : 'bg-violet-50'
+                        }`}>
+                          <p className="text-xs font-bold text-[#191b23]">{linkedPackage?.name || tier}</p>
+                          {linkedPackage && <p className="text-[9px] text-[#424754] font-semibold">${linkedPackage.price}/mes · {cumulativeCount} módulos disponibles</p>}
+                          {!linkedPackage && <p className="text-[9px] text-[#424754] font-semibold">{cumulativeCount} módulos disponibles</p>}
+                        </div>
+                        <div className="p-3 flex flex-col gap-2">
+                          {tier !== 'Basic' && (
+                            <p className="text-[9px] italic text-[#424754]">Todo lo de {tier === 'Pro' ? 'Basic' : 'Pro'}, más:</p>
+                          )}
+                          {tierMods.map((m) => (
+                            <div key={m.id} className="flex items-center gap-2">
+                              <span className="material-symbols-outlined text-[14px] text-[#0058be] shrink-0">{m.icon}</span>
+                              <span className="text-[10px] font-semibold text-[#191b23]">{m.name}</span>
+                            </div>
+                          ))}
+                          {tierMods.length === 0 && (
+                            <p className="text-[10px] text-[#424754] italic">Sin módulos propios en este nivel.</p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+
+              {/* Catálogo de módulos de expansión */}
+              <section className="flex flex-col gap-4">
+                <div className="border-b border-[#c2c6d6] pb-4">
+                  <h2 className="text-xl font-bold text-[#191b23]">Módulos de Expansión</h2>
+                  <p className="text-xs text-[#424754] mt-1">Lo que se cobra aparte cuando el negocio crece y necesita más que el catálogo básico. El porqué de cada uno está en "Módulos y Estrategia".</p>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {modules.map((mod) => {
+                    const linkedSlugs = moduleStoreLinks[mod.id] || [];
+                    return (
+                      <div key={mod.id} className="bg-white border border-[#c2c6d6] rounded-md p-4 flex flex-col gap-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-9 h-9 rounded-md bg-[#d5e0f8] flex items-center justify-center shrink-0">
+                              <span className="material-symbols-outlined text-[18px] text-[#0058be]">{mod.icon}</span>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-[#191b23] truncate">{mod.name}</p>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <p className="text-[10px] font-bold text-[#0058be]">{mod.price}</p>
+                                <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border leading-none ${
+                                  mod.tier === 'Basic' ? 'bg-emerald-50 text-emerald-800 border-emerald-100' :
+                                  mod.tier === 'Pro' ? 'bg-amber-50 text-amber-800 border-amber-100' :
+                                  'bg-violet-50 text-violet-800 border-violet-100'
+                                }`}>
+                                  desde {mod.tier}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <Toggle on={mod.active} onChange={() => toggleModuleActive(mod.id)} />
+                        </div>
+                        <p className="text-[11px] text-[#424754] leading-relaxed">{mod.description}</p>
+
+                        <div className="pt-3 border-t border-[#ecedf7] flex flex-col gap-2">
+                          <p className="text-[9px] font-bold uppercase tracking-wider text-[#424754]">
+                            {linkedSlugs.length} de {storeList.length} tiendas con este módulo
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {storeList.length === 0 && (
+                              <span className="text-[10px] text-[#424754] italic">Todavía no hay tiendas cargadas.</span>
+                            )}
+                            {storeList.map((s) => {
+                              const on = linkedSlugs.includes(s.slug);
+                              return (
+                                <button
+                                  key={s.slug}
+                                  type="button"
+                                  onClick={() => toggleModuleForStore(mod.id, s.slug)}
+                                  disabled={!mod.active}
+                                  className={`text-[10px] font-semibold px-2 py-1 rounded-full border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                                    on
+                                      ? 'bg-[#0058be] border-[#0058be] text-white'
+                                      : 'bg-[#f2f3fd] border-[#c2c6d6] text-[#424754] hover:border-[#0058be]'
+                                  }`}
+                                  title={mod.active ? (on ? `Quitar de ${s.name}` : `Activar en ${s.name}`) : 'Activá el módulo primero'}
+                                >
+                                  {storeMeta[s.slug]?.emoji || '🏪'} {s.name}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+
               {/* Archive Table */}
               <section className="bg-white border border-[#c2c6d6] rounded-md overflow-hidden">
                 <div className="px-4 py-3 border-b border-[#c2c6d6] bg-[#f2f3fd] flex items-center justify-between">
@@ -1717,6 +2160,53 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                   </table>
                 </div>
               </section>
+            </div>
+          )}
+
+          {/* ─── MÓDULOS Y ESTRATEGIA ─── */}
+          {activeTab === 'modulos' && (
+            <div className="flex flex-col gap-8 animate-fade-in">
+              {/* Modelo de negocio: por qué se cobra así */}
+              <section className="flex flex-col gap-3">
+                <div className="border-b border-[#c2c6d6] pb-4">
+                  <h2 className="text-xl font-bold text-[#191b23]">Modelo de Negocio</h2>
+                  <p className="text-xs text-[#424754] mt-1">Por qué cobramos así, no solo qué cobramos. Referencia interna — no la ve el comercio.</p>
+                </div>
+                <div className="flex flex-col gap-4">
+                  {Array.from(new Set(BUSINESS_STRATEGY.map(i => i.category))).map((category) => (
+                    <div key={category} className="flex flex-col gap-2">
+                      <h3 className="text-[10px] font-bold uppercase tracking-wider text-[#0058be] pl-1">{category}</h3>
+                      {BUSINESS_STRATEGY.filter(i => i.category === category).map((item) => {
+                        const isOpen = strategyOpen === item.title;
+                        return (
+                          <div key={item.title} className="bg-white border border-[#c2c6d6] rounded-md overflow-hidden">
+                            <button
+                              type="button"
+                              onClick={() => setStrategyOpen(isOpen ? null : item.title)}
+                              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#f2f3fd]/40 transition-colors"
+                            >
+                              <span className="material-symbols-outlined text-[18px] text-[#0058be] shrink-0">{item.icon}</span>
+                              <span className="flex-1 text-xs font-bold text-[#191b23]">{item.title}</span>
+                              <span className={`material-symbols-outlined text-[18px] text-[#424754] transition-transform ${isOpen ? 'rotate-180' : ''}`}>expand_more</span>
+                            </button>
+                            {isOpen && (
+                              <p className="px-4 pb-4 pl-11 text-xs text-[#424754] leading-relaxed">{item.body}</p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+                <div className="bg-[#f2f3fd] border border-[#c2c6d6] rounded-md p-4 flex items-start gap-3">
+                  <span className="material-symbols-outlined text-[18px] text-[#0058be] shrink-0">lightbulb</span>
+                  <p className="text-xs text-[#424754] leading-relaxed">
+                    <span className="font-bold text-[#191b23]">Ejemplo Shopify: </span>
+                    no cobra "ancho de banda" — cobra mensualidad fija + % de cada venta + apps extra. No se vende el código, se vende el servicio.
+                  </p>
+                </div>
+              </section>
+
             </div>
           )}
 
@@ -2915,19 +3405,52 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                     <span className="material-symbols-outlined text-[15px] text-[#424754] font-bold">menu_book</span>
                     Glosario de Reglas
                   </h3>
-                  <div className="space-y-3">
+                  <p className="text-[9px] text-[#424754] leading-snug font-semibold -mt-1">
+                    Todas gratis, vienen incluidas en cualquier tienda — no confundir con los módulos <em>pagos</em> de la pestaña "Módulos y Estrategia".
+                  </p>
+                  <div className="space-y-4">
                     {[
-                      { title: "1. PWA para Formar Icono", desc: "Todas las tiendas deben tener PWA (Progressive Web App). Permite que la app se instale en el celular del cliente con su propio icono, sin ir a App Stores." },
-                      { title: "2. Módulo de Productos", desc: "Estructura unificada de productos en base de datos. Cada producto debe estar enlazado a su respectiva tienda e incluir imágenes de alta resolución." },
-                      { title: "3. Recuadro de Características", desc: "Los productos deben llevar especificaciones claras: tallas, colores, materiales, peso o descripciones ricas de ficha técnica." },
-                      { title: "4. Categorías Estructuradas", desc: "Cada aplicación debe tener al menos 3 categorías en su menú para permitir navegación fluida (ej. Sunset: Cocina, Bar, Café)." },
-                      { title: "5. Botón de Pedidos WhatsApp", desc: "Un botón activo de WhatsApp en el carrito/reserva para derivar la orden directamente al comercio y concretar la transacción." },
-                      { title: "6. Estilos y Branding", desc: "Tema de color HSL único configurado en el archivo de diseño para adaptar la apariencia visual a la identidad de la tienda." },
-                      { title: "7. Botones de Compartir e Instalar", desc: "Botones flotantes transparentes al costado de la pantalla para compartir la tienda (menú nativo del celular) e instalar la app (PWA) con un toque." }
-                    ].map((rule, idx) => (
-                      <div key={idx} className="space-y-1 bg-[#f2f3fd]/55 p-2.5 rounded-md border border-[#c2c6d6]/65">
-                        <p className="font-bold text-[11px] text-[#191b23]">{rule.title}</p>
-                        <p className="text-[10px] text-[#424754] leading-relaxed font-semibold">{rule.desc}</p>
+                      {
+                        group: 'App Instalable',
+                        items: [
+                          { title: 'PWA para Formar Ícono', desc: 'Toda tienda debe tener PWA (Progressive Web App): se instala en el celular del cliente con su propio ícono, sin pasar por App Stores.' },
+                          { title: 'Botones de Compartir e Instalar', desc: 'Botones flotantes al costado de la pantalla para compartir la tienda (menú nativo del celular) e instalar el PWA con un toque — la otra mitad de tener PWA.' },
+                        ],
+                      },
+                      {
+                        group: 'Catálogo de Productos',
+                        items: [
+                          { title: 'Módulo de Productos', desc: 'Estructura unificada de productos en base de datos. Cada producto enlazado a su tienda, con imágenes de alta resolución.' },
+                          { title: 'Recuadro de Características', desc: 'Ficha técnica del producto: tallas, colores, materiales, peso o descripción rica — no solo nombre y precio.' },
+                        ],
+                      },
+                      {
+                        group: 'Categorías Estructuradas',
+                        items: [
+                          { title: 'Navegación por Categorías', desc: 'Al menos 3 categorías en el menú para navegación fluida (ej. Sunset: Cocina, Bar, Café).' },
+                        ],
+                      },
+                      {
+                        group: 'Botón de Pedidos WhatsApp',
+                        items: [
+                          { title: 'Conversión a Pedido', desc: 'Botón activo de WhatsApp en el carrito/reserva para derivar la orden directo al comercio y concretar la transacción.' },
+                        ],
+                      },
+                      {
+                        group: 'Estilos y Branding',
+                        items: [
+                          { title: 'Identidad Visual', desc: 'Tema de color único configurado en el archivo de diseño para adaptar la apariencia visual a la identidad de cada tienda.' },
+                        ],
+                      },
+                    ].map((section) => (
+                      <div key={section.group} className="space-y-1.5">
+                        <p className="text-[9px] font-bold uppercase tracking-wider text-[#0058be]">{section.group}</p>
+                        {section.items.map((rule) => (
+                          <div key={rule.title} className="space-y-1 bg-[#f2f3fd]/55 p-2.5 rounded-md border border-[#c2c6d6]/65">
+                            <p className="font-bold text-[11px] text-[#191b23]">{rule.title}</p>
+                            <p className="text-[10px] text-[#424754] leading-relaxed font-semibold">{rule.desc}</p>
+                          </div>
+                        ))}
                       </div>
                     ))}
                   </div>
