@@ -43,12 +43,12 @@ export async function GET(request: NextRequest) {
           theme_color: '#5244e1',
         }
       : {
-          id: '/',
+          id: '/market',
           name: 'Boga Market',
           short_name: 'Boga Market',
           description: 'Descubre tiendas y productos cerca de ti.',
-          start_url: '/',
-          scope: '/',
+          start_url: '/market',
+          scope: '/market',
           theme_color: '#b8130e',
         };
 

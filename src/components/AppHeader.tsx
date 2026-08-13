@@ -88,7 +88,7 @@ export default function AppHeader({
       <div className="hidden lg:flex items-center justify-between px-container-margin py-3 max-w-[1440px] mx-auto gap-4">
         {/* Left: Brand logo & Location */}
         <div className="flex items-center gap-6 shrink-0">
-          <Link href="/" className="text-headline-md font-headline-md text-primary tracking-tight font-extrabold">
+          <Link href="/market" className="text-headline-md font-headline-md text-primary tracking-tight font-extrabold">
             Boga Market
           </Link>
           <div className="flex items-center gap-1.5 text-secondary group cursor-pointer">
@@ -100,10 +100,10 @@ export default function AppHeader({
 
         {/* Middle Left: Navigation Links */}
         <nav className="flex items-center gap-5 shrink-0">
-          <Link 
-            href="/" 
+          <Link
+            href="/market"
             className={`font-label-md text-label-md transition-colors ${
-              pathname === '/' ? 'text-primary' : 'text-secondary hover:text-primary'
+              pathname === '/market' ? 'text-primary' : 'text-secondary hover:text-primary'
             }`}
           >
             Inicio

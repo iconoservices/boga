@@ -32,7 +32,7 @@ export default function OfflinePage() {
             Reintentar
           </button>
           <Link
-            href="/"
+            href="/market"
             className="w-full block bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors"
           >
             Ir al inicio

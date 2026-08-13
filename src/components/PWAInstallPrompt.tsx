@@ -21,6 +21,7 @@ function isStoreRoute(pathname: string): boolean {
     if (pathname.startsWith('/promotions')) return false;
     if (pathname.startsWith('/preview')) return false;
     if (pathname.startsWith('/product')) return false;
+    if (pathname.startsWith('/market')) return false;
     if (pathname === '/') return false;
     if (pathname === '/offline') return false;
     return true;

@@ -35,7 +35,7 @@ export default function ProductDetail() {
   return (
     <>
       <nav className="bg-surface-container-lowest/90 backdrop-blur-md sticky top-0 left-0 w-full z-50 flex justify-between items-center px-4 h-16 border-b border-[#3E2723]/5 shadow-sm">
-        <Link href="/" className="text-[#3E2723]/60 hover:opacity-80 transition-opacity active:scale-95 flex items-center justify-center w-10 h-10">
+        <Link href="/market" className="text-[#3E2723]/60 hover:opacity-80 transition-opacity active:scale-95 flex items-center justify-center w-10 h-10">
           <span className="material-symbols-outlined">arrow_back</span>
         </Link>
         <span className="font-bold text-xl text-[#3E2723]">Boga Market</span>

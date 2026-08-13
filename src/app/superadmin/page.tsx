@@ -252,7 +252,14 @@ interface StoreModule {
   // gatea nada todavía (Paquetes sigue con sus features sueltas, sin leer
   // esto). Sirve para ordenar la matriz visual de abajo.
   tier: 'Basic' | 'Pro' | 'Enterprise';
+  // Qué tan real es hoy en el código, no en la idea. 'parcial' = ya existe
+  // algo funcionando por debajo (aunque no esté conectado al toggle de acá);
+  // 'no_construido' = es puro catálogo comercial, cero código todavía.
+  buildStatus: 'parcial' | 'no_construido';
+  buildNote: string;
 }
+
+const NO_CODE_YET = 'Todavía no tiene código — es puro catálogo comercial por ahora.';
 
 const INITIAL_MODULES: StoreModule[] = [
   {
@@ -263,6 +270,8 @@ const INITIAL_MODULES: StoreModule[] = [
     description: 'El dueño ve cuánto vende cada sede desde su celular: ranking entre locales y comparativas. Solo tiene sentido una vez que hay más de una sede.',
     active: true,
     tier: 'Enterprise',
+    buildStatus: 'no_construido',
+    buildNote: NO_CODE_YET,
   },
   {
     id: 'facturacion-electronica',
@@ -272,6 +281,8 @@ const INITIAL_MODULES: StoreModule[] = [
     description: 'Emisión de boletas y facturas electrónicas directo a SUNAT por cada venta procesada en el sistema. Se cobra por boleta enviada, no por mes.',
     active: true,
     tier: 'Pro',
+    buildStatus: 'no_construido',
+    buildNote: NO_CODE_YET,
   },
   {
     id: 'business-intelligence',
@@ -281,6 +292,8 @@ const INITIAL_MODULES: StoreModule[] = [
     description: 'Predicción de demanda: qué días y en qué sedes conviene contratar más personal, según el historial de ventas.',
     active: false,
     tier: 'Enterprise',
+    buildStatus: 'no_construido',
+    buildNote: NO_CODE_YET,
   },
   {
     id: 'inventario-inteligente',
@@ -290,6 +303,8 @@ const INITIAL_MODULES: StoreModule[] = [
     description: 'No solo dice "hay 10 pollos": avisa "según tus ventas de los últimos 3 viernes, mañana te quedas sin papas a las 8pm — compra más ahora". Alerta predictiva por insumo, no solo conteo de stock.',
     active: false,
     tier: 'Pro',
+    buildStatus: 'no_construido',
+    buildNote: NO_CODE_YET,
   },
   {
     id: 'repartidores-propios',
@@ -299,6 +314,8 @@ const INITIAL_MODULES: StoreModule[] = [
     description: 'App mini para que los motorizados del local vean su ruta y marquen "entregado", con mapa en tiempo real para el cliente — un Uber Eats propio del negocio, sin comisión a terceros.',
     active: false,
     tier: 'Enterprise',
+    buildStatus: 'no_construido',
+    buildNote: NO_CODE_YET,
   },
   {
     id: 'marketing-automatizado',
@@ -308,6 +325,8 @@ const INITIAL_MODULES: StoreModule[] = [
     description: 'Correos y SMS automáticos por fecha o comportamiento: "Feliz cumpleaños Juan, hoy tu cuarto de pollo es gratis" o reactivación de clientes que no piden hace semanas.',
     active: false,
     tier: 'Pro',
+    buildStatus: 'no_construido',
+    buildNote: NO_CODE_YET,
   },
   {
     id: 'presencia-marketplace',
@@ -317,6 +336,8 @@ const INITIAL_MODULES: StoreModule[] = [
     description: 'Aparecer también en el marketplace compartido de Boga (búsqueda y categorías cruzadas entre tiendas), no solo en la tienda propia del negocio. Más alcance, pero comparte vidriera con otros comercios.',
     active: true,
     tier: 'Basic',
+    buildStatus: 'parcial',
+    buildNote: 'El listado de /market ya muestra todas las tiendas — falta el flag is_public para que activar/desactivar esto cambie algo de verdad.',
   },
   {
     id: 'notificaciones-inteligentes',
@@ -326,6 +347,8 @@ const INITIAL_MODULES: StoreModule[] = [
     description: 'Geofencing: si el cliente pasa a 300m del local, le llega "estás a 2 minutos, ven ahora y te regalamos el café". Es lo mismo que hace Starbucks y les sale carísimo — acá viene incluido. Gamificación: "te faltan 2 pedidos para ser Cliente Oro" — el cliente abre la app solo, sin invadir por WhatsApp.',
     active: false,
     tier: 'Pro',
+    buildStatus: 'no_construido',
+    buildNote: NO_CODE_YET,
   },
   {
     id: 'lealtad-digital',
@@ -335,6 +358,8 @@ const INITIAL_MODULES: StoreModule[] = [
     description: 'La tarjeta de cartón que sellan y se pierde, digital y sin que se pierda nunca: compra 5 y el 6to gratis, o 1 sol = 1 punto canjeable por extras. Niveles Bronce/Plata/Oro según cuánto vuelve. El valor real para el dueño: "Juan ya tiene 4 sellos, mandale una notificación ahora para que venga hoy por el 5to" — reactivación con nombre y apellido, no un descuento genérico.',
     active: false,
     tier: 'Basic',
+    buildStatus: 'no_construido',
+    buildNote: NO_CODE_YET,
   },
   {
     id: 'racha-envio-gratis',
@@ -344,6 +369,8 @@ const INITIAL_MODULES: StoreModule[] = [
     description: 'Mientras el cliente mantenga su racha de pedidos (ej. 1 por semana) tiene envío gratis. Si la corta, la pierde y tiene que reconstruirla desde cero — el mismo gancho que hace que nadie quiera perder su racha en Duolingo.',
     active: false,
     tier: 'Basic',
+    buildStatus: 'no_construido',
+    buildNote: NO_CODE_YET,
   },
   {
     id: 'app-nativa',
@@ -353,6 +380,8 @@ const INITIAL_MODULES: StoreModule[] = [
     description: 'Va más allá del PWA (que ya es gratis para todos): empaqueta la tienda como app real, publicada en Google Play y App Store con su propio ícono y ficha. El mantenimiento mensual cubre las actualizaciones que piden ambas tiendas cada tanto.',
     active: false,
     tier: 'Enterprise',
+    buildStatus: 'no_construido',
+    buildNote: NO_CODE_YET,
   },
   {
     id: 'pasarela-pago-propia',
@@ -362,6 +391,8 @@ const INITIAL_MODULES: StoreModule[] = [
     description: 'Checkout con tarjeta dentro de la misma app (Culqi/Niubiz) en vez de derivar todo a WhatsApp para coordinar el pago. Se cobra por transacción procesada, no por mes.',
     active: false,
     tier: 'Pro',
+    buildStatus: 'no_construido',
+    buildNote: 'Hoy el 100% del checkout de cualquier tienda es "mandale un WhatsApp al dueño" (ver lib/whatsapp.ts) — cero pagos reales todavía.',
   },
   {
     id: 'reservas-citas',
@@ -371,6 +402,8 @@ const INITIAL_MODULES: StoreModule[] = [
     description: 'Calendario de turnos con hora fija en vez de solo catálogo de productos — pensado para salones, clínicas y servicios con cita previa.',
     active: false,
     tier: 'Pro',
+    buildStatus: 'no_construido',
+    buildNote: NO_CODE_YET,
   },
   {
     id: 'programa-referidos',
@@ -380,6 +413,8 @@ const INITIAL_MODULES: StoreModule[] = [
     description: '"Invita a un amigo y ambos ganan": código de referido con recompensa automática tanto para quien invita como para el invitado en su primer pedido.',
     active: false,
     tier: 'Basic',
+    buildStatus: 'no_construido',
+    buildNote: NO_CODE_YET,
   },
   {
     id: 'marca-blanca-total',
@@ -389,6 +424,8 @@ const INITIAL_MODULES: StoreModule[] = [
     description: 'Saca cualquier rastro de "Powered by Boga" de la tienda — para el comercio que no quiere que se note qué tecnología usa por debajo.',
     active: false,
     tier: 'Enterprise',
+    buildStatus: 'no_construido',
+    buildNote: NO_CODE_YET,
   },
   {
     id: 'resenas-reales',
@@ -398,6 +435,8 @@ const INITIAL_MODULES: StoreModule[] = [
     description: 'Hoy el rating de cada tienda lo carga el comercio a mano en el panel — no sale de compras reales. Este módulo pide reseña al cliente después de cada pedido y calcula el promedio solo, con historial de comentarios.',
     active: false,
     tier: 'Basic',
+    buildStatus: 'no_construido',
+    buildNote: NO_CODE_YET,
   },
   {
     id: 'analitica-favoritos',
@@ -407,6 +446,8 @@ const INITIAL_MODULES: StoreModule[] = [
     description: 'Los "Me Gusta" del cliente hoy quedan solo en el celular de quien los guardó — el dueño nunca se entera. Este módulo los sincroniza y le muestra qué productos guarda la gente pero no compra: la señal de remarketing más barata que existe.',
     active: false,
     tier: 'Pro',
+    buildStatus: 'parcial',
+    buildNote: 'Los favoritos ya existen (guardados en el celular del cliente, ver app/orders/page.tsx) — falta sincronizarlos a Supabase para que el dueño los vea.',
   },
   {
     id: 'auto-branding-ia',
@@ -416,6 +457,8 @@ const INITIAL_MODULES: StoreModule[] = [
     description: 'La extracción de colores de logo que hoy solo usás vos desde superadmin, self-service para el dueño: sube su logo o una foto de un plato y la tienda se retematiza sola, sin tener que pedírtelo.',
     active: false,
     tier: 'Basic',
+    buildStatus: 'parcial',
+    buildNote: 'El motor ya existe y funciona (lib/extractThemeClient.ts) — hoy solo lo usa superadmin, falta exponérselo al dueño.',
   },
   {
     id: 'delivery-zonas-dinamico',
@@ -425,6 +468,8 @@ const INITIAL_MODULES: StoreModule[] = [
     description: 'La "zona" de cada tienda hoy es un texto decorativo. Este módulo la convierte en zonas reales de reparto, cada una con su propio costo de envío y tiempo estimado — en vez de un dato suelto que no cobra nada.',
     active: false,
     tier: 'Pro',
+    buildStatus: 'no_construido',
+    buildNote: NO_CODE_YET,
   },
   {
     id: 'happy-hour-automatico',
@@ -434,6 +479,8 @@ const INITIAL_MODULES: StoreModule[] = [
     description: 'Detecta las horas muertas del local (ej. martes 3-5pm) y lanza sola un 2x1 o descuento por los próximos 60 minutos. Liquida stock que se iba a malograr y llena el local en horarios flojos, sin que el dueño tenga que acordarse de activarlo.',
     active: false,
     tier: 'Pro',
+    buildStatus: 'no_construido',
+    buildNote: NO_CODE_YET,
   },
   {
     id: 'suscripcion-vip',
@@ -443,6 +490,8 @@ const INITIAL_MODULES: StoreModule[] = [
     description: 'El cliente le paga al comercio, por ejemplo S/ 20/mes, y a cambio tiene delivery gratis siempre + 10% de descuento fijo. El dueño gana ingreso asegurado todos los meses aunque el cliente no compre; vos ganás una comisión por administrar esa suscripción dentro de tu plataforma.',
     active: false,
     tier: 'Enterprise',
+    buildStatus: 'no_construido',
+    buildNote: NO_CODE_YET,
   },
   {
     id: 'reserva-y-pide',
@@ -452,6 +501,8 @@ const INITIAL_MODULES: StoreModule[] = [
     description: '"Llego en 15 minutos, quiero mi pedido servido apenas me siente". El cliente paga desde la app, la cocina recibe la orden al toque, y cuando llega la comida ya está lista — cero colas, cero espera.',
     active: false,
     tier: 'Pro',
+    buildStatus: 'no_construido',
+    buildNote: NO_CODE_YET,
   },
   {
     id: 'sitio-web-propio',
@@ -461,6 +512,8 @@ const INITIAL_MODULES: StoreModule[] = [
     description: 'Landing page o catálogo con dominio propio, fuera del ecosistema Boga — para SEO y para compartir un link "serio" en redes. El esfuerzo no es el mismo para todos los rubros: una carta de restaurante con pocos platos es mucho más simple que un catálogo de ecommerce con cientos de productos, así que el precio final se cotiza según cuánto tiene la tienda.',
     active: false,
     tier: 'Pro',
+    buildStatus: 'parcial',
+    buildNote: 'Cada tienda ya tiene su link propio (/slug) que cumple parte de esto — falta el dominio 100% propio y la ficha SEO dedicada.',
   },
 ];
 
@@ -2086,6 +2139,20 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           <Toggle on={mod.active} onChange={() => toggleModuleActive(mod.id)} />
                         </div>
                         <p className="text-[11px] text-[#424754] leading-relaxed">{mod.description}</p>
+
+                        <div className={`flex items-start gap-1.5 p-2 rounded-md border ${
+                          mod.buildStatus === 'parcial' ? 'bg-sky-50 border-sky-100' : 'bg-[#f9f9ff] border-[#ecedf7]'
+                        }`}>
+                          <span className={`material-symbols-outlined text-[13px] shrink-0 mt-px ${
+                            mod.buildStatus === 'parcial' ? 'text-sky-700' : 'text-[#424754]'
+                          }`}>
+                            {mod.buildStatus === 'parcial' ? 'construction' : 'draft'}
+                          </span>
+                          <p className={`text-[9px] leading-snug font-semibold ${mod.buildStatus === 'parcial' ? 'text-sky-800' : 'text-[#424754]'}`}>
+                            <span className="font-bold uppercase tracking-wider">{mod.buildStatus === 'parcial' ? 'Parcialmente construido: ' : 'Sin construir: '}</span>
+                            {mod.buildNote}
+                          </p>
+                        </div>
 
                         <div className="pt-3 border-t border-[#ecedf7] flex flex-col gap-2">
                           <p className="text-[9px] font-bold uppercase tracking-wider text-[#424754]">

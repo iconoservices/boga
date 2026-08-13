@@ -59,39 +59,47 @@ export default function VendeConBogaPage() {
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
       <div style={{
-        position: 'fixed', inset: 0, zIndex: 9999,
+        minHeight: '100vh',
         display: 'flex', fontFamily: "'Outfit', sans-serif", backgroundColor: '#ffffff',
       }}>
 
         {/* ── Left: Branding Panel ── */}
+        {/* sticky: se queda fija en pantalla mientras el formulario de la derecha
+            scrollea, así nunca "desaparece a la mitad" en pantallas chicas. */}
         <div className="vcb-left-panel" style={{
           display: 'none', width: '50%', backgroundColor: '#000',
-          position: 'relative', overflow: 'hidden',
+          position: 'sticky', top: 0, height: '100vh', overflow: 'hidden',
           alignItems: 'center', justifyContent: 'center', padding: '56px',
         }}>
-          <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '60%', height: '60%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(82,68,225,0.18), transparent 70%)' }} />
-          <div style={{ position: 'absolute', bottom: '-10%', left: '-10%', width: '50%', height: '50%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.04), transparent 70%)' }} />
+          <img
+            src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1200&q=80"
+            alt=""
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.22 }}
+          />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.88))' }} />
+          <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '60%', height: '60%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(82,68,225,0.22), transparent 70%)' }} />
+          <div style={{ position: 'absolute', bottom: '-10%', left: '-10%', width: '50%', height: '50%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.05), transparent 70%)' }} />
 
           <div style={{ position: 'relative', zIndex: 10, maxWidth: '420px' }}>
             <div style={{ width: '56px', height: '56px', backgroundColor: 'white', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '28px', boxShadow: '0 25px 60px rgba(255,255,255,0.08)' }}>
               <span style={{ fontSize: '26px', fontWeight: 900, color: '#000' }}>B</span>
             </div>
-            <h1 style={{ fontSize: '40px', fontWeight: 800, color: '#fff', lineHeight: 1.2, marginBottom: '20px' }}>
-              Lleva tu negocio{' '}
-              <span style={{ color: '#8b5cf6' }}>a todo tu barrio</span>.
+            <h1 style={{ fontSize: '42px', fontWeight: 800, color: '#fff', lineHeight: 1.15, marginBottom: '20px', letterSpacing: '-0.02em' }}>
+              Lleva tu negocio a{' '}
+              <span style={{ color: '#8b5cf6' }}>miles de clientes nuevos</span>.
             </h1>
-            <p style={{ fontSize: '16px', color: '#777', fontWeight: 500, lineHeight: 1.7 }}>
+            <p style={{ fontSize: '16px', color: '#aaa', fontWeight: 500, lineHeight: 1.7 }}>
               Crea tu carta digital o catálogo en Boga Market. Nosotros lo montamos por ti y llegas a nuevos clientes desde el primer día.
             </p>
             <div style={{ marginTop: '40px', display: 'flex', gap: '28px', alignItems: 'center' }}>
               <div>
                 <p style={{ fontSize: '26px', fontWeight: 700, color: '#fff', marginBottom: '2px' }}>Sin código</p>
-                <p style={{ fontSize: '10px', fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Nosotros lo armamos</p>
+                <p style={{ fontSize: '10px', fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Nosotros lo armamos</p>
               </div>
-              <div style={{ width: '1px', height: '40px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
+              <div style={{ width: '1px', height: '40px', backgroundColor: 'rgba(255,255,255,0.15)' }} />
               <div>
                 <p style={{ fontSize: '26px', fontWeight: 700, color: '#fff', marginBottom: '2px' }}>Directo</p>
-                <p style={{ fontSize: '10px', fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Pedidos por WhatsApp</p>
+                <p style={{ fontSize: '10px', fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Pedidos por WhatsApp</p>
               </div>
             </div>
           </div>
@@ -100,12 +108,12 @@ export default function VendeConBogaPage() {
         {/* ── Right: Form Panel ── */}
         <div style={{
           flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: '24px', backgroundColor: '#fafafa', overflowY: 'auto',
+          padding: '48px 24px', backgroundColor: '#fafafa',
         }}>
           <div style={{ width: '100%', maxWidth: '420px' }}>
 
             {/* Logo */}
-            <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px', textDecoration: 'none' }}>
+            <Link href="/market" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px', textDecoration: 'none' }}>
               <div style={{ width: '36px', height: '36px', backgroundColor: '#000', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 20px rgba(0,0,0,0.2)' }}>
                 <span style={{ color: '#fff', fontSize: '18px', fontWeight: 900 }}>B</span>
               </div>
@@ -123,7 +131,7 @@ export default function VendeConBogaPage() {
                   <p style={{ fontSize: '13px', color: '#999', fontWeight: 500, lineHeight: 1.6, marginBottom: '24px' }}>
                     Recibimos los datos de <b>{businessName}</b>. Te contactaremos por WhatsApp para coordinar los siguientes pasos.
                   </p>
-                  <Link href="/" style={{
+                  <Link href="/market" style={{
                     display: 'inline-block', padding: '12px 24px', backgroundColor: '#000', color: '#fff',
                     borderRadius: '12px', fontSize: '13px', fontWeight: 700, textDecoration: 'none',
                   }}>

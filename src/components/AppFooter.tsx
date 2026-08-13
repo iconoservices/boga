@@ -5,8 +5,8 @@ import { usePathname } from 'next/navigation';
 export default function AppFooter() {
   const pathname = usePathname();
 
-  const isMarketplaceRoute = 
-    pathname === '/' ||
+  const isMarketplaceRoute =
+    pathname.startsWith('/market') ||
     pathname.startsWith('/explore') ||
     pathname.startsWith('/orders') ||
     pathname.startsWith('/profile') ||

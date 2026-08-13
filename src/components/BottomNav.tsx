@@ -6,8 +6,8 @@ import { usePathname } from 'next/navigation';
 export default function BottomNav() {
   const pathname = usePathname();
 
-  const isMarketplaceRoute = 
-    pathname === '/' ||
+  const isMarketplaceRoute =
+    pathname.startsWith('/market') ||
     pathname.startsWith('/explore') ||
     pathname.startsWith('/orders') ||
     pathname.startsWith('/profile') ||
@@ -17,7 +17,7 @@ export default function BottomNav() {
   if (!isMarketplaceRoute) return null;
 
   const navItems = [
-    { path: '/', icon: 'home', label: 'Inicio' },
+    { path: '/market', icon: 'home', label: 'Inicio' },
     { path: '/explore', icon: 'search', label: 'Explorar' },
     { path: '/orders', icon: 'receipt_long', label: 'Pedidos' },
     { path: '/profile', icon: 'person', label: 'Perfil' },
