@@ -99,13 +99,16 @@ export function useCatalogo(store: StoreConfig) {
     });
   const vaciarCarrito = () => setCart({});
 
-  const confirmarPedido = () => {
+  const confirmarPedido = (datos: { nombre: string; entrega: 'delivery' | 'recojo'; direccion: string }) => {
     const lineas = cartItems
       .map((l) => `• ${l.qty}x ${l.producto.name} — ${soles(l.producto.price * l.qty)}`)
       .join('\n');
+    const entregaTexto = datos.entrega === 'delivery'
+      ? `Delivery a: ${datos.direccion}`
+      : 'Recojo en tienda';
     enviarPedidoPorWhatsApp(
       store,
-      `¡Hola ${store.name}! Quiero hacer este pedido:\n\n${lineas}\n\nTotal: ${soles(subtotal)}`
+      `¡Hola ${store.name}! Soy ${datos.nombre}. Quiero hacer este pedido:\n\n${lineas}\n\nTotal: ${soles(subtotal)}\n\n${entregaTexto}`
     );
   };
 

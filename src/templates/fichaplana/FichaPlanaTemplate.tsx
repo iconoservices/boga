@@ -175,7 +175,7 @@ export default function FichaPlanaTemplate({ store }: Props) {
 
                 {/* Métodos de pago */}
                 <div className="flex items-center justify-center gap-2.5 mt-5 flex-wrap">
-                  {['Visa', 'Mastercard', 'Efectivo', 'Yape/Plin'].map((m) => (
+                  {(store.metodosPago?.length ? store.metodosPago : ['Efectivo']).map((m) => (
                     <span key={m} className={`px-3 py-1 rounded-lg border font-bold ${TXT.micro} uppercase tracking-wide`} style={{ borderColor: `${t.outlineVariant}80`, color: t.onSurfaceVariant }}>
                       {m}
                     </span>

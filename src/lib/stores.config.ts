@@ -28,6 +28,8 @@ export interface StoreConfig {
   horario?: string;
   /** 0 a 5. Sin decidir todavia de donde sale (manual vs. promedio de reseñas real); por ahora lo carga el comercio a mano. */
   rating?: number;
+  /** Metodos que el comercio acepta de verdad (ninguno se procesa en la app: el pago se coordina por WhatsApp). Si no cargo ninguno, se asume solo Efectivo. */
+  metodosPago?: string[];
   /**
    * Mostrar los productos de ejemplo de la plantilla mientras la tienda esta
    * vacia. Solo aplica si no cargo productos propios (ver lib/demo.ts).

@@ -132,6 +132,7 @@ async function getDynamicStore(slug: string) {
         direccion: dbStore.direccion || undefined,
         horario: dbStore.horario || undefined,
         rating: dbStore.rating ?? undefined,
+        metodosPago: dbStore.metodos_pago || undefined,
       };
     }
   } catch (err) {
@@ -191,6 +192,7 @@ export default async function StorePage({ params, searchParams }: Props) {
         direccion: undefined,
         horario: undefined,
         rating: undefined,
+        metodosPago: undefined,
       };
     } else {
       notFound();

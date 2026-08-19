@@ -216,7 +216,7 @@ function AdminDashboard({ user }: { user: User }) {
   const [isStoreEditorOpen, setIsStoreEditorOpen] = useState(false);
   const [editingStoreSlug, setEditingStoreSlug] = useState<string | null>(null);
   const [isStoreSaving, setIsStoreSaving] = useState(false);
-  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '', show_demo_products: true, zona: '', direccion: '', horario: '', rating: '' });
+  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '', show_demo_products: true, zona: '', direccion: '', horario: '', rating: '', metodos_pago: [] as string[] });
   const [storeLogoFile, setStoreLogoFile] = useState<File | null>(null);
   const [storeHeroFile, setStoreHeroFile] = useState<File | null>(null);
   const [storeLogoPreview, setStoreLogoPreview] = useState<string | null>(null);
@@ -368,6 +368,7 @@ function AdminDashboard({ user }: { user: User }) {
       direccion: dbData?.direccion || config?.direccion || '',
       horario: dbData?.horario || config?.horario || '',
       rating: dbData?.rating != null ? String(dbData.rating) : (config?.rating != null ? String(config.rating) : ''),
+      metodos_pago: dbData?.metodos_pago || config?.metodosPago || [],
     });
     setStoreHeroPreview(dbData?.hero_image || config?.heroImage || null);
     setStoreLogoPreview(dbData?.logo_image || config?.logoImage || null);
@@ -436,6 +437,7 @@ function AdminDashboard({ user }: { user: User }) {
         direccion: storeForm.direccion || null,
         horario: storeForm.horario || null,
         rating: storeForm.rating !== '' ? Number(storeForm.rating) : null,
+        metodos_pago: storeForm.metodos_pago.length ? storeForm.metodos_pago : null,
         status: 'active',
       };
       if (heroUrl) upsertData.hero_image = heroUrl;
@@ -465,7 +467,7 @@ function AdminDashboard({ user }: { user: User }) {
       // en vez de perder todo el guardado. Paso exactamente esto con `whatsapp`:
       // el panel quedo sin poder guardar NADA de ninguna tienda hasta correr la
       // migracion. Columnas opcionales porque llegaron despues del lanzamiento.
-      const columnasOpcionales = ['show_demo_products', 'zona', 'direccion', 'horario', 'rating'];
+      const columnasOpcionales = ['show_demo_products', 'zona', 'direccion', 'horario', 'rating', 'metodos_pago'];
       const columnasFaltantes: string[] = [];
       let faltante = columnasOpcionales.find((col) => col in upsertData && new RegExp(col).test(error?.message || ''));
       while (error && faltante) {
@@ -2460,6 +2462,36 @@ function AdminDashboard({ user }: { user: User }) {
                     Sin este número, el botón de pedir de tu tienda no llega a nadie.
                   </p>
                 )}
+              </div>
+
+              {/* Metodos de pago: solo informativos, el pago se coordina por WhatsApp */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Métodos de Pago que Aceptas</label>
+                <div className="flex flex-wrap gap-2">
+                  {['Efectivo', 'Yape/Plin', 'Transferencia', 'Visa', 'Mastercard'].map((metodo) => {
+                    const activo = storeForm.metodos_pago.includes(metodo);
+                    return (
+                      <button
+                        key={metodo}
+                        type="button"
+                        onClick={() => setStoreForm({
+                          ...storeForm,
+                          metodos_pago: activo
+                            ? storeForm.metodos_pago.filter((m) => m !== metodo)
+                            : [...storeForm.metodos_pago, metodo],
+                        })}
+                        className={`px-3.5 py-2 rounded-full text-xs font-bold border transition-all ${
+                          activo ? 'bg-black text-white border-black' : 'bg-gray-50 text-gray-600 border-gray-200'
+                        }`}
+                      >
+                        {metodo}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-gray-500 mt-1.5">
+                  Se muestran en tu tienda como referencia. Si no elegís ninguno, se muestra solo Efectivo. Ningún pago se procesa en la app: se coordina por WhatsApp.
+                </p>
               </div>
 
               {/* Ficha del local: todo opcional, para negocios sin sede fisica (puro delivery) */}

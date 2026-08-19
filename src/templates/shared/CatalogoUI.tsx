@@ -234,10 +234,20 @@ export function CartPanel({
   onAdd: (p: Producto) => void;
   onRemove: (id: string) => void;
   onVaciar: () => void;
-  onConfirmar: () => void;
+  onConfirmar: (datos: { nombre: string; entrega: 'delivery' | 'recojo'; direccion: string }) => void;
   onIrAlMenu: () => void;
   whatsappVisible: boolean;
 }) {
+  // Antes el pedido se mandaba por WhatsApp con solo los items y el total: el
+  // dueño tenia que volver a preguntar quien pedia y si era delivery o recojo.
+  // Pedirlo aca hace que el primer mensaje ya venga completo.
+  const [nombre, setNombre] = React.useState('');
+  const [entrega, setEntrega] = React.useState<'delivery' | 'recojo'>('delivery');
+  const [direccion, setDireccion] = React.useState('');
+
+  const faltaNombre = !nombre.trim();
+  const faltaDireccion = entrega === 'delivery' && !direccion.trim();
+
   return (
     <div className="animate-fade-in px-5 py-8 max-w-[600px] mx-auto text-center space-y-6">
       <div
@@ -323,9 +333,62 @@ export function CartPanel({
             <span className={`font-black ${TXT.title}`} style={{ color: t.primary }}>{soles(subtotal)}</span>
           </div>
 
+          <div className="space-y-3 pt-1">
+            <div>
+              <label htmlFor="carrito-nombre" className={`block ${TXT.micro} font-bold uppercase mb-1`} style={{ color: t.onSurfaceVariant }}>
+                Tu nombre
+              </label>
+              <input
+                id="carrito-nombre"
+                type="text"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                placeholder="¿A nombre de quién va el pedido?"
+                className={`w-full border rounded-xl px-3 py-2.5 ${TXT.small} font-semibold focus:outline-none`}
+                style={{ borderColor: `${t.outlineVariant}80`, background: t.surface, color: t.onSurface }}
+              />
+            </div>
+
+            <div className="flex gap-2">
+              {(['delivery', 'recojo'] as const).map((opcion) => (
+                <button
+                  key={opcion}
+                  type="button"
+                  onClick={() => setEntrega(opcion)}
+                  className={`flex-1 py-2.5 rounded-xl font-bold ${TXT.small} uppercase border transition-all`}
+                  style={{
+                    background: entrega === opcion ? t.primary : t.surface,
+                    color: entrega === opcion ? t.onPrimary : t.onSurfaceVariant,
+                    borderColor: entrega === opcion ? 'transparent' : `${t.outlineVariant}80`,
+                  }}
+                >
+                  {opcion === 'delivery' ? 'Delivery' : 'Recojo en tienda'}
+                </button>
+              ))}
+            </div>
+
+            {entrega === 'delivery' && (
+              <div>
+                <label htmlFor="carrito-direccion" className={`block ${TXT.micro} font-bold uppercase mb-1`} style={{ color: t.onSurfaceVariant }}>
+                  Dirección de entrega
+                </label>
+                <input
+                  id="carrito-direccion"
+                  type="text"
+                  value={direccion}
+                  onChange={(e) => setDireccion(e.target.value)}
+                  placeholder="Calle, número, referencia"
+                  className={`w-full border rounded-xl px-3 py-2.5 ${TXT.small} font-semibold focus:outline-none`}
+                  style={{ borderColor: `${t.outlineVariant}80`, background: t.surface, color: t.onSurface }}
+                />
+              </div>
+            )}
+          </div>
+
           <button
-            onClick={onConfirmar}
-            className={`w-full py-4 rounded-full font-bold ${TXT.lead} shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 uppercase`}
+            onClick={() => onConfirmar({ nombre: nombre.trim(), entrega, direccion: direccion.trim() })}
+            disabled={faltaNombre || faltaDireccion}
+            className={`w-full py-4 rounded-full font-bold ${TXT.lead} shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 uppercase disabled:opacity-50 disabled:pointer-events-none`}
             style={{ backgroundColor: t.primary, color: t.onPrimary }}
           >
             <span className={`material-symbols-outlined ${ICON.md}`}>chat</span>

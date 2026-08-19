@@ -24,6 +24,7 @@ const SUPERADMIN_EMAILS = ['jnmcsky@gmail.com'];
 // Plantillas que ya tienen botón de pedido por WhatsApp implementado en su código
 const TEMPLATES_WITH_WHATSAPP = new Set([
   'polleria', 'estilosmirka', 'sweetkittynails', 'mercado', 'menudirecto', 'iniciocatalogo', 'flores',
+  'fichadigital', 'fichaplana',
 ]);
 
 // Datos de presentacion comercial que no viven en templates.config (descripcion
@@ -84,6 +85,16 @@ const TEMPLATE_PRESENTATION: Record<string, { category?: string; description: st
     description: 'Estilo delicado en tonos rosa con categorías para ramos, arreglos, plantas y detalles. Pensado para florerías y regalos.',
     previewUrl: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=600&q=80',
   },
+  fichadigital: {
+    category: 'Restaurantes',
+    description: 'Ficha de negocio tipo reemplazo del PDF de carta: portada superpuesta con logo, horario y dirección, categorías en círculo y menú debajo. Pedido por WhatsApp o llamada en un toque.',
+    previewUrl: 'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=600&q=80',
+  },
+  fichaplana: {
+    category: 'Restaurantes',
+    description: 'Misma ficha de negocio que Ficha Digital, con la portada integrada a la página en vez de superpuesta. Categorías en círculo, menú debajo y pedido por WhatsApp o llamada en un toque.',
+    previewUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&q=80',
+  },
 };
 
 // Que significa cada categoria visual: se muestra como ayuda al elegir la
@@ -100,7 +111,7 @@ const CATEGORY_DESCRIPTIONS: Record<string, string> = {
 // Todas las plantillas montan <StoreFloatingActions/>, en movil y en escritorio.
 const TEMPLATES_WITH_SHARE_INSTALL = new Set([
   'polleria', 'estilosmirka', 'mercado', 'sunset', 'natura', 'amazonia', 'sweetkittynails',
-  'menudirecto', 'iniciocatalogo', 'flores',
+  'menudirecto', 'iniciocatalogo', 'flores', 'fichadigital', 'fichaplana',
 ]);
 
 const META: Record<string, { emoji: string; cat: string }> = {
@@ -674,7 +685,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     zona: '',
     direccion: '',
     horario: '',
-    rating: ''
+    rating: '',
+    metodosPago: [] as string[]
   });
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
@@ -1159,6 +1171,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
               direccion: dbStore.direccion || undefined,
               horario: dbStore.horario || undefined,
               rating: dbStore.rating ?? undefined,
+              metodosPago: dbStore.metodos_pago || undefined,
               theme: (() => {
                 if (dbStore.theme && Object.keys(dbStore.theme).length > 0) return dbStore.theme;
                 const tmpl = dbStore.template as string;
@@ -1317,7 +1330,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       zona: '',
       direccion: '',
       horario: '',
-      rating: ''
+      rating: '',
+      metodosPago: []
     });
     setShowStoreModal(true);
   };
@@ -1352,7 +1366,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       zona: store.zona || '',
       direccion: store.direccion || '',
       horario: store.horario || '',
-      rating: store.rating != null ? String(store.rating) : ''
+      rating: store.rating != null ? String(store.rating) : '',
+      metodosPago: store.metodosPago || []
     });
     setShowStoreModal(true);
   };
@@ -1500,6 +1515,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       direccion: storeForm.direccion || null,
       horario: storeForm.horario || null,
       rating: storeForm.rating !== '' ? Number(storeForm.rating) : null,
+      metodos_pago: storeForm.metodosPago.length ? storeForm.metodosPago : null,
     };
     if (logoUrl) {
       upsertData.logo_image = logoUrl;
@@ -1524,7 +1540,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       // Mismo problema que ya paso con `whatsapp` en el panel del cliente: si una
       // columna nueva todavia no existe en la base, reintenta sin ella en vez de
       // perder el guardado completo de la tienda.
-      const columnasOpcionales = ['whatsapp', 'zona', 'direccion', 'horario', 'rating', 'show_demo_products'];
+      const columnasOpcionales = ['whatsapp', 'zona', 'direccion', 'horario', 'rating', 'show_demo_products', 'metodos_pago'];
       const columnasFaltantes: string[] = [];
       let faltante = columnasOpcionales.find((col) => col in upsertData && new RegExp(col).test(error?.message || ''));
       while (error && faltante) {
@@ -4393,6 +4409,33 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                       </div>
 
                       <div>
+                        <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Métodos de Pago que Acepta</label>
+                        <div className="flex flex-wrap gap-2">
+                          {['Efectivo', 'Yape/Plin', 'Transferencia', 'Visa', 'Mastercard'].map((metodo) => {
+                            const activo = storeForm.metodosPago.includes(metodo);
+                            return (
+                              <button
+                                key={metodo}
+                                type="button"
+                                onClick={() => setStoreForm(prev => ({
+                                  ...prev,
+                                  metodosPago: activo
+                                    ? prev.metodosPago.filter((m) => m !== metodo)
+                                    : [...prev.metodosPago, metodo],
+                                }))}
+                                className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-all ${
+                                  activo ? 'bg-[#0058be] text-white border-[#0058be]' : 'bg-[#f8fafc] text-[#545f73] border-[#ecedf7]'
+                                }`}
+                              >
+                                {metodo}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <p className="text-[9px] text-[#727785] font-semibold mt-1">Informativo: se muestra en la ficha de la tienda (solo en las plantillas que lo soportan). Si no elegís ninguno, se muestra solo Efectivo. Ningún pago se procesa en la app.</p>
+                      </div>
+
+                      <div>
                         <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Paquete Comercial</label>
                         <select
                           value={storeForm.tier}
@@ -4524,7 +4567,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           zona: '',
                           direccion: '',
                           horario: '',
-                          rating: ''
+                          rating: '',
+                          metodosPago: []
                         });
                         if (logoPreview?.startsWith('blob:')) URL.revokeObjectURL(logoPreview);
                         setLogoFile(null);

@@ -69,6 +69,15 @@ ADD COLUMN IF NOT EXISTS direccion TEXT,
 ADD COLUMN IF NOT EXISTS horario TEXT,
 ADD COLUMN IF NOT EXISTS rating NUMERIC(2,1);
 
+-- Migration: Add metodos_pago column (run this if the table already exists)
+-- Antes las plantillas Ficha Digital y Ficha Plana mostraban "Visa, Mastercard,
+-- Efectivo, Yape/Plin" fijo, igual para toda tienda, sin que ninguno funcionara
+-- de verdad (el pago se coordina por WhatsApp, no se procesa en la app). Ahora
+-- cada tienda elige los suyos desde el panel; si no elige ninguno, se muestra
+-- solo Efectivo.
+ALTER TABLE public.stores
+ADD COLUMN IF NOT EXISTS metodos_pago TEXT[];
+
 -- Create the 'store-assets' bucket for logos and hero images if it doesn't exist
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('store-assets', 'store-assets', true)
