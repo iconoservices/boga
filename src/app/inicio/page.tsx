@@ -6,27 +6,9 @@ import AppHeader from '@/components/AppHeader';
 import MarketTabs from '@/components/MarketTabs';
 import { useCart } from '@/context/CartContext';
 
-// Inicio = el hub de DESCUBRIMIENTO, con formato editorial tipo Time Out:
-// banda negra + reportaje de tapa + barra roja de secciones + bloques.
-// Nada de acá es el buscador de productos (eso vive en /market).
-
-const QUICK_LINKS = [
-  { label: 'Qué hacer hoy', href: '/eventos' },
-  { label: 'Dónde comer', href: '/market' },
-  { label: 'Eventos', href: '/eventos' },
-  { label: 'Sorteos', href: '/sorteos' },
-  { label: 'Chamba', href: '/yapu' },
-];
-
-const NAV = [
-  { label: 'Qué hacer', href: '/eventos' },
-  { label: 'Dónde comer', href: '/market' },
-  { label: 'Revista', href: '/revista' },
-  { label: 'Eventos', href: '/eventos' },
-  { label: 'Sorteos', href: '/sorteos' },
-  { label: 'Taxi Seguro', href: '/taxi-seguro' },
-  { label: 'Chamba', href: '/yapu' },
-];
+// Inicio = el hub de DESCUBRIMIENTO, con formato editorial tipo Time Out.
+// La navegación entre hubs vive en el AppHeader / riel lateral, no acá.
+// Nada de esta pantalla es el buscador de productos (eso vive en /market).
 
 const FEATURE = {
   kicker: 'Revista · Gastronomía',
@@ -83,63 +65,45 @@ export default function Inicio() {
       <AppHeader showSearch={false} cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
       <MarketTabs />
 
-      {/* Banda negra compacta — a todo el ancho */}
+      {/* Banda negra compacta — solo marca, sin nav (el menú vive en el header) */}
       <div className="bg-on-surface text-background">
-        <div className="max-w-[1280px] mx-auto px-container-margin lg:px-8 py-3 lg:py-3.5 flex flex-wrap items-center gap-x-6 gap-y-2">
-          <h1 className="font-headline-lg font-extrabold tracking-tight text-lg lg:text-xl shrink-0">
+        <div className="max-w-[1280px] mx-auto px-container-margin lg:px-8 py-3 lg:py-3.5 flex flex-wrap items-center gap-x-6 gap-y-1">
+          <h1 className="font-headline-lg font-extrabold tracking-tight text-lg lg:text-xl">
             Descubre <span className="text-primary-fixed">Pucallpa</span>
           </h1>
-          <div className="flex gap-2 overflow-x-auto hide-scrollbar flex-1 lg:justify-end -mx-container-margin px-container-margin lg:mx-0 lg:px-0" style={{ scrollbarWidth: 'none' }}>
-            {QUICK_LINKS.map((q) => (
-              <Link
-                key={q.label}
-                href={q.href}
-                className="shrink-0 bg-primary text-white font-label-md text-[11px] px-3.5 py-1.5 rounded-full hover:opacity-90 transition-opacity"
-              >
-                {q.label}
-              </Link>
-            ))}
-            <Link
-              href="/market"
-              className="shrink-0 border border-background/40 text-background font-label-md text-[11px] px-3.5 py-1.5 rounded-full hover:border-background transition-colors"
-            >
-              Ir al Market
-            </Link>
-          </div>
+          <p className="font-body-md text-background/60 text-xs">Qué hacer, dónde comer y a quién llamar.</p>
         </div>
       </div>
 
-      {/* Barra roja de secciones — a todo el ancho, como un menú */}
-      <nav className="bg-primary text-white shadow-[0_6px_16px_-6px_rgba(184,19,14,0.5)]">
-        <div className="max-w-[1280px] mx-auto flex overflow-x-auto hide-scrollbar" style={{ scrollbarWidth: 'none' }}>
-          {NAV.map((n) => (
-            <Link
-              key={n.label}
-              href={n.href}
-              className="shrink-0 px-4 lg:px-6 py-3.5 font-headline-sm text-[12px] lg:text-[13px] uppercase tracking-[0.08em] whitespace-nowrap border-r border-white/15 first:border-l first:border-white/15 hover:bg-black/20 transition-colors"
-            >
-              {n.label}
-            </Link>
-          ))}
-        </div>
-      </nav>
-
-      {/* Reportaje de tapa — a todo el ancho */}
-      <Link href={FEATURE.href} className="group relative block overflow-hidden aspect-[16/12] sm:aspect-[16/8] lg:aspect-[24/8] bg-surface-container-low">
-        <img src={FEATURE.img} alt={FEATURE.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
-        <div className="max-w-[1280px] mx-auto h-full relative px-container-margin lg:px-8">
-          <div className="absolute top-4 left-4 lg:top-1/2 lg:left-8 lg:-translate-y-1/2 w-24 h-24 lg:w-52 lg:h-52 rounded-full overflow-hidden border-4 border-white shadow-xl">
+      {/* Reportaje de tapa (mitad) + notas secundarias */}
+      <div className="max-w-[1280px] mx-auto w-full px-container-margin lg:px-8 pt-6 grid lg:grid-cols-2 gap-5">
+        <Link href={FEATURE.href} className="group relative block overflow-hidden rounded-2xl aspect-[16/11] lg:aspect-[4/3] bg-surface-container-low shadow-lg">
+          <img src={FEATURE.img} alt={FEATURE.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
+          <div className="absolute top-3 left-3 w-20 h-20 lg:w-28 lg:h-28 rounded-full overflow-hidden border-4 border-white shadow-xl">
             <img src={FEATURE.portrait} alt="" className="w-full h-full object-cover" />
           </div>
-          <div className="absolute inset-x-4 lg:inset-x-8 bottom-0 pb-5 lg:pb-8">
+          <div className="absolute inset-x-0 bottom-0 p-4 lg:p-5">
             <span className="font-label-md text-[10px] uppercase tracking-[0.25em] text-white/70">{FEATURE.kicker}</span>
-            <h2 className="font-headline-lg font-extrabold tracking-tight text-white leading-[1.05] text-2xl sm:text-3xl lg:text-4xl mt-1.5 max-w-[24ch]">
+            <h2 className="font-headline-lg font-extrabold tracking-tight text-white leading-[1.06] text-xl sm:text-2xl lg:text-3xl mt-1.5 max-w-[22ch]">
               {FEATURE.title}
             </h2>
           </div>
+        </Link>
+
+        <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
+          {SELVA_NOTES.slice(0, 2).map((n) => (
+            <Link href="/revista" key={n.id} className="group relative overflow-hidden rounded-2xl aspect-[16/10] lg:aspect-[16/7] bg-surface-container-low">
+              <img src={n.img} alt={n.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-3">
+                <span className="font-label-md text-[9px] uppercase tracking-wider text-white/60">{n.cat}</span>
+                <h3 className="font-headline-sm text-white text-[13px] leading-tight line-clamp-2 mt-0.5">{n.title}</h3>
+              </div>
+            </Link>
+          ))}
         </div>
-      </Link>
+      </div>
 
       <main className="max-w-[1280px] mx-auto w-full flex flex-col gap-9 lg:gap-12 py-9 lg:py-12 px-container-margin lg:px-8">
 

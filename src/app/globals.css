@@ -56,13 +56,14 @@
   --spacing-stack-md: 8px;
   --spacing-stack-lg: 16px;
 
-  /* Rounded Corner Radii mapped to Tailwind design rules */
-  --radius-sm: 0.25rem;
-  --radius-md: 0.375rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
-  --radius-2xl: 1rem;
-  --radius-3xl: 1.5rem;
+  /* Rounded Corner Radii — escala más cuadrada (global). Sube estos valores
+     si quieres volver a esquinas más redondeadas. rounded-full no se toca. */
+  --radius-sm: 0.125rem;
+  --radius-md: 0.25rem;
+  --radius-lg: 0.375rem;
+  --radius-xl: 0.5rem;
+  --radius-2xl: 0.625rem;
+  --radius-3xl: 0.875rem;
 
   /* Typography */
   --font-headline-lg: "Plus Jakarta Sans", sans-serif;

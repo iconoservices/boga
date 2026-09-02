@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
+import { HUBS, isHubActive } from '@/lib/hubs';
 
 interface AppHeaderProps {
   showSearch?: boolean;
@@ -109,9 +110,9 @@ export default function AppHeader({
       {/* Desktop Nav Row */}
       <div className="hidden lg:flex items-center justify-between px-container-margin py-3 max-w-[1440px] mx-auto gap-4">
         {/* Left: Brand logo & Location */}
-        <div className="flex items-center gap-6 shrink-0">
-          <Link href="/market" className="text-headline-md font-headline-md text-primary tracking-tight font-extrabold">
-            Boga Market
+        <div className="flex items-center gap-5 shrink-0">
+          <Link href="/inicio" className="text-headline-md font-headline-md text-primary tracking-tight font-extrabold">
+            Boga
           </Link>
           {showLocation && (
             <div className="flex items-center gap-1.5 text-secondary group cursor-pointer">
@@ -122,48 +123,19 @@ export default function AppHeader({
           )}
         </div>
 
-        {/* Middle Left: Navigation Links */}
-        <nav className="flex items-center gap-5 shrink-0">
-          <Link
-            href="/inicio"
-            className={`font-label-md text-label-md transition-colors ${
-              pathname.startsWith('/inicio') ? 'text-primary' : 'text-secondary hover:text-primary'
-            }`}
-          >
-            Inicio
-          </Link>
-          <Link
-            href="/market"
-            className={`font-label-md text-label-md transition-colors ${
-              pathname === '/market' ? 'text-primary' : 'text-secondary hover:text-primary'
-            }`}
-          >
-            Market
-          </Link>
-          <Link
-            href="/explore"
-            className={`font-label-md text-label-md transition-colors ${
-              pathname.startsWith('/explore') ? 'text-primary' : 'text-secondary hover:text-primary'
-            }`}
-          >
-            Explorar
-          </Link>
-          <Link
-            href="/orders" 
-            className={`font-label-md text-label-md transition-colors ${
-              pathname.startsWith('/orders') ? 'text-primary' : 'text-secondary hover:text-primary'
-            }`}
-          >
-            Pedidos
-          </Link>
-          <Link 
-            href="/profile" 
-            className={`font-label-md text-label-md transition-colors ${
-              pathname.startsWith('/profile') ? 'text-primary' : 'text-secondary hover:text-primary'
-            }`}
-          >
-            Perfil
-          </Link>
+        {/* Middle: hubs — mismos destinos que el riel lateral (src/lib/hubs.ts) */}
+        <nav className="flex items-center gap-4 xl:gap-5 min-w-0 overflow-x-auto hide-scrollbar" style={{ scrollbarWidth: 'none' }}>
+          {HUBS.map((h) => (
+            <Link
+              key={h.href}
+              href={h.href}
+              className={`font-label-md text-label-md whitespace-nowrap transition-colors ${
+                isHubActive(pathname, h.href) ? 'text-primary' : 'text-secondary hover:text-primary'
+              }`}
+            >
+              {h.label}
+            </Link>
+          ))}
         </nav>
 
         {/* Middle Right: Centered Search Bar */}
@@ -183,7 +155,16 @@ export default function AppHeader({
         )}
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-4 shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
+          {/* Pedidos */}
+          <Link
+            href="/orders"
+            title="Pedidos"
+            className="p-2 hover:bg-surface-container-high transition-colors rounded-full active:scale-95 duration-150 flex items-center justify-center"
+          >
+            <span className={`material-symbols-outlined text-[22px] ${pathname.startsWith('/orders') ? 'text-primary' : 'text-secondary'}`}>receipt_long</span>
+          </Link>
+
           {/* WhatsApp Support button */}
           {showChat && (
             <button className="p-2 hover:bg-surface-container-high transition-colors rounded-full active:scale-95 duration-150 relative flex items-center justify-center" title="Soporte WhatsApp">

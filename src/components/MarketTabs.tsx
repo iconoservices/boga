@@ -3,26 +3,17 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { HUBS as TABS, isHubActive } from '@/lib/hubs';
 
-// Conmutador entre todos los "hubs" del lado consumidor. Riel de íconos pegado
-// al borde izquierdo (queda fuera del flujo, no empuja el contenido); el botón
-// de abajo lo expande al panel con etiquetas.
-const TABS = [
-  { href: '/inicio',      label: 'Inicio',       icon: 'home' },
-  { href: '/market',      label: 'Market',       icon: 'storefront' },
-  { href: '/yapu',        label: 'Yapu',         icon: 'handshake' },
-  { href: '/taxi-seguro', label: 'Taxi Seguro',  icon: 'local_taxi' },
-  { href: '/alquileres',  label: 'Alquileres',   icon: 'bed' },
-  { href: '/eventos',     label: 'Eventos',      icon: 'celebration' },
-  { href: '/sorteos',     label: 'Sorteos',      icon: 'confirmation_number' },
-  { href: '/revista',     label: 'Revista',      icon: 'menu_book' },
-];
+// Riel de íconos pegado al borde izquierdo (visible en móvil y escritorio):
+// mismos destinos que el menú del AppHeader — ambos salen de src/lib/hubs.ts.
+// El botón de abajo lo expande al panel con etiquetas.
 
 export default function MarketTabs() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  const isActive = (href: string) => pathname.startsWith(href);
+  const isActive = (href: string) => isHubActive(pathname, href);
 
   // Cerrar con Escape y bloquear scroll del fondo mientras está abierto.
   useEffect(() => {
