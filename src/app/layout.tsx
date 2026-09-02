@@ -4,9 +4,43 @@ import './globals.css';
 import BottomNav from '@/components/BottomNav';
 import AppFooter from '@/components/AppFooter';
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://boga.la';
+const SITE_DESC =
+  'Boga es el sistema operativo digital de Pucallpa: comercio, movilidad segura, ' +
+  'trabajo, alquiler de viviendas, eventos y estilo de vida de la ciudad en una sola app.';
+
 export const metadata: Metadata = {
-  title: 'Boga Dash',
-  description: 'Boga Market App',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'Boga · Todo Pucallpa en una app',
+    template: '%s · Boga',
+  },
+  description: SITE_DESC,
+  applicationName: 'Boga',
+  keywords: [
+    'Pucallpa', 'Ucayali', 'delivery Pucallpa', 'restaurantes Pucallpa',
+    'qué hacer en Pucallpa', 'eventos Pucallpa', 'alquileres Pucallpa',
+    'mototaxi seguro', 'trabajo Pucallpa', 'marketplace Pucallpa', 'Boga',
+  ],
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    locale: 'es_PE',
+    url: SITE_URL,
+    siteName: 'Boga',
+    title: 'Boga · Todo Pucallpa en una app',
+    description: SITE_DESC,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Boga · Todo Pucallpa en una app',
+    description: SITE_DESC,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
+  },
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,

@@ -419,19 +419,19 @@ export default function Home() {
       <MarketTabs />
 
       <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-4 lg:gap-6 mt-4 lg:mt-5 pb-12">
-        {/* Banners Section */}
-        <section className="px-container-margin lg:px-6">
+        {/* Banners Section — a todo el ancho, esquinas rectas, uno por vista */}
+        <section>
           {/* Scroll-snap slider — clientWidth based, no clone tricks */}
           <div
             ref={sliderRef}
-            className="flex overflow-x-auto hide-scrollbar rounded-2xl"
+            className="flex overflow-x-auto hide-scrollbar"
             style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
           >
             {BANNERS_RAW.map((b) => (
               <div
                 key={b.id}
-                className="relative aspect-[21/9] lg:aspect-[21/5.5] overflow-hidden shadow-lg shrink-0 group"
-                style={{ scrollSnapAlign: 'start', minWidth: '85vw', flex: isDesktop ? '0 0 100%' : '0 0 85vw' }}
+                className="relative aspect-[16/9] sm:aspect-[21/9] lg:aspect-[32/9] overflow-hidden shadow-sm shrink-0 group w-full"
+                style={{ scrollSnapAlign: 'start', flex: '0 0 100%' }}
               >
                 <img alt="" className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" src={b.img} />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent flex flex-col justify-center p-6 lg:px-16 z-10">
