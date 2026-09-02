@@ -4,7 +4,7 @@
 export type Hub = { href: string; label: string; icon: string };
 
 export const HUBS: Hub[] = [
-  { href: '/inicio',      label: 'Inicio',      icon: 'home' },
+  { href: '/',            label: 'Inicio',      icon: 'home' },
   { href: '/market',      label: 'Market',      icon: 'storefront' },
   { href: '/yapu',        label: 'Yapu',        icon: 'handshake' },
   { href: '/taxi-seguro', label: 'Taxi Seguro', icon: 'local_taxi' },
@@ -15,5 +15,6 @@ export const HUBS: Hub[] = [
 ];
 
 export function isHubActive(pathname: string, href: string) {
-  return href === '/market' ? pathname === '/market' : pathname.startsWith(href);
+  if (href === '/' || href === '/market') return pathname === href;
+  return pathname.startsWith(href);
 }

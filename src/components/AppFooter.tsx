@@ -6,7 +6,7 @@ export default function AppFooter() {
   const pathname = usePathname();
 
   const isMarketplaceRoute =
-    pathname.startsWith('/inicio') ||
+    pathname === '/' ||
     pathname.startsWith('/market') ||
     pathname.startsWith('/explore') ||
     pathname.startsWith('/orders') ||

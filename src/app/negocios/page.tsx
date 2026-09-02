@@ -1,9 +1,8 @@
 import Link from 'next/link';
 
 // Landing B2B (/negocios): la puerta de entrada para dueños de negocio que
-// quieren crear su tienda. Separada del lado consumidor (/inicio, /market…).
-// La raíz "/" redirige a /inicio; acá se entra desde el footer o un link
-// "Vende con Boga".
+// quieren crear su tienda. Separada del lado consumidor ("/", /market…).
+// A "/negocios" se entra desde el footer o un link "Vende con Boga".
 
 const FEATURES = [
   {
@@ -56,7 +55,7 @@ export default function NegociosPage() {
               Iniciar sesión
             </Link>
             <Link
-              href="/inicio"
+              href="/"
               className="font-label-md text-label-md px-4 py-2 rounded-full border border-surface-container-highest text-on-background hover:border-primary hover:text-primary transition-colors"
             >
               Abrir Boga
@@ -113,7 +112,7 @@ export default function NegociosPage() {
                   Crear tu tienda
                 </Link>
                 <Link
-                  href="/inicio"
+                  href="/"
                   className="text-on-background font-semibold text-sm px-7 py-3.5 rounded-full border border-surface-container-highest hover:border-primary hover:text-primary transition-colors"
                 >
                   Ver la app
