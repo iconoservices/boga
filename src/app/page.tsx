@@ -91,18 +91,16 @@ export default function HomePage() {
           </div>
         </Link>
 
-        <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
-          {SELVA_NOTES.slice(0, 2).map((n) => (
-            <Link href="/revista" key={n.id} className="group relative overflow-hidden aspect-[16/10] lg:aspect-[16/7] bg-surface-container-low">
-              <img src={n.img} alt={n.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 p-3">
-                <span className="font-label-md text-[9px] uppercase tracking-wider text-white/60">{n.cat}</span>
-                <h3 className="font-headline-sm text-white text-[13px] leading-tight line-clamp-2 mt-0.5">{n.title}</h3>
-              </div>
-            </Link>
-          ))}
-        </div>
+        {SELVA_NOTES.slice(1, 2).map((n) => (
+          <Link href="/revista" key={n.id} className="group relative overflow-hidden aspect-[16/11] lg:aspect-[4/3] bg-surface-container-low shadow-sm">
+            <img src={n.img} alt={n.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 p-4 lg:p-5">
+              <span className="font-label-md text-[10px] uppercase tracking-[0.25em] text-white/70">{n.cat}</span>
+              <h3 className="font-headline-lg font-extrabold tracking-tight text-white leading-[1.08] text-lg sm:text-xl lg:text-2xl mt-1.5 max-w-[22ch] line-clamp-3">{n.title}</h3>
+            </div>
+          </Link>
+        ))}
       </div>
 
       <main className="max-w-[1280px] mx-auto w-full flex flex-col gap-9 lg:gap-12 py-9 lg:py-12 px-container-margin lg:px-8">
