@@ -76,8 +76,8 @@ export default function HomePage() {
       </div>
 
       {/* Reportaje de tapa (mitad) + notas secundarias */}
-      <div className="max-w-[1280px] mx-auto w-full px-container-margin lg:px-8 pt-6 grid lg:grid-cols-2 gap-5">
-        <Link href={FEATURE.href} className="group relative block overflow-hidden rounded-2xl aspect-[16/11] lg:aspect-[4/3] bg-surface-container-low shadow-lg">
+      <div className="max-w-[1280px] mx-auto w-full px-container-margin lg:px-8 pt-6 grid lg:grid-cols-2 gap-4">
+        <Link href={FEATURE.href} className="group relative block overflow-hidden aspect-[16/11] lg:aspect-[4/3] bg-surface-container-low shadow-sm">
           <img src={FEATURE.img} alt={FEATURE.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
           <div className="absolute top-3 left-3 w-20 h-20 lg:w-28 lg:h-28 rounded-full overflow-hidden border-4 border-white shadow-xl">
@@ -93,7 +93,7 @@ export default function HomePage() {
 
         <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
           {SELVA_NOTES.slice(0, 2).map((n) => (
-            <Link href="/revista" key={n.id} className="group relative overflow-hidden rounded-2xl aspect-[16/10] lg:aspect-[16/7] bg-surface-container-low">
+            <Link href="/revista" key={n.id} className="group relative overflow-hidden aspect-[16/10] lg:aspect-[16/7] bg-surface-container-low">
               <img src={n.img} alt={n.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 p-3">
