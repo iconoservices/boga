@@ -3,7 +3,6 @@
 import React from 'react';
 import AppHeader from '@/components/AppHeader';
 import MarketTabs from '@/components/MarketTabs';
-import { useCart } from '@/context/CartContext';
 
 // "Yo Soy de la Selva" — la revista digital de Boga. Formato editorial, no
 // catálogo: crónicas, guías y retratos de Pucallpa y la Amazonía. Todo el
@@ -50,11 +49,9 @@ const EN_ESTA_EDICION = [
 ];
 
 export default function Revista() {
-  const { cartCount, setIsCartOpen } = useCart();
-
   return (
     <>
-      <AppHeader showSearch={false} cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
+      <AppHeader showSearch={false} showLocation={false} showChat={false} showCart={false} />
       <MarketTabs />
 
       <main className="max-w-[1100px] mx-auto w-full pb-16">

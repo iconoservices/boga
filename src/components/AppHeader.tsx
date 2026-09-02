@@ -9,13 +9,22 @@ interface AppHeaderProps {
   placeholder?: string;
   cartCount?: number;
   onCartClick?: () => void;
+  /** Bloque "Entregar en <dirección>". Se apaga en pantallas de lectura (Revista). */
+  showLocation?: boolean;
+  /** Botón de soporte por WhatsApp. */
+  showChat?: boolean;
+  /** Botón de carrito. */
+  showCart?: boolean;
 }
 
-export default function AppHeader({ 
-  showSearch = true, 
+export default function AppHeader({
+  showSearch = true,
   placeholder = "¿Qué buscas hoy?",
   cartCount: propCartCount,
-  onCartClick: propOnCartClick
+  onCartClick: propOnCartClick,
+  showLocation = true,
+  showChat = true,
+  showCart = true
 }: AppHeaderProps) {
   const { cartCount: contextCartCount, setIsCartOpen } = useCart();
   const pathname = usePathname();
@@ -30,37 +39,50 @@ export default function AppHeader({
       <div className="flex lg:hidden flex-col px-container-margin pt-4 pb-2">
         {/* Location & Icons Row */}
         <div className="flex items-center justify-between">
-          {/* Address Selection */}
-          <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
-            <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>location_on</span>
-            <div className="flex flex-col min-w-0">
-              <span className="font-label-md text-label-md text-secondary leading-none mb-0.5">Entregar en</span>
-              <div className="flex items-center gap-1 cursor-pointer">
-                <span className="font-label-md text-label-md text-on-surface font-bold truncate">Calle Las Palmeras 123</span>
-                <span className="material-symbols-outlined text-sm text-secondary">expand_more</span>
+          {/* Address Selection — o wordmark en pantallas de lectura */}
+          {showLocation ? (
+            <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
+              <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>location_on</span>
+              <div className="flex flex-col min-w-0">
+                <span className="font-label-md text-label-md text-secondary leading-none mb-0.5">Entregar en</span>
+                <div className="flex items-center gap-1 cursor-pointer">
+                  <span className="font-label-md text-label-md text-on-surface font-bold truncate">Calle Las Palmeras 123</span>
+                  <span className="material-symbols-outlined text-sm text-secondary">expand_more</span>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <Link href="/inicio" className="flex items-center gap-2 min-w-0 flex-1 pr-2">
+              <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center shrink-0">
+                <span className="text-white font-black text-xs">B</span>
+              </div>
+              <span className="font-headline-sm text-headline-sm text-on-surface">Boga</span>
+            </Link>
+          )}
 
           {/* Action Buttons */}
           <div className="flex items-center gap-3 shrink-0">
             {/* WhatsApp Support button */}
-            <button className="p-2 bg-white rounded-full shadow-sm hover:shadow-md transition-all active:scale-90 flex items-center justify-center">
-              <span className="material-symbols-outlined text-[#25D366] text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>chat</span>
-            </button>
+            {showChat && (
+              <button className="p-2 bg-white rounded-full shadow-sm hover:shadow-md transition-all active:scale-90 flex items-center justify-center">
+                <span className="material-symbols-outlined text-[#25D366] text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>chat</span>
+              </button>
+            )}
 
             {/* Cart button */}
-            <button 
-              onClick={handleCartClick}
-              className="p-2 bg-white rounded-full shadow-sm hover:shadow-md transition-all active:scale-90 relative flex items-center justify-center"
-            >
-              <span className="material-symbols-outlined text-on-surface text-[20px]">shopping_cart</span>
-              {displayCartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-primary text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                  {displayCartCount}
-                </span>
-              )}
-            </button>
+            {showCart && (
+              <button
+                onClick={handleCartClick}
+                className="p-2 bg-white rounded-full shadow-sm hover:shadow-md transition-all active:scale-90 relative flex items-center justify-center"
+              >
+                <span className="material-symbols-outlined text-on-surface text-[20px]">shopping_cart</span>
+                {displayCartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                    {displayCartCount}
+                  </span>
+                )}
+              </button>
+            )}
 
             {/* Notifications button */}
             <button className="p-2 bg-white rounded-full shadow-sm hover:shadow-md transition-all active:scale-90 flex items-center justify-center">
@@ -91,11 +113,13 @@ export default function AppHeader({
           <Link href="/market" className="text-headline-md font-headline-md text-primary tracking-tight font-extrabold">
             Boga Market
           </Link>
-          <div className="flex items-center gap-1.5 text-secondary group cursor-pointer">
-            <span className="material-symbols-outlined text-primary text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>location_on</span>
-            <span className="font-label-md text-label-md group-hover:text-primary transition-colors">Calle Las Palmeras 123</span>
-            <span className="material-symbols-outlined text-sm text-secondary group-hover:text-primary transition-colors">expand_more</span>
-          </div>
+          {showLocation && (
+            <div className="flex items-center gap-1.5 text-secondary group cursor-pointer">
+              <span className="material-symbols-outlined text-primary text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>location_on</span>
+              <span className="font-label-md text-label-md group-hover:text-primary transition-colors">Calle Las Palmeras 123</span>
+              <span className="material-symbols-outlined text-sm text-secondary group-hover:text-primary transition-colors">expand_more</span>
+            </div>
+          )}
         </div>
 
         {/* Middle Left: Navigation Links */}
@@ -153,9 +177,11 @@ export default function AppHeader({
         {/* Right: Actions */}
         <div className="flex items-center gap-4 shrink-0">
           {/* WhatsApp Support button */}
-          <button className="p-2 hover:bg-surface-container-high transition-colors rounded-full active:scale-95 duration-150 relative flex items-center justify-center" title="Soporte WhatsApp">
-            <span className="material-symbols-outlined text-[#25D366] text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>chat</span>
-          </button>
+          {showChat && (
+            <button className="p-2 hover:bg-surface-container-high transition-colors rounded-full active:scale-95 duration-150 relative flex items-center justify-center" title="Soporte WhatsApp">
+              <span className="material-symbols-outlined text-[#25D366] text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>chat</span>
+            </button>
+          )}
 
           {/* Notifications button */}
           <button className="p-2 hover:bg-surface-container-high transition-colors rounded-full active:scale-95 duration-150 relative flex items-center justify-center" title="Notificaciones">
@@ -163,18 +189,20 @@ export default function AppHeader({
           </button>
 
           {/* Cart button */}
-          <button 
-            onClick={handleCartClick}
-            className="p-2 hover:bg-surface-container-high transition-colors rounded-full active:scale-95 duration-150 relative flex items-center justify-center"
-            title="Carrito de compras"
-          >
-            <span className="material-symbols-outlined text-secondary text-[22px]">shopping_cart</span>
-            {displayCartCount > 0 && (
-              <span className="absolute top-0 right-0 bg-primary text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-surface shadow-sm">
-                {displayCartCount}
-              </span>
-            )}
-          </button>
+          {showCart && (
+            <button
+              onClick={handleCartClick}
+              className="p-2 hover:bg-surface-container-high transition-colors rounded-full active:scale-95 duration-150 relative flex items-center justify-center"
+              title="Carrito de compras"
+            >
+              <span className="material-symbols-outlined text-secondary text-[22px]">shopping_cart</span>
+              {displayCartCount > 0 && (
+                <span className="absolute top-0 right-0 bg-primary text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-surface shadow-sm">
+                  {displayCartCount}
+                </span>
+              )}
+            </button>
+          )}
 
           {/* Profile button */}
           <Link 
