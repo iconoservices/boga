@@ -17,8 +17,8 @@ import type { StoreTheme } from '@/lib/templates.config';
 // cuenta puede entrar y solo ve sus propias tiendas), este panel puede editar
 // y borrar CUALQUIER tienda del ecosistema — la lista, no solo estar logueado,
 // es lo que decide el acceso. Coincide con el email permitido en las políticas
-// RLS de Supabase (ver supabase_auth_setup.sql): si agregas uno acá, agrégalo
-// también allá.
+// RLS de Supabase (ver supabase_setup.sql → public.is_superadmin()): si
+// agregas uno acá, agrégalo también allá.
 const SUPERADMIN_EMAILS = ['jnmcsky@gmail.com'];
 
 // Plantillas que ya tienen botón de pedido por WhatsApp implementado en su código
@@ -812,7 +812,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       zona: '',
       direccion: '',
       horario: '',
-      rating: ''
+      rating: '',
+      metodosPago: [],
     });
     setShowStoreModal(true);
     supabase.from('store_requests').update({ status: 'approved' }).eq('id', req.id).then(() => {
@@ -1552,7 +1553,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       if (!error && columnasFaltantes.length) {
         alert(
           `Tienda guardada, pero estos campos todavía no se guardaron: ${columnasFaltantes.join(', ')}.\n\n` +
-          'Corré la migración pendiente en el SQL editor de Supabase (ver supabase_stores_setup.sql).'
+          'Corré la migración pendiente en el SQL editor de Supabase (ver supabase_setup.sql).'
         );
       }
       if (error) throw error;
