@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-// Conmutador entre los "hubs" del lado consumidor. Toggle pegado al borde
-// izquierdo que despliega el menú vertical (queda fuera del flujo, no empuja
-// el contenido). Inicio y Market NO van acá: ya están en la barra inferior.
+// Conmutador entre todos los "hubs" del lado consumidor. Riel de íconos pegado
+// al borde izquierdo (queda fuera del flujo, no empuja el contenido); el botón
+// de abajo lo expande al panel con etiquetas.
 const TABS = [
+  { href: '/inicio',      label: 'Inicio',       icon: 'home' },
+  { href: '/market',      label: 'Market',       icon: 'storefront' },
   { href: '/yapu',        label: 'Yapu',         icon: 'handshake' },
   { href: '/taxi-seguro', label: 'Taxi Seguro',  icon: 'local_taxi' },
   { href: '/alquileres',  label: 'Alquileres',   icon: 'bed' },
@@ -39,7 +41,7 @@ export default function MarketTabs() {
     <>
       {/* Riel de íconos flotante en el borde izquierdo (estado cerrado) */}
       <div
-        className={`fixed left-0 top-1/2 -translate-y-1/2 z-40 flex flex-col items-center gap-0.5 rounded-r-2xl bg-primary py-2 px-1 shadow-[4px_4px_16px_rgba(0,0,0,0.18)] transition-opacity duration-200 ${
+        className={`fixed left-0 top-1/2 -translate-y-1/2 z-40 flex flex-col items-center rounded-r-2xl bg-primary py-1.5 px-1 shadow-[4px_4px_16px_rgba(0,0,0,0.18)] transition-opacity duration-200 ${
           open ? 'pointer-events-none opacity-0' : 'opacity-100'
         }`}
       >
@@ -51,12 +53,12 @@ export default function MarketTabs() {
               href={tab.href}
               title={tab.label}
               aria-label={tab.label}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
                 active ? 'bg-white text-primary' : 'text-white/85 hover:bg-white/15'
               }`}
             >
               <span
-                className="material-symbols-outlined text-[20px]"
+                className="material-symbols-outlined text-[18px]"
                 style={active ? { fontVariationSettings: "'FILL' 1" } : {}}
               >
                 {tab.icon}
@@ -68,7 +70,7 @@ export default function MarketTabs() {
         <button
           onClick={() => setOpen(true)}
           aria-label="Abrir menú de secciones"
-          className="w-9 h-9 rounded-full flex items-center justify-center text-white/70 hover:bg-white/15 active:scale-95 transition-all"
+          className="w-8 h-8 rounded-full flex items-center justify-center text-white/70 hover:bg-white/15 active:scale-95 transition-all"
         >
           <span className="material-symbols-outlined text-[18px]">chevron_right</span>
         </button>

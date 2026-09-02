@@ -83,30 +83,28 @@ export default function Inicio() {
       <AppHeader showSearch={false} cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
       <MarketTabs />
 
-      {/* Banda negra — a todo el ancho */}
+      {/* Banda negra compacta — a todo el ancho */}
       <div className="bg-on-surface text-background">
-        <div className="max-w-[1280px] mx-auto px-container-margin lg:px-8 py-8 lg:py-14">
-          <div className="grid lg:grid-cols-[1.2fr_1fr] gap-6 lg:gap-10 items-center">
-            <h1 className="font-headline-lg font-extrabold tracking-tight text-3xl sm:text-4xl lg:text-[52px] leading-[1.02]">
-              Descubre lo mejor de Pucallpa
-            </h1>
-            <div className="flex flex-wrap gap-2 lg:justify-end">
-              {QUICK_LINKS.map((q) => (
-                <Link
-                  key={q.label}
-                  href={q.href}
-                  className="bg-primary text-white font-label-md text-[12px] px-4 py-2 rounded-full hover:opacity-90 transition-opacity"
-                >
-                  {q.label}
-                </Link>
-              ))}
+        <div className="max-w-[1280px] mx-auto px-container-margin lg:px-8 py-3 lg:py-3.5 flex flex-wrap items-center gap-x-6 gap-y-2">
+          <h1 className="font-headline-lg font-extrabold tracking-tight text-lg lg:text-xl shrink-0">
+            Descubre <span className="text-primary-fixed">Pucallpa</span>
+          </h1>
+          <div className="flex gap-2 overflow-x-auto hide-scrollbar flex-1 lg:justify-end -mx-container-margin px-container-margin lg:mx-0 lg:px-0" style={{ scrollbarWidth: 'none' }}>
+            {QUICK_LINKS.map((q) => (
               <Link
-                href="/market"
-                className="border border-background/40 text-background font-label-md text-[12px] px-4 py-2 rounded-full hover:border-background transition-colors"
+                key={q.label}
+                href={q.href}
+                className="shrink-0 bg-primary text-white font-label-md text-[11px] px-3.5 py-1.5 rounded-full hover:opacity-90 transition-opacity"
               >
-                Ir al Market
+                {q.label}
               </Link>
-            </div>
+            ))}
+            <Link
+              href="/market"
+              className="shrink-0 border border-background/40 text-background font-label-md text-[11px] px-3.5 py-1.5 rounded-full hover:border-background transition-colors"
+            >
+              Ir al Market
+            </Link>
           </div>
         </div>
       </div>
