@@ -61,30 +61,49 @@ const EN_ESTA_EDICION = [
   'Mapa: dónde hay wifi gratis de verdad en el centro',
 ];
 
+// Tarjeta de nota con el título ENCIMA de la imagen (estilo tapa de revista).
+function NotaCard({ n, lead = false }: { n: Nota; lead?: boolean }) {
+  return (
+    <article
+      className={`group relative overflow-hidden rounded-sm ${
+        lead ? 'aspect-[16/10] sm:aspect-[21/9] sm:col-span-2 lg:col-span-3' : 'aspect-[4/3]'
+      }`}
+    >
+      <img
+        src={n.img}
+        alt={n.titulo}
+        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
+      <div className={`absolute inset-x-0 bottom-0 ${lead ? 'p-5 lg:p-8' : 'p-4'}`}>
+        <span className="inline-block bg-[#0b4d2c] text-white font-label-md text-[9px] uppercase tracking-[0.2em] px-2 py-0.5">
+          {n.kicker}
+        </span>
+        <h3
+          className={`text-white font-headline-lg font-extrabold tracking-tight leading-[1.08] mt-2 ${
+            lead ? 'text-xl sm:text-3xl lg:text-4xl max-w-[20ch]' : 'text-base lg:text-lg'
+          }`}
+        >
+          {n.titulo}
+        </h3>
+        <div className="flex items-center gap-2 mt-2 text-white/70">
+          <span className="font-label-md text-[10px] uppercase tracking-wider">{n.fecha}</span>
+          <span className="w-1 h-1 rounded-full bg-white/40" />
+          <span className="font-label-md text-[10px]">{n.lectura}</span>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 function ListaNotas({ notas }: { notas: Nota[] }) {
   if (notas.length === 0) {
     return <p className="font-body-md text-secondary text-sm py-10">Todavía no hay notas en esta sección.</p>;
   }
   return (
-    <div className="divide-y divide-on-surface/10">
-      {notas.map((n) => (
-        <article key={n.id} className="flex gap-4 lg:gap-6 py-6 group">
-          <div className="w-28 sm:w-44 lg:w-56 shrink-0 aspect-[4/3] overflow-hidden rounded-sm bg-surface-container-low">
-            <img src={n.img} alt={n.titulo} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <span className="font-label-md text-[11px] uppercase tracking-wider text-secondary">{n.fecha}</span>
-            <h3 className="font-headline-lg font-bold tracking-tight text-on-surface leading-snug text-base sm:text-lg lg:text-xl mt-1">
-              {n.titulo}
-            </h3>
-            <p className="hidden sm:block font-body-md text-secondary text-sm leading-relaxed mt-2 line-clamp-2 lg:line-clamp-3">{n.dek}</p>
-            <div className="flex items-center gap-2 mt-2 text-secondary">
-              <span className="font-label-md text-[10px] uppercase tracking-[0.25em] text-primary">{n.kicker}</span>
-              <span className="w-1 h-1 rounded-full bg-secondary/40" />
-              <span className="font-label-md text-[11px]">{n.lectura}</span>
-            </div>
-          </div>
-        </article>
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
+      {notas.map((n, i) => (
+        <NotaCard key={n.id} n={n} lead={i === 0} />
       ))}
     </div>
   );
@@ -112,17 +131,16 @@ export default function Revista() {
 
       <main className="w-full pb-16">
 
-        {/* Masthead estilo diario digital */}
-        <div className="bg-primary text-white">
+        {/* Masthead — paleta del logo "Yo Soy de la Selva": verde selva + dorado + madera */}
+        <div className="bg-[#0b4d2c] text-white border-b-4 border-[#e0a72e]">
           <div className="max-w-[1100px] mx-auto px-container-margin lg:px-8 py-6 lg:py-8">
             <h1 className="font-headline-lg font-extrabold tracking-tight leading-[0.92] text-[11vw] sm:text-5xl lg:text-6xl">
-              Yo Soy de la Selva
+              Yo Soy <span className="text-[#f2d489]">de la Selva</span>
             </h1>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
-              <p className="font-label-md text-[11px] uppercase tracking-[0.25em] text-white/80">
-                Revista digital de Pucallpa
-              </p>
-              <span className="w-1 h-1 rounded-full bg-white/40" />
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3">
+              <span className="bg-[#6b4a2e] text-[#f4e7d3] font-label-md text-[10px] px-2.5 py-1 rounded-sm shadow-sm">
+                Únete y sé un selvático de verdad
+              </span>
               <p className="font-label-md text-[10px] uppercase tracking-widest text-white/70">{EDICION}</p>
             </div>
           </div>
@@ -139,10 +157,10 @@ export default function Revista() {
                   onClick={() => irASeccion(s)}
                   className={`shrink-0 px-4 py-3 font-headline-sm text-[13px] whitespace-nowrap transition-colors relative ${
                     i > 0 ? 'border-l border-on-surface/12' : ''
-                  } ${active ? 'text-primary' : 'text-on-surface hover:text-primary'}`}
+                  } ${active ? 'text-[#0b4d2c]' : 'text-on-surface hover:text-[#0b4d2c]'}`}
                 >
                   {s}
-                  {active && <span className="absolute left-0 right-0 -bottom-px h-0.5 bg-primary" />}
+                  {active && <span className="absolute left-0 right-0 -bottom-px h-0.5 bg-[#0b4d2c]" />}
                 </button>
               );
             })}
@@ -159,7 +177,7 @@ export default function Revista() {
                   <img src={PORTADA.img} alt={PORTADA.titulo} className="absolute inset-0 w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-5 lg:p-8">
-                    <span className="inline-block bg-primary text-white font-label-md text-[10px] uppercase tracking-[0.2em] px-2.5 py-1">
+                    <span className="inline-block bg-[#0b4d2c] text-white font-label-md text-[10px] uppercase tracking-[0.2em] px-2.5 py-1">
                       {PORTADA.kicker}
                     </span>
                     <h2 className="text-white font-headline-lg font-extrabold tracking-tight leading-[1.03] text-2xl sm:text-4xl lg:text-5xl mt-3 max-w-[16ch]">
@@ -168,7 +186,7 @@ export default function Revista() {
                   </div>
                 </div>
                 <div className="grid lg:grid-cols-[1fr_240px] gap-6 lg:gap-10 mt-6">
-                  <p className="font-body-lg text-on-surface/80 text-base lg:text-lg leading-relaxed first-letter:font-headline-lg first-letter:font-black first-letter:text-6xl first-letter:leading-[0.75] first-letter:float-left first-letter:mr-2.5 first-letter:mt-1 first-letter:text-primary">
+                  <p className="font-body-lg text-on-surface/80 text-base lg:text-lg leading-relaxed first-letter:font-headline-lg first-letter:font-black first-letter:text-6xl first-letter:leading-[0.75] first-letter:float-left first-letter:mr-2.5 first-letter:mt-1 first-letter:text-[#1a7f45]">
                     {PORTADA.dek}
                   </p>
                   <div className="flex lg:flex-col gap-3 lg:gap-2 lg:border-l lg:border-on-surface/15 lg:pl-6 shrink-0">
@@ -185,24 +203,15 @@ export default function Revista() {
               </article>
 
               {/* Destacados */}
-              <section className="px-container-margin lg:px-8 mt-10 grid sm:grid-cols-3 gap-8">
+              <section className="px-container-margin lg:px-8 mt-10 grid sm:grid-cols-3 gap-5 lg:gap-6">
                 {destacados.map((d) => (
-                  <article key={d.id} className="group">
-                    <div className="relative overflow-hidden rounded-sm aspect-[3/2]">
-                      <img src={d.img} alt={d.titulo} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
-                    </div>
-                    <span className="font-label-md text-[10px] uppercase tracking-[0.25em] text-primary block mt-3">{d.kicker}</span>
-                    <h3 className="font-headline-lg font-extrabold tracking-tight text-on-surface leading-[1.1] text-lg mt-1">
-                      {d.titulo}
-                    </h3>
-                    <p className="font-body-md text-secondary text-sm leading-relaxed mt-2 line-clamp-2">{d.dek}</p>
-                  </article>
+                  <NotaCard key={d.id} n={d} />
                 ))}
               </section>
 
               {/* Cita */}
               <blockquote className="px-container-margin lg:px-8 my-14">
-                <div className="border-l-4 border-primary pl-5 lg:pl-8 max-w-[28ch] lg:max-w-[40ch]">
+                <div className="border-l-4 border-[#e0a72e] pl-5 lg:pl-8 max-w-[28ch] lg:max-w-[40ch]">
                   <p className="font-headline-lg font-extrabold tracking-tight text-on-surface leading-[1.15] text-xl lg:text-3xl">
                     {CITA.texto}
                   </p>
