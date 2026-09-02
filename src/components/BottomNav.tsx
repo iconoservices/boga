@@ -9,6 +9,8 @@ export default function BottomNav() {
   const isMarketplaceRoute =
     pathname.startsWith('/market') ||
     pathname.startsWith('/explore') ||
+    pathname.startsWith('/yapu') ||
+    pathname.startsWith('/taxi-seguro') ||
     pathname.startsWith('/orders') ||
     pathname.startsWith('/profile') ||
     pathname.startsWith('/promotions') ||
