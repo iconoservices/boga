@@ -14,6 +14,7 @@ export default function BottomNav() {
     pathname.startsWith('/taxi-seguro') ||
     pathname.startsWith('/eventos') ||
     pathname.startsWith('/sorteos') ||
+    pathname.startsWith('/revista') ||
     pathname.startsWith('/orders') ||
     pathname.startsWith('/profile') ||
     pathname.startsWith('/promotions') ||

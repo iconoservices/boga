@@ -16,6 +16,7 @@ const TABS = [
   { href: '/taxi-seguro', label: 'Taxi Seguro',  icon: 'local_taxi' },
   { href: '/eventos',     label: 'Eventos',      icon: 'celebration' },
   { href: '/sorteos',     label: 'Sorteos',      icon: 'confirmation_number' },
+  { href: '/revista',     label: 'Revista',      icon: 'menu_book' },
 ];
 
 export default function MarketTabs() {
