@@ -1,14 +1,13 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-// Conmutador entre los "hubs" del lado consumidor:
-//  - Inicio: contenido editorial / descubrimiento (qué hacer, lista VIP, notas…)
-//  - Market: SOLO compras — categorías y productos, el buscador del marketplace
-//  - Yapu: tablero local de chamba y servicios
-//  - Taxi Seguro: directorio de movilidad verificada
-// Se muestra arriba de cada uno para que se sienta una sola app con pestañas.
+// Conmutador entre los "hubs" del lado consumidor. Antes era una barra de
+// pestañas horizontal arriba de cada pantalla; ahora es un toggle pegado al
+// borde izquierdo que despliega el menú vertical (queda fuera del flujo y no
+// empuja el contenido).
 const TABS = [
   { href: '/inicio',      label: 'Inicio',       icon: 'explore' },
   { href: '/market',      label: 'Market',       icon: 'storefront' },
@@ -21,32 +20,108 @@ const TABS = [
 
 export default function MarketTabs() {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
+  const isActive = (href: string) =>
+    href === '/market' ? pathname === '/market' : pathname.startsWith(href);
+
+  const activeTab = TABS.find((t) => isActive(t.href)) ?? TABS[0];
+
+  // Cerrar con Escape y bloquear scroll del fondo mientras está abierto.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    window.addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
 
   return (
-    <div className="max-w-[1440px] mx-auto w-full px-container-margin lg:px-6 pt-3">
-      <div className="flex gap-2 overflow-x-auto hide-scrollbar" style={{ scrollbarWidth: 'none' }}>
-        {TABS.map((tab) => {
-          const isActive = tab.href === '/market'
-            ? pathname === '/market'
-            : pathname.startsWith(tab.href);
-          return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-label-md shrink-0 transition-all shadow-sm active:scale-95 ${
-                isActive
-                  ? 'bg-primary text-white border border-primary shadow-md'
-                  : 'bg-white border border-surface-container-highest text-secondary hover:shadow-md'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[16px]" style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}>
-                {tab.icon}
-              </span>
-              {tab.label}
-            </Link>
-          );
-        })}
-      </div>
-    </div>
+    <>
+      {/* Handle pegado al borde izquierdo */}
+      <button
+        onClick={() => setOpen(true)}
+        aria-label="Abrir menú de secciones"
+        className={`fixed left-0 top-[42%] z-40 flex flex-col items-center gap-1 rounded-r-2xl bg-primary text-white pl-1.5 pr-2 py-3 shadow-[4px_4px_16px_rgba(0,0,0,0.18)] active:scale-95 transition-transform ${
+          open ? 'pointer-events-none opacity-0' : 'opacity-100'
+        }`}
+      >
+        <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+          {activeTab.icon}
+        </span>
+        <span
+          className="font-label-md text-[10px] tracking-wider uppercase"
+          style={{ writingMode: 'vertical-rl' } as React.CSSProperties}
+        >
+          {activeTab.label}
+        </span>
+        <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+      </button>
+
+      {/* Backdrop */}
+      <div
+        onClick={() => setOpen(false)}
+        className={`fixed inset-0 z-[55] bg-black/40 transition-opacity duration-200 ${
+          open ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        aria-hidden="true"
+      />
+
+      {/* Panel deslizante */}
+      <nav
+        className={`fixed left-0 top-0 bottom-0 z-[60] w-[264px] max-w-[82vw] bg-surface-container-lowest shadow-[8px_0_28px_rgba(0,0,0,0.22)] flex flex-col transition-transform duration-300 ease-out ${
+          open ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="flex items-center justify-between px-4 h-16 border-b border-surface-container-high shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center shrink-0">
+              <span className="text-white font-black text-xs">B</span>
+            </div>
+            <span className="font-headline-sm text-on-surface">Explora Boga</span>
+          </div>
+          <button
+            onClick={() => setOpen(false)}
+            aria-label="Cerrar menú"
+            className="w-8 h-8 flex items-center justify-center rounded-full text-secondary hover:bg-surface-container-high active:scale-90 transition-all"
+          >
+            <span className="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto py-2">
+          {TABS.map((tab) => {
+            const active = isActive(tab.href);
+            return (
+              <Link
+                key={tab.href}
+                href={tab.href}
+                onClick={() => setOpen(false)}
+                className={`flex items-center gap-3 mx-2 px-3 py-3 rounded-xl transition-colors ${
+                  active
+                    ? 'bg-primary-fixed text-primary'
+                    : 'text-on-surface hover:bg-surface-container-high'
+                }`}
+              >
+                <span
+                  className="material-symbols-outlined text-[22px]"
+                  style={active ? { fontVariationSettings: "'FILL' 1" } : {}}
+                >
+                  {tab.icon}
+                </span>
+                <span className="font-label-md text-[13px]">{tab.label}</span>
+                {active && (
+                  <span className="material-symbols-outlined text-[18px] ml-auto">chevron_right</span>
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+    </>
   );
 }
