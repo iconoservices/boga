@@ -12,6 +12,7 @@ export default function BottomNav() {
     pathname.startsWith('/explore') ||
     pathname.startsWith('/yapu') ||
     pathname.startsWith('/taxi-seguro') ||
+    pathname.startsWith('/alquileres') ||
     pathname.startsWith('/eventos') ||
     pathname.startsWith('/sorteos') ||
     pathname.startsWith('/revista') ||
