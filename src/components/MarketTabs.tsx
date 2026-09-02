@@ -22,9 +22,6 @@ export default function MarketTabs() {
 
   const isActive = (href: string) => pathname.startsWith(href);
 
-  const activeTab = TABS.find((t) => isActive(t.href))
-    ?? { label: 'Explora', icon: 'widgets' };
-
   // Cerrar con Escape y bloquear scroll del fondo mientras está abierto.
   useEffect(() => {
     if (!open) return;
@@ -40,25 +37,42 @@ export default function MarketTabs() {
 
   return (
     <>
-      {/* Handle pegado al borde izquierdo */}
-      <button
-        onClick={() => setOpen(true)}
-        aria-label="Abrir menú de secciones"
-        className={`fixed left-0 top-[42%] z-40 flex flex-col items-center gap-1 rounded-r-2xl bg-primary text-white pl-1.5 pr-2 py-3 shadow-[4px_4px_16px_rgba(0,0,0,0.18)] active:scale-95 transition-transform ${
+      {/* Riel de íconos flotante en el borde izquierdo (estado cerrado) */}
+      <div
+        className={`fixed left-0 top-1/2 -translate-y-1/2 z-40 flex flex-col items-center gap-0.5 rounded-r-2xl bg-primary py-2 px-1 shadow-[4px_4px_16px_rgba(0,0,0,0.18)] transition-opacity duration-200 ${
           open ? 'pointer-events-none opacity-0' : 'opacity-100'
         }`}
       >
-        <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-          {activeTab.icon}
-        </span>
-        <span
-          className="font-label-md text-[10px] tracking-wider uppercase"
-          style={{ writingMode: 'vertical-rl' } as React.CSSProperties}
+        {TABS.map((tab) => {
+          const active = isActive(tab.href);
+          return (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              title={tab.label}
+              aria-label={tab.label}
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
+                active ? 'bg-white text-primary' : 'text-white/85 hover:bg-white/15'
+              }`}
+            >
+              <span
+                className="material-symbols-outlined text-[20px]"
+                style={active ? { fontVariationSettings: "'FILL' 1" } : {}}
+              >
+                {tab.icon}
+              </span>
+            </Link>
+          );
+        })}
+        <span className="w-5 h-px bg-white/25 my-1" />
+        <button
+          onClick={() => setOpen(true)}
+          aria-label="Abrir menú de secciones"
+          className="w-9 h-9 rounded-full flex items-center justify-center text-white/70 hover:bg-white/15 active:scale-95 transition-all"
         >
-          {activeTab.label}
-        </span>
-        <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-      </button>
+          <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+        </button>
+      </div>
 
       {/* Backdrop */}
       <div
