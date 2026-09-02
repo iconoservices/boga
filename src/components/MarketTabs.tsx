@@ -4,13 +4,10 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-// Conmutador entre los "hubs" del lado consumidor. Antes era una barra de
-// pestañas horizontal arriba de cada pantalla; ahora es un toggle pegado al
-// borde izquierdo que despliega el menú vertical (queda fuera del flujo y no
-// empuja el contenido).
+// Conmutador entre los "hubs" del lado consumidor. Toggle pegado al borde
+// izquierdo que despliega el menú vertical (queda fuera del flujo, no empuja
+// el contenido). Inicio y Market NO van acá: ya están en la barra inferior.
 const TABS = [
-  { href: '/inicio',      label: 'Inicio',       icon: 'explore' },
-  { href: '/market',      label: 'Market',       icon: 'storefront' },
   { href: '/yapu',        label: 'Yapu',         icon: 'handshake' },
   { href: '/taxi-seguro', label: 'Taxi Seguro',  icon: 'local_taxi' },
   { href: '/eventos',     label: 'Eventos',      icon: 'celebration' },
@@ -22,10 +19,10 @@ export default function MarketTabs() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  const isActive = (href: string) =>
-    href === '/market' ? pathname === '/market' : pathname.startsWith(href);
+  const isActive = (href: string) => pathname.startsWith(href);
 
-  const activeTab = TABS.find((t) => isActive(t.href)) ?? TABS[0];
+  const activeTab = TABS.find((t) => isActive(t.href))
+    ?? { label: 'Explora', icon: 'widgets' };
 
   // Cerrar con Escape y bloquear scroll del fondo mientras está abierto.
   useEffect(() => {

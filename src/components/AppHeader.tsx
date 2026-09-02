@@ -125,22 +125,30 @@ export default function AppHeader({
         {/* Middle Left: Navigation Links */}
         <nav className="flex items-center gap-5 shrink-0">
           <Link
+            href="/inicio"
+            className={`font-label-md text-label-md transition-colors ${
+              pathname.startsWith('/inicio') ? 'text-primary' : 'text-secondary hover:text-primary'
+            }`}
+          >
+            Inicio
+          </Link>
+          <Link
             href="/market"
             className={`font-label-md text-label-md transition-colors ${
               pathname === '/market' ? 'text-primary' : 'text-secondary hover:text-primary'
             }`}
           >
-            Inicio
+            Market
           </Link>
-          <Link 
-            href="/explore" 
+          <Link
+            href="/explore"
             className={`font-label-md text-label-md transition-colors ${
               pathname.startsWith('/explore') ? 'text-primary' : 'text-secondary hover:text-primary'
             }`}
           >
             Explorar
           </Link>
-          <Link 
+          <Link
             href="/orders" 
             className={`font-label-md text-label-md transition-colors ${
               pathname.startsWith('/orders') ? 'text-primary' : 'text-secondary hover:text-primary'
