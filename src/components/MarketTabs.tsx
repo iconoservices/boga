@@ -14,6 +14,7 @@ const TABS = [
   { href: '/market',      label: 'Market',       icon: 'storefront' },
   { href: '/yapu',        label: 'Yapu',         icon: 'handshake' },
   { href: '/taxi-seguro', label: 'Taxi Seguro',  icon: 'local_taxi' },
+  { href: '/sorteos',     label: 'Sorteos',      icon: 'confirmation_number' },
 ];
 
 export default function MarketTabs() {
