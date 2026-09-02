@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
@@ -29,13 +30,38 @@ export default function AppHeader({
 }: AppHeaderProps) {
   const { cartCount: contextCartCount, setIsCartOpen } = useCart();
   const pathname = usePathname();
-  
+
   // Use props if provided, otherwise use context
   const displayCartCount = propCartCount !== undefined ? propCartCount : contextCartCount;
   const handleCartClick = propOnCartClick || (() => setIsCartOpen(true));
 
+  // Se oculta al bajar, reaparece al subir (o cerca del tope).
+  const [hidden, setHidden] = useState(false);
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        if (y < 64) setHidden(false);
+        else if (y > lastY + 6) setHidden(true);
+        else if (y < lastY - 6) setHidden(false);
+        lastY = y;
+        ticking = false;
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   return (
-    <header className="bg-surface sticky top-0 z-50 w-full shadow-[0px_15px_15px_rgba(0,0,0,0.04)] border-b border-surface-container-high">
+    <header
+      className={`bg-surface sticky top-0 z-50 w-full shadow-[0px_15px_15px_rgba(0,0,0,0.04)] border-b border-surface-container-high transition-transform duration-300 ${
+        hidden ? '-translate-y-full' : 'translate-y-0'
+      }`}
+    >
       {/* Mobile Nav Row */}
       <div className="flex lg:hidden flex-col px-container-margin pt-4 pb-2">
         {/* Location & Icons Row */}
