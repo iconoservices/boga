@@ -7,6 +7,7 @@ export default function BottomNav() {
   const pathname = usePathname();
 
   const isMarketplaceRoute =
+    pathname.startsWith('/inicio') ||
     pathname.startsWith('/market') ||
     pathname.startsWith('/explore') ||
     pathname.startsWith('/yapu') ||
@@ -19,8 +20,8 @@ export default function BottomNav() {
   if (!isMarketplaceRoute) return null;
 
   const navItems = [
-    { path: '/market', icon: 'home', label: 'Inicio' },
-    { path: '/explore', icon: 'search', label: 'Explorar' },
+    { path: '/inicio', icon: 'home', label: 'Inicio' },
+    { path: '/market', icon: 'storefront', label: 'Market' },
     { path: '/orders', icon: 'receipt_long', label: 'Pedidos' },
     { path: '/profile', icon: 'person', label: 'Perfil' },
   ];

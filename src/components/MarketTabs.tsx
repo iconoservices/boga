@@ -3,11 +3,14 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-// Conmutador entre los tres "hubs" del lado consumidor: el Marketplace de
-// compras, el tablero local de chamba/servicios (Yapu) y el directorio de
-// movilidad verificada (Taxi Seguro). Se muestra arriba de cada uno para que
-// se sienta una sola app con pestañas y no tres cosas sueltas.
+// Conmutador entre los "hubs" del lado consumidor:
+//  - Inicio: contenido editorial / descubrimiento (qué hacer, lista VIP, notas…)
+//  - Market: SOLO compras — categorías y productos, el buscador del marketplace
+//  - Yapu: tablero local de chamba y servicios
+//  - Taxi Seguro: directorio de movilidad verificada
+// Se muestra arriba de cada uno para que se sienta una sola app con pestañas.
 const TABS = [
+  { href: '/inicio',      label: 'Inicio',       icon: 'explore' },
   { href: '/market',      label: 'Market',       icon: 'storefront' },
   { href: '/yapu',        label: 'Yapu',         icon: 'handshake' },
   { href: '/taxi-seguro', label: 'Taxi Seguro',  icon: 'local_taxi' },
