@@ -83,12 +83,11 @@ export default function Inicio() {
       <AppHeader showSearch={false} cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
       <MarketTabs />
 
-      <main className="max-w-[1200px] mx-auto w-full flex flex-col gap-8 lg:gap-10 mt-4 pb-14 px-container-margin lg:px-6">
-
-        {/* Banda negra tipo Time Out */}
-        <section className="bg-on-surface text-background rounded-2xl px-6 py-7 lg:px-10 lg:py-10">
-          <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 items-center">
-            <h1 className="font-headline-lg font-extrabold tracking-tight text-3xl sm:text-4xl lg:text-5xl leading-[1.03]">
+      {/* Banda negra — a todo el ancho */}
+      <div className="bg-on-surface text-background">
+        <div className="max-w-[1280px] mx-auto px-container-margin lg:px-8 py-8 lg:py-14">
+          <div className="grid lg:grid-cols-[1.2fr_1fr] gap-6 lg:gap-10 items-center">
+            <h1 className="font-headline-lg font-extrabold tracking-tight text-3xl sm:text-4xl lg:text-[52px] leading-[1.02]">
               Descubre lo mejor de Pucallpa
             </h1>
             <div className="flex flex-wrap gap-2 lg:justify-end">
@@ -109,39 +108,42 @@ export default function Inicio() {
               </Link>
             </div>
           </div>
-        </section>
+        </div>
+      </div>
 
-        {/* Reportaje de tapa — imagen grande + retrato circular + titular encima */}
-        <Link href={FEATURE.href} className="group relative block overflow-hidden rounded-2xl aspect-[16/11] sm:aspect-[16/9] lg:aspect-[21/9] bg-surface-container-low shadow-lg">
-          <img src={FEATURE.img} alt={FEATURE.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
-          <div className="absolute top-4 left-4 lg:top-1/2 lg:left-10 lg:-translate-y-1/2 w-24 h-24 lg:w-48 lg:h-48 rounded-full overflow-hidden border-4 border-white shadow-xl">
+      {/* Barra roja de secciones — a todo el ancho, como un menú */}
+      <nav className="bg-primary text-white shadow-[0_6px_16px_-6px_rgba(184,19,14,0.5)]">
+        <div className="max-w-[1280px] mx-auto flex overflow-x-auto hide-scrollbar" style={{ scrollbarWidth: 'none' }}>
+          {NAV.map((n) => (
+            <Link
+              key={n.label}
+              href={n.href}
+              className="shrink-0 px-4 lg:px-6 py-3.5 font-headline-sm text-[12px] lg:text-[13px] uppercase tracking-[0.08em] whitespace-nowrap border-r border-white/15 first:border-l first:border-white/15 hover:bg-black/20 transition-colors"
+            >
+              {n.label}
+            </Link>
+          ))}
+        </div>
+      </nav>
+
+      {/* Reportaje de tapa — a todo el ancho */}
+      <Link href={FEATURE.href} className="group relative block overflow-hidden aspect-[16/12] sm:aspect-[16/8] lg:aspect-[24/8] bg-surface-container-low">
+        <img src={FEATURE.img} alt={FEATURE.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
+        <div className="max-w-[1280px] mx-auto h-full relative px-container-margin lg:px-8">
+          <div className="absolute top-4 left-4 lg:top-1/2 lg:left-8 lg:-translate-y-1/2 w-24 h-24 lg:w-52 lg:h-52 rounded-full overflow-hidden border-4 border-white shadow-xl">
             <img src={FEATURE.portrait} alt="" className="w-full h-full object-cover" />
           </div>
-          <div className="absolute inset-x-0 bottom-0 p-5 lg:p-8">
+          <div className="absolute inset-x-4 lg:inset-x-8 bottom-0 pb-5 lg:pb-8">
             <span className="font-label-md text-[10px] uppercase tracking-[0.25em] text-white/70">{FEATURE.kicker}</span>
-            <h2 className="font-headline-lg font-extrabold tracking-tight text-white leading-[1.05] text-2xl sm:text-3xl lg:text-4xl mt-1.5 max-w-[22ch]">
+            <h2 className="font-headline-lg font-extrabold tracking-tight text-white leading-[1.05] text-2xl sm:text-3xl lg:text-4xl mt-1.5 max-w-[24ch]">
               {FEATURE.title}
             </h2>
           </div>
-        </Link>
+        </div>
+      </Link>
 
-        {/* Barra roja de secciones */}
-        <nav className="bg-primary text-white rounded-xl -mt-2">
-          <div className="flex overflow-x-auto hide-scrollbar" style={{ scrollbarWidth: 'none' }}>
-            {NAV.map((n, i) => (
-              <Link
-                key={n.label}
-                href={n.href}
-                className={`shrink-0 px-4 py-3 font-headline-sm text-[12px] uppercase tracking-wider whitespace-nowrap hover:bg-white/10 transition-colors ${
-                  i > 0 ? 'border-l border-white/20' : ''
-                }`}
-              >
-                {n.label}
-              </Link>
-            ))}
-          </div>
-        </nav>
+      <main className="max-w-[1280px] mx-auto w-full flex flex-col gap-9 lg:gap-12 py-9 lg:py-12 px-container-margin lg:px-8">
 
         {/* Qué hacer en Pucallpa */}
         <section className="flex flex-col gap-4">
