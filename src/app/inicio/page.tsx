@@ -71,7 +71,7 @@ export default function Inicio() {
           <h1 className="font-headline-lg font-extrabold tracking-tight text-lg lg:text-xl">
             Descubre <span className="text-primary-fixed">Pucallpa</span>
           </h1>
-          <p className="font-body-md text-background/60 text-xs">Qué hacer, dónde comer y a quién llamar.</p>
+          <p className="font-body-md text-background/60 text-xs">Comercio, movilidad, trabajo, alquileres y estilo de vida — en un solo lugar.</p>
         </div>
       </div>
 
