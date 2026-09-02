@@ -6,10 +6,35 @@ import AppHeader from '@/components/AppHeader';
 import MarketTabs from '@/components/MarketTabs';
 import { useCart } from '@/context/CartContext';
 
-// Inicio = el hub de DESCUBRIMIENTO. Nada de acá es el buscador de productos
-// (eso vive en /market): son itinerarios, la lista VIP patrocinada, las tiendas
-// verificadas de arbitraje y las notas editoriales "Yo Soy de la Selva".
-// Contenido curado a mano hasta que haya panel/tablas propias.
+// Inicio = el hub de DESCUBRIMIENTO, con formato editorial tipo Time Out:
+// banda negra + reportaje de tapa + barra roja de secciones + bloques.
+// Nada de acá es el buscador de productos (eso vive en /market).
+
+const QUICK_LINKS = [
+  { label: 'Qué hacer hoy', href: '/eventos' },
+  { label: 'Dónde comer', href: '/market' },
+  { label: 'Eventos', href: '/eventos' },
+  { label: 'Sorteos', href: '/sorteos' },
+  { label: 'Chamba', href: '/yapu' },
+];
+
+const NAV = [
+  { label: 'Qué hacer', href: '/eventos' },
+  { label: 'Dónde comer', href: '/market' },
+  { label: 'Revista', href: '/revista' },
+  { label: 'Eventos', href: '/eventos' },
+  { label: 'Sorteos', href: '/sorteos' },
+  { label: 'Taxi Seguro', href: '/taxi-seguro' },
+  { label: 'Chamba', href: '/yapu' },
+];
+
+const FEATURE = {
+  kicker: 'Revista · Gastronomía',
+  title: 'Los 3 huariques secretos para el mejor tacacho de Pucallpa',
+  href: '/revista',
+  img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1400&q=80',
+  portrait: 'https://images.unsplash.com/photo-1554048612-b6a482bc67e5?w=400&q=80',
+};
 
 // Itinerarios y experiencias — "¿Qué hacer en Pucallpa hoy?"
 const EXPERIENCES = [
@@ -42,6 +67,14 @@ const SELVA_NOTES = [
   { id: 'mitos',     cat: 'Curiosidades', title: 'Mitos de la selva que probablemente no sabías',               img: 'https://images.unsplash.com/photo-1516214104703-d870798883c5?w=600&q=80' },
 ];
 
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-2xl lg:text-3xl border-t-2 border-on-surface pt-3">
+      {children}
+    </h2>
+  );
+}
+
 export default function Inicio() {
   const { cartCount, setIsCartOpen } = useCart();
 
@@ -50,52 +83,72 @@ export default function Inicio() {
       <AppHeader showSearch={false} cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
       <MarketTabs />
 
-      <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-6 lg:gap-8 mt-4 lg:mt-5 pb-12 px-container-margin lg:px-6">
+      <main className="max-w-[1200px] mx-auto w-full flex flex-col gap-8 lg:gap-10 mt-4 pb-14 px-container-margin lg:px-6">
 
-        {/* Hero */}
-        <section className="relative overflow-hidden rounded-2xl aspect-[21/9] lg:aspect-[21/6] shadow-lg">
-          <img
-            src="https://images.unsplash.com/photo-1518182170546-07661fd94144?w=1200&q=80"
-            alt="Pucallpa"
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent flex flex-col justify-center p-6 lg:px-14">
-            <span className="text-white/80 font-label-md text-[10px] uppercase tracking-widest mb-1">Boga · Pucallpa</span>
-            <h1 className="font-headline-lg lg:text-[36px] lg:leading-none text-white font-extrabold">Tu ciudad,<br />en una sola app</h1>
-            <p className="text-white/80 font-body-md text-xs lg:text-sm mt-2 max-w-sm">Qué hacer, dónde comer, a quién llamar. Y si quieres comprar, entra a Market.</p>
+        {/* Banda negra tipo Time Out */}
+        <section className="bg-on-surface text-background rounded-2xl px-6 py-7 lg:px-10 lg:py-10">
+          <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 items-center">
+            <h1 className="font-headline-lg font-extrabold tracking-tight text-3xl sm:text-4xl lg:text-5xl leading-[1.03]">
+              Descubre lo mejor de Pucallpa
+            </h1>
+            <div className="flex flex-wrap gap-2 lg:justify-end">
+              {QUICK_LINKS.map((q) => (
+                <Link
+                  key={q.label}
+                  href={q.href}
+                  className="bg-primary text-white font-label-md text-[12px] px-4 py-2 rounded-full hover:opacity-90 transition-opacity"
+                >
+                  {q.label}
+                </Link>
+              ))}
+              <Link
+                href="/market"
+                className="border border-background/40 text-background font-label-md text-[12px] px-4 py-2 rounded-full hover:border-background transition-colors"
+              >
+                Ir al Market
+              </Link>
+            </div>
           </div>
         </section>
 
-        {/* Tablero local de chamba y servicios — Yapu */}
-        <Link
-          href="/yapu"
-          className="relative overflow-hidden rounded-2xl bg-inverse-surface text-inverse-on-surface p-4 flex items-center gap-3 group"
-        >
-          <div className="absolute -right-8 -top-10 w-40 h-40 bg-primary/20 rounded-full blur-2xl pointer-events-none" aria-hidden="true" />
-          <div className="w-11 h-11 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-inverse-primary text-[22px]">handshake</span>
+        {/* Reportaje de tapa — imagen grande + retrato circular + titular encima */}
+        <Link href={FEATURE.href} className="group relative block overflow-hidden rounded-2xl aspect-[16/11] sm:aspect-[16/9] lg:aspect-[21/9] bg-surface-container-low shadow-lg">
+          <img src={FEATURE.img} alt={FEATURE.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
+          <div className="absolute top-4 left-4 lg:top-1/2 lg:left-10 lg:-translate-y-1/2 w-24 h-24 lg:w-48 lg:h-48 rounded-full overflow-hidden border-4 border-white shadow-xl">
+            <img src={FEATURE.portrait} alt="" className="w-full h-full object-cover" />
           </div>
-          <div className="relative flex flex-col min-w-0 flex-1">
-            <span className="font-headline-sm text-sm leading-tight">¿Buscas chamba o necesitas a alguien?</span>
-            <span className="text-inverse-on-surface/70 font-body-md text-xs mt-0.5">Entra al tablero local · Yapu</span>
+          <div className="absolute inset-x-0 bottom-0 p-5 lg:p-8">
+            <span className="font-label-md text-[10px] uppercase tracking-[0.25em] text-white/70">{FEATURE.kicker}</span>
+            <h2 className="font-headline-lg font-extrabold tracking-tight text-white leading-[1.05] text-2xl sm:text-3xl lg:text-4xl mt-1.5 max-w-[22ch]">
+              {FEATURE.title}
+            </h2>
           </div>
-          <span className="material-symbols-outlined text-inverse-on-surface/60 shrink-0 group-hover:translate-x-1 transition-transform">chevron_right</span>
         </Link>
 
-        {/* Itinerarios y Experiencias */}
-        <section className="flex flex-col gap-4">
-          <div className="flex justify-between items-end mb-1">
-            <div>
-              <h3 className="font-headline-lg text-on-surface">¿Qué hacer en Pucallpa hoy? 🌴</h3>
-              <p className="text-secondary font-body-md text-xs mt-0.5">Paseos y experiencias para armar tu día</p>
-            </div>
+        {/* Barra roja de secciones */}
+        <nav className="bg-primary text-white rounded-xl -mt-2">
+          <div className="flex overflow-x-auto hide-scrollbar" style={{ scrollbarWidth: 'none' }}>
+            {NAV.map((n, i) => (
+              <Link
+                key={n.label}
+                href={n.href}
+                className={`shrink-0 px-4 py-3 font-headline-sm text-[12px] uppercase tracking-wider whitespace-nowrap hover:bg-white/10 transition-colors ${
+                  i > 0 ? 'border-l border-white/20' : ''
+                }`}
+              >
+                {n.label}
+              </Link>
+            ))}
           </div>
+        </nav>
+
+        {/* Qué hacer en Pucallpa */}
+        <section className="flex flex-col gap-4">
+          <SectionTitle>Qué hacer en Pucallpa hoy</SectionTitle>
           <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
             {EXPERIENCES.map((e) => (
-              <div
-                key={e.id}
-                className="min-w-[220px] w-[220px] lg:min-w-[260px] lg:w-[260px] bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest snap-start group flex flex-col"
-              >
+              <div key={e.id} className="min-w-[220px] w-[220px] lg:min-w-[260px] lg:w-[260px] bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest snap-start group flex flex-col">
                 <div className="relative h-32 overflow-hidden bg-surface-container-low">
                   <img src={e.img} alt={e.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <span className="absolute top-2 left-2 bg-white/95 backdrop-blur-sm text-on-surface text-[10px] font-label-md px-2 py-0.5 rounded-full border border-surface-container-highest flex items-center gap-1">
@@ -111,50 +164,38 @@ export default function Inicio() {
           </div>
         </section>
 
-        {/* Lista VIP de restaurantes (posición patrocinada) */}
+        {/* Lista VIP de restaurantes */}
         <section className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1 mb-1">
-            <span className="w-fit bg-tertiary-fixed text-on-tertiary-fixed-variant text-[10px] font-label-md px-2 py-0.5 rounded-full flex items-center gap-1 uppercase tracking-wider">
-              <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>workspace_premium</span>Lista VIP
+          <div className="border-t-2 border-on-surface pt-3">
+            <span className="w-fit bg-tertiary-fixed text-on-tertiary-fixed-variant text-[10px] font-label-md px-2 py-0.5 rounded-full flex items-center gap-1 uppercase tracking-wider mb-1.5">
+              <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>workspace_premium</span>Lista VIP · Patrocinado
             </span>
-            <h3 className="font-headline-lg text-on-surface">Los 3 mejores restaurantes 🍽️</h3>
+            <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-2xl lg:text-3xl">Los 3 mejores restaurantes</h2>
           </div>
-          <div className="flex flex-col gap-3">
+          <div className="grid sm:grid-cols-3 gap-4">
             {VIP_RESTAURANTS.map((r, i) => (
-              <div
-                key={r.id}
-                className="bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex items-center gap-3 p-2.5 group"
-              >
-                <div className="relative w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-surface-container-low">
-                  <img src={r.img} alt={r.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <span className="absolute top-1 left-1 w-5 h-5 rounded-full bg-primary text-white text-[11px] font-black flex items-center justify-center shadow-sm">{i + 1}</span>
-                </div>
-                <div className="flex flex-col min-w-0 flex-1">
-                  <h4 className="font-headline-sm text-sm text-on-surface line-clamp-1">{r.name}</h4>
-                  <span className="text-secondary font-label-md text-[11px] line-clamp-1">{r.cuisine}</span>
-                  <div className="flex items-center gap-1 mt-1">
+              <div key={r.id} className="group relative overflow-hidden rounded-2xl aspect-[4/3] shadow-[0_15px_15px_rgba(0,0,0,0.04)]">
+                <img src={r.img} alt={r.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+                <span className="absolute top-2 left-2 w-6 h-6 rounded-full bg-primary text-white text-[12px] font-black flex items-center justify-center shadow">{i + 1}</span>
+                <div className="absolute inset-x-0 bottom-0 p-3">
+                  <h4 className="font-headline-sm text-white text-sm leading-tight">{r.name}</h4>
+                  <div className="flex items-center gap-1 mt-1 text-white/80">
                     <span className="material-symbols-outlined text-tertiary text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                    <span className="text-[11px] font-label-md text-secondary">{r.rating} <span className="opacity-60">({r.reviews})</span></span>
+                    <span className="text-[11px] font-label-md">{r.rating} · {r.cuisine}</span>
                   </div>
                 </div>
-                <span className="text-[9px] font-label-md text-secondary/70 uppercase tracking-wider shrink-0 self-start mt-1 mr-1">Patrocinado</span>
               </div>
             ))}
           </div>
         </section>
 
-        {/* Compra seguro — tiendas verificadas de Boga */}
+        {/* Compra seguro */}
         <section className="flex flex-col gap-4">
-          <div className="mb-1">
-            <h3 className="font-headline-lg text-on-surface">Compra seguro en Boga 🛡️</h3>
-            <p className="text-secondary font-body-md text-xs mt-0.5">Laptops y relojes verificados, con garantía y boleta</p>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
+          <SectionTitle>Compra seguro en Boga</SectionTitle>
+          <div className="grid grid-cols-2 gap-3 lg:gap-4">
             {SAFE_DEALS.map((d) => (
-              <div
-                key={d.id}
-                className="relative rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest group min-h-[128px] flex"
-              >
+              <div key={d.id} className="relative rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] group min-h-[128px] lg:min-h-[180px] flex">
                 <img src={d.img} alt={d.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                 <div className="relative z-10 mt-auto p-3 flex flex-col gap-0.5">
@@ -169,28 +210,22 @@ export default function Inicio() {
           </div>
         </section>
 
-        {/* Yo Soy de la Selva — notas y curiosidades */}
+        {/* Yo Soy de la Selva */}
         <section className="flex flex-col gap-4">
-          <div className="mb-1">
-            <h3 className="font-headline-lg text-on-surface">Yo Soy de la Selva 🌿</h3>
-            <p className="text-secondary font-body-md text-xs mt-0.5">Huariques, curiosidades y rutas locales</p>
+          <div className="flex items-end justify-between border-t-2 border-on-surface pt-3">
+            <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-2xl lg:text-3xl">Yo Soy de la Selva</h2>
+            <Link href="/revista" className="font-label-md text-[12px] text-primary shrink-0">Ver revista</Link>
           </div>
           <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
             {SELVA_NOTES.map((n) => (
-              <div
-                key={n.id}
-                className="min-w-[260px] w-[260px] lg:min-w-[300px] lg:w-[300px] bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest snap-start group flex flex-col"
-              >
-                <div className="relative h-36 overflow-hidden bg-surface-container-low">
-                  <img src={n.img} alt={n.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <span className="absolute top-2 left-2 bg-white/95 backdrop-blur-sm text-on-surface text-[10px] font-label-md px-2 py-0.5 rounded-full uppercase tracking-wider">{n.cat}</span>
+              <Link href="/revista" key={n.id} className="min-w-[260px] w-[260px] lg:min-w-[300px] lg:w-[300px] snap-start group flex flex-col">
+                <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-surface-container-low">
+                  <img src={n.img} alt={n.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                  <span className="absolute top-2 left-2 bg-white text-on-surface text-[9px] font-label-md px-2 py-0.5 uppercase tracking-wider">{n.cat}</span>
+                  <h3 className="absolute inset-x-0 bottom-0 p-3 font-headline-sm text-white text-sm leading-tight line-clamp-2">{n.title}</h3>
                 </div>
-                <div className="p-3">
-                  <h4 className="font-headline-sm text-sm text-on-surface line-clamp-2">{n.title}</h4>
-                  <span className="text-primary font-label-md text-[11px] mt-1.5 flex items-center gap-1">Leer nota<span className="material-symbols-outlined text-[13px]">arrow_forward</span></span>
-                </div>
-              </div>
+              </Link>
             ))}
           </div>
         </section>
