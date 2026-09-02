@@ -87,9 +87,9 @@ export default function Eventos() {
 
       <main className="max-w-[1200px] mx-auto px-container-margin lg:px-6 w-full pt-4 flex flex-col gap-8 pb-14">
 
-        {/* Carrusel destacado */}
-        <section>
-          <div className="relative overflow-hidden rounded-2xl shadow-lg aspect-[16/10] sm:aspect-[21/9]">
+        {/* Carrusel destacado + Tendencias al costado */}
+        <section className="grid lg:grid-cols-[1fr_320px] gap-5">
+          <div className="relative overflow-hidden rounded-2xl shadow-lg aspect-[16/10] sm:aspect-[21/9] lg:aspect-auto lg:min-h-[340px]">
             <div
               className="flex h-full transition-transform duration-500 ease-out"
               style={{ transform: `translateX(-${slide * 100}%)` }}
@@ -139,6 +139,22 @@ export default function Eventos() {
               ))}
             </div>
           </div>
+
+          {/* Nuestras tendencias */}
+          <aside className="bg-surface-container-low rounded-2xl p-4 flex flex-col">
+            <h3 className="font-headline-sm text-on-surface flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-primary text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>trending_up</span>
+              Nuestras tendencias
+            </h3>
+            <ol className="mt-2 divide-y divide-on-surface/10 flex-1">
+              {TENDENCIAS.map((t, i) => (
+                <li key={i} className="flex items-baseline gap-3 py-3">
+                  <span className="font-headline-lg font-black text-primary text-lg tabular-nums shrink-0">{i + 1}</span>
+                  <span className="font-body-md text-on-surface text-[13px] leading-snug">{t}</span>
+                </li>
+              ))}
+            </ol>
+          </aside>
         </section>
 
         {/* Categorías */}
@@ -198,58 +214,111 @@ export default function Eventos() {
           </div>
         </section>
 
-        {/* Agenda + Tendencias */}
-        <section className="grid lg:grid-cols-[1fr_300px] gap-8">
-          <div className="flex flex-col gap-4">
-            <h2 className="font-headline-lg text-on-surface">
-              {cat ? cat : 'Toda la agenda'}
-            </h2>
-            {lista.length === 0 ? (
-              <p className="text-secondary font-body-md text-sm py-8">No hay eventos en esta categoría por ahora.</p>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {lista.map((e) => (
-                  <div key={e.id} className="bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col">
-                    <div className="relative h-36 overflow-hidden bg-surface-container-low">
-                      <img src={e.img} alt={e.titulo} className="w-full h-full object-cover" />
-                      <div className="absolute top-2 left-2 bg-white rounded-lg px-2 py-1 text-center shadow-sm">
-                        <span className="block font-price-lg text-primary text-sm leading-none">{e.dia}</span>
-                        <span className="block font-label-md text-[9px] text-secondary uppercase">{e.mes}</span>
-                      </div>
-                      <span className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-label-md px-2 py-0.5 rounded-full uppercase tracking-wider">{e.cat}</span>
-                    </div>
-                    <div className="p-3 flex flex-col gap-1 flex-1">
-                      <h4 className="font-headline-sm text-sm text-on-surface line-clamp-1">{e.titulo}</h4>
-                      <span className="text-secondary font-label-md text-[11px] flex items-center gap-1 line-clamp-1">
-                        <span className="material-symbols-outlined text-[13px]">location_on</span>{e.lugar}
-                      </span>
-                      <span className="text-secondary/70 font-label-md text-[10px] uppercase tracking-wider">Organiza · {e.organiza}</span>
-                      <div className="flex items-center justify-between border-t border-surface-container pt-2.5 mt-2">
-                        <span className="font-price-lg text-primary text-sm">{e.precio}</span>
-                        <span className="text-primary font-label-md text-[11px] flex items-center gap-1">Más info<span className="material-symbols-outlined text-[13px]">arrow_forward</span></span>
-                      </div>
+        {/* Planes imperdibles — carrusel de eventos */}
+        <section className="flex flex-col gap-3">
+          <h2 className="font-headline-lg text-on-surface">Planes imperdibles</h2>
+          <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
+            {EVENTOS.slice(0, 7).map((e) => (
+              <div key={e.id} className="min-w-[180px] w-[180px] lg:min-w-[210px] lg:w-[210px] bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest snap-start flex flex-col">
+                <div className="relative aspect-square overflow-hidden bg-surface-container-low">
+                  <img src={e.img} alt={e.titulo} className="w-full h-full object-cover" />
+                </div>
+                <div className="p-3 flex flex-col gap-1 flex-1">
+                  <span className="w-fit bg-primary-fixed text-primary text-[10px] font-label-md px-2 py-0.5 rounded-full">{e.dia} {e.mes}</span>
+                  <h4 className="font-headline-sm text-sm text-on-surface line-clamp-2 mt-0.5">{e.titulo}</h4>
+                  <span className="text-secondary font-label-md text-[11px] flex items-center gap-1 mt-auto">
+                    <span className="material-symbols-outlined text-[12px]">location_on</span>{e.lugar}
+                  </span>
+                  <span className="font-price-lg text-primary text-sm">{e.precio}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Lo más vendido esta semana — numerado */}
+        <section className="flex flex-col gap-3">
+          <h2 className="font-headline-lg text-on-surface flex items-center gap-2">
+            <span className="material-symbols-outlined text-tertiary" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+            Lo más vendido esta semana
+          </h2>
+          <div className="flex gap-4 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
+            {EVENTOS.slice(1, 6).map((e, i) => (
+              <div key={e.id} className="flex items-end gap-1 shrink-0 snap-start">
+                <span className="font-headline-lg font-black text-primary/25 text-[64px] leading-[0.7] select-none">{i + 1}</span>
+                <div className="w-[150px] lg:w-[170px]">
+                  <div className="relative aspect-square rounded-xl overflow-hidden bg-surface-container-low">
+                    <img src={e.img} alt={e.titulo} className="w-full h-full object-cover" />
+                  </div>
+                  <span className="font-label-md text-[10px] text-secondary uppercase tracking-wider mt-2 block">{e.dia} {e.mes} · {e.lugar.split(' ')[0]}</span>
+                  <h4 className="font-headline-sm text-[13px] text-on-surface line-clamp-2 leading-tight mt-0.5">{e.titulo}</h4>
+                  <span className="font-price-lg text-primary text-[13px]">Desde {e.precio}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Sección temática */}
+        <section className="relative overflow-hidden rounded-2xl bg-[#0b4d2c] text-white p-5 lg:p-8">
+          <div className="absolute -right-10 -top-12 w-56 h-56 bg-white/5 rounded-full blur-2xl" aria-hidden="true" />
+          <div className="grid lg:grid-cols-[260px_1fr] gap-6 items-center relative">
+            <div>
+              <h2 className="font-headline-lg font-extrabold text-2xl lg:text-3xl leading-tight">Fiestas de la Selva</h2>
+              <p className="text-white/75 font-body-md text-sm mt-2">Cumbia, aniversarios y ferias. La agenda que llena el malecón.</p>
+              <button className="mt-4 bg-white text-on-surface font-label-md text-[12px] px-4 py-2 rounded-full active:scale-95 transition-transform">
+                Ver todas las fiestas
+              </button>
+            </div>
+            <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1 snap-x" style={{ scrollbarWidth: 'none' }}>
+              {EVENTOS.filter((e) => ['Conciertos', 'Fiestas', 'Ferias'].includes(e.cat)).map((e) => (
+                <div key={e.id} className="min-w-[150px] w-[150px] shrink-0 snap-start">
+                  <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-white/10">
+                    <img src={e.img} alt={e.titulo} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                    <div className="absolute inset-x-0 bottom-0 p-2">
+                      <span className="font-label-md text-[9px] uppercase tracking-wider text-white/70">{e.dia} {e.mes}</span>
+                      <h4 className="font-headline-sm text-white text-[12px] leading-tight line-clamp-2">{e.titulo}</h4>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Tendencias */}
-          <aside className="lg:sticky lg:top-4 h-fit bg-surface-container-low rounded-2xl p-4">
-            <h3 className="font-headline-sm text-on-surface flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-primary text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>trending_up</span>
-              Tendencias
-            </h3>
-            <ol className="mt-3 divide-y divide-on-surface/10">
-              {TENDENCIAS.map((t, i) => (
-                <li key={i} className="flex items-baseline gap-3 py-3">
-                  <span className="font-headline-lg font-black text-primary text-base tabular-nums shrink-0">{i + 1}</span>
-                  <span className="font-body-md text-on-surface text-[13px] leading-snug">{t}</span>
-                </li>
+                </div>
               ))}
-            </ol>
-          </aside>
+            </div>
+          </div>
+        </section>
+
+        {/* Toda la agenda */}
+        <section className="flex flex-col gap-4">
+          <h2 className="font-headline-lg text-on-surface">{cat ? cat : 'Toda la agenda'}</h2>
+          {lista.length === 0 ? (
+            <p className="text-secondary font-body-md text-sm py-8">No hay eventos en esta categoría por ahora.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {lista.map((e) => (
+                <div key={e.id} className="bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col">
+                  <div className="relative h-36 overflow-hidden bg-surface-container-low">
+                    <img src={e.img} alt={e.titulo} className="w-full h-full object-cover" />
+                    <div className="absolute top-2 left-2 bg-white rounded-lg px-2 py-1 text-center shadow-sm">
+                      <span className="block font-price-lg text-primary text-sm leading-none">{e.dia}</span>
+                      <span className="block font-label-md text-[9px] text-secondary uppercase">{e.mes}</span>
+                    </div>
+                    <span className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-label-md px-2 py-0.5 rounded-full uppercase tracking-wider">{e.cat}</span>
+                  </div>
+                  <div className="p-3 flex flex-col gap-1 flex-1">
+                    <h4 className="font-headline-sm text-sm text-on-surface line-clamp-1">{e.titulo}</h4>
+                    <span className="text-secondary font-label-md text-[11px] flex items-center gap-1 line-clamp-1">
+                      <span className="material-symbols-outlined text-[13px]">location_on</span>{e.lugar}
+                    </span>
+                    <span className="text-secondary/70 font-label-md text-[10px] uppercase tracking-wider">Organiza · {e.organiza}</span>
+                    <div className="flex items-center justify-between border-t border-surface-container pt-2.5 mt-2">
+                      <span className="font-price-lg text-primary text-sm">{e.precio}</span>
+                      <span className="text-primary font-label-md text-[11px] flex items-center gap-1">Más info<span className="material-symbols-outlined text-[13px]">arrow_forward</span></span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         <p className="text-secondary/70 font-body-md text-[11px] text-center pt-2">
