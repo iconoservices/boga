@@ -2,30 +2,20 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { HUBS, isHubActive } from '@/lib/hubs';
 
 // Barra de secciones horizontal — va debajo del header, a todo el ancho.
-// Etiquetas más descriptivas que el sidebar/riel (que usan nombres cortos).
-const LINKS = [
-  { href: '/',            label: 'Inicio' },
-  { href: '/market',      label: 'Market' },
-  { href: '/servicios',   label: 'Servicios & Chamba' },
-  { href: '/taxi-seguro', label: 'Taxi Seguro' },
-  { href: '/alquileres',  label: 'Alquileres' },
-  { href: '/eventos',     label: 'Eventos & Agenda' },
-  { href: '/sorteos',     label: 'Sorteos' },
-  { href: '/revista',     label: 'Yo Soy de la Selva' },
-  { href: '/negocios',    label: 'Para Negocios', apart: true },
-];
+// Mismo orden que el riel y la barra inferior (fuente única: lib/hubs). Usa las
+// etiquetas largas cuando existen ("Servicios & Chamba", "Para Negocios"…).
 
 export default function SectionNav() {
   const pathname = usePathname();
-  const active = (href: string) =>
-    href === '/' ? pathname === '/' : pathname.startsWith(href);
+  const active = (href: string) => isHubActive(pathname, href);
 
   return (
     <nav className="border-t border-surface-container-high bg-surface">
       <div className="max-w-[1440px] mx-auto flex items-stretch gap-0.5 overflow-x-auto hide-scrollbar px-container-margin lg:px-6" style={{ scrollbarWidth: 'none' }}>
-        {LINKS.map((l) => (
+        {HUBS.map((l) => (
           <Link
             key={l.href}
             href={l.href}
@@ -33,7 +23,7 @@ export default function SectionNav() {
               l.apart ? 'ml-auto' : ''
             } ${active(l.href) ? 'text-primary' : 'text-on-surface hover:text-primary'}`}
           >
-            {l.label}
+            {l.long ?? l.label}
             {active(l.href) && (
               <span className="absolute left-3 right-3 -bottom-px h-[3px] bg-primary rounded-full" />
             )}
