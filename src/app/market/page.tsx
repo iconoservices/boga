@@ -419,8 +419,10 @@ export default function Home() {
       <MarketTabs />
 
       <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-4 lg:gap-6 mt-4 lg:mt-5 pb-12">
-        {/* Banners Section — a todo el ancho (en escritorio, del área de contenido) */}
-        <section className="w-screen mx-[calc(50%-50vw)] px-container-margin lg:w-auto lg:mx-0 lg:px-4">
+        {/* Banner + Explorar Categorías — lado a lado (mitad y mitad) en escritorio */}
+        <div className="lg:grid lg:grid-cols-2 lg:gap-6 lg:items-center lg:px-6">
+        {/* Banners Section */}
+        <section className="w-screen mx-[calc(50%-50vw)] px-container-margin lg:w-auto lg:mx-0 lg:px-0">
           {/* Scroll-snap slider — clientWidth based, no clone tricks */}
           <div
             ref={sliderRef}
@@ -430,20 +432,20 @@ export default function Home() {
             {BANNERS_RAW.map((b) => (
               <div
                 key={b.id}
-                className="relative aspect-[16/9] sm:aspect-[21/9] lg:aspect-[32/9] overflow-hidden shadow-sm shrink-0 group w-full"
+                className="relative aspect-[16/9] sm:aspect-[21/9] lg:aspect-auto lg:h-[300px] overflow-hidden shadow-sm shrink-0 group w-full"
                 style={{ scrollSnapAlign: 'start', flex: '0 0 100%' }}
               >
                 <img alt="" className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" src={b.img} />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent flex flex-col justify-center p-6 sm:pl-12 lg:pl-[9%] lg:pr-16 z-10">
+                <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent flex flex-col justify-center p-6 sm:pl-12 lg:pl-10 lg:pr-12 z-10">
                   {b.tag && (
                     <span className="inline-block px-3 py-1 bg-primary text-white font-label-md text-[10px] rounded-lg mb-1.5 uppercase tracking-wider w-fit">
                       {b.tag}
                     </span>
                   )}
-                  <h2 className="font-headline-lg lg:text-[40px] lg:leading-none lg:font-extrabold text-white leading-tight">
+                  <h2 className="font-headline-lg lg:text-[30px] lg:leading-none lg:font-extrabold text-white leading-tight">
                     {b.title1}<br />{b.title2}
                   </h2>
-                  <p className="text-white/80 font-body-md lg:text-base mt-1 lg:mt-3 lg:mb-3 max-w-md">{b.sub}</p>
+                  <p className="text-white/80 font-body-md lg:text-sm mt-1 lg:mt-3 lg:mb-3 max-w-md">{b.sub}</p>
                 </div>
               </div>
             ))}
@@ -461,18 +463,18 @@ export default function Home() {
             ))}
           </div>
         </section>
-        
-        {/* Categories Section Group */}
-        <div className="flex flex-col gap-4 lg:gap-5 px-container-margin lg:px-6">
+
+        {/* Categorías + subcategorías — la otra mitad, junto al banner en escritorio */}
+        <div className="flex flex-col gap-4 lg:gap-4 mt-4 lg:mt-0">
           {/* Adaptive Macro-Categories Selector */}
-          <section className="flex flex-col gap-2 lg:gap-3 transition-all duration-500">
+          <section className="flex flex-col gap-2 lg:gap-3 transition-all duration-500 px-container-margin lg:px-0">
             <div className="flex justify-between items-center px-1">
               <h2 className="font-headline-lg text-on-surface">Explorar Categorías</h2>
             </div>
             <div className={`
               transition-all duration-500 ease-in-out
-              ${activeCategory === 'Todas' 
-                ? 'grid grid-cols-4 lg:grid-cols-8 gap-2 lg:gap-gutter' 
+              ${activeCategory === 'Todas'
+                ? 'grid grid-cols-4 gap-2 lg:gap-3'
                 : 'flex gap-3 overflow-x-auto hide-scrollbar pb-1.5'
               }`}
               style={{ scrollbarWidth: 'none' }}
@@ -527,9 +529,9 @@ export default function Home() {
           </section>
 
           {/* Specific Sub-Categories (Filtered) */}
-          <section className="hide-scrollbar overflow-x-auto flex gap-4 items-start w-full">
-            <div 
-              className={`py-1 ${showAllSubCategories ? 'flex flex-wrap gap-x-3 gap-y-2.5 justify-start w-full' : 'flex gap-3.5 items-center'}`} 
+          <section className="hide-scrollbar overflow-x-auto flex gap-4 items-start w-full px-container-margin lg:px-0">
+            <div
+              className={`py-1 ${showAllSubCategories ? 'flex flex-wrap gap-x-3 gap-y-2.5 justify-start w-full' : 'flex gap-3.5 items-center'}`}
               style={{ scrollbarWidth: 'none' }}
             >
               <div 
@@ -559,6 +561,8 @@ export default function Home() {
             </div>
           </section>
         </div>
+        </div>
+        {/* fin del bloque banner + categorías + subcategorías */}
 
         {/* Discovery Mode (Todas) or Listing Mode (Specific Category) */}
         {activeCategory === 'Todas' ? (
