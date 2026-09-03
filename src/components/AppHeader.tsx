@@ -134,7 +134,7 @@ export default function AppHeader({
       </div>
 
       {/* Desktop Nav Row */}
-      <div className="hidden lg:flex items-center justify-between px-container-margin py-3 max-w-[1440px] mx-auto gap-4">
+      <div className="hidden lg:flex items-center justify-between px-container-margin py-2.5 max-w-[1440px] mx-auto gap-4">
         {/* Left: Brand logo & Location */}
         <div className="flex items-center gap-5 shrink-0">
           <Link href="/" className="text-headline-md font-headline-md text-primary tracking-tight font-extrabold">
@@ -165,37 +165,29 @@ export default function AppHeader({
           <div className="flex-1" />
         )}
 
-        {/* Right: Actions */}
-        <div className="flex items-center gap-3 shrink-0">
-          {/* Pedidos */}
-          <Link
-            href="/orders"
-            title="Pedidos"
-            className="p-2 hover:bg-surface-container-high transition-colors rounded-full active:scale-95 duration-150 flex items-center justify-center"
-          >
-            <span className={`material-symbols-outlined text-[22px] ${pathname.startsWith('/orders') ? 'text-primary' : 'text-secondary'}`}>receipt_long</span>
-          </Link>
-
-          {/* WhatsApp Support button */}
+        {/* Right: Actions — soporte · notificaciones · pedidos · carrito · perfil */}
+        <div className="flex items-center gap-1.5 shrink-0">
           {showChat && (
-            <button className="p-2 hover:bg-surface-container-high transition-colors rounded-full active:scale-95 duration-150 relative flex items-center justify-center" title="Soporte WhatsApp">
-              <span className="material-symbols-outlined text-[#25D366] text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>chat</span>
+            <button className="w-9 h-9 hover:bg-surface-container-high transition-colors rounded-full active:scale-95 flex items-center justify-center" title="Soporte por WhatsApp">
+              <span className="material-symbols-outlined text-[#25D366] text-[21px]" style={{ fontVariationSettings: "'FILL' 1" }}>chat</span>
             </button>
           )}
 
-          {/* Notifications button */}
-          <button className="p-2 hover:bg-surface-container-high transition-colors rounded-full active:scale-95 duration-150 relative flex items-center justify-center" title="Notificaciones">
-            <span className="material-symbols-outlined text-secondary text-[22px]">notifications</span>
+          <button className="w-9 h-9 hover:bg-surface-container-high transition-colors rounded-full active:scale-95 flex items-center justify-center" title="Notificaciones">
+            <span className="material-symbols-outlined text-secondary text-[21px]">notifications</span>
           </button>
 
-          {/* Cart button */}
+          <Link href="/orders" title="Mis pedidos" className="w-9 h-9 hover:bg-surface-container-high transition-colors rounded-full active:scale-95 flex items-center justify-center">
+            <span className={`material-symbols-outlined text-[21px] ${pathname.startsWith('/orders') ? 'text-primary' : 'text-secondary'}`}>receipt_long</span>
+          </Link>
+
           {showCart && (
             <button
               onClick={handleCartClick}
-              className="p-2 hover:bg-surface-container-high transition-colors rounded-full active:scale-95 duration-150 relative flex items-center justify-center"
-              title="Carrito de compras"
+              className="w-9 h-9 hover:bg-surface-container-high transition-colors rounded-full active:scale-95 relative flex items-center justify-center"
+              title="Carrito"
             >
-              <span className="material-symbols-outlined text-secondary text-[22px]">shopping_cart</span>
+              <span className="material-symbols-outlined text-secondary text-[21px]">shopping_cart</span>
               {displayCartCount > 0 && (
                 <span className="absolute top-0 right-0 bg-primary text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-surface shadow-sm">
                   {displayCartCount}
@@ -205,7 +197,7 @@ export default function AppHeader({
           )}
 
           {/* Profile button */}
-          <Link 
+          <Link
             href="/profile"
             className="flex items-center gap-2 p-1 pl-3 bg-surface-container rounded-full hover:bg-surface-container-high transition-colors active:scale-95 duration-150"
           >
