@@ -28,6 +28,37 @@ interface Product {
   created_at: string;
 }
 
+type TabId = 'inicio' | 'products' | 'orders' | 'pos' | 'metrics' | 'stores';
+
+// Orden canónico de la navegación. La sidebar de escritorio, la barra inferior
+// móvil, el menú Perfil y las tarjetas de "Gestión" del Inicio se arman TODAS
+// desde acá: así no se desincronizan ni quedan en distinto orden.
+const NAV_TABS: { id: TabId; label: string; icon: string; sub: string; inBottomBar: boolean }[] = [
+  { id: 'inicio',   label: 'Inicio',       icon: 'home',          sub: 'Resumen de tu carta',        inBottomBar: true },
+  { id: 'products', label: 'Productos',    icon: 'inventory_2',   sub: 'Añade o modifica ítems',     inBottomBar: true },
+  { id: 'orders',   label: 'Pedidos',      icon: 'receipt_long',  sub: 'Gestiona los pedidos',       inBottomBar: true },
+  { id: 'pos',      label: 'Vender (POS)', icon: 'point_of_sale', sub: 'Caja rápida en el local',    inBottomBar: true },
+  { id: 'metrics',  label: 'Métricas',     icon: 'bar_chart',     sub: 'Rendimiento del negocio',    inBottomBar: false },
+  { id: 'stores',   label: 'Mis Tiendas',  icon: 'store',         sub: 'Administra tus sucursales',  inBottomBar: false },
+];
+
+// Métodos de pago que una carta puede aceptar. Un solo lugar: lo usan el editor
+// de tienda (qué acepta el negocio) y la caja POS (cómo se pagó esta venta).
+const PAYMENT_METHODS: { id: string; label: string; icon: string; color: string }[] = [
+  { id: 'Efectivo',      label: 'Efectivo',      icon: 'payments',       color: '#16a34a' },
+  { id: 'Yape/Plin',     label: 'Yape / Plin',   icon: 'qr_code_2',      color: '#7c3aed' },
+  { id: 'Transferencia', label: 'Transferencia', icon: 'account_balance',color: '#0ea5e9' },
+  { id: 'Visa',          label: 'Visa',          icon: 'credit_card',    color: '#1d4ed8' },
+  { id: 'Mastercard',    label: 'Mastercard',    icon: 'credit_card',    color: '#ea580c' },
+];
+
+// Cómo se cobró una venta en el POS. "Tarjeta" agrupa Visa/Mastercard.
+const POS_PAYMENT_METHODS: { id: 'Efectivo' | 'Yape/Plin' | 'Tarjeta'; label: string; icon: string; color: string }[] = [
+  { id: 'Efectivo',  label: 'Efectivo',    icon: 'payments',    color: '#16a34a' },
+  { id: 'Yape/Plin', label: 'Yape / Plin', icon: 'qr_code_2',   color: '#7c3aed' },
+  { id: 'Tarjeta',   label: 'Tarjeta',     icon: 'credit_card', color: '#1d4ed8' },
+];
+
 export default function DashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -50,6 +81,9 @@ export default function DashboardPage() {
 function AdminDashboard({ user }: { user: User }) {
   const { signOut } = useAuth();
   const router = useRouter();
+  // El QR y los links a las tiendas apuntan al dominio real donde corre la app
+  // (antes estaba escrito 'https://boga.com' fijo, que no es el dominio en uso).
+  const siteOrigin = typeof window !== 'undefined' ? window.location.origin : '';
   const [selectedStore, setSelectedStore] = useState<string>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -65,7 +99,10 @@ function AdminDashboard({ user }: { user: User }) {
   const [selectedFilterCategory, setSelectedFilterCategory] = useState('all');
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'metrics' | 'stores' | 'pos'>('products');
+  const [activeTab, setActiveTab] = useState<TabId>('inicio');
+  // A qué sección del editor de tienda saltar al abrirlo desde las tarjetas
+  // del Inicio (Datos del negocio / Horarios / Métodos de pago / Avisos).
+  const [storeEditorSection, setStoreEditorSection] = useState<string | null>(null);
 
   // POS (Caja Rápida) States
   const [posCart, setPosCart] = useState<{ product: Product; quantity: number }[]>([]);
@@ -142,6 +179,10 @@ function AdminDashboard({ user }: { user: User }) {
           template: (s.template || 'default') as any,
           heroImage: s.hero_image || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
           heroAlt: s.hero_alt || 'store image',
+          logoImage: s.logo_image || undefined,
+          whatsapp: s.whatsapp || undefined,
+          horario: s.horario || undefined,
+          metodosPago: s.metodos_pago || undefined,
           categories: s.categories || [],
           theme: s.theme || {
             primary: '#0058be',
@@ -174,6 +215,24 @@ function AdminDashboard({ user }: { user: User }) {
     if (!managedSlugs) return [];
     return products.filter(p => managedSlugs.includes(p.store));
   }, [products, managedSlugs]);
+
+  // Las pantallas que operan sobre UNA sola carta (Inicio, POS) usan esto:
+  // con "Todas mis tiendas" elegido cae a la primera. Así el carrito del POS
+  // no puede mezclar tiendas y el Inicio siempre muestra una carta concreta.
+  const focusedStore = selectedStore === 'all' ? (Object.keys(stores)[0] ?? '') : selectedStore;
+
+  // Datos derivados para la pestaña Inicio (una sola carta).
+  const inicioStore = stores[focusedStore];
+  const inicioDb = dbStores.find((s: any) => s.slug === focusedStore);
+  const inicioActiva = (inicioDb?.status ?? 'active') === 'active';
+  const inicioNombre = (user.user_metadata?.name as string | undefined)?.split(' ')[0];
+  const inicioUrl = inicioStore ? `${siteOrigin}/${inicioStore.slug}` : '';
+  const inicioOrders = inicioStore ? orders.filter(o => o.store === inicioStore.slug) : [];
+  const compartirCarta = async () => {
+    if (typeof navigator === 'undefined') return;
+    if (navigator.share) { try { await navigator.share({ title: inicioStore?.name, url: inicioUrl }); } catch {} }
+    else if (navigator.clipboard) { await navigator.clipboard.writeText(inicioUrl); alert('Link copiado: ' + inicioUrl); }
+  };
 
   // Pedidos visibles: solo los de las tiendas que administra este cliente, y
   // acotados a la tienda elegida en el selector "Todas mis tiendas".
@@ -256,6 +315,15 @@ function AdminDashboard({ user }: { user: User }) {
     fetchOrders();
   }, []);
 
+  // Al abrir el editor desde una tarjeta del Inicio, saltar a esa sección.
+  useEffect(() => {
+    if (!isStoreEditorOpen || !storeEditorSection) return;
+    const t = setTimeout(() => {
+      document.getElementById(`editor-${storeEditorSection}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 60);
+    return () => clearTimeout(t);
+  }, [isStoreEditorOpen, storeEditorSection]);
+
   const fetchProducts = async () => {
     setIsLoading(true);
     const { data, error } = await supabase
@@ -289,6 +357,20 @@ function AdminDashboard({ user }: { user: User }) {
     if (data) setDbStores(data);
   };
 
+  // "Carta activa": prende/apaga la tienda. Si está inactiva sigue existiendo
+  // pero no recibe pedidos (lo respeta cada plantilla al leer el status).
+  const [togglingActive, setTogglingActive] = useState(false);
+  const toggleStoreActive = async (slug: string, activa: boolean) => {
+    setTogglingActive(true);
+    setDbStores(prev => prev.map((s: any) => s.slug === slug ? { ...s, status: activa ? 'active' : 'inactive' } : s));
+    const { error } = await supabase.from('stores').update({ status: activa ? 'active' : 'inactive' }).eq('slug', slug);
+    if (error) {
+      setDbStores(prev => prev.map((s: any) => s.slug === slug ? { ...s, status: activa ? 'inactive' : 'active' } : s));
+      alert('No se pudo cambiar el estado de la carta: ' + error.message);
+    }
+    setTogglingActive(false);
+  };
+
   const addToCart = (product: Product) => {
     setPosCart(prev => {
       const existing = prev.find(item => item.product.id === product.id);
@@ -310,15 +392,12 @@ function AdminDashboard({ user }: { user: User }) {
   };
 
   const handlePosCheckout = async () => {
-    if (posCart.length === 0) return;
+    if (posCart.length === 0 || !focusedStore) return;
     setIsPosSaving(true);
-    
-    // Si selectedStore es 'all', usamos el store del primer producto
-    const storeSlug = selectedStore === 'all' ? (posCart[0]?.product.store || '') : selectedStore;
     const cartTotal = posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
     const saleDetails = {
-      store: storeSlug,
+      store: focusedStore,
       customer_name: posCustomerName.trim() || 'Cliente Local (POS)',
       customer_phone: posCustomerPhone.trim() || null,
       items: posCart.map(item => ({
@@ -354,9 +433,10 @@ function AdminDashboard({ user }: { user: User }) {
     setIsPosSaving(false);
   };
 
-  const openStoreEditor = (slug: string) => {
+  const openStoreEditor = (slug: string, section: string | null = null) => {
     const config = stores[slug];
     const dbData = dbStores.find((s: any) => s.slug === slug);
+    setStoreEditorSection(section);
     setEditingStoreSlug(slug);
     setStoreForm({
       name: dbData?.name || config?.name || '',
@@ -479,7 +559,7 @@ function AdminDashboard({ user }: { user: User }) {
       if (!error && columnasFaltantes.length) {
         alert(
           `Tienda guardada, pero estos campos todavía no se guardaron: ${columnasFaltantes.join(', ')}.\n\n` +
-          'Corré la migración pendiente en el SQL editor de Supabase (ver supabase_stores_setup.sql).'
+          'Corré la migración pendiente en el SQL editor de Supabase (ver supabase_setup.sql).'
         );
       }
       if (error) throw error;
@@ -680,14 +760,18 @@ function AdminDashboard({ user }: { user: User }) {
         }
       }));
       
-      // Process each category
-      storeObj.categories.forEach(cat => {
-        const catProducts = storeProducts.filter(p => p.category === cat.name || p.category === cat.href);
+      // Se agrupa por la categoría real de cada producto. El array
+      // storeObj.categories solo lleva iconos y orden para la vitrina; el PDF
+      // no los necesita, y las tiendas de la DB suelen tenerlo vacío.
+      const categorias = Array.from(new Set(storeProducts.map(p => p.category || 'Sin categoría')));
+
+      categorias.forEach(cat => {
+        const catProducts = storeProducts.filter(p => (p.category || 'Sin categoría') === cat);
         if (catProducts.length === 0) return;
-        
+
         autoTable(doc, {
           startY: yOffset,
-          head: [['', cat.name.toUpperCase(), 'Descripción', 'Precio']],
+          head: [['', cat.toUpperCase(), 'Descripción', 'Precio']],
           body: catProducts.map(p => [
             '', // placeholder for image
             p.name + (p.subcategory ? `\n(Sección: ${p.subcategory})` : ''), 
@@ -750,41 +834,16 @@ function AdminDashboard({ user }: { user: User }) {
           <span className="font-extrabold text-xl tracking-tight text-gray-900">Workspace</span>
         </div>
         <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
-          <button 
-            onClick={() => setActiveTab('products')}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md font-semibold transition-colors ${activeTab === 'products' ? 'bg-[#b8130e] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
-          >
-            <span className="material-symbols-outlined text-[20px]">inventory_2</span>
-            Productos
-          </button>
-          <button 
-            onClick={() => setActiveTab('pos')}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md font-semibold transition-colors ${activeTab === 'pos' ? 'bg-[#b8130e] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
-          >
-            <span className="material-symbols-outlined text-[20px]">point_of_sale</span>
-            Vender (POS)
-          </button>
-          <button 
-            onClick={() => setActiveTab('orders')}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md font-semibold transition-colors ${activeTab === 'orders' ? 'bg-[#b8130e] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
-          >
-            <span className="material-symbols-outlined text-[20px]">shopping_cart</span>
-            Pedidos
-          </button>
-          <button 
-            onClick={() => setActiveTab('metrics')}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md font-semibold transition-colors ${activeTab === 'metrics' ? 'bg-[#b8130e] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
-          >
-            <span className="material-symbols-outlined text-[20px]">bar_chart</span>
-            Métricas
-          </button>
-          <button 
-            onClick={() => setActiveTab('stores')}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md font-semibold transition-colors ${activeTab === 'stores' ? 'bg-[#b8130e] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
-          >
-            <span className="material-symbols-outlined text-[20px]">store</span>
-            Mis Tiendas
-          </button>
+          {NAV_TABS.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md font-semibold transition-colors ${activeTab === t.id ? 'bg-[#b8130e] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+            >
+              <span className="material-symbols-outlined text-[20px]">{t.icon}</span>
+              {t.label}
+            </button>
+          ))}
 
           {/* Static Install Button */}
           <button 
@@ -822,9 +881,12 @@ function AdminDashboard({ user }: { user: User }) {
         <header className={`hidden md:flex flex-col md:flex-row md:items-center justify-between gap-4 ${activeTab === 'pos' ? 'mb-2' : 'mb-6'}`}>
           <div>
             <h1 className={`${activeTab === 'pos' ? 'text-lg font-black' : 'text-2xl font-extrabold'} text-gray-900 tracking-tight`}>
-              {activeTab === 'products' ? 'Gestión de Productos' : activeTab === 'orders' ? 'Gestión de Pedidos' : activeTab === 'stores' ? 'Mis Tiendas' : activeTab === 'pos' ? 'Caja Rápida (POS)' : 'Métricas y Rendimiento'}
+              {activeTab === 'inicio' ? 'Inicio' : activeTab === 'products' ? 'Gestión de Productos' : activeTab === 'orders' ? 'Gestión de Pedidos' : activeTab === 'stores' ? 'Mis Tiendas' : activeTab === 'pos' ? 'Caja Rápida (POS)' : 'Métricas y Rendimiento'}
+              {(activeTab === 'pos' || activeTab === 'inicio') && stores[focusedStore] && (
+                <span className="ml-2 text-gray-400 font-semibold">· {stores[focusedStore].name}</span>
+              )}
             </h1>
-            {activeTab !== 'pos' && (
+            {activeTab !== 'pos' && activeTab !== 'inicio' && (
               <p className="text-gray-500 text-sm font-medium mt-1">
                 {activeTab === 'products' ? 'Administra el inventario de tus tiendas.' : activeTab === 'orders' ? 'Gestiona los pedidos de tus clientes.' : activeTab === 'stores' ? 'Administra la información de tus sucursales.' : 'Analiza el rendimiento de tu negocio.'}
               </p>
@@ -870,6 +932,162 @@ function AdminDashboard({ user }: { user: User }) {
             ) : null}
           </div>
         </header>
+
+        {activeTab === 'inicio' && !inicioStore && (
+          <div className="max-w-md mx-auto py-16 text-center">
+            <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+              <span className="material-symbols-outlined text-gray-400 text-[28px]">storefront</span>
+            </div>
+            <h3 className="font-bold text-gray-900">Todavía no tenés ninguna carta</h3>
+            <p className="text-gray-500 text-sm mt-1">Reclamá la que te creó el equipo de Boga para empezar.</p>
+            <button
+              onClick={() => { setPickerDraft([]); setIsStorePickerOpen(true); }}
+              className="mt-5 px-4 py-2.5 bg-[#b8130e] text-white font-bold rounded-md text-sm"
+            >
+              Reclamar mi carta
+            </button>
+          </div>
+        )}
+
+        {activeTab === 'inicio' && inicioStore && (
+          <div className="max-w-md md:max-w-2xl mx-auto flex flex-col gap-3 pb-4">
+            {/* Acciones rápidas */}
+            <div className="flex gap-2 overflow-x-auto hide-scrollbar" style={{ scrollbarWidth: 'none' }}>
+              <button onClick={() => { setPickerDraft([]); setIsStorePickerOpen(true); }} className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-xs font-bold text-gray-700 hover:bg-gray-50">
+                <span className="material-symbols-outlined text-[16px]">menu_book</span>Mis cartas
+              </button>
+              <a href={inicioUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-xs font-bold text-gray-700 hover:bg-gray-50">
+                <span className="material-symbols-outlined text-[16px]">open_in_new</span>Ver enlace
+              </a>
+              <button onClick={() => openStoreEditor(inicioStore.slug, 'datos')} className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-xs font-bold text-gray-700 hover:bg-gray-50">
+                <span className="material-symbols-outlined text-[16px]">edit</span>Editar perfil
+              </button>
+              <button onClick={async () => { await signOut(); router.replace('/login'); }} className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-xs font-bold text-[#8c0009] hover:bg-[#8c0009]/5">
+                <span className="material-symbols-outlined text-[16px]">logout</span>Cerrar sesión
+              </button>
+            </div>
+
+            {/* Fila 1: header con color de la carta — logo, selector, URL, y a la
+                derecha el toggle "activa" y el botón de compartir. */}
+            <div className="rounded-xl p-3.5 text-white shadow-sm flex items-center gap-3" style={{ background: inicioStore.theme?.primary || '#b8130e' }}>
+              <div className="w-10 h-10 rounded-full bg-white/15 border border-white/25 overflow-hidden flex items-center justify-center shrink-0">
+                {inicioStore.logoImage
+                  ? <img src={inicioStore.logoImage} alt={inicioStore.name} className="w-full h-full object-cover" />
+                  : <span className="material-symbols-outlined text-white text-[20px]">storefront</span>}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-white/70 text-[11px] font-semibold leading-none">Hola{inicioNombre ? `, ${inicioNombre}` : ''}</p>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <select
+                    value={selectedStore === 'all' ? inicioStore.slug : selectedStore}
+                    onChange={(e) => setSelectedStore(e.target.value)}
+                    className="max-w-full bg-transparent text-white font-black text-base leading-tight truncate focus:outline-none cursor-pointer appearance-none"
+                  >
+                    {Object.values(stores).map(s => (
+                      <option key={s.slug} value={s.slug} className="text-gray-900">{s.name}</option>
+                    ))}
+                  </select>
+                  {Object.keys(stores).length > 1 && <span className="material-symbols-outlined text-white/70 text-[18px] shrink-0">unfold_more</span>}
+                </div>
+                <p className="text-white/70 text-[11px] truncate">{inicioUrl.replace(/^https?:\/\//, '')}</p>
+              </div>
+              <div className="flex flex-col items-center gap-1.5 shrink-0">
+                <button
+                  onClick={() => toggleStoreActive(inicioStore.slug, !inicioActiva)}
+                  disabled={togglingActive}
+                  title={inicioActiva ? 'Carta activa — recibe pedidos' : 'Carta inactiva'}
+                  className={`relative w-11 h-6 rounded-full transition-colors ${inicioActiva ? 'bg-[#25D366]' : 'bg-white/30'} disabled:opacity-60`}
+                  aria-pressed={inicioActiva}
+                >
+                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${inicioActiva ? 'translate-x-5' : ''}`} />
+                </button>
+                <button onClick={compartirCarta} title="Compartir link de la carta" className="flex items-center gap-1 text-white/90 text-[10px] font-bold hover:text-white">
+                  <span className="material-symbols-outlined text-[15px]">share</span>Compartir
+                </button>
+              </div>
+            </div>
+
+            {/* Fila 2: resumen de pedidos */}
+            <button onClick={() => setActiveTab('orders')} className="w-full bg-white border border-gray-100 rounded-xl p-3 shadow-sm text-left hover:border-gray-200 transition-colors">
+              <div className="flex items-center justify-between">
+                <h4 className="font-bold text-gray-900 text-sm">Pedidos del negocio</h4>
+                <span className="material-symbols-outlined text-[#b8130e] text-[20px]">arrow_forward</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 mt-2 text-center">
+                {[
+                  { k: 'Total', v: inicioOrders.length },
+                  { k: 'Pendientes', v: inicioOrders.filter(o => o.status === 'Pendiente').length },
+                  { k: 'Entregados', v: inicioOrders.filter(o => o.status === 'Entregado').length },
+                ].map(s => (
+                  <div key={s.k}>
+                    <p className="text-xl font-black text-gray-900 leading-none">{s.v}</p>
+                    <p className="text-[11px] font-semibold text-gray-400 mt-1">{s.k}</p>
+                  </div>
+                ))}
+              </div>
+            </button>
+
+            {/* Gestión — mismas secciones y mismo orden que la sidebar / barra inferior */}
+            <div>
+              <p className="text-[11px] font-extrabold uppercase tracking-wider text-gray-400 mb-2 px-1">Gestión</p>
+              <div className="grid grid-cols-2 gap-3">
+                {NAV_TABS.filter(t => t.id !== 'inicio' && t.id !== 'stores').map(t => (
+                  <button key={t.id} onClick={() => setActiveTab(t.id)} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm text-left hover:shadow-md hover:border-gray-200 transition-all flex flex-col gap-2">
+                    <span className="w-9 h-9 rounded-lg bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center">
+                      <span className="material-symbols-outlined text-[20px]">{t.icon}</span>
+                    </span>
+                    <span className="font-bold text-gray-900 text-sm leading-tight">{t.label}</span>
+                    <span className="text-[11px] text-gray-500 leading-snug">{t.sub}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Herramientas */}
+            <div>
+              <p className="text-[11px] font-extrabold uppercase tracking-wider text-gray-400 mb-2 px-1">Herramientas</p>
+              <div className="grid grid-cols-2 gap-3">
+                <button onClick={() => { setSelectedStore(inicioStore.slug); setIsQRModalOpen(true); }} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm text-left hover:shadow-md hover:border-gray-200 transition-all flex flex-col gap-2">
+                  <span className="w-9 h-9 rounded-lg bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center">
+                    <span className="material-symbols-outlined text-[20px]">qr_code_2</span>
+                  </span>
+                  <span className="font-bold text-gray-900 text-sm leading-tight">Código QR</span>
+                  <span className="text-[11px] text-gray-500 leading-snug">Genéralo y compártelo para tus mesas</span>
+                </button>
+                <button onClick={() => { setSelectedStore(inicioStore.slug); setIsPDFModalOpen(true); }} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm text-left hover:shadow-md hover:border-gray-200 transition-all flex flex-col gap-2">
+                  <span className="w-9 h-9 rounded-lg bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center">
+                    <span className="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+                  </span>
+                  <span className="font-bold text-gray-900 text-sm leading-tight">Exportar PDF</span>
+                  <span className="text-[11px] text-gray-500 leading-snug">Descarga tu carta como catálogo</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Configuración de la carta */}
+            <div>
+              <p className="text-[11px] font-extrabold uppercase tracking-wider text-gray-400 mb-2 px-1">Configuración de la carta</p>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { icon: 'wallpaper', titulo: 'Editar portada', sub: 'Diseño y elementos visibles', section: 'portada' },
+                  { icon: 'storefront', titulo: 'Datos del negocio', sub: 'Información principal y redes', section: 'datos' },
+                  { icon: 'schedule', titulo: 'Horarios', sub: 'Define apertura y cierre', section: 'horario' },
+                  { icon: 'payments', titulo: 'Métodos de pago', sub: 'Configura opciones', section: 'pagos' },
+                  { icon: 'notifications', titulo: 'Avisos y notificaciones', sub: 'WhatsApp y correo donde recibís tus pedidos', section: 'avisos' },
+                ].map(c => (
+                  <button key={c.section} onClick={() => openStoreEditor(inicioStore.slug, c.section)} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm text-left hover:shadow-md hover:border-gray-200 transition-all flex flex-col gap-2">
+                    <span className="w-9 h-9 rounded-lg bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center">
+                      <span className="material-symbols-outlined text-[20px]">{c.icon}</span>
+                    </span>
+                    <span className="font-bold text-gray-900 text-sm leading-tight">{c.titulo}</span>
+                    <span className="text-[11px] text-gray-500 leading-snug">{c.sub}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'products' && (
           <>
             {/* Store Selector Global for Dashboard */}
@@ -1575,7 +1793,7 @@ function AdminDashboard({ user }: { user: User }) {
                   >
                     Todos
                   </button>
-                  {Array.from(new Set((selectedStore === 'all' ? visibleProducts : visibleProducts.filter(p => p.store === selectedStore)).map(p => p.category))).map(cat => (
+                  {Array.from(new Set(visibleProducts.filter(p => p.store === focusedStore).map(p => p.category))).map(cat => (
                     <button 
                       key={cat}
                       onClick={() => setPosProductCategory(cat)}
@@ -1593,7 +1811,7 @@ function AdminDashboard({ user }: { user: User }) {
 
               {/* Grid */}
               {(() => {
-                const posFilteredStoreProducts = selectedStore === 'all' ? visibleProducts : visibleProducts.filter(p => p.store === selectedStore);
+                const posFilteredStoreProducts = visibleProducts.filter(p => p.store === focusedStore);
                 const posProducts = posFilteredStoreProducts.filter(p => {
                   const matchesSearch = p.name.toLowerCase().includes(posProductSearch.toLowerCase()) ||
                                         p.category.toLowerCase().includes(posProductSearch.toLowerCase());
@@ -1802,42 +2020,21 @@ function AdminDashboard({ user }: { user: User }) {
                   <div className="flex flex-col gap-1">
                     <h4 className="text-[8px] font-extrabold text-gray-400 uppercase tracking-widest">Método de Pago</h4>
                     <div className="grid grid-cols-3 gap-1">
-                      <button 
-                        type="button" 
-                        onClick={() => setPosPaymentMethod('Efectivo')}
-                        className={`py-1 px-1 rounded-lg border transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                          posPaymentMethod === 'Efectivo' 
-                            ? 'border-[#b8130e] bg-[#b8130e]/5 text-[#b8130e]' 
-                            : 'border-[#e1e3e4]/30 bg-[#ffece9]/40 text-gray-500 hover:border-gray-300'
-                        }`}
-                      >
-                        <span className="material-symbols-outlined text-[15px]">payments</span>
-                        <span className="text-[10px] font-bold">Efectivo</span>
-                      </button>
-                      <button 
-                        type="button" 
-                        onClick={() => setPosPaymentMethod('Yape/Plin')}
-                        className={`py-1 px-1 rounded-lg border transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                          posPaymentMethod === 'Yape/Plin' 
-                            ? 'border-[#b8130e] bg-[#b8130e]/5 text-[#b8130e]' 
-                            : 'border-[#e1e3e4]/30 bg-[#ffece9]/40 text-gray-500 hover:border-gray-300'
-                        }`}
-                      >
-                        <span className="material-symbols-outlined text-[15px]">qr_code_2</span>
-                        <span className="text-[10px] font-bold">Yape/Plin</span>
-                      </button>
-                      <button 
-                        type="button" 
-                        onClick={() => setPosPaymentMethod('Tarjeta')}
-                        className={`py-1 px-1 rounded-lg border transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                          posPaymentMethod === 'Tarjeta' 
-                            ? 'border-[#b8130e] bg-[#b8130e]/5 text-[#b8130e]' 
-                            : 'border-[#e1e3e4]/30 bg-[#ffece9]/40 text-gray-500 hover:border-gray-300'
-                        }`}
-                      >
-                        <span className="material-symbols-outlined text-[15px]">credit_card</span>
-                        <span className="text-[10px] font-bold">Tarjeta</span>
-                      </button>
+                      {POS_PAYMENT_METHODS.map(m => {
+                        const on = posPaymentMethod === m.id;
+                        return (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => setPosPaymentMethod(m.id)}
+                            className="py-1.5 px-1 rounded-lg border-2 transition-all flex flex-col items-center gap-0.5 cursor-pointer bg-white"
+                            style={on ? { borderColor: m.color, background: `${m.color}0d`, color: m.color } : { borderColor: '#e5e7eb', color: '#6b7280' }}
+                          >
+                            <span className="material-symbols-outlined text-[15px]">{m.icon}</span>
+                            <span className="text-[10px] font-bold">{m.label}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -2022,42 +2219,21 @@ function AdminDashboard({ user }: { user: User }) {
                         <div className="flex flex-col gap-1">
                           <h4 className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Método de Pago</h4>
                           <div className="grid grid-cols-3 gap-1.5">
-                            <button 
-                              type="button" 
-                              onClick={() => setPosPaymentMethod('Efectivo')}
-                              className={`py-1.5 px-2 rounded-lg border-2 transition-all flex flex-col items-center gap-0.5 cursor-pointer ${
-                                posPaymentMethod === 'Efectivo' 
-                                  ? 'border-[#b8130e] bg-[#b8130e]/5 text-[#b8130e]' 
-                                  : 'border-[#e1e3e4]/30 bg-[#ffece9]/40 text-gray-500 hover:border-gray-300'
-                              }`}
-                            >
-                              <span className="material-symbols-outlined text-[16px]">payments</span>
-                              <span className="text-[9px] font-bold">Efectivo</span>
-                            </button>
-                            <button 
-                              type="button" 
-                              onClick={() => setPosPaymentMethod('Yape/Plin')}
-                              className={`py-1.5 px-2 rounded-lg border-2 transition-all flex flex-col items-center gap-0.5 cursor-pointer ${
-                                posPaymentMethod === 'Yape/Plin' 
-                                  ? 'border-[#b8130e] bg-[#b8130e]/5 text-[#b8130e]' 
-                                  : 'border-[#e1e3e4]/30 bg-[#ffece9]/40 text-gray-500 hover:border-gray-300'
-                              }`}
-                            >
-                              <span className="material-symbols-outlined text-[16px]">qr_code_2</span>
-                              <span className="text-[9px] font-bold">Yape/Plin</span>
-                            </button>
-                            <button 
-                              type="button" 
-                              onClick={() => setPosPaymentMethod('Tarjeta')}
-                              className={`py-1.5 px-2 rounded-lg border-2 transition-all flex flex-col items-center gap-0.5 cursor-pointer ${
-                                posPaymentMethod === 'Tarjeta' 
-                                  ? 'border-[#b8130e] bg-[#b8130e]/5 text-[#b8130e]' 
-                                  : 'border-[#e1e3e4]/30 bg-[#ffece9]/40 text-gray-500 hover:border-gray-300'
-                              }`}
-                            >
-                              <span className="material-symbols-outlined text-[16px]">credit_card</span>
-                              <span className="text-[9px] font-bold">Tarjeta</span>
-                            </button>
+                            {POS_PAYMENT_METHODS.map(m => {
+                              const on = posPaymentMethod === m.id;
+                              return (
+                                <button
+                                  key={m.id}
+                                  type="button"
+                                  onClick={() => setPosPaymentMethod(m.id)}
+                                  className="py-1.5 px-2 rounded-lg border-2 transition-all flex flex-col items-center gap-0.5 cursor-pointer bg-white"
+                                  style={on ? { borderColor: m.color, background: `${m.color}0d`, color: m.color } : { borderColor: '#e5e7eb', color: '#6b7280' }}
+                                >
+                                  <span className="material-symbols-outlined text-[16px]">{m.icon}</span>
+                                  <span className="text-[9px] font-bold">{m.label}</span>
+                                </button>
+                              );
+                            })}
                           </div>
                         </div>
 
@@ -2287,7 +2463,7 @@ function AdminDashboard({ user }: { user: User }) {
 
             <div className="p-6 overflow-y-auto flex-1 custom-scrollbar space-y-6">
               {/* Hero Image Upload */}
-              <div>
+              <div id="editor-portada" className="scroll-mt-4">
                 <label className="block text-sm font-bold text-gray-700 mb-2">Foto de Portada</label>
                 <input type="file" ref={storeHeroInputRef} onChange={e => { if (e.target.files?.[0]) { setStoreHeroFile(e.target.files[0]); setStoreHeroPreview(URL.createObjectURL(e.target.files[0])); }}} accept="image/*" className="hidden" />
                 <div
@@ -2443,7 +2619,7 @@ function AdminDashboard({ user }: { user: User }) {
               </div>
 
               {/* WhatsApp de pedidos */}
-              <div>
+              <div id="editor-avisos" className="scroll-mt-4">
                 <label className="block text-sm font-bold text-gray-700 mb-2">WhatsApp de Pedidos</label>
                 <input
                   type="tel"
@@ -2465,37 +2641,50 @@ function AdminDashboard({ user }: { user: User }) {
               </div>
 
               {/* Metodos de pago: solo informativos, el pago se coordina por WhatsApp */}
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Métodos de Pago que Aceptas</label>
-                <div className="flex flex-wrap gap-2">
-                  {['Efectivo', 'Yape/Plin', 'Transferencia', 'Visa', 'Mastercard'].map((metodo) => {
-                    const activo = storeForm.metodos_pago.includes(metodo);
+              <div id="editor-pagos" className="scroll-mt-4">
+                <label className="block text-sm font-bold text-gray-700 mb-1">Métodos de Pago que Aceptas</label>
+                <p className="text-xs text-gray-500 mb-3">
+                  Se muestran en tu tienda como referencia. Ningún pago se procesa en la app: se coordina por WhatsApp.
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  {PAYMENT_METHODS.map((m) => {
+                    const activo = storeForm.metodos_pago.includes(m.id);
                     return (
                       <button
-                        key={metodo}
+                        key={m.id}
                         type="button"
                         onClick={() => setStoreForm({
                           ...storeForm,
                           metodos_pago: activo
-                            ? storeForm.metodos_pago.filter((m) => m !== metodo)
-                            : [...storeForm.metodos_pago, metodo],
+                            ? storeForm.metodos_pago.filter((x) => x !== m.id)
+                            : [...storeForm.metodos_pago, m.id],
                         })}
-                        className={`px-3.5 py-2 rounded-full text-xs font-bold border transition-all ${
-                          activo ? 'bg-black text-white border-black' : 'bg-gray-50 text-gray-600 border-gray-200'
-                        }`}
+                        className="relative flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all bg-white hover:border-gray-300"
+                        style={activo
+                          ? { borderColor: m.color, background: `${m.color}0d` }
+                          : { borderColor: '#e5e7eb' }}
                       >
-                        {metodo}
+                        {activo && (
+                          <span className="material-symbols-outlined absolute top-1 right-1 text-[16px]" style={{ color: m.color }}>check_circle</span>
+                        )}
+                        <span
+                          className="w-9 h-9 rounded-lg flex items-center justify-center"
+                          style={{ background: `${m.color}1a`, color: m.color }}
+                        >
+                          <span className="material-symbols-outlined text-[20px]">{m.icon}</span>
+                        </span>
+                        <span className="text-xs font-bold" style={{ color: activo ? m.color : '#374151' }}>{m.label}</span>
                       </button>
                     );
                   })}
                 </div>
-                <p className="text-xs text-gray-500 mt-1.5">
-                  Se muestran en tu tienda como referencia. Si no elegís ninguno, se muestra solo Efectivo. Ningún pago se procesa en la app: se coordina por WhatsApp.
-                </p>
+                {storeForm.metodos_pago.length === 0 && (
+                  <p className="text-xs text-gray-400 mt-2">Si no elegís ninguno, tu tienda muestra solo Efectivo.</p>
+                )}
               </div>
 
               {/* Ficha del local: todo opcional, para negocios sin sede fisica (puro delivery) */}
-              <div className="space-y-4 pt-2 border-t border-gray-100">
+              <div id="editor-horario" className="space-y-4 pt-2 border-t border-gray-100 scroll-mt-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Ficha del local (opcional)</label>
                   <p className="text-xs text-gray-500">
@@ -2622,7 +2811,7 @@ function AdminDashboard({ user }: { user: User }) {
               <div className="p-4 bg-white rounded-md shadow-sm border border-gray-100 flex flex-col items-center">
                 <div className="text-lg font-black tracking-tight mb-4">{selectedStore !== 'all' ? stores[selectedStore]?.name : 'Boga Market'}</div>
                 <QRCodeSVG 
-                  value={selectedStore !== 'all' ? `https://boga.com/${selectedStore}` : `https://boga.com/explore`}
+                  value={selectedStore !== 'all' ? `${siteOrigin}/${selectedStore}` : `${siteOrigin}/explore`}
                   size={200}
                   level="H"
                   includeMargin={true}
@@ -2643,7 +2832,7 @@ function AdminDashboard({ user }: { user: User }) {
                       ctx?.drawImage(img, 0, 0);
                       const pngFile = canvas.toDataURL("image/png");
                       const downloadLink = document.createElement("a");
-                      downloadLink.download = `QR_${selectedStore}.png`;
+                      downloadLink.download = `QR_${selectedStore === 'all' ? 'boga-market' : selectedStore}.png`;
                       downloadLink.href = `${pngFile}`;
                       downloadLink.click();
                     };
@@ -2713,37 +2902,21 @@ function AdminDashboard({ user }: { user: User }) {
         </div>
       )}
 
-      {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 flex justify-between items-center z-50 rounded-t-2xl shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
-        <button 
-          onClick={() => setActiveTab('orders')} 
-          className={`flex flex-col items-center gap-1 w-16 py-2 rounded-[20px] transition-all ${activeTab === 'orders' ? 'bg-[#b8130e] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
-        >
-          <span className="material-symbols-outlined text-[22px]">receipt_long</span>
-          <span className="text-[10px] font-bold">Pedidos</span>
-        </button>
-        <button 
-          onClick={() => setActiveTab('products')} 
-          className={`flex flex-col items-center gap-1 w-16 py-2 rounded-[20px] transition-all ${activeTab === 'products' ? 'bg-[#b8130e] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
-        >
-          <span className="material-symbols-outlined text-[22px]">inventory_2</span>
-          <span className="text-[10px] font-bold">Productos</span>
-        </button>
-        <button 
-          onClick={() => setActiveTab('pos')} 
-          className={`flex flex-col items-center gap-1 w-16 py-2 rounded-[20px] transition-all ${activeTab === 'pos' ? 'bg-[#b8130e] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
-        >
-          <span className="material-symbols-outlined text-[22px]">point_of_sale</span>
-          <span className="text-[10px] font-bold">Vender</span>
-        </button>
-        <button 
-          onClick={() => setActiveTab('metrics')} 
-          className={`flex flex-col items-center gap-1 w-16 py-2 rounded-[20px] transition-all ${activeTab === 'metrics' ? 'bg-[#b8130e] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
-        >
-          <span className="material-symbols-outlined text-[22px]">bar_chart</span>
-          <span className="text-[10px] font-bold">Métricas</span>
-        </button>
-        <button 
+      {/* Mobile Bottom Navigation — no aparece en el Inicio: ahí es un hub, la
+          barra sale recién al entrar a una sección de trabajo. */}
+      {activeTab !== 'inicio' && (
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-2 py-3 flex justify-around items-center z-50 rounded-t-2xl shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
+        {NAV_TABS.filter(t => t.inBottomBar).map(t => (
+          <button
+            key={t.id}
+            onClick={() => setActiveTab(t.id)}
+            className={`flex flex-col items-center gap-1 w-16 py-2 rounded-[20px] transition-all ${activeTab === t.id ? 'bg-[#b8130e] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+          >
+            <span className="material-symbols-outlined text-[22px]">{t.icon}</span>
+            <span className="text-[10px] font-bold">{t.id === 'pos' ? 'Vender' : t.label}</span>
+          </button>
+        ))}
+        <button
           onClick={() => setIsMobileMenuOpen(true)}
           className="flex flex-col items-center gap-1 w-16 py-2 transition-all text-gray-500 hover:bg-gray-50 rounded-[20px]"
         >
@@ -2751,6 +2924,7 @@ function AdminDashboard({ user }: { user: User }) {
           <span className="text-[10px] font-bold">Perfil</span>
         </button>
       </div>
+      )}
 
       {/* Mobile Profile Menu Modal */}
       {isMobileMenuOpen && (
@@ -2792,21 +2966,17 @@ function AdminDashboard({ user }: { user: User }) {
               </div>
 
               <div className="space-y-2 border-t border-gray-100 pt-6">
-                <button
-                  onClick={() => { setActiveTab('pos'); setIsMobileMenuOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-md font-semibold transition-colors ${activeTab === 'pos' ? 'bg-[#b8130e] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
-                >
-                  <span className="material-symbols-outlined text-[20px]">point_of_sale</span>
-                  Vender (POS)
-                </button>
-
-                <button
-                  onClick={() => { setActiveTab('stores'); setIsMobileMenuOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-md font-semibold transition-colors ${activeTab === 'stores' ? 'bg-[#b8130e] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
-                >
-                  <span className="material-symbols-outlined text-[20px]">store</span>
-                  Mis Tiendas
-                </button>
+                {/* Secciones que no entran en la barra inferior, en el mismo orden */}
+                {NAV_TABS.filter(t => !t.inBottomBar).map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => { setActiveTab(t.id); setIsMobileMenuOpen(false); }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-md font-semibold transition-colors ${activeTab === t.id ? 'bg-[#b8130e] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">{t.icon}</span>
+                    {t.label}
+                  </button>
+                ))}
 
                 <Link href="/market" className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-md font-semibold transition-colors">
                   <span className="material-symbols-outlined text-[20px]">arrow_back</span>
