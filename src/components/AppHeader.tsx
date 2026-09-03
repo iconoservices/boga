@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
-import { HUBS, isHubActive } from '@/lib/hubs';
+import SectionNav from '@/components/SectionNav';
 
 interface AppHeaderProps {
   showSearch?: boolean;
@@ -149,21 +149,6 @@ export default function AppHeader({
           )}
         </div>
 
-        {/* Middle: hubs — mismos destinos que el riel lateral (src/lib/hubs.ts) */}
-        <nav className="flex items-center gap-4 xl:gap-5 min-w-0 overflow-x-auto hide-scrollbar" style={{ scrollbarWidth: 'none' }}>
-          {HUBS.map((h) => (
-            <Link
-              key={h.href}
-              href={h.href}
-              className={`font-label-md text-label-md whitespace-nowrap transition-colors ${
-                isHubActive(pathname, h.href) ? 'text-primary' : 'text-secondary hover:text-primary'
-              }`}
-            >
-              {h.label}
-            </Link>
-          ))}
-        </nav>
-
         {/* Middle Right: Centered Search Bar */}
         {showSearch ? (
           <div className="flex-1 max-w-xl px-2">
@@ -235,6 +220,9 @@ export default function AppHeader({
           </Link>
         </div>
       </div>
+
+      {/* Barra de secciones — debajo del header, a todo el ancho */}
+      <SectionNav />
     </header>
   );
 }
