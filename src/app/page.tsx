@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
 import MarketTabs from '@/components/MarketTabs';
@@ -11,19 +11,42 @@ import { useCart } from '@/context/CartContext';
 // descubre; cada bloque termina en "Ver todo". Buscador = /market, B2B = /negocios.
 // Data de muestra hasta que cada hub exponga sus destacados reales.
 
-const FEATURE = {
-  kicker: 'Revista · Gastronomía',
-  title: 'Los 3 huariques secretos para el mejor tacacho de Pucallpa',
-  href: '/revista',
-  img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1400&q=80',
-  portrait: 'https://images.unsplash.com/photo-1554048612-b6a482bc67e5?w=400&q=80',
-};
-
-const NOTA_SECUNDARIA = {
-  cat: 'Curiosidades',
-  title: '¿Sabías por qué la laguna de Yarinacocha se llama así?',
-  img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80',
-};
+// Portada rotativa — un solo banner que va cambiando: revista, promos, sorteo,
+// eventos… Data de muestra hasta que salga de cada hub / de un CMS.
+type Slide = { kicker: string; title: string; href: string; img: string; portrait?: string };
+const PORTADA_SLIDES: Slide[] = [
+  {
+    kicker: 'Revista · Gastronomía',
+    title: 'Los 3 huariques secretos para el mejor tacacho de Pucallpa',
+    href: '/revista',
+    img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1600&q=80',
+    portrait: 'https://images.unsplash.com/photo-1554048612-b6a482bc67e5?w=400&q=80',
+  },
+  {
+    kicker: 'Promo · Market',
+    title: '2x1 en hamburguesas — solo por hoy',
+    href: '/market',
+    img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1600&q=80',
+  },
+  {
+    kicker: 'Sorteo del mes',
+    title: 'Suma tickets con tus compras y gana una moto lineal 0 km',
+    href: '/sorteos',
+    img: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=1600&q=80',
+  },
+  {
+    kicker: 'Eventos',
+    title: 'Trueno en Pucallpa · 1 de octubre en el Anfiteatro',
+    href: '/eventos',
+    img: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=1600&q=80',
+  },
+  {
+    kicker: 'Revista · Curiosidades',
+    title: '¿Sabías por qué la laguna de Yarinacocha se llama así?',
+    href: '/revista',
+    img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1600&q=80',
+  },
+];
 
 // Vistazo a los hubs — "todo Boga en un lugar".
 const HUB_TILES = [
@@ -95,6 +118,62 @@ function SectionHead({ title, href, cta = 'Ver todo' }: { title: string; href: s
 
 const CAROUSEL = "flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x";
 
+// Un solo banner de portada que rota entre revista, promos, sorteo y eventos.
+function PortadaCarrusel() {
+  const [i, setI] = useState(0);
+  const n = PORTADA_SLIDES.length;
+  const next = useCallback(() => setI((v) => (v + 1) % n), [n]);
+  const prev = () => setI((v) => (v - 1 + n) % n);
+
+  useEffect(() => {
+    const id = setInterval(next, 6000);
+    return () => clearInterval(id);
+  }, [next]);
+
+  return (
+    <div className="max-w-[1280px] mx-auto w-full pl-12 pr-container-margin lg:px-8 pt-6">
+      <div className="relative overflow-hidden bg-surface-container-low shadow-sm aspect-[4/3] sm:aspect-[2/1] lg:aspect-[64/21]">
+        <div className="flex h-full transition-transform duration-500 ease-out" style={{ transform: `translateX(-${i * 100}%)` }}>
+          {PORTADA_SLIDES.map((s) => (
+            <Link key={s.title} href={s.href} className="group relative w-full h-full shrink-0">
+              <img src={s.img} alt={s.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+              {s.portrait && (
+                <div className="absolute top-3 left-3 lg:top-5 lg:left-5 w-16 h-16 lg:w-24 lg:h-24 rounded-full overflow-hidden border-4 border-white shadow-xl">
+                  <img src={s.portrait} alt="" className="w-full h-full object-cover" />
+                </div>
+              )}
+              <div className="absolute inset-x-0 bottom-0 pt-4 pr-4 pb-4 pl-14 lg:p-8">
+                <span className="font-label-md text-[10px] uppercase tracking-[0.25em] text-white/70">{s.kicker}</span>
+                <h2 className="font-headline-lg font-extrabold tracking-tight text-white leading-[1.06] text-xl sm:text-2xl lg:text-4xl mt-1.5 max-w-[24ch]">
+                  {s.title}
+                </h2>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        <button onClick={(e) => { e.preventDefault(); prev(); }} aria-label="Anterior" className="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 items-center justify-center shadow-md active:scale-90 transition-transform">
+          <span className="material-symbols-outlined text-[20px] text-on-surface">chevron_left</span>
+        </button>
+        <button onClick={(e) => { e.preventDefault(); next(); }} aria-label="Siguiente" className="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 items-center justify-center shadow-md active:scale-90 transition-transform">
+          <span className="material-symbols-outlined text-[20px] text-on-surface">chevron_right</span>
+        </button>
+        <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+          {PORTADA_SLIDES.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={(e) => { e.preventDefault(); setI(idx); }}
+              aria-label={`Ir al banner ${idx + 1}`}
+              className={`h-1.5 rounded-full transition-all ${idx === i ? 'w-5 bg-white' : 'w-1.5 bg-white/50'}`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const { cartCount, setIsCartOpen } = useCart();
 
@@ -113,33 +192,10 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Portada editorial (revista) */}
-      <div className="max-w-[1280px] mx-auto w-full px-container-margin lg:px-8 pt-6 grid lg:grid-cols-2 gap-4">
-        <Link href={FEATURE.href} className="group relative block overflow-hidden aspect-[16/11] lg:aspect-[4/3] bg-surface-container-low shadow-sm">
-          <img src={FEATURE.img} alt={FEATURE.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
-          <div className="absolute top-3 left-3 w-20 h-20 lg:w-28 lg:h-28 rounded-full overflow-hidden border-4 border-white shadow-xl">
-            <img src={FEATURE.portrait} alt="" className="w-full h-full object-cover" />
-          </div>
-          <div className="absolute inset-x-0 bottom-0 p-4 lg:p-5">
-            <span className="font-label-md text-[10px] uppercase tracking-[0.25em] text-white/70">{FEATURE.kicker}</span>
-            <h2 className="font-headline-lg font-extrabold tracking-tight text-white leading-[1.06] text-xl sm:text-2xl lg:text-3xl mt-1.5 max-w-[22ch]">
-              {FEATURE.title}
-            </h2>
-          </div>
-        </Link>
+      {/* Portada — un solo banner que rota */}
+      <PortadaCarrusel />
 
-        <Link href="/revista" className="group relative overflow-hidden aspect-[16/11] lg:aspect-[4/3] bg-surface-container-low shadow-sm">
-          <img src={NOTA_SECUNDARIA.img} alt={NOTA_SECUNDARIA.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 p-4 lg:p-5">
-            <span className="font-label-md text-[10px] uppercase tracking-[0.25em] text-white/70">{NOTA_SECUNDARIA.cat}</span>
-            <h3 className="font-headline-lg font-extrabold tracking-tight text-white leading-[1.08] text-lg sm:text-xl lg:text-2xl mt-1.5 max-w-[22ch] line-clamp-3">{NOTA_SECUNDARIA.title}</h3>
-          </div>
-        </Link>
-      </div>
-
-      <main className="max-w-[1280px] mx-auto w-full flex flex-col gap-9 lg:gap-12 py-9 lg:py-12 px-container-margin lg:px-8">
+      <main className="max-w-[1280px] mx-auto w-full flex flex-col gap-9 lg:gap-12 py-9 lg:py-12 pl-12 pr-container-margin lg:px-8">
 
         {/* Todo Boga en un vistazo */}
         <section className="flex flex-col gap-4">
