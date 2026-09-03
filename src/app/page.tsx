@@ -210,54 +210,96 @@ const PULSO_CARDS = [
   },
 ];
 
-function PulsoPanel() {
+// Panel "Los 8 Portales de Boga" — el lanzador de la ciudad, al lado de la
+// portada en escritorio y apilado en móvil. Un ícono por hub, en 2 columnas.
+function PortalesPanel() {
   return (
     <div className="pl-12 pr-container-margin lg:px-0 pt-6 lg:pt-0">
       <div className="h-full bg-surface-container-low border border-surface-container-high rounded-2xl p-5 lg:p-6 flex flex-col gap-4 shadow-sm">
-        <div className="flex items-center justify-between">
-          <span className="font-label-md text-[10px] uppercase tracking-[0.22em] text-[#0b7a48] font-bold">Pulso metropolitano</span>
-          <span className="flex items-center gap-1.5 font-label-md text-[10px] text-secondary">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#0F8A55] animate-pulse" />
-            Sincronizado
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <span className="font-label-md text-[10px] uppercase tracking-[0.2em] text-secondary">Portales locales</span>
+            <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-xl lg:text-2xl leading-tight">
+              Los 8 Portales de Boga
+            </h2>
+          </div>
+          <span className="hidden lg:block font-body-md text-secondary text-[10px] text-right leading-tight max-w-[10ch] shrink-0 mt-1">
+            Toda la ciudad en un toque
           </span>
         </div>
 
-        <div>
-          <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-xl lg:text-2xl leading-tight">
-            Pucallpa en una sola app
-          </h2>
-          <p className="font-body-md text-secondary text-xs mt-1.5">
-            Transporte verificado, servicios de confianza y la agenda de la ciudad, en tiempo real.
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-2.5 lg:gap-3 flex-1">
-          {PULSO_CARDS.map((c) => (
+        <div className="grid grid-cols-2 gap-2 lg:gap-2.5 flex-1">
+          {PORTALES.map((p) => (
             <Link
-              key={c.href}
-              href={c.href}
-              className="group bg-white border border-surface-container-high rounded-xl p-3 flex items-center gap-3 hover:border-primary/40 hover:shadow-md transition-all"
+              key={p.href}
+              href={p.href}
+              className="group bg-white border border-surface-container-high rounded-xl p-2.5 flex items-center gap-2.5 hover:border-primary/40 hover:shadow-md transition-all"
             >
-              <span className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${c.tint}`}>
-                <span className="material-symbols-outlined text-[20px]">{c.icon}</span>
+              <span
+                className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 shadow-sm"
+                style={{ backgroundColor: p.color }}
+              >
+                <span className="material-symbols-outlined text-white text-[19px]" style={{ fontVariationSettings: "'FILL' 1" }}>{p.icon}</span>
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block font-headline-sm text-[13px] text-on-surface leading-tight line-clamp-1">{c.title}</span>
-                <span className="block font-body-md text-secondary text-[11px] leading-tight line-clamp-1">{c.sub}</span>
-              </span>
-              <span className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${c.btn}`}>
-                <span className="material-symbols-outlined text-[18px]">{c.action}</span>
+                <span className="block font-headline-sm text-[12px] text-on-surface leading-tight line-clamp-1">{p.label}</span>
+                <span className="hidden sm:block font-body-md text-secondary text-[10px] leading-tight line-clamp-1">{p.sub}</span>
               </span>
             </Link>
           ))}
         </div>
-
-        <div className="flex items-center justify-between border-t border-surface-container-high pt-3 font-label-md text-[10px]">
-          <span className="text-secondary">Callería · Yarinacocha · Manantay</span>
-          <span className="text-[#0b7a48] font-bold">100% ucayalino</span>
-        </div>
       </div>
     </div>
+  );
+}
+
+// Panel "Pulso metropolitano" — banda de accesos rápidos a los hubs de servicio,
+// debajo de la portada. 3 tarjetas en fila en escritorio, apiladas en móvil.
+function PulsoPanel() {
+  return (
+    <section className="flex flex-col gap-4">
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <span className="font-label-md text-[10px] uppercase tracking-[0.22em] text-[#0b7a48] font-bold">Pulso metropolitano</span>
+          <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-2xl lg:text-3xl leading-tight">
+            Pucallpa en una sola app
+          </h2>
+          <p className="font-body-md text-secondary text-xs mt-1.5 max-w-[52ch]">
+            Transporte verificado, servicios de confianza y la agenda de la ciudad, en tiempo real.
+          </p>
+        </div>
+        <span className="flex items-center gap-1.5 font-label-md text-[10px] text-secondary shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#0F8A55] animate-pulse" />
+          Sincronizado
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {PULSO_CARDS.map((c) => (
+          <Link
+            key={c.href}
+            href={c.href}
+            className="group bg-white border border-surface-container-high rounded-xl p-3 flex items-center gap-3 hover:border-primary/40 hover:shadow-md transition-all"
+          >
+            <span className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${c.tint}`}>
+              <span className="material-symbols-outlined text-[20px]">{c.icon}</span>
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-headline-sm text-[13px] text-on-surface leading-tight line-clamp-1">{c.title}</span>
+              <span className="block font-body-md text-secondary text-[11px] leading-tight line-clamp-1">{c.sub}</span>
+            </span>
+            <span className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${c.btn}`}>
+              <span className="material-symbols-outlined text-[18px]">{c.action}</span>
+            </span>
+          </Link>
+        ))}
+      </div>
+
+      <div className="flex items-center justify-between border-t border-surface-container-high pt-3 font-label-md text-[10px]">
+        <span className="text-secondary">Callería · Yarinacocha · Manantay</span>
+        <span className="text-[#0b7a48] font-bold">100% ucayalino</span>
+      </div>
+    </section>
   );
 }
 
@@ -279,46 +321,18 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Portada rotativa + panel "Pulso metropolitano" (lado a lado en escritorio) */}
+      {/* Portada rotativa + panel "Los 8 Portales de Boga" (lado a lado en escritorio) */}
       <div className="max-w-[1440px] mx-auto w-full lg:px-8 pt-4 lg:pt-6">
         <div className="lg:grid lg:grid-cols-[1.7fr_1fr] lg:gap-5 lg:items-stretch">
           <PortadaCarrusel />
-          <PulsoPanel />
+          <PortalesPanel />
         </div>
       </div>
 
       <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-9 lg:gap-12 py-9 lg:py-12 pl-12 pr-container-margin lg:px-8">
 
-        {/* Los 8 Portales de Boga */}
-        <section className="flex flex-col gap-4">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <span className="font-label-md text-[10px] uppercase tracking-[0.2em] text-secondary">Portales locales</span>
-              <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-2xl lg:text-3xl">Los 8 Portales de Boga</h2>
-            </div>
-            <span className="hidden sm:block font-body-md text-secondary text-xs text-right leading-tight max-w-[18ch] shrink-0">
-              Toda la ciudad en un toque
-            </span>
-          </div>
-          <div className="grid grid-cols-4 lg:grid-cols-8 gap-1 lg:gap-3">
-            {PORTALES.map((p) => (
-              <Link
-                key={p.href}
-                href={p.href}
-                className="group flex flex-col items-center text-center gap-1.5 p-2 rounded-xl hover:bg-surface-container-low transition-colors"
-              >
-                <span
-                  className="w-12 h-12 lg:w-14 lg:h-14 rounded-2xl flex items-center justify-center shadow-sm transition-transform group-hover:-translate-y-0.5"
-                  style={{ backgroundColor: p.color }}
-                >
-                  <span className="material-symbols-outlined text-white text-[24px] lg:text-[27px]" style={{ fontVariationSettings: "'FILL' 1" }}>{p.icon}</span>
-                </span>
-                <span className="font-headline-sm text-[12px] lg:text-[13px] text-on-surface leading-tight">{p.label}</span>
-                <span className="hidden sm:block font-body-md text-secondary text-[10px] leading-tight">{p.sub}</span>
-              </Link>
-            ))}
-          </div>
-        </section>
+        {/* Pulso metropolitano */}
+        <PulsoPanel />
 
         {/* Del Market — Lista VIP */}
         <section className="flex flex-col gap-4">
