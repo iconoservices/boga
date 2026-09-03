@@ -380,18 +380,15 @@ export default function HomePage() {
 
       <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-9 lg:gap-12 py-9 lg:py-12 pl-12 pr-container-margin lg:px-8">
 
-        {/* Pulso metropolitano */}
-        <PulsoPanel />
-
-        {/* Guía rápida — ¿Primera vez en Pucallpa? */}
+        {/* Guía rápida — ¿Primera vez en Pucallpa? (debajo del banner) */}
         <section className="flex flex-col gap-4">
           <div>
             <span className="font-label-md text-[10px] uppercase tracking-[0.2em] text-secondary">Guía rápida</span>
             <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-2xl lg:text-3xl">¿Primera vez en Pucallpa?</h2>
             <p className="font-body-md text-secondary text-xs mt-1">Lo esencial para moverte, dormir, comer y pasarla bien.</p>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-            {GUIA_PUCALLPA.map((g) => (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {GUIA_PUCALLPA.slice(0, 4).map((g) => (
               <Link
                 href={g.href}
                 key={g.titulo}
@@ -425,6 +422,9 @@ export default function HomePage() {
             <span className="material-symbols-outlined text-primary-fixed text-[20px] shrink-0 transition-transform group-hover:translate-x-0.5">arrow_forward</span>
           </Link>
         </section>
+
+        {/* Pulso metropolitano */}
+        <PulsoPanel />
 
         {/* Del Market — Dónde comer esta semana (carrusel de listas) */}
         <section className="flex flex-col gap-4">
