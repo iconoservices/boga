@@ -12,7 +12,7 @@ export default function AppFooter() {
     pathname.startsWith('/orders') ||
     pathname.startsWith('/profile') ||
     pathname.startsWith('/promotions') ||
-    pathname.startsWith('/yapu') ||
+    pathname.startsWith('/servicios') ||
     pathname.startsWith('/taxi-seguro') ||
     pathname.startsWith('/alquileres') ||
     pathname.startsWith('/eventos') ||

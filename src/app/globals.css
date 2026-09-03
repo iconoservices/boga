@@ -109,3 +109,11 @@ body {
   -webkit-tap-highlight-color: transparent;
   min-height: max(884px, 100dvh);
 }
+
+/* Sidebar persistente (solo escritorio). MarketTabs pone data-sidebar en <html>
+   al montar y lo empuja el contenido; en móvil no aplica (es overlay). */
+body { transition: padding-left 0.2s ease; }
+@media (min-width: 1024px) {
+  html[data-sidebar='open'] body { padding-left: 248px; }
+  html[data-sidebar='collapsed'] body { padding-left: 56px; }
+}

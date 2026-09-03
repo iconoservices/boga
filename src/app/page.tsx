@@ -52,7 +52,7 @@ const PORTADA_SLIDES: Slide[] = [
 const HUB_TILES = [
   { href: '/market',      label: 'Market',      icon: 'storefront',          stat: '+200 productos',      sub: 'Comida, mercado, moda y más' },
   { href: '/eventos',     label: 'Eventos',     icon: 'celebration',         stat: '14 esta semana',      sub: 'Conciertos, ferias y fiestas' },
-  { href: '/yapu',        label: 'Yapu',        icon: 'handshake',           stat: 'Chamba y servicios',  sub: 'Oficios y avisos de trabajo' },
+  { href: '/servicios',   label: 'Servicios',   icon: 'construction',        stat: 'Oficios y empleos',    sub: 'Electricistas, gasfiteros, chamba' },
   { href: '/taxi-seguro', label: 'Taxi Seguro', icon: 'local_taxi',          stat: 'Choferes verificados', sub: 'Mototaxi, auto y moto' },
   { href: '/alquileres',  label: 'Alquileres',  icon: 'bed',                 stat: '40 avisos',           sub: 'Cuartos, depas y pensiones' },
   { href: '/sorteos',     label: 'Sorteos',     icon: 'confirmation_number', stat: 'Premios cada mes',    sub: 'Suma tickets con tus compras' },
@@ -74,7 +74,7 @@ const EXPERIENCES = [
   { id: 'malecon',  title: 'Atardecer en el Malecón',         tag: 'Gratis',       from: 'S/ 0',  img: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=600&q=80' },
 ];
 
-// Peek: Yapu → servicios locales.
+// Peek: Servicios locales.
 const SERVICIOS_PEEK = [
   { id: 'sv1', nombre: 'Marco Ríos',    oficio: 'Electricista domiciliario', zona: 'Yarinacocha', img: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400&q=80' },
   { id: 'sv2', nombre: 'Lucía Panduro', oficio: 'Gasfitería y destape',      zona: 'Callería',    img: 'https://images.unsplash.com/photo-1580281658626-ee379f3cce93?w=400&q=80' },
@@ -131,8 +131,8 @@ function PortadaCarrusel() {
   }, [next]);
 
   return (
-    <div className="max-w-[1280px] mx-auto w-full pl-12 pr-container-margin lg:px-8 pt-6">
-      <div className="relative overflow-hidden rounded-2xl bg-surface-container-low shadow-sm aspect-[4/3] sm:aspect-[2/1] lg:aspect-[64/21]">
+    <div className="w-screen mx-[calc(50%-50vw)] lg:w-full lg:max-w-[1280px] lg:mx-auto pt-4 lg:pt-6 lg:px-8">
+      <div className="relative overflow-hidden lg:rounded-2xl bg-surface-container-low shadow-sm aspect-[16/10] sm:aspect-[2/1] lg:aspect-[64/21]">
         <div className="flex h-full transition-transform duration-500 ease-out" style={{ transform: `translateX(-${i * 100}%)` }}>
           {PORTADA_SLIDES.map((s) => (
             <Link key={s.title} href={s.href} className="group relative w-full h-full shrink-0">
@@ -272,12 +272,12 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Chamba y servicios — Yapu */}
+        {/* Servicios y chamba */}
         <section className="flex flex-col gap-4">
-          <SectionHead title="Chamba y servicios" href="/yapu" cta="Ver Yapu" />
+          <SectionHead title="Chamba y servicios" href="/servicios" cta="Ver todo" />
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {SERVICIOS_PEEK.map((s) => (
-              <Link href="/yapu" key={s.id} className="bg-white border border-surface-container-highest p-3 flex items-center gap-3 shadow-sm hover:border-primary/30 transition-colors">
+              <Link href="/servicios" key={s.id} className="bg-white border border-surface-container-highest p-3 flex items-center gap-3 shadow-sm hover:border-primary/30 transition-colors">
                 <div className="w-14 h-14 overflow-hidden shrink-0 bg-surface-container-low">
                   <img src={s.img} alt={s.nombre} className="w-full h-full object-cover" />
                 </div>

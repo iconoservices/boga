@@ -11,7 +11,7 @@ const ROUTES: { path: string; changeFrequency: MetadataRoute.Sitemap[number]['ch
   { path: '/eventos',       changeFrequency: 'daily',   priority: 0.8 },
   { path: '/revista',       changeFrequency: 'weekly',  priority: 0.8 },
   { path: '/sorteos',       changeFrequency: 'weekly',  priority: 0.7 },
-  { path: '/yapu',          changeFrequency: 'weekly',  priority: 0.7 },
+  { path: '/servicios',     changeFrequency: 'weekly',  priority: 0.7 },
   { path: '/taxi-seguro',   changeFrequency: 'weekly',  priority: 0.7 },
   { path: '/alquileres',    changeFrequency: 'daily',   priority: 0.8 },
   { path: '/promotions',    changeFrequency: 'daily',   priority: 0.6 },

@@ -6,7 +6,7 @@ export type Hub = { href: string; label: string; icon: string };
 export const HUBS: Hub[] = [
   { href: '/',            label: 'Inicio',      icon: 'home' },
   { href: '/market',      label: 'Market',      icon: 'storefront' },
-  { href: '/yapu',        label: 'Yapu',        icon: 'handshake' },
+  { href: '/servicios',   label: 'Servicios',   icon: 'construction' },
   { href: '/taxi-seguro', label: 'Taxi Seguro', icon: 'local_taxi' },
   { href: '/alquileres',  label: 'Alquileres',  icon: 'bed' },
   { href: '/eventos',     label: 'Eventos',     icon: 'celebration' },

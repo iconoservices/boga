@@ -419,8 +419,8 @@ export default function Home() {
       <MarketTabs />
 
       <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-4 lg:gap-6 mt-4 lg:mt-5 pb-12">
-        {/* Banners Section — a todo el ancho de la pantalla, esquinas suaves */}
-        <section className="w-screen mx-[calc(50%-50vw)] px-container-margin lg:px-4">
+        {/* Banners Section — a todo el ancho (en escritorio, del área de contenido) */}
+        <section className="w-screen mx-[calc(50%-50vw)] px-container-margin lg:w-auto lg:mx-0 lg:px-4">
           {/* Scroll-snap slider — clientWidth based, no clone tricks */}
           <div
             ref={sliderRef}

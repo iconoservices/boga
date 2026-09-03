@@ -5,7 +5,7 @@ import AppHeader from '@/components/AppHeader';
 import MarketTabs from '@/components/MarketTabs';
 import { useCart } from '@/context/CartContext';
 
-// Yapu = tablero local de chamba. Por ahora es un DIRECTORIO curado a mano
+// Servicios = tablero local de trabajo, oficios y empleos. Por ahora es un DIRECTORIO curado a mano
 // (sin tabla en Supabase todavía): gente que ofrece su oficio y avisos de
 // trabajo de negocios de la zona. El contacto sale por WhatsApp directo.
 
@@ -32,7 +32,7 @@ function waLink(numero: string, texto: string) {
   return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
 }
 
-export default function Yapu() {
+export default function Servicios() {
   const { cartCount, setIsCartOpen } = useCart();
   const [vista, setVista] = useState<Vista>('servicios');
 
@@ -45,13 +45,13 @@ export default function Yapu() {
 
         {/* Encabezado */}
         <div className="flex flex-col gap-1">
-          <h1 className="font-headline-lg text-on-surface">Yapu · Tablero local 🤝</h1>
+          <h1 className="font-headline-lg text-on-surface">Servicios · Tablero local 🤝</h1>
           <p className="text-secondary font-body-md text-sm">¿Buscas chamba o necesitas a alguien de confianza? Todo pasa por acá.</p>
         </div>
 
         {/* CTA publicar */}
         <a
-          href={waLink('51961000000', 'Hola Boga, quiero publicar un aviso en Yapu (servicio / empleo).')}
+          href={waLink('51961000000', 'Hola Boga, quiero publicar un aviso en Servicios de Boga (servicio / empleo).')}
           target="_blank"
           rel="noreferrer"
           className="relative overflow-hidden rounded-2xl bg-inverse-surface text-inverse-on-surface p-4 flex items-center gap-3 group"
@@ -108,7 +108,7 @@ export default function Yapu() {
                     <span className="material-symbols-outlined text-[14px]">location_on</span>{s.zona}
                   </span>
                   <a
-                    href={waLink(s.wsp, `Hola ${s.nombre}, te contacto desde Yapu (Boga) por tu servicio de ${s.oficio}.`)}
+                    href={waLink(s.wsp, `Hola ${s.nombre}, te contacto desde Boga por tu servicio de ${s.oficio}.`)}
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center gap-1.5 bg-[#25D366] text-white text-[12px] font-label-md px-3 py-1.5 rounded-full active:scale-95 transition-transform"
@@ -139,7 +139,7 @@ export default function Yapu() {
                   </div>
                 </div>
                 <a
-                  href={waLink(e.wsp, `Hola, vi el aviso de "${e.puesto}" en ${e.negocio} por Yapu (Boga). Me interesa postular.`)}
+                  href={waLink(e.wsp, `Hola, vi el aviso de "${e.puesto}" en ${e.negocio} por Boga. Me interesa postular.`)}
                   target="_blank"
                   rel="noreferrer"
                   className="shrink-0 flex items-center gap-1.5 bg-primary text-white text-[12px] font-label-md px-3 py-2 rounded-full active:scale-95 transition-transform"

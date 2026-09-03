@@ -10,7 +10,7 @@ export default function BottomNav() {
     pathname === '/' ||
     pathname.startsWith('/market') ||
     pathname.startsWith('/explore') ||
-    pathname.startsWith('/yapu') ||
+    pathname.startsWith('/servicios') ||
     pathname.startsWith('/taxi-seguro') ||
     pathname.startsWith('/alquileres') ||
     pathname.startsWith('/eventos') ||
