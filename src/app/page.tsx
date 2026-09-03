@@ -48,14 +48,17 @@ const PORTADA_SLIDES: Slide[] = [
   },
 ];
 
-// Vistazo a los hubs — "todo Boga en un lugar".
-const HUB_TILES = [
-  { href: '/market',      label: 'Market',      icon: 'storefront',          stat: '+200 productos',      sub: 'Comida, mercado, moda y más' },
-  { href: '/eventos',     label: 'Eventos',     icon: 'celebration',         stat: '14 esta semana',      sub: 'Conciertos, ferias y fiestas' },
-  { href: '/servicios',   label: 'Servicios',   icon: 'construction',        stat: 'Oficios y empleos',    sub: 'Electricistas, gasfiteros, chamba' },
-  { href: '/taxi-seguro', label: 'Taxi Seguro', icon: 'local_taxi',          stat: 'Choferes verificados', sub: 'Mototaxi, auto y moto' },
-  { href: '/alquileres',  label: 'Alquileres',  icon: 'bed',                 stat: '40 avisos',           sub: 'Cuartos, depas y pensiones' },
-  { href: '/sorteos',     label: 'Sorteos',     icon: 'confirmation_number', stat: 'Premios cada mes',    sub: 'Suma tickets con tus compras' },
+// Los 8 Portales de Boga — el lanzador de la ciudad. Un ícono por hub, en una
+// sola fila en escritorio. Cada portal tiene su color.
+const PORTALES = [
+  { href: '/market',      label: 'Market',      icon: 'storefront',          sub: 'Pescado, carne y tienda',   color: '#E8894A' },
+  { href: '/servicios',   label: 'Chamba',      icon: 'construction',        sub: 'Oficios y empleo diario',   color: '#3E9B5F' },
+  { href: '/taxi-seguro', label: 'Taxi Seguro', icon: 'local_taxi',          sub: 'Mototaxis verificados',     color: '#E4655A' },
+  { href: '/alquileres',  label: 'Alquileres',  icon: 'bed',                 sub: 'Cuartos, depas y lotes',    color: '#8B7FD4' },
+  { href: '/eventos',     label: 'Eventos',     icon: 'celebration',         sub: 'Conciertos, ferias, cultura', color: '#EBB05C' },
+  { href: '/sorteos',     label: 'La Suerte',   icon: 'confirmation_number', sub: 'Premios reales cada mes',   color: '#2E9B76' },
+  { href: '/revista',     label: 'Revista',     icon: 'menu_book',           sub: 'Historias y crónicas',      color: '#D97742' },
+  { href: '/negocios',    label: 'Negocios',    icon: 'work',                sub: 'Vende por WhatsApp',        color: '#2F3B4C' },
 ];
 
 // Peek: Market → lista VIP de restaurantes (posición pagada por el local).
@@ -106,7 +109,7 @@ const SELVA_NOTES = [
 
 function SectionHead({ title, href, cta = 'Ver todo' }: { title: string; href: string; cta?: string }) {
   return (
-    <div className="flex items-end justify-between border-t-2 border-on-surface pt-3">
+    <div className="flex items-end justify-between">
       <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-2xl lg:text-3xl">{title}</h2>
       <Link href={href} className="font-label-md text-[12px] text-primary shrink-0 flex items-center gap-0.5 whitespace-nowrap">
         {cta}
@@ -286,24 +289,32 @@ export default function HomePage() {
 
       <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-9 lg:gap-12 py-9 lg:py-12 pl-12 pr-container-margin lg:px-8">
 
-        {/* Todo Boga en un vistazo */}
+        {/* Los 8 Portales de Boga */}
         <section className="flex flex-col gap-4">
-          <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-2xl lg:text-3xl border-t-2 border-on-surface pt-3">
-            Todo Boga en un vistazo
-          </h2>
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-            {HUB_TILES.map((h) => (
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <span className="font-label-md text-[10px] uppercase tracking-[0.2em] text-secondary">Portales locales</span>
+              <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-2xl lg:text-3xl">Los 8 Portales de Boga</h2>
+            </div>
+            <span className="hidden sm:block font-body-md text-secondary text-xs text-right leading-tight max-w-[18ch] shrink-0">
+              Toda la ciudad en un toque
+            </span>
+          </div>
+          <div className="grid grid-cols-4 lg:grid-cols-8 gap-1 lg:gap-3">
+            {PORTALES.map((p) => (
               <Link
-                key={h.href}
-                href={h.href}
-                className="group bg-white border border-surface-container-highest rounded-lg p-4 flex flex-col gap-1.5 hover:border-primary/40 hover:shadow-md transition-all"
+                key={p.href}
+                href={p.href}
+                className="group flex flex-col items-center text-center gap-1.5 p-2 rounded-xl hover:bg-surface-container-low transition-colors"
               >
-                <span className="w-10 h-10 rounded-lg bg-primary-fixed flex items-center justify-center">
-                  <span className="material-symbols-outlined text-primary text-[22px]">{h.icon}</span>
+                <span
+                  className="w-12 h-12 lg:w-14 lg:h-14 rounded-2xl flex items-center justify-center shadow-sm transition-transform group-hover:-translate-y-0.5"
+                  style={{ backgroundColor: p.color }}
+                >
+                  <span className="material-symbols-outlined text-white text-[24px] lg:text-[27px]" style={{ fontVariationSettings: "'FILL' 1" }}>{p.icon}</span>
                 </span>
-                <span className="font-headline-sm text-sm text-on-surface mt-1">{h.label}</span>
-                <span className="font-label-md text-[11px] text-primary">{h.stat}</span>
-                <span className="font-body-md text-secondary text-[11px] leading-tight">{h.sub}</span>
+                <span className="font-headline-sm text-[12px] lg:text-[13px] text-on-surface leading-tight">{p.label}</span>
+                <span className="hidden sm:block font-body-md text-secondary text-[10px] leading-tight">{p.sub}</span>
               </Link>
             ))}
           </div>
@@ -311,7 +322,7 @@ export default function HomePage() {
 
         {/* Del Market — Lista VIP */}
         <section className="flex flex-col gap-4">
-          <div className="border-t-2 border-on-surface pt-3 flex items-end justify-between">
+          <div className="flex items-end justify-between">
             <div>
               <span className="w-fit bg-tertiary-fixed text-on-tertiary-fixed-variant text-[10px] font-label-md px-2 py-0.5 rounded-full flex items-center gap-1 uppercase tracking-wider mb-1.5">
                 <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>workspace_premium</span>Lista VIP · Patrocinado
