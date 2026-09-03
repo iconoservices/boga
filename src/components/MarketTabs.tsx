@@ -84,9 +84,7 @@ export default function MarketTabs() {
         <div className={`flex items-center h-16 border-b border-surface-container-high shrink-0 ${deskOpen ? 'px-4 justify-between w-full' : 'justify-center'}`}>
           {deskOpen && (
             <Link href="/" className="flex items-center gap-2 min-w-0">
-              <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center shrink-0">
-                <span className="text-white font-black text-xs">B</span>
-              </div>
+              <img src="/logo-mark.svg" alt="" className="w-7 h-7 shrink-0" />
               <span className="font-headline-sm text-on-surface truncate">Explora Boga</span>
             </Link>
           )}
@@ -131,9 +129,7 @@ export default function MarketTabs() {
       <nav className={`lg:hidden fixed left-0 top-0 bottom-0 z-[60] w-[264px] max-w-[82vw] bg-surface-container-lowest shadow-[8px_0_28px_rgba(0,0,0,0.22)] flex flex-col transition-transform duration-300 ease-out ${open ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex items-center justify-between px-4 h-16 border-b border-surface-container-high shrink-0">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center shrink-0">
-              <span className="text-white font-black text-xs">B</span>
-            </div>
+            <img src="/logo-mark.svg" alt="" className="w-7 h-7 shrink-0" />
             <span className="font-headline-sm text-on-surface">Explora Boga</span>
           </div>
           <button onClick={() => setOpen(false)} aria-label="Cerrar menú"

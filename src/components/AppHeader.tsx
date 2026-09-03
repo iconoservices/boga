@@ -80,9 +80,7 @@ export default function AppHeader({
             </div>
           ) : (
             <Link href="/" className="flex items-center gap-2 min-w-0 flex-1 pr-2">
-              <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center shrink-0">
-                <span className="text-white font-black text-xs">B</span>
-              </div>
+              <img src="/logo-mark.svg" alt="" className="w-8 h-8 shrink-0" />
               <span className="font-headline-sm text-headline-sm text-on-surface">Boga</span>
             </Link>
           )}
@@ -137,8 +135,8 @@ export default function AppHeader({
       <div className="hidden lg:flex items-center justify-between px-container-margin py-2.5 max-w-[1440px] mx-auto gap-4">
         {/* Left: Brand logo & Location */}
         <div className="flex items-center gap-5 shrink-0">
-          <Link href="/" className="text-headline-md font-headline-md text-primary tracking-tight font-extrabold">
-            Boga
+          <Link href="/" className="flex items-center shrink-0" aria-label="Boga — Inicio">
+            <img src="/logo.svg" alt="Boga" className="h-8 w-auto" />
           </Link>
           {showLocation && (
             <div className="flex items-center gap-1.5 text-secondary group cursor-pointer">

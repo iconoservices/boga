@@ -1,18 +1,18 @@
-<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Boga">
-  <!-- río -->
-  <path d="M0 94c18-11 33 9 55-2s41-9 65 1v27H0z" fill="#12823F"/>
-  <path d="M12 90c15-8 27 7 46-2" stroke="#0C5E2C" stroke-width="3" fill="none" stroke-linecap="round" opacity=".55"/>
-  <circle cx="90" cy="90" r="3" fill="#0C5E2C" opacity=".5"/>
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Boga">
+  <g transform="translate(8 1)">
+    <!-- río: onda del agua (detrás) -->
+    <path d="M0 49c5-3 9 2 14 0s9-3 14 0 7 2 12 0" stroke="#2AA6D6" stroke-width="3.2" stroke-linecap="round"/>
 
-  <!-- lomos de la B -->
-  <path fill="#12823F" fill-rule="evenodd" d="M38 12h21a19 19 0 0 1 0 38H38V12Zm11 12v14h9a7 7 0 0 0 0-14h-9Z"/>
-  <path fill="#12823F" fill-rule="evenodd" d="M38 50h24a20 20 0 0 1 0 40H38V50Zm11 12v16h11a8 8 0 0 0 0-16H49Z"/>
+    <!-- B en verde: los dos lóbulos; el asta la forma el remo -->
+    <path fill="#1B9E4B" fill-rule="evenodd" d="M22 5h8a10 10 0 0 1 0 20H22V5Zm0 5.5h6a4.5 4.5 0 0 1 0 9H22v-9Z"/>
+    <path fill="#1B9E4B" fill-rule="evenodd" d="M22 25h9.5a11 11 0 0 1 0 22H22V25Zm0 5.5h7a5.5 5.5 0 0 1 0 11H22V30.5Z"/>
 
-  <!-- remo: pala -->
-  <path d="M34 84c-12 0-16 13-16 23s8 17 16 19c8-2 16-9 16-19s-4-23-16-23Z" fill="#E97E2B"/>
-  <!-- remo: asta (es el eje de la B) -->
-  <rect x="28" y="12" width="12" height="80" rx="6" fill="#E97E2B"/>
-  <!-- remo: mango -->
-  <rect x="15" y="10" width="30" height="10" rx="5" fill="#E97E2B"/>
-  <line x1="34" y1="92" x2="34" y2="118" stroke="#12823F" stroke-width="3" stroke-linecap="round" opacity=".35"/>
+    <!-- remo en naranja: mango en T, caña (asta de la B) y pala -->
+    <rect x="10.5" y="2" width="18" height="5.5" rx="2.75" fill="#EE7F2D"/>
+    <rect x="15" y="4" width="9" height="40" rx="2" fill="#EE7F2D"/>
+    <path fill="#EE7F2D" d="M19.5 41c-6 0-8 3.5-8 8.5v6c0 4 3 7 8 7s8-3 8-7v-6c0-5-2-8.5-8-8.5Z"/>
+
+    <!-- río: onda delantera, la pala entra al agua -->
+    <path d="M2 56c4-2 7 2 11.5 0s7-2 11.5 0 6 1.5 10 0" stroke="#2AA6D6" stroke-width="2.8" stroke-linecap="round" opacity=".5"/>
+  </g>
 </svg>
