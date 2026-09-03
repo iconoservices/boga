@@ -419,12 +419,12 @@ export default function Home() {
       <MarketTabs />
 
       <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-4 lg:gap-6 mt-4 lg:mt-5 pb-12">
-        {/* Banners Section — a todo el ancho, esquinas rectas, uno por vista */}
-        <section>
+        {/* Banners Section — a todo el ancho de la pantalla, esquinas suaves */}
+        <section className="w-screen mx-[calc(50%-50vw)] px-container-margin lg:px-4">
           {/* Scroll-snap slider — clientWidth based, no clone tricks */}
           <div
             ref={sliderRef}
-            className="flex overflow-x-auto hide-scrollbar"
+            className="flex overflow-x-auto hide-scrollbar rounded-xl"
             style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
           >
             {BANNERS_RAW.map((b) => (
@@ -434,7 +434,7 @@ export default function Home() {
                 style={{ scrollSnapAlign: 'start', flex: '0 0 100%' }}
               >
                 <img alt="" className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" src={b.img} />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent flex flex-col justify-center p-6 lg:px-16 z-10">
+                <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent flex flex-col justify-center p-6 sm:pl-12 lg:pl-[9%] lg:pr-16 z-10">
                   {b.tag && (
                     <span className="inline-block px-3 py-1 bg-primary text-white font-label-md text-[10px] rounded-lg mb-1.5 uppercase tracking-wider w-fit">
                       {b.tag}

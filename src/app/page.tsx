@@ -132,7 +132,7 @@ function PortadaCarrusel() {
 
   return (
     <div className="max-w-[1280px] mx-auto w-full pl-12 pr-container-margin lg:px-8 pt-6">
-      <div className="relative overflow-hidden bg-surface-container-low shadow-sm aspect-[4/3] sm:aspect-[2/1] lg:aspect-[64/21]">
+      <div className="relative overflow-hidden rounded-2xl bg-surface-container-low shadow-sm aspect-[4/3] sm:aspect-[2/1] lg:aspect-[64/21]">
         <div className="flex h-full transition-transform duration-500 ease-out" style={{ transform: `translateX(-${i * 100}%)` }}>
           {PORTADA_SLIDES.map((s) => (
             <Link key={s.title} href={s.href} className="group relative w-full h-full shrink-0">

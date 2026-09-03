@@ -89,7 +89,7 @@ export default function Eventos() {
 
         {/* Carrusel destacado + Tendencias al costado */}
         <section className="grid lg:grid-cols-[1fr_320px] gap-5">
-          <div className="relative overflow-hidden rounded-none shadow-sm aspect-[16/9] sm:aspect-[21/9] lg:aspect-auto lg:min-h-[340px] -mx-container-margin lg:mx-0">
+          <div className="relative overflow-hidden rounded-2xl shadow-sm aspect-[16/9] sm:aspect-[21/9] lg:aspect-auto lg:min-h-[340px]">
             <div
               className="flex h-full transition-transform duration-500 ease-out"
               style={{ transform: `translateX(-${slide * 100}%)` }}

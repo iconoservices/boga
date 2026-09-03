@@ -89,7 +89,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="bg-background text-on-background font-body-md min-h-screen">
+      <body className="bg-background text-on-background font-body-md min-h-screen overflow-x-hidden">
         <AuthProvider>
           <StoreSettingsProvider>
             <DemoProvider>
