@@ -10,7 +10,7 @@ import { HUBS, ACCOUNT_LINKS, isHubActive } from '@/lib/hubs';
 // desliza en horizontal y el botón "Más" (fijo a la derecha) abre una hoja con
 // la grilla completa.
 const ALL = [...HUBS, ...ACCOUNT_LINKS];
-const EXTRA_ROUTES = ['/explore', '/promotions', '/login'];
+const EXTRA_ROUTES = ['/explore', '/promotions', '/login', '/guia'];
 
 export default function BottomNav() {
   const pathname = usePathname();

@@ -574,7 +574,7 @@ export default function Home() {
                 <h3 className="font-headline-lg text-on-surface">Recomendados para ti</h3>
                 <Link href="/promotions" className="text-primary font-label-md text-sm">Ver todo</Link>
               </div>
-              <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-stack-lg">
+              <div className="grid grid-flow-row-dense grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-stack-lg">
                 {marketplaceProducts.map((prod, idx) => {
                   const isFeaturedStore = (idx + 1) % 10 === 5;
                   const isFeaturedProduct = (idx + 1) % 10 === 0;
@@ -603,14 +603,6 @@ export default function Home() {
                             <div className="flex flex-col flex-1 min-w-0">
                               <span className="font-headline-sm text-sm text-on-surface leading-tight">{featuredStore.name}</span>
                               <span className="text-[9px] text-secondary font-label-md uppercase tracking-wider truncate mt-0.5">{featuredStore.category}</span>
-                              <div className="flex gap-1.5 mt-1.5">
-                                <span className="bg-primary-fixed text-primary text-[9px] font-label-md px-2 py-0.5 rounded-full flex items-center gap-0.5 border border-primary/10">
-                                  <span className="material-symbols-outlined text-[10px]">schedule</span>{featuredStore.time}
-                                </span>
-                                <span className="bg-surface-container-low text-secondary text-[9px] font-label-md px-2 py-0.5 rounded-full flex items-center gap-0.5 border border-surface-container-highest">
-                                  <span className="material-symbols-outlined text-[10px]">two_wheeler</span>{featuredStore.delivery}
-                                </span>
-                              </div>
                             </div>
                           </div>
                         </Link>

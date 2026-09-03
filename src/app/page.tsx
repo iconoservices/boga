@@ -107,13 +107,16 @@ const COMER_LISTAS: ComerLista[] = [
   },
 ];
 
-// Guía rápida — "¿Primera vez en Pucallpa?". Lo esencial, cada tarjeta manda
-// al portal que lo resuelve. Colores tomados de PORTALES.
+// Guía rápida — "¿Primera vez en Pucallpa?". 6 necesidades, cada tarjeta
+// manda al portal que la resuelve; la guía completa (clima, plata, etc.)
+// vive en /guia. Tarjetas compactas (ícono + texto), sin foto.
 const GUIA_PUCALLPA = [
   { href: '/alquileres',  icon: 'bed',          titulo: 'Dónde quedarte', sub: 'Cuartos, hostales y minidepas — por día o por mes', color: '#8B7FD4' },
-  { href: '/eventos',     icon: 'map',          titulo: 'Qué hacer',      sub: 'Yarinacocha, Boquerón, ferias y agenda cultural',   color: '#EBB05C' },
   { href: '/taxi-seguro', icon: 'local_taxi',   titulo: 'Cómo moverte',   sub: 'Mototaxi, auto o moto con chofer verificado',       color: '#E4655A' },
+  { href: '/eventos',     icon: 'map',          titulo: 'Qué hacer',      sub: 'Yarinacocha, Boquerón, ferias y agenda cultural',   color: '#EBB05C' },
   { href: '/market',      icon: 'ramen_dining', titulo: 'Dónde comer',    sub: 'Huariques, menús del día y cocina de la selva',     color: '#E8894A' },
+  { href: '/servicios',   icon: 'construction', titulo: 'Buscar chamba',  sub: 'Técnicos de confianza y bolsa de empleo local',     color: '#3E9B5F' },
+  { href: '/market',      icon: 'storefront',   titulo: 'Qué comprar',    sub: 'Pescado y carne fresca, abarrotes y artesanía',     color: '#D97742' },
 ];
 
 // Peek: Eventos / turismo → "¿Qué hacer en Pucallpa hoy?"
@@ -387,11 +390,11 @@ export default function HomePage() {
             <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-2xl lg:text-3xl">¿Primera vez en Pucallpa?</h2>
             <p className="font-body-md text-secondary text-xs mt-1">Lo esencial para moverte, dormir, comer y pasarla bien.</p>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             {GUIA_PUCALLPA.map((g) => (
               <Link
                 href={g.href}
-                key={g.href}
+                key={g.titulo}
                 className="group bg-white border border-surface-container-highest p-4 shadow-sm hover:border-primary/30 hover:shadow-md transition-all flex flex-col gap-2"
               >
                 <span className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm" style={{ backgroundColor: g.color }}>
@@ -405,6 +408,22 @@ export default function HomePage() {
               </Link>
             ))}
           </div>
+
+          <Link
+            href="/guia"
+            className="group flex items-center justify-between gap-4 bg-on-surface text-background p-4 lg:p-5 hover:bg-on-surface/90 transition-colors"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="w-10 h-10 rounded-xl bg-primary-fixed text-primary flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>menu_book</span>
+              </span>
+              <div className="min-w-0">
+                <h3 className="font-headline-sm text-sm lg:text-base">Guía completa de Pucallpa</h3>
+                <p className="font-body-md text-background/60 text-[11px] lg:text-xs">Clima, plata, emergencias, cómo llegar y costumbres locales</p>
+              </div>
+            </div>
+            <span className="material-symbols-outlined text-primary-fixed text-[20px] shrink-0 transition-transform group-hover:translate-x-0.5">arrow_forward</span>
+          </Link>
         </section>
 
         {/* Del Market — Dónde comer esta semana (carrusel de listas) */}
