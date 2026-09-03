@@ -48,24 +48,72 @@ const PORTADA_SLIDES: Slide[] = [
   },
 ];
 
-// Los 8 Portales de Boga — el lanzador de la ciudad. Un ícono por hub, en una
-// sola fila en escritorio. Cada portal tiene su color.
+// Los 8 Portales de Boga — el lanzador de la ciudad. Un ícono por hub, cada
+// uno con su color. El "sub" está escrito como lo que Boga te resuelve, no
+// como una categoría: "cómo te ayudamos", en lenguaje cercano.
 const PORTALES = [
-  { href: '/market',      label: 'Market',      icon: 'storefront',          sub: 'Pescado, carne y tienda',   color: '#E8894A' },
-  { href: '/servicios',   label: 'Chamba',      icon: 'construction',        sub: 'Oficios y empleo diario',   color: '#3E9B5F' },
-  { href: '/taxi-seguro', label: 'Taxi Seguro', icon: 'local_taxi',          sub: 'Mototaxis verificados',     color: '#E4655A' },
-  { href: '/alquileres',  label: 'Alquileres',  icon: 'bed',                 sub: 'Cuartos, depas y lotes',    color: '#8B7FD4' },
-  { href: '/eventos',     label: 'Eventos',     icon: 'celebration',         sub: 'Conciertos, ferias, cultura', color: '#EBB05C' },
-  { href: '/sorteos',     label: 'La Suerte',   icon: 'confirmation_number', sub: 'Premios reales cada mes',   color: '#2E9B76' },
-  { href: '/revista',     label: 'Revista',     icon: 'menu_book',           sub: 'Historias y crónicas',      color: '#D97742' },
-  { href: '/negocios',    label: 'Negocios',    icon: 'work',                sub: 'Vende por WhatsApp',        color: '#2F3B4C' },
+  { href: '/market',      label: 'Market',      icon: 'storefront',          sub: 'Te traemos pescado, carne y tienda', color: '#E8894A' },
+  { href: '/servicios',   label: 'Chamba',      icon: 'construction',        sub: 'Te conseguimos técnico o trabajo',   color: '#3E9B5F' },
+  { href: '/taxi-seguro', label: 'Taxi Seguro', icon: 'local_taxi',          sub: 'Te llevamos con chofer verificado',  color: '#E4655A' },
+  { href: '/alquileres',  label: 'Alquileres',  icon: 'bed',                 sub: 'Te encontramos dónde vivir',         color: '#8B7FD4' },
+  { href: '/eventos',     label: 'Eventos',     icon: 'celebration',         sub: 'Te armamos el finde en la ciudad',   color: '#EBB05C' },
+  { href: '/sorteos',     label: 'La Suerte',   icon: 'confirmation_number', sub: 'Te hacemos ganar con tus compras',   color: '#2E9B76' },
+  { href: '/revista',     label: 'Revista',     icon: 'menu_book',           sub: 'Te contamos la selva y sus historias', color: '#D97742' },
+  { href: '/negocios',    label: 'Negocios',    icon: 'work',                sub: 'Te ponemos a vender por WhatsApp',   color: '#2F3B4C' },
 ];
 
-// Peek: Market → lista VIP de restaurantes (posición pagada por el local).
-const VIP_RESTAURANTS = [
-  { id: 1, name: 'La Anaconda Parrillas',       cuisine: 'Parrilla amazónica',    rating: '4.9', img: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&q=80' },
-  { id: 2, name: 'Doña Fela · Comida Criolla',  cuisine: 'Criollo y menú del día', rating: '4.8', img: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&q=80' },
-  { id: 3, name: 'El Fogón · Juanes & Tacacho', cuisine: 'Regional selvática',     rating: '4.7', img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=80' },
+// Peek: Market → "Dónde comer esta semana". Un carrusel de listas por antojo;
+// cada lista trae 3 locales. La posición dentro de la lista la paga el local
+// (las listas marcadas "patrocinado").
+type ComerLugar = { name: string; cuisine: string; rating: string; img: string };
+type ComerLista = { id: string; titulo: string; patrocinado?: boolean; lugares: ComerLugar[] };
+const COMER_LISTAS: ComerLista[] = [
+  {
+    id: 'parrillas',
+    titulo: 'Parrillas y ahumados',
+    patrocinado: true,
+    lugares: [
+      { name: 'La Anaconda Parrillas',   cuisine: 'Parrilla amazónica',     rating: '4.9', img: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=400&q=80' },
+      { name: 'El Ahumadero de Yarina',  cuisine: 'Ahumados a la leña',      rating: '4.7', img: 'https://images.unsplash.com/photo-1558030006-450675393462?w=400&q=80' },
+      { name: 'Brasa Shipiba',           cuisine: 'Carnes y chorizo regional', rating: '4.6', img: 'https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=400&q=80' },
+    ],
+  },
+  {
+    id: 'menu',
+    titulo: 'Menú del día',
+    lugares: [
+      { name: 'Doña Fela · Comida Criolla', cuisine: 'Menú casero',        rating: '4.8', img: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&q=80' },
+      { name: 'El Almuerzo de la Tía',      cuisine: 'Menú económico',      rating: '4.5', img: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=400&q=80' },
+      { name: 'Sabor Ucayalino',           cuisine: 'Criollo y selvático',  rating: '4.6', img: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400&q=80' },
+    ],
+  },
+  {
+    id: 'selva',
+    titulo: 'Cocina de la selva',
+    lugares: [
+      { name: 'El Fogón · Juanes & Tacacho', cuisine: 'Regional selvática',           rating: '4.7', img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&q=80' },
+      { name: 'Tacacho & Cecina "El Boquerón"', cuisine: 'Platos típicos',            rating: '4.6', img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80' },
+      { name: 'La Patarashca de Manuel',     cuisine: 'Pescado en hoja de bijao',     rating: '4.8', img: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&q=80' },
+    ],
+  },
+  {
+    id: 'llevar',
+    titulo: 'Para llevar y delivery',
+    lugares: [
+      { name: 'Pollería La Leña Brava',     cuisine: 'Pollo a la brasa',    rating: '4.5', img: 'https://images.unsplash.com/photo-1626082927389-6cd097cee6a6?w=400&q=80' },
+      { name: 'Anticuchos del Malecón',     cuisine: 'Anticucho y parrilla', rating: '4.7', img: 'https://images.unsplash.com/photo-1633896949673-1eb9d131a9b4?w=400&q=80' },
+      { name: 'Juguería Amazonía',          cuisine: 'Jugos y sánguches',    rating: '4.6', img: 'https://images.unsplash.com/photo-1502741224143-90386d7f8c82?w=400&q=80' },
+    ],
+  },
+];
+
+// Guía rápida — "¿Primera vez en Pucallpa?". Lo esencial, cada tarjeta manda
+// al portal que lo resuelve. Colores tomados de PORTALES.
+const GUIA_PUCALLPA = [
+  { href: '/alquileres',  icon: 'bed',          titulo: 'Dónde quedarte', sub: 'Cuartos, hostales y minidepas — por día o por mes', color: '#8B7FD4' },
+  { href: '/eventos',     icon: 'map',          titulo: 'Qué hacer',      sub: 'Yarinacocha, Boquerón, ferias y agenda cultural',   color: '#EBB05C' },
+  { href: '/taxi-seguro', icon: 'local_taxi',   titulo: 'Cómo moverte',   sub: 'Mototaxi, auto o moto con chofer verificado',       color: '#E4655A' },
+  { href: '/market',      icon: 'ramen_dining', titulo: 'Dónde comer',    sub: 'Huariques, menús del día y cocina de la selva',     color: '#E8894A' },
 ];
 
 // Peek: Eventos / turismo → "¿Qué hacer en Pucallpa hoy?"
@@ -216,16 +264,14 @@ function PortalesPanel() {
   return (
     <div className="pl-12 pr-container-margin lg:px-0 pt-6 lg:pt-0">
       <div className="h-full bg-surface-container-low border border-surface-container-high rounded-2xl p-5 lg:p-6 flex flex-col gap-4 shadow-sm">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <span className="font-label-md text-[10px] uppercase tracking-[0.2em] text-secondary">Portales locales</span>
-            <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-xl lg:text-2xl leading-tight">
-              Los 8 Portales de Boga
-            </h2>
-          </div>
-          <span className="hidden lg:block font-body-md text-secondary text-[10px] text-right leading-tight max-w-[10ch] shrink-0 mt-1">
-            Toda la ciudad en un toque
-          </span>
+        <div>
+          <span className="font-label-md text-[10px] uppercase tracking-[0.2em] text-secondary">Cómo te ayudamos</span>
+          <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-xl lg:text-2xl leading-tight">
+            Todo Pucallpa, de tu lado
+          </h2>
+          <p className="font-body-md text-secondary text-xs mt-1">
+            Te ayudamos con tu compra, tu chamba, tu taxi y tu día a día en la ciudad.
+          </p>
         </div>
 
         <div className="grid grid-cols-2 gap-2 lg:gap-2.5 flex-1">
@@ -233,7 +279,7 @@ function PortalesPanel() {
             <Link
               key={p.href}
               href={p.href}
-              className="group bg-white border border-surface-container-high rounded-xl p-2.5 flex items-center gap-2.5 hover:border-primary/40 hover:shadow-md transition-all"
+              className="group bg-white border border-surface-container-high rounded-xl p-2.5 flex items-start gap-2.5 hover:border-primary/40 hover:shadow-md transition-all"
             >
               <span
                 className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 shadow-sm"
@@ -243,7 +289,7 @@ function PortalesPanel() {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block font-headline-sm text-[12px] text-on-surface leading-tight line-clamp-1">{p.label}</span>
-                <span className="hidden sm:block font-body-md text-secondary text-[10px] leading-tight line-clamp-1">{p.sub}</span>
+                <span className="hidden sm:block font-body-md text-secondary text-[10px] leading-snug line-clamp-2 mt-0.5">{p.sub}</span>
               </span>
             </Link>
           ))}
@@ -334,33 +380,82 @@ export default function HomePage() {
         {/* Pulso metropolitano */}
         <PulsoPanel />
 
-        {/* Del Market — Lista VIP */}
+        {/* Guía rápida — ¿Primera vez en Pucallpa? */}
+        <section className="flex flex-col gap-4">
+          <div>
+            <span className="font-label-md text-[10px] uppercase tracking-[0.2em] text-secondary">Guía rápida</span>
+            <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-2xl lg:text-3xl">¿Primera vez en Pucallpa?</h2>
+            <p className="font-body-md text-secondary text-xs mt-1">Lo esencial para moverte, dormir, comer y pasarla bien.</p>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {GUIA_PUCALLPA.map((g) => (
+              <Link
+                href={g.href}
+                key={g.href}
+                className="group bg-white border border-surface-container-highest p-4 shadow-sm hover:border-primary/30 hover:shadow-md transition-all flex flex-col gap-2"
+              >
+                <span className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm" style={{ backgroundColor: g.color }}>
+                  <span className="material-symbols-outlined text-white text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>{g.icon}</span>
+                </span>
+                <h3 className="font-headline-sm text-sm text-on-surface leading-tight">{g.titulo}</h3>
+                <p className="font-body-md text-secondary text-[11px] leading-snug">{g.sub}</p>
+                <span className="mt-auto pt-1 text-primary font-label-md text-[11px] flex items-center gap-0.5">
+                  Ver <span className="material-symbols-outlined text-[13px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* Del Market — Dónde comer esta semana (carrusel de listas) */}
         <section className="flex flex-col gap-4">
           <div className="flex items-end justify-between">
             <div>
               <span className="w-fit bg-tertiary-fixed text-on-tertiary-fixed-variant text-[10px] font-label-md px-2 py-0.5 rounded-full flex items-center gap-1 uppercase tracking-wider mb-1.5">
-                <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>workspace_premium</span>Lista VIP · Patrocinado
+                <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>restaurant</span>Selección Boga
               </span>
-              <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-2xl lg:text-3xl">Los 3 mejores restaurantes</h2>
+              <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-2xl lg:text-3xl">Dónde comer esta semana</h2>
+              <p className="font-body-md text-secondary text-xs mt-1">Listas por antojo — desliza para ver más.</p>
             </div>
             <Link href="/market" className="font-label-md text-[12px] text-primary shrink-0 flex items-center gap-0.5 whitespace-nowrap">
               Ver Market<span className="material-symbols-outlined text-[14px]">arrow_forward</span>
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {VIP_RESTAURANTS.map((r, i) => (
-              <Link href="/market" key={r.id} className="group relative overflow-hidden aspect-[16/10] sm:aspect-[4/3] shadow-sm bg-surface-container-low">
-                <img src={r.img} alt={r.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
-                <span className="absolute top-2 left-2 w-6 h-6 rounded-full bg-primary text-white text-[12px] font-black flex items-center justify-center shadow">{i + 1}</span>
-                <div className="absolute inset-x-0 bottom-0 p-3">
-                  <h3 className="font-headline-sm text-white text-sm leading-tight">{r.name}</h3>
-                  <div className="flex items-center gap-1 mt-1 text-white/80">
-                    <span className="material-symbols-outlined text-tertiary text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                    <span className="text-[11px] font-label-md">{r.rating} · {r.cuisine}</span>
-                  </div>
+          <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
+            {COMER_LISTAS.map((lista) => (
+              <div
+                key={lista.id}
+                className="snap-start shrink-0 w-[86%] sm:w-[380px] lg:w-[420px] bg-white border border-surface-container-highest shadow-sm flex flex-col"
+              >
+                <div className="flex items-center justify-between px-4 py-3 border-b border-surface-container-high">
+                  <h3 className="font-headline-sm text-sm text-on-surface">{lista.titulo}</h3>
+                  {lista.patrocinado && (
+                    <span className="text-[9px] font-label-md uppercase tracking-wider text-secondary shrink-0">Patrocinado</span>
+                  )}
                 </div>
-              </Link>
+                <div className="flex flex-col">
+                  {lista.lugares.map((r, i) => (
+                    <Link
+                      href="/market"
+                      key={r.name}
+                      className="group flex items-center gap-3 p-3 border-b border-surface-container-low last:border-0 hover:bg-surface-container-low transition-colors"
+                    >
+                      <span className="w-6 h-6 rounded-full bg-primary text-white text-[12px] font-black flex items-center justify-center shrink-0">{i + 1}</span>
+                      <div className="w-14 h-14 overflow-hidden shrink-0 bg-surface-container-low">
+                        <img src={r.img} alt={r.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-headline-sm text-sm text-on-surface leading-tight line-clamp-1">{r.name}</h4>
+                        <div className="flex items-center gap-1 mt-0.5 text-secondary">
+                          <span className="material-symbols-outlined text-tertiary text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                          <span className="text-[11px] font-label-md line-clamp-1">{r.rating} · {r.cuisine}</span>
+                        </div>
+                      </div>
+                      <span className="material-symbols-outlined text-secondary/40 text-[18px] group-hover:text-primary transition-colors shrink-0">chevron_right</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </section>
