@@ -8,7 +8,7 @@ const FEATURES = [
   {
     icon: 'storefront',
     title: 'Tu catálogo propio',
-    body: 'Tu propia página de pedidos (boga.la/tu-negocio) para compartir en WhatsApp o Instagram. Es tuya: gestionas tus productos, tus pedidos y tus clientes sin depender de nadie.',
+    body: 'Tu propia página de pedidos (bogahub.app/tu-negocio) para compartir en WhatsApp o Instagram. Es tuya: gestionas tus productos, tus pedidos y tus clientes sin depender de nadie.',
   },
   {
     icon: 'extension',

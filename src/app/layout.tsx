@@ -4,7 +4,7 @@ import './globals.css';
 import BottomNav from '@/components/BottomNav';
 import AppFooter from '@/components/AppFooter';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://boga.la';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app';
 const SITE_DESC =
   'Boga es el sistema operativo digital de Pucallpa: comercio, movilidad segura, ' +
   'trabajo, alquiler de viviendas, eventos y estilo de vida de la ciudad en una sola app.';

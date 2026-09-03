@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://boga.la';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app';
 
 // Rutas públicas indexables. Las tiendas dinámicas (/[slug]) se podrían sumar
 // leyéndolas de Supabase cuando haga falta.
