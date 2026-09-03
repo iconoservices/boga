@@ -43,30 +43,36 @@ export async function GET(request: NextRequest) {
           theme_color: '#5244e1',
         }
       : {
-          id: '/market',
-          name: 'Boga Market',
-          short_name: 'Boga Market',
-          description: 'Descubre tiendas y productos cerca de ti.',
-          start_url: '/market',
-          scope: '/market',
-          theme_color: '#b8130e',
+          id: '/',
+          name: 'Boga · Todo Pucallpa en una app',
+          short_name: 'Boga',
+          description: 'El sistema operativo digital de Pucallpa: comercio, movilidad, trabajo, alquileres y eventos.',
+          start_url: '/',
+          scope: '/',
+          theme_color: '#0F8A55',
         };
 
     return new Response(
       JSON.stringify({
         ...manifest,
         display: 'standalone',
-        background_color: '#ffffff',
+        background_color: isAdmin ? '#ffffff' : '#134034',
         lang: 'es',
         orientation: 'portrait',
-        icons: [
-          {
-            src: BOGA_DEFAULT_ICON,
-            sizes: '512x512',
-            type: mimeFromUrl(BOGA_DEFAULT_ICON),
-            purpose: 'any maskable',
-          },
-        ],
+        icons: isAdmin
+          ? [
+              {
+                src: BOGA_DEFAULT_ICON,
+                sizes: '512x512',
+                type: mimeFromUrl(BOGA_DEFAULT_ICON),
+                purpose: 'any maskable',
+              },
+            ]
+          : [
+              { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+              { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+              { src: '/icon-512-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+            ],
       }),
       { headers: { 'Content-Type': 'application/manifest+json' } }
     );

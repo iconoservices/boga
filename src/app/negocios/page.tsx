@@ -39,12 +39,10 @@ export default function NegociosPage() {
       {/* Header */}
       <header className="sticky top-0 z-20 w-full bg-background/80 backdrop-blur-md border-b border-surface-container-highest/70">
         <div className="max-w-[1200px] mx-auto px-container-margin py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shrink-0 shadow-sm">
-              <span className="text-on-primary font-black text-sm">B</span>
-            </div>
+          <Link href="/" className="flex items-center gap-2">
+            <img src="/logo-mark.svg" alt="" className="w-8 h-8 shrink-0" />
             <span className="font-headline-sm text-headline-sm text-on-background">Boga</span>
-          </div>
+          </Link>
           <div className="hidden md:flex items-center gap-6">
             <a href="#soluciones" className="font-label-md text-label-md text-secondary hover:text-primary transition-colors">Soluciones</a>
             <a href="#precios" className="font-label-md text-label-md text-secondary hover:text-primary transition-colors">Precios</a>

@@ -1,18 +1,6 @@
-<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Boga">
-  <g transform="translate(8 1)">
-    <!-- río: onda del agua (detrás) -->
-    <path d="M0 49c5-3 9 2 14 0s9-3 14 0 7 2 12 0" stroke="#2AA6D6" stroke-width="3.2" stroke-linecap="round"/>
-
-    <!-- B en verde: los dos lóbulos; el asta la forma el remo -->
-    <path fill="#1B9E4B" fill-rule="evenodd" d="M22 5h8a10 10 0 0 1 0 20H22V5Zm0 5.5h6a4.5 4.5 0 0 1 0 9H22v-9Z"/>
-    <path fill="#1B9E4B" fill-rule="evenodd" d="M22 25h9.5a11 11 0 0 1 0 22H22V25Zm0 5.5h7a5.5 5.5 0 0 1 0 11H22V30.5Z"/>
-
-    <!-- remo en naranja: mango en T, caña (asta de la B) y pala -->
-    <rect x="10.5" y="2" width="18" height="5.5" rx="2.75" fill="#EE7F2D"/>
-    <rect x="15" y="4" width="9" height="40" rx="2" fill="#EE7F2D"/>
-    <path fill="#EE7F2D" d="M19.5 41c-6 0-8 3.5-8 8.5v6c0 4 3 7 8 7s8-3 8-7v-6c0-5-2-8.5-8-8.5Z"/>
-
-    <!-- río: onda delantera, la pala entra al agua -->
-    <path d="M2 56c4-2 7 2 11.5 0s7-2 11.5 0 6 1.5 10 0" stroke="#2AA6D6" stroke-width="2.8" stroke-linecap="round" opacity=".5"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120" fill="none" role="img" aria-label="Boga">
+  <path d="M76.4 14.9A48 48 0 1 1 43.6 14.9" stroke="#0F8A55" stroke-width="13" stroke-linecap="round"/>
+  <path d="M60 60C79 73 80 88 60 99 40 88 41 73 60 60Z" fill="#F0821E"/>
+  <rect x="55" y="6" width="10" height="78" rx="5" fill="#F0821E"/>
+  <rect x="51.5" y="2" width="17" height="8" rx="4" fill="#F0821E"/>
 </svg>
