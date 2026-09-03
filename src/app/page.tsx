@@ -131,8 +131,8 @@ function PortadaCarrusel() {
   }, [next]);
 
   return (
-    <div className="w-screen mx-[calc(50%-50vw)] lg:w-full lg:max-w-[1280px] lg:mx-auto pt-4 lg:pt-6 lg:px-8">
-      <div className="relative overflow-hidden lg:rounded-2xl bg-surface-container-low shadow-sm aspect-[16/10] sm:aspect-[2/1] lg:aspect-[64/21]">
+    <div className="w-screen mx-[calc(50%-50vw)] lg:w-full lg:mx-0">
+      <div className="relative overflow-hidden lg:rounded-2xl bg-surface-container-low shadow-sm aspect-[16/10] sm:aspect-[2/1] lg:aspect-auto lg:h-[460px]">
         <div className="flex h-full transition-transform duration-500 ease-out" style={{ transform: `translateX(-${i * 100}%)` }}>
           {PORTADA_SLIDES.map((s) => (
             <Link key={s.title} href={s.href} className="group relative w-full h-full shrink-0">
@@ -174,6 +174,90 @@ function PortadaCarrusel() {
   );
 }
 
+// Panel "Pulso metropolitano" — al lado de la portada en escritorio, apilado en
+// móvil. Accesos rápidos a los hubs de servicio con la data que ya mostramos en
+// las tarjetas de "Todo Boga en un vistazo".
+const PULSO_CARDS = [
+  {
+    href: '/taxi-seguro',
+    icon: 'local_taxi',
+    title: 'Taxi Seguro a tu puerta',
+    sub: 'Choferes verificados · mototaxi, auto y moto',
+    action: 'arrow_outward',
+    tint: 'bg-tertiary-fixed text-tertiary',
+    btn: 'bg-tertiary text-on-tertiary',
+  },
+  {
+    href: '/servicios',
+    icon: 'construction',
+    title: '¿Necesitas un técnico?',
+    sub: 'Electricistas y gasfiteros activos + bolsa de empleos',
+    action: 'search',
+    tint: 'bg-[#d7f0e2] text-[#0b7a48]',
+    btn: 'bg-[#0F8A55] text-white',
+  },
+  {
+    href: '/sorteos',
+    icon: 'confirmation_number',
+    title: 'Sorteo del mes: moto 0 km',
+    sub: 'Honda XR 150 · suma tickets con tus compras',
+    action: 'chevron_right',
+    tint: 'bg-primary-fixed text-primary',
+    btn: 'bg-primary text-white',
+  },
+];
+
+function PulsoPanel() {
+  return (
+    <div className="pl-12 pr-container-margin lg:px-0 pt-6 lg:pt-0">
+      <div className="h-full bg-surface-container-low border border-surface-container-high rounded-2xl p-5 lg:p-6 flex flex-col gap-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <span className="font-label-md text-[10px] uppercase tracking-[0.22em] text-[#0b7a48] font-bold">Pulso metropolitano</span>
+          <span className="flex items-center gap-1.5 font-label-md text-[10px] text-secondary">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#0F8A55] animate-pulse" />
+            Sincronizado
+          </span>
+        </div>
+
+        <div>
+          <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-xl lg:text-2xl leading-tight">
+            Pucallpa en una sola app
+          </h2>
+          <p className="font-body-md text-secondary text-xs mt-1.5">
+            Transporte verificado, servicios de confianza y la agenda de la ciudad, en tiempo real.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-2.5 lg:gap-3 flex-1">
+          {PULSO_CARDS.map((c) => (
+            <Link
+              key={c.href}
+              href={c.href}
+              className="group bg-white border border-surface-container-high rounded-xl p-3 flex items-center gap-3 hover:border-primary/40 hover:shadow-md transition-all"
+            >
+              <span className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${c.tint}`}>
+                <span className="material-symbols-outlined text-[20px]">{c.icon}</span>
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-headline-sm text-[13px] text-on-surface leading-tight line-clamp-1">{c.title}</span>
+                <span className="block font-body-md text-secondary text-[11px] leading-tight line-clamp-1">{c.sub}</span>
+              </span>
+              <span className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${c.btn}`}>
+                <span className="material-symbols-outlined text-[18px]">{c.action}</span>
+              </span>
+            </Link>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-between border-t border-surface-container-high pt-3 font-label-md text-[10px]">
+          <span className="text-secondary">Callería · Yarinacocha · Manantay</span>
+          <span className="text-[#0b7a48] font-bold">100% ucayalino</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const { cartCount, setIsCartOpen } = useCart();
 
@@ -184,7 +268,7 @@ export default function HomePage() {
 
       {/* Banda negra compacta */}
       <div className="bg-on-surface text-background">
-        <div className="max-w-[1280px] mx-auto px-container-margin lg:px-8 py-3 lg:py-3.5 flex flex-wrap items-center gap-x-6 gap-y-1">
+        <div className="max-w-[1440px] mx-auto px-container-margin lg:px-8 py-3 lg:py-3.5 flex flex-wrap items-center gap-x-6 gap-y-1">
           <h1 className="font-headline-lg font-extrabold tracking-tight text-lg lg:text-xl">
             Descubre <span className="text-primary-fixed">Pucallpa</span>
           </h1>
@@ -192,10 +276,15 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Portada — un solo banner que rota */}
-      <PortadaCarrusel />
+      {/* Portada rotativa + panel "Pulso metropolitano" (lado a lado en escritorio) */}
+      <div className="max-w-[1440px] mx-auto w-full lg:px-8 pt-4 lg:pt-6">
+        <div className="lg:grid lg:grid-cols-[1.7fr_1fr] lg:gap-5 lg:items-stretch">
+          <PortadaCarrusel />
+          <PulsoPanel />
+        </div>
+      </div>
 
-      <main className="max-w-[1280px] mx-auto w-full flex flex-col gap-9 lg:gap-12 py-9 lg:py-12 pl-12 pr-container-margin lg:px-8">
+      <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-9 lg:gap-12 py-9 lg:py-12 pl-12 pr-container-margin lg:px-8">
 
         {/* Todo Boga en un vistazo */}
         <section className="flex flex-col gap-4">
