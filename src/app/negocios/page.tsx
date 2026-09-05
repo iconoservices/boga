@@ -49,7 +49,7 @@ export default function NegociosPage() {
             <a href="#como-funciona" className="font-label-md text-label-md text-secondary hover:text-primary transition-colors">Recursos</a>
           </div>
           <nav className="flex items-center gap-3">
-            <Link href="/login" className="hidden sm:block font-label-md text-label-md text-secondary hover:text-primary transition-colors">
+            <Link href="/login?redirect=/admin" className="hidden sm:block font-label-md text-label-md text-secondary hover:text-primary transition-colors">
               Iniciar sesión
             </Link>
             <Link

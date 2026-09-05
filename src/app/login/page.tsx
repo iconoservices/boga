@@ -16,6 +16,12 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [confirmMessage, setConfirmMessage] = useState<string | null>(null);
 
+  // A dónde volver tras entrar: el link que trajo a la persona acá decide
+  // (?redirect=/admin para comercios desde "Vende con Boga", /profile por
+  // defecto para el resto) — antes siempre mandaba a /admin, así que un
+  // cliente normal terminaba en el panel de la tienda en vez de su perfil.
+  const getRedirectTarget = () => new URLSearchParams(window.location.search).get('redirect') || '/profile';
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -23,7 +29,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     if (useMagicLink) {
-      const redirectTo = `${window.location.origin}/admin`;
+      const redirectTo = `${window.location.origin}${getRedirectTarget()}`;
       const { error: magicLinkError } = await signInWithMagicLink(email, redirectTo);
       setIsLoading(false);
       if (magicLinkError) { setError(magicLinkError); return; }
@@ -39,14 +45,14 @@ export default function LoginPage() {
         setConfirmMessage('Cuenta creada. Revisa tu correo y confirma tu cuenta antes de entrar.');
         return;
       }
-      router.push('/admin');
+      router.push(getRedirectTarget());
       return;
     }
 
     const { error: signInError } = await signIn(email, password);
     setIsLoading(false);
     if (signInError) { setError('Correo o contraseña incorrectos.'); return; }
-    router.push('/admin');
+    router.push(getRedirectTarget());
   };
 
   const handleForgotPassword = async () => {

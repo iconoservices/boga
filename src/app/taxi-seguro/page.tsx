@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import AppHeader from '@/components/AppHeader';
-import MarketTabs from '@/components/MarketTabs';
 import { useCart } from '@/context/CartContext';
 
 // Taxi Seguro: por ahora es SOLO UN DIRECTORIO de choferes verificados
@@ -292,7 +291,6 @@ export default function TaxiSeguro() {
   return (
     <>
       <AppHeader showSearch={false} cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
-      <MarketTabs />
 
       {/* Banda cívica */}
       <div className="bg-on-surface text-background">

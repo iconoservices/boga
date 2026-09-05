@@ -3,7 +3,6 @@
 import React from 'react';
 import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
-import MarketTabs from '@/components/MarketTabs';
 import { useCart } from '@/context/CartContext';
 
 // Guía de Pucallpa — la página "recién llegas, esto es lo que necesitas
@@ -64,7 +63,6 @@ export default function GuiaPage() {
   return (
     <>
       <AppHeader showSearch={false} cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
-      <MarketTabs />
 
       {/* Banda de portada */}
       <div className="bg-on-surface text-background">

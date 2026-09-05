@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import AppHeader from '@/components/AppHeader';
-import MarketTabs from '@/components/MarketTabs';
 import { useCart } from '@/context/CartContext';
 
 // Alquileres = espacio para arriendos mensuales en Pucallpa: habitaciones,
@@ -58,7 +57,6 @@ export default function Alquileres() {
   return (
     <>
       <AppHeader showSearch cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} placeholder="Busca por zona o tipo…" />
-      <MarketTabs />
 
       <main className="max-w-[1200px] mx-auto px-container-margin lg:px-6 w-full pt-5 flex flex-col gap-6 pb-14">
 

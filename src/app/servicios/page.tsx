@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import AppHeader from '@/components/AppHeader';
-import MarketTabs from '@/components/MarketTabs';
 import { useCart } from '@/context/CartContext';
 
 // Servicios = tablero local de trabajo, oficios y empleos. Por ahora es un DIRECTORIO curado a mano
@@ -39,7 +38,6 @@ export default function Servicios() {
   return (
     <>
       <AppHeader showSearch={false} cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
-      <MarketTabs />
 
       <main className="max-w-[1440px] mx-auto px-container-margin lg:px-6 w-full pt-5 flex flex-col gap-6 pb-12">
 

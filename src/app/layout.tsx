@@ -55,7 +55,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#0F8A55',
+  themeColor: '#B8130E',
 };
 
 import { CartProvider } from '@/context/CartContext';
@@ -63,6 +63,7 @@ import { DemoProvider } from '@/context/DemoContext';
 import { StoreSettingsProvider } from '@/context/StoreSettingsContext';
 import { AuthProvider } from '@/context/AuthContext';
 import SharedUI from '@/components/SharedUI';
+import MarketTabs from '@/components/MarketTabs';
 
 export default function RootLayout({
   children,
@@ -80,12 +81,29 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           rel="stylesheet"
         />
+        {/* Fija data-sidebar en <html> antes del primer paint (misma lista de
+            rutas y misma preferencia que lee MarketTabs), así el body ya nace
+            con el padding-left correcto en vez de saltar cuando el efecto de
+            React recién lo aplica. Es un <script> nativo (no next/script:
+            en esta versión de Next romper la hidratación al no poder
+            reconciliar un <script> hijo de <html>). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{
+              var p=window.location.pathname;
+              var routes=['/market','/servicios','/taxi-seguro','/alquileres','/eventos','/sorteos','/revista','/guia'];
+              var show=p==='/'||routes.some(function(r){return p.indexOf(r)===0;});
+              if(show){document.documentElement.dataset.sidebar=localStorage.getItem('boga_sidebar_open')==='1'?'open':'rail';}
+            }catch(e){}})();`,
+          }}
+        />
       </head>
       <body className="bg-background text-on-background font-body-md min-h-screen overflow-x-hidden">
         <AuthProvider>
           <StoreSettingsProvider>
             <DemoProvider>
               <CartProvider>
+                <MarketTabs />
                 {children}
                 <AppFooter />
                 <BottomNav />

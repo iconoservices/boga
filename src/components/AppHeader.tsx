@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import SectionNav from '@/components/SectionNav';
 
 interface AppHeaderProps {
@@ -29,7 +30,10 @@ export default function AppHeader({
   showCart = true
 }: AppHeaderProps) {
   const { cartCount: contextCartCount, setIsCartOpen } = useCart();
+  const { user } = useAuth();
   const pathname = usePathname();
+
+  const firstName = user?.user_metadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || null;
 
   // Use props if provided, otherwise use context
   const displayCartCount = propCartCount !== undefined ? propCartCount : contextCartCount;
@@ -196,16 +200,12 @@ export default function AppHeader({
 
           {/* Profile button */}
           <Link
-            href="/profile"
+            href={user ? '/profile' : '/login'}
             className="flex items-center gap-2 p-1 pl-3 bg-surface-container rounded-full hover:bg-surface-container-high transition-colors active:scale-95 duration-150"
           >
-            <span className="font-label-md text-label-md text-on-surface">Hola, Alex</span>
-            <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-surface-container-highest">
-              <img 
-                className="w-full h-full object-cover" 
-                alt="Perfil de usuario" 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-IfEzGRk920DvtCpRmfZp9bbKbjxdF27v3TAFmrFvsQkVlD9adL1G9__Y4T63prwK0SpZ_e8eC0ZzjfdXwOmfi3w33M2hw9ALsqO-dEj7G_H8GUHkbE4DRAdO0EevAXO7oYcJ66uwpr1wxs4jobjXK8FnMkmc7l0_-iXvrRC36FyaBjUem3f-02cQhz-mES9QLNpYrclwkPRjdwnZ7lQUhLlJVY_O2mDIM933yELXAuOKN08bMAxdsZlKlqpY45x1nO_U-iiLM9I"
-              />
+            <span className="font-label-md text-label-md text-on-surface">{firstName ? `Hola, ${firstName}` : 'Iniciar sesión'}</span>
+            <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-surface-container-highest bg-primary-fixed flex items-center justify-center">
+              <span className="material-symbols-outlined text-primary text-[20px]">person</span>
             </div>
           </Link>
         </div>

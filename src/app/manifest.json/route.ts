@@ -49,14 +49,14 @@ export async function GET(request: NextRequest) {
           description: 'El sistema operativo digital de Pucallpa: comercio, movilidad, trabajo, alquileres y eventos.',
           start_url: '/',
           scope: '/',
-          theme_color: '#0F8A55',
+          theme_color: '#B8130E',
         };
 
     return new Response(
       JSON.stringify({
         ...manifest,
         display: 'standalone',
-        background_color: isAdmin ? '#ffffff' : '#134034',
+        background_color: '#ffffff',
         lang: 'es',
         orientation: 'portrait',
         icons: isAdmin

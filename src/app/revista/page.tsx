@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import AppHeader from '@/components/AppHeader';
-import MarketTabs from '@/components/MarketTabs';
 
 // "Yo Soy de la Selva" — la revista/blog digital de Boga. Masthead + barra de
 // secciones + notas que se abren como artículo (vista de lectura tipo blog).
@@ -361,7 +360,6 @@ export default function Revista() {
   return (
     <>
       <AppHeader showSearch={false} showLocation={false} showChat={false} showCart={false} />
-      <MarketTabs />
 
       <main className="w-full pb-16">
 

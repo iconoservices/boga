@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import AppHeader from '@/components/AppHeader';
-import MarketTabs from '@/components/MarketTabs';
 import { useCart } from '@/context/CartContext';
 
 // Sorteos = "La Casa de la Suerte" de Boga. Estética morada, energética.
@@ -82,7 +81,6 @@ export default function Sorteos() {
   return (
     <>
       <AppHeader showSearch={false} cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
-      <MarketTabs />
 
       <div className="min-h-screen bg-[#3a1a6e] text-white">
         <div className="max-w-[1200px] mx-auto px-container-margin lg:px-6 pt-5 pb-16 flex flex-col gap-7">

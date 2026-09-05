@@ -1,53 +1,83 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { getTemplate } from '@/lib/templates.config';
+import { useRouter } from 'next/navigation';
 import AppHeader from '@/components/AppHeader';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 
-// --- Mock user data (will be replaced with Supabase auth later) ---
-const MOCK_USER = {
-  name: 'Carlos Mejía',
-  email: 'carlos@gmail.com',
-  phone: '51987654321',
-  address: 'Av. Larco 345, Miraflores',
-  avatar: '', // empty = use initials
-  isMerchant: true, // has a store on Boga
-  merchantStore: 'estilosmirka', // which store slug
-  joinedDate: 'Mayo 2025',
-};
-
-const MOCK_ORDERS = [
-  { id: 'ORD-7734', store: 'estilosmirka', storeName: 'Estilos Mirka', items: 'Vestido Floral + Blusa', total: 210.00, date: 'Hace 1 semana', status: 'Entregado' },
-  { id: 'ORD-5543', store: 'polleria', storeName: 'Pollería Bravoz', items: 'Pollo Brasa + Papas + Inca Kola', total: 55.00, date: 'Hace 3 días', status: 'Entregado' },
-];
-
-const STATUS_COLORS: Record<string, string> = {
-  'Entregado': '#16a34a',
-  'En camino': '#d97706',
-  'Cancelado': '#dc2626',
+// Placeholder mientras se resuelve la sesión / mientras redirige a /login.
+// El contenido real de la página sale de la cuenta autenticada, no de esto.
+const EMPTY_USER = {
+  name: '',
+  email: '',
+  phone: '',
+  address: '',
+  avatar: '',
+  isMerchant: false,
+  merchantStoreName: '',
+  joinedDate: '',
 };
 
 export default function ProfilePage() {
-  const [user, setUser] = useState(MOCK_USER);
+  const router = useRouter();
+  const { user: authUser, loading: authLoading, signOut } = useAuth();
+  const [user, setUser] = useState(EMPTY_USER);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ name: user.name, phone: user.phone, address: user.address });
-  const [activeSection, setActiveSection] = useState<'perfil' | 'pedidos' | 'ajustes'>('perfil');
+  const [activeSection, setActiveSection] = useState<'perfil' | 'ajustes'>('perfil');
   const [notifOrders, setNotifOrders] = useState(true);
   const [notifPromos, setNotifPromos] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
 
-  const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-  const merchantConfig = getTemplate(user.merchantStore);
+  // Sin sesión real no hay perfil que mostrar — a /login. Cada cuenta ve
+  // sus propios datos, no un "Carlos Mejía" fijo para cualquiera que entre.
+  useEffect(() => {
+    if (authLoading) return;
+    if (!authUser) {
+      router.replace('/login');
+      return;
+    }
+    const base = {
+      name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'Usuario',
+      email: authUser.email || '',
+      phone: '',
+      address: '',
+      avatar: '',
+      joinedDate: authUser.created_at
+        ? new Date(authUser.created_at).toLocaleDateString('es-PE', { month: 'long', year: 'numeric' })
+        : '',
+    };
+    setUser({ ...base, isMerchant: false, merchantStoreName: '' });
+
+    // ¿Esta cuenta ya tiene una tienda? (stores.user_id la referencia)
+    supabase.from('stores').select('name').eq('user_id', authUser.id).maybeSingle()
+      .then(({ data }) => {
+        if (data) setUser((u) => ({ ...u, isMerchant: true, merchantStoreName: data.name }));
+      });
+  }, [authLoading, authUser, router]);
+
+  const initials = (user.name || '?').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
   const handleSave = () => {
     setUser(prev => ({ ...prev, ...editForm }));
     setIsEditing(false);
   };
 
+  if (authLoading || !authUser) {
+    return (
+      <>
+        <AppHeader showSearch={false} cartCount={0} />
+        <main className="max-w-[640px] mx-auto px-container-margin pt-20 pb-12 flex items-center justify-center text-secondary text-sm">
+          {authLoading ? 'Cargando tu perfil…' : 'Redirigiendo a inicio de sesión…'}
+        </main>
+      </>
+    );
+  }
+
   const navTabs: { key: typeof activeSection; label: string; icon: string }[] = [
     { key: 'perfil', label: 'Mi Perfil', icon: 'person' },
-    { key: 'pedidos', label: 'Mis Pedidos', icon: 'receipt_long' },
     { key: 'ajustes', label: 'Ajustes', icon: 'settings' },
   ];
 
@@ -75,14 +105,14 @@ export default function ProfilePage() {
         </div>
 
         {/* Merchant Card */}
-        {user.isMerchant && merchantConfig && (
+        {user.isMerchant && (
           <div className="bg-gradient-to-r from-primary to-primary-container rounded-2xl p-5 flex items-center gap-4 shadow-md text-white">
             <div className="w-12 h-12 bg-white/15 rounded-xl flex items-center justify-center shrink-0 backdrop-blur-md">
               <span className="material-symbols-outlined text-white text-[24px]">storefront</span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-white/70 text-[10px] font-bold uppercase tracking-wider">Tu tienda en Boga</p>
-              <p className="font-bold text-sm text-white mt-0.5">{merchantConfig.name}</p>
+              <p className="font-bold text-sm text-white mt-0.5">{user.merchantStoreName}</p>
             </div>
             <Link 
               href="/admin" 
@@ -106,8 +136,8 @@ export default function ProfilePage() {
                 Crea tu carta digital o catálogo en Boga gratis.
               </p>
             </div>
-            <Link 
-              href="/vende-con-boga" 
+            <Link
+              href="/negocios"
               className="bg-primary text-white hover:bg-primary-container transition-all font-bold text-xs py-2 px-4 rounded-xl active:scale-95 shrink-0"
             >
               Saber más
@@ -202,71 +232,6 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* SECTION: Mis Pedidos */}
-        {activeSection === 'pedidos' && (
-          <div className="flex flex-col gap-4">
-            {MOCK_ORDERS.length === 0 ? (
-              <div className="bg-white rounded-2xl p-8 text-center border border-surface-container-highest shadow-[0_15px_15px_rgba(0,0,0,0.04)]">
-                <span className="material-symbols-outlined text-[48px] text-secondary/35">shopping_bag</span>
-                <p className="font-bold text-on-surface mt-3 mb-1">Aún no tienes pedidos</p>
-                <p className="text-secondary text-xs mt-1">Explora tus tiendas favoritas</p>
-                <Link 
-                  href="/explore" 
-                  className="inline-block mt-4 bg-primary text-white font-bold py-2.5 px-6 rounded-xl text-xs hover:bg-primary-container transition-all active:scale-95 shadow-sm"
-                >
-                  Explorar Boga
-                </Link>
-              </div>
-            ) : (
-              <>
-                <div className="flex justify-between items-center px-1">
-                  <h2 className="font-bold text-base text-on-surface">Historial de pedidos</h2>
-                  <span className="text-xs text-secondary font-medium">{MOCK_ORDERS.length} pedidos</span>
-                </div>
-                {MOCK_ORDERS.map(order => (
-                  <div 
-                    key={order.id} 
-                    className="bg-white rounded-2xl p-4 shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex items-center gap-3.5"
-                  >
-                    <div className="w-11 h-11 rounded-xl bg-surface-container-low flex items-center justify-center shrink-0 border border-surface-container-highest">
-                      <span className="material-symbols-outlined text-[20px] text-secondary">receipt_long</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start">
-                        <p className="font-bold text-sm text-on-surface leading-tight">{order.storeName}</p>
-                        <span className="font-bold text-sm text-on-surface">S/ {order.total.toFixed(2)}</span>
-                      </div>
-                      <p className="text-xs text-secondary truncate mt-0.5">{order.items}</p>
-                      <div className="flex justify-between items-center mt-2.5">
-                        <span className="text-[10px] text-secondary/50 font-medium">{order.date}</span>
-                        <span 
-                          className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                          style={{
-                            color: STATUS_COLORS[order.status] || '#5f5e5e',
-                            backgroundColor: `${STATUS_COLORS[order.status]}12` || '#f3f4f5',
-                          }}
-                        >
-                          {order.status}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-                <div className="text-center py-2">
-                  <Link 
-                    href="/explore" 
-                    className="inline-flex items-center gap-1.5 text-primary font-bold text-xs hover:text-primary-container active:scale-95 transition-all"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">add_circle</span>
-                    Hacer un nuevo pedido
-                  </Link>
-                </div>
-              </>
-            )}
-          </div>
-        )}
-
         {/* SECTION: Ajustes */}
         {activeSection === 'ajustes' && (
           <div className="flex flex-col gap-4">
@@ -329,8 +294,8 @@ export default function ProfilePage() {
                 </a>
               ))}
 
-              <button 
-                onClick={() => { window.location.href = '/login'; }} 
+              <button
+                onClick={async () => { await signOut(); window.location.href = '/login'; }}
                 className="flex items-center gap-3.5 px-5 py-3.5 border-t border-surface-container-low w-full text-left bg-transparent border-0 cursor-pointer text-red-500 hover:bg-red-50/50 transition-colors"
               >
                 <span className="material-symbols-outlined text-[20px] text-red-500">logout</span>

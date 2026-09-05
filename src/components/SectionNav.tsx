@@ -13,7 +13,7 @@ export default function SectionNav() {
   const active = (href: string) => isHubActive(pathname, href);
 
   return (
-    <nav className="border-t border-surface-container-high bg-surface">
+    <nav data-section-nav className="border-t border-surface-container-high bg-surface">
       <div className="max-w-[1440px] mx-auto flex items-stretch gap-0.5 overflow-x-auto hide-scrollbar px-container-margin lg:px-6" style={{ scrollbarWidth: 'none' }}>
         {HUBS.map((l) => (
           <Link

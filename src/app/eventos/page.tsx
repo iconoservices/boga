@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import AppHeader from '@/components/AppHeader';
-import MarketTabs from '@/components/MarketTabs';
 import { useCart } from '@/context/CartContext';
 
 // Eventos = agenda + descubrimiento local de Pucallpa, estilo plataforma de
@@ -83,7 +82,6 @@ export default function Eventos() {
   return (
     <>
       <AppHeader showSearch cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} placeholder="Busca un evento o lugar…" />
-      <MarketTabs />
 
       <main className="max-w-[1200px] mx-auto px-container-margin lg:px-6 w-full pt-4 flex flex-col gap-8 pb-14">
 

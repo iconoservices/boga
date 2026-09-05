@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
-import MarketTabs from '@/components/MarketTabs';
 import HomeFloatingActions from '@/components/HomeFloatingActions';
 import { useCart } from '@/context/CartContext';
 
@@ -415,8 +414,6 @@ export default function Home() {
       />
 
       <HomeFloatingActions />
-
-      <MarketTabs />
 
       <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-4 lg:gap-6 mt-4 lg:mt-5 pb-12">
         {/* Banner + Explorar Categorías — lado a lado (mitad y mitad) en escritorio */}

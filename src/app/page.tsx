@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
-import MarketTabs from '@/components/MarketTabs';
 import { useCart } from '@/context/CartContext';
 
 // "/" = el Inicio del lado consumidor. Es el índice vivo de Boga: un vistazo a
@@ -265,8 +264,8 @@ const PULSO_CARDS = [
 // portada en escritorio y apilado en móvil. Un ícono por hub, en 2 columnas.
 function PortalesPanel() {
   return (
-    <div className="pl-12 pr-container-margin lg:px-0 pt-6 lg:pt-0">
-      <div className="h-full bg-surface-container-low border border-surface-container-high rounded-2xl p-5 lg:p-6 flex flex-col gap-4 shadow-sm">
+    <div className="px-container-margin lg:px-0 pt-6 lg:pt-0">
+      <div className="flex flex-col gap-4 lg:h-full">
         <div>
           <span className="font-label-md text-[10px] uppercase tracking-[0.2em] text-secondary">Cómo te ayudamos</span>
           <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-xl lg:text-2xl leading-tight">
@@ -277,7 +276,30 @@ function PortalesPanel() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 lg:gap-2.5 flex-1">
+        {/* Móvil: fila horizontal de tarjetas cuadradas (ícono + descripción), sin panel envolvente */}
+        <div className="flex lg:hidden gap-2.5 overflow-x-auto hide-scrollbar -mx-1 px-1" style={{ scrollbarWidth: 'none' }}>
+          {PORTALES.map((p) => (
+            <Link
+              key={p.href}
+              href={p.href}
+              className="group bg-white border border-surface-container-high rounded-xl p-2.5 flex items-start gap-2.5 hover:border-primary/40 hover:shadow-md transition-all shrink-0 w-[168px]"
+            >
+              <span
+                className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 shadow-sm"
+                style={{ backgroundColor: p.color }}
+              >
+                <span className="material-symbols-outlined text-white text-[19px]" style={{ fontVariationSettings: "'FILL' 1" }}>{p.icon}</span>
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-headline-sm text-[12px] text-on-surface leading-tight line-clamp-1">{p.label}</span>
+                <span className="block font-body-md text-secondary text-[10px] leading-snug line-clamp-2 mt-0.5">{p.sub}</span>
+              </span>
+            </Link>
+          ))}
+        </div>
+
+        {/* Escritorio: grilla con descripción */}
+        <div className="hidden lg:grid grid-cols-2 gap-2.5 flex-1">
           {PORTALES.map((p) => (
             <Link
               key={p.href}
@@ -358,15 +380,19 @@ export default function HomePage() {
   return (
     <>
       <AppHeader showSearch={false} cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
-      <MarketTabs />
 
       {/* Banda negra compacta */}
-      <div className="bg-on-surface text-background">
-        <div className="max-w-[1440px] mx-auto px-container-margin lg:px-8 py-3 lg:py-3.5 flex flex-wrap items-center gap-x-6 gap-y-1">
-          <h1 className="font-headline-lg font-extrabold tracking-tight text-lg lg:text-xl">
+      <div className="bg-on-surface text-background overflow-hidden">
+        <div className="max-w-[1440px] mx-auto px-container-margin lg:px-8 py-1.5 lg:py-2 flex items-center gap-x-6">
+          <h1 className="shrink-0 font-headline-lg font-extrabold tracking-tight text-lg lg:text-xl">
             Descubre <span className="text-primary-fixed">Pucallpa</span>
           </h1>
-          <p className="font-body-md text-background/60 text-xs">Comercio, movilidad, trabajo, alquileres y estilo de vida — en un solo lugar.</p>
+          <div className="flex-1 min-w-0 overflow-hidden">
+            <div className="marquee-track flex w-max gap-16 whitespace-nowrap">
+              <p className="font-body-md text-background/60 text-xs">Comercio, movilidad, trabajo, alquileres y estilo de vida — en un solo lugar.</p>
+              <p className="font-body-md text-background/60 text-xs" aria-hidden="true">Comercio, movilidad, trabajo, alquileres y estilo de vida — en un solo lugar.</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -378,7 +404,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-9 lg:gap-12 py-9 lg:py-12 pl-12 pr-container-margin lg:px-8">
+      <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-9 lg:gap-12 py-9 lg:py-12 px-container-margin lg:px-8">
 
         {/* Guía rápida — ¿Primera vez en Pucallpa? (debajo del banner) */}
         <section className="flex flex-col gap-4">
