@@ -383,14 +383,17 @@ export default function HomePage() {
 
       {/* Banda negra compacta */}
       <div className="bg-on-surface text-background overflow-hidden">
-        <div className="max-w-[1440px] mx-auto px-container-margin lg:px-8 py-1.5 lg:py-2 flex items-center gap-x-6">
+        <div className="w-full px-container-margin lg:px-8 py-1 lg:py-1.5 flex items-center gap-x-6">
           <h1 className="shrink-0 font-headline-lg font-extrabold tracking-tight text-lg lg:text-xl">
             Descubre <span className="text-primary-fixed">Pucallpa</span>
           </h1>
           <div className="flex-1 min-w-0 overflow-hidden">
             <div className="marquee-track flex w-max gap-16 whitespace-nowrap">
-              <p className="font-body-md text-background/60 text-xs">Comercio, movilidad, trabajo, alquileres y estilo de vida — en un solo lugar.</p>
-              <p className="font-body-md text-background/60 text-xs" aria-hidden="true">Comercio, movilidad, trabajo, alquileres y estilo de vida — en un solo lugar.</p>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <p key={i} className="font-body-md text-background/60 text-xs" aria-hidden={i > 0 || undefined}>
+                  Comercio, movilidad, trabajo, alquileres y estilo de vida — en un solo lugar.
+                </p>
+              ))}
             </div>
           </div>
         </div>

@@ -136,13 +136,15 @@ body { transition: padding-left 0.2s ease; }
 
 /* Texto en loop de la banda "Descubre Pucallpa". Solo mueve `transform`
    (GPU, sin repintar), así que no pesa más que un texto quieto; se apaga
-   solo si el sistema pide menos movimiento. */
-@keyframes marquee-scroll {
+   solo si el sistema pide menos movimiento. -25% porque el track repite
+   la misma frase 4 veces (así llena pantallas anchas sin dejar un hueco
+   vacío) — recorrer un cuarto del track ya es un ciclo completo. */
+@keyframes marquee-scroll-4 {
   from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  to { transform: translateX(-25%); }
 }
 .marquee-track {
-  animation: marquee-scroll 16s linear infinite;
+  animation: marquee-scroll-4 22s linear infinite;
 }
 @media (prefers-reduced-motion: reduce) {
   .marquee-track {
