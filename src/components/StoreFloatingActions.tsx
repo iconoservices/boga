@@ -68,6 +68,22 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
       deferredPrompt.userChoice.then(() => setDeferredPrompt(null));
       return;
     }
+
+    // Ya estamos dentro de OTRA app instalada (Boga Hub, o la de otra
+    // tienda) — el navegador no ofrece instalar una segunda PWA desde acá
+    // adentro (no hay chrome del navegador). Hay que sacar el link afuera.
+    const yaEnStandalone = (window.navigator as any).standalone || window.matchMedia('(display-mode: standalone)').matches;
+    if (yaEnStandalone) {
+      const url = window.location.href;
+      navigator.clipboard?.writeText(url).catch(() => {});
+      if (navigator.share) {
+        navigator.share({ title: store.name, text: `Instalá la app de ${store.name}`, url }).catch(() => {});
+      } else {
+        alert(`Para instalar "${store.name}" como app aparte, abrí este link en tu navegador (Chrome o Safari), no desde acá adentro. Se copió el link:\n\n${url}`);
+      }
+      return;
+    }
+
     const ua = navigator.userAgent.toLowerCase();
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
     if (/iphone|ipad|ipod/.test(ua) && isSafari) {

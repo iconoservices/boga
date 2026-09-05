@@ -39,14 +39,30 @@ export default function HomeFloatingActions() {
     if (deferredPrompt) {
       deferredPrompt.prompt();
       deferredPrompt.userChoice.then(() => setDeferredPrompt(null));
-    } else {
-      const ua = navigator.userAgent.toLowerCase();
-      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-      if (/iphone|ipad|ipod/.test(ua) && isSafari) {
-        alert('Para instalar:\n\n1. Tocá el icono Compartir (📤) abajo\n2. Deslizá y tocá "Agregar a pantalla de inicio"\n3. Tocá "Agregar"');
+      return;
+    }
+
+    // Ya estamos dentro de OTRA app instalada (la de una tienda, por
+    // ejemplo) — el navegador no ofrece instalar una segunda PWA desde acá
+    // adentro. Hay que sacar el link afuera.
+    const yaEnStandalone = (window.navigator as any).standalone || window.matchMedia('(display-mode: standalone)').matches;
+    if (yaEnStandalone) {
+      const url = window.location.href;
+      navigator.clipboard?.writeText(url).catch(() => {});
+      if (navigator.share) {
+        navigator.share({ title: 'Boga Market', text: 'Instalá la app de Boga Market', url }).catch(() => {});
       } else {
-        alert('Para instalar:\n\n1. Abrí el menú del navegador (⋯)\n2. Buscá "Agregar a pantalla de inicio"\n3. Confirmá la instalación');
+        alert(`Para instalar Boga Market como app aparte, abrí este link en tu navegador (Chrome o Safari), no desde acá adentro. Se copió el link:\n\n${url}`);
       }
+      return;
+    }
+
+    const ua = navigator.userAgent.toLowerCase();
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    if (/iphone|ipad|ipod/.test(ua) && isSafari) {
+      alert('Para instalar:\n\n1. Tocá el icono Compartir (📤) abajo\n2. Deslizá y tocá "Agregar a pantalla de inicio"\n3. Tocá "Agregar"');
+    } else {
+      alert('Para instalar:\n\n1. Abrí el menú del navegador (⋯)\n2. Buscá "Agregar a pantalla de inicio"\n3. Confirmá la instalación');
     }
   };
 

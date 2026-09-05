@@ -886,6 +886,11 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   const [isSendingInvite, setIsSendingInvite] = useState(false);
   const [editingUser, setEditingUser] = useState<UserRow | null>(null);
   const [editingUserOriginalStore, setEditingUserOriginalStore] = useState('');
+  const [isCopyingLink, setIsCopyingLink] = useState(false);
+  // Slug de la tienda cuyo modal de "Asignar/Editar Administrador" está
+  // abierto (se abre desde la fila en Gestión de Tiendas, sin cambiar de
+  // pestaña). Reutiliza el mismo estado de invitación/edición que Usuarios.
+  const [assignStoreSlug, setAssignStoreSlug] = useState<string | null>(null);
 
   React.useEffect(() => {
     supabase.from('profiles').select('*').then(({ data, error }) => {
@@ -1081,6 +1086,31 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     setTimeout(() => {
       setInviteEmail(''); setInviteStore(''); setInviteRole('store_admin'); setInviteSent(false);
     }, 2600);
+  };
+
+  // Alternativa a mandar el correo: genera el mismo link de acceso y lo
+  // copia, para poder mandarlo vos por WhatsApp. Pasa por /api porque hace
+  // falta la service_role key, que nunca debe tocar el navegador.
+  const handleCopyInviteLink = async () => {
+    if (!inviteEmail) return;
+    setIsCopyingLink(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const redirectTo = `${window.location.origin}${inviteRole === 'super_admin' ? '/superadmin' : '/admin'}`;
+      const res = await fetch('/api/generate-invite-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ email: inviteEmail, redirectTo }),
+      });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || 'No se pudo generar el link'); return; }
+      await navigator.clipboard.writeText(data.link);
+      alert('Link copiado — mandalo por WhatsApp o donde prefieras.');
+    } catch (err: any) {
+      alert('No se pudo copiar el link: ' + err.message);
+    } finally {
+      setIsCopyingLink(false);
+    }
   };
 
   const handleSaveUser = async () => {
@@ -2509,20 +2539,23 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                                 </button>
                                 <button
                                   onClick={() => {
-                                    // Si el dueño actual ya está arriba como fila propia (un
-                                    // admin de tienda, o vos mismo si te asignaste la tienda a
-                                    // tu cuenta) lo edita; si no, precarga la invitación con
-                                    // esta tienda ya elegida — sirve tanto para asignar de
-                                    // cero como para reemplazar a un dueño que sos vos mismo.
+                                    // Abre el modal de asignar/editar admin sin salir de esta
+                                    // pestaña. Si el dueño actual ya está arriba como fila propia
+                                    // (un admin de tienda, o vos mismo si te asignaste la tienda a
+                                    // tu cuenta) lo carga para editar; si no, precarga la
+                                    // invitación con esta tienda ya elegida.
                                     const owner = derivedUsers.find((u) => u.store === store.slug);
                                     if (owner && owner.role !== 'super_admin') {
                                       setEditingUser({ ...owner });
                                       setEditingUserOriginalStore(store.slug);
                                     } else {
+                                      setEditingUser(null);
+                                      setInviteEmail('');
+                                      setInviteSent(false);
                                       setInviteStore(store.slug);
                                       setInviteRole('store_admin');
                                     }
-                                    setActiveTab('usuarios');
+                                    setAssignStoreSlug(store.slug);
                                   }}
                                   className="material-symbols-outlined text-[18px] text-[#545f73] hover:text-[#0058be] transition-colors p-1 hover:bg-[#e6e7f2] rounded"
                                   title={derivedUsers.some((u) => u.store === store.slug && u.role !== 'super_admin') ? 'Editar Administrador' : 'Asignar Administrador'}
@@ -3140,14 +3173,24 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                             </select>
                           </div>
                         )}
-                        <button
-                          onClick={handleSendInvite}
-                          disabled={isSendingInvite || !inviteEmail || (inviteRole === 'store_admin' && !inviteStore)}
-                          className="w-full py-2.5 bg-[#0058be] text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 hover:shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed mt-2"
-                        >
-                          <span className={`material-symbols-outlined text-[16px] ${isSendingInvite ? 'animate-spin' : ''}`}>{isSendingInvite ? 'progress_activity' : 'send'}</span>
-                          {isSendingInvite ? 'Enviando...' : 'Enviar Invitación'}
-                        </button>
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            onClick={handleSendInvite}
+                            disabled={isSendingInvite || !inviteEmail || (inviteRole === 'store_admin' && !inviteStore)}
+                            className="flex-1 py-2.5 bg-[#0058be] text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 hover:shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            <span className={`material-symbols-outlined text-[16px] ${isSendingInvite ? 'animate-spin' : ''}`}>{isSendingInvite ? 'progress_activity' : 'send'}</span>
+                            {isSendingInvite ? 'Enviando...' : 'Enviar por correo'}
+                          </button>
+                          <button
+                            onClick={handleCopyInviteLink}
+                            disabled={isCopyingLink || !inviteEmail || (inviteRole === 'store_admin' && !inviteStore)}
+                            title="Copiar link de acceso (para mandar por WhatsApp)"
+                            className="w-11 shrink-0 py-2.5 bg-[#ecedf7] text-[#424754] rounded-lg font-bold text-xs flex items-center justify-center hover:bg-[#e6e7f2] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            <span className={`material-symbols-outlined text-[16px] ${isCopyingLink ? 'animate-spin' : ''}`}>{isCopyingLink ? 'progress_activity' : 'content_copy'}</span>
+                          </button>
+                        </div>
                       </div>
                     </>
                   )}
@@ -3677,6 +3720,126 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         </div>
       </main>
     </div>
+
+    {/* ── ASIGNAR / EDITAR ADMINISTRADOR DE TIENDA (desde Gestión de Tiendas) ── */}
+    {assignStoreSlug && (
+      <div
+        className="fixed inset-0 z-[200] bg-[#191b23]/60 backdrop-blur-sm flex items-center justify-center p-4"
+        onClick={() => { setAssignStoreSlug(null); setEditingUser(null); }}
+      >
+        <div
+          className="bg-white rounded-lg border border-[#c2c6d6] shadow-2xl w-full max-w-sm overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {editingUser ? (
+            <>
+              <div className="px-5 py-4 border-b border-[#c2c6d6] bg-amber-50/50 flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-xs text-[#191b23] flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[18px] text-amber-600">manage_accounts</span>
+                    Administrador de {stores[assignStoreSlug]?.name || assignStoreSlug}
+                  </h3>
+                  <p className="text-[10px] text-[#424754] font-semibold mt-0.5 truncate">{editingUser.email}</p>
+                </div>
+                <button
+                  onClick={() => { setAssignStoreSlug(null); setEditingUser(null); }}
+                  className="w-7 h-7 flex items-center justify-center text-[#c2c6d6] hover:text-[#424754] hover:bg-[#ecedf7] rounded-lg transition-colors shrink-0"
+                >
+                  <span className="material-symbols-outlined text-[16px]">close</span>
+                </button>
+              </div>
+              <div className="p-4 space-y-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-[#424754] mb-1.5 uppercase tracking-wide">Nombre</label>
+                  <input
+                    type="text" value={editingUser.name}
+                    onChange={(e) => setEditingUser(prev => prev ? { ...prev, name: e.target.value } : prev)}
+                    className="w-full bg-[#f2f3fd] border border-[#c2c6d6] rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-[#0058be] focus:bg-white transition-colors"
+                  />
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <button
+                    onClick={() => { handleRevokeAccess(editingUser); setAssignStoreSlug(null); }}
+                    className="flex-1 py-2 bg-red-50 text-[#ba1a1a] rounded-lg font-bold text-xs hover:bg-red-100 transition-colors"
+                  >
+                    Revocar acceso
+                  </button>
+                  <button
+                    onClick={async () => { await handleSaveUser(); setAssignStoreSlug(null); }}
+                    className="flex-1 py-2 bg-[#0058be] text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 hover:shadow-md transition-all"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">save</span>
+                    Guardar
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : inviteSent ? (
+            <div className="p-6 text-center">
+              <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-3 border border-emerald-100">
+                <span className="material-symbols-outlined text-emerald-600 text-2xl">check_circle</span>
+              </div>
+              <h3 className="text-sm font-bold text-[#191b23] mb-1">¡Link enviado!</h3>
+              <p className="text-xs text-[#424754] font-semibold">
+                Cuando entre por primera vez, volvé acá para confirmar que le quedó asignada "{stores[assignStoreSlug]?.name || assignStoreSlug}".
+              </p>
+              <button
+                onClick={() => { setAssignStoreSlug(null); setInviteSent(false); }}
+                className="mt-4 w-full py-2 bg-[#ecedf7] text-[#424754] rounded-lg font-bold text-xs hover:bg-[#e6e7f2] transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="px-5 py-4 border-b border-[#c2c6d6] bg-[#f2f3fd] flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-xs text-[#191b23] flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[18px] text-[#424754]">person_add</span>
+                    Asignar administrador
+                  </h3>
+                  <p className="text-[10px] text-[#424754] font-semibold mt-0.5">Para {stores[assignStoreSlug]?.name || assignStoreSlug}</p>
+                </div>
+                <button
+                  onClick={() => setAssignStoreSlug(null)}
+                  className="w-7 h-7 flex items-center justify-center text-[#c2c6d6] hover:text-[#424754] hover:bg-[#ecedf7] rounded-lg transition-colors shrink-0"
+                >
+                  <span className="material-symbols-outlined text-[16px]">close</span>
+                </button>
+              </div>
+              <div className="p-4 space-y-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-[#424754] mb-1.5 uppercase tracking-wide">Correo Electrónico</label>
+                  <input
+                    type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)}
+                    placeholder="admin@sutienda.com"
+                    className="w-full bg-[#f2f3fd] border border-[#c2c6d6] rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-[#0058be] focus:bg-white transition-colors"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSendInvite}
+                    disabled={isSendingInvite || !inviteEmail}
+                    className="flex-1 py-2.5 bg-[#0058be] text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 hover:shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <span className={`material-symbols-outlined text-[16px] ${isSendingInvite ? 'animate-spin' : ''}`}>{isSendingInvite ? 'progress_activity' : 'send'}</span>
+                    {isSendingInvite ? 'Enviando...' : 'Enviar por correo'}
+                  </button>
+                  <button
+                    onClick={handleCopyInviteLink}
+                    disabled={isCopyingLink || !inviteEmail}
+                    title="Copiar link de acceso (para mandar por WhatsApp)"
+                    className="w-11 shrink-0 py-2.5 bg-[#ecedf7] text-[#424754] rounded-lg font-bold text-xs flex items-center justify-center hover:bg-[#e6e7f2] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <span className={`material-symbols-outlined text-[16px] ${isCopyingLink ? 'animate-spin' : ''}`}>{isCopyingLink ? 'progress_activity' : 'content_copy'}</span>
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    )}
 
     {/* ── CREATE / EDIT PACKAGE MODAL ── */}
     {showPackageModal && (
