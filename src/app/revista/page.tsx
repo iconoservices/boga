@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import AppHeader from '@/components/AppHeader';
 
 // "Yo Soy de la Selva" — la revista/blog digital de Boga. Masthead + barra de
@@ -21,8 +22,12 @@ type Nota = {
   fecha: string;
   lectura: string;
   img: string;
+  /** Por defecto dice "archivo Boga" — sobreescribir cuando la foto es real (ej. Wikimedia Commons). */
+  imgCredito?: string;
   cuerpo: string[];
   cita?: { texto: string; autor: string };
+  /** Si la nota es sobre un lugar puntual, un botón "Cómo llegar" a Google Maps. */
+  ubicacionMaps?: string;
   destacado?: boolean;
   portada?: boolean;
 };
@@ -175,6 +180,109 @@ const NOTAS: Nota[] = [
       'Entre choferes hay un código: no "robar" pasajero que otro ya está negociando, respetar los paraderos informales y ceder el paso en las bajadas al puerto. Quien lo rompe se gana la mala fama del gremio, que en una ciudad así se corre rápido.',
     ],
   },
+  {
+    id: 'r1', kicker: 'Rutas',
+    titulo: 'Laguna de Yarinacocha: la joya de Pucallpa',
+    dek: 'Paseo en bote, artesanía shipibo-conibo y las mejores puestas de sol de la ciudad.',
+    autor: 'Redacción Boga', fecha: '05 sep 2026', lectura: '3 min',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Laguna_de_Yarinacocha_desde_un_bote_01.jpg/500px-Laguna_de_Yarinacocha_desde_un_bote_01.jpg',
+    imgCredito: 'Foto: Wikimedia Commons',
+    ubicacionMaps: 'Laguna de Yarinacocha, Pucallpa, Perú',
+    cuerpo: [
+      'A veinte minutos del centro, Yarinacocha es un antiguo meandro del río Ucayali que quedó aislado en forma de herradura — por eso sus aguas son quietas, distintas a las del río. Desde el puerto de Puerto Callao salen los botes hacia las comunidades de San Francisco y Santa Clara.',
+      'El paseo clásico dura entre una y dos horas: se navega bordeando la vegetación flotante, se para en algún taller de artesanía shipibo-conibo, y se cierra con la puesta de sol sobre el agua, el momento que todo pucallpino recomienda no perderse.',
+    ],
+  },
+  {
+    id: 'r2', kicker: 'Rutas',
+    titulo: 'Plaza de Armas: el punto de partida del centro',
+    dek: 'El corazón de la ciudad, ideal para empezar a conocer Pucallpa a pie.',
+    autor: 'Redacción Boga', fecha: '05 sep 2026', lectura: '2 min',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Plaza_de_Armas_de_Pucallpa%2C_Per%C3%BA.jpg/500px-Plaza_de_Armas_de_Pucallpa%2C_Per%C3%BA.jpg',
+    imgCredito: 'Foto: Wikimedia Commons',
+    ubicacionMaps: 'Plaza de Armas, Pucallpa, Perú',
+    cuerpo: [
+      'Frente a la catedral y a pocas cuadras del malecón, la Plaza de Armas es el mejor punto de referencia para orientarse en el centro. Bancas a la sombra, un obelisco y el ir y venir constante de mototaxis alrededor.',
+      'De noche se llena de puestos de comida y familias que salen a caminar, sobre todo los fines de semana. Es también el punto de partida clásico para llegar caminando al Reloj Público, a unas cuadras.',
+    ],
+  },
+  {
+    id: 'r3', kicker: 'Rutas',
+    titulo: 'Catedral Virgen de la Inmaculada',
+    dek: 'El templo principal de Pucallpa, frente a la Plaza de Armas.',
+    autor: 'Redacción Boga', fecha: '05 sep 2026', lectura: '2 min',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/La_catedral_de_Pucallpa_2022.jpg/500px-La_catedral_de_Pucallpa_2022.jpg',
+    imgCredito: 'Foto: Wikimedia Commons',
+    ubicacionMaps: 'Catedral Virgen de la Inmaculada, Pucallpa, Perú',
+    cuerpo: [
+      'La catedral de Pucallpa es sede de la Vicariato Apostólico de Pucallpa y el templo católico más importante de la ciudad. Su fachada, sobre la Plaza de Armas, es una de las postales más fotografiadas del centro.',
+      'Recibe misa diaria y se llena para las celebraciones patronales de la ciudad. Aunque no es antigua comparada con las catedrales de la sierra o la costa, es un punto de referencia obligado si estás conociendo el centro.',
+    ],
+  },
+  {
+    id: 'r4', kicker: 'Rutas',
+    titulo: 'Museo Agustín Rivas Vásquez: el Picasso de la Amazonía',
+    dek: 'Esculturas en madera talladas de raíces y troncos, en el antiguo taller del artista.',
+    autor: 'Redacción Boga', fecha: '05 sep 2026', lectura: '3 min',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Pucallpa1.JPG/500px-Pucallpa1.JPG',
+    imgCredito: 'Foto: Wikimedia Commons (imagen referencial de Pucallpa)',
+    ubicacionMaps: 'Museo Agustín Rivas Vásquez, Pucallpa, Perú',
+    cuerpo: [
+      'Agustín Rivas Vásquez, apodado "el Picasso de la Amazonía", pasó décadas transformando raíces y troncos de la selva en esculturas de formas humanas y espirituales, muchas inspiradas en sus experiencias con la ayahuasca.',
+      'Su antiguo taller-museo en Pucallpa conserva buena parte de esa obra: piezas de gran tamaño talladas directamente de la forma natural de la madera, sin cortarla en bloques primero. Una parada obligada para quien le interesa el arte amazónico fuera de lo turístico convencional.',
+    ],
+  },
+  {
+    id: 'r5', kicker: 'Rutas',
+    titulo: 'Plaza del Reloj Público: el punto de encuentro clásico',
+    dek: 'El reloj más reconocible de la ciudad, cerca del puerto.',
+    autor: 'Redacción Boga', fecha: '05 sep 2026', lectura: '2 min',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Reloj_publico_pucallpa_2022.jpg/500px-Reloj_publico_pucallpa_2022.jpg',
+    imgCredito: 'Foto: Wikimedia Commons',
+    ubicacionMaps: 'Plaza del Reloj Público, Pucallpa, Perú',
+    cuerpo: [
+      'A pocas cuadras del puerto de Pucallpa, la Plaza del Reloj Público es un clásico punto de encuentro y referencia para dar direcciones ("nos vemos en el reloj" es prácticamente una institución local).',
+      'Buena parada para combinar con una caminata hacia el malecón y el puerto, sobre todo al atardecer, cuando baja el calor y la zona se llena de gente.',
+    ],
+  },
+  {
+    id: 'r6', kicker: 'Rutas',
+    titulo: 'Parque Natural de Pucallpa: fauna amazónica de cerca',
+    dek: 'Zoológico y museo regional en un mismo espacio, ideal para ir en familia.',
+    autor: 'Redacción Boga', fecha: '05 sep 2026', lectura: '3 min',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Puente_central_del_Parque_Natural_de_Pucallpa.jpg/500px-Puente_central_del_Parque_Natural_de_Pucallpa.jpg',
+    imgCredito: 'Foto: Wikimedia Commons',
+    ubicacionMaps: 'Parque Natural de Pucallpa, Pucallpa, Perú',
+    cuerpo: [
+      'El Parque Natural de Pucallpa combina zoológico y museo regional: se puede ver de cerca especies amazónicas como el otorongo, el manatí y distintas aves, además de piezas sobre la historia de Ucayali.',
+      'Es una de las salidas favoritas para ir en familia, con senderos, puentes y zonas de descanso dentro del parque. Recomendable ir temprano, antes de que suba el calor del mediodía.',
+    ],
+  },
+  {
+    id: 'r7', kicker: 'Rutas',
+    titulo: 'Laguna Cashibococha: la alternativa tranquila a Yarinacocha',
+    dek: 'Menos conocida, menos concurrida, ideal para pasar el día en familia.',
+    autor: 'Redacción Boga', fecha: '05 sep 2026', lectura: '2 min',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Cashibo_cocha.jpg/500px-Cashibo_cocha.jpg',
+    imgCredito: 'Foto: Wikimedia Commons',
+    ubicacionMaps: 'Laguna Cashibococha, Pucallpa, Perú',
+    cuerpo: [
+      'Cashibococha es la laguna que eligen los que ya conocen Yarinacocha y buscan algo más tranquilo: menos puestos, menos bulla, más naturaleza. Es un buen plan de día completo con la familia.',
+      'La zona alberga también la comunidad nativa Santa Teresita de Cashibococha. Como en toda laguna amazónica, conviene ir con repelente y protector solar — la sombra escasea sobre el agua.',
+    ],
+  },
+  {
+    id: 'r8', kicker: 'Rutas',
+    titulo: 'Usko Ayar: el taller de Pablo Amaringo, hoy escuela de pintura',
+    dek: 'El legado del maestro del arte visionario shipibo sigue vivo en su antigua casa-escuela.',
+    autor: 'Redacción Boga', fecha: '05 sep 2026', lectura: '3 min',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Hanna_jon_2002_amaringo_pablo.jpg/500px-Hanna_jon_2002_amaringo_pablo.jpg',
+    imgCredito: 'Foto: Wikimedia Commons',
+    cuerpo: [
+      'Pablo Amaringo (1938-2009) fue uno de los máximos exponentes del arte visionario amazónico: pintaba de memoria las visiones que decía haber tenido bajo ayahuasca, con una explosión de color y detalle que lo llevó a exponer en museos de varios países.',
+      'Su casa-taller en Pucallpa, "Usko Ayar", funcionó como escuela de arte para jóvenes de la ciudad, muchos sin recursos para estudiar pintura de otra forma. Hoy sigue siendo un referente para entender de dónde sale el arte visionario shipibo que hoy se vende en las ferias de Yarinacocha.',
+    ],
+  },
 ];
 
 const EN_ESTA_EDICION = [
@@ -236,14 +344,14 @@ function NotaCard({ n, lead = false, onOpen }: { n: Nota; lead?: boolean; onOpen
   );
 }
 
-function ListaNotas({ notas, onOpen }: { notas: Nota[]; onOpen: (n: Nota) => void }) {
+function ListaNotas({ notas, onOpen, conLead = false }: { notas: Nota[]; onOpen: (n: Nota) => void; conLead?: boolean }) {
   if (notas.length === 0) {
     return <p className="font-body-md text-secondary text-sm py-10">Todavía no hay notas en esta sección.</p>;
   }
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
       {notas.map((n, i) => (
-        <NotaCard key={n.id} n={n} lead={i === 0} onOpen={onOpen} />
+        <NotaCard key={n.id} n={n} lead={conLead && i === 0} onOpen={onOpen} />
       ))}
     </div>
   );
@@ -276,7 +384,7 @@ function ArticuloView({ nota, relacionadas, onBack, onOpen }: {
         <div className="relative overflow-hidden rounded-sm aspect-[16/9]">
           <img src={nota.img} alt={nota.titulo} className="absolute inset-0 w-full h-full object-cover" />
         </div>
-        <figcaption className="font-label-md text-[11px] text-secondary mt-2">Foto: archivo Boga · imagen referencial</figcaption>
+        <figcaption className="font-label-md text-[11px] text-secondary mt-2">{nota.imgCredito || 'Foto: archivo Boga · imagen referencial'}</figcaption>
       </figure>
 
       <div className="max-w-[680px] mx-auto px-container-margin lg:px-8 mt-8">
@@ -300,6 +408,19 @@ function ArticuloView({ nota, relacionadas, onBack, onOpen }: {
             </p>
             <footer className="font-label-md text-[11px] uppercase tracking-widest text-secondary mt-3">— {nota.cita.autor}</footer>
           </blockquote>
+        )}
+
+        {nota.ubicacionMaps && (
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(nota.ubicacionMaps)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-8 inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-white font-label-md text-[12px] uppercase tracking-wider transition-opacity hover:opacity-90"
+            style={{ backgroundColor: VERDE }}
+          >
+            <span className="material-symbols-outlined text-[16px]">location_on</span>
+            Cómo llegar
+          </a>
         )}
 
         <div className="mt-10 pt-5 border-t border-on-surface/15 flex items-center gap-3">
@@ -328,9 +449,29 @@ function ArticuloView({ nota, relacionadas, onBack, onOpen }: {
   );
 }
 
+// useSearchParams() exige un límite Suspense propio (para poder abrir un
+// artículo directo con /revista?nota=<id> sin romper el prerenderizado).
 export default function Revista() {
+  return (
+    <Suspense fallback={null}>
+      <RevistaConParams />
+    </Suspense>
+  );
+}
+
+function RevistaConParams() {
+  const searchParams = useSearchParams();
   const [seccion, setSeccion] = useState<string>('Portada');
   const [abierta, setAbierta] = useState<Nota | null>(null);
+
+  // Permite linkear a un artículo puntual desde afuera (ej. las tarjetas de
+  // /guia) con /revista?nota=<id>, sin depender de hacer click adentro.
+  useEffect(() => {
+    const id = searchParams.get('nota');
+    if (!id) return;
+    const nota = NOTAS.find((n) => n.id === id);
+    if (nota) setAbierta(nota);
+  }, [searchParams]);
 
   const irASeccion = (s: string) => {
     setAbierta(null);
@@ -447,7 +588,7 @@ export default function Revista() {
                 {seccion === 'Portada' ? 'Últimas notas' : seccion}
               </h2>
               <div className="mt-8">
-                <ListaNotas notas={notasSeccion} onOpen={abrir} />
+                <ListaNotas notas={notasSeccion} onOpen={abrir} conLead={seccion === 'Portada'} />
               </div>
             </section>
 

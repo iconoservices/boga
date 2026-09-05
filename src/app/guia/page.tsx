@@ -19,6 +19,62 @@ const ACCESOS = [
   { href: '/market',      icon: 'storefront',   titulo: 'Qué comprar',    sub: 'Mercado fresco y artesanía' },
 ];
 
+// Fotos reales de Wikimedia Commons (uso libre), no de bancos de stock —
+// verificadas una por una porque los IDs de Unsplash "a ojo" salieron mal
+// (fotos que no tenían nada que ver con el lugar).
+// Cada tarjeta abre su artículo completo en Revista (categoría "Rutas"),
+// no un link externo — son preview/miniatura de esa nota.
+const QUE_VISITAR = [
+  {
+    notaId: 'r1',
+    titulo: 'Laguna de Yarinacocha',
+    desc: 'La joya de Pucallpa: paseo en bote, artesanía shipibo-conibo y las mejores puestas de sol.',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Laguna_de_Yarinacocha_desde_un_bote_01.jpg/500px-Laguna_de_Yarinacocha_desde_un_bote_01.jpg',
+  },
+  {
+    notaId: 'r2',
+    titulo: 'Plaza de Armas',
+    desc: 'El corazón de la ciudad, punto de partida para conocer el centro a pie.',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Plaza_de_Armas_de_Pucallpa%2C_Per%C3%BA.jpg/500px-Plaza_de_Armas_de_Pucallpa%2C_Per%C3%BA.jpg',
+  },
+  {
+    notaId: 'r3',
+    titulo: 'Catedral Virgen de la Inmaculada',
+    desc: 'El templo principal de Pucallpa, frente a la Plaza de Armas.',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/La_catedral_de_Pucallpa_2022.jpg/500px-La_catedral_de_Pucallpa_2022.jpg',
+  },
+  {
+    notaId: 'r4',
+    titulo: 'Museo Agustín Rivas Vásquez',
+    desc: 'Esculturas en madera del "Picasso de la Amazonía", tallada de raíces y troncos.',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Pucallpa1.JPG/500px-Pucallpa1.JPG',
+  },
+  {
+    notaId: 'r5',
+    titulo: 'Plaza del Reloj Público',
+    desc: 'Punto de encuentro clásico, con el reloj más reconocible de la ciudad.',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Reloj_publico_pucallpa_2022.jpg/500px-Reloj_publico_pucallpa_2022.jpg',
+  },
+  {
+    notaId: 'r6',
+    titulo: 'Parque Natural y Museo Regional',
+    desc: 'Fauna amazónica de cerca y piezas de la historia de Ucayali, en un mismo lugar.',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Puente_central_del_Parque_Natural_de_Pucallpa.jpg/500px-Puente_central_del_Parque_Natural_de_Pucallpa.jpg',
+  },
+  {
+    notaId: 'r7',
+    titulo: 'Laguna Cashibococha',
+    desc: 'Más tranquila que Yarinacocha, ideal para pasar el día en familia.',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Cashibo_cocha.jpg/500px-Cashibo_cocha.jpg',
+  },
+  {
+    notaId: 'r8',
+    titulo: 'Casa "Usko Ayar" de Pablo Amaringo',
+    desc: 'El taller del maestro del arte visionario shipibo, hoy escuela de pintura.',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Hanna_jon_2002_amaringo_pablo.jpg/500px-Hanna_jon_2002_amaringo_pablo.jpg',
+  },
+];
+
 const TEMAS = [
   {
     id: 'clima', icon: 'thermostat', titulo: 'Clima y qué llevar',
@@ -97,6 +153,29 @@ export default function GuiaPage() {
                 <span className="mt-auto pt-1 text-primary font-label-md text-[11px] flex items-center gap-0.5">
                   Ver <span className="material-symbols-outlined text-[13px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
                 </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* Qué visitar */}
+        <section className="flex flex-col gap-4">
+          <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-xl lg:text-2xl">Qué visitar</h2>
+          <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1 -mx-container-margin px-container-margin lg:mx-0 lg:px-0 lg:grid lg:grid-cols-4" style={{ scrollbarWidth: 'none' }}>
+            {QUE_VISITAR.map((l) => (
+              <Link
+                key={l.notaId}
+                href={`/revista?nota=${l.notaId}`}
+                className="group shrink-0 w-[220px] lg:w-auto bg-white border border-surface-container-highest shadow-sm hover:shadow-md hover:border-primary/30 transition-all overflow-hidden flex flex-col"
+              >
+                <img src={l.img} alt={l.titulo} className="w-full h-32 object-cover" loading="lazy" />
+                <div className="p-3 flex flex-col gap-1">
+                  <h3 className="font-headline-sm text-sm text-on-surface leading-tight">{l.titulo}</h3>
+                  <p className="font-body-md text-secondary text-[11px] leading-snug">{l.desc}</p>
+                  <span className="mt-1 text-primary font-label-md text-[11px] flex items-center gap-0.5">
+                    Leer más <span className="material-symbols-outlined text-[13px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
+                  </span>
+                </div>
               </Link>
             ))}
           </div>
