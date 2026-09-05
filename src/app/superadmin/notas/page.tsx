@@ -61,7 +61,6 @@ export default function NotasInternas() {
       <div className="max-w-4xl mx-auto flex flex-col gap-10">
         <div>
           <h1 className="text-2xl font-bold">Notas internas · Guía de Pucallpa</h1>
-          <p className="text-white/50 text-sm mt-1">Solo vos ves esto. No es contenido de producto, es estrategia.</p>
         </div>
 
         <section className="flex flex-col gap-4">
