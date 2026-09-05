@@ -7,6 +7,9 @@ import AppHeader from '@/components/AppHeader';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 
+// Mismo correo que /superadmin (ver ese archivo si agregas uno acá, agrégalo allá).
+const SUPERADMIN_EMAILS = ['jnmcsky@gmail.com'];
+
 // Placeholder mientras se resuelve la sesión / mientras redirige a /login.
 // El contenido real de la página sale de la cuenta autenticada, no de esto.
 const EMPTY_USER = {
@@ -59,6 +62,7 @@ export default function ProfilePage() {
   }, [authLoading, authUser, router]);
 
   const initials = (user.name || '?').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  const isSuperadmin = !!authUser?.email && SUPERADMIN_EMAILS.includes(authUser.email);
 
   const handleSave = () => {
     setUser(prev => ({ ...prev, ...editForm }));
@@ -103,6 +107,26 @@ export default function ProfilePage() {
             </p>
           </div>
         </div>
+
+        {/* Superadmin Card — atajo a TODAS las tiendas, no solo la propia */}
+        {isSuperadmin && (
+          <div className="bg-gradient-to-r from-[#1a1a1a] to-[#333] rounded-2xl p-5 flex items-center gap-4 shadow-md text-white">
+            <div className="w-12 h-12 bg-white/15 rounded-xl flex items-center justify-center shrink-0 backdrop-blur-md">
+              <span className="material-symbols-outlined text-white text-[24px]">admin_panel_settings</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white/70 text-[10px] font-bold uppercase tracking-wider">Acceso Super Admin</p>
+              <p className="font-bold text-sm text-white mt-0.5">Gestionar todas las tiendas de Boga</p>
+            </div>
+            <Link
+              href="/superadmin"
+              className="bg-white text-on-surface hover:bg-neutral-50 transition-all font-bold text-xs py-2 px-4 rounded-xl flex items-center gap-1.5 shadow-sm active:scale-95 shrink-0"
+            >
+              <span className="material-symbols-outlined text-[16px]">dashboard</span>
+              Mis tiendas
+            </Link>
+          </div>
+        )}
 
         {/* Merchant Card */}
         {user.isMerchant && (
