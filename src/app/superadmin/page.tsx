@@ -12,15 +12,14 @@ import { supabase } from '@/lib/supabase';
 import { COLOR_PRESETS, getColorPreset } from '@/lib/colorPresets';
 import { extractThemeFromImageClient } from '@/lib/extractThemeClient';
 import { uploadFile } from '@/lib/uploadClient';
+import { SUPERADMIN_EMAILS } from '@/lib/superadmin';
 import type { StoreTheme } from '@/lib/templates.config';
 
 // Correos con acceso al superadmin. A diferencia de /admin (donde cualquier
 // cuenta puede entrar y solo ve sus propias tiendas), este panel puede editar
 // y borrar CUALQUIER tienda del ecosistema — la lista, no solo estar logueado,
-// es lo que decide el acceso. Coincide con el email permitido en las políticas
-// RLS de Supabase (ver supabase_setup.sql → public.is_superadmin()): si
-// agregas uno acá, agrégalo también allá.
-const SUPERADMIN_EMAILS = ['jnmcsky@gmail.com'];
+// es lo que decide el acceso. La lista vive en src/lib/superadmin.ts y tiene
+// que coincidir con public.is_superadmin() en supabase_setup.sql (RLS).
 
 // Plantillas que ya tienen botón de pedido por WhatsApp implementado en su código
 const TEMPLATES_WITH_WHATSAPP = new Set([
@@ -1504,23 +1503,22 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     const heroAlt = existingStoreObj.heroAlt || 'store image';
     const categoriesList = existingStoreObj.categories || [];
 
-    let logoUrl: string | null = null;
-    if (logoFile && slug) {
-      try {
-        logoUrl = await uploadFile(logoFile, `store-assets/${slug}`);
-      } catch (err) {
-        console.error('Error subiendo logo:', err);
-      }
-    }
-
-    let heroUrl: string | null = null;
-    if (heroFile && slug) {
-      try {
-        heroUrl = await uploadFile(heroFile, `store-assets/${slug}`);
-      } catch (err) {
-        console.error('Error subiendo portada:', err);
-      }
-    }
+    // En paralelo: son subidas independientes, esperarlas en fila duplica lo
+    // que tarda guardar cuando se cambian logo y portada a la vez.
+    const [logoUrl, heroUrl] = await Promise.all([
+      logoFile && slug
+        ? uploadFile(logoFile, `store-assets/${slug}`).catch((err) => {
+            console.error('Error subiendo logo:', err);
+            return null;
+          })
+        : null,
+      heroFile && slug
+        ? uploadFile(heroFile, `store-assets/${slug}`).catch((err) => {
+            console.error('Error subiendo portada:', err);
+            return null;
+          })
+        : null,
+    ]);
     const heroImage = heroUrl || existingStoreObj.heroImage || tpl?.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80';
 
     const upsertData: Record<string, any> = {
@@ -2452,6 +2450,9 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                         const details = storeDetails[store.slug] || { location: '—', date: 'Hoy', icon: 'storefront' };
                         const tier = storeTiers[store.slug] || 'Basic Tier';
                         const storeOn = !!activeStores[store.slug];
+                        // El dueño con fila propia en Usuarios: no lo hay si la tienda
+                        // está sin asignar o si su user_id sos vos como super admin.
+                        const storeAdmin = derivedUsers.find((u) => u.store === store.slug && u.role !== 'super_admin');
 
                         // Detectar tiendas incompletas
                         const missingFields: { field: string; label: string }[] = [];
@@ -2540,13 +2541,10 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                                 <button
                                   onClick={() => {
                                     // Abre el modal de asignar/editar admin sin salir de esta
-                                    // pestaña. Si el dueño actual ya está arriba como fila propia
-                                    // (un admin de tienda, o vos mismo si te asignaste la tienda a
-                                    // tu cuenta) lo carga para editar; si no, precarga la
-                                    // invitación con esta tienda ya elegida.
-                                    const owner = derivedUsers.find((u) => u.store === store.slug);
-                                    if (owner && owner.role !== 'super_admin') {
-                                      setEditingUser({ ...owner });
+                                    // pestaña: si ya hay un admin de tienda lo carga para
+                                    // editar, si no precarga la invitación con esta tienda.
+                                    if (storeAdmin) {
+                                      setEditingUser({ ...storeAdmin });
                                       setEditingUserOriginalStore(store.slug);
                                     } else {
                                       setEditingUser(null);
@@ -2558,7 +2556,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                                     setAssignStoreSlug(store.slug);
                                   }}
                                   className="material-symbols-outlined text-[18px] text-[#545f73] hover:text-[#0058be] transition-colors p-1 hover:bg-[#e6e7f2] rounded"
-                                  title={derivedUsers.some((u) => u.store === store.slug && u.role !== 'super_admin') ? 'Editar Administrador' : 'Asignar Administrador'}
+                                  title={storeAdmin ? 'Editar Administrador' : 'Asignar Administrador'}
                                 >
                                   manage_accounts
                                 </button>

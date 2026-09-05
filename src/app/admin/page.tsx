@@ -487,21 +487,24 @@ function AdminDashboard({ user }: { user: User }) {
       let logoUrl: string | null = storeLogoPreview;
       let heroUrl: string | null = storeHeroPreview;
 
-      if (storeLogoFile) {
-        try {
-          logoUrl = await uploadFile(storeLogoFile, `store-assets/${editingStoreSlug}`);
-        } catch (err) {
-          console.error('Error subiendo logo:', err);
-        }
-      }
-
-      if (storeHeroFile) {
-        try {
-          heroUrl = await uploadFile(storeHeroFile, `store-assets/${editingStoreSlug}`);
-        } catch (err) {
-          console.error('Error subiendo portada:', err);
-        }
-      }
+      // En paralelo: son subidas independientes, esperarlas en fila duplica lo
+      // que tarda guardar cuando el comercio cambia logo y portada a la vez.
+      const [logoSubido, heroSubido] = await Promise.all([
+        storeLogoFile
+          ? uploadFile(storeLogoFile, `store-assets/${editingStoreSlug}`).catch((err) => {
+              console.error('Error subiendo logo:', err);
+              return null;
+            })
+          : null,
+        storeHeroFile
+          ? uploadFile(storeHeroFile, `store-assets/${editingStoreSlug}`).catch((err) => {
+              console.error('Error subiendo portada:', err);
+              return null;
+            })
+          : null,
+      ]);
+      if (logoSubido) logoUrl = logoSubido;
+      if (heroSubido) heroUrl = heroSubido;
 
       const upsertData: any = {
         slug: editingStoreSlug,

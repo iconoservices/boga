@@ -44,10 +44,15 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
       setIsInstalled(true);
     };
 
+    // Solo cuenta como instalada ESTA tienda, no "estamos dentro de alguna PWA":
+    // todas las tiendas viven en el mismo dominio, así que estar en standalone
+    // puede significar que estás dentro de Boga Hub o de otra tienda, y ahí el
+    // botón sí tiene que aparecer (con el aviso de abrirlo en el navegador).
+    // En iOS no existe el evento `appinstalled`, así que no hay forma de saber
+    // cuál app se instaló: si está en standalone se asume que es esta.
     const checkInstalled = () => {
       if (localStorage.getItem(installKey) === 'true') return true;
       if ((window.navigator as any).standalone) return true;
-      if (window.matchMedia('(display-mode: standalone)').matches) return true;
       return false;
     };
 

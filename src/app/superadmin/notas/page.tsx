@@ -3,11 +3,11 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { esSuperadmin } from '@/lib/superadmin';
 
-// Mismo candado que /superadmin: solo este correo entra. No es contenido de
-// producto, son notas internas de estrategia — por eso vive fuera de
-// cualquier ruta que un usuario común pueda llegar a ver.
-const SUPERADMIN_EMAILS = ['jnmcsky@gmail.com'];
+// Mismo candado que /superadmin. No es contenido de producto, son notas
+// internas de estrategia — por eso vive fuera de cualquier ruta que un
+// usuario común pueda llegar a ver.
 
 const PERFILES = [
   {
@@ -40,7 +40,7 @@ const GANCHOS = [
 export default function NotasInternas() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const isSuperadmin = !!user?.email && SUPERADMIN_EMAILS.includes(user.email);
+  const isSuperadmin = esSuperadmin(user?.email);
 
   React.useEffect(() => {
     if (loading) return;

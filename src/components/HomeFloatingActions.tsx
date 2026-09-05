@@ -12,10 +12,13 @@ export default function HomeFloatingActions() {
       setDeferredPrompt(e);
     };
 
+    // Solo cuenta como instalada ESTA app, no "estamos dentro de alguna PWA":
+    // si estás dentro de la app de una tienda, Boga Hub sigue sin instalarse y
+    // el botón tiene que aparecer. En iOS no existe el evento `appinstalled`,
+    // así que si está en standalone se asume que es esta.
     const checkInstalled = () => {
       if (localStorage.getItem('boga_pwa_installed') === 'true') return true;
       if ((window.navigator as any).standalone) return true;
-      if (window.matchMedia('(display-mode: standalone)').matches) return true;
       return false;
     };
 

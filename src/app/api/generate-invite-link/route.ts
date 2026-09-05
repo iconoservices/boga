@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-
-// Mismo correo que /superadmin (ver ese archivo si agregas uno acá, agrégalo allá).
-const SUPERADMIN_EMAILS = ['jnmcsky@gmail.com'];
+import { esSuperadmin } from '@/lib/superadmin';
 
 // service_role: nunca al navegador. Solo esta ruta la usa, para poder
 // generar el link de invitación sin depender de que Supabase mande el
@@ -17,7 +15,7 @@ export async function POST(request: Request) {
   if (!token) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
   const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
-  if (userError || !user?.email || !SUPERADMIN_EMAILS.includes(user.email)) {
+  if (userError || !esSuperadmin(user?.email)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
   }
 

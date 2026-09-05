@@ -4,8 +4,6 @@ import React from 'react';
 import { usePathname } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import CartDrawer from '@/components/CartDrawer';
-// PWAInstallPrompt oculto por ahora — se reemplazará por un ícono fijo minimalista
-// import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 
 export default function SharedUI() {
   const pathname = usePathname();
