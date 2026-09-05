@@ -21,7 +21,9 @@ export const metadata: Metadata = {
     'qué hacer en Pucallpa', 'eventos Pucallpa', 'alquileres Pucallpa',
     'mototaxi seguro', 'trabajo Pucallpa', 'marketplace Pucallpa', 'Boga',
   ],
-  alternates: { canonical: '/' },
+  // OJO: no poner `alternates.canonical` acá — se hereda a TODAS las rutas y
+  // haría que /market, /revista, etc. se declaren copia de la home. Cada page
+  // define su propia canónica; las que no, se auto-canonizan por su URL.
   openGraph: {
     type: 'website',
     locale: 'es_PE',

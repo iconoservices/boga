@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { NOTAS, notaSlug, fechaISO } from '@/lib/revista';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app';
 
@@ -21,10 +22,21 @@ const ROUTES: { path: string; changeFrequency: MetadataRoute.Sitemap[number]['ch
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
-  return ROUTES.map((r) => ({
+
+  const rutasFijas: MetadataRoute.Sitemap = ROUTES.map((r) => ({
     url: `${SITE_URL}${r.path}`,
     lastModified: now,
     changeFrequency: r.changeFrequency,
     priority: r.priority,
   }));
+
+  // Cada artículo de la Revista como URL propia e indexable.
+  const notas: MetadataRoute.Sitemap = NOTAS.map((n) => ({
+    url: `${SITE_URL}/revista/${notaSlug(n)}`,
+    lastModified: new Date(fechaISO(n.fecha)),
+    changeFrequency: 'monthly',
+    priority: 0.6,
+  }));
+
+  return [...rutasFijas, ...notas];
 }

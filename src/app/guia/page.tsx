@@ -4,6 +4,14 @@ import React from 'react';
 import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
+import { getNotaById, notaHref } from '@/lib/revista';
+
+// Cada tarjeta de "Qué visitar" abre su artículo en la Revista por su URL
+// canónica (/revista/<slug>). Fallback a /revista si el id no existe.
+const notaHrefById = (id: string) => {
+  const n = getNotaById(id);
+  return n ? notaHref(n) : '/revista';
+};
 
 // Guía de Pucallpa — la página "recién llegas, esto es lo que necesitas
 // saber". Los accesos rápidos mandan a su portal; abajo, lo práctico que no
@@ -165,7 +173,7 @@ export default function GuiaPage() {
             {QUE_VISITAR.map((l) => (
               <Link
                 key={l.notaId}
-                href={`/revista?nota=${l.notaId}`}
+                href={notaHrefById(l.notaId)}
                 className="group shrink-0 w-[220px] lg:w-auto bg-white border border-surface-container-highest shadow-sm hover:shadow-md hover:border-primary/30 transition-all overflow-hidden flex flex-col"
               >
                 <img src={l.img} alt={l.titulo} className="w-full h-32 object-cover" loading="lazy" />
