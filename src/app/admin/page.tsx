@@ -12,6 +12,7 @@ import { useAuth } from '@/context/AuthContext';
 import type { User } from '@supabase/supabase-js';
 import { COLOR_PRESETS, getColorPreset } from '@/lib/colorPresets';
 import { extractThemeFromImageClient } from '@/lib/extractThemeClient';
+import { uploadFile } from '@/lib/uploadClient';
 import type { StoreTheme } from '@/lib/templates.config';
 
 interface Product {
@@ -487,22 +488,18 @@ function AdminDashboard({ user }: { user: User }) {
       let heroUrl: string | null = storeHeroPreview;
 
       if (storeLogoFile) {
-        const ext = storeLogoFile.name.split('.').pop();
-        const path = `${editingStoreSlug}/logo-${Date.now()}.${ext}`;
-        const { error: upErr } = await supabase.storage.from('store-assets').upload(path, storeLogoFile, { upsert: true });
-        if (!upErr) {
-          const { data: pubData } = supabase.storage.from('store-assets').getPublicUrl(path);
-          logoUrl = pubData.publicUrl;
+        try {
+          logoUrl = await uploadFile(storeLogoFile, `store-assets/${editingStoreSlug}`);
+        } catch (err) {
+          console.error('Error subiendo logo:', err);
         }
       }
 
       if (storeHeroFile) {
-        const ext = storeHeroFile.name.split('.').pop();
-        const path = `${editingStoreSlug}/hero-${Date.now()}.${ext}`;
-        const { error: upErr } = await supabase.storage.from('store-assets').upload(path, storeHeroFile, { upsert: true });
-        if (!upErr) {
-          const { data: pubData } = supabase.storage.from('store-assets').getPublicUrl(path);
-          heroUrl = pubData.publicUrl;
+        try {
+          heroUrl = await uploadFile(storeHeroFile, `store-assets/${editingStoreSlug}`);
+        } catch (err) {
+          console.error('Error subiendo portada:', err);
         }
       }
 
@@ -623,21 +620,8 @@ function AdminDashboard({ user }: { user: User }) {
 
       // 1. Subir la imagen si hay una nueva
       if (selectedFile) {
-        const fileExt = selectedFile.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const filePath = `${newProduct.store.replace(/\s+/g, '-').toLowerCase()}/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('product-images')
-          .upload(filePath, selectedFile);
-
-        if (uploadError) throw uploadError;
-
-        const { data: publicUrlData } = supabase.storage
-          .from('product-images')
-          .getPublicUrl(filePath);
-          
-        finalImageUrl = publicUrlData.publicUrl;
+        const folder = `product-images/${newProduct.store.replace(/\s+/g, '-').toLowerCase()}`;
+        finalImageUrl = await uploadFile(selectedFile, folder);
       }
 
       // 2. Guardar en la base de datos

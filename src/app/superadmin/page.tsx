@@ -11,6 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { COLOR_PRESETS, getColorPreset } from '@/lib/colorPresets';
 import { extractThemeFromImageClient } from '@/lib/extractThemeClient';
+import { uploadFile } from '@/lib/uploadClient';
 import type { StoreTheme } from '@/lib/templates.config';
 
 // Correos con acceso al superadmin. A diferencia de /admin (donde cualquier
@@ -549,12 +550,8 @@ function ImageUploadInput({ value, onChange, placeholder }: { value: string; onC
     if (!file) return;
     setUploading(true);
     try {
-      const ext = file.name.split('.').pop();
-      const path = `banners/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error: upErr } = await supabase.storage.from('product-images').upload(path, file);
-      if (upErr) throw upErr;
-      const { data } = supabase.storage.from('product-images').getPublicUrl(path);
-      onChange(data.publicUrl);
+      const url = await uploadFile(file, 'product-images/banners');
+      onChange(url);
     } catch (err: any) {
       alert('Error al subir: ' + err.message);
     } finally {
@@ -1479,23 +1476,19 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
 
     let logoUrl: string | null = null;
     if (logoFile && slug) {
-      const ext = logoFile.name.split('.').pop();
-      const path = `${slug}/logo-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from('store-assets').upload(path, logoFile, { upsert: true });
-      if (!upErr) {
-        const { data: pubData } = supabase.storage.from('store-assets').getPublicUrl(path);
-        logoUrl = pubData.publicUrl;
+      try {
+        logoUrl = await uploadFile(logoFile, `store-assets/${slug}`);
+      } catch (err) {
+        console.error('Error subiendo logo:', err);
       }
     }
 
     let heroUrl: string | null = null;
     if (heroFile && slug) {
-      const ext = heroFile.name.split('.').pop();
-      const path = `${slug}/hero-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from('store-assets').upload(path, heroFile, { upsert: true });
-      if (!upErr) {
-        const { data: pubData } = supabase.storage.from('store-assets').getPublicUrl(path);
-        heroUrl = pubData.publicUrl;
+      try {
+        heroUrl = await uploadFile(heroFile, `store-assets/${slug}`);
+      } catch (err) {
+        console.error('Error subiendo portada:', err);
       }
     }
     const heroImage = heroUrl || existingStoreObj.heroImage || tpl?.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80';
@@ -1774,12 +1767,10 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       // la URL que ya estaba en el campo en vez de perder el resto del cambio.
       if (templateImageFile) {
         setIsTemplateSaving(true);
-        const ext = templateImageFile.name.split('.').pop();
-        const path = `templates/${editingTemplate.id}-${Date.now()}.${ext}`;
-        const { error: upErr } = await supabase.storage.from('store-assets').upload(path, templateImageFile, { upsert: true });
-        if (!upErr) {
-          const { data: pubData } = supabase.storage.from('store-assets').getPublicUrl(path);
-          previewUrl = pubData.publicUrl;
+        try {
+          previewUrl = await uploadFile(templateImageFile, 'store-assets/templates');
+        } catch (err) {
+          console.error('Error subiendo imagen de plantilla:', err);
         }
         setIsTemplateSaving(false);
       }
