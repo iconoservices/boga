@@ -1856,6 +1856,13 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
             );
           })}
         </nav>
+        <Link
+          href="/superadmin/notas"
+          className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold rounded-md text-[#424754]/60 hover:bg-[#e6e7f2] hover:text-[#424754] transition-all"
+        >
+          <span className="material-symbols-outlined text-[18px]">sticky_note_2</span>
+          Notas internas
+        </Link>
         <div className="mt-auto pt-4 border-t border-[#c2c6d6]">
           <div className="flex items-center gap-3 px-2 mb-4">
             <div className="w-10 h-10 rounded-full bg-[#d5e0f8] flex items-center justify-center overflow-hidden">
