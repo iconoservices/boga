@@ -276,30 +276,8 @@ function PortalesPanel() {
           </p>
         </div>
 
-        {/* Móvil: fila horizontal de tarjetas cuadradas (ícono + descripción), sin panel envolvente */}
-        <div className="flex lg:hidden gap-2.5 overflow-x-auto hide-scrollbar -mx-1 px-1" style={{ scrollbarWidth: 'none' }}>
-          {PORTALES.map((p) => (
-            <Link
-              key={p.href}
-              href={p.href}
-              className="group bg-white border border-surface-container-high rounded-xl p-2.5 flex items-start gap-2.5 hover:border-primary/40 hover:shadow-md transition-all shrink-0 w-[168px]"
-            >
-              <span
-                className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 shadow-sm"
-                style={{ backgroundColor: p.color }}
-              >
-                <span className="material-symbols-outlined text-white text-[19px]" style={{ fontVariationSettings: "'FILL' 1" }}>{p.icon}</span>
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block font-headline-sm text-[12px] text-on-surface leading-tight line-clamp-1">{p.label}</span>
-                <span className="block font-body-md text-secondary text-[10px] leading-snug line-clamp-2 mt-0.5">{p.sub}</span>
-              </span>
-            </Link>
-          ))}
-        </div>
-
-        {/* Escritorio: grilla con descripción */}
-        <div className="hidden lg:grid grid-cols-2 gap-2.5 flex-1">
+        {/* Grilla con descripción — todas las tarjetas a la vista, sin scroll horizontal */}
+        <div className="grid grid-cols-2 gap-2.5 lg:flex-1">
           {PORTALES.map((p) => (
             <Link
               key={p.href}
@@ -314,7 +292,7 @@ function PortalesPanel() {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block font-headline-sm text-[12px] text-on-surface leading-tight line-clamp-1">{p.label}</span>
-                <span className="hidden sm:block font-body-md text-secondary text-[10px] leading-snug line-clamp-2 mt-0.5">{p.sub}</span>
+                <span className="block font-body-md text-secondary text-[10px] leading-snug line-clamp-2 mt-0.5">{p.sub}</span>
               </span>
             </Link>
           ))}
@@ -416,12 +394,12 @@ export default function HomePage() {
             <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-2xl lg:text-3xl">¿Primera vez en Pucallpa?</h2>
             <p className="font-body-md text-secondary text-xs mt-1">Lo esencial para moverte, dormir, comer y pasarla bien.</p>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {GUIA_PUCALLPA.slice(0, 4).map((g) => (
+          <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
+            {GUIA_PUCALLPA.map((g) => (
               <Link
                 href={g.href}
                 key={g.titulo}
-                className="group bg-white border border-surface-container-highest p-4 shadow-sm hover:border-primary/30 hover:shadow-md transition-all flex flex-col gap-2"
+                className="group bg-white border border-surface-container-highest p-4 shadow-sm hover:border-primary/30 hover:shadow-md transition-all flex flex-col gap-2 min-w-[180px] w-[180px] snap-start shrink-0"
               >
                 <span className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm" style={{ backgroundColor: g.color }}>
                   <span className="material-symbols-outlined text-white text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>{g.icon}</span>
@@ -529,6 +507,23 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Más de la Revista — SEO */}
+        <section className="flex flex-col gap-4">
+          <SectionHead title="Más de la Revista" href="/revista" cta="Ver revista" />
+          <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
+            {SELVA_NOTES.map((n) => (
+              <Link href="/revista" key={n.id} className="min-w-[260px] w-[260px] lg:min-w-[300px] lg:w-[300px] snap-start group flex flex-col">
+                <div className="relative aspect-[16/10] overflow-hidden bg-surface-container-low">
+                  <img src={n.img} alt={n.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 to-transparent" />
+                  <span className="absolute top-2 left-2 bg-white text-on-surface text-[9px] font-label-md px-2 py-0.5 uppercase tracking-wider">{n.cat}</span>
+                  <h3 className="absolute inset-x-0 bottom-0 p-3 font-headline-sm text-white text-sm leading-tight line-clamp-2">{n.title}</h3>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
         {/* Servicios y chamba */}
         <section className="flex flex-col gap-4">
           <SectionHead title="Chamba y servicios" href="/servicios" cta="Ver todo" />
@@ -583,23 +578,6 @@ export default function HomePage() {
               <p className="text-white/80 font-body-md text-xs lg:text-sm">{SORTEO_PEEK.sub}</p>
             </div>
           </Link>
-        </section>
-
-        {/* Más de la Revista — SEO */}
-        <section className="flex flex-col gap-4">
-          <SectionHead title="Más de la Revista" href="/revista" cta="Ver revista" />
-          <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
-            {SELVA_NOTES.map((n) => (
-              <Link href="/revista" key={n.id} className="min-w-[260px] w-[260px] lg:min-w-[300px] lg:w-[300px] snap-start group flex flex-col">
-                <div className="relative aspect-[16/10] overflow-hidden bg-surface-container-low">
-                  <img src={n.img} alt={n.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 to-transparent" />
-                  <span className="absolute top-2 left-2 bg-white text-on-surface text-[9px] font-label-md px-2 py-0.5 uppercase tracking-wider">{n.cat}</span>
-                  <h3 className="absolute inset-x-0 bottom-0 p-3 font-headline-sm text-white text-sm leading-tight line-clamp-2">{n.title}</h3>
-                </div>
-              </Link>
-            ))}
-          </div>
         </section>
 
         {/* Qué es Boga */}
