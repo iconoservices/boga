@@ -294,13 +294,13 @@ export default function TaxiSeguro() {
 
       {/* Banda cívica */}
       <div className="bg-on-surface text-background">
-        <div className="max-w-[1440px] mx-auto pl-12 pr-container-margin lg:px-6 py-2 flex items-center gap-2 text-[11px] font-label-md">
+        <div className="max-w-[1440px] mx-auto px-container-margin lg:px-6 py-2 flex items-center gap-2 text-[11px] font-label-md">
           <span className="material-symbols-outlined text-[14px]" style={{ color: VERDE_SOFT }}>local_police</span>
           Padrón cívico vecinal · choferes con antecedentes y documentos revisados
         </div>
       </div>
 
-      <main className="max-w-[1440px] mx-auto pl-12 pr-container-margin lg:px-6 w-full pt-5 flex flex-col gap-6 pb-12">
+      <main className="max-w-[1440px] mx-auto px-container-margin lg:px-6 w-full pt-5 flex flex-col gap-6 pb-12">
 
         {/* Encabezado + métricas */}
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">

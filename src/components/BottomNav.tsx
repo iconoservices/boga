@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { HUBS, ACCOUNT_LINKS, isHubActive } from '@/lib/hubs';
 
 // Barra inferior móvil. Lleva TODAS las secciones (hubs + cuenta), en el mismo
@@ -15,6 +15,14 @@ const EXTRA_ROUTES = ['/explore', '/promotions', '/login', '/guia'];
 export default function BottomNav() {
   const pathname = usePathname();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const activeRef = useRef<HTMLAnchorElement>(null);
+
+  // La fila es scrolleable y no todas las pestañas entran en pantalla; si la
+  // activa cae fuera de vista (ej. Taxi Seguro) queda pegada a un borde en
+  // vez de a la vista. La centramos cada vez que cambia la ruta.
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }, [pathname]);
 
   const onNavRoute =
     ALL.some((i) => isHubActive(pathname, i.href)) ||
@@ -50,6 +58,7 @@ export default function BottomNav() {
               <Link
                 key={item.href}
                 href={item.href}
+                ref={isActive ? activeRef : undefined}
                 className={`snap-start shrink-0 min-w-[62px] flex flex-col items-center justify-center rounded-xl px-2.5 py-1.5 transition-transform duration-150 active:scale-90 ${
                   isActive
                     ? 'bg-primary-fixed text-primary dark:bg-primary-container dark:text-on-primary-container'

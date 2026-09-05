@@ -39,33 +39,31 @@ export default function AppHeader({
   const displayCartCount = propCartCount !== undefined ? propCartCount : contextCartCount;
   const handleCartClick = propOnCartClick || (() => setIsCartOpen(true));
 
-  // Se oculta al bajar, reaparece al subir (o cerca del tope).
-  const [hidden, setHidden] = useState(false);
+  // El buscador (mobile) se esconde apenas empezás a bajar y vuelve apenas
+  // volvés cerca del tope; la fila de dirección/iconos arriba se queda
+  // siempre fija (pedido explícito). Dos umbrales distintos (no uno solo)
+  // para esconder y para mostrar: con el rebote del scroll elástico en
+  // mobile, el scroll pasa varias veces por el mismo punto al asentarse, y
+  // un solo umbral hace que el buscador parpadee cada vez que lo cruza.
+  const [searchHidden, setSearchHidden] = useState(false);
   useEffect(() => {
-    let lastY = window.scrollY;
+    if (!showSearch) return;
     let ticking = false;
     const onScroll = () => {
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(() => {
         const y = window.scrollY;
-        if (y < 64) setHidden(false);
-        else if (y > lastY + 6) setHidden(true);
-        else if (y < lastY - 6) setHidden(false);
-        lastY = y;
+        setSearchHidden((prev) => (prev ? y > 24 : y > 80));
         ticking = false;
       });
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [showSearch]);
 
   return (
-    <header
-      className={`bg-surface sticky top-0 z-50 w-full shadow-[0px_15px_15px_rgba(0,0,0,0.04)] border-b border-surface-container-high transition-transform duration-300 ${
-        hidden ? '-translate-y-full' : 'translate-y-0'
-      }`}
-    >
+    <header className="bg-surface sticky top-0 z-50 w-full shadow-[0px_15px_15px_rgba(0,0,0,0.04)] border-b border-surface-container-high">
       {/* Mobile Nav Row */}
       <div className="flex lg:hidden flex-col px-container-margin pt-4 pb-2">
         {/* Location & Icons Row */}
@@ -120,17 +118,23 @@ export default function AppHeader({
           </div>
         </div>
 
-        {/* Pill-shaped Search Bar */}
+        {/* Pill-shaped Search Bar — colapsa al bajar, la fila de arriba no se mueve */}
         {showSearch && (
-          <div className="mt-4 relative">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
-              <span className="material-symbols-outlined text-secondary text-[20px]">search</span>
+          <div
+            className={`overflow-hidden transition-all duration-300 ${
+              searchHidden ? 'max-h-0 opacity-0' : 'max-h-16 opacity-100 mt-4'
+            }`}
+          >
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+                <span className="material-symbols-outlined text-secondary text-[20px]">search</span>
+              </div>
+              <input
+                className="block w-full pl-11 pr-4 py-3 bg-white border-none rounded-full shadow-[0_15px_15px_rgba(0,0,0,0.04)] focus:ring-2 focus:ring-primary/20 text-body-md font-body-md transition-all focus:outline-none placeholder:text-secondary/60"
+                placeholder={placeholder}
+                type="text"
+              />
             </div>
-            <input
-              className="block w-full pl-11 pr-4 py-3 bg-white border-none rounded-full shadow-[0_15px_15px_rgba(0,0,0,0.04)] focus:ring-2 focus:ring-primary/20 text-body-md font-body-md transition-all focus:outline-none placeholder:text-secondary/60"
-              placeholder={placeholder}
-              type="text"
-            />
           </div>
         )}
       </div>
@@ -211,8 +215,11 @@ export default function AppHeader({
         </div>
       </div>
 
-      {/* Barra de secciones — debajo del header, a todo el ancho */}
-      <SectionNav />
+      {/* Barra de secciones — debajo del header, a todo el ancho. Solo en
+          desktop: en mobile ya está el BottomNav con las mismas secciones. */}
+      <div className="hidden lg:block">
+        <SectionNav />
+      </div>
     </header>
   );
 }
