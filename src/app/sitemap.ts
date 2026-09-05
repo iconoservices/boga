@@ -1,7 +1,10 @@
 import type { MetadataRoute } from 'next';
-import { NOTAS, notaSlug, fechaISO } from '@/lib/revista';
+import { fechaISO } from '@/lib/revista';
+import { getNotasPublicadas } from '@/lib/revista.data';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app';
+
+export const revalidate = 300;
 
 // Rutas públicas indexables. Las tiendas dinámicas (/[slug]) se podrían sumar
 // leyéndolas de Supabase cuando haga falta.
@@ -20,7 +23,7 @@ const ROUTES: { path: string; changeFrequency: MetadataRoute.Sitemap[number]['ch
   { path: '/vende-con-boga', changeFrequency: 'monthly', priority: 0.5 },
 ];
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
   const rutasFijas: MetadataRoute.Sitemap = ROUTES.map((r) => ({
@@ -30,9 +33,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: r.priority,
   }));
 
-  // Cada artículo de la Revista como URL propia e indexable.
-  const notas: MetadataRoute.Sitemap = NOTAS.map((n) => ({
-    url: `${SITE_URL}/revista/${notaSlug(n)}`,
+  // Cada artículo publicado de la Revista como URL propia e indexable.
+  const publicadas = await getNotasPublicadas();
+  const notas: MetadataRoute.Sitemap = publicadas.map((n) => ({
+    url: `${SITE_URL}/revista/${n.slug}`,
     lastModified: new Date(fechaISO(n.fecha)),
     changeFrequency: 'monthly',
     priority: 0.6,

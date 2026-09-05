@@ -352,3 +352,146 @@ USING (bucket_id IN ('store-assets', 'product-images') AND auth.role() = 'authen
 -- SELECT tablename, policyname, cmd, qual, with_check
 -- FROM pg_policies WHERE schemaname = 'public'
 -- ORDER BY tablename, cmd;
+
+-- ============================================================
+-- 10. ROL "redactor" (para la Revista)
+-- ============================================================
+-- profiles.rol: NULL = cuenta común. 'redactor' = puede escribir notas de la
+-- Revista, pero NO publicarlas (eso lo hace el superadmin). Se asigna solo con
+-- set_rol_redactor(), nunca desde el navegador.
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS rol TEXT;
+
+CREATE OR REPLACE FUNCTION public.puede_editar_revista()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+AS $$
+  SELECT public.is_superadmin()
+    OR EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = auth.uid() AND rol = 'redactor'
+    )
+$$;
+
+-- Alta/baja de redactores. SECURITY DEFINER: corre con permisos del dueño de
+-- la función, así que el chequeo de superadmin adentro es lo único que protege.
+CREATE OR REPLACE FUNCTION public.set_rol_redactor(correo text, activar boolean)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF NOT public.is_superadmin() THEN
+    RAISE EXCEPTION 'Solo el superadmin puede cambiar roles';
+  END IF;
+  UPDATE public.profiles
+     SET rol = CASE WHEN activar THEN 'redactor' ELSE NULL END
+   WHERE email = correo;
+END;
+$$;
+
+-- La política UPDATE de profiles no tiene WITH CHECK: sin esto, un usuario
+-- podría hacer `update profiles set rol='redactor' where id = auth.uid()`.
+-- El trigger revierte cualquier cambio de `rol` que no venga del superadmin.
+CREATE OR REPLACE FUNCTION public.profiles_protege_rol()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.rol IS DISTINCT FROM OLD.rol AND NOT public.is_superadmin() THEN
+    NEW.rol := OLD.rol;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS profiles_protege_rol ON public.profiles;
+CREATE TRIGGER profiles_protege_rol
+BEFORE UPDATE ON public.profiles
+FOR EACH ROW EXECUTE FUNCTION public.profiles_protege_rol();
+
+-- ============================================================
+-- 11. REVISTA_NOTAS  (CMS de "Yo Soy de la Selva")
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.revista_notas (
+  id            UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  slug          TEXT UNIQUE NOT NULL,
+  kicker        TEXT NOT NULL,
+  titulo        TEXT NOT NULL,
+  dek           TEXT NOT NULL,
+  autor_id      UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  autor_nombre  TEXT NOT NULL DEFAULT 'Redacción Boga',
+  fecha         DATE NOT NULL DEFAULT current_date,
+  lectura       TEXT NOT NULL DEFAULT '3 min',
+  img           TEXT NOT NULL,
+  img_credito   TEXT NOT NULL,
+  cuerpo        JSONB NOT NULL DEFAULT '[]'::jsonb,
+  cita          JSONB,
+  ubicacion_maps TEXT,
+  fuente        JSONB,
+  destacado     BOOLEAN NOT NULL DEFAULT false,
+  portada       BOOLEAN NOT NULL DEFAULT false,
+  estado        TEXT NOT NULL DEFAULT 'borrador'
+                CHECK (estado IN ('borrador', 'en_revision', 'publicada')),
+  created_at    TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at    TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  published_at  TIMESTAMP WITH TIME ZONE
+);
+CREATE INDEX IF NOT EXISTS revista_notas_estado_idx ON public.revista_notas (estado);
+CREATE INDEX IF NOT EXISTS revista_notas_slug_idx   ON public.revista_notas (slug);
+
+CREATE OR REPLACE FUNCTION public.revista_notas_touch()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at := now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS revista_notas_touch ON public.revista_notas;
+CREATE TRIGGER revista_notas_touch
+BEFORE UPDATE ON public.revista_notas
+FOR EACH ROW EXECUTE FUNCTION public.revista_notas_touch();
+
+ALTER TABLE public.revista_notas ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "revista_notas: lectura de publicadas o propias" ON public.revista_notas;
+DROP POLICY IF EXISTS "revista_notas: redactor crea en borrador"       ON public.revista_notas;
+DROP POLICY IF EXISTS "revista_notas: superadmin o autor edita"        ON public.revista_notas;
+DROP POLICY IF EXISTS "revista_notas: superadmin o autor borra"        ON public.revista_notas;
+
+-- Lectura: las publicadas son públicas (sin login). Los borradores solo los ve
+-- el superadmin o quien los escribió.
+CREATE POLICY "revista_notas: lectura de publicadas o propias"
+ON public.revista_notas FOR SELECT
+USING (
+  estado = 'publicada'
+  OR public.is_superadmin()
+  OR autor_id = auth.uid()
+);
+
+-- Crear: solo redactores/superadmin, siempre como autor de la fila. Un redactor
+-- no puede crear directamente en 'publicada'; el superadmin sí.
+CREATE POLICY "revista_notas: redactor crea en borrador"
+ON public.revista_notas FOR INSERT
+WITH CHECK (
+  public.puede_editar_revista()
+  AND autor_id = auth.uid()
+  AND (estado <> 'publicada' OR public.is_superadmin())
+);
+
+-- Editar: el superadmin cualquier nota; el redactor solo las suyas, y no puede
+-- pasarlas a 'publicada' (eso queda para el superadmin).
+CREATE POLICY "revista_notas: superadmin o autor edita"
+ON public.revista_notas FOR UPDATE
+USING (public.is_superadmin() OR autor_id = auth.uid())
+WITH CHECK (
+  public.is_superadmin()
+  OR (autor_id = auth.uid() AND estado <> 'publicada')
+);
+
+CREATE POLICY "revista_notas: superadmin o autor borra"
+ON public.revista_notas FOR DELETE
+USING (
+  public.is_superadmin()
+  OR (autor_id = auth.uid() AND estado <> 'publicada')
+);

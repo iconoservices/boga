@@ -42,3 +42,33 @@ export function useEsSuperadmin() {
 
   return { esSuperadmin, cargando: cargandoSesion || cargando };
 }
+
+/**
+ * ¿El usuario puede escribir en la Revista? = superadmin O tiene rol 'redactor'.
+ * Lo contesta public.puede_editar_revista() (la misma función que la RLS de
+ * revista_notas). El superadmin además puede publicar; el redactor no.
+ */
+export function usePuedeEditarRevista() {
+  const { user, loading: cargandoSesion } = useAuth();
+  const [puede, setPuede] = useState(false);
+  const [cargando, setCargando] = useState(true);
+
+  useEffect(() => {
+    if (cargandoSesion) return;
+    if (!user) {
+      setPuede(false);
+      setCargando(false);
+      return;
+    }
+    let vigente = true;
+    supabase.rpc('puede_editar_revista').then(({ data, error }) => {
+      if (!vigente) return;
+      if (error) console.error('No se pudo verificar el permiso de Revista:', error.message);
+      setPuede(data === true);
+      setCargando(false);
+    });
+    return () => { vigente = false; };
+  }, [user, cargandoSesion]);
+
+  return { puede, cargando: cargandoSesion || cargando };
+}

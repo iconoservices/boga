@@ -3,29 +3,26 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import AppHeader from '@/components/AppHeader';
 import {
-  NOTAS, getNotaBySlug, notaSlug, notaHref, relacionadas, fechaISO,
+  notaHref, relacionadasDe, fechaISO,
   VERDE, VERDE_CLARO, ORO, type Nota,
 } from '@/lib/revista';
+import { getNotaPublicadaBySlug, getNotasPublicadas } from '@/lib/revista.data';
 
 // Un artículo de la Revista, en su propia URL (/revista/<slug>). Server
-// Component 100% estático: genera todas las rutas en build, expone metadata
-// por artículo (título, descripción, canónica, OG) y un bloque JSON-LD
-// (NewsArticle + BreadcrumbList) para SEO y para que los motores de IA
-// puedan citar la nota con autor y fecha.
+// Component: lee la nota de la tabla revista_notas (fallback a NOTAS_SEED),
+// expone metadata por artículo (título, descripción, canónica, OG) y un bloque
+// JSON-LD (NewsArticle + BreadcrumbList) para SEO y para que los motores de IA
+// puedan citar la nota con autor y fecha. Revalida cada 5 min.
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app';
 
-export const dynamicParams = false;
-
-export function generateStaticParams() {
-  return NOTAS.map((n) => ({ slug: notaSlug(n) }));
-}
+export const revalidate = 300;
 
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const nota = getNotaBySlug(slug);
+  const nota = await getNotaPublicadaBySlug(slug);
   if (!nota) return { title: 'Nota no encontrada' };
 
   const url = `/revista/${slug}`;
@@ -84,10 +81,10 @@ function NotaMiniCard({ n }: { n: Nota }) {
 
 export default async function ArticuloPage({ params }: Props) {
   const { slug } = await params;
-  const nota = getNotaBySlug(slug);
+  const nota = await getNotaPublicadaBySlug(slug);
   if (!nota) notFound();
 
-  const rel = relacionadas(nota);
+  const rel = relacionadasDe(nota, await getNotasPublicadas());
   const url = `${SITE_URL}/revista/${slug}`;
   const publishedTime = fechaISO(nota.fecha);
 

@@ -1,8 +1,10 @@
-// Datos y helpers de la Revista ("Yo Soy de la Selva") — módulo compartido para
-// que la portada (/revista) y cada artículo (/revista/[slug]) lean la misma
-// fuente. Sin "use client": lo importan tanto Server como Client Components.
-// Contenido compilado por el equipo de Boga a partir de fuentes públicas
-// (pucallpa.com, Wikipedia) con fotos de Wikimedia Commons acreditadas.
+// Tipos y helpers PUROS de la Revista ("Yo Soy de la Selva"). Sin "use client"
+// y sin acceso a base: lo importan Server y Client Components por igual.
+//
+// Las notas ahora viven en la tabla `revista_notas` de Supabase — se leen desde
+// src/lib/revista.data.ts (server-only). Este archivo conserva NOTAS_SEED: las
+// 26 notas originales, que sirven de (a) semilla para poblar la tabla y (b)
+// fallback si la tabla está vacía o falla, para que /revista nunca quede en blanco.
 
 export const EDICION = 'Edición 07 · Septiembre 2026';
 
@@ -10,7 +12,10 @@ export const EDICION = 'Edición 07 · Septiembre 2026';
 export const SECCIONES = ['Actualidad', 'Cultura', 'Lifestyle', 'Vida Social', 'Gastronomía', 'Naturaleza', 'Rutas'] as const;
 
 export type Nota = {
+  /** id de la fila en `revista_notas` (las de NOTAS_SEED traen su id viejo n3, r1…). */
   id: string;
+  /** Segmento de la URL: /revista/<slug>. Estable, no cambia si se edita el título. */
+  slug: string;
   kicker: string;
   titulo: string;
   dek: string;
@@ -30,7 +35,7 @@ export type Nota = {
   portada?: boolean;
 };
 
-export const NOTAS: Nota[] = [
+const NOTAS_RAW: Omit<Nota, 'slug'>[] = [
   {
     id: 'n19', kicker: 'Naturaleza',
     titulo: 'El río que hierve: Shanay-timpishka, a un viaje de Pucallpa',
@@ -387,39 +392,47 @@ export function slugify(s: string): string {
     .replace(/(^-+|-+$)/g, '');
 }
 
-const SLUG_A_NOTA = new Map<string, Nota>(NOTAS.map((n) => [slugify(n.titulo), n]));
-const ID_A_NOTA = new Map<string, Nota>(NOTAS.map((n) => [n.id, n]));
-
-export function notaSlug(n: Nota): string {
-  return slugify(n.titulo);
-}
-
 /** Ruta canónica del artículo. */
-export function notaHref(n: Nota): string {
-  return `/revista/${slugify(n.titulo)}`;
+export function notaHref(n: Pick<Nota, 'slug'>): string {
+  return `/revista/${n.slug}`;
 }
 
-export function getNotaBySlug(slug: string): Nota | undefined {
-  return SLUG_A_NOTA.get(slug);
+/** Notas de la misma sección, sin la actual. `todas` = lista ya cargada. */
+export function relacionadasDe(nota: Nota, todas: Nota[], max = 3): Nota[] {
+  return todas.filter((n) => n.kicker === nota.kicker && n.slug !== nota.slug).slice(0, max);
 }
 
-export function getNotaById(id: string): Nota | undefined {
-  return ID_A_NOTA.get(id);
-}
+const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+const MES_A_NUM: Record<string, string> = Object.fromEntries(MESES.map((m, i) => [m, String(i + 1).padStart(2, '0')]));
 
-const MESES: Record<string, string> = {
-  ene: '01', feb: '02', mar: '03', abr: '04', may: '05', jun: '06',
-  jul: '07', ago: '08', sep: '09', oct: '10', nov: '11', dic: '12',
-};
-
-/** "05 sep 2026" -> "2026-09-05" (para datePublished en JSON-LD y sitemap). */
+/** Acepta "05 sep 2026" o "2026-09-05" y devuelve ISO "2026-09-05" (para datePublished / sitemap). */
 export function fechaISO(fecha: string): string {
-  const m = fecha.trim().toLowerCase().match(/^(\d{1,2})\s+([a-z]{3})\w*\.?\s+(\d{4})$/);
+  const f = fecha.trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(f)) return f.slice(0, 10);
+  const m = f.toLowerCase().match(/^(\d{1,2})\s+([a-z]{3})\w*\.?\s+(\d{4})$/);
   if (!m) return new Date().toISOString().slice(0, 10);
   const [, d, mon, y] = m;
-  return `${y}-${MESES[mon] ?? '01'}-${d.padStart(2, '0')}`;
+  return `${y}-${MES_A_NUM[mon] ?? '01'}-${d.padStart(2, '0')}`;
 }
 
-export function relacionadas(nota: Nota, max = 3): Nota[] {
-  return NOTAS.filter((n) => n.kicker === nota.kicker && n.id !== nota.id).slice(0, max);
+/** ISO "2026-09-05" -> "05 sep 2026" para mostrar en la firma/tarjetas. */
+export function fechaDisplay(fecha: string): string {
+  const m = fecha.trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return fecha;
+  const [, y, mm, d] = m;
+  return `${d} ${MESES[Number(mm) - 1] ?? mm} ${y}`;
+}
+
+// --- Datos semilla / fallback ------------------------------------------------
+
+/** Las 26 notas originales, con su slug calculado. Semilla de `revista_notas`
+ *  y fallback de las páginas públicas si la tabla está vacía o falla. */
+export const NOTAS_SEED: Nota[] = NOTAS_RAW.map((n) => ({ ...n, slug: slugify(n.titulo) }));
+
+export function seedBySlug(slug: string): Nota | undefined {
+  return NOTAS_SEED.find((n) => n.slug === slug);
+}
+
+export function seedById(id: string): Nota | undefined {
+  return NOTAS_SEED.find((n) => n.id === id);
 }

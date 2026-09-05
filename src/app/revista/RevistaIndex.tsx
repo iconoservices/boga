@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
 import {
-  NOTAS, SECCIONES, EDICION, EN_ESTA_EDICION, VERDE, VERDE_CLARO,
+  SECCIONES, EDICION, EN_ESTA_EDICION, VERDE, VERDE_CLARO,
   notaHref, type Nota,
 } from '@/lib/revista';
 
@@ -63,7 +63,7 @@ function ListaNotas({ notas, conLead = false }: { notas: Nota[]; conLead?: boole
   );
 }
 
-export default function RevistaIndex() {
+export default function RevistaIndex({ notas }: { notas: Nota[] }) {
   const [seccion, setSeccion] = useState<string>('Portada');
 
   const irASeccion = (s: string) => {
@@ -76,11 +76,11 @@ export default function RevistaIndex() {
   };
 
   const tabs = ['Portada', ...SECCIONES];
-  const portada = NOTAS.find((n) => n.portada)!;
-  const destacados = NOTAS.filter((n) => n.destacado && !n.portada).slice(0, 3);
+  const portada = notas.find((n) => n.portada) ?? notas[0];
+  const destacados = notas.filter((n) => n.destacado && n.slug !== portada?.slug).slice(0, 3);
   const notasSeccion = seccion === 'Portada'
-    ? NOTAS.filter((n) => !n.portada)
-    : NOTAS.filter((n) => n.kicker === seccion);
+    ? notas.filter((n) => n.slug !== portada?.slug)
+    : notas.filter((n) => n.kicker === seccion);
 
   return (
     <>
@@ -129,7 +129,7 @@ export default function RevistaIndex() {
 
         <div className="max-w-[1100px] mx-auto">
 
-          {seccion === 'Portada' && (
+          {seccion === 'Portada' && portada && (
             <>
               {/* Nota de portada */}
               <Link href={notaHref(portada)} className="block w-full text-left px-container-margin lg:px-8 pt-8 group">

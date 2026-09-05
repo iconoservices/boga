@@ -4,14 +4,10 @@ import React from 'react';
 import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
-import { getNotaById, notaHref } from '@/lib/revista';
 
 // Cada tarjeta de "Qué visitar" abre su artículo en la Revista por su URL
-// canónica (/revista/<slug>). Fallback a /revista si el id no existe.
-const notaHrefById = (id: string) => {
-  const n = getNotaById(id);
-  return n ? notaHref(n) : '/revista';
-};
+// canónica (/revista/<slug>). Los slugs son los de las notas semilla de
+// sección "Rutas" (src/lib/revista.ts).
 
 // Guía de Pucallpa — la página "recién llegas, esto es lo que necesitas
 // saber". Los accesos rápidos mandan a su portal; abajo, lo práctico que no
@@ -34,49 +30,49 @@ const ACCESOS = [
 // no un link externo — son preview/miniatura de esa nota.
 const QUE_VISITAR = [
   {
-    notaId: 'r1',
+    slug: 'laguna-de-yarinacocha-la-joya-de-pucallpa',
     titulo: 'Laguna de Yarinacocha',
     desc: 'La joya de Pucallpa: paseo en bote, artesanía shipibo-conibo y las mejores puestas de sol.',
     img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Laguna_de_Yarinacocha_desde_un_bote_01.jpg/500px-Laguna_de_Yarinacocha_desde_un_bote_01.jpg',
   },
   {
-    notaId: 'r2',
+    slug: 'plaza-de-armas-el-punto-de-partida-del-centro',
     titulo: 'Plaza de Armas',
     desc: 'El corazón de la ciudad, punto de partida para conocer el centro a pie.',
     img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Plaza_de_Armas_de_Pucallpa%2C_Per%C3%BA.jpg/500px-Plaza_de_Armas_de_Pucallpa%2C_Per%C3%BA.jpg',
   },
   {
-    notaId: 'r3',
+    slug: 'catedral-virgen-de-la-inmaculada',
     titulo: 'Catedral Virgen de la Inmaculada',
     desc: 'El templo principal de Pucallpa, frente a la Plaza de Armas.',
     img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/La_catedral_de_Pucallpa_2022.jpg/500px-La_catedral_de_Pucallpa_2022.jpg',
   },
   {
-    notaId: 'r4',
+    slug: 'museo-agustin-rivas-vasquez-el-picasso-de-la-amazonia',
     titulo: 'Museo Agustín Rivas Vásquez',
     desc: 'Esculturas en madera del "Picasso de la Amazonía", tallada de raíces y troncos.',
     img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Pucallpa1.JPG/500px-Pucallpa1.JPG',
   },
   {
-    notaId: 'r5',
+    slug: 'plaza-del-reloj-publico-el-punto-de-encuentro-clasico',
     titulo: 'Plaza del Reloj Público',
     desc: 'Punto de encuentro clásico, con el reloj más reconocible de la ciudad.',
     img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Reloj_publico_pucallpa_2022.jpg/500px-Reloj_publico_pucallpa_2022.jpg',
   },
   {
-    notaId: 'r6',
+    slug: 'parque-natural-de-pucallpa-fauna-amazonica-de-cerca',
     titulo: 'Parque Natural y Museo Regional',
     desc: 'Fauna amazónica de cerca y piezas de la historia de Ucayali, en un mismo lugar.',
     img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Puente_central_del_Parque_Natural_de_Pucallpa.jpg/500px-Puente_central_del_Parque_Natural_de_Pucallpa.jpg',
   },
   {
-    notaId: 'r7',
+    slug: 'laguna-cashibococha-la-alternativa-tranquila-a-yarinacocha',
     titulo: 'Laguna Cashibococha',
     desc: 'Más tranquila que Yarinacocha, ideal para pasar el día en familia.',
     img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Cashibo_cocha.jpg/500px-Cashibo_cocha.jpg',
   },
   {
-    notaId: 'r8',
+    slug: 'usko-ayar-el-taller-de-pablo-amaringo-hoy-escuela-de-pintura',
     titulo: 'Casa "Usko Ayar" de Pablo Amaringo',
     desc: 'El taller del maestro del arte visionario shipibo, hoy escuela de pintura.',
     img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Hanna_jon_2002_amaringo_pablo.jpg/500px-Hanna_jon_2002_amaringo_pablo.jpg',
@@ -172,8 +168,8 @@ export default function GuiaPage() {
           <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1 -mx-container-margin px-container-margin lg:mx-0 lg:px-0 lg:grid lg:grid-cols-4" style={{ scrollbarWidth: 'none' }}>
             {QUE_VISITAR.map((l) => (
               <Link
-                key={l.notaId}
-                href={notaHrefById(l.notaId)}
+                key={l.slug}
+                href={`/revista/${l.slug}`}
                 className="group shrink-0 w-[220px] lg:w-auto bg-white border border-surface-container-highest shadow-sm hover:shadow-md hover:border-primary/30 transition-all overflow-hidden flex flex-col"
               >
                 <img src={l.img} alt={l.titulo} className="w-full h-32 object-cover" loading="lazy" />

@@ -26,6 +26,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Falta el archivo o la carpeta destino' }, { status: 400 });
   }
 
+  // Las fotos de la Revista solo las suben redactores / superadmin. Se pregunta
+  // con el token de quien llama (misma función que la RLS).
+  if (folder.split('/')[0] === 'revista') {
+    const supabaseComoUsuario = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { global: { headers: { Authorization: `Bearer ${token}` } } }
+    );
+    const { data: puede } = await supabaseComoUsuario.rpc('puede_editar_revista');
+    if (puede !== true) {
+      return NextResponse.json({ error: 'No autorizado para la Revista' }, { status: 403 });
+    }
+  }
+
   const ext = file.name.split('.').pop() || 'bin';
   const key = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
   const buffer = Buffer.from(await file.arrayBuffer());
