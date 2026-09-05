@@ -3,7 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { esSuperadmin } from '@/lib/superadmin';
+import { useEsSuperadmin } from '@/lib/superadmin';
 
 // Mismo candado que /superadmin. No es contenido de producto, son notas
 // internas de estrategia — por eso vive fuera de cualquier ruta que un
@@ -38,9 +38,9 @@ const GANCHOS = [
 ];
 
 export default function NotasInternas() {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
+  const { esSuperadmin: isSuperadmin, cargando: loading } = useEsSuperadmin();
   const router = useRouter();
-  const isSuperadmin = esSuperadmin(user?.email);
 
   React.useEffect(() => {
     if (loading) return;

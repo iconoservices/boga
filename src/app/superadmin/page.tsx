@@ -12,7 +12,7 @@ import { supabase } from '@/lib/supabase';
 import { COLOR_PRESETS, getColorPreset } from '@/lib/colorPresets';
 import { extractThemeFromImageClient } from '@/lib/extractThemeClient';
 import { uploadFile } from '@/lib/uploadClient';
-import { SUPERADMIN_EMAILS } from '@/lib/superadmin';
+import { useEsSuperadmin } from '@/lib/superadmin';
 import type { StoreTheme } from '@/lib/templates.config';
 
 // Correos con acceso al superadmin. A diferencia de /admin (donde cualquier
@@ -610,9 +610,9 @@ function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
 }
 
 export default function AdminPage() {
-  const { user, loading, signOut } = useAuth();
+  const { user, signOut } = useAuth();
+  const { esSuperadmin: isSuperadmin, cargando: loading } = useEsSuperadmin();
   const router = useRouter();
-  const isSuperadmin = !!user?.email && SUPERADMIN_EMAILS.includes(user.email);
 
   React.useEffect(() => {
     if (loading) return;
@@ -632,6 +632,7 @@ export default function AdminPage() {
 }
 
 function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
+  const { user: authUser } = useAuth();
   const [activeTab, setActiveTab] = useState<'tiendas' | 'categorias' | 'usuarios' | 'personalizacion' | 'facturacion' | 'mapa' | 'paquetes' | 'plantillas' | 'modulos'>('tiendas');
   const [search, setSearch] = useState('');
   
@@ -898,24 +899,29 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     });
   }, []);
 
-  // Un usuario real (con cuenta) por fila: primero los superadmins (email en
-  // el codigo), despues una fila por cada tienda que administra cada quien, y
-  // por ultimo quien ya tiene cuenta pero todavia no administra ninguna
-  // tienda (se registro solo, o vos lo invitaste y ya entro).
+  // Un usuario real (con cuenta) por fila: primero vos como superadmin,
+  // despues una fila por cada tienda que administra cada quien, y por ultimo
+  // quien ya tiene cuenta pero todavia no administra ninguna tienda (se
+  // registro solo, o vos lo invitaste y ya entro).
+  //
+  // Solo aparece TU fila de superadmin: quien manda es public.is_superadmin()
+  // en la base, y esa funcion contesta por el usuario actual, no devuelve la
+  // lista. Es el precio de no tener los correos escritos en el navegador. Si
+  // algun dia hay mas de un superadmin, conviene moverlos a una tabla.
   const derivedUsers = React.useMemo<UserRow[]>(() => {
     const rows: UserRow[] = [];
     const idsConFila = new Set<string>();
 
-    SUPERADMIN_EMAILS.forEach((email) => {
-      const p = profiles.find((pr) => pr.email === email);
-      rows.push({ id: p?.id || email, email, name: p?.name || 'Super Admin', role: 'super_admin', store: '', status: p ? 'activo' : 'pendiente' });
-      if (p) idsConFila.add(p.id);
-    });
+    if (authUser?.id && authUser.email) {
+      const p = profiles.find((pr) => pr.id === authUser.id);
+      rows.push({ id: authUser.id, email: authUser.email, name: p?.name || 'Super Admin', role: 'super_admin', store: '', status: 'activo' });
+      idsConFila.add(authUser.id);
+    }
 
     Object.entries(storeOwners).forEach(([slug, ownerId]) => {
       if (!ownerId) return;
+      if (ownerId === authUser?.id) return; // ya esta arriba como superadmin
       const p = profiles.find((pr) => pr.id === ownerId);
-      if (p && SUPERADMIN_EMAILS.includes(p.email)) return; // ya esta arriba como superadmin
       rows.push({ id: ownerId, email: p?.email || ownerId, name: p?.name || p?.email || '(sin perfil todavía)', role: 'store_admin', store: slug, status: 'activo' });
       idsConFila.add(ownerId);
     });
@@ -923,12 +929,12 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     // Tiene cuenta pero ninguna tienda todavia: aca es donde vos lo "ascendes"
     // con Editar, sin mandarle nada de nuevo.
     profiles.forEach((p) => {
-      if (idsConFila.has(p.id) || SUPERADMIN_EMAILS.includes(p.email)) return;
+      if (idsConFila.has(p.id)) return;
       rows.push({ id: p.id, email: p.email, name: p.name || p.email, role: 'store_admin', store: '', status: 'activo' });
     });
 
     return rows;
-  }, [profiles, storeOwners]);
+  }, [profiles, storeOwners, authUser]);
 
   // Paquetes state
   const [packages, setPackages] = useState<Package[]>([
@@ -1116,8 +1122,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     if (!editingUser) return;
     if (editingUser.role === 'super_admin') {
       alert(
-        'El acceso de Super Admin sale de una lista fija en el código (SUPERADMIN_EMAILS), no de esta tabla.\n\n' +
-        'Para dar acceso total a otra persona hay que agregar su correo ahí y volver a desplegar — avisame y lo hago.'
+        'El acceso de Super Admin sale de la función is_superadmin() en la base de datos, no de esta tabla.\n\n' +
+        'Para dar acceso total a otra persona hay que editar esa función en el SQL editor de Supabase — avisame y lo hago.'
       );
       return;
     }
@@ -1144,7 +1150,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   // la cuenta de auth.users desde el navegador sin la service_role key.
   const handleRevokeAccess = async (u: UserRow) => {
     if (u.role === 'super_admin') {
-      alert('El acceso de Super Admin sale del código (SUPERADMIN_EMAILS), no se puede revocar desde acá.');
+      alert('El acceso de Super Admin sale de is_superadmin() en la base de datos, no se puede revocar desde acá.');
       return;
     }
     if (!confirm(`¿Quitarle a ${u.email} el acceso a "${stores[u.store]?.name || u.store}"?`)) return;

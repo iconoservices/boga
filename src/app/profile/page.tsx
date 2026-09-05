@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import AppHeader from '@/components/AppHeader';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { esSuperadmin } from '@/lib/superadmin';
+import { useEsSuperadmin } from '@/lib/superadmin';
 
 // Placeholder mientras se resuelve la sesión / mientras redirige a /login.
 // El contenido real de la página sale de la cuenta autenticada, no de esto.
@@ -60,7 +60,7 @@ export default function ProfilePage() {
   }, [authLoading, authUser, router]);
 
   const initials = (user.name || '?').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-  const isSuperadmin = esSuperadmin(authUser?.email);
+  const { esSuperadmin: isSuperadmin } = useEsSuperadmin();
 
   const handleSave = () => {
     setUser(prev => ({ ...prev, ...editForm }));
