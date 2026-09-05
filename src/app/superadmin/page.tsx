@@ -2500,14 +2500,36 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                                 >
                                   visibility
                                 </Link>
-                                <button 
+                                <button
                                   onClick={() => handleOpenEditStore(store)}
                                   className="material-symbols-outlined text-[18px] text-[#545f73] hover:text-[#0058be] transition-colors p-1 hover:bg-[#e6e7f2] rounded"
                                   title="Editar Tienda"
                                 >
                                   edit
                                 </button>
-                                <button 
+                                <button
+                                  onClick={() => {
+                                    // Si el dueño actual ya está arriba como fila propia (un
+                                    // admin de tienda, o vos mismo si te asignaste la tienda a
+                                    // tu cuenta) lo edita; si no, precarga la invitación con
+                                    // esta tienda ya elegida — sirve tanto para asignar de
+                                    // cero como para reemplazar a un dueño que sos vos mismo.
+                                    const owner = derivedUsers.find((u) => u.store === store.slug);
+                                    if (owner && owner.role !== 'super_admin') {
+                                      setEditingUser({ ...owner });
+                                      setEditingUserOriginalStore(store.slug);
+                                    } else {
+                                      setInviteStore(store.slug);
+                                      setInviteRole('store_admin');
+                                    }
+                                    setActiveTab('usuarios');
+                                  }}
+                                  className="material-symbols-outlined text-[18px] text-[#545f73] hover:text-[#0058be] transition-colors p-1 hover:bg-[#e6e7f2] rounded"
+                                  title={derivedUsers.some((u) => u.store === store.slug && u.role !== 'super_admin') ? 'Editar Administrador' : 'Asignar Administrador'}
+                                >
+                                  manage_accounts
+                                </button>
+                                <button
                                   onClick={() => handleDeleteStore(store.slug)}
                                   className="material-symbols-outlined text-[18px] text-[#545f73] hover:text-red-600 transition-colors p-1 hover:bg-red-50 rounded"
                                   title="Eliminar Tienda"
