@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { esSuperadmin } from '@/lib/superadmin';
 
 // service_role: nunca al navegador. Solo esta ruta la usa, para poder
 // generar el link de invitación sin depender de que Supabase mande el
@@ -14,8 +13,16 @@ export async function POST(request: Request) {
   const token = (request.headers.get('authorization') || '').replace('Bearer ', '');
   if (!token) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
-  const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
-  if (userError || !esSuperadmin(user?.email)) {
+  // Quién es superadmin lo decide public.is_superadmin() en la base, la misma
+  // función que usan las políticas RLS — no una lista aparte acá. Se pregunta
+  // con el token de quien llama, así que un token inválido también da false.
+  const supabaseComoUsuario = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { global: { headers: { Authorization: `Bearer ${token}` } } }
+  );
+  const { data: esSuperadmin, error: authError } = await supabaseComoUsuario.rpc('is_superadmin');
+  if (authError || esSuperadmin !== true) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
   }
 
