@@ -918,9 +918,11 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       idsConFila.add(authUser.id);
     }
 
+    // Una fila por cada tienda asignada, incluidas las que te asignaste a vos
+    // mismo como superadmin: si no, la tienda parece sin dueño de nuevo (el
+    // botón vuelve a decir "Asignar" en vez de "Editar") apenas te la asignás.
     Object.entries(storeOwners).forEach(([slug, ownerId]) => {
       if (!ownerId) return;
-      if (ownerId === authUser?.id) return; // ya esta arriba como superadmin
       const p = profiles.find((pr) => pr.id === ownerId);
       rows.push({ id: ownerId, email: p?.email || ownerId, name: p?.name || p?.email || '(sin perfil todavía)', role: 'store_admin', store: slug, status: 'activo' });
       idsConFila.add(ownerId);
@@ -935,6 +937,28 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
 
     return rows;
   }, [profiles, storeOwners, authUser]);
+
+  // Cuentas que ya existen (se registraron solo, o vos las invitaste y ya
+  // entraron) pero todavía no administran ninguna tienda. Sirve para poder
+  // asignarle una tienda a alguien que ya tiene cuenta, en vez de mandarle
+  // siempre una invitación nueva por correo.
+  // Incluye también al superadmin: puede querer administrar una tienda
+  // puntual desde el /admin normal, aparte de su acceso total en /superadmin.
+  const usuariosSinTienda = React.useMemo(
+    () => derivedUsers.filter((u) => !u.store),
+    [derivedUsers]
+  );
+
+  const [asignandoExistente, setAsignandoExistente] = useState(false);
+  const handleAsignarExistente = async (usuarioId: string) => {
+    if (!assignStoreSlug || !usuarioId) return;
+    setAsignandoExistente(true);
+    const { error } = await supabase.from('stores').update({ user_id: usuarioId }).eq('slug', assignStoreSlug);
+    setAsignandoExistente(false);
+    if (error) { alert('No se pudo asignar: ' + error.message); return; }
+    setStoreOwners((prev) => ({ ...prev, [assignStoreSlug]: usuarioId }));
+    setAssignStoreSlug(null);
+  };
 
   // Paquetes state
   const [packages, setPackages] = useState<Package[]>([
@@ -3829,6 +3853,34 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                 >
                   <span className="material-symbols-outlined text-[16px]">close</span>
                 </button>
+              </div>
+              {usuariosSinTienda.length > 0 && (
+                <div className="px-4 pt-4">
+                  <label className="block text-[10px] font-bold text-[#424754] mb-1.5 uppercase tracking-wide">
+                    O elegí una cuenta que ya existe
+                  </label>
+                  <div className="flex gap-2">
+                    <select
+                      value=""
+                      onChange={(e) => e.target.value && handleAsignarExistente(e.target.value)}
+                      disabled={asignandoExistente}
+                      className="flex-1 bg-[#f2f3fd] border border-[#c2c6d6] rounded-lg px-3 py-2 text-xs font-bold outline-none focus:border-[#0058be] focus:bg-white transition-colors disabled:opacity-50"
+                    >
+                      <option value="">Seleccionar cuenta sin tienda...</option>
+                      {usuariosSinTienda.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.role === 'super_admin' ? `Tú (Super Admin) — ${u.email}` : `${u.name} — ${u.email}`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <p className="text-[10px] text-[#424754] mt-1.5">Cuentas ya registradas que todavía no administran ninguna tienda.</p>
+                </div>
+              )}
+              <div className="px-4 pb-1 pt-3">
+                <div className="border-t border-[#ecedf7] pt-3 text-[10px] font-bold text-[#424754] uppercase tracking-wide text-center">
+                  {usuariosSinTienda.length > 0 ? 'O invitar a alguien nuevo' : 'Invitar a alguien nuevo'}
+                </div>
               </div>
               {camposInvitacion(false)}
             </>

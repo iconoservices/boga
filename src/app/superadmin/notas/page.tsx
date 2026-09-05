@@ -26,6 +26,28 @@ const PERFILES = [
   },
 ];
 
+// Historias que se escribieron para probar el formato de Revista, con
+// nombres y personas inventados. Se sacaron de la Revista pública (donde
+// se mezclaban con las notas reales) y quedan acá para adaptarlas con gente
+// real, o usarlas de inspiración para notas nuevas con esa misma temática.
+const IDEAS_HISTORIAS = [
+  {
+    titulo: 'El último maestro del bote de madera en Yarinacocha',
+    tema: 'Un artesano que sigue construyendo peque-peques de madera a mano, oficio que se está perdiendo frente a los de fibra de vidrio.',
+    personajeInventado: 'Aurelio Sangama',
+  },
+  {
+    titulo: 'Un fotógrafo detrás del foco: aficiones, sueños y recuerdos',
+    tema: 'Perfil de estilo de vida de un fotógrafo local: sus viajes, rutinas y lo que hay detrás de sus fotos.',
+    personajeInventado: 'Stefano Klima',
+  },
+  {
+    titulo: 'La señora que alimenta a media cuadra desde su ventana',
+    tema: 'Una vecina que cocina de más y comparte comida con quien pase con hambre — solidaridad de barrio, sin que sea "caridad" para ella.',
+    personajeInventado: 'doña Rosa',
+  },
+];
+
 const GANCHOS = [
   {
     trigger: 'Si el extranjero ve en el itinerario: "Paso 1: Ir a Yarinacocha"',
@@ -108,6 +130,22 @@ export default function NotasInternas() {
               </li>
             ))}
           </ol>
+        </section>
+
+        <section className="flex flex-col gap-4">
+          <h2 className="text-lg font-bold">📝 Ideas de historias (con personajes inventados — sacadas de la Revista pública)</h2>
+          <p className="text-white/70 text-sm">
+            Se escribieron para probar el formato "artículo" de Revista, pero el personaje central es inventado — no es honesto dejarlas mezcladas con notas reales. Quedan acá como inspiración: se pueden adaptar con una persona real, o reescribir el tema con datos reales sin un protagonista específico.
+          </p>
+          <div className="flex flex-col gap-3">
+            {IDEAS_HISTORIAS.map((h) => (
+              <div key={h.titulo} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                <div className="font-semibold">{h.titulo}</div>
+                <div className="text-white/60 text-sm mt-1">{h.tema}</div>
+                <div className="text-white/40 text-xs mt-2 italic">Personaje inventado en el borrador original: {h.personajeInventado}</div>
+              </div>
+            ))}
+          </div>
         </section>
       </div>
     </div>

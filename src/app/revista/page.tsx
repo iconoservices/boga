@@ -34,42 +34,6 @@ type Nota = {
 
 const NOTAS: Nota[] = [
   {
-    id: 'portada', portada: true, destacado: true, kicker: 'Crónica',
-    titulo: 'El último maestro del bote de madera en Yarinacocha',
-    dek: 'Don Aurelio tiene 74 años y las manos llenas de astillas. En su taller a orillas de la laguna todavía se construyen peque-peques como hace medio siglo — pero ya nadie quiere aprender el oficio.',
-    autor: 'Redacción Boga', fecha: '02 sep 2026', lectura: '6 min',
-    img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1400&q=80',
-    cita: { texto: 'Acá el río manda. Si el río sube, tu día cambia. Si el río baja, también. Uno aprende a vivir preguntándole al agua.', autor: 'Aurelio Sangama' },
-    cuerpo: [
-      'El taller de don Aurelio no tiene letrero. Es un techo de calamina sostenido por horcones de topa, a diez metros del agua, donde el olor a aserrín compite con el de la resina de copaiba que él mismo hierve para sellar las junturas. Lleva 52 años haciendo botes y todavía no usa un solo plano: "el bote está en la madera, uno solo lo saca".',
-      'Cuando empezó había nueve talleres como el suyo alrededor de la laguna. Hoy queda uno. Los peque-peques de fibra de vidrio llegan de Pucallpa armados y más baratos, y los jóvenes prefieren un trabajo con sueldo fijo. Don Aurelio lo entiende, pero le duele: "una lancha de madera bien hecha te dura treinta años; la de fibra, con suerte diez, y no la puedes remendar".',
-      'Su hija menor le insiste en que grabe videos, que enseñe por internet. Él se ríe. Pero esta semana, por primera vez, dejó que un muchacho del barrio se quedara a mirar toda la mañana. "Si aprende aunque sea a poner la quilla, ya algo queda", dice, y vuelve a cepillar.',
-    ],
-  },
-  {
-    id: 'n1', destacado: true, kicker: 'Lifestyle',
-    titulo: 'Stefano Klima detrás del foco: sus aficiones, sueños y recuerdos',
-    dek: 'El fotógrafo ítalo-peruano nos abre su universo personal: de sus viajes a la Toscana e Islandia a su afición por el Real Madrid, su gata Mera y el deporte.',
-    autor: 'Redacción', fecha: '02 sep 2026', lectura: '7 min',
-    img: 'https://images.unsplash.com/photo-1554048612-b6a482bc67e5?w=1200&q=80',
-    cuerpo: [
-      'Dice que la fotografía lo encontró a él y no al revés. A los diecinueve años cambió una cámara por una bicicleta y no volvió a soltarla. Desde entonces ha retratado bodas en Tarapoto, campañas en Lima y, últimamente, la vida cotidiana de Pucallpa, que lo tiene "obsesionado con la luz de las cinco de la tarde".',
-      'Fuera del trabajo, Stefano es un hombre de rutinas: corre seis kilómetros antes del amanecer, ve al Real Madrid con la misma taza de café desde hace años y viaja siempre con un cuaderno donde no escribe, dibuja. Islandia y la Toscana son sus dos polos: "el hielo y el vino, no necesito más".',
-      'Su compañera de estudio es Mera, una gata negra que aparece en la mitad de sus historias de Instagram. "Es mi editora —bromea—. Si se sienta sobre una foto impresa, esa foto no va".',
-    ],
-  },
-  {
-    id: 'n2', kicker: 'Lifestyle',
-    titulo: 'La técnica para lograr una piel luminosa en el calor de la selva',
-    dek: 'Cómo potenciar la luz natural de la piel con hidratación, activos y una rutina simple que sí se puede sostener con humedad y 34 grados.',
-    autor: 'M. Vela', fecha: '02 sep 2026', lectura: '5 min',
-    img: 'https://images.unsplash.com/photo-1596704017254-9b121068fb31?w=1200&q=80',
-    cuerpo: [
-      'La primera regla en clima húmedo es contraintuitiva: menos capas, no más. Un limpiador suave en gel, un sérum ligero con vitamina C por la mañana y protector solar reaplicado al mediodía hacen más que cualquier mascarilla pesada que se derrita a media tarde.',
-      'La luminosidad, dicen las dermatólogas consultadas, es sobre todo hidratación y constancia. El ácido hialurónico sobre la piel todavía húmeda, dormir con el ventilador lejos de la cara y tomar agua real —no gaseosa— cambian el rostro en dos semanas. Los "glow" instantáneos son maquillaje; esto es rutina.',
-    ],
-  },
-  {
     id: 'n3', destacado: true, kicker: 'Vida Social',
     titulo: 'La Feria de Emprendedores toma el bulevar de Yarinacocha',
     dek: 'La municipalidad distrital organiza ferias periódicas en el bulevar turístico, con decenas de stands de negocios locales.',
@@ -82,7 +46,7 @@ const NOTAS: Nota[] = [
     ],
   },
   {
-    id: 'n4', destacado: true, kicker: 'Actualidad',
+    id: 'n4', portada: true, destacado: true, kicker: 'Actualidad',
     titulo: 'El bulevar de Yarinacocha: la megaobra que cambió la cara del malecón',
     dek: 'S/ 144 millones de inversión, 6 canchas de fútbol de extensión y un muelle turístico a orillas de la laguna.',
     autor: 'Redacción Boga', fecha: '31 ago 2026', lectura: '4 min',
@@ -118,7 +82,7 @@ const NOTAS: Nota[] = [
     ],
   },
   {
-    id: 'n7', kicker: 'Naturaleza',
+    id: 'n7', destacado: true, kicker: 'Naturaleza',
     titulo: 'Boquerón del Padre Abad: el cañón de casi 70 cascadas',
     dek: 'A un par de horas de Pucallpa, el Velo de la Novia cae 101 metros en dos saltos. La Ducha del Diablo la descubrió un misionero en 1757.',
     autor: 'Redacción Boga', fecha: '28 ago 2026', lectura: '4 min',
@@ -135,21 +99,11 @@ const NOTAS: Nota[] = [
     titulo: 'Fin de semana barato: Pucallpa a Contamana en lancha',
     dek: 'Cuánto cuesta, dónde dormir y qué llevar para bajar el río sin gastar de más.',
     autor: 'J. Ríos', fecha: '27 ago 2026', lectura: '7 min',
-    img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1200&q=80',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Amazon_River_Taxi.jpg/500px-Amazon_River_Taxi.jpg',
+    imgCredito: 'Foto: Wikimedia Commons',
     cuerpo: [
       'La lancha rápida sale del puerto de Pucallpa por la mañana y hace el tramo en unas seis horas; el "deslizador" lento cuesta la mitad pero se toma el doble de tiempo. Presupuesto realista para dos días: pasaje ida y vuelta, hospedaje sencillo y comida, todo por debajo de 180 soles por persona.',
       'En Contamana no te pierdas los baños termales de Agua Caliente y el mirador del cerro. Llevar efectivo (los cajeros fallan seguido), repelente y una muda extra: en el río siempre te mojas más de lo que crees.',
-    ],
-  },
-  {
-    id: 'n9', kicker: 'Vida Social',
-    titulo: 'La señora que alimenta a media cuadra desde su ventana',
-    dek: 'Hace doce años que doña Rosa cocina de más "por si alguien pasa con hambre". La conocimos.',
-    autor: 'R. Isuiza', fecha: '26 ago 2026', lectura: '5 min',
-    img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=1200&q=80',
-    cuerpo: [
-      'La rutina de doña Rosa no cambió desde 2014: cocina una olla grande, aparta lo de su familia y el resto lo deja en la ventana con un cartel de cartón que dice "sírvete". Empezó con los recicladores que pasaban de madrugada; ahora hay días en que reparte veinte platos.',
-      'No acepta que la llamen caridad. "Yo cocino igual, solo pongo más agua y más plátano", dice. Los vecinos se organizaron sin decírselo: uno le manda arroz, otro la posta de pollo, la bodega de la esquina le fía el aceite. La cuadra entera come de esa ventana.',
     ],
   },
   {
@@ -189,7 +143,19 @@ const NOTAS: Nota[] = [
     ],
   },
   {
-    id: 'r1', kicker: 'Rutas',
+    id: 'n2', kicker: 'Lifestyle',
+    titulo: 'Cómo cuidar la piel en un clima cálido y húmedo',
+    dek: 'Menos capas, no más: hidratación y protector solar bien aplicados rinden más que una rutina cargada en climas como el de Pucallpa.',
+    autor: 'Redacción Boga', fecha: '02 sep 2026', lectura: '4 min',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Person_applies_cream_for_skin_from_a_jar_closeup.jpg/500px-Person_applies_cream_for_skin_from_a_jar_closeup.jpg',
+    imgCredito: 'Foto: Wikimedia Commons',
+    cuerpo: [
+      'En clima húmedo, la regla general es contraintuitiva: menos capas de producto, no más. Un limpiador suave, un sérum ligero por la mañana y protector solar reaplicado al mediodía suelen rendir más que una rutina cargada que termina derritiéndose con el calor.',
+      'La constancia importa más que los productos caros: hidratarse bien, tomar suficiente agua y dormir con buena ventilación ayudan más que cualquier "efecto inmediato" de maquillaje. No hay atajos mágicos — es rutina sostenida en el tiempo.',
+    ],
+  },
+  {
+    id: 'r1', destacado: true, kicker: 'Rutas',
     titulo: 'Laguna de Yarinacocha: la joya de Pucallpa',
     dek: 'Paseo en bote, artesanía shipibo-conibo y las mejores puestas de sol de la ciudad.',
     autor: 'Redacción Boga', fecha: '05 sep 2026', lectura: '3 min',
@@ -514,13 +480,13 @@ function RevistaConParams() {
 
         {/* Masthead — paleta del logo: verde selva + dorado + madera */}
         <div className="text-white border-b-4" style={{ backgroundColor: VERDE, borderColor: ORO }}>
-          <div className="max-w-[1100px] mx-auto px-container-margin lg:px-8 py-6 lg:py-8">
+          <div className="max-w-[1100px] mx-auto px-container-margin lg:px-8 py-4 lg:py-5">
             <button onClick={() => irASeccion('Portada')} className="text-left">
-              <h1 className="font-headline-lg font-extrabold tracking-tight leading-[0.92] text-[11vw] sm:text-5xl lg:text-6xl">
+              <h1 className="font-headline-lg font-extrabold tracking-tight leading-[0.92] text-[7vw] sm:text-3xl lg:text-4xl">
                 Yo Soy <span style={{ color: '#f2d489' }}>de la Selva</span>
               </h1>
             </button>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
               <span className="font-label-md text-[10px] px-2.5 py-1 rounded-sm shadow-sm" style={{ backgroundColor: '#6b4a2e', color: '#f4e7d3' }}>
                 Únete y sé un selvático de verdad
               </span>
