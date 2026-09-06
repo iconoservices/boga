@@ -5,7 +5,7 @@ import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
 
-import { supabase } from '@/lib/supabase';
+import { fetchCatalogo } from '@/lib/catalogo';
 
 export default function Explore() {
   const [activeCategory, setActiveCategory] = useState('Todas');
@@ -22,7 +22,7 @@ export default function Explore() {
   useEffect(() => {
     const fetchRealData = async () => {
       // 1. Fetch dynamic stores
-      const { data: dbStoresData } = await supabase.from('stores').select('*');
+      const { stores: dbStoresData, products: dbProductsData } = await fetchCatalogo();
       
       const allStores: Record<string, any> = {};
       if (dbStoresData) {
@@ -68,8 +68,8 @@ export default function Explore() {
       );
 
       // 2. Fetch products
-      const { data, error } = await supabase.from('products').select('*');
-      if (data && !error && data.length > 0) {
+      const data = dbProductsData;
+      if (data && data.length > 0) {
         const filteredData = data.filter((p: any) => allStores[p.store] !== undefined);
         const formattedProducts = filteredData.map((p: any) => {
           return {

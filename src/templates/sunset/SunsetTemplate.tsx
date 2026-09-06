@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { StoreConfig } from '@/lib/stores.config';
-import { supabase } from '@/lib/supabase';
+import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { debeMostrarDemo } from '@/lib/demo';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
@@ -90,10 +90,8 @@ export default function SunsetTemplate({ store }: SunsetTemplateProps) {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('store', store.slug);
+      const data = await fetchProductosDeTienda(store.slug);
+      const error = null;
       
       if (data && !error) {
         const dbProducts = data.map((p) => {

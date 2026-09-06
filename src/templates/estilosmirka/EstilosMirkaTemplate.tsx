@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
-import { supabase } from '@/lib/supabase';
+import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import { estrellasDe } from '../shared/tokens';
@@ -29,10 +29,8 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
   useEffect(() => {
     const fetchSupabaseProducts = async () => {
       try {
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .eq('store', store.slug);
+        const data = await fetchProductosDeTienda(store.slug);
+        const error = null;
         
         if (data && !error && data.length > 0) {
           const formatted = data.map((p) => ({

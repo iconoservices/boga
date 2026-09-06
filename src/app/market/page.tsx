@@ -6,7 +6,7 @@ import AppHeader from '@/components/AppHeader';
 import HomeFloatingActions from '@/components/HomeFloatingActions';
 import { useCart } from '@/context/CartContext';
 
-import { supabase } from '@/lib/supabase';
+import { fetchCatalogo } from '@/lib/catalogo';
 
 const BANNERS_RAW = [
   { id: 'deliv',  img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1200", tag: null,            title1: 'DELIVERY', title2: 'GRATIS',        sub: 'En tu primera orden' },
@@ -44,7 +44,7 @@ export default function Home() {
   useEffect(() => {
     const fetchRealData = async () => {
       // 1. Fetch dynamic stores
-      const { data: dbStoresData } = await supabase.from('stores').select('*');
+      const { stores: dbStoresData, products: dbProductsData } = await fetchCatalogo();
       
       const allStores: Record<string, any> = {};
       if (dbStoresData) {
@@ -80,8 +80,8 @@ export default function Home() {
       );
 
       // 2. Fetch products
-      const { data, error } = await supabase.from('products').select('*');
-      if (data && !error && data.length > 0) {
+      const data = dbProductsData;
+      if (data && data.length > 0) {
         const filteredData = data.filter((p: any) => allStores[p.store] !== undefined);
         const formattedProducts = filteredData.map((p: any) => {
           const storeDef = allStores[p.store];
@@ -269,7 +269,7 @@ export default function Home() {
   useEffect(() => {
     const fetchRealData = async () => {
       // 1. Fetch dynamic stores
-      const { data: dbStoresData } = await supabase.from('stores').select('*');
+      const { stores: dbStoresData, products: dbProductsData } = await fetchCatalogo();
       const allStores: Record<string, any> = {};
       if (dbStoresData) {
         dbStoresData.forEach((s: any) => {
@@ -288,8 +288,8 @@ export default function Home() {
       }
 
       // 2. Fetch products
-      const { data, error } = await supabase.from('products').select('*');
-      if (data && !error && data.length > 0) {
+      const data = dbProductsData;
+      if (data && data.length > 0) {
         const filteredData = data.filter((p: any) => allStores[p.store] !== undefined);
         // Build real products array using allStores
         const formattedProducts = filteredData.map((p: any) => {

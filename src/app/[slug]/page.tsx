@@ -5,6 +5,8 @@ import { notFound } from 'next/navigation';
 import StoreRenderer from './StoreRenderer';
 import { supabase } from '@/lib/supabase';
 import { Vibrant } from 'node-vibrant/node';
+import { unstable_cache } from 'next/cache';
+import { cache } from 'react';
 
 export const dynamic = 'force-dynamic';
 
@@ -87,7 +89,7 @@ async function extractThemeFromImage(imageUrl: string): Promise<StoreTheme | nul
   }
 }
 
-async function getDynamicStore(slug: string) {  
+async function cargarTienda(slug: string) {
   try {
     const { data: dbStore } = await supabase
       .from('stores')
@@ -138,9 +140,22 @@ async function getDynamicStore(slug: string) {
   } catch (err) {
     console.error('Error fetching dynamic store:', err);
   }
-  
+
   return null;
 }
+
+// Cacheado: aunque la ruta sea dinámica (usa ?preview), repetir visitas a la
+// misma tienda no vuelven a consultar Supabase ni a re-descargar la portada
+// para extraerle los colores. Un bot que crawlea = 1 consulta cada 5 min por
+// tienda, no una por request. `fresco` salta el caché para la vista previa
+// de una tienda recién creada.
+const cargarTiendaCacheada = unstable_cache(cargarTienda, ['tienda-dinamica'], {
+  revalidate: 300,
+  tags: ['stores'],
+});
+const getDynamicStore = cache((slug: string, fresco = false) =>
+  fresco ? cargarTienda(slug) : cargarTiendaCacheada(slug),
+);
 
 export async function generateMetadata({ params }: Omit<Props, 'searchParams'>) {
   const { slug } = await params;
@@ -169,7 +184,7 @@ export async function generateMetadata({ params }: Omit<Props, 'searchParams'>) 
 export default async function StorePage({ params, searchParams }: Props) {
   const { slug } = await params;
   const { preview } = await searchParams;
-  let store = await getDynamicStore(slug);
+  let store = await getDynamicStore(slug, preview === 'true');
   
   if (!store) {
     if (preview === 'true') {

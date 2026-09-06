@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
-import { supabase } from '@/lib/supabase';
+import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { getDemoProducts } from '@/lib/templates.config';
 import { debeMostrarDemo } from '@/lib/demo';
 import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
@@ -44,10 +44,8 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
   // vacia; la decision viaja en los datos de la tienda, no en localStorage.
   useEffect(() => {
     const cargar = async () => {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('store', store.slug);
+      const data = await fetchProductosDeTienda(store.slug);
+      const error = null;
 
       const deLaBase: Producto[] = data && !error
         ? data.map((p) => ({

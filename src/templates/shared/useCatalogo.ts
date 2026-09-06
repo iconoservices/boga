@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import type { StoreConfig } from '@/lib/stores.config';
-import { supabase } from '@/lib/supabase';
+import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { getDemoProducts } from '@/lib/templates.config';
 import { debeMostrarDemo } from '@/lib/demo';
 import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
@@ -42,12 +42,9 @@ export function useCatalogo(store: StoreConfig) {
       categorias.find((c) => c.name === nombre)?.href ?? (nombre || '').toLowerCase();
 
     const cargar = async () => {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('store', store.slug);
+      const data = await fetchProductosDeTienda(store.slug);
 
-      const deLaBase: Producto[] = data && !error
+      const deLaBase: Producto[] = data
         ? data.map((p) => ({
             id: String(p.id),
             name: p.name,

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
-import { supabase } from '@/lib/supabase';
+import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { debeMostrarDemo } from '@/lib/demo';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 
@@ -36,10 +36,8 @@ export default function NaturaTemplate({ store }: NaturaTemplateProps) {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('store', store.slug);
+      const data = await fetchProductosDeTienda(store.slug);
+      const error = null;
       
       const dbProducts = data && !error ? data.map((p) => {
         const categoryObj = store.categories.find(c => c.name === p.category);
