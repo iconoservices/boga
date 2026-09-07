@@ -177,6 +177,28 @@ const CHOFERES: Chofer[] = [
 
 const ICONO: Record<string, string> = { Mototaxi: 'electric_rickshaw', Auto: 'directions_car', Moto: 'two_wheeler' };
 
+// Planes fijos — placeholder. El directorio de choferes sigue gratis; estos
+// planes por suscripción son cómo Boga va a sostener el servicio sin cobrarle
+// comisión al chofer. Todavía sin motor de reservas ni cobro.
+const PLANES_TRANSPORTE = [
+  {
+    id: 'hogar',
+    nombre: 'Plan Hogar',
+    icon: 'escalator_warning',
+    tagline: 'Para las familias con viajes de siempre',
+    desc: 'Recojo del colegio, ida y vuelta al trabajo, la feria del sábado — con el mismo chofer de confianza, agendado por mes.',
+    modo: 'Membresía mensual · precio cerrado',
+  },
+  {
+    id: 'premium',
+    nombre: 'Transporte Premium',
+    icon: 'car_rental',
+    tagline: 'Auto privado, chofer dedicado',
+    desc: 'Vehículo cerrado con aire, chofer asignado y viajes programados o a pedido. Para el aeropuerto, una reunión, o cuando querés llegar impecable.',
+    modo: 'Por viaje o por hora',
+  },
+];
+
 function DriverCard({ c }: { c: Chofer }) {
   const waText = encodeURIComponent(
     `Hola ${c.nombre.split(' ')[0]}, lo/la vi en Boga · Taxi Seguro. ¿Está libre para una carrera?\nOrigen: \nDestino: `
@@ -284,6 +306,7 @@ function DriverCard({ c }: { c: Chofer }) {
 export default function TaxiSeguro() {
   const { cartCount, setIsCartOpen } = useCart();
   const [filtro, setFiltro] = useState<Filtro>('Todos');
+  const [interesado, setInteresado] = useState(false);
 
   const lista = filtro === 'Todos' ? CHOFERES : CHOFERES.filter((c) => c.tipo === filtro);
   const cuenta = (f: Filtro) => (f === 'Todos' ? CHOFERES.length : CHOFERES.filter((c) => c.tipo === f).length);
@@ -356,6 +379,45 @@ export default function TaxiSeguro() {
             <DriverCard key={c.id} c={c} />
           ))}
         </div>
+
+        {/* Planes fijos — próximamente */}
+        <section className="rounded-2xl border border-surface-container-highest bg-white shadow-[0_15px_15px_rgba(0,0,0,0.04)] p-5 lg:p-6 flex flex-col gap-4 mt-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="font-headline-md text-on-surface text-lg lg:text-xl">Planes para moverte todos los días</h2>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-label-md text-[10px] uppercase tracking-wider" style={{ backgroundColor: VERDE_SOFT, color: VERDE }}>
+              <span className="material-symbols-outlined text-[12px]">schedule</span>
+              Próximamente
+            </span>
+          </div>
+          <p className="text-secondary font-body-md text-sm max-w-[62ch]">
+            El directorio de choferes es y va a seguir siendo gratis. Aparte, pronto vas a poder
+            contratar planes fijos — así Boga sostiene el servicio sin cobrarle comisión al chofer.
+          </p>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {PLANES_TRANSPORTE.map((p) => (
+              <div key={p.id} className="rounded-xl border border-surface-container-highest p-4 flex flex-col gap-2">
+                <span className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: VERDE_SOFT, color: VERDE }}>
+                  <span className="material-symbols-outlined text-[22px]">{p.icon}</span>
+                </span>
+                <span className="font-headline-sm text-on-surface text-[15px]">{p.nombre}</span>
+                <span className="font-label-md text-[11px] text-secondary">{p.tagline}</span>
+                <p className="font-body-md text-secondary text-[13px] leading-snug">{p.desc}</p>
+                <span className="font-label-md text-[11px] mt-auto pt-1" style={{ color: VERDE }}>{p.modo}</span>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <button
+              onClick={() => setInteresado(true)}
+              disabled={interesado}
+              className="px-4 py-2 rounded-full text-white font-label-md text-[12px] active:scale-95 transition-transform disabled:opacity-70"
+              style={{ backgroundColor: VERDE }}
+            >
+              {interesado ? '¡Anotado! Te avisamos 👌' : 'Me interesa un plan'}
+            </button>
+            <span className="font-label-md text-[10px] uppercase tracking-wider text-secondary/50">Contenido de muestra</span>
+          </div>
+        </section>
 
         <p className="text-secondary/70 font-body-md text-[11px] text-center pt-2">
           Boga solo conecta pasajeros y choferes verificados. La tarifa se acuerda directamente entre las partes.
