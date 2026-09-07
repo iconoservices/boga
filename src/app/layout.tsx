@@ -93,7 +93,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `(function(){try{
               var p=window.location.pathname;
-              var routes=['/market','/servicios','/taxi-seguro','/alquileres','/eventos','/sorteos','/revista','/guia'];
+              var routes=['/market','/pension','/servicios','/taxi-seguro','/alquileres','/eventos','/sorteos','/revista','/guia'];
               var show=p==='/'||routes.some(function(r){return p.indexOf(r)===0;});
               if(show){document.documentElement.dataset.sidebar=localStorage.getItem('boga_sidebar_open')==='1'?'open':'rail';}
             }catch(e){}})();`,

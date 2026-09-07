@@ -17,7 +17,7 @@ import { HUBS as TABS, isHubActive } from '@/lib/hubs';
 // del body (abajo) se apagaba y prendía de golpe: se veía como si la barra
 // "se cerrara y volviera a abrir" en cada cambio de pestaña.
 const LS_KEY = 'boga_sidebar_open';
-const SIDEBAR_ROUTES = ['/market', '/servicios', '/taxi-seguro', '/alquileres', '/eventos', '/sorteos', '/revista', '/guia'];
+const SIDEBAR_ROUTES = ['/market', '/pension', '/servicios', '/taxi-seguro', '/alquileres', '/eventos', '/sorteos', '/revista', '/guia'];
 
 export default function MarketTabs() {
   const pathname = usePathname();
