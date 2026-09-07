@@ -116,7 +116,33 @@ CREATE TABLE IF NOT EXISTS public.store_requests (
   description TEXT,
   status TEXT DEFAULT 'pending'
 );
+-- Columnas agregadas después del launch:
+--   city     — slug de ciudad (ver src/lib/ciudades.ts). Mide demanda B2B por plaza.
+--   interest — qué quiere el negocio: 'tienda' (solo su tienda propia),
+--              'marketplace' (aparecer en Boga Market) o 'ambos'.
+ALTER TABLE public.store_requests ADD COLUMN IF NOT EXISTS city TEXT;
+ALTER TABLE public.store_requests ADD COLUMN IF NOT EXISTS interest TEXT;
 CREATE INDEX IF NOT EXISTS store_requests_status_idx ON public.store_requests (status);
+CREATE INDEX IF NOT EXISTS store_requests_city_idx ON public.store_requests (city);
+
+-- ── Lista de espera por ciudad ──────────────────────────────────────────────
+-- Cuando alguien abre Boga Market en una ciudad donde todavía no operamos, en
+-- vez de mostrar vacío pedimos su contacto acá. Sirve para saber a dónde
+-- expandir (cuánta gente y qué negocios piden Boga en cada plaza).
+--   role — 'comprador' (usuario final) o 'negocio' (dueño de negocio).
+CREATE TABLE IF NOT EXISTS public.city_interest (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  city TEXT NOT NULL,
+  region TEXT,
+  role TEXT NOT NULL DEFAULT 'comprador',
+  email TEXT,
+  whatsapp TEXT,
+  business_name TEXT,
+  note TEXT,
+  source TEXT
+);
+CREATE INDEX IF NOT EXISTS city_interest_city_idx ON public.city_interest (city);
 
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -129,6 +155,7 @@ ALTER TABLE public.stores          ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders          ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.store_requests  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.city_interest   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profiles        ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================
@@ -279,6 +306,23 @@ USING (public.is_superadmin());
 
 CREATE POLICY "store_requests: solo superadmin gestiona"
 ON public.store_requests FOR UPDATE
+USING (public.is_superadmin());
+
+-- city_interest: mismo patrón — cualquiera se anota, solo el superadmin lee.
+DROP POLICY IF EXISTS "city_interest: cualquiera se anota"   ON public.city_interest;
+DROP POLICY IF EXISTS "city_interest: solo superadmin lee"   ON public.city_interest;
+DROP POLICY IF EXISTS "city_interest: solo superadmin gestiona" ON public.city_interest;
+
+CREATE POLICY "city_interest: cualquiera se anota"
+ON public.city_interest FOR INSERT
+WITH CHECK (true);
+
+CREATE POLICY "city_interest: solo superadmin lee"
+ON public.city_interest FOR SELECT
+USING (public.is_superadmin());
+
+CREATE POLICY "city_interest: solo superadmin gestiona"
+ON public.city_interest FOR UPDATE
 USING (public.is_superadmin());
 
 -- ============================================================

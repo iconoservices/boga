@@ -41,7 +41,7 @@ export default function AppFooter() {
           <span className="font-label-md text-on-surface uppercase font-bold tracking-wider text-xs">Empresa</span>
           <nav className="flex flex-col gap-2">
             <a className="font-body-md text-secondary hover:text-primary transition-colors duration-200" href="/negocios">Vende con Boga</a>
-            <a className="font-body-md text-secondary hover:text-primary transition-colors duration-200" href="/vende-con-boga">Crear tu tienda</a>
+            <a className="font-body-md text-secondary hover:text-primary transition-colors duration-200" href="/negocios/registro">Crear tu tienda</a>
             <a className="font-body-md text-secondary hover:text-primary transition-colors duration-200" href="#">Carreras</a>
           </nav>
         </div>

@@ -7,6 +7,7 @@ import HomeFloatingActions from '@/components/HomeFloatingActions';
 import { useCart } from '@/context/CartContext';
 
 import { fetchCatalogo } from '@/lib/catalogo';
+import { MarketCityBanner } from '@/components/CityWaitlist';
 
 const BANNERS_RAW = [
   { id: 'deliv',  img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1200", tag: null,            title1: 'DELIVERY', title2: 'GRATIS',        sub: 'En tu primera orden' },
@@ -414,6 +415,10 @@ export default function Home() {
       />
 
       <HomeFloatingActions />
+
+      <div className="max-w-[1440px] mx-auto w-full">
+        <MarketCityBanner />
+      </div>
 
       <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-4 lg:gap-6 mt-4 lg:mt-5 pb-12">
         {/* Banner + Explorar Categorías — lado a lado (mitad y mitad) en escritorio */}

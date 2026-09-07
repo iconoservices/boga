@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import SectionNav from '@/components/SectionNav';
+import { CitySwitcher } from '@/components/CityWaitlist';
 
 interface AppHeaderProps {
   showSearch?: boolean;
@@ -70,16 +71,7 @@ export default function AppHeader({
         <div className="flex items-center justify-between">
           {/* Address Selection — o wordmark en pantallas de lectura */}
           {showLocation ? (
-            <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
-              <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>location_on</span>
-              <div className="flex flex-col min-w-0">
-                <span className="font-label-md text-label-md text-secondary leading-none mb-0.5">Entregar en</span>
-                <div className="flex items-center gap-1 cursor-pointer">
-                  <span className="font-label-md text-label-md text-on-surface font-bold truncate">Calle Las Palmeras 123</span>
-                  <span className="material-symbols-outlined text-sm text-secondary">expand_more</span>
-                </div>
-              </div>
-            </div>
+            <CitySwitcher variant="mobile" />
           ) : (
             <Link href="/" className="flex items-center gap-2 min-w-0 flex-1 pr-2">
               <img src="/logo-mark.svg" alt="" className="w-8 h-8 shrink-0" />
@@ -146,13 +138,7 @@ export default function AppHeader({
           <Link href="/" className="flex items-center shrink-0" aria-label="Boga — Inicio">
             <img src="/logo.svg" alt="Boga" className="h-8 w-auto" />
           </Link>
-          {showLocation && (
-            <div className="flex items-center gap-1.5 text-secondary group cursor-pointer">
-              <span className="material-symbols-outlined text-primary text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>location_on</span>
-              <span className="font-label-md text-label-md group-hover:text-primary transition-colors">Calle Las Palmeras 123</span>
-              <span className="material-symbols-outlined text-sm text-secondary group-hover:text-primary transition-colors">expand_more</span>
-            </div>
-          )}
+          {showLocation && <CitySwitcher variant="desktop" />}
         </div>
 
         {/* Middle Right: Centered Search Bar */}

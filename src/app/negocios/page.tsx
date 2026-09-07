@@ -1,36 +1,55 @@
+// Landing B2B única de Boga. Marketing puro; el formulario está en su propia
+// página (/negocios/registro). Los CTA linkean ahí con ?i= para pre-seleccionar
+// "¿Qué te interesa?".
+//
+// Estructura: hero → 2 caminos (tienda propia / Boga Market) → cómo funciona →
+// soluciones → precios. `/vende-con-boga` redirige a /negocios/registro.
+
+import React from 'react';
 import Link from 'next/link';
 
-// Landing B2B (/negocios): la puerta de entrada para dueños de negocio que
-// quieren crear su tienda. Separada del lado consumidor ("/", /market…).
-// A "/negocios" se entra desde el footer o un link "Vende con Boga".
+const REGISTRO = '/negocios/registro';
 
-const FEATURES = [
+const CAMINOS = [
   {
+    id: 'tienda',
     icon: 'storefront',
-    title: 'Tu catálogo propio',
-    body: 'Tu propia página de pedidos (bogahub.app/tu-negocio) para compartir en WhatsApp o Instagram. Es tuya: gestionas tus productos, tus pedidos y tus clientes sin depender de nadie.',
+    title: 'Tu tienda propia',
+    body: 'Tu página de pedidos (bogahub.app/tu-negocio) para compartir en WhatsApp o Instagram. Es tuya.',
+    bullets: [
+      'Catálogo con tus productos, precios y fotos',
+      'Pedidos directo a tu WhatsApp — sin comisión',
+      'Funciona en cualquier ciudad',
+    ],
+    cta: 'Quiero mi tienda',
+    featured: false,
   },
   {
-    icon: 'extension',
-    title: 'Módulos que sumas cuando creces',
-    body: 'Empieza con lo básico y agrega fidelización, facturación electrónica, inventario inteligente o notificaciones a medida que tu negocio lo necesite.',
-  },
-  {
-    icon: 'military_tech',
-    title: 'Fidelización real',
-    body: 'Puntos, niveles y notificaciones automáticas para que tus clientes vuelvan — sin que tengas que acordarte de mandarles nada.',
-  },
-  {
+    id: 'marketplace',
     icon: 'travel_explore',
-    title: 'Más gente te encuentra',
-    body: 'Activa el Marketplace de Boga cuando quieras y tus productos aparecen también frente a miles de clientes nuevos que no te conocían todavía.',
+    title: 'Vende en Boga Market',
+    body: 'Tu negocio aparece en el marketplace de tu ciudad, junto a otros comercios locales, frente a gente que todavía no te conoce.',
+    bullets: [
+      'Clientes de tu ciudad te descubren',
+      'Lo activas y lo apagas cuando quieras',
+      'Comisión solo en pedidos que llegan por el Market',
+    ],
+    cta: 'Quiero vender en el Market',
+    featured: true,
   },
 ];
 
 const STEPS = [
-  { n: '1', title: 'Subes tu catálogo', body: 'Fotos, precios y tu WhatsApp de pedidos. 10 minutos y ya tienes tu link propio.' },
-  { n: '2', title: 'Activas módulos si quieres', body: 'Fidelización, facturación, Marketplace — solo lo que tu negocio necesite hoy.' },
-  { n: '3', title: 'Empiezas a vender', body: 'Comparte tu link o deja que te encuentren en el Marketplace de Boga.' },
+  { n: '1', title: 'Cuéntanos de tu negocio', body: 'Llenas el formulario: qué vendes, dónde y tu WhatsApp. 2 minutos.' },
+  { n: '2', title: 'Lo montamos contigo', body: 'Armamos tu catálogo y tu link propio. Sin código, sin complicarte.' },
+  { n: '3', title: 'Empiezas a vender', body: 'Compartes tu link y —si quieres— activas el Market para que te descubran.' },
+];
+
+const FEATURES = [
+  { icon: 'storefront',   title: 'Tu catálogo propio',           body: 'Tu propia página de pedidos para compartir donde quieras. Gestionas tus productos, pedidos y clientes sin depender de nadie.' },
+  { icon: 'extension',    title: 'Módulos que sumas al crecer',  body: 'Empieza con lo básico y agrega fidelización, facturación electrónica, inventario o notificaciones cuando lo necesites.' },
+  { icon: 'military_tech',title: 'Fidelización real',            body: 'Puntos, niveles y notificaciones automáticas para que tus clientes vuelvan — sin que tengas que acordarte de nada.' },
+  { icon: 'travel_explore',title: 'Más gente de tu ciudad te encuentra', body: 'Activa el Marketplace de Boga cuando quieras y tus productos aparecen frente a clientes de tu zona que aún no te conocían.' },
 ];
 
 export default function NegociosPage() {
@@ -42,16 +61,24 @@ export default function NegociosPage() {
           <Link href="/" className="flex items-center gap-2">
             <img src="/logo-mark.svg" alt="" className="w-8 h-8 shrink-0" />
             <span className="font-headline-sm text-headline-sm text-on-background">Boga</span>
+            <span className="hidden sm:inline text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">Negocios</span>
           </Link>
           <div className="hidden md:flex items-center gap-6">
+            <a href="#caminos" className="font-label-md text-label-md text-secondary hover:text-primary transition-colors">Cómo vender</a>
             <a href="#soluciones" className="font-label-md text-label-md text-secondary hover:text-primary transition-colors">Soluciones</a>
             <a href="#precios" className="font-label-md text-label-md text-secondary hover:text-primary transition-colors">Precios</a>
-            <a href="#como-funciona" className="font-label-md text-label-md text-secondary hover:text-primary transition-colors">Recursos</a>
           </div>
           <nav className="flex items-center gap-3">
+            <Link
+              href={REGISTRO}
+              className="hidden sm:block font-label-md text-label-md text-secondary hover:text-primary transition-colors"
+            >
+              Registrar negocio
+            </Link>
             <Link href="/login?redirect=/admin" className="hidden sm:block font-label-md text-label-md text-secondary hover:text-primary transition-colors">
               Iniciar sesión
             </Link>
+            {/* Mantiene conectado el lado negocios con la app de consumo. */}
             <Link
               href="/"
               className="font-label-md text-label-md px-4 py-2 rounded-full border border-surface-container-highest text-on-background hover:border-primary hover:text-primary transition-colors"
@@ -65,12 +92,10 @@ export default function NegociosPage() {
       <main>
         {/* Hero */}
         <section className="relative max-w-[1200px] mx-auto px-container-margin pt-10 md:pt-14 pb-10 md:pb-14">
-          {/* Decorative blurred blobs */}
           <div className="absolute -top-24 -right-24 w-[420px] h-[420px] bg-primary/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
           <div className="absolute top-40 -left-32 w-[320px] h-[320px] bg-tertiary/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
 
           <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 items-center">
-            {/* Hero visual: arriba en mobile, a la derecha en desktop */}
             <div className="relative order-1 lg:order-2">
               <div className="relative rounded-[1.5rem] lg:rounded-[2rem] overflow-hidden shadow-2xl aspect-[16/10] lg:aspect-[4/3] lg:max-w-[440px] lg:ml-auto lg:rotate-2">
                 <img
@@ -99,12 +124,13 @@ export default function NegociosPage() {
                 Digitaliza tu negocio con <span className="text-primary">Boga</span>
               </h1>
               <p className="text-secondary font-body-lg text-base md:text-lg max-w-[480px]">
-                Tu propio catálogo online, sistema de pedidos y fidelización de clientes.
-                Y si quieres, más gente nueva te encuentra a través de nuestro Marketplace.
+                Tu propio catálogo online, pedidos por WhatsApp y fidelización de clientes.
+                Y cuando Boga Market abra en tu ciudad, entras al grupo de comercios locales
+                donde te encuentra gente nueva.
               </p>
               <div className="flex flex-col sm:flex-row items-center gap-3 mt-1">
                 <Link
-                  href="/vende-con-boga"
+                  href={REGISTRO}
                   className="bg-primary text-on-primary font-bold text-sm px-7 py-3.5 rounded-full shadow-[0_8px_24px_-6px_rgba(184,19,14,0.5)] hover:opacity-90 hover:shadow-[0_10px_28px_-6px_rgba(184,19,14,0.6)] transition-all active:scale-95"
                 >
                   Crear tu tienda
@@ -121,26 +147,76 @@ export default function NegociosPage() {
         </section>
 
         <div className="max-w-[1200px] mx-auto px-container-margin">
+          {/* Dos caminos */}
+          <section id="caminos" className="scroll-mt-24 pb-14 md:pb-16">
+            <div className="text-center max-w-[560px] mx-auto mb-10">
+              <h2 className="font-headline-md text-2xl md:text-3xl font-extrabold text-on-background">Dos formas de vender con Boga</h2>
+              <p className="text-secondary font-body-md text-sm md:text-base mt-2">Elige por dónde empezar. Puedes tener las dos.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {CAMINOS.map((c) => (
+                <div
+                  key={c.id}
+                  className={`relative bg-surface-container-lowest rounded-2xl p-6 flex flex-col gap-3 ${
+                    c.featured ? 'border-[1.5px] border-primary' : 'border border-surface-container-highest'
+                  }`}
+                >
+                  {c.featured && (
+                    <span className="absolute top-4 right-4 text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md uppercase tracking-wide">
+                      Más alcance
+                    </span>
+                  )}
+                  <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-primary">{c.icon}</span>
+                  </div>
+                  <h3 className="font-headline-sm text-headline-sm text-on-background">{c.title}</h3>
+                  <p className="text-secondary font-body-md text-sm leading-relaxed">{c.body}</p>
+                  <ul className="flex flex-col gap-2 my-1">
+                    {c.bullets.map((b) => (
+                      <li key={b} className="flex gap-2 text-sm text-on-background/80">
+                        <span className="material-symbols-outlined text-primary text-[18px] shrink-0">check</span>
+                        <span>{b}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href={`${REGISTRO}?i=${c.id}`}
+                    className={`w-full mt-auto py-3 rounded-xl font-bold text-sm text-center transition-all active:scale-95 ${
+                      c.featured
+                        ? 'bg-primary text-on-primary hover:opacity-90'
+                        : 'border-[1.5px] border-primary text-primary hover:bg-primary/5'
+                    }`}
+                  >
+                    {c.cta}
+                  </Link>
+                </div>
+              ))}
+            </div>
+            <p className="text-secondary/80 font-body-md text-xs text-center mt-4">
+              ¿Ya tienes tu tienda con Boga? El Market es un módulo que activas desde tu panel — no hace falta registrarte de nuevo.
+            </p>
+          </section>
+
           {/* Cómo funciona */}
           <section id="como-funciona" className="scroll-mt-24 pb-14 md:pb-16">
             <div className="text-center max-w-[560px] mx-auto mb-10">
-              <h2 className="font-headline-md text-2xl md:text-3xl font-extrabold text-on-background">Cómo funciona Boga</h2>
+              <h2 className="font-headline-md text-2xl md:text-3xl font-extrabold text-on-background">Cómo funciona</h2>
               <p className="text-secondary font-body-md text-sm md:text-base mt-2">Tres pasos simples para llevar tu negocio al siguiente nivel digital.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {STEPS.map((s) => (
-              <div key={s.n} className="flex flex-col gap-3">
-                <div className="w-9 h-9 rounded-full bg-on-background text-background font-headline-sm text-headline-sm flex items-center justify-center">
-                  {s.n}
+              {STEPS.map((s) => (
+                <div key={s.n} className="flex flex-col gap-3">
+                  <div className="w-9 h-9 rounded-full bg-on-background text-background font-headline-sm text-headline-sm flex items-center justify-center">
+                    {s.n}
+                  </div>
+                  <h3 className="font-headline-sm text-headline-sm text-on-background">{s.title}</h3>
+                  <p className="text-secondary font-body-md text-sm leading-relaxed">{s.body}</p>
                 </div>
-                <h3 className="font-headline-sm text-headline-sm text-on-background">{s.title}</h3>
-                <p className="text-secondary font-body-md text-sm leading-relaxed">{s.body}</p>
-              </div>
-            ))}
+              ))}
             </div>
           </section>
 
-          {/* Features */}
+          {/* Soluciones */}
           <section id="soluciones" className="scroll-mt-24 grid grid-cols-1 sm:grid-cols-2 gap-4 pb-14 md:pb-16">
             {FEATURES.map((f) => (
               <div
@@ -156,7 +232,7 @@ export default function NegociosPage() {
             ))}
           </section>
 
-          {/* Pricing teaser */}
+          {/* Precios teaser */}
           <section id="precios" className="scroll-mt-24 relative bg-gradient-to-br from-inverse-surface to-[#1c1e1f] text-inverse-on-surface rounded-3xl p-8 md:p-12 flex flex-col items-center text-center gap-4 mb-14 md:mb-16 overflow-hidden">
             <div className="absolute -right-16 -top-16 w-56 h-56 bg-primary/20 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
             <div className="absolute -left-16 -bottom-16 w-56 h-56 bg-white/5 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
@@ -167,12 +243,14 @@ export default function NegociosPage() {
               de gente que te descubrió a través del Marketplace de Boga.
             </p>
             <Link
-              href="/vende-con-boga"
+              href={REGISTRO}
               className="relative bg-primary text-on-primary font-bold text-sm px-7 py-3.5 rounded-full mt-2 shadow-[0_8px_24px_-6px_rgba(184,19,14,0.5)] hover:opacity-90 transition-opacity active:scale-95"
             >
               Quiero mi catálogo
             </Link>
           </section>
+
+          <div className="pb-16 md:pb-24" />
         </div>
       </main>
 
