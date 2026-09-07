@@ -9,6 +9,7 @@ export default function AppFooter() {
     pathname === '/' ||
     pathname.startsWith('/market') ||
     pathname.startsWith('/pension') ||
+    pathname.startsWith('/pandero') ||
     pathname.startsWith('/explore') ||
     pathname.startsWith('/orders') ||
     pathname.startsWith('/profile') ||

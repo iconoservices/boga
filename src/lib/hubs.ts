@@ -13,6 +13,7 @@ export const HUBS: Hub[] = [
   { href: '/alquileres',  label: 'Alquileres',  icon: 'bed' },
   { href: '/eventos',     label: 'Eventos',     long: 'Eventos & Agenda', icon: 'celebration' },
   { href: '/sorteos',     label: 'Sorteos',     icon: 'confirmation_number' },
+  { href: '/pandero',     label: 'Pandero',     long: 'Pandero · ahorro en grupo', icon: 'savings' },
   { href: '/revista',     label: 'Revista',     long: 'Yo Soy de la Selva', icon: 'menu_book' },
   { href: '/negocios',    label: 'Negocios',    long: 'Para Negocios', icon: 'work', apart: true },
 ];
