@@ -12,8 +12,19 @@ import { useCart } from '@/context/CartContext';
 
 type Filtro = 'Todos' | 'Mototaxi' | 'Auto' | 'Moto';
 
-const VERDE = '#0b7a48';
-const VERDE_SOFT = '#d7f0e2';
+// Paleta propia de Taxi Seguro (verde/cian, distinta del rojo Boga). El
+// `themeVars` se aplica en el <div> raíz y redefine los tokens `--color-*`
+// para todo el subárbol, así `bg-primary`, `text-primary`, `text-tertiary`,
+// etc. salen en verde solo en esta página.
+const VERDE = '#00875A';       // primary
+const VERDE_SOFT = '#d3f1e4';  // tint claro del primary
+
+const themeVars = {
+  '--color-primary': '#00875A',
+  '--color-primary-container': '#00A56C',
+  '--color-tertiary': '#00E599',
+  '--color-tertiary-container': '#00C983',
+} as React.CSSProperties;
 
 type Chofer = {
   id: string;
@@ -312,7 +323,7 @@ export default function TaxiSeguro() {
   const cuenta = (f: Filtro) => (f === 'Todos' ? CHOFERES.length : CHOFERES.filter((c) => c.tipo === f).length);
 
   return (
-    <>
+    <div style={themeVars}>
       <AppHeader showSearch={false} cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
 
       {/* Banda cívica */}
@@ -423,6 +434,6 @@ export default function TaxiSeguro() {
           Boga solo conecta pasajeros y choferes verificados. La tarifa se acuerda directamente entre las partes.
         </p>
       </main>
-    </>
+    </div>
   );
 }
