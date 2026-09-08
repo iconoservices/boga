@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
+import { fetchChoferes, type Chofer } from '@/lib/drivers';
 
 // Taxi Seguro: por ahora es SOLO UN DIRECTORIO de choferes verificados
 // (mototaxi / auto / moto). No hay reserva ni pago dentro de la app todavía —
@@ -26,26 +27,9 @@ const themeVars = {
   '--color-tertiary-container': '#00C983',
 } as React.CSSProperties;
 
-type Chofer = {
-  id: string;
-  nombre: string;
-  tipo: Exclude<Filtro, 'Todos'>;
-  comite: string;
-  experiencia: string;
-  placa: string;
-  modelo: string;
-  sellos: { label: string; icon: string; fuerte?: boolean }[];
-  ruta: string;
-  precio: string;
-  paradero: string;
-  resena: string;
-  resenaAutor: string;
-  tel: string;
-  img: string;
-  vehImg: string;
-};
-
-const CHOFERES: Chofer[] = [
+// Seed: se muestra mientras la tabla `drivers` esté vacía. Apenas haya filas
+// activas en Supabase (vía /api/drivers), estas dejan de usarse.
+const CHOFERES_SEED: Chofer[] = [
   {
     id: 'c1',
     nombre: 'Luz Marina Rengifo',
@@ -318,9 +302,16 @@ export default function TaxiSeguro() {
   const { cartCount, setIsCartOpen } = useCart();
   const [filtro, setFiltro] = useState<Filtro>('Todos');
   const [interesado, setInteresado] = useState(false);
+  const [choferes, setChoferes] = useState<Chofer[]>(CHOFERES_SEED);
 
-  const lista = filtro === 'Todos' ? CHOFERES : CHOFERES.filter((c) => c.tipo === filtro);
-  const cuenta = (f: Filtro) => (f === 'Todos' ? CHOFERES.length : CHOFERES.filter((c) => c.tipo === f).length);
+  useEffect(() => {
+    fetchChoferes().then((rows) => {
+      if (rows.length > 0) setChoferes(rows);
+    });
+  }, []);
+
+  const lista = filtro === 'Todos' ? choferes : choferes.filter((c) => c.tipo === filtro);
+  const cuenta = (f: Filtro) => (f === 'Todos' ? choferes.length : choferes.filter((c) => c.tipo === f).length);
 
   return (
     <div style={themeVars}>
@@ -347,6 +338,15 @@ export default function TaxiSeguro() {
             <p className="text-secondary font-body-md text-sm">
               Choferes verificados por la comunidad Boga. Los contactas directo por llamada o WhatsApp — sin tarifas ocultas ni comisiones a intermediarios.
             </p>
+            <a
+              href="/taxi-seguro/registro"
+              className="inline-flex items-center gap-1.5 w-fit mt-1 font-label-md text-[12px] font-bold hover:underline"
+              style={{ color: VERDE }}
+            >
+              <span className="material-symbols-outlined text-[16px]">badge</span>
+              ¿Manejas mototaxi, auto o moto? Postúlate al padrón
+              <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
+            </a>
           </div>
           <div className="grid grid-cols-3 gap-3 bg-white rounded-2xl border border-surface-container-highest shadow-[0_15px_15px_rgba(0,0,0,0.04)] p-4 lg:w-[360px] shrink-0">
             {[

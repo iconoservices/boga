@@ -539,3 +539,85 @@ USING (
   public.is_superadmin()
   OR (autor_id = auth.uid() AND estado <> 'publicada')
 );
+
+-- ============================================================
+-- 12. TAXI SEGURO  (directorio de choferes + postulaciones)
+-- ============================================================
+-- `drivers`: el directorio curado de /taxi-seguro. Antes era un array
+-- hardcodeado en la página. Lectura pública SOLO de status='activo'; escritura
+-- solo superadmin (desde /superadmin). Leer siempre por endpoint cacheado
+-- (/api/drivers) — nunca select('*') desde el cliente (ver egress).
+CREATE TABLE IF NOT EXISTS public.drivers (
+  id           UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at   TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  nombre       TEXT NOT NULL,
+  tipo         TEXT NOT NULL DEFAULT 'Mototaxi',   -- Mototaxi | Auto | Moto
+  comite       TEXT,
+  experiencia  TEXT,
+  placa        TEXT,
+  modelo       TEXT,
+  sellos       JSONB NOT NULL DEFAULT '[]'::jsonb, -- [{label, icon, fuerte?}]
+  ruta         TEXT,
+  precio       TEXT,
+  paradero     TEXT,
+  resena       TEXT,
+  resena_autor TEXT,
+  tel          TEXT,                                -- WhatsApp / llamada (E.164 sin +)
+  img          TEXT,
+  veh_img      TEXT,
+  ciudad       TEXT NOT NULL DEFAULT 'pucallpa',
+  orden        INT  NOT NULL DEFAULT 0,
+  status       TEXT NOT NULL DEFAULT 'activo'       -- activo | oculto
+);
+CREATE INDEX IF NOT EXISTS drivers_status_idx ON public.drivers (status);
+CREATE INDEX IF NOT EXISTS drivers_ciudad_idx ON public.drivers (ciudad);
+
+-- `driver_requests`: postulaciones desde el formulario público
+-- /taxi-seguro/registro. Cualquiera inserta; solo el superadmin lee/gestiona.
+CREATE TABLE IF NOT EXISTS public.driver_requests (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at  TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  nombre      TEXT NOT NULL,
+  whatsapp    TEXT NOT NULL,
+  tipo        TEXT,
+  placa       TEXT,
+  zona        TEXT,
+  ciudad      TEXT,
+  experiencia TEXT,
+  mensaje     TEXT,
+  status      TEXT NOT NULL DEFAULT 'pending'       -- pending | approved | rejected
+);
+CREATE INDEX IF NOT EXISTS driver_requests_status_idx ON public.driver_requests (status);
+
+ALTER TABLE public.drivers          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.driver_requests  ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "drivers: lectura pública de activos" ON public.drivers;
+DROP POLICY IF EXISTS "drivers: superadmin inserta"         ON public.drivers;
+DROP POLICY IF EXISTS "drivers: superadmin edita"           ON public.drivers;
+DROP POLICY IF EXISTS "drivers: superadmin borra"           ON public.drivers;
+DROP POLICY IF EXISTS "driver_requests: cualquiera se postula"    ON public.driver_requests;
+DROP POLICY IF EXISTS "driver_requests: solo superadmin lee"      ON public.driver_requests;
+DROP POLICY IF EXISTS "driver_requests: solo superadmin gestiona" ON public.driver_requests;
+
+CREATE POLICY "drivers: lectura pública de activos"
+ON public.drivers FOR SELECT
+USING (status = 'activo' OR public.is_superadmin());
+
+CREATE POLICY "drivers: superadmin inserta"
+ON public.drivers FOR INSERT WITH CHECK (public.is_superadmin());
+
+CREATE POLICY "drivers: superadmin edita"
+ON public.drivers FOR UPDATE USING (public.is_superadmin());
+
+CREATE POLICY "drivers: superadmin borra"
+ON public.drivers FOR DELETE USING (public.is_superadmin());
+
+CREATE POLICY "driver_requests: cualquiera se postula"
+ON public.driver_requests FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "driver_requests: solo superadmin lee"
+ON public.driver_requests FOR SELECT USING (public.is_superadmin());
+
+CREATE POLICY "driver_requests: solo superadmin gestiona"
+ON public.driver_requests FOR UPDATE USING (public.is_superadmin());
