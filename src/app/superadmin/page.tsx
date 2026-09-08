@@ -21,12 +21,6 @@ import type { StoreTheme } from '@/lib/templates.config';
 // es lo que decide el acceso. La lista vive en src/lib/superadmin.ts y tiene
 // que coincidir con public.is_superadmin() en supabase_setup.sql (RLS).
 
-// Plantillas que ya tienen botón de pedido por WhatsApp implementado en su código
-const TEMPLATES_WITH_WHATSAPP = new Set([
-  'polleria', 'estilosmirka', 'sweetkittynails', 'mercado', 'menudirecto', 'iniciocatalogo', 'flores',
-  'fichadigital', 'fichaplana',
-]);
-
 // Datos de presentacion comercial que no viven en templates.config (descripcion
 // e imagen de portada). Si una plantilla no esta aca, cae a su heroImage.
 const TEMPLATE_PRESENTATION: Record<string, { category?: string; description: string; previewUrl: string }> = {
@@ -108,12 +102,6 @@ const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   Salud: 'Servicios con cita previa: clínicas, salones de belleza, bienestar. Foco en horarios y reservas.',
 };
 
-// Todas las plantillas montan <StoreFloatingActions/>, en movil y en escritorio.
-const TEMPLATES_WITH_SHARE_INSTALL = new Set([
-  'polleria', 'estilosmirka', 'mercado', 'sunset', 'natura', 'amazonia', 'sweetkittynails',
-  'menudirecto', 'iniciocatalogo', 'flores', 'fichadigital', 'fichaplana',
-]);
-
 const META: Record<string, { emoji: string; cat: string }> = {
   sunset:   { emoji: '🥂', cat: 'Bar & Café' },
   delva:    { emoji: '🌿', cat: 'Mercado' },
@@ -174,82 +162,9 @@ const NAV = [
   { id: 'tiendas',         icon: 'storefront',    label: 'Tiendas' },
   { id: 'categorias',      icon: 'category',      label: 'Categorías' },
   { id: 'paquetes',        icon: 'inventory_2',   label: 'Paquetes' },
-  { id: 'modulos',         icon: 'extension',     label: 'Módulos y Estrategia' },
   { id: 'usuarios',        icon: 'group',         label: 'Usuarios' },
   { id: 'personalizacion', icon: 'tune',          label: 'Personalización' },
   { id: 'plantillas',      icon: 'layers',        label: 'Plantillas' },
-  { id: 'facturacion',     icon: 'payments',      label: 'Facturación' },
-  { id: 'mapa',            icon: 'account_tree',  label: 'Mapa de Apps' },
-] as const;
-
-// Notas de modelo de negocio: por qué se cobra así, no qué es cada campo (eso
-// ya lo dice la UI). Vive en código porque es criterio del socio fundador,
-// no dato operativo que cambie tienda a tienda.
-// Agrupado por tema (no por orden de llegada) para que se pueda escanear:
-// primero cómo se cobra, después por qué no te dejan, después cómo escala,
-// al final la salida. "Impuesto al Éxito" se fusionó dentro de "Modelo
-// Híbrido" — eran la misma idea con dos redacciones distintas.
-const BUSINESS_STRATEGY = [
-  {
-    category: 'Cómo Cobrar',
-    icon: 'stars',
-    title: 'El Modelo Híbrido — la solución ganadora',
-    body: 'Suscripción base fija (ej. S/ 80-100/mes) que cubre servidores y soporte y asegura flujo de caja, + una comisión de éxito de 1-2% sobre la venta bruta procesada por la app — bajísimo comparado al 30% de Rappi, así que el dueño lo acepta feliz. El contrato debe fijar el % sobre venta bruta, no sobre ganancia neta. Si vende S/ 10,000/mes, el 1% son S/ 100 — casi no se siente; si escala a S/ 1,000,000/mes, son S/ 10,000 mensuales por un solo cliente.',
-  },
-  {
-    category: 'Cómo Cobrar',
-    icon: 'layers',
-    title: 'Cobrar por "escalones de capacidad", no por ancho de banda',
-    body: 'Nunca le hables de tráfico o bandwidth, es muy técnico para el dueño. Cobrá por escalones: Plan Básico (hasta 500 usuarios registrados), Plan Pro (usuarios ilimitados + mapas de calor de dónde viven sus clientes), Plan Enterprise (varias sedes sincronizadas). Es justo para los dos: si el negocio crece a 5,000 usuarios, gasta más de tus servidores, así que le toca pasar al siguiente plan.',
-  },
-  {
-    category: 'Cómo Cobrar',
-    icon: 'request_quote',
-    title: 'La psicología del cobro Enterprise',
-    body: 'A un cliente grande no se le habla de soles sueltos. Se le habla de: Licenciamiento Anual (ej. USD 5,000/año), Costo por Pedido (ej. S/ 0.20 por cada pedido procesado) y Soporte Premium 24/7 como extra fijo.',
-  },
-  {
-    category: 'Por Qué No Te Van a Dejar',
-    icon: 'lock',
-    title: 'Lock-in (Retención)',
-    body: 'Cambiar de software le cuesta al negocio meses y miles de dólares. La data histórica, los puntos de fidelización de sus clientes y las costumbres de sus empleados viven en tu sistema. Eso da poder de negociación real para ajustar precios cada año sin perder al cliente.',
-  },
-  {
-    category: 'Por Qué No Te Van a Dejar',
-    icon: 'shield',
-    title: 'Arquitectura anti-bypass',
-    body: 'La app que tiene el cliente es solo un "cascarón". El cálculo de puntos, los algoritmos de fidelización y la base de datos viven en tu servidor central. Si intentan copiar la app, no se llevan el "cerebro" — reconstruirlo desde cero les sale más caro que seguir pagándote.',
-  },
-  {
-    category: 'Por Qué No Te Van a Dejar',
-    icon: 'power_settings_new',
-    title: 'El "Kill Switch" — lo valioso es la data',
-    body: 'Controlar la infraestructura da poder real: si no pagan la comisión o la mensualidad, el sistema se suspende automáticamente. Y en B2B lo más valioso no es la app, es la data — si el dueño tiene 100,000 clientes registrados con correos, gustos, direcciones y cumpleaños, jamás va a querer dejar de pagar, porque perder el acceso es perder su activo más grande: su comunidad fiel.',
-  },
-  {
-    category: 'Cómo Escala el Negocio',
-    icon: 'extension',
-    title: 'Módulos de Expansión',
-    body: 'Una tienda de barrio no necesita lo mismo que una franquicia. A medida que el negocio crece, se cobra por necesidades nuevas: panel de franquicias, facturación electrónica, Business Intelligence predictivo y el resto del catálogo de abajo.',
-  },
-  {
-    category: 'Cómo Escala el Negocio',
-    icon: 'dns',
-    title: '¿Servidores propios o SaaS? El dilema de la propiedad',
-    body: 'Vender el software e instalarlo en el servidor del cliente no conviene: te pagan una vez y si el negocio explota a 1 millón de usuarios, vos no ganás nada extra. Mejor White Label multi-tenant en tu propia infraestructura — la app lleva su logo y su nombre, pero el motor y los datos corren en tus servidores. Cobrás mensualidad Enterprise + mantenimiento, y si se quieren ir se llevan sus datos, no el código: la tecnología sigue siendo tuya.',
-  },
-  {
-    category: 'Cómo Escala el Negocio',
-    icon: 'hub',
-    title: 'Escalabilidad a 100k usuarios (Isolating)',
-    body: 'Con base de datos compartida, un cliente que llega a 100,000 usuarios puede volver lenta la app de la tienda chica que recién empieza. Se lo aísla en una instancia de servidor dedicada solo para él, vendido como "Plan Infraestructura Dedicada": sus costos de servidor los paga él dentro de su mensualidad, y vos te quedás con la ganancia.',
-  },
-  {
-    category: 'La Salida',
-    icon: 'sell',
-    title: '¿Y si quieren comprarte el software?',
-    body: 'Cuando el cliente crece, a veces pide comprar la app entera para dejar de pagar mensualidad. No vendas el código barato: pedí una cifra de 6 o 7 dígitos, o mejor — no vendas el código, dales una licencia exclusiva de por vida por un pago único (ej. $50,000) + mantenimiento mensual.',
-  },
 ] as const;
 
 interface StoreModule {
@@ -633,7 +548,7 @@ export default function AdminPage() {
 
 function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   const { user: authUser } = useAuth();
-  const [activeTab, setActiveTab] = useState<'tiendas' | 'categorias' | 'usuarios' | 'personalizacion' | 'facturacion' | 'mapa' | 'paquetes' | 'plantillas' | 'modulos'>('tiendas');
+  const [activeTab, setActiveTab] = useState<'tiendas' | 'categorias' | 'usuarios' | 'personalizacion' | 'paquetes' | 'plantillas'>('tiendas');
   const [search, setSearch] = useState('');
   
   // Dynamic stores states
@@ -1003,7 +918,6 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   // es una tabla store_modules (store_id, module_id, active).
   const [modules, setModules] = useState<StoreModule[]>(INITIAL_MODULES);
   const [moduleStoreLinks, setModuleStoreLinks] = useState<Record<string, string[]>>({});
-  const [strategyOpen, setStrategyOpen] = useState<string | null>(BUSINESS_STRATEGY[0]?.title ?? null);
 
   const toggleModuleActive = (id: string) => {
     setModules(prev => prev.map(m => (m.id === id ? { ...m, active: !m.active } : m)));
@@ -1951,20 +1865,6 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     return Object.values(stores).filter(s => s.template === tplId).length;
   };
 
-  // Auditoría de Mapa de Apps: se calcula por plantilla, ya que las tiendas heredan sus reglas
-  const allTemplates = getAllTemplates();
-  const getTemplateChecks = (templateId: string) => {
-    const tpl = getTemplate(templateId);
-    return [
-      true, // PWA: la provee la plataforma a toda tienda automáticamente
-      true, // Módulo de Productos: todas las plantillas reales consultan Supabase
-      false, // Recuadro de Características: todavía no existe ficha técnica por producto
-      (tpl?.categories?.length || 0) >= 3, // Categorías Estructuradas
-      TEMPLATES_WITH_WHATSAPP.has(templateId), // Botón de Pedidos WhatsApp
-      true, // Estilos y Branding: toda plantilla trae un tema completo
-      TEMPLATES_WITH_SHARE_INSTALL.has(templateId), // Botones de Compartir e Instalar (PWA)
-    ];
-  };
 
   return (
     <>
@@ -2017,6 +1917,27 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         >
           <span className="material-symbols-outlined text-[18px]">local_taxi</span>
           Choferes
+        </Link>
+        <Link
+          href="/superadmin/modulos"
+          className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold rounded-md text-[#424754]/60 hover:bg-[#e6e7f2] hover:text-[#424754] transition-all"
+        >
+          <span className="material-symbols-outlined text-[18px]">extension</span>
+          Módulos y Estrategia
+        </Link>
+        <Link
+          href="/superadmin/mapa"
+          className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold rounded-md text-[#424754]/60 hover:bg-[#e6e7f2] hover:text-[#424754] transition-all"
+        >
+          <span className="material-symbols-outlined text-[18px]">account_tree</span>
+          Mapa de Apps
+        </Link>
+        <Link
+          href="/superadmin/facturacion"
+          className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold rounded-md text-[#424754]/60 hover:bg-[#e6e7f2] hover:text-[#424754] transition-all"
+        >
+          <span className="material-symbols-outlined text-[18px]">payments</span>
+          Facturación
         </Link>
         <div className="mt-auto pt-4 border-t border-[#c2c6d6]">
           <div className="flex items-center gap-3 px-2 mb-4">
@@ -2397,53 +2318,6 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                   </table>
                 </div>
               </section>
-            </div>
-          )}
-
-          {/* ─── MÓDULOS Y ESTRATEGIA ─── */}
-          {activeTab === 'modulos' && (
-            <div className="flex flex-col gap-8 animate-fade-in">
-              {/* Modelo de negocio: por qué se cobra así */}
-              <section className="flex flex-col gap-3">
-                <div className="border-b border-[#c2c6d6] pb-4">
-                  <h2 className="text-xl font-bold text-[#191b23]">Modelo de Negocio</h2>
-                  <p className="text-xs text-[#424754] mt-1">Por qué cobramos así, no solo qué cobramos. Referencia interna — no la ve el comercio.</p>
-                </div>
-                <div className="flex flex-col gap-4">
-                  {Array.from(new Set(BUSINESS_STRATEGY.map(i => i.category))).map((category) => (
-                    <div key={category} className="flex flex-col gap-2">
-                      <h3 className="text-[10px] font-bold uppercase tracking-wider text-[#0058be] pl-1">{category}</h3>
-                      {BUSINESS_STRATEGY.filter(i => i.category === category).map((item) => {
-                        const isOpen = strategyOpen === item.title;
-                        return (
-                          <div key={item.title} className="bg-white border border-[#c2c6d6] rounded-md overflow-hidden">
-                            <button
-                              type="button"
-                              onClick={() => setStrategyOpen(isOpen ? null : item.title)}
-                              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#f2f3fd]/40 transition-colors"
-                            >
-                              <span className="material-symbols-outlined text-[18px] text-[#0058be] shrink-0">{item.icon}</span>
-                              <span className="flex-1 text-xs font-bold text-[#191b23]">{item.title}</span>
-                              <span className={`material-symbols-outlined text-[18px] text-[#424754] transition-transform ${isOpen ? 'rotate-180' : ''}`}>expand_more</span>
-                            </button>
-                            {isOpen && (
-                              <p className="px-4 pb-4 pl-11 text-xs text-[#424754] leading-relaxed">{item.body}</p>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ))}
-                </div>
-                <div className="bg-[#f2f3fd] border border-[#c2c6d6] rounded-md p-4 flex items-start gap-3">
-                  <span className="material-symbols-outlined text-[18px] text-[#0058be] shrink-0">lightbulb</span>
-                  <p className="text-xs text-[#424754] leading-relaxed">
-                    <span className="font-bold text-[#191b23]">Ejemplo Shopify: </span>
-                    no cobra "ancho de banda" — cobra mensualidad fija + % de cada venta + apps extra. No se vende el código, se vende el servicio.
-                  </p>
-                </div>
-              </section>
-
             </div>
           )}
 
@@ -3567,225 +3441,6 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                     );
                   })}
               </section>
-            </div>
-          )}
-
-          {/* ─── FACTURACION ─── */}
-          {activeTab === 'facturacion' && (
-            <div className="bg-white rounded-md border border-[#c2c6d6] flex flex-col items-center justify-center py-16 px-4 gap-4 animate-fade-in">
-              <div className="w-14 h-14 bg-[#d5e0f8] rounded-lg flex items-center justify-center shadow-inner">
-                <span className="material-symbols-outlined text-3xl text-[#0058be]">payments</span>
-              </div>
-              <div className="text-center max-w-[320px]">
-                <h2 className="text-sm font-bold text-[#191b23]">Módulo de Facturación</h2>
-                <p className="text-[#424754] text-xs font-semibold mt-2 leading-relaxed">
-                  Las pasarelas de pago y las facturas se asocian directamente con los planes administrados en la pestaña de <button onClick={() => setActiveTab('paquetes')} className="text-[#0058be] hover:underline font-bold">Paquetes</button>.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* ─── MAPA DE APLICACIONES ─── */}
-          {activeTab === 'mapa' && (
-            <div className="space-y-4 animate-fade-in">
-              {/* Global Ecosystem Stats */}
-              <div className="bg-gradient-to-r from-neutral-900 to-neutral-800 text-white rounded-lg p-5 shadow-lg border border-neutral-700">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[20px] text-amber-400">gavel</span>
-                      <h2 className="text-base font-extrabold tracking-tight">Reglas del Ecosistema Boga Market</h2>
-                    </div>
-                    <p className="text-xs text-neutral-400 mt-1 max-w-[650px] leading-relaxed">
-                      Las tiendas se crean dinámicamente a partir de una plantilla base. Por eso la taxonomía de cumplimiento audita cada plantilla, no cada tienda: si la plantilla cumple una regla, toda tienda que la use hereda ese cumplimiento.
-                    </p>
-                  </div>
-                  <div className="bg-white/10 px-4 py-2 rounded-md border border-white/10 shrink-0 text-center md:text-right">
-                    <p className="text-[9px] uppercase tracking-wider font-extrabold text-neutral-400 leading-none">Promedio Global</p>
-                    <p className="text-2xl font-black text-white mt-1">
-                      {`${Math.round(
-                        allTemplates.reduce((sum, tpl) => {
-                          const checks = getTemplateChecks(tpl.id);
-                          return sum + (checks.filter(Boolean).length / checks.length) * 100;
-                        }, 0) / allTemplates.length
-                      )}%`}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Grid of Stores Compliancy Audit */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left column: Rules glossary + Ajustes roadmap, stacked */}
-                <div className="col-span-1 flex flex-col gap-6">
-                {/* Rules List Sidebar */}
-                <div className="bg-white border border-[#c2c6d6] rounded-lg p-4 shadow-sm space-y-4">
-                  <h3 className="font-extrabold text-xs text-[#191b23] border-b border-[#ecedf7] pb-2 flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[15px] text-[#424754] font-bold">menu_book</span>
-                    Glosario de Reglas
-                  </h3>
-                  <p className="text-[9px] text-[#424754] leading-snug font-semibold -mt-1">
-                    Todas gratis, vienen incluidas en cualquier tienda — no confundir con los módulos <em>pagos</em> de la pestaña "Módulos y Estrategia".
-                  </p>
-                  <div className="space-y-4">
-                    {[
-                      {
-                        group: 'App Instalable',
-                        items: [
-                          { title: 'PWA para Formar Ícono', desc: 'Toda tienda debe tener PWA (Progressive Web App): se instala en el celular del cliente con su propio ícono, sin pasar por App Stores.' },
-                          { title: 'Botones de Compartir e Instalar', desc: 'Botones flotantes al costado de la pantalla para compartir la tienda (menú nativo del celular) e instalar el PWA con un toque — la otra mitad de tener PWA.' },
-                        ],
-                      },
-                      {
-                        group: 'Catálogo de Productos',
-                        items: [
-                          { title: 'Módulo de Productos', desc: 'Estructura unificada de productos en base de datos. Cada producto enlazado a su tienda, con imágenes de alta resolución.' },
-                          { title: 'Recuadro de Características', desc: 'Ficha técnica del producto: tallas, colores, materiales, peso o descripción rica — no solo nombre y precio.' },
-                        ],
-                      },
-                      {
-                        group: 'Categorías Estructuradas',
-                        items: [
-                          { title: 'Navegación por Categorías', desc: 'Al menos 3 categorías en el menú para navegación fluida (ej. Sunset: Cocina, Bar, Café).' },
-                        ],
-                      },
-                      {
-                        group: 'Botón de Pedidos WhatsApp',
-                        items: [
-                          { title: 'Conversión a Pedido', desc: 'Botón activo de WhatsApp en el carrito/reserva para derivar la orden directo al comercio y concretar la transacción.' },
-                        ],
-                      },
-                      {
-                        group: 'Estilos y Branding',
-                        items: [
-                          { title: 'Identidad Visual', desc: 'Tema de color único configurado en el archivo de diseño para adaptar la apariencia visual a la identidad de cada tienda.' },
-                        ],
-                      },
-                    ].map((section) => (
-                      <div key={section.group} className="space-y-1.5">
-                        <p className="text-[9px] font-bold uppercase tracking-wider text-[#0058be]">{section.group}</p>
-                        {section.items.map((rule) => (
-                          <div key={rule.title} className="space-y-1 bg-[#f2f3fd]/55 p-2.5 rounded-md border border-[#c2c6d6]/65">
-                            <p className="font-bold text-[11px] text-[#191b23]">{rule.title}</p>
-                            <p className="text-[10px] text-[#424754] leading-relaxed font-semibold">{rule.desc}</p>
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Ajustes: funciones en camino (no cuentan en el % porque todavía no existen en la plataforma) */}
-                <div className="bg-white border border-[#c2c6d6] rounded-lg p-4 shadow-sm space-y-3">
-                  <h3 className="font-extrabold text-xs text-[#191b23] border-b border-[#ecedf7] pb-2 flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[15px] text-[#424754] font-bold">tune</span>
-                    Ajustes · Próximas funciones
-                  </h3>
-                  <p className="text-[10px] text-[#424754] leading-relaxed font-semibold">
-                    Todavía no existen en ninguna tienda, así que no se cuentan en el % de cumplimiento. Se activan acá cuando estén listas.
-                  </p>
-                  <div className="space-y-2">
-                    {[
-                      { title: 'Idiomas', desc: 'Que cada tienda pueda mostrarse en más de un idioma al cliente final.', icon: 'translate' },
-                      { title: 'Modo Oscuro', desc: 'Adaptar cada plantilla de tienda a modo oscuro real.', icon: 'dark_mode' },
-                    ].map((item, idx) => (
-                      <div key={idx} className="flex items-center justify-between gap-2 bg-[#f2f3fd]/55 p-2.5 rounded-md border border-[#c2c6d6]/65">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="material-symbols-outlined text-[15px] text-[#745853] shrink-0">{item.icon}</span>
-                          <div className="min-w-0">
-                            <p className="font-bold text-[11px] text-[#191b23]">{item.title}</p>
-                            <p className="text-[9px] text-[#424754] leading-tight font-semibold">{item.desc}</p>
-                          </div>
-                        </div>
-                        <span className="text-[8px] font-bold px-1.5 py-0.5 rounded border bg-[#ecedf7] text-[#424754] border-[#c2c6d6] whitespace-nowrap shrink-0">
-                          🔜 Próximamente
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                </div>
-
-                {/* Compliance Table / Status */}
-                <div className="lg:col-span-2 space-y-3">
-                  <div className="bg-white border border-[#c2c6d6] rounded-lg shadow-sm overflow-hidden">
-                    <div className="px-4 py-3 bg-[#f2f3fd] border-b border-[#c2c6d6] flex justify-between items-center">
-                      <h3 className="font-bold text-xs text-[#191b23]">Estado de Cumplimiento por Plantilla</h3>
-                      <span className="text-[9px] font-bold text-[#424754] bg-[#ecedf7] px-2 py-0.5 rounded border border-[#c2c6d6] leading-none">Auditoría Real</span>
-                    </div>
-
-                    <div className="divide-y divide-[#ecedf7]">
-                      {allTemplates.map((tpl) => {
-                        const checks = getTemplateChecks(tpl.id);
-                        const usage = getTemplateUsageCount(tpl.id);
-                        const missing: string[] = [];
-                        if (!checks[2]) missing.push('ficha técnica de producto');
-                        if (!checks[4]) missing.push('botón de pedidos por WhatsApp');
-                        if (!checks[6]) missing.push('botones de compartir/instalar');
-                        const app = {
-                          slug: tpl.id,
-                          name: tpl.name,
-                          checks,
-                          notes: missing.length === 0
-                            ? '¡Totalmente compatible! 100% de las reglas verificables.'
-                            : `Le falta: ${missing.join(', ')}. Usada por ${usage} ${usage === 1 ? 'tienda' : 'tiendas'}.`,
-                        };
-                        const passedCount = app.checks.filter(Boolean).length;
-                        const pct = Math.round((passedCount / app.checks.length) * 100);
-                        const isGold = pct === 100;
-                        return (
-                          <div key={app.slug} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#f2f3fd]/10 transition-colors">
-                            <div className="space-y-1 sm:max-w-[280px]">
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-base">{META[app.slug]?.emoji || '🎨'}</span>
-                                <span className="font-bold text-xs text-[#191b23]">{app.name}</span>
-                                <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border ${
-                                  isGold ? 'bg-emerald-50 text-emerald-800 border-emerald-100' : 'bg-amber-50 text-amber-800 border-amber-100'
-                                }`}>
-                                  {pct}%
-                                </span>
-                              </div>
-                              <p className="text-[10px] text-[#424754] font-semibold truncate leading-tight">plantilla/{app.slug} · {passedCount} de {app.checks.length} reglas</p>
-                              <p className="text-[10px] text-[#424754] leading-normal italic">{app.notes}</p>
-                            </div>
-
-                            {/* Interactive status indicators */}
-                            <div className="flex flex-wrap items-center gap-1">
-                              {[
-                                { label: 'PWA', icon: 'phone_android' },
-                                { label: 'PROD', icon: 'shopping_bag' },
-                                { label: 'FICHA', icon: 'assignment' },
-                                { label: 'CAT', icon: 'category' },
-                                { label: 'WSP', icon: 'chat' },
-                                { label: 'ESTILO', icon: 'palette' },
-                                { label: 'SHARE', icon: 'ios_share' }
-                              ].map((rule, idx) => {
-                                const checked = app.checks[idx];
-                                return (
-                                  <div
-                                    key={idx}
-                                    className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-[9px] font-bold cursor-help transition-colors ${
-                                      checked
-                                        ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                                        : 'bg-red-50 border-red-200 text-[#ba1a1a]'
-                                    }`}
-                                    title={`${rule.label}: ${checked ? 'Cumplido' : 'Pendiente'}`}
-                                  >
-                                    <span className="material-symbols-outlined text-[10px] font-bold">
-                                      {checked ? 'check' : 'warning'}
-                                    </span>
-                                    {rule.label}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
 
