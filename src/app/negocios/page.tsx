@@ -30,7 +30,7 @@ const PLANES = [
   {
     id: 'marketplace',
     icon: 'travel_explore',
-    nombre: 'Tu Tienda + Boga Market',
+    nombre: 'Vende en Boga Market',
     precio: 'S/ 100',
     periodo: '/mes',
     nota: 'Solo donde Boga opera',
