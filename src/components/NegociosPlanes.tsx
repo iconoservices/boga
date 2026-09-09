@@ -32,8 +32,8 @@ const PLANES: Plan[] = [
       'Pedidos directo a tu WhatsApp, sin comisión',
       'Funciona en cualquier ciudad',
     ],
-    mes: { precio: 'S/ 50', periodo: '/mes', nota: 'Precio fundador — fijo de por vida si te unes ahora · luego S/ 80/mes' },
-    anio: { precio: 'S/ 500', periodo: '/año', nota: 'Precio fundador · 2 meses gratis (≈ S/ 42/mes)' },
+    mes: { precio: 'S/ 50', periodo: '/mes', nota: 'Precio de apertura — fijo de por vida si entras ahora · luego S/ 80/mes' },
+    anio: { precio: 'S/ 500', periodo: '/año', nota: 'Precio de apertura · 2 meses gratis (≈ S/ 42/mes)' },
   },
   {
     id: 'marketplace',
@@ -140,8 +140,8 @@ export default function NegociosPlanes() {
       </div>
 
       <p className="text-secondary/80 font-body-md text-xs text-center mt-4 max-w-[560px] mx-auto">
-        El Market es un módulo que activas o apagas desde tu panel — no hace falta registrarte de nuevo.
-        ¿Quieres una tienda con diseño a medida? La armamos contigo: plan más una puesta en marcha que conversamos según lo que necesites.
+        Vienes con plantillas listas para tu rubro. El Market lo activas o apagas desde tu panel — no hace falta registrarte de nuevo.
+        ¿Quieres un diseño totalmente a medida? Lo cotizamos según lo que necesites.
       </p>
     </section>
   );

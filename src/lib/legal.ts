@@ -779,7 +779,7 @@ const anexoNegocios: DocLegal = {
     'de servicio y sus plazos, la cláusula de evolución (sección 6) y el acuerdo de datos (sección 5).',
   pendientes: [
     'DECIDIDO: plan Tu Tienda Boga S/50 lanzamiento → S/80 regular; plan + Boga Market S/100. (Confirmar con contador cómo se documentan las promos de lanzamiento.)',
-    'Definir el fee de puesta en marcha (setup) de una tienda a medida — el user lo tiene que organizar.',
+    'Tienda a medida: se cotiza caso por caso (las plantillas ya vienen en el plan; el costo a medida depende del alcance). Definir un rango o piso de referencia.',
     'Definir la antelación para cambios de precio del plan (se propone 30 días).',
     'Definir el acuerdo de tratamiento de datos: el negocio es responsable de los datos de sus clientes.',
   ],
@@ -798,7 +798,7 @@ const anexoNegocios: DocLegal = {
         { tipo: 'lista', items: [
           'Plan Tu Tienda Boga: S/ 50 al mes como precio de lanzamiento; el precio regular es S/ 80 al mes.',
           'Plan Tu Tienda Boga + Boga Market: S/ 100 al mes.',
-          'Tienda a medida: precio del plan más un costo de setup [[a definir]] por única vez.',
+          'Tienda a medida: el plan incluye plantillas listas; un diseño totalmente a medida se cotiza aparte, según el alcance.',
         ]},
         { tipo: 'p', texto: 'Los precios vigentes, lo que incluye cada plan y las promociones activas se te muestran antes de contratar y figuran en tu panel. Boga puede cambiarlos con el aviso de la sección 4. Para registrarte necesitás datos reales del negocio (RUC o documento, rubro, contacto).' },
       ],

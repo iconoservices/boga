@@ -454,7 +454,7 @@ Boga te ofrece una herramienta para digitalizar tu negocio, por un plan mensual.
 
 - Plan Tu Tienda Boga: S/ 50 al mes como precio de lanzamiento; el precio regular es S/ 80 al mes.
 - Plan Tu Tienda Boga + Boga Market: S/ 100 al mes.
-- Tienda a medida: precio del plan más un costo de setup a definir por única vez.
+- Tienda a medida: el plan incluye plantillas listas; un diseño totalmente a medida se cotiza aparte, según el alcance.
 
 Los precios vigentes, lo que incluye cada plan y las promociones activas se te muestran antes de contratar y figuran en tu panel. Boga puede cambiarlos con el aviso de la sección 4. Para registrarte necesitás datos reales del negocio (RUC o documento, rubro, contacto).
 
