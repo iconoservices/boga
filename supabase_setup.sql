@@ -201,6 +201,27 @@ DROP POLICY IF EXISTS "Solo el superadmin aprueba o rechaza solicitudes" ON publ
 DROP POLICY IF EXISTS "Cada quien ve su perfil, superadmin ve todos" ON public.profiles;
 DROP POLICY IF EXISTS "Cada usuario actualiza su propio perfil"      ON public.profiles;
 
+-- Nombres NUEVOS (los que este mismo script crea más abajo). Sin esto, la
+-- segunda corrida falla con "policy ... already exists" — CREATE POLICY no
+-- tiene IF NOT EXISTS. Con estos DROPs el script vuelve a ser 100% idempotente.
+DROP POLICY IF EXISTS "stores: lectura pública"            ON public.stores;
+DROP POLICY IF EXISTS "stores: solo superadmin crea"       ON public.stores;
+DROP POLICY IF EXISTS "stores: dueño o superadmin edita"   ON public.stores;
+DROP POLICY IF EXISTS "stores: dueño o superadmin borra"   ON public.stores;
+DROP POLICY IF EXISTS "products: lectura pública"          ON public.products;
+DROP POLICY IF EXISTS "products: dueño o superadmin crea"  ON public.products;
+DROP POLICY IF EXISTS "products: dueño o superadmin edita" ON public.products;
+DROP POLICY IF EXISTS "products: dueño o superadmin borra" ON public.products;
+DROP POLICY IF EXISTS "orders: dueño o superadmin ve"        ON public.orders;
+DROP POLICY IF EXISTS "orders: dueño o superadmin crea"      ON public.orders;
+DROP POLICY IF EXISTS "orders: dueño o superadmin actualiza" ON public.orders;
+DROP POLICY IF EXISTS "orders: dueño o superadmin borra"     ON public.orders;
+DROP POLICY IF EXISTS "store_requests: cualquiera se postula"    ON public.store_requests;
+DROP POLICY IF EXISTS "store_requests: solo superadmin lee"      ON public.store_requests;
+DROP POLICY IF EXISTS "store_requests: solo superadmin gestiona" ON public.store_requests;
+DROP POLICY IF EXISTS "profiles: cada quien el suyo, superadmin todos" ON public.profiles;
+DROP POLICY IF EXISTS "profiles: cada quien actualiza el suyo"        ON public.profiles;
+
 -- ============================================================
 -- 3. STORES
 -- ============================================================
