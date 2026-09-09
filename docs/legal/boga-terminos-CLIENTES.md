@@ -11,11 +11,11 @@ RAZÓN SOCIAL S.A.C. · RUC N.º DE RUC · domicilio fiscal completo, Pucallpa, 
 2. Política de Privacidad
 3. Política de Cookies
 4. Libro de Reclamaciones
-5. Anexo · Market, Pensión y Delivery
+5. Anexo · Boga Market, Pensión y Delivery
 6. Anexo · Taxi Seguro
 7. Anexo · Boga Points (billetera de créditos)
 8. Anexo · Eventos y Entradas
-9. Anexo · Negocios / Vende con Boga
+9. Anexo · Negocios (Tu Tienda Boga y Boga Market)
 10. Anexo · Programa de Afiliados
 
 ---
@@ -68,11 +68,11 @@ Boga puede quitar contenido, limitar funciones o suspender cuentas que incumplan
 
 ### 6. Precios, pagos y comprobantes
 
-Los precios se muestran en soles (S/) e incluyen los impuestos que correspondan, salvo que se indique lo contrario. El costo de envío, comisiones de servicio y propinas se muestran antes de confirmar.
+Los precios se muestran en soles (S/) e incluyen los impuestos que correspondan, salvo que se indique lo contrario. El costo de envío y otros cargos se muestran antes de confirmar.
 
-El pago se procesa a través de los medios habilitados en la app (efectivo contra entrega, tarjeta, billeteras y otros que se agreguen). Boga puede usar proveedores de pago externos; al pagar aceptás también las condiciones de ese proveedor.
+Quién cobra depende del servicio, y cada Anexo lo aclara: en el Market le pagás directamente al negocio (efectivo, Yape, transferencia), y Boga no procesa ese pago; los planes, suscripciones y servicios que Boga te presta a vos sí se pagan dentro de la app, con los medios habilitados. Si Boga usa un proveedor de pago externo, al pagar aceptás también sus condiciones.
 
-El comprobante de pago (boleta o factura) lo emite quien vende el producto o presta el servicio. Cuando Boga cobra una comisión propia, Boga emite el comprobante por esa comisión.
+El comprobante de pago (boleta o factura) lo emite quien vende el producto o presta el servicio final. Boga emite su propio comprobante por lo que te cobra (un plan, un fee de servicio, una comisión).
 
 ### 7. Cancelaciones, devoluciones y reclamos
 
@@ -231,41 +231,41 @@ Boga te responde dentro del plazo que fija la ley. Si el reclamo es sobre un pro
 
 ---
 
-## 5. Anexo · Market, Pensión y Delivery
+## 5. Anexo · Boga Market, Pensión y Delivery
 
-_Aplica a: Quien compra en el Market o Pensión y los comercios que venden ahí._
+_Aplica a: Quien usa el Market o Pensión para comprar en negocios locales._
 
-### 1. Quién te vende
+### 1. Qué es el Market
 
-En el Market y en Pensión, el vendedor es el comercio que figura en cada producto. Boga muestra el catálogo, procesa el pedido y coordina la entrega, pero el contrato de compraventa es entre vos y ese comercio. El comercio es responsable de que el producto exista, esté en buen estado y cumpla lo ofrecido, y de emitir la boleta o factura.
+Boga Market es una guía de tiendas, restaurantes y negocios de tu ciudad: los encontrás, ves su catálogo y armás tu pedido en un solo lugar. Boga no es una tienda: no te vende los productos.
 
-### 2. Precios y disponibilidad
+El Market funciona ciudad por ciudad. Donde Boga todavía no opera, podés dejar tu interés en la lista de espera.
 
-Los precios y el stock los define el comercio y pueden cambiar de un día para otro. Eso es normal y no necesita aviso previo: siempre ves el precio final antes de pagar cada pedido, y ese precio es el que se respeta para ese pedido. La regla de aviso previo y cancelación sin penalidad solo aplica a los planes y suscripciones (sección 7), donde sí hay un compromiso que se repite.
+### 2. Quién te vende y quién te cobra
 
-Si un producto no está disponible después de que pagaste, se te ofrece un reemplazo o el reembolso de ese ítem.
+El vendedor es el negocio que figura en cada producto. La compra es un contrato entre vos y ese negocio. El negocio es responsable de que el producto exista, esté en buen estado y cumpla lo ofrecido, y de darte tu boleta o factura.
 
-El costo de envío y la comisión de servicio de Boga se muestran antes de confirmar el pedido.
+Hoy le pagás al negocio directo: efectivo al recibir, Yape o el medio que el negocio acepte. Boga no procesa ese pago. El precio y el costo de envío se te muestran antes de confirmar.
+
+Los precios y el stock los define el negocio y pueden cambiar de un día para otro; siempre ves el precio final antes de confirmar y ese es el que se respeta para ese pedido. Si un producto no está disponible después, se te ofrece un reemplazo o no se cobra ese ítem.
 
 ### 3. Entrega
 
-Los tiempos de entrega son estimados y dependen de la distancia, el clima y la demanda. Tenés que dar una dirección correcta y estar disponible para recibir el pedido. Si no se puede entregar por causas tuyas (dirección errada, no contestás), puede cobrarse el envío igual.
+Boga coordina la entrega con un repartidor. Los tiempos son estimados y dependen de la distancia, el clima y la demanda. Tenés que dar una dirección correcta y estar disponible para recibir. Si no se puede entregar por causas tuyas (dirección errada, no contestás), puede cobrarse el envío igual.
 
-### 4. Cancelaciones
+### 4. Cancelaciones y problemas con tu pedido
 
-Podés cancelar sin costo mientras el comercio no haya empezado a preparar el pedido. Después de eso, según el estado, puede no haber reembolso del total. Boga puede cancelar un pedido y devolverte lo pagado si el comercio no puede cumplir o si se detecta un fraude.
+Podés cancelar sin costo mientras el negocio no haya empezado a preparar el pedido. Después, según el estado, el negocio puede cobrarte lo ya preparado.
 
-### 5. Problemas con tu pedido
+Si el pedido llega incompleto, en mal estado o distinto a lo pedido, avisá por el Centro de Ayuda dentro de las 24 horas, con fotos si podés. Boga traslada el reclamo al negocio y hace seguimiento. Tus derechos como consumidor frente al negocio (y frente a Boga en lo que la ley lo haga responsable) quedan a salvo.
 
-Si el pedido llega incompleto, en mal estado o distinto a lo pedido, avisá por el Centro de Ayuda dentro de las 24 horas, con fotos si podés. Según el caso se resuelve con reenvío, reembolso parcial o total. Esto no afecta tus derechos como consumidor frente al comercio y frente a Boga.
+### 5. Productos de venta restringida
 
-### 6. Productos de venta restringida
+Las bebidas alcohólicas, el tabaco y otros productos regulados solo se entregan a mayores de edad y puede pedirse documento al recibir. El repartidor puede negar la entrega si hay dudas sobre la edad o si la persona está visiblemente ebria.
 
-La venta de bebidas alcohólicas, tabaco y otros productos regulados solo se hace a mayores de edad y puede requerir mostrar documento al recibir. El repartidor puede negar la entrega si hay dudas sobre la edad o si la persona está visiblemente ebria.
+### 6. Planes y suscripciones de comida (Pensión)
 
-### 7. Planes y suscripciones de comida
-
-Cuando Boga o un comercio ofrezcan planes de comida (por ejemplo un pack semanal de almuerzos de Pensión), antes de contratar vas a ver, de forma clara: qué incluye, el precio, cada cuánto se cobra, cómo se renueva y si tiene un plazo mínimo de permanencia.
+Cuando Boga o un negocio ofrezcan planes de comida (por ejemplo un pack semanal de almuerzos de Pensión), antes de contratar vas a ver, de forma clara: qué incluye, el precio, cada cuánto se cobra, cómo se renueva y si tiene un plazo mínimo de permanencia.
 
 **Planes sin plazo mínimo (mes a mes)**
 
@@ -303,6 +303,8 @@ La verificación es un control inicial y periódico, no una garantía absoluta s
 ### 3. Relación de Boga con los choferes
 
 Los choferes son trabajadores independientes. No existe vínculo laboral con Boga: cada chofer maneja su horario, su vehículo, su tarifa y sus gastos. Boga solo presta un servicio de difusión y verificación.
+
+Estar en el directorio hoy es gratis. Más adelante Boga puede cobrarle al chofer un plan por aparecer con el sello de verificado; en ese caso se avisa con anticipación y sigue siendo una decisión del chofer. El pasajero nunca paga por usar el directorio.
 
 ### 4. Responsabilidad en el viaje
 
@@ -383,63 +385,98 @@ Boga puede ajustar, retener o anular saldo cargado por error, obtenido con fraud
 
 ## 8. Anexo · Eventos y Entradas
 
-_Aplica a: Quien compra entradas y los organizadores que publican eventos en Boga._
+_Aplica a: Organizadores que publican eventos en Boga y personas que reservan o compran entradas._
 
-### 1. Quién organiza el evento
+### 1. Dos formas de usar Eventos
 
-El organizador que figura en cada evento es el responsable del evento: su realización, el aforo, la seguridad, los permisos y la información publicada. Boga es la plataforma que vende las entradas y emite el ticket digital.
+**Por defecto: Boga te da la herramienta**
 
-### 2. Tu entrada y el QR
+El organizador contrata a Boga una herramienta para su evento: la página, la generación de códigos QR (de cortesía o de entrada) y la validación en puerta. El organizador maneja su propio cobro como quiera —lista de invitados gratis, cobro en la puerta, su propio medio de pago— y Boga no interviene en ese dinero. Boga le cobra al organizador un fee por el uso de la herramienta.
 
-Al comprar recibís una entrada digital con un código QR. Ese QR es de un solo uso: se valida al ingresar y deja de servir. No compartas la imagen: si alguien la usa antes, no vas a poder entrar. Guardá tu entrada en la app.
+**Opcional: Boga como coproductor**
 
-Si la entrada admite transferirse a otra persona, vas a poder reasignarla desde la app; cada evento indica hasta cuándo se puede hacer.
+En algunos eventos puntuales Boga puede además vender las entradas y cobrar por ellas. En esos casos se firma un acuerdo aparte y el evento lo indica claramente. El resto de este anexo, salvo que se diga lo contrario, describe el modo por defecto.
 
-### 3. Precio y comisión
+### 2. Quién responde por el evento
 
-El precio de la entrada lo fija el organizador. Boga puede cobrar una comisión de servicio que se muestra antes de pagar.
+El organizador que figura en cada evento es el responsable: la realización, el aforo, la seguridad, los permisos y la información publicada. Boga aporta la herramienta y, en el modo por defecto, no participa del cobro ni de la organización.
 
-### 4. Cambios, cancelación y reembolso
+### 3. Tu entrada y el QR
 
-- Si el organizador cancela el evento: tenés derecho a la devolución del valor de la entrada.
-- Si el organizador reprograma: tu entrada vale para la nueva fecha; si no podés asistir, podés pedir el reembolso dentro del plazo que se indique al anunciar la nueva fecha.
-- Si simplemente no querés ir: el reembolso depende de la política del evento, que se muestra antes de comprar.
+Recibís una entrada digital con un código QR de un solo uso: se valida al ingresar y deja de servir. No compartas la imagen: si alguien la usa antes, no vas a poder entrar. Guardá tu entrada en la app.
+
+Si la entrada admite transferirse a otra persona, vas a poder reasignarla desde la app; cada evento indica hasta cuándo.
+
+### 4. Precio, cambios y reembolso
+
+En el modo por defecto, el precio de la entrada y la política de reembolso los define y los cobra el organizador; se te muestran antes de reservar o comprar.
+
+- Si el organizador cancela el evento: te corresponde la devolución de lo que pagaste por la entrada, y la gestiona el organizador.
+- Si el organizador reprograma: tu entrada vale para la nueva fecha; si no podés asistir, aplicá la política de reembolso del evento.
+- Si no querés ir: depende de la política del evento, que se muestra antes de comprar.
+
+En el modo "coproductor", el reembolso lo gestiona Boga según las condiciones de ese evento.
 
 ### 5. En el evento
 
-El ingreso puede estar sujeto a edad mínima, control de identidad y reglas del local. El organizador puede negar o retirar el ingreso por conducta que ponga en riesgo a otros. Boga no participa en el control de puerta salvo la validación del QR.
+El ingreso puede estar sujeto a edad mínima, control de identidad y reglas del local. El organizador puede negar o retirar el ingreso por conducta que ponga en riesgo a otros. Boga no participa en el control de puerta salvo, si el organizador la usa, la validación del QR.
 
 ---
 
-## 9. Anexo · Negocios / Vende con Boga
+## 9. Anexo · Negocios (Tu Tienda Boga y Boga Market)
 
-_Aplica a: Comercios, emprendedores y prestadores de servicios que se registran para vender en Boga._
+_Aplica a: Negocios, emprendedores y prestadores de servicios que contratan un plan de Boga._
 
-### 1. Registro y verificación
+### 1. Qué contratás
 
-Para vender en Boga tenés que registrar tu negocio con datos reales (RUC o documento, rubro, contacto) y aceptar este anexo. Boga puede verificar la información y pedir documentación adicional antes de activar la tienda.
+Boga te ofrece una herramienta para digitalizar tu negocio, por un plan mensual. Según el nivel que elijas, incluye:
 
-### 2. Qué hace Boga y qué hacés vos
+- Tu Tienda Boga: tu página propia con catálogo, inventario y pedidos, con un enlace que compartís donde quieras. Disponible en cualquier ciudad.
+- Boga Market: además, aparecés en el directorio de tiendas de tu ciudad dentro de la app. Disponible solo donde Boga opera; si tu ciudad todavía no está activa, quedás en lista de espera.
+- Coordinación de entrega, donde esté habilitada.
+- Tienda a medida: diseño personalizado, con un costo de puesta en marcha aparte del plan.
 
-Boga te da la vitrina, el sistema de pedidos, la coordinación de entrega y el procesamiento de pagos. Vos sos responsable de: tener stock real, precios y fotos correctas, preparar los pedidos a tiempo, cumplir las normas sanitarias y de tu rubro, y emitir el comprobante de pago al cliente por cada venta.
+Los planes, lo que incluye cada uno y sus precios se te muestran antes de contratar y figuran en tu panel. Para registrarte necesitás datos reales del negocio (RUC o documento, rubro, contacto).
 
-### 3. Comisiones y pagos
+### 2. Boga no toca el dinero de tus clientes
 
-Boga cobra una comisión por cada venta, que se te informa al registrarte y figura en tu panel. Boga liquida el saldo a tu favor de forma periódica, al medio que indiques, descontando la comisión y lo que corresponda por reembolsos a clientes. Boga te entrega el detalle de cada liquidación y su comprobante por la comisión.
+Hoy Boga NO procesa el pago de tus ventas. Tu cliente te paga directo a vos (efectivo contra entrega, Yape, transferencia, el medio que uses). Boga solo te cobra el plan.
 
-Boga puede cambiar la comisión avisándote con al menos 30 días de anticipación. Si no estás de acuerdo, podés dar de baja tu tienda antes de que el cambio aplique.
+Por eso, frente a la ley y frente a SUNAT, la venta es tuya: vos sos el vendedor, vos emitís la boleta o factura a tu cliente y vos declarás esa venta. Boga te emite a vos el comprobante por el plan que pagás.
 
-### 4. Responsabilidad frente al cliente
+Boga tampoco es responsable de esa venta ni del producto: esa responsabilidad es del negocio. Sí ayudamos a mediar si un cliente reclama, y podemos quitar del directorio a un negocio con reclamos reiterados.
 
-Frente al consumidor, el comercio responde por el producto o servicio que vende. El comercio mantiene indemne a Boga por reclamos, multas o daños que resulten de incumplimientos suyos (producto en mal estado, publicidad engañosa, falta de comprobante, incumplimiento sanitario).
+### 3. Tus obligaciones
 
-### 5. Datos de los clientes
+- Mantener el catálogo al día: stock real, precios y fotos correctas.
+- Cumplir las normas de tu rubro (sanitarias, de etiquetado, de productos regulados).
+- Emitir a tu cliente el comprobante de pago que corresponda por cada venta.
+- Atender y responder los reclamos de tus clientes.
+- No usar Boga para vender productos prohibidos o de venta restringida sin autorización.
 
-Los datos del cliente que recibís a través de Boga (nombre, teléfono, dirección) son solo para cumplir ese pedido y atender reclamos. No podés usarlos para marketing propio ni cederlos a terceros sin consentimiento del cliente. Sos responsable de esos datos mientras los tengas.
+### 4. El plan: cobro, cambios y baja
 
-### 6. Suspensión y baja
+El plan se cobra por adelantado, en el ciclo que elijas. Si se renueva solo, se te avisa antes de cada cobro y podés cancelar la renovación cuando quieras; la baja aplica al final del período que ya pagaste.
 
-Podés dar de baja tu tienda cuando quieras, cumpliendo primero los pedidos en curso. Boga puede suspender o cerrar tu tienda por incumplimientos graves o reiterados, fraude, o riesgo para los consumidores, informándote el motivo. Las liquidaciones pendientes se pagan igual, salvo montos retenidos por reclamos en curso.
+Boga puede cambiar el precio o el contenido de un plan avisándote con al menos 30 días. Si no estás de acuerdo, podés dar de baja antes de que el cambio aplique, sin penalidad.
+
+Boga puede suspender o cerrar tu tienda por incumplimientos graves o reiterados, fraude o riesgo para los consumidores, informándote el motivo. Si te suspendemos sin causa, te devolvemos la parte del plan no usada.
+
+### 5. Datos de tus clientes
+
+Los datos de tus clientes que cargás o recibís a través de Boga son tuyos y son tu responsabilidad. Usalos solo para atender a ese cliente; no los cedas a terceros sin su consentimiento. Boga los trata solo para prestarte el servicio, según la Política de Privacidad.
+
+### 6. Si más adelante Boga procesa el pago
+
+Boga podría habilitar más adelante el pago dentro de la app y, con eso, una comisión por venta. Ese es un modelo distinto al de este anexo. Si lo hacemos:
+
+- te lo ofreceremos como una opción, no como un cambio obligatorio;
+- publicaremos una versión ampliada de este anexo con las reglas de comisión, liquidación y comprobantes, y te avisaremos con al menos 30 días;
+- podés no aceptarla y seguir con tu plan actual, en el que vos cobrás directo.
+
+### 7. Ley aplicable
+
+Este anexo se rige por las leyes del Perú y complementa los Términos y Condiciones Generales de Boga. Consultas: legal@bogahub.app.
 
 ---
 
