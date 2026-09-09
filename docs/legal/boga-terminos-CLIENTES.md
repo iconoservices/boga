@@ -2,7 +2,9 @@
 
 _Última actualización: 2026-09-09._
 
-[[RAZÓN SOCIAL S.A.C.]] · RUC [[N.º DE RUC]] · [[domicilio fiscal completo]], Pucallpa, Ucayali, Perú · [[legal@bogahub.app]]
+RAZÓN SOCIAL S.A.C. · RUC N.º DE RUC · domicilio fiscal completo, Pucallpa, Ucayali, Perú · legal@bogahub.app
+
+> Documento en preparación: algunos datos de la empresa (razón social, RUC, domicilio) todavía se están completando.
 
 ## Contenido
 1. Términos y Condiciones Generales
@@ -24,7 +26,7 @@ _Aplica a: Todas las personas que usan la app o el sitio de Boga._
 
 ### 1. Quiénes somos
 
-Boga es una plataforma digital operada por [[RAZÓN SOCIAL S.A.C.]], con RUC [[N.º DE RUC]] y domicilio en [[domicilio fiscal completo]], Pucallpa, Ucayali, Perú ("Boga", "nosotros"). Podés escribirnos a [[legal@bogahub.app]].
+Boga es una plataforma digital operada por RAZÓN SOCIAL S.A.C., con RUC N.º DE RUC y domicilio en domicilio fiscal completo, Pucallpa, Ucayali, Perú ("Boga", "nosotros"). Podés escribirnos a legal@bogahub.app.
 
 Boga reúne en una sola app varios servicios de Pucallpa: el Market (compras y delivery), Pensión, Servicios & Chamba, Taxi Seguro, Alquileres, Eventos, Sorteos, Pandero y la Revista. En la mayoría de estos servicios Boga actúa como intermediario: conecta a quien ofrece un producto o servicio con quien lo busca, pero no es el vendedor, el transportista ni el prestador del servicio final, salvo que se diga expresamente.
 
@@ -76,7 +78,7 @@ El comprobante de pago (boleta o factura) lo emite quien vende el producto o pre
 
 Las condiciones de cancelación y devolución dependen del servicio y están en cada Anexo. Como regla general, tenés derecho a los remedios que te da el Código de Protección y Defensa del Consumidor cuando el producto o servicio no es idóneo.
 
-Para cualquier reclamo, escribí primero a [[legal@bogahub.app]] o usá el Centro de Ayuda. Si no llegamos a una solución, podés dejar tu queja en el Libro de Reclamaciones de Boga, que encontrás en la app y en el sitio web, y acudir a INDECOPI.
+Para cualquier reclamo, escribí primero a legal@bogahub.app o usá el Centro de Ayuda. Si no llegamos a una solución, podés dejar tu queja en el Libro de Reclamaciones de Boga, que encontrás en la app y en el sitio web, y acudir a INDECOPI.
 
 ### 8. Contenido y propiedad intelectual
 
@@ -104,11 +106,11 @@ Ningún cambio de términos afecta pedidos, viajes o compras que ya confirmaste 
 
 Estos Términos se rigen por las leyes del Perú.
 
-Ante cualquier controversia, primero intentaremos resolverla de buena fe por el Centro de Ayuda. Si no hay acuerdo, las partes se someten a los jueces y tribunales de Pucallpa, sin perjuicio del derecho del consumidor a acudir a INDECOPI o a la vía que la ley le franquee. [[Definir con abogado si se agrega cláusula arbitral.]]
+Ante cualquier controversia, primero intentaremos resolverla de buena fe por el Centro de Ayuda. Si no hay acuerdo, las partes se someten a los jueces y tribunales de Pucallpa, sin perjuicio del derecho del consumidor a acudir a INDECOPI o a la vía que la ley le franquee.
 
 ### 12. Contacto
 
-Consultas legales y notificaciones: [[legal@bogahub.app]]. Domicilio: [[domicilio fiscal completo]], Pucallpa, Ucayali, Perú. Para temas de datos personales, ver la Política de Privacidad.
+Consultas legales y notificaciones: legal@bogahub.app. Domicilio: domicilio fiscal completo, Pucallpa, Ucayali, Perú. Para temas de datos personales, ver la Política de Privacidad.
 
 ---
 
@@ -118,7 +120,7 @@ _Aplica a: Todas las personas cuyos datos trata Boga: usuarios, choferes, contac
 
 ### 1. Responsable del tratamiento
 
-El responsable de tus datos es [[RAZÓN SOCIAL S.A.C.]], RUC [[N.º DE RUC]], domicilio [[domicilio fiscal completo]], Pucallpa, Ucayali, Perú. Para cualquier tema de datos personales escribí a [[privacidad@bogahub.app]].
+El responsable de tus datos es RAZÓN SOCIAL S.A.C., RUC N.º DE RUC, domicilio domicilio fiscal completo, Pucallpa, Ucayali, Perú. Para cualquier tema de datos personales escribí a privacidad@bogahub.app.
 
 ### 2. Qué datos recogemos
 
@@ -155,15 +157,15 @@ Boga no vende tus datos personales.
 
 ### 5. Transferencias internacionales
 
-Algunos de nuestros proveedores procesan datos fuera del Perú. En esos casos aplicamos las garantías que exige la Ley 29733 y su reglamento. [[Detallar proveedores y país con el abogado.]]
+Algunos de nuestros proveedores procesan datos fuera del Perú. En esos casos aplicamos las garantías que exige la Ley 29733 y su reglamento. Podés pedirnos la lista actualizada de estos proveedores escribiendo a privacidad@bogahub.app.
 
 ### 6. Cuánto tiempo los guardamos
 
-Conservamos cada dato mientras tengas cuenta y luego por los plazos que exijan las normas tributarias, contables y de protección al consumidor. Después lo eliminamos o lo anonimizamos. [[Fijar plazos concretos por tipo de dato.]]
+Conservamos cada dato mientras tengas cuenta y luego por los plazos que exijan las normas tributarias, contables y de protección al consumidor. Después lo eliminamos o lo anonimizamos.
 
 ### 7. Tus derechos
 
-Podés pedir acceder a tus datos, rectificarlos, actualizarlos, cancelarlos u oponerte a ciertos tratamientos, escribiendo a [[privacidad@bogahub.app]]. Respondemos en los plazos de ley. Si no estás conforme, podés reclamar ante la Autoridad Nacional de Protección de Datos Personales.
+Podés pedir acceder a tus datos, rectificarlos, actualizarlos, cancelarlos u oponerte a ciertos tratamientos, escribiendo a privacidad@bogahub.app. Respondemos en los plazos de ley. Si no estás conforme, podés reclamar ante la Autoridad Nacional de Protección de Datos Personales.
 
 ### 8. Seguridad
 
@@ -197,7 +199,7 @@ Una cookie es un archivo pequeño que un sitio guarda en tu navegador. Sirve, po
 
 **Analíticas y de rendimiento**
 
-Nos ayudan a entender cómo se usa la app para mejorarla. [[Nombrar el proveedor si se usa uno.]]
+Nos ayudan a entender cómo se usa la app para mejorarla. Si usamos un proveedor de analítica externo, lo identificamos en esta política.
 
 **De terceros**
 
@@ -221,7 +223,7 @@ El Libro de Reclamaciones es donde dejás por escrito una disconformidad. Hay do
 
 Entrá a /libro-de-reclamaciones (link en el pie de página), completá tus datos, los del pedido o servicio y contanos qué pasó. Al enviar recibís un número de hoja; guardala o imprimila desde esa pantalla.
 
-Si preferís, escribinos a [[legal@bogahub.app]].
+Si preferís, escribinos a legal@bogahub.app.
 
 ### 3. Qué pasa después
 
@@ -272,13 +274,13 @@ Cuando Boga o un comercio ofrezcan planes de comida (por ejemplo un pack semanal
 **Planes con plazo mínimo de permanencia**
 
 - Algunos planes se ofrecen a un precio menor a cambio de un compromiso de permanencia (por ejemplo 6 o 12 meses). Ese plazo y el costo de salir antes se te muestran de forma destacada antes de contratar, y solo se aplican si los aceptás expresamente.
-- Si cancelás antes de que termine el plazo por decisión tuya, se cobra la penalidad informada, que como máximo equivale a [[definir: p. ej. el descuento del que ya te beneficiaste, o una parte proporcional de las cuotas restantes — nunca el total pendiente]].
+- Si cancelás antes de que termine el plazo por decisión tuya, se cobra la penalidad informada al contratar. Esa penalidad es proporcional (por ejemplo, el descuento del que ya te beneficiaste o una parte de las cuotas que faltan) y nunca es el total de lo que quedaba por pagar.
 - No se cobra ninguna penalidad si cancelás porque Boga o el comercio subieron el precio, redujeron lo que incluye el plan o incumplieron de forma reiterada. En ese caso podés salir sin costo aunque estés dentro del plazo.
 
 **Para todos los planes**
 
 - Cambios de precio o de contenido: se te avisa con al menos 30 días de anticipación y podés cancelar sin penalidad antes de que el cambio entre en vigor.
-- Pausas y faltas: [[definir política — p. ej. poder pausar X días, qué pasa si el comercio no entrega un día]].
+- Pausas y faltas: cada plan indica si podés pausarlo, por cuántos días, y qué pasa si un día el comercio no entrega (se repone o se descuenta).
 
 Boga puede modificar o descontinuar un plan avisando con al menos 30 días; si queda saldo a favor tuyo, se te reembolsa o se te acredita en Boga Points, a tu elección, sin penalidad.
 
@@ -294,7 +296,7 @@ Taxi Seguro es, por ahora, un directorio de choferes de Pucallpa (mototaxi, auto
 
 ### 2. Verificación de choferes
 
-Antes de publicar a un chofer, Boga revisa [[lista exacta a definir: DNI, licencia vigente de la categoría correspondiente, SOAT/AFOCAT vigente, tarjeta de propiedad o autorización de uso, permiso municipal de operación cuando aplica, y referencias]].
+Antes de publicar a un chofer, Boga revisa su DNI, la licencia de conducir vigente de la categoría que corresponde al vehículo, el SOAT o AFOCAT vigente, la tarjeta de propiedad o la autorización de uso del vehículo, el permiso municipal de operación cuando aplica, y referencias.
 
 La verificación es un control inicial y periódico, no una garantía absoluta sobre la conducta del chofer en cada viaje. El chofer se compromete a mantener sus documentos vigentes y a avisar a Boga si algo cambia. Boga puede quitar del directorio a cualquier chofer.
 
@@ -337,7 +339,7 @@ _Aplica a: Usuarios que carguen o usen saldo dentro de Boga._
 
 ### 1. Qué son los Boga Points
 
-Los Boga Points son un saldo de créditos dentro de tu cuenta que sirve para pagar productos y servicios ofrecidos en Boga. 1 Boga Point equivale a S/ 1 [[confirmar equivalencia]].
+Los Boga Points son un saldo de créditos dentro de tu cuenta que sirve para pagar productos y servicios ofrecidos en Boga. 1 Boga Point equivale a S/ 1.
 
 Los Boga Points no son dinero, no son un depósito, no generan intereses y no son dinero electrónico en el sentido de la Ley 29985. Son un mecanismo de pago de uso exclusivo dentro de Boga.
 
@@ -359,19 +361,19 @@ Podés usar tu saldo, total o parcialmente, para pagar dentro de Boga:
 
 No se pueden usar para pagar fuera de Boga.
 
-Los Boga Points no se pueden transferir libremente a otras personas ni convertir de vuelta a efectivo, salvo los casos de reembolso descritos abajo. [[Si se habilita "regalar saldo" a un contacto, definir límites para no volverlo un medio de transferencia de valor entre personas.]]
+Los Boga Points no se pueden transferir libremente a otras personas ni convertir de vuelta a efectivo, salvo los casos de reembolso descritos abajo.
 
 ### 4. Caducidad
 
-El saldo comprado con tu dinero [[no caduca / caduca a los XX meses de inactividad, definir]]. El saldo otorgado como promoción caduca en la fecha que indique cada promoción. Antes de que un saldo caduque, te avisamos.
+El saldo que compraste con tu dinero no caduca mientras tu cuenta esté activa. El saldo otorgado como promoción caduca en la fecha que indique cada promoción. Antes de que un saldo caduque, te avisamos.
 
 ### 5. Reembolso
 
-[[Definir con abogado.]] Propuesta: podés pedir que Boga te devuelva el saldo comprado con tu dinero (no el de promociones) al medio de pago original, descontando [[comisión / sin comisión]], dentro de [[plazo]]. Al cerrar tu cuenta, el saldo comprado se te reembolsa por el mismo mecanismo.
+Podés pedir que Boga te devuelva el saldo que compraste con tu dinero (no el saldo de promociones) al medio de pago original. Al cerrar tu cuenta, ese saldo se te reembolsa por el mismo mecanismo. Las condiciones (plazo y comisiones, si las hubiera) se indican en la app al momento de solicitar el reembolso.
 
 ### 6. Pagos entre pasajeros y choferes (Taxi Seguro)
 
-Si Boga habilita pagar el viaje de Taxi Seguro con Boga Points, el pasajero paga a Boga y Boga acredita al chofer el monto correspondiente, menos la comisión de servicio informada. Los tiempos y el mecanismo de liquidación al chofer se detallan al activar la función. [[Este flujo es el que más hay que revisar frente a la Ley 29985: definir si Boga solo "recauda por cuenta de" el chofer o si administra saldo de terceros.]]
+Si Boga habilita pagar el viaje de Taxi Seguro con Boga Points, el pasajero paga a Boga y Boga acredita al chofer el monto correspondiente, menos la comisión de servicio informada. Los tiempos y el mecanismo de liquidación al chofer se detallan al activar la función.
 
 ### 7. Errores y mal uso
 
@@ -391,7 +393,7 @@ El organizador que figura en cada evento es el responsable del evento: su realiz
 
 Al comprar recibís una entrada digital con un código QR. Ese QR es de un solo uso: se valida al ingresar y deja de servir. No compartas la imagen: si alguien la usa antes, no vas a poder entrar. Guardá tu entrada en la app.
 
-[[Definir si la entrada es transferible: p. ej. poder reasignarla a otra persona desde la app hasta X horas antes.]]
+Si la entrada admite transferirse a otra persona, vas a poder reasignarla desde la app; cada evento indica hasta cuándo se puede hacer.
 
 ### 3. Precio y comisión
 
@@ -399,9 +401,9 @@ El precio de la entrada lo fija el organizador. Boga puede cobrar una comisión 
 
 ### 4. Cambios, cancelación y reembolso
 
-- Si el organizador cancela el evento: tenés derecho a la devolución del valor de la entrada. [[Definir si la comisión de servicio también se devuelve.]]
-- Si el organizador reprograma: tu entrada vale para la nueva fecha; si no podés asistir, podés pedir el reembolso dentro de [[plazo]].
-- Si simplemente no querés ir: el reembolso depende de la política del evento, que se muestra antes de comprar. [[Definir política por defecto.]]
+- Si el organizador cancela el evento: tenés derecho a la devolución del valor de la entrada.
+- Si el organizador reprograma: tu entrada vale para la nueva fecha; si no podés asistir, podés pedir el reembolso dentro del plazo que se indique al anunciar la nueva fecha.
+- Si simplemente no querés ir: el reembolso depende de la política del evento, que se muestra antes de comprar.
 
 ### 5. En el evento
 
@@ -423,9 +425,9 @@ Boga te da la vitrina, el sistema de pedidos, la coordinación de entrega y el p
 
 ### 3. Comisiones y pagos
 
-Boga cobra una comisión por cada venta [[detallar % por vertical]]. Boga liquida el saldo a tu favor cada [[periodo]], al medio que indiques, descontando la comisión y lo que corresponda por reembolsos a clientes. Boga te entrega el detalle de cada liquidación y su comprobante por la comisión.
+Boga cobra una comisión por cada venta, que se te informa al registrarte y figura en tu panel. Boga liquida el saldo a tu favor de forma periódica, al medio que indiques, descontando la comisión y lo que corresponda por reembolsos a clientes. Boga te entrega el detalle de cada liquidación y su comprobante por la comisión.
 
-Boga puede cambiar la comisión avisándote con al menos [[30]] días. Si no estás de acuerdo, podés dar de baja tu tienda antes de que el cambio aplique.
+Boga puede cambiar la comisión avisándote con al menos 30 días de anticipación. Si no estás de acuerdo, podés dar de baja tu tienda antes de que el cambio aplique.
 
 ### 4. Responsabilidad frente al cliente
 
@@ -451,11 +453,11 @@ El programa de afiliados te permite recomendar Boga a negocios, choferes o nuevo
 
 ### 2. Cómo se gana la comisión
 
-[[Definir.]] Cada campaña indica: qué acción del referido genera comisión, cuánto paga, si es un pago único o recurrente y por cuánto tiempo. La comisión se confirma solo cuando la acción del referido es válida (no cancelada, no fraudulenta).
+Cada campaña indica: qué acción del referido genera comisión, cuánto paga, si es un pago único o recurrente y por cuánto tiempo. La comisión se confirma solo cuando la acción del referido es válida (no cancelada, no fraudulenta).
 
 ### 3. Pago
 
-[[Definir.]] Boga paga la comisión acumulada cada [[periodo]] cuando superás el mínimo de [[monto]]. Según tu situación, se te pedirá comprobante o se aplicará la retención que corresponda.
+Boga paga la comisión acumulada de forma periódica cuando superás el monto mínimo indicado en el programa. Según tu situación, se te pedirá comprobante o se aplicará la retención que corresponda.
 
 ### 4. Lo que no está permitido
 

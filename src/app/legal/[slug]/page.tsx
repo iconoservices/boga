@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import AppHeader from '@/components/AppHeader';
 import PrintButton from '@/components/PrintButton';
 import {
-  DOCS, getDoc, docHref, EMPRESA,
+  DOCS, getDoc, docHref, EMPRESA, EMPRESA_INCOMPLETA,
   type Bloque, type Seccion,
 } from '@/lib/legal';
 
@@ -38,14 +38,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-// Resalta los placeholders [[...]] mientras no estén completados en legal.ts.
+// Los placeholders [[...]] que quedan en la vista pública son solo datos de la
+// empresa sin completar. Se muestran discretos (no en amarillo de alarma); el
+// aviso de "documento en preparación" arriba de la página explica el porqué.
 function Texto({ children }: { children: string }) {
   const partes = children.split(/(\[\[[^\]]+\]\])/g);
   return (
     <>
       {partes.map((p, i) =>
         /^\[\[[^\]]+\]\]$/.test(p) ? (
-          <mark key={i} className="rounded bg-[#fff3bf] px-1 text-[#8a5a00]">{p}</mark>
+          <span key={i} className="text-secondary underline decoration-dotted underline-offset-2">
+            {p.replace(/^\[\[|\]\]$/g, '')}
+          </span>
         ) : (
           <span key={i}>{p}</span>
         ),
@@ -110,6 +114,13 @@ export default async function DocPage({ params }: Props) {
         </h1>
         <p className="mt-3 font-body-lg text-base leading-relaxed text-on-surface/70">{doc.resumen}</p>
         <p className="mt-2 font-label-md text-[12px] italic text-secondary">Aplica a: {doc.aplicaA}</p>
+
+        {EMPRESA_INCOMPLETA && (
+          <p className="mt-4 rounded-md bg-surface-container-low px-3 py-2 font-body-md text-[12px] leading-relaxed text-secondary">
+            Documento en preparación: algunos datos de la empresa (razón social, RUC, domicilio)
+            todavía se están completando.
+          </p>
+        )}
 
         <div className="mt-4 print:hidden">
           <PrintButton />

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import PrintButton from '@/components/PrintButton';
 import {
-  DOCS, TIPO_META, EMPRESA, FECHA_BORRADOR,
+  DOCS, TIPO_META, EMPRESA, EMPRESA_INCOMPLETA, FECHA_BORRADOR,
   type Bloque,
 } from '@/lib/legal';
 
@@ -26,7 +26,9 @@ function Texto({ children }: { children: string }) {
     <>
       {partes.map((p, i) =>
         /^\[\[[^\]]+\]\]$/.test(p) ? (
-          <mark key={i} className="rounded bg-[#fff3bf] px-1 text-[#8a5a00]">{p}</mark>
+          <span key={i} className="text-secondary underline decoration-dotted underline-offset-2">
+            {p.replace(/^\[\[|\]\]$/g, '')}
+          </span>
         ) : (
           <span key={i}>{p}</span>
         ),
@@ -67,6 +69,13 @@ export default function LegalCompleto() {
       <p className="mt-2 font-body-md text-[13px] text-secondary">
         {EMPRESA.razonSocial} · RUC {EMPRESA.ruc} · {EMPRESA.domicilio} · {EMPRESA.email}
       </p>
+
+      {EMPRESA_INCOMPLETA && (
+        <p className="mt-3 rounded-md bg-surface-container-low px-3 py-2 font-body-md text-[12px] leading-relaxed text-secondary">
+          Documento en preparación: algunos datos de la empresa (razón social, RUC, domicilio)
+          todavía se están completando.
+        </p>
+      )}
 
       <div className="mt-4 print:hidden">
         <PrintButton />

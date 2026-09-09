@@ -9,19 +9,22 @@
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { DOCS, ESTADO_META, TIPO_META, EMPRESA, FECHA_BORRADOR, type DocLegal } from '../src/lib/legal.ts';
+import { DOCS, ESTADO_META, TIPO_META, EMPRESA, EMPRESA_INCOMPLETA, FECHA_BORRADOR, type DocLegal } from '../src/lib/legal.ts';
+
+// En la versión de clientes, [[dato]] -> "dato" (sin corchetes de alarma).
+const limpio = (s: string) => s.replace(/\[\[([^\]]+)\]\]/g, '$1');
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = join(__dirname, '..', 'docs', 'legal');
 
-function seccionesDe(d: DocLegal, L: string[], w: (s?: string) => void) {
+function seccionesDe(d: DocLegal, L: string[], w: (s?: string) => void, fmt: (s: string) => string = (s) => s) {
   for (const s of d.secciones) {
     w(`### ${s.n}. ${s.titulo}`);
     w();
     for (const b of s.bloques) {
-      if (b.tipo === 'p') { w(b.texto); w(); }
-      else if (b.tipo === 'sub') { w(`**${b.texto}**`); w(); }
-      else { b.items.forEach((it) => w(`- ${it}`)); w(); }
+      if (b.tipo === 'p') { w(fmt(b.texto)); w(); }
+      else if (b.tipo === 'sub') { w(`**${fmt(b.texto)}**`); w(); }
+      else { b.items.forEach((it) => w(`- ${fmt(it)}`)); w(); }
     }
   }
 }
@@ -79,8 +82,12 @@ function clientes(): string {
   w();
   w(`_Última actualización: ${FECHA_BORRADOR}._`);
   w();
-  w(`${EMPRESA.razonSocial} · RUC ${EMPRESA.ruc} · ${EMPRESA.domicilio} · ${EMPRESA.email}`);
+  w(limpio(`${EMPRESA.razonSocial} · RUC ${EMPRESA.ruc} · ${EMPRESA.domicilio} · ${EMPRESA.email}`));
   w();
+  if (EMPRESA_INCOMPLETA) {
+    w('> Documento en preparación: algunos datos de la empresa (razón social, RUC, domicilio) todavía se están completando.');
+    w();
+  }
   w('## Contenido');
   DOCS.forEach((d, i) => w(`${i + 1}. ${d.titulo}`));
   w();
@@ -91,7 +98,7 @@ function clientes(): string {
     w();
     w(`_Aplica a: ${d.aplicaA}_`);
     w();
-    seccionesDe(d, L, w);
+    seccionesDe(d, L, w, limpio);
     w('---');
     w();
   });
