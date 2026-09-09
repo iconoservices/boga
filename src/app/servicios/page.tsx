@@ -33,7 +33,9 @@ function waLink(numero: string, texto: string) {
 
 export default function Servicios() {
   const { cartCount, setIsCartOpen } = useCart();
-  const [vista, setVista] = useState<Vista>('servicios');
+  // Arranca en "Empleos": los avisos de trabajo tienen más demanda que el
+  // directorio de oficios.
+  const [vista, setVista] = useState<Vista>('empleos');
 
   return (
     <>
@@ -67,7 +69,7 @@ export default function Servicios() {
 
         {/* Conmutador de vista */}
         <div className="flex gap-2">
-          {([['servicios', 'Servicios', 'construction'], ['empleos', 'Empleos', 'work']] as const).map(([id, label, icon]) => (
+          {([['empleos', 'Empleos', 'work'], ['servicios', 'Servicios', 'construction']] as const).map(([id, label, icon]) => (
             <button
               key={id}
               onClick={() => setVista(id)}
