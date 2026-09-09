@@ -185,7 +185,7 @@ function SectionHead({ title, href, cta = 'Ver todo' }: { title: string; href: s
   );
 }
 
-const CAROUSEL = "flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x";
+const CAROUSEL = "flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x scroll-pl-container-margin lg:scroll-pl-0";
 
 // Un solo banner de portada que rota entre notas de la Revista y promos.
 // Mismo diseño en móvil y escritorio: foto a sangre, kicker + titular abajo,
@@ -422,10 +422,19 @@ export default function HomePage() {
 
         {/* Guía rápida — ¿Primera vez en Pucallpa? (debajo del banner) */}
         <section className="flex flex-col gap-4">
-          <div>
-            <span className="font-label-md text-[10px] uppercase tracking-[0.2em] text-secondary">Guía rápida</span>
-            <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-2xl lg:text-3xl">¿Primera vez en Pucallpa?</h2>
-            <p className="font-body-md text-secondary text-xs mt-1">Lo esencial para moverte, dormir, comer y pasarla bien.</p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <span className="font-label-md text-[10px] uppercase tracking-[0.2em] text-secondary">Guía rápida</span>
+              <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-2xl lg:text-3xl">¿Primera vez en Pucallpa?</h2>
+              <p className="font-body-md text-secondary text-xs mt-1">Lo esencial para moverte, dormir, comer y pasarla bien.</p>
+            </div>
+            <Link
+              href="/guia"
+              className="group shrink-0 mt-1 font-label-md text-[12px] text-primary flex items-center gap-0.5 whitespace-nowrap"
+            >
+              Guía completa
+              <span className="material-symbols-outlined text-[14px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
+            </Link>
           </div>
           <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
             {GUIA_PUCALLPA.map((g) => (
@@ -434,8 +443,8 @@ export default function HomePage() {
                 key={g.titulo}
                 className="group bg-white border border-surface-container-highest p-4 shadow-sm hover:border-primary/30 hover:shadow-md transition-all flex flex-col gap-2 min-w-[180px] w-[180px] snap-start shrink-0"
               >
-                <span className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm" style={{ backgroundColor: g.color }}>
-                  <span className="material-symbols-outlined text-white text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>{g.icon}</span>
+                <span className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm" style={{ backgroundColor: g.color }}>
+                  <span className="material-symbols-outlined text-white text-[19px]" style={{ fontVariationSettings: "'FILL' 1" }}>{g.icon}</span>
                 </span>
                 <h3 className="font-headline-sm text-sm text-on-surface leading-tight">{g.titulo}</h3>
                 <p className="font-body-md text-secondary text-[11px] leading-snug">{g.sub}</p>
@@ -445,22 +454,6 @@ export default function HomePage() {
               </Link>
             ))}
           </div>
-
-          <Link
-            href="/guia"
-            className="group flex items-center justify-between gap-4 bg-on-surface text-background p-4 lg:p-5 hover:bg-on-surface/90 transition-colors"
-          >
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="w-10 h-10 rounded-xl bg-primary-fixed text-primary flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>menu_book</span>
-              </span>
-              <div className="min-w-0">
-                <h3 className="font-headline-sm text-sm lg:text-base">Guía completa de Pucallpa</h3>
-                <p className="font-body-md text-background/60 text-[11px] lg:text-xs">Clima, plata, emergencias, cómo llegar y costumbres locales</p>
-              </div>
-            </div>
-            <span className="material-symbols-outlined text-primary-fixed text-[20px] shrink-0 transition-transform group-hover:translate-x-0.5">arrow_forward</span>
-          </Link>
         </section>
 
         {/* Pulso metropolitano */}
