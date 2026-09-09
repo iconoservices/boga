@@ -32,8 +32,8 @@ const PLANES: Plan[] = [
       'Pedidos directo a tu WhatsApp, sin comisión',
       'Funciona en cualquier ciudad',
     ],
-    mes: { precio: 'S/ 50', periodo: '/mes', nota: 'Precio de lanzamiento · luego S/ 80/mes' },
-    anio: { precio: 'S/ 500', periodo: '/año', nota: '2 meses gratis · equivale a ~S/ 42/mes' },
+    mes: { precio: 'S/ 50', periodo: '/mes', nota: 'Precio fundador — fijo de por vida si te unes ahora · luego S/ 80/mes' },
+    anio: { precio: 'S/ 500', periodo: '/año', nota: 'Precio fundador · 2 meses gratis (≈ S/ 42/mes)' },
   },
   {
     id: 'marketplace',
