@@ -498,8 +498,10 @@ const anexoMarket: DocLegal = {
         { tipo: 'sub', texto: 'Quién administra el plan' },
         { tipo: 'lista', items: [
           'Plan del negocio: la cocina o el negocio administra su propio plan y te cobra directo. Boga solo pone la herramienta y coordina la entrega, igual que en un pedido normal.',
-          'Plan administrado por Boga: en algunos planes de Pensión, Boga cobra la suscripción, organiza la logística del reparto diario y coordina con la cocina. En ese caso Boga te emite el comprobante por el plan y liquida con la cocina. Cada plan indica quién lo administra antes de que lo contrates.',
+          'Plan administrado por Boga: Boga cobra la suscripción, organiza la logística del reparto diario y coordina con una cocina. Boga te emite el comprobante por el plan y liquida con la cocina.',
+          'Pensión Boga (marca propia): en algunos planes la comida es de Boga —cocina propia o contratada bajo la marca de Boga—. Acá Boga es directamente el proveedor: vende el plan, lo prepara o lo manda preparar, y responde por él.',
         ]},
+        { tipo: 'p', texto: 'Cada plan indica quién lo administra antes de que lo contrates.' },
         { tipo: 'sub', texto: 'Planes sin plazo mínimo (mes a mes)' },
         { tipo: 'lista', items: [
           'Si el plan se renueva solo, se te avisa antes de cada cobro y podés cancelar la renovación en cualquier momento desde tu perfil; la cancelación aplica al siguiente período, no al que ya pagaste.',
@@ -600,6 +602,12 @@ const anexoTaxi: DocLegal = {
       bloques: [
         { tipo: 'p', texto: 'Boga puede ofrecer planes pagos —por ejemplo un plan para el chofer con sello de verificado destacado, o una versión premium para el pasajero con más funciones (reservar con anticipación, historial, soporte prioritario)—. Mientras Boga solo cobre por esas funciones y NO administre la tarifa del viaje, sigue siendo un servicio de Boga y no cambia el resto de este anexo.' },
         { tipo: 'p', texto: 'Distinto es el día que Boga habilite pagar el viaje dentro de la app (por ejemplo con Boga Points): ahí Boga entra en el dinero del pasaje, y se publicará una versión ampliada de este anexo con las reglas de tarifa, cancelación, calificación, seguro y liquidación al chofer. Ese cambio se avisa con anticipación.' },
+      ],
+    },
+    {
+      n: '8', titulo: 'Un servicio propio de Boga, más adelante',
+      bloques: [
+        { tipo: 'p', texto: 'Aparte del directorio de choferes independientes, Boga podría más adelante operar su propio servicio de movilidad: un grupo de choferes con los que Boga trabaja, y un servicio premium que Boga le ofrece directamente al pasajero (por viaje o por una cuota mensual). Ese servicio ya no es un directorio: Boga organiza el viaje y, según el caso, cobra la tarifa. Tiene sus propias reglas de tarifa, seguro y responsabilidad, y las normas de transporte que correspondan, en un anexo aparte que se publicará cuando ese servicio exista.' },
       ],
     },
   ],
@@ -770,8 +778,8 @@ const anexoNegocios: DocLegal = {
     'sin "recaudación por cuenta de", el ingreso de Boga es solo el plan). El abogado revisa el contrato ' +
     'de servicio y sus plazos, la cláusula de evolución (sección 6) y el acuerdo de datos (sección 5).',
   pendientes: [
-    'Fijar los niveles de plan y sus precios (base / con Boga Market / tienda a medida).',
-    'Definir el fee de puesta en marcha (setup) de una tienda a medida.',
+    'DECIDIDO: plan Tu Tienda Boga S/50 lanzamiento → S/80 regular; plan + Boga Market S/100. (Confirmar con contador cómo se documentan las promos de lanzamiento.)',
+    'Definir el fee de puesta en marcha (setup) de una tienda a medida — el user lo tiene que organizar.',
     'Definir la antelación para cambios de precio del plan (se propone 30 días).',
     'Definir el acuerdo de tratamiento de datos: el negocio es responsable de los datos de sus clientes.',
   ],
@@ -784,9 +792,15 @@ const anexoNegocios: DocLegal = {
           'Tu Tienda Boga: tu página propia con catálogo, inventario y pedidos, con un enlace que compartís donde quieras. Disponible en cualquier ciudad.',
           'Boga Market: además, aparecés en el directorio de tiendas de tu ciudad dentro de la app. Disponible solo donde Boga opera; si tu ciudad todavía no está activa, quedás en lista de espera.',
           'Coordinación de entrega, donde esté habilitada.',
-          'Tienda a medida: diseño personalizado, con un costo de puesta en marcha aparte del plan.',
+          'Tienda a medida: diseño personalizado, con un costo de puesta en marcha (setup) aparte del plan.',
         ]},
-        { tipo: 'p', texto: 'Los planes, lo que incluye cada uno y sus precios se te muestran antes de contratar y figuran en tu panel. Para registrarte necesitás datos reales del negocio (RUC o documento, rubro, contacto).' },
+        { tipo: 'sub', texto: 'Niveles y precios (a la fecha de este documento)' },
+        { tipo: 'lista', items: [
+          'Plan Tu Tienda Boga: S/ 50 al mes como precio de lanzamiento; el precio regular es S/ 80 al mes.',
+          'Plan Tu Tienda Boga + Boga Market: S/ 100 al mes.',
+          'Tienda a medida: precio del plan más un costo de setup [[a definir]] por única vez.',
+        ]},
+        { tipo: 'p', texto: 'Los precios vigentes, lo que incluye cada plan y las promociones activas se te muestran antes de contratar y figuran en tu panel. Boga puede cambiarlos con el aviso de la sección 4. Para registrarte necesitás datos reales del negocio (RUC o documento, rubro, contacto).' },
       ],
     },
     {
