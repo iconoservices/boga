@@ -434,6 +434,56 @@ function AdminDashboard({ user }: { user: User }) {
     setIsPosSaving(false);
   };
 
+  // Boleta de la venta del POS en PDF (formato ticket 80mm). El modal ya tiene
+  // "Imprimir" (window.print) y "Compartir por WhatsApp" en texto; esto agrega
+  // un archivo descargable/archivable.
+  const descargarBoletaPDF = (venta: any) => {
+    const storeName = stores[venta.store]?.name || String(venta.store).toUpperCase();
+    const items = Array.isArray(venta.items)
+      ? venta.items
+      : typeof venta.items === 'string' ? JSON.parse(venta.items) : [];
+
+    const W = 80;
+    const doc = new jsPDF({ unit: 'mm', format: [W, 297] });
+    const M = 6;
+    let y = 10;
+    const line = (txt: string, opts: { size?: number; bold?: boolean; align?: 'left' | 'center' | 'right'; gap?: number } = {}) => {
+      doc.setFontSize(opts.size ?? 8);
+      doc.setFont('helvetica', opts.bold ? 'bold' : 'normal');
+      const x = opts.align === 'center' ? W / 2 : opts.align === 'right' ? W - M : M;
+      doc.text(txt, x, y, { align: opts.align ?? 'left' });
+      y += opts.gap ?? 4.2;
+    };
+    const rule = () => { doc.setLineDashPattern([0.6, 0.6], 0); doc.line(M, y, W - M, y); y += 3; };
+    const row = (l: string, r: string, bold = false) => {
+      doc.setFontSize(8);
+      doc.setFont('helvetica', bold ? 'bold' : 'normal');
+      doc.text(l, M, y);
+      doc.text(r, W - M, y, { align: 'right' });
+      y += 4.2;
+    };
+
+    line('BOGA MARKET', { size: 12, bold: true, align: 'center', gap: 4.5 });
+    line(storeName, { size: 8, bold: true, align: 'center' });
+    line('TICKET DE VENTA LOCAL', { size: 7, align: 'center', gap: 5 });
+    rule();
+    row('ID Venta:', '#' + String(venta.id).substring(0, 8));
+    row('Fecha:', new Date(venta.created_at).toLocaleString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }));
+    row('Vendedor:', venta.seller_name || '-');
+    row('Pago:', venta.payment_method || '-');
+    if (venta.customer_name && venta.customer_name !== 'Cliente Local (POS)') row('Cliente:', venta.customer_name);
+    rule();
+    items.forEach((it: any) => {
+      row(`${it.quantity}x ${it.name}`.slice(0, 32), `S/ ${(it.price * it.quantity).toFixed(2)}`);
+    });
+    rule();
+    row('TOTAL', `S/ ${Number(venta.total_amount).toFixed(2)}`, true);
+    y += 4;
+    line('¡Gracias por su compra!', { size: 7, align: 'center' });
+
+    doc.save(`Boleta_${storeName.replace(/\s+/g, '_')}_${String(venta.id).substring(0, 8)}.pdf`);
+  };
+
   const openStoreEditor = (slug: string, section: string | null = null) => {
     const config = stores[slug];
     const dbData = dbStores.find((s: any) => s.slug === slug);
@@ -3116,8 +3166,16 @@ function AdminDashboard({ user }: { user: User }) {
                 <span className="material-symbols-outlined text-[18px]">print</span>
                 Imprimir Ticket (Impresora Térmica)
               </button>
-              
-              <button 
+
+              <button
+                onClick={() => descargarBoletaPDF(lastCompletedSale)}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-gray-900 text-white hover:bg-black font-bold rounded-md transition-all shadow-md cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+                Descargar boleta (PDF)
+              </button>
+
+              <button
                 onClick={() => {
                   if (typeof window !== 'undefined') {
                     const items = Array.isArray(lastCompletedSale.items) 
