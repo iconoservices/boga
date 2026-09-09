@@ -48,9 +48,11 @@ export default function AppFooter() {
         <div className="flex flex-col gap-4">
           <span className="font-label-md text-on-surface uppercase font-bold tracking-wider text-xs">Legal</span>
           <nav className="flex flex-col gap-2">
-            <a className="font-body-md text-secondary hover:text-primary transition-colors duration-200" href="#">Términos del Servicio</a>
-            <a className="font-body-md text-secondary hover:text-primary transition-colors duration-200" href="#">Política de Privacidad</a>
-            <a className="font-body-md text-secondary hover:text-primary transition-colors duration-200" href="#">Cookies</a>
+            <a className="font-body-md text-secondary hover:text-primary transition-colors duration-200" href="/legal/terminos">Términos y Condiciones</a>
+            <a className="font-body-md text-secondary hover:text-primary transition-colors duration-200" href="/legal/privacidad">Política de Privacidad</a>
+            <a className="font-body-md text-secondary hover:text-primary transition-colors duration-200" href="/legal/cookies">Cookies</a>
+            <a className="font-body-md text-secondary hover:text-primary transition-colors duration-200" href="/libro-de-reclamaciones">Libro de Reclamaciones</a>
+            <a className="font-body-md text-secondary hover:text-primary transition-colors duration-200" href="/legal">Centro Legal</a>
           </nav>
         </div>
         <div className="flex flex-col gap-4">

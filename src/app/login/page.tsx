@@ -238,6 +238,15 @@ export default function LoginPage() {
                     </>
                   ) : useMagicLink ? 'Enviarme el link →' : isSignUp ? 'Crear cuenta →' : 'Entrar →'}
                 </button>
+
+                {isSignUp && (
+                  <p className="text-[10px] leading-relaxed text-secondary/70 text-center -mt-1">
+                    Al crear tu cuenta confirmás que sos mayor de 18 años y aceptás los{' '}
+                    <a href="/legal/terminos" target="_blank" className="font-bold text-secondary hover:text-primary underline">Términos</a>{' '}
+                    y la{' '}
+                    <a href="/legal/privacidad" target="_blank" className="font-bold text-secondary hover:text-primary underline">Política de Privacidad</a>.
+                  </p>
+                )}
               </form>
 
               <div className="mt-4 text-center">
