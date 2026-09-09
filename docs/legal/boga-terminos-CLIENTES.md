@@ -263,13 +263,24 @@ La venta de bebidas alcohólicas, tabaco y otros productos regulados solo se hac
 
 ### 7. Planes y suscripciones de comida
 
-Cuando Boga o un comercio ofrezcan planes de comida (por ejemplo un pack semanal de almuerzos de Pensión), antes de contratar vas a ver: qué incluye, el precio, cada cuánto se cobra y cómo se renueva.
+Cuando Boga o un comercio ofrezcan planes de comida (por ejemplo un pack semanal de almuerzos de Pensión), antes de contratar vas a ver, de forma clara: qué incluye, el precio, cada cuánto se cobra, cómo se renueva y si tiene un plazo mínimo de permanencia.
 
-- Renovación: si el plan se renueva solo, se te avisa antes de cada cobro y podés cancelar la renovación en cualquier momento desde tu perfil; la cancelación aplica al siguiente período, no al que ya pagaste.
-- Cambios de precio o de contenido: se te avisa con al menos 30 días de anticipación. Si no estás de acuerdo, podés cancelar sin penalidad antes de que el cambio entre en vigor.
+**Planes sin plazo mínimo (mes a mes)**
+
+- Si el plan se renueva solo, se te avisa antes de cada cobro y podés cancelar la renovación en cualquier momento desde tu perfil; la cancelación aplica al siguiente período, no al que ya pagaste.
+
+**Planes con plazo mínimo de permanencia**
+
+- Algunos planes se ofrecen a un precio menor a cambio de un compromiso de permanencia (por ejemplo 6 o 12 meses). Ese plazo y el costo de salir antes se te muestran de forma destacada antes de contratar, y solo se aplican si los aceptás expresamente.
+- Si cancelás antes de que termine el plazo por decisión tuya, se cobra la penalidad informada, que como máximo equivale a [[definir: p. ej. el descuento del que ya te beneficiaste, o una parte proporcional de las cuotas restantes — nunca el total pendiente]].
+- No se cobra ninguna penalidad si cancelás porque Boga o el comercio subieron el precio, redujeron lo que incluye el plan o incumplieron de forma reiterada. En ese caso podés salir sin costo aunque estés dentro del plazo.
+
+**Para todos los planes**
+
+- Cambios de precio o de contenido: se te avisa con al menos 30 días de anticipación y podés cancelar sin penalidad antes de que el cambio entre en vigor.
 - Pausas y faltas: [[definir política — p. ej. poder pausar X días, qué pasa si el comercio no entrega un día]].
 
-Boga puede modificar o descontinuar un plan avisando con la misma anticipación; si queda saldo a favor tuyo, se te reembolsa o se te acredita en Boga Points, a tu elección.
+Boga puede modificar o descontinuar un plan avisando con al menos 30 días; si queda saldo a favor tuyo, se te reembolsa o se te acredita en Boga Points, a tu elección, sin penalidad.
 
 ---
 
