@@ -397,6 +397,32 @@ export function notaHref(n: Pick<Nota, 'slug'>): string {
   return `/revista/${n.slug}`;
 }
 
+/** Forma reducida de una nota para las tarjetas de la portada (/). La sirve
+ *  el endpoint cacheado GET /api/revista. */
+export type NotaCard = {
+  slug: string;
+  kicker: string;
+  titulo: string;
+  dek: string;
+  img: string;
+  fecha: string;
+  lectura: string;
+  autor: string;
+};
+
+/** Lee las notas publicadas desde el endpoint cacheado. Para componentes
+ *  cliente (la portada). Devuelve [] si falla — el que llama pone su fallback. */
+export async function fetchNotasRevista(): Promise<NotaCard[]> {
+  try {
+    const res = await fetch('/api/revista');
+    if (!res.ok) return [];
+    const { notas } = await res.json();
+    return Array.isArray(notas) ? (notas as NotaCard[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 /** Notas de la misma sección, sin la actual. `todas` = lista ya cargada. */
 export function relacionadasDe(nota: Nota, todas: Nota[], max = 3): Nota[] {
   return todas.filter((n) => n.kicker === nota.kicker && n.slug !== nota.slug).slice(0, max);

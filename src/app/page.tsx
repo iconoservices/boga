@@ -4,23 +4,20 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
+import { fetchNotasRevista, type NotaCard } from '@/lib/revista';
 
 // "/" = el Inicio del lado consumidor. Es el índice vivo de Boga: un vistazo a
 // cada hub + contenido editorial fresco (SEO). Nada se resuelve acá, solo se
 // descubre; cada bloque termina en "Ver todo". Buscador = /market, B2B = /negocios.
 // Data de muestra hasta que cada hub exponga sus destacados reales.
 
-// Portada rotativa — un solo banner que va cambiando: revista, promos, sorteo,
-// eventos… Data de muestra hasta que salga de cada hub / de un CMS.
+// Portada rotativa — un solo banner que va cambiando entre notas REALES de la
+// Revista (vía /api/revista) y promos de cada hub. Las promas siguen siendo de
+// muestra hasta que cada hub exponga sus destacados; las de Revista ya son reales.
 type Slide = { kicker: string; title: string; href: string; img: string; portrait?: string };
-const PORTADA_SLIDES: Slide[] = [
-  {
-    kicker: 'Revista · Gastronomía',
-    title: 'Los 3 huariques secretos para el mejor tacacho de Pucallpa',
-    href: '/revista',
-    img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1600&q=80',
-    portrait: 'https://images.unsplash.com/photo-1554048612-b6a482bc67e5?w=400&q=80',
-  },
+
+// Promos de los otros hubs (de muestra). Se intercalan con las notas de Revista.
+const PROMO_SLIDES: Slide[] = [
   {
     kicker: 'Promo · Market',
     title: '2x1 en hamburguesas — solo por hoy',
@@ -39,13 +36,32 @@ const PORTADA_SLIDES: Slide[] = [
     href: '/eventos',
     img: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=1600&q=80',
   },
+];
+
+// Fallback completo si /api/revista no responde (egress caído, tabla vacía):
+// el banner nunca queda en blanco.
+const PORTADA_FALLBACK: Slide[] = [
   {
-    kicker: 'Revista · Curiosidades',
-    title: '¿Sabías por qué la laguna de Yarinacocha se llama así?',
+    kicker: 'Revista',
+    title: 'Historias, cultura y rutas de Pucallpa',
     href: '/revista',
     img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1600&q=80',
   },
+  ...PROMO_SLIDES,
 ];
+
+// Construye la lista de slides: intercala las 2 notas más recientes de la
+// Revista con las promos.
+function armarSlides(notas: NotaCard[]): Slide[] {
+  if (!notas.length) return PORTADA_FALLBACK;
+  const rev: Slide[] = notas.slice(0, 2).map((n) => ({
+    kicker: `Revista · ${n.kicker}`,
+    title: n.titulo,
+    href: `/revista/${n.slug}`,
+    img: n.img,
+  }));
+  return [rev[0], PROMO_SLIDES[0], PROMO_SLIDES[1], rev[1], PROMO_SLIDES[2]].filter(Boolean) as Slide[];
+}
 
 // Los 8 Portales de Boga — el lanzador de la ciudad. Un ícono por hub, cada
 // uno con su color. El "sub" está escrito como lo que Boga te resuelve, no
@@ -171,10 +187,18 @@ function SectionHead({ title, href, cta = 'Ver todo' }: { title: string; href: s
 
 const CAROUSEL = "flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x";
 
-// Un solo banner de portada que rota entre revista, promos, sorteo y eventos.
-function PortadaCarrusel() {
+// Un solo banner de portada que rota entre notas de la Revista y promos.
+// Mismo diseño en móvil y escritorio: foto a sangre, kicker + titular abajo,
+// flechas a los lados y puntos de posición. Rota solo cada 6 s.
+function PortadaCarrusel({ notas }: { notas: NotaCard[] }) {
+  const slides = React.useMemo(() => armarSlides(notas), [notas]);
   const [i, setI] = useState(0);
-  const n = PORTADA_SLIDES.length;
+  const n = slides.length;
+
+  // Si cambia la cantidad de slides (llegan las notas reales), no dejar el
+  // índice fuera de rango.
+  useEffect(() => { setI((v) => (v < n ? v : 0)); }, [n]);
+
   const next = useCallback(() => setI((v) => (v + 1) % n), [n]);
   const prev = () => setI((v) => (v - 1 + n) % n);
 
@@ -187,7 +211,7 @@ function PortadaCarrusel() {
     <div className="w-screen mx-[calc(50%-50vw)] lg:w-full lg:mx-0">
       <div className="relative overflow-hidden lg:rounded-2xl bg-surface-container-low shadow-sm aspect-[16/10] sm:aspect-[2/1] lg:aspect-auto lg:h-[460px]">
         <div className="flex h-full transition-transform duration-500 ease-out" style={{ transform: `translateX(-${i * 100}%)` }}>
-          {PORTADA_SLIDES.map((s) => (
+          {slides.map((s) => (
             <Link key={s.title} href={s.href} className="group relative w-full h-full shrink-0">
               <img src={s.img} alt={s.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
@@ -196,9 +220,9 @@ function PortadaCarrusel() {
                   <img src={s.portrait} alt="" className="w-full h-full object-cover" />
                 </div>
               )}
-              <div className="absolute inset-x-0 bottom-0 pt-4 pr-4 pb-4 pl-14 lg:p-8">
+              <div className="absolute inset-x-0 bottom-0 px-12 pb-10 pt-5 sm:px-14 sm:pb-11 lg:px-8 lg:pb-8">
                 <span className="font-label-md text-[10px] uppercase tracking-[0.25em] text-white/70">{s.kicker}</span>
-                <h2 className="font-headline-lg font-extrabold tracking-tight text-white leading-[1.06] text-xl sm:text-2xl lg:text-4xl mt-1.5 max-w-[24ch]">
+                <h2 className="font-headline-lg font-extrabold tracking-tight text-white leading-[1.06] text-lg sm:text-2xl lg:text-4xl mt-1.5 max-w-[24ch] line-clamp-2">
                   {s.title}
                 </h2>
               </div>
@@ -206,14 +230,14 @@ function PortadaCarrusel() {
           ))}
         </div>
 
-        <button onClick={(e) => { e.preventDefault(); prev(); }} aria-label="Anterior" className="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 items-center justify-center shadow-md active:scale-90 transition-transform">
-          <span className="material-symbols-outlined text-[20px] text-on-surface">chevron_left</span>
+        <button onClick={(e) => { e.preventDefault(); prev(); }} aria-label="Anterior" className="flex absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/90 items-center justify-center shadow-md active:scale-90 transition-transform">
+          <span className="material-symbols-outlined text-[18px] sm:text-[20px] text-on-surface">chevron_left</span>
         </button>
-        <button onClick={(e) => { e.preventDefault(); next(); }} aria-label="Siguiente" className="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 items-center justify-center shadow-md active:scale-90 transition-transform">
-          <span className="material-symbols-outlined text-[20px] text-on-surface">chevron_right</span>
+        <button onClick={(e) => { e.preventDefault(); next(); }} aria-label="Siguiente" className="flex absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/90 items-center justify-center shadow-md active:scale-90 transition-transform">
+          <span className="material-symbols-outlined text-[18px] sm:text-[20px] text-on-surface">chevron_right</span>
         </button>
         <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
-          {PORTADA_SLIDES.map((_, idx) => (
+          {slides.map((_, idx) => (
             <button
               key={idx}
               onClick={(e) => { e.preventDefault(); setI(idx); }}
@@ -355,6 +379,15 @@ function PulsoPanel() {
 export default function HomePage() {
   const { cartCount, setIsCartOpen } = useCart();
 
+  // Notas reales de la Revista (endpoint cacheado). Alimentan el banner de
+  // portada y el carrusel "Más de la Revista".
+  const [notasRevista, setNotasRevista] = useState<NotaCard[]>([]);
+  useEffect(() => { fetchNotasRevista().then(setNotasRevista); }, []);
+
+  const masRevista = notasRevista.length
+    ? notasRevista.slice(0, 8).map((n) => ({ key: n.slug, href: `/revista/${n.slug}`, cat: n.kicker, title: n.titulo, img: n.img }))
+    : SELVA_NOTES.map((n) => ({ key: n.id, href: '/revista', cat: n.cat, title: n.title, img: n.img }));
+
   return (
     <>
       <AppHeader showSearch={false} cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
@@ -380,7 +413,7 @@ export default function HomePage() {
       {/* Portada rotativa + panel "Los 8 Portales de Boga" (lado a lado en escritorio) */}
       <div className="max-w-[1440px] mx-auto w-full lg:px-8 pt-4 lg:pt-6">
         <div className="lg:grid lg:grid-cols-[1.7fr_1fr] lg:gap-5 lg:items-stretch">
-          <PortadaCarrusel />
+          <PortadaCarrusel notas={notasRevista} />
           <PortalesPanel />
         </div>
       </div>
@@ -511,8 +544,8 @@ export default function HomePage() {
         <section className="flex flex-col gap-4">
           <SectionHead title="Más de la Revista" href="/revista" cta="Ver revista" />
           <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
-            {SELVA_NOTES.map((n) => (
-              <Link href="/revista" key={n.id} className="min-w-[260px] w-[260px] lg:min-w-[300px] lg:w-[300px] snap-start group flex flex-col">
+            {masRevista.map((n) => (
+              <Link href={n.href} key={n.key} className="min-w-[260px] w-[260px] lg:min-w-[300px] lg:w-[300px] snap-start group flex flex-col">
                 <div className="relative aspect-[16/10] overflow-hidden bg-surface-container-low">
                   <img src={n.img} alt={n.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/75 to-transparent" />
