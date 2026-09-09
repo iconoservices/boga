@@ -209,7 +209,7 @@ function PortadaCarrusel({ notas }: { notas: NotaCard[] }) {
 
   return (
     <div className="w-screen mx-[calc(50%-50vw)] lg:w-full lg:mx-0">
-      <div className="relative overflow-hidden lg:rounded-2xl bg-surface-container-low shadow-sm aspect-[16/10] sm:aspect-[2/1] lg:aspect-auto lg:h-[460px]">
+      <div className="relative overflow-hidden lg:rounded-2xl bg-surface-container-low shadow-sm aspect-[16/10] sm:aspect-[2/1] lg:aspect-auto lg:h-[380px]">
         <div className="flex h-full transition-transform duration-500 ease-out" style={{ transform: `translateX(-${i * 100}%)` }}>
           {slides.map((s) => (
             <Link key={s.title} href={s.href} className="group relative w-full h-full shrink-0">
@@ -297,7 +297,7 @@ function PortalesPanel() {
         </div>
 
         {/* Grilla compacta de 3 columnas; scroll vertical si no entra en el alto del banner */}
-        <div className="grid grid-cols-3 gap-2 lg:flex-1 lg:min-h-0 lg:overflow-y-auto hide-scrollbar">
+        <div className="grid grid-cols-3 gap-2 lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:content-start hide-scrollbar">
           {PORTALES.map((p) => (
             <Link
               key={p.href}
