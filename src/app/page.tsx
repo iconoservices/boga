@@ -291,13 +291,9 @@ function PortalesPanel() {
     <div className="px-container-margin lg:px-0 pt-6 lg:pt-0">
       <div className="flex flex-col gap-4 lg:h-full">
         <div>
-          <span className="font-label-md text-[10px] uppercase tracking-[0.2em] text-secondary">Cómo te ayudamos</span>
           <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-xl lg:text-2xl leading-tight">
             Todo Pucallpa, de tu lado
           </h2>
-          <p className="font-body-md text-secondary text-xs mt-1">
-            Te ayudamos con tu compra, tu chamba, tu taxi y tu día a día en la ciudad.
-          </p>
         </div>
 
         {/* Grilla compacta de 3 columnas; scroll vertical si no entra en el alto del banner */}
