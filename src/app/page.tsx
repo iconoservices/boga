@@ -300,24 +300,22 @@ function PortalesPanel() {
           </p>
         </div>
 
-        {/* Grilla con descripción — todas las tarjetas a la vista, sin scroll horizontal */}
-        <div className="grid grid-cols-2 gap-2.5 lg:flex-1">
+        {/* Grilla compacta de 3 columnas; scroll vertical si no entra en el alto del banner */}
+        <div className="grid grid-cols-3 gap-2 lg:flex-1 lg:min-h-0 lg:overflow-y-auto hide-scrollbar">
           {PORTALES.map((p) => (
             <Link
               key={p.href}
               href={p.href}
-              className="group bg-white border border-surface-container-high rounded-xl p-2.5 flex items-start gap-2.5 hover:border-primary/40 hover:shadow-md transition-all"
+              className="group bg-white border border-surface-container-high rounded-xl p-2 flex flex-col items-center text-center gap-1 hover:border-primary/40 hover:shadow-md transition-all"
             >
               <span
-                className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 shadow-sm"
+                className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm"
                 style={{ backgroundColor: p.color }}
               >
-                <span className="material-symbols-outlined text-white text-[19px]" style={{ fontVariationSettings: "'FILL' 1" }}>{p.icon}</span>
+                <span className="material-symbols-outlined text-white text-[17px]" style={{ fontVariationSettings: "'FILL' 1" }}>{p.icon}</span>
               </span>
-              <span className="min-w-0 flex-1">
-                <span className="block font-headline-sm text-[12px] text-on-surface leading-tight line-clamp-1">{p.label}</span>
-                <span className="block font-body-md text-secondary text-[10px] leading-snug line-clamp-2 mt-0.5">{p.sub}</span>
-              </span>
+              <span className="block font-headline-sm text-[11px] text-on-surface leading-tight line-clamp-1 w-full">{p.label}</span>
+              <span className="block font-body-md text-secondary text-[9px] leading-snug line-clamp-2">{p.sub}</span>
             </Link>
           ))}
         </div>
