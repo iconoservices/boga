@@ -32,9 +32,40 @@ const CAMINOS = [
     bullets: [
       'Clientes de tu ciudad te descubren',
       'Lo activas y lo apagas cuando quieras',
-      'Comisión solo en pedidos que llegan por el Market',
+      'Sin comisión: pagas un plan fijo, no un % de tus ventas',
     ],
     cta: 'Quiero vender en el Market',
+    featured: true,
+  },
+];
+
+const PLANES = [
+  {
+    id: 'tienda',
+    nombre: 'Tu Tienda Boga',
+    precio: 'S/ 50',
+    periodo: '/mes',
+    nota: 'Precio de lanzamiento · luego S/ 80/mes',
+    body: 'Tu página de pedidos con tu propio link. Tú vendes y cobras directo — Boga no toca tu plata.',
+    bullets: [
+      'Catálogo, inventario y pedidos',
+      'Tu link propio (bogahub.app/tu-negocio)',
+      'Funciona en cualquier ciudad',
+    ],
+    featured: false,
+  },
+  {
+    id: 'marketplace',
+    nombre: 'Tu Tienda + Boga Market',
+    precio: 'S/ 100',
+    periodo: '/mes',
+    nota: 'Solo donde Boga opera',
+    body: 'Todo lo de Tu Tienda Boga y, además, apareces en el Market de tu ciudad frente a gente que no te conoce.',
+    bullets: [
+      'Todo lo del plan Tu Tienda Boga',
+      'Apareces en el Marketplace de tu ciudad',
+      'Coordinación de entrega',
+    ],
     featured: true,
   },
 ];
@@ -232,22 +263,58 @@ export default function NegociosPage() {
             ))}
           </section>
 
-          {/* Precios teaser */}
-          <section id="precios" className="scroll-mt-24 relative bg-gradient-to-br from-inverse-surface to-[#1c1e1f] text-inverse-on-surface rounded-3xl p-8 md:p-12 flex flex-col items-center text-center gap-4 mb-14 md:mb-16 overflow-hidden">
-            <div className="absolute -right-16 -top-16 w-56 h-56 bg-primary/20 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
-            <div className="absolute -left-16 -bottom-16 w-56 h-56 bg-white/5 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
-            <span className="material-symbols-outlined text-primary text-4xl relative">bolt</span>
-            <h2 className="font-headline-md text-2xl md:text-3xl font-extrabold relative">Sin comisión en tus pedidos directos</h2>
-            <p className="text-inverse-on-surface/70 font-body-md text-sm md:text-base max-w-[520px] relative">
-              Si el pedido llega por tu link propio, es 100% tuyo. Solo cobramos una comisión cuando el pedido viene
-              de gente que te descubrió a través del Marketplace de Boga.
+          {/* Precios */}
+          <section id="precios" className="scroll-mt-24 pb-14 md:pb-16">
+            <div className="text-center max-w-[560px] mx-auto mb-10">
+              <h2 className="font-headline-md text-2xl md:text-3xl font-extrabold text-on-background">Un plan fijo, sin comisión</h2>
+              <p className="text-secondary font-body-md text-sm md:text-base mt-2">
+                Lo que vendes es 100% tuyo: cobras tú, directo a tu cliente. Boga solo te cobra el plan.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-[720px] mx-auto">
+              {PLANES.map((p) => (
+                <div
+                  key={p.id}
+                  className={`relative bg-surface-container-lowest rounded-2xl p-6 flex flex-col gap-3 ${
+                    p.featured ? 'border-[1.5px] border-primary' : 'border border-surface-container-highest'
+                  }`}
+                >
+                  {p.featured && (
+                    <span className="absolute top-4 right-4 text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md uppercase tracking-wide">
+                      Más alcance
+                    </span>
+                  )}
+                  <h3 className="font-headline-sm text-headline-sm text-on-background">{p.nombre}</h3>
+                  <div className="flex items-baseline gap-1">
+                    <span className="font-headline-md text-3xl font-extrabold text-on-background">{p.precio}</span>
+                    <span className="text-secondary font-body-md text-sm">{p.periodo}</span>
+                  </div>
+                  <p className="text-primary font-label-md text-[11px] font-bold uppercase tracking-wide -mt-1">{p.nota}</p>
+                  <p className="text-secondary font-body-md text-sm leading-relaxed">{p.body}</p>
+                  <ul className="flex flex-col gap-2 my-1">
+                    {p.bullets.map((b) => (
+                      <li key={b} className="flex gap-2 text-sm text-on-background/80">
+                        <span className="material-symbols-outlined text-primary text-[18px] shrink-0">check</span>
+                        <span>{b}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href={`${REGISTRO}?i=${p.id}`}
+                    className={`w-full mt-auto py-3 rounded-xl font-bold text-sm text-center transition-all active:scale-95 ${
+                      p.featured
+                        ? 'bg-primary text-on-primary hover:opacity-90'
+                        : 'border-[1.5px] border-primary text-primary hover:bg-primary/5'
+                    }`}
+                  >
+                    Empezar
+                  </Link>
+                </div>
+              ))}
+            </div>
+            <p className="text-secondary/80 font-body-md text-xs text-center mt-4 max-w-[560px] mx-auto">
+              ¿Quieres una tienda con diseño a medida? La armamos contigo: plan más una puesta en marcha que conversamos según lo que necesites.
             </p>
-            <Link
-              href={REGISTRO}
-              className="relative bg-primary text-on-primary font-bold text-sm px-7 py-3.5 rounded-full mt-2 shadow-[0_8px_24px_-6px_rgba(184,19,14,0.5)] hover:opacity-90 transition-opacity active:scale-95"
-            >
-              Quiero mi catálogo
-            </Link>
           </section>
 
           <div className="pb-16 md:pb-24" />
