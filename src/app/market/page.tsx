@@ -426,9 +426,10 @@ export default function Home() {
         {/* Banners Section */}
         <section className="w-screen mx-[calc(50%-50vw)] px-container-margin lg:w-auto lg:mx-0 lg:px-0">
           {/* Scroll-snap slider — clientWidth based, no clone tricks */}
+          <div className="relative rounded-xl overflow-hidden">
           <div
             ref={sliderRef}
-            className="flex overflow-x-auto hide-scrollbar rounded-xl"
+            className="flex overflow-x-auto hide-scrollbar"
             style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
           >
             {BANNERS_RAW.map((b) => (
@@ -451,6 +452,28 @@ export default function Home() {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Flechas para cambiar de banner — cluster abajo a la derecha, fuera
+              del texto (que va alineado a la izquierda y centrado vertical). */}
+          <div className="absolute bottom-3 right-3 flex gap-1.5 z-20">
+            <button
+              type="button"
+              aria-label="Banner anterior"
+              onClick={() => scrollToBanner((bannerIdxRef.current - 1 + bannerCount) % bannerCount)}
+              className="flex w-8 h-8 rounded-full bg-white/90 items-center justify-center shadow-md active:scale-90 transition-transform"
+            >
+              <span className="material-symbols-outlined text-[18px] text-on-surface">chevron_left</span>
+            </button>
+            <button
+              type="button"
+              aria-label="Banner siguiente"
+              onClick={() => scrollToBanner((bannerIdxRef.current + 1) % bannerCount)}
+              className="flex w-8 h-8 rounded-full bg-white/90 items-center justify-center shadow-md active:scale-90 transition-transform"
+            >
+              <span className="material-symbols-outlined text-[18px] text-on-surface">chevron_right</span>
+            </button>
+          </div>
           </div>
 
           <div className="flex justify-center gap-1.5 mt-1.5">
