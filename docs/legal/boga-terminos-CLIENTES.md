@@ -267,6 +267,11 @@ Las bebidas alcohólicas, el tabaco y otros productos regulados solo se entregan
 
 Cuando Boga o un negocio ofrezcan planes de comida (por ejemplo un pack semanal de almuerzos de Pensión), antes de contratar vas a ver, de forma clara: qué incluye, el precio, cada cuánto se cobra, cómo se renueva y si tiene un plazo mínimo de permanencia.
 
+**Quién administra el plan**
+
+- Plan del negocio: la cocina o el negocio administra su propio plan y te cobra directo. Boga solo pone la herramienta y coordina la entrega, igual que en un pedido normal.
+- Plan administrado por Boga: en algunos planes de Pensión, Boga cobra la suscripción, organiza la logística del reparto diario y coordina con la cocina. En ese caso Boga te emite el comprobante por el plan y liquida con la cocina. Cada plan indica quién lo administra antes de que lo contrates.
+
 **Planes sin plazo mínimo (mes a mes)**
 
 - Si el plan se renueva solo, se te avisa antes de cada cobro y podés cancelar la renovación en cualquier momento desde tu perfil; la cancelación aplica al siguiente período, no al que ya pagaste.
@@ -329,9 +334,11 @@ Si Boga publicó información falsa o desactualizada sobre un chofer y eso te ca
 
 Incumplir estas reglas es causal de salida inmediata del directorio, además de las responsabilidades legales del chofer.
 
-### 7. Si en el futuro Boga intermedia el viaje o el pago
+### 7. Planes y versiones premium
 
-Cuando Boga habilite reservar el viaje o pagar dentro de la app (por ejemplo con Boga Points), se publicará una versión ampliada de este anexo con las reglas de tarifa, cancelación, calificación y seguro. Ese cambio se avisa con anticipación.
+Boga puede ofrecer planes pagos —por ejemplo un plan para el chofer con sello de verificado destacado, o una versión premium para el pasajero con más funciones (reservar con anticipación, historial, soporte prioritario)—. Mientras Boga solo cobre por esas funciones y NO administre la tarifa del viaje, sigue siendo un servicio de Boga y no cambia el resto de este anexo.
+
+Distinto es el día que Boga habilite pagar el viaje dentro de la app (por ejemplo con Boga Points): ahí Boga entra en el dinero del pasaje, y se publicará una versión ampliada de este anexo con las reglas de tarifa, cancelación, calificación, seguro y liquidación al chofer. Ese cambio se avisa con anticipación.
 
 ---
 
