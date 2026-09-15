@@ -366,6 +366,58 @@ const NOTAS_RAW: Omit<Nota, 'slug'>[] = [
       'Su casa-taller en Pucallpa, "Usko Ayar", funcionó como escuela de arte para jóvenes de la ciudad, muchos sin recursos para estudiar pintura de otra forma. Hoy sigue siendo un referente para entender de dónde sale el arte visionario shipibo que hoy se vende en las ferias de Yarinacocha.',
     ],
   },
+  {
+    id: 'n21', kicker: 'Actualidad',
+    titulo: 'La Federico Basadre: la única carretera que conecta Pucallpa con el resto del país',
+    dek: 'Sin ella, Pucallpa seguiría llegándose solo por río o por aire. Se inauguró en 1943 y, más de 80 años después, todavía tiene un tramo sin asfaltar.',
+    autor: 'Redacción Boga', fecha: '15 sep 2026', lectura: '3 min',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/0/06/Avenida_Centenario_km_4.JPG',
+    imgCredito: 'Foto: Wikimedia Commons (Avenida Centenario, donde arranca la carretera dentro de Pucallpa)',
+    fuente: { nombre: 'Wikipedia', url: 'https://es.wikipedia.org/wiki/Ruta_nacional_PE-18_C' },
+    cuerpo: [
+      'La carretera Federico Basadre (ruta nacional PE-18C) se inauguró el 7 de septiembre de 1943, durante el gobierno de Manuel Prado Ugarteche. Son unos 200 km que arrancan en la avenida Centenario, en Pucallpa, y cruzan Campo Verde y Aguaytía (provincia de Padre Abad) hasta el límite con Huánuco. Antes de que existiera, la única forma de entrar o salir de Pucallpa era por el río Ucayali o por avión.',
+      'No es una carretera cualquiera en su historia: durante los años del terrorismo llegó a ser una de las rutas principales del narcotráfico en el país, algo que fue cediendo terreno a medida que el cacao se volvió el cultivo fuerte de zonas como Irázola. Todavía hoy el tramo entre el Boquerón y La Divisoria es el más castigado —afirmado de tierra y ripio, con erosión del río Yurac Yacu— mientras se avanza por partes con la promesa de ampliarla a cuatro carriles desde la Centenario.',
+    ],
+  },
+  {
+    id: 'n22', kicker: 'Gastronomía',
+    titulo: 'Paiche: el pez que casi desaparece y hoy es la estrella de la carta amazónica',
+    dek: 'Es el pez de escama más grande de agua dulce del mundo. La sobrepesca lo llevó al borde y Ucayali lo trajo de vuelta criándolo en cochas.',
+    autor: 'Redacción Boga', fecha: '15 sep 2026', lectura: '3 min',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/d/d2/Arapaima_Paiche.jpg',
+    imgCredito: 'Foto: Wikimedia Commons (ejemplar de paiche, imagen referencial)',
+    fuente: { nombre: 'RNIA - Produce', url: 'https://rnia.produce.gob.pe/el-paiche-esta-de-moda/' },
+    cuerpo: [
+      'El paiche (Arapaima gigas) puede pasar los dos metros de largo y es el pez de escama más grande de agua dulce del planeta. Entre 1992 y 2002 su producción cayó a un ritmo de 35,7% anual por la pesca indiscriminada de las décadas previas: llegó a casi desaparecer de los mercados amazónicos y hoy figura en el Apéndice II de CITES, la lista de especies cuyo comercio se vigila para que no se extingan.',
+      'Lo que lo trajo de vuelta fue la "paichicultura": criarlo en cochas y lagunas controladas en vez de pescarlo del río. Ucayali es hoy la región con la mayor población de paiche del Perú, y de ahí sale para tacachos, ceviches, chicharrones y, más recientemente, conservas que emprendedores locales empezaron a producir para vender fuera de la región.',
+    ],
+  },
+  {
+    id: 'n23', kicker: 'Gastronomía',
+    titulo: 'Inchicapi: la sopa de maní y gallina que se sirve en los cumpleaños de la selva',
+    dek: 'Su nombre viene del quechua "inchik" (maní) y "api" (sopa) — prueba de que el plato es de antes de la Colonia.',
+    autor: 'Redacción Boga', fecha: '15 sep 2026', lectura: '3 min',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/e/ef/Inchicapi%2C_comida_t%C3%ADpica_de_la_selva_peruana.jpg',
+    imgCredito: 'Foto: Neil Vega Murrieta / Wikimedia Commons (CC BY-SA 2.0)',
+    fuente: { nombre: 'Wikipedia', url: 'https://es.wikipedia.org/wiki/Inchicapi' },
+    cuerpo: [
+      'El inchicapi es una sopa prehispánica de la selva —Ucayali, Loreto, San Martín— que sobrevivió intacta a la Colonia. Su nombre ya lo dice todo en quechua: "inchik" es maní y "api" es sopa. Se hace licuando maní tostado con choclo desgranado y culantro (o sacha culantro) en caldo, y agregando después presas de gallina y yuca hasta que espesa.',
+      'El resultado es un caldo amarillo-verdoso, denso, con ese sabor a maní tostado que no se parece a ninguna otra sopa peruana. Por costumbre se sirve en cumpleaños y celebraciones, no en el almuerzo de cualquier día — es un plato de ocasión, no de rutina.',
+    ],
+  },
+  {
+    id: 'n24', kicker: 'Gastronomía',
+    titulo: 'Ají charapita: el picante del tamaño de una arveja que sale de Pucallpa e Iquitos',
+    dek: 'Es diminuto, amarillo, y llega hasta 100 mil unidades Scoville. Le pone sabor a medio menú amazónico, del patarashca al juane.',
+    autor: 'Redacción Boga', fecha: '15 sep 2026', lectura: '2 min',
+    img: 'https://upload.wikimedia.org/wikipedia/commons/3/38/Aji_charapita_2_%28Iquitos%2C_Peru%29.jpg',
+    imgCredito: 'Foto: Dtarazona / Wikimedia Commons',
+    fuente: { nombre: 'Slow Food Foundation — Ark of Taste', url: 'https://www.fondazioneslowfood.com/en/ark-of-taste-slow-food/charapita-pepper/' },
+    cuerpo: [
+      'El ají charapita es originario de la zona de Iquitos y Pucallpa, y hoy se cultiva sobre todo en Ucayali, Loreto y Madre de Dios. Es del tamaño de una arveja, normalmente amarillo (también existe en rojo), y en la escala Scoville marca entre 30.000 y 100.000 unidades — bastante más picante que un rocoto. Más allá del picor, tiene una nota cítrica y afrutada que lo hace reconocible al probarlo.',
+      'Necesita calor, humedad alta y tierra con mucha materia orgánica, por eso casi no prospera fuera de la selva. Se usa fresco, molido o en salsa embotellada, y aparece en buena parte de la cocina amazónica: patarashca, juane, tacacho, patacones picantes, ají de cocona. Sin él, media carta de un restaurante de Pucallpa perdería su sabor de fondo.',
+    ],
+  },
 ];
 
 export const EN_ESTA_EDICION = [
