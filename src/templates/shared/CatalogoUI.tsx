@@ -87,7 +87,7 @@ export function ProductGrid({
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-7 gap-3">
       {productos.map((product) => (
         <div
           key={product.id}
@@ -102,11 +102,11 @@ export function ProductGrid({
               src={product.image}
             />
           </div>
-          <div className="p-3 flex flex-col flex-1">
+          <div className="p-2.5 flex flex-col flex-1">
             <h4 className={`font-bold ${TXT.body} leading-tight mb-1 line-clamp-2`} style={{ color: t.onSurface }}>
               {product.name}
             </h4>
-            <p className={`${TXT.micro} mb-3 line-clamp-2 flex-1`} style={{ color: t.onSurfaceVariant }}>
+            <p className={`${TXT.micro} mb-2 line-clamp-2 flex-1`} style={{ color: t.onSurfaceVariant }}>
               {product.desc}
             </p>
             <div className="flex justify-between items-center mt-auto">
@@ -115,7 +115,7 @@ export function ProductGrid({
               </span>
               <button
                 onClick={(e) => { e.stopPropagation(); onAdd(product); }}
-                className="w-8 h-8 rounded-full flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all"
+                className="w-7 h-7 rounded-full flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all"
                 style={{ background: t.primary, color: t.onPrimary }}
                 aria-label={`Agregar ${product.name} al pedido`}
               >
