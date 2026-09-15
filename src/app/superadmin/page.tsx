@@ -619,6 +619,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   // (se detecta por nombre contra getDemoProducts). El switch inserta/borra.
   const [demoProductsActive, setDemoProductsActive] = useState(false);
   const [demoProductsBusy, setDemoProductsBusy] = useState(false);
+  const [demoProductsChecking, setDemoProductsChecking] = useState(false);
 
   // Send preview updates to iframe in real time
   const sendPreviewUpdate = React.useCallback(() => {
@@ -1432,17 +1433,22 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
 
     // Detecta si esta tienda ya tiene cargados los productos demo de su
     // plantilla actual (match por nombre) para arrancar el switch en la
-    // posicion correcta.
+    // posicion correcta. Mientras no se sabe, el switch queda deshabilitado
+    // (si no, un click durante la carga podria insertar demo duplicados en
+    // vez de borrar los que ya estaban).
     setDemoProductsActive(false);
     const demoNames = getDemoProducts(store.template || 'default').map(p => p.name);
     if (demoNames.length > 0) {
+      setDemoProductsChecking(true);
       supabase
         .from('products')
         .select('name')
         .eq('store', slug)
         .in('name', demoNames)
-        .then(({ data }) => {
-          if (data && data.length > 0) setDemoProductsActive(true);
+        .then(({ data, error }) => {
+          setDemoProductsChecking(false);
+          if (error) { console.error('Error revisando productos demo:', error); return; }
+          setDemoProductsActive(!!data && data.length > 0);
         });
     }
   };
@@ -1707,25 +1713,6 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       });
 
       setShowStoreModal(false);
-
-      // Si es una tienda nueva, insertar productos demo de la plantilla
-      if (!editingStore) {
-        const demoProducts = getDemoProducts(templateKey);
-        if (demoProducts.length > 0) {
-          const demoInserts = demoProducts.map(p => ({
-            name: p.name,
-            price: p.price,
-            category: p.category,
-            subcategory: p.subcategory || null,
-            image: p.image,
-            description: p.description || null,
-            store: slug,
-            stock: 0,
-            status: 'Activo',
-          }));
-          await supabase.from('products').insert(demoInserts);
-        }
-      }
     } catch (err: any) {
       alert('Error al guardar en Supabase: ' + err.message);
     } finally {
@@ -4458,14 +4445,14 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                     <div>
                       <span className="text-xs font-bold text-[#0058be] block">Productos Demo</span>
                       <span className="text-[10px] text-[#545f73] font-semibold">
-                        {demoProductsActive ? 'Cargados en la tienda' : 'Sin cargar'}
+                        {demoProductsChecking ? 'Comprobando…' : demoProductsActive ? 'Cargados en la tienda' : 'Sin cargar'}
                       </span>
                     </div>
                     <Toggle
                       on={demoProductsActive}
                       onChange={() => {
                         if (!storeForm.slug) { alert('Primero ingresa el nombre de la tienda'); return; }
-                        if (demoProductsBusy) return;
+                        if (demoProductsBusy || demoProductsChecking) return;
                         const demo = getDemoProducts(storeForm.template as string);
                         if (demo.length === 0) return;
 
@@ -4505,6 +4492,34 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                       }}
                     />
                   </div>
+                  <button
+                    type="button"
+                    disabled={demoProductsBusy}
+                    onClick={() => {
+                      if (!storeForm.slug) { alert('Primero ingresa el nombre de la tienda'); return; }
+                      if (!confirm('¿Borrar todos los productos demo de esta tienda (de cualquier plantilla)? Los productos reales no se tocan.')) return;
+                      // Borra por nombre contra el demo set de TODAS las plantillas, no
+                      // solo la actual: cubre el caso de haber insertado demo con una
+                      // plantilla y despues cambiado a otra.
+                      const allDemoNames = Array.from(new Set(
+                        ['default', ...getAllTemplates().map(t => t.id)].flatMap(id => getDemoProducts(id).map(p => p.name))
+                      ));
+                      setDemoProductsBusy(true);
+                      supabase
+                        .from('products')
+                        .delete()
+                        .eq('store', storeForm.slug)
+                        .in('name', allDemoNames)
+                        .then(({ error }) => {
+                          setDemoProductsBusy(false);
+                          if (error) { alert('Error: ' + error.message); return; }
+                          setDemoProductsActive(false);
+                        });
+                    }}
+                    className="w-full py-2 text-[10px] font-bold text-[#a33] hover:underline disabled:opacity-50"
+                  >
+                    Borrar todos los productos demo
+                  </button>
                   <button
                     type="button"
                     onClick={() => {
