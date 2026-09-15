@@ -32,14 +32,6 @@ export function useCiudad() {
   const [detectando, setDetectando] = useState(false);
   const [avisoGeo, setAvisoGeo] = useState<string | null>(null);
 
-  useEffect(() => {
-    setSlug(leerCiudadGuardada());
-    setListo(true);
-    const onCambio = (e: Event) => setSlug((e as CustomEvent<string>).detail || null);
-    window.addEventListener('boga:ciudad', onCambio);
-    return () => window.removeEventListener('boga:ciudad', onCambio);
-  }, []);
-
   const elegir = useCallback((s: string) => {
     setSlug(s || null);
     guardarCiudad(s);
@@ -68,6 +60,21 @@ export function useCiudad() {
         : 'No pudimos obtener tu ubicación. Elige tu ciudad de la lista.',
     );
   }, [elegir]);
+
+  // Primera visita (sin ciudad guardada): intenta detectar sola por GPS en vez
+  // de obligar a elegir a mano. Si el navegador niega el permiso o falla, el
+  // usuario simplemente ve "Elige tu ciudad" como antes.
+  useEffect(() => {
+    const guardada = leerCiudadGuardada();
+    setSlug(guardada);
+    setListo(true);
+    if (!guardada) detectar();
+
+    const onCambio = (e: Event) => setSlug((e as CustomEvent<string>).detail || null);
+    window.addEventListener('boga:ciudad', onCambio);
+    return () => window.removeEventListener('boga:ciudad', onCambio);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return {
     slug,
