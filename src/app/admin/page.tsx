@@ -281,6 +281,8 @@ function AdminDashboard({ user }: { user: User }) {
   const [storeHeroFile, setStoreHeroFile] = useState<File | null>(null);
   const [storeLogoPreview, setStoreLogoPreview] = useState<string | null>(null);
   const [storeHeroPreview, setStoreHeroPreview] = useState<string | null>(null);
+  const [storeCategories, setStoreCategories] = useState<{ name: string; icon: string; href: string }[]>([]);
+  const [newCategoryName, setNewCategoryName] = useState('');
   // null = no tocar el color: se deja el que ya tenia (de la plantilla o de
   // un preset elegido antes). Con un id, ese preset pisa el primary al guardar.
   // 'logo' es dinamico: el color sale de logoTheme (extraido de una imagen),
@@ -505,6 +507,8 @@ function AdminDashboard({ user }: { user: User }) {
     setStoreLogoPreview(dbData?.logo_image || config?.logoImage || null);
     setStoreLogoFile(null);
     setStoreHeroFile(null);
+    setStoreCategories(dbData?.categories || config?.categories || []);
+    setNewCategoryName('');
     const currentPrimary = (dbData?.theme || config?.theme)?.primary;
     setColorPreset(COLOR_PRESETS.find((p) => p.theme.primary === currentPrimary)?.id ?? null);
     setLogoTheme(null);
@@ -568,6 +572,7 @@ function AdminDashboard({ user }: { user: User }) {
         horario: storeForm.horario || null,
         rating: storeForm.rating !== '' ? Number(storeForm.rating) : null,
         metodos_pago: storeForm.metodos_pago.length ? storeForm.metodos_pago : null,
+        categories: storeCategories,
         status: 'active',
       };
       if (heroUrl) upsertData.hero_image = heroUrl;
@@ -597,7 +602,7 @@ function AdminDashboard({ user }: { user: User }) {
       // en vez de perder todo el guardado. Paso exactamente esto con `whatsapp`:
       // el panel quedo sin poder guardar NADA de ninguna tienda hasta correr la
       // migracion. Columnas opcionales porque llegaron despues del lanzamiento.
-      const columnasOpcionales = ['show_demo_products', 'zona', 'direccion', 'horario', 'rating', 'metodos_pago'];
+      const columnasOpcionales = ['show_demo_products', 'zona', 'direccion', 'horario', 'rating', 'metodos_pago', 'categories'];
       const columnasFaltantes: string[] = [];
       let faltante = columnasOpcionales.find((col) => col in upsertData && new RegExp(col).test(error?.message || ''));
       while (error && faltante) {
@@ -2586,6 +2591,68 @@ function AdminDashboard({ user }: { user: User }) {
                     <p className="text-sm font-semibold text-gray-700">Logo cuadrado</p>
                     <p className="text-xs text-gray-500 mt-1">Aparece como miniatura en el marketplace. Recomendado: 200×200px, fondo transparente o color sólido.</p>
                   </div>
+                </div>
+              </div>
+
+              {/* Categorias del menu (chips que filtran el catalogo publico) */}
+              <div id="editor-categorias" className="scroll-mt-4">
+                <label className="block text-sm font-bold text-gray-700 mb-2">Categorías del Menú</label>
+                <p className="text-xs text-gray-500 mb-3">
+                  Los rubros de tu carta (ej: Bebidas, Comidas, Postres). Al agregar un producto, elegís a cuál pertenece.
+                </p>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {storeCategories.length === 0 && (
+                    <span className="text-xs text-gray-400 italic">Todavía no agregaste ninguna categoría.</span>
+                  )}
+                  {storeCategories.map((cat, idx) => (
+                    <span
+                      key={cat.href + idx}
+                      className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 bg-gray-100 rounded-full text-xs font-bold text-gray-700"
+                    >
+                      {cat.name}
+                      <button
+                        type="button"
+                        onClick={() => setStoreCategories(prev => prev.filter((_, i) => i !== idx))}
+                        className="w-5 h-5 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
+                        aria-label={`Quitar ${cat.name}`}
+                      >
+                        <span className="material-symbols-outlined text-[14px]">close</span>
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key !== 'Enter') return;
+                      e.preventDefault();
+                      const name = newCategoryName.trim();
+                      if (!name) return;
+                      const href = name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+                      if (storeCategories.some(c => c.href === href)) { setNewCategoryName(''); return; }
+                      setStoreCategories(prev => [...prev, { name, icon: 'category', href }]);
+                      setNewCategoryName('');
+                    }}
+                    placeholder="Ej: Bebidas"
+                    className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-md font-medium text-sm focus:bg-white focus:outline-none focus:border-black transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const name = newCategoryName.trim();
+                      if (!name) return;
+                      const href = name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+                      if (storeCategories.some(c => c.href === href)) { setNewCategoryName(''); return; }
+                      setStoreCategories(prev => [...prev, { name, icon: 'category', href }]);
+                      setNewCategoryName('');
+                    }}
+                    className="px-4 py-2.5 bg-black text-white rounded-md font-bold text-sm hover:bg-gray-800 transition-colors"
+                  >
+                    Agregar
+                  </button>
                 </div>
               </div>
 
