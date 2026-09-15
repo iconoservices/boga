@@ -134,33 +134,8 @@ const STORE_DETAILS: Record<string, { location: string; date: string; icon: stri
   sweetkittynails: { location: 'CDMX, MX',   date: '22 Oct 2023', icon: 'face' }
 };
 
-const INITIAL_CATEGORIES = [
-  { id: 1, name: 'Comida', subs: ['Menú del Día', 'Criollo', 'Hamburguesas', 'Pizzas', 'Sándwiches'], storeSlugs: ['sunset'] },
-  { id: 2, name: 'Bebidas', subs: ['Piqueos & Snacks', 'Cervezas', 'Licores', 'Jugos', 'Café'], storeSlugs: ['sunset'] },
-  { id: 3, name: 'Mercado', subs: ['Frutas', 'Verduras', 'Carnes', 'Lácteos', 'Panadería'], storeSlugs: ['delva', 'amazonia'] },
-  { id: 4, name: 'Salud', subs: ['Medicamentos', 'Cuidado Personal', 'Suplementos'], storeSlugs: ['natura'] },
-  { id: 5, name: 'Moda', subs: ['Vestidos', 'Blusas', 'Accesorios', 'Relojes', 'Calzado'], storeSlugs: ['estilosmirka', 'sweetkittynails'] },
-  { id: 6, name: 'Servicios', subs: ['Limpieza', 'Reparación', 'Delivery'], storeSlugs: [] },
-  { id: 7, name: 'Combos & Promos', subs: ['Combos Comida', 'Packs Bebidas', 'Ofertas Flash'], storeSlugs: [] },
-];
-
-const mapFormCategoryToCategoryName = (formCat: string): string => {
-  const mapping: Record<string, string> = {
-    'Restaurantes': 'Comida',
-    'Mercado': 'Mercado',
-    'Salud y Bienestar': 'Salud',
-    'Salud': 'Salud',
-    'Moda y Belleza': 'Moda',
-    'Moda': 'Moda',
-    'Servicios': 'Servicios',
-    'Tecnología': 'Servicios',
-  };
-  return mapping[formCat] || formCat;
-};
-
 const NAV = [
   { id: 'tiendas',         icon: 'storefront',    label: 'Tiendas' },
-  { id: 'categorias',      icon: 'category',      label: 'Categorías' },
   { id: 'paquetes',        icon: 'inventory_2',   label: 'Paquetes' },
   { id: 'usuarios',        icon: 'group',         label: 'Usuarios' },
   { id: 'personalizacion', icon: 'tune',          label: 'Personalización' },
@@ -548,7 +523,7 @@ export default function AdminPage() {
 
 function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   const { user: authUser } = useAuth();
-  const [activeTab, setActiveTab] = useState<'tiendas' | 'categorias' | 'usuarios' | 'personalizacion' | 'paquetes' | 'plantillas'>('tiendas');
+  const [activeTab, setActiveTab] = useState<'tiendas' | 'usuarios' | 'personalizacion' | 'paquetes' | 'plantillas'>('tiendas');
   const [search, setSearch] = useState('');
   
   // Dynamic stores states
@@ -788,9 +763,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   }, [storeForm.slug, editingStore]);
 
   // Categorias state
-  const [categories, setCategories] = useState(INITIAL_CATEGORIES);
-  const [editingCatId, setEditingCatId] = useState<number | null>(null);
-  const [editingSubId, setEditingSubId] = useState<{catId: number, index: number} | null>(null);
+
 
   // Usuarios state — se arma de datos reales (perfiles + dueños de tienda), no
   // de una lista inventada: ver `derivedUsers` mas abajo.
@@ -1270,20 +1243,6 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
           setActiveStores(mergedActive);
           setStoreIds(mergedIds);
           setStoreOwners(mergedOwners);
-
-          setCategories(prevCats => {
-            return prevCats.map(c => {
-              const currentSlugs = [...(c.storeSlugs || [])];
-              data.forEach(dbStore => {
-                const slug = dbStore.slug;
-                const mappedCatName = mapFormCategoryToCategoryName(dbStore.marketplace_category || '');
-                if (c.name === mappedCatName && !currentSlugs.includes(slug)) {
-                  currentSlugs.push(slug);
-                }
-              });
-              return { ...c, storeSlugs: currentSlugs };
-            });
-          });
         }
       } catch (err) {
         console.error('Error fetching stores from Supabase:', err);
@@ -1292,67 +1251,6 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     
     fetchDbStores();
   }, []);
-
-  const handleLinkStoreToCategory = async (catId: number, catName: string, slug: string) => {
-    setCategories(cats => cats.map(c => {
-      if (c.id === catId) {
-        const current = c.storeSlugs || [];
-        if (!current.includes(slug)) {
-          return { ...c, storeSlugs: [...current, slug] };
-        }
-      }
-      return c;
-    }));
-
-    setStores(prev => {
-      if (!prev[slug]) return prev;
-      return {
-        ...prev,
-        [slug]: {
-          ...prev[slug],
-          marketplaceCategory: catName
-        }
-      };
-    });
-
-    try {
-      await supabase
-        .from('stores')
-        .update({ marketplace_category: catName })
-        .eq('slug', slug);
-    } catch (err) {
-      console.error('Error linking store to category:', err);
-    }
-  };
-
-  const handleUnlinkStoreFromCategory = async (catId: number, slug: string) => {
-    setCategories(cats => cats.map(c => {
-      if (c.id === catId) {
-        return { ...c, storeSlugs: (c.storeSlugs || []).filter(s => s !== slug) };
-      }
-      return c;
-    }));
-
-    setStores(prev => {
-      if (!prev[slug]) return prev;
-      return {
-        ...prev,
-        [slug]: {
-          ...prev[slug],
-          marketplaceCategory: ''
-        }
-      };
-    });
-
-    try {
-      await supabase
-        .from('stores')
-        .update({ marketplace_category: '' })
-        .eq('slug', slug);
-    } catch (err) {
-      console.error('Error unlinking store from category:', err);
-    }
-  };
 
   const storeList = Object.values(stores);
   const filtered = storeList.filter((s) =>
@@ -1496,13 +1394,6 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         setStoreMeta(prev => { const next = { ...prev }; delete next[slug]; return next; });
         setStoreTiers(prev => { const next = { ...prev }; delete next[slug]; return next; });
         setStoreIds(prev => { const next = { ...prev }; delete next[slug]; return next; });
-        
-        setCategories(prevCats => {
-          return prevCats.map(c => ({
-            ...c,
-            storeSlugs: (c.storeSlugs || []).filter(s => s !== slug)
-          }));
-        });
       } catch (err: any) {
         alert('Error al eliminar tienda de Supabase: ' + err.message);
       }
@@ -1693,24 +1584,6 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         logoImage: logoUrl || (logoRemoved ? undefined : existingStoreObj.logoImage),
         theme
       }));
-
-      const mappedCatName = mapFormCategoryToCategoryName(storeForm.marketplaceCategory);
-      setCategories(prevCats => {
-        return prevCats.map(c => {
-          let storeSlugs = c.storeSlugs || [];
-          if (oldSlug) {
-            storeSlugs = storeSlugs.filter(s => s !== oldSlug);
-          }
-          if (c.name === mappedCatName) {
-            if (!storeSlugs.includes(slug)) {
-              storeSlugs = [...storeSlugs, slug];
-            }
-          } else {
-            storeSlugs = storeSlugs.filter(s => s !== slug);
-          }
-          return { ...c, storeSlugs };
-        });
-      });
 
       setShowStoreModal(false);
     } catch (err: any) {
@@ -2632,374 +2505,6 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                   <strong>Control Ecosistema:</strong> Puedes cambiar el estado de activación de cada comercio desde el formulario de edición. Las tiendas inactivas/pausadas no se listarán en el portal de Boga Market.
                 </span>
               </div>
-            </div>
-          )}
-
-          {/* ─── CATEGORIAS ─── */}
-          {activeTab === 'categorias' && (
-            <div className="space-y-6 animate-fade-in">
-              {/* Metrics Summary */}
-              <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Total Categorías */}
-                <div className="bg-white border border-[#c2c6d6] p-4 rounded-md flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-[#2170e4] flex items-center justify-center text-white shrink-0">
-                    <span className="material-symbols-outlined text-lg">grid_view</span>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-[#424754] uppercase tracking-wide">Total Categorías</p>
-                    <p className="text-xl font-extrabold text-[#191b23]">{categories.length}</p>
-                  </div>
-                </div>
-
-                {/* Total Tiendas */}
-                <div className="bg-white border border-[#c2c6d6] p-4 rounded-md flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-[#d5e0f8] flex items-center justify-center text-[#586377] shrink-0">
-                    <span className="material-symbols-outlined text-lg">store</span>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-[#424754] uppercase tracking-wide">Total Tiendas</p>
-                    <p className="text-xl font-extrabold text-[#191b23]">{Object.keys(stores).length}</p>
-                  </div>
-                </div>
-
-                {/* Tiendas sin asignar */}
-                {(() => {
-                  const allCategoryStoreSlugs = new Set(categories.flatMap(c => c.storeSlugs || []));
-                  const unassignedStores = Object.values(stores).filter(s => !allCategoryStoreSlugs.has(s.slug));
-                  const count = unassignedStores.length;
-                  return (
-                    <div className="bg-white border border-[#c2c6d6] p-4 rounded-md flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-[#ffdad6] flex items-center justify-center text-[#93000a] shrink-0">
-                        <span className="material-symbols-outlined text-lg">warning</span>
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-bold text-[#424754] uppercase tracking-wide">Tiendas sin asignar</p>
-                        <p className={`text-xl font-extrabold ${count > 0 ? 'text-[#ba1a1a]' : 'text-emerald-700'}`}>{count}</p>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </section>
-
-              {/* Categories Notion-style Database Table */}
-              <section className="bg-white border border-[#c2c6d6] rounded-md overflow-hidden shadow-sm">
-                <div className="p-4 border-b border-[#c2c6d6] bg-[#f2f3fd] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div>
-                    <h2 className="font-extrabold text-xs text-[#191b23] uppercase tracking-wider">Base de Datos de Categorías</h2>
-                    <p className="text-[10px] text-[#424754] font-semibold mt-0.5">Estructura taxonómica del marketplace al estilo Notion.</p>
-                  </div>
-                  <button 
-                    onClick={() => {
-                      const newId = Math.max(...categories.map(c => c.id), 0) + 1;
-                      setCategories(cats => [...cats, {
-                        id: newId,
-                        name: 'Nueva Categoría',
-                        subs: ['General'],
-                        storeSlugs: []
-                      }]);
-                      setEditingCatId(newId);
-                    }}
-                    className="bg-[#0058be] text-white px-3.5 py-1.5 rounded-lg font-bold flex items-center gap-1.5 hover:shadow transition-all text-xs cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-sm">add</span>
-                    Nueva Categoría
-                  </button>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse table-fixed min-w-[850px]">
-                    <thead>
-                      <tr className="bg-[#f2f3fd]/50 border-b border-[#c2c6d6] text-[10px] font-bold uppercase tracking-wider text-[#424754]">
-                        <th className="px-4 py-3 w-[260px] font-bold">Categoría Principal</th>
-                        <th className="px-4 py-3 w-[380px] font-bold">Subcategorías (Etiquetas Notion)</th>
-                        <th className="px-4 py-3 w-[250px] font-bold">Tiendas Vinculadas</th>
-                        <th className="px-4 py-3 w-[100px] text-right font-bold">Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#ecedf7]">
-                      {categories.map((cat, catIdx) => {
-                        const iconName = CATEGORY_ICONS[cat.name] || CATEGORY_ICONS['default'];
-                        
-                        // Notion style tag colors
-                        const colors = [
-                          { bg: 'bg-[#ffdad6] text-[#93000a] border-[#ffb4a5]' }, // red
-                          { bg: 'bg-[#d8e2ff] text-[#004395] border-[#adc6ff]' }, // blue
-                          { bg: 'bg-[#d5e0f8] text-[#3c475a] border-[#bcc7de]' }, // slate
-                          { bg: 'bg-[#d1f2e5] text-[#00513b] border-[#a3e5cb]' }, // green
-                          { bg: 'bg-[#ffe8d6] text-[#803e00] border-[#ffd1a9]' }, // orange
-                          { bg: 'bg-[#f3dbf5] text-[#5c006a] border-[#e8b5ed]' }, // purple
-                        ];
-
-                        return (
-                          <tr key={cat.id} className="hover:bg-[#f9f9ff] transition-colors text-xs align-top">
-                            {/* Column 1: Category Name & Icon */}
-                            <td className="px-4 py-3.5">
-                              <div className="flex items-start gap-2.5">
-                                <div className="w-8 h-8 rounded-lg bg-[#f2f3fd] border border-[#c2c6d6]/60 flex items-center justify-center text-[#0058be] shrink-0">
-                                  <span className="material-symbols-outlined text-base">{iconName}</span>
-                                </div>
-                                <div className="space-y-1 w-full min-w-0">
-                                  {editingCatId === cat.id ? (
-                                    <input
-                                      autoFocus
-                                      value={cat.name}
-                                      onChange={(e) => setCategories(cats => cats.map(c => c.id === cat.id ? { ...c, name: e.target.value } : c))}
-                                      onBlur={() => setEditingCatId(null)}
-                                      onKeyDown={(e) => e.key === 'Enter' && setEditingCatId(null)}
-                                      className="font-bold text-xs text-[#191b23] bg-white border border-[#0058be] rounded px-1.5 py-0.5 outline-none w-full"
-                                    />
-                                  ) : (
-                                    <div className="flex items-center gap-1.5 group/title">
-                                      <span 
-                                        onClick={() => setEditingCatId(cat.id)} 
-                                        className="font-bold text-xs text-[#191b23] cursor-pointer hover:underline truncate"
-                                      >
-                                        {cat.name}
-                                      </span>
-                                      <span className="text-[8px] font-bold bg-[#ecedf7] text-[#424754] px-1 py-0.2 rounded border border-[#c2c6d6]/40 shrink-0">ID:{cat.id}</span>
-                                      <button 
-                                        onClick={() => setEditingCatId(cat.id)}
-                                        className="opacity-0 group-hover/title:opacity-100 text-[#424754] hover:text-[#0058be] transition-opacity shrink-0"
-                                      >
-                                        <span className="material-symbols-outlined text-[12px]">edit</span>
-                                      </button>
-                                    </div>
-                                  )}
-                                  <p className="text-[9px] text-[#424754] font-semibold">
-                                    {(cat.storeSlugs || []).length} {(cat.storeSlugs || []).length === 1 ? 'tienda' : 'tiendas'}
-                                  </p>
-                                </div>
-                              </div>
-                            </td>
-
-                            {/* Column 2: Subcategories (Notion tags style) */}
-                            <td className="px-4 py-3.5">
-                              <div className="flex flex-wrap gap-1.5 items-center">
-                                {cat.subs.map((sub, idx) => {
-                                  const tagColor = colors[(catIdx + idx) % colors.length];
-                                  return (
-                                    <span 
-                                      key={idx} 
-                                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold border transition-all ${tagColor.bg}`}
-                                    >
-                                      {editingSubId?.catId === cat.id && editingSubId?.index === idx ? (
-                                        <input
-                                          autoFocus
-                                          value={sub}
-                                          onChange={(e) => setCategories(cats => cats.map(c => {
-                                            if (c.id !== cat.id) return c;
-                                            const newSubs = [...c.subs];
-                                            newSubs[idx] = e.target.value;
-                                            return { ...c, subs: newSubs };
-                                          }))}
-                                          onBlur={() => setEditingSubId(null)}
-                                          onKeyDown={(e) => e.key === 'Enter' && setEditingSubId(null)}
-                                          className="text-[9px] font-extrabold text-[#191b23] bg-white border border-[#0058be] outline-none w-16 px-1 rounded"
-                                        />
-                                      ) : (
-                                        <span 
-                                          onClick={() => setEditingSubId({ catId: cat.id, index: idx })} 
-                                          className="cursor-pointer hover:underline"
-                                        >
-                                          {sub}
-                                        </span>
-                                      )}
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setCategories(cats => cats.map(c => c.id === cat.id ? { ...c, subs: c.subs.filter((_, i) => i !== idx) } : c));
-                                        }}
-                                        className="opacity-70 hover:opacity-100 transition-opacity shrink-0 flex items-center"
-                                        title="Eliminar"
-                                      >
-                                        <span className="material-symbols-outlined text-[10px] font-bold">close</span>
-                                      </button>
-                                    </span>
-                                  );
-                                })}
-
-                                <button 
-                                  onClick={() => {
-                                    setCategories(cats => cats.map(c => {
-                                      if (c.id !== cat.id) return c;
-                                      const newSubs = [...c.subs, 'Nueva Sub'];
-                                      setEditingSubId({ catId: cat.id, index: newSubs.length - 1 });
-                                      return { ...c, subs: newSubs };
-                                    }));
-                                  }}
-                                  className="border border-dashed border-[#c2c6d6] hover:border-[#0058be] px-2 py-0.5 rounded-md text-[9px] font-bold text-[#0058be] hover:bg-[#d8e2ff]/40 transition-all flex items-center gap-0.5 cursor-pointer bg-white"
-                                >
-                                  <span className="material-symbols-outlined text-[11px]">add</span>
-                                  Nueva
-                                </button>
-                              </div>
-                            </td>
-
-                            {/* Column 3: Linked Stores */}
-                            <td className="px-4 py-3.5">
-                              <div className="space-y-2">
-                                <div className="flex flex-wrap gap-1">
-                                  {cat.storeSlugs.length === 0 ? (
-                                    <span className="text-[10px] text-[#727785] italic font-semibold">Sin tiendas vinculadas</span>
-                                  ) : (
-                                    cat.storeSlugs.map(slug => (
-                                      <span 
-                                        key={slug} 
-                                        className="inline-flex items-center gap-1 bg-[#f2f3fd] border border-[#c2c6d6] text-[#191b23] px-2 py-0.5 rounded-md text-[9px] font-bold shrink-0 shadow-xs hover:border-[#2170e4] transition-colors"
-                                      >
-                                        <span>{META[slug]?.emoji || '🏪'}</span>
-                                        <span className="truncate max-w-[80px]">{stores[slug]?.name || slug}</span>
-                                        <button 
-                                          onClick={() => handleUnlinkStoreFromCategory(cat.id, slug)}
-                                          className="text-[#424754] hover:text-[#ba1a1a] shrink-0 flex items-center ml-0.5"
-                                          title="Desvincular"
-                                        >
-                                          <span className="material-symbols-outlined text-[10px] font-bold">close</span>
-                                        </button>
-                                      </span>
-                                    ))
-                                  )}
-                                </div>
-                                
-                                <select 
-                                  value=""
-                                  onChange={(e) => {
-                                    const val = e.target.value;
-                                    if (!val) return;
-                                    handleLinkStoreToCategory(cat.id, cat.name, val);
-                                  }}
-                                  className="w-full bg-[#f9f9ff] border border-[#c2c6d6] text-[#424754] text-[9px] font-bold px-2 py-1 rounded-md outline-none focus:border-[#0058be] transition-colors cursor-pointer"
-                                >
-                                  <option value="">+ Vincular Tienda...</option>
-                                  {Object.values(stores).filter(s => !(cat.storeSlugs || []).includes(s.slug)).map(s => (
-                                    <option key={s.slug} value={s.slug}>{s.name}</option>
-                                  ))}
-                                </select>
-                              </div>
-                            </td>
-
-                            {/* Column 4: Inline Actions */}
-                            <td className="px-4 py-3.5 text-right">
-                              <div className="flex items-center justify-end gap-1">
-                                <button 
-                                  onClick={() => setEditingCatId(cat.id)}
-                                  className="w-7 h-7 flex items-center justify-center text-[#424754] hover:text-[#0058be] hover:bg-[#ecedf7] rounded-lg transition-colors"
-                                  title="Editar nombre"
-                                >
-                                  <span className="material-symbols-outlined text-base">edit</span>
-                                </button>
-                                <button 
-                                  onClick={() => {
-                                    if (window.confirm(`¿Eliminar la categoría "${cat.name}"?`)) {
-                                      setCategories(cats => cats.filter(c => c.id !== cat.id));
-                                    }
-                                  }}
-                                  className="w-7 h-7 flex items-center justify-center text-[#c2c6d6] hover:text-[#ba1a1a] hover:bg-red-50 rounded-lg transition-colors"
-                                  title="Eliminar categoría"
-                                >
-                                  <span className="material-symbols-outlined text-base">delete</span>
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-
-              {/* Unassigned Stores Table */}
-              {(() => {
-                const allCategoryStoreSlugs = new Set(categories.flatMap(c => c.storeSlugs || []));
-                const unlinkedStores = Object.values(stores).filter(s => !allCategoryStoreSlugs.has(s.slug));
-
-                return (
-                  <section className="bg-white border border-[#c2c6d6] rounded-md overflow-hidden shadow-sm animate-fade-in">
-                    <div className="p-4 border-b border-[#c2c6d6] bg-[#f2f3fd] flex justify-between items-center">
-                      <h2 className="font-extrabold text-xs text-[#191b23] uppercase tracking-wider">Tiendas sin Categoría</h2>
-                      <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
-                        unlinkedStores.length > 0
-                          ? 'bg-[#ffdad6] text-[#93000a] border-[#ffdad6]'
-                          : 'bg-emerald-50 text-emerald-800 border-emerald-100'
-                      }`}>
-                        {unlinkedStores.length} {unlinkedStores.length === 1 ? 'pendiente' : 'pendientes'}
-                      </span>
-                    </div>
-
-                    {unlinkedStores.length === 0 ? (
-                      <div className="p-8 text-center text-xs text-[#424754] font-semibold">
-                        <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-3 border border-emerald-100">
-                          <span className="material-symbols-outlined text-emerald-600 text-2xl">check_circle</span>
-                        </div>
-                        <p className="text-emerald-800 font-bold mb-1">¡Todo ordenado!</p>
-                        <p>Todas las tiendas del ecosistema pertenecen a alguna categoría principal.</p>
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                          <thead>
-                            <tr className="bg-[#f2f3fd]/40 border-b border-[#c2c6d6] text-[10px] font-bold uppercase tracking-wider text-[#424754]">
-                              <th className="px-4 py-2.5 font-bold">Nombre de Tienda</th>
-                              <th className="px-4 py-2.5 font-bold">Ubicación</th>
-                              <th className="px-4 py-2.5 font-bold">Fecha de Registro</th>
-                              <th className="px-4 py-2.5 font-bold">Estado</th>
-                              <th className="px-4 py-2.5 font-bold text-right">Acción</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-[#ecedf7]">
-                            {unlinkedStores.map((s) => {
-                              const meta = META[s.slug] || { emoji: '🏪' };
-                              const details = STORE_DETAILS[s.slug] || { location: 'Ecosistema, Global', date: '01 Ene 2024', icon: 'storefront' };
-                              return (
-                                <tr key={s.slug} className="hover:bg-[#f9f9ff] transition-colors text-xs">
-                                  <td className="px-4 py-3">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-base shrink-0">{meta.emoji}</span>
-                                      <div>
-                                        <p className="font-bold text-[#191b23]">{s.name}</p>
-                                        <p className="text-[9px] text-[#424754] font-medium leading-none">/{s.slug}</p>
-                                      </div>
-                                    </div>
-                                  </td>
-                                  <td className="px-4 py-3 text-[#424754] font-semibold">{details.location}</td>
-                                  <td className="px-4 py-3 text-[#424754] font-semibold">{details.date}</td>
-                                  <td className="px-4 py-3">
-                                    <span className="bg-[#ecedf7] text-[#424754] border border-[#c2c6d6] text-[9px] font-bold px-2 py-0.5 rounded">
-                                      Pendiente
-                                    </span>
-                                  </td>
-                                  <td className="px-4 py-3 text-right">
-                                    <div className="flex items-center justify-end gap-1.5">
-                                      <select 
-                                        value=""
-                                        onChange={(e) => {
-                                          const catId = Number(e.target.value);
-                                          if (!catId) return;
-                                          const catObj = categories.find(c => c.id === catId);
-                                          if (catObj) {
-                                            handleLinkStoreToCategory(catId, catObj.name, s.slug);
-                                          }
-                                        }}
-                                        className="bg-[#d5e0f8] hover:bg-[#2170e4] hover:text-white text-[#0058be] text-[10px] font-extrabold px-3 py-1.5 rounded-full border border-transparent outline-none transition-all cursor-pointer shadow-sm w-32"
-                                      >
-                                        <option value="" className="text-[#424754] font-semibold">Asignar...</option>
-                                        {categories.map(cat => (
-                                          <option key={cat.id} value={cat.id} className="text-[#191b23] font-bold">{cat.name}</option>
-                                        ))}
-                                      </select>
-                                    </div>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </section>
-                );
-              })()}
             </div>
           )}
 
