@@ -86,6 +86,8 @@ export default function StoreRenderer({ store: initialStore }: Props) {
   }, []);
 
   switch (store.template) {
+    case 'default':
+      return <MenuDirectoTemplate store={store} />;
     case 'sunset':
       return <SunsetTemplate store={store} />;
     case 'natura':

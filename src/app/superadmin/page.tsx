@@ -615,6 +615,10 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   const [heroFile, setHeroFile] = useState<File | null>(null);
   const [heroPreview, setHeroPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  // Refleja si la tienda ya tiene cargados los productos demo de su plantilla
+  // (se detecta por nombre contra getDemoProducts). El switch inserta/borra.
+  const [demoProductsActive, setDemoProductsActive] = useState(false);
+  const [demoProductsBusy, setDemoProductsBusy] = useState(false);
 
   // Send preview updates to iframe in real time
   const sendPreviewUpdate = React.useCallback(() => {
@@ -1370,6 +1374,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     setHeroPreview(null);
     setColorPreset(null);
     setLogoTheme(null);
+    setDemoProductsActive(false);
     setStoreForm({
       slug: '',
       name: '',
@@ -1424,6 +1429,22 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       metodosPago: store.metodosPago || []
     });
     setShowStoreModal(true);
+
+    // Detecta si esta tienda ya tiene cargados los productos demo de su
+    // plantilla actual (match por nombre) para arrancar el switch en la
+    // posicion correcta.
+    setDemoProductsActive(false);
+    const demoNames = getDemoProducts(store.template || 'default').map(p => p.name);
+    if (demoNames.length > 0) {
+      supabase
+        .from('products')
+        .select('name')
+        .eq('store', slug)
+        .in('name', demoNames)
+        .then(({ data }) => {
+          if (data && data.length > 0) setDemoProductsActive(true);
+        });
+    }
   };
 
   // Preset dinamico: saca la paleta de la imagen que ya cargo el comercio (logo
@@ -4433,13 +4454,23 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
 
                 {/* Footer Buttons */}
                 <div className="p-6 border-t border-[#ecedf7] bg-white shrink-0 space-y-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!storeForm.slug) { alert('Primero ingresa el nombre de la tienda'); return; }
-                      if (confirm('¿Insertar productos demo de la plantilla? Los productos existentes no se borrarán.')) {
+                  <div className="flex items-center justify-between p-3.5 bg-[#f0f7ff] rounded-lg border border-[#0058be]/20">
+                    <div>
+                      <span className="text-xs font-bold text-[#0058be] block">Productos Demo</span>
+                      <span className="text-[10px] text-[#545f73] font-semibold">
+                        {demoProductsActive ? 'Cargados en la tienda' : 'Sin cargar'}
+                      </span>
+                    </div>
+                    <Toggle
+                      on={demoProductsActive}
+                      onChange={() => {
+                        if (!storeForm.slug) { alert('Primero ingresa el nombre de la tienda'); return; }
+                        if (demoProductsBusy) return;
                         const demo = getDemoProducts(storeForm.template as string);
-                        if (demo.length > 0) {
+                        if (demo.length === 0) return;
+
+                        if (!demoProductsActive) {
+                          setDemoProductsBusy(true);
                           supabase.from('products').insert(
                             demo.map(p => ({
                               name: p.name,
@@ -4453,17 +4484,27 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                               status: 'Activo',
                             }))
                           ).then(({ error }) => {
-                            if (error) alert('Error: ' + error.message);
-                            else alert(`✅ ${demo.length} productos demo insertados`);
+                            setDemoProductsBusy(false);
+                            if (error) { alert('Error: ' + error.message); return; }
+                            setDemoProductsActive(true);
                           });
+                        } else {
+                          if (!confirm('¿Quitar los productos demo de esta tienda?')) return;
+                          setDemoProductsBusy(true);
+                          supabase
+                            .from('products')
+                            .delete()
+                            .eq('store', storeForm.slug)
+                            .in('name', demo.map(p => p.name))
+                            .then(({ error }) => {
+                              setDemoProductsBusy(false);
+                              if (error) { alert('Error: ' + error.message); return; }
+                              setDemoProductsActive(false);
+                            });
                         }
-                      }
-                    }}
-                    className="w-full py-3 bg-[#f0f7ff] border border-[#0058be]/20 text-[#0058be] rounded-md font-bold text-xs hover:bg-[#e0efff] transition-all flex items-center justify-center gap-1.5"
-                  >
-                    <span className="material-symbols-outlined text-[14px]">playlist_add</span>
-                    Insertar Productos Demo
-                  </button>
+                      }}
+                    />
+                  </div>
                   <button
                     type="button"
                     onClick={() => {

@@ -2331,9 +2331,21 @@ function AdminDashboard({ user }: { user: User }) {
                 accept="image/*" 
                 className="hidden" 
               />
-              <div 
+              <div
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full h-48 border-2 border-dashed border-gray-200 rounded-lg mb-8 flex flex-col items-center justify-center text-gray-400 hover:border-black hover:text-black transition-colors cursor-pointer bg-gray-50/50 overflow-hidden relative group"
+                tabIndex={0}
+                onPaste={(e) => {
+                  const file = Array.from(e.clipboardData.files)[0]
+                    || Array.from(e.clipboardData.items).find(i => i.type.startsWith('image/'))?.getAsFile();
+                  if (file) { setSelectedFile(file); setPreviewUrl(URL.createObjectURL(file)); }
+                }}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const file = e.dataTransfer.files?.[0];
+                  if (file) { setSelectedFile(file); setPreviewUrl(URL.createObjectURL(file)); }
+                }}
+                className="w-full h-48 border-2 border-dashed border-gray-200 rounded-lg mb-8 flex flex-col items-center justify-center text-gray-400 hover:border-black hover:text-black transition-colors cursor-pointer bg-gray-50/50 overflow-hidden relative group focus:outline-none focus:border-black"
               >
                 {previewUrl ? (
                   <>
@@ -2505,7 +2517,19 @@ function AdminDashboard({ user }: { user: User }) {
                 <input type="file" ref={storeHeroInputRef} onChange={e => { if (e.target.files?.[0]) { setStoreHeroFile(e.target.files[0]); setStoreHeroPreview(URL.createObjectURL(e.target.files[0])); }}} accept="image/*" className="hidden" />
                 <div
                   onClick={() => storeHeroInputRef.current?.click()}
-                  className="w-full h-36 rounded-lg border-2 border-dashed border-gray-200 overflow-hidden cursor-pointer relative group hover:border-black transition-colors bg-gray-50"
+                  tabIndex={0}
+                  onPaste={(e) => {
+                    const file = Array.from(e.clipboardData.files)[0]
+                      || Array.from(e.clipboardData.items).find(i => i.type.startsWith('image/'))?.getAsFile();
+                    if (file) { setStoreHeroFile(file); setStoreHeroPreview(URL.createObjectURL(file)); }
+                  }}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const file = e.dataTransfer.files?.[0];
+                    if (file) { setStoreHeroFile(file); setStoreHeroPreview(URL.createObjectURL(file)); }
+                  }}
+                  className="w-full h-36 rounded-lg border-2 border-dashed border-gray-200 overflow-hidden cursor-pointer relative group hover:border-black transition-colors bg-gray-50 focus:outline-none focus:border-black"
                 >
                   {storeHeroPreview ? (
                     <>
@@ -2531,7 +2555,19 @@ function AdminDashboard({ user }: { user: User }) {
                 <div className="flex items-center gap-4">
                   <div
                     onClick={() => storeLogoInputRef.current?.click()}
-                    className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-200 overflow-hidden cursor-pointer relative group hover:border-black transition-colors bg-gray-50 shrink-0"
+                    tabIndex={0}
+                    onPaste={(e) => {
+                      const file = Array.from(e.clipboardData.files)[0]
+                        || Array.from(e.clipboardData.items).find(i => i.type.startsWith('image/'))?.getAsFile();
+                      if (file) { setStoreLogoFile(file); setStoreLogoPreview(URL.createObjectURL(file)); }
+                    }}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const file = e.dataTransfer.files?.[0];
+                      if (file) { setStoreLogoFile(file); setStoreLogoPreview(URL.createObjectURL(file)); }
+                    }}
+                    className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-200 overflow-hidden cursor-pointer relative group hover:border-black transition-colors bg-gray-50 shrink-0 focus:outline-none focus:border-black"
                   >
                     {storeLogoPreview ? (
                       <>
