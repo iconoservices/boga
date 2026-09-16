@@ -45,11 +45,11 @@ export default function BottomNav() {
   return (
     <>
       {/* Spacer para que el contenido no quede tapado por la barra fija */}
-      <div className="h-[72px] w-full shrink-0 lg:hidden" aria-hidden="true" />
+      <div className="h-[80px] w-full shrink-0 lg:hidden" aria-hidden="true" />
 
-      <nav className="fixed bottom-0 left-0 w-full z-50 flex items-stretch bg-surface-container-lowest dark:bg-inverse-surface shadow-[0_-4px_15px_rgba(0,0,0,0.04)] rounded-t-xl border-t border-surface-container-high lg:hidden pb-safe">
+      <nav className="fixed bottom-0 left-0 w-full z-50 flex items-stretch bg-surface-container-lowest dark:bg-inverse-surface shadow-[0_-4px_15px_rgba(0,0,0,0.04)] rounded-t-xl border-t border-surface-container-high lg:hidden pb-[max(12px,env(safe-area-inset-bottom))]">
         <div
-          className="flex-1 flex gap-1 overflow-x-auto hide-scrollbar px-2 py-2 snap-x"
+          className="flex-1 flex gap-1 overflow-x-auto hide-scrollbar px-2 py-3 snap-x"
           style={{ scrollbarWidth: 'none' }}
         >
           {ALL.map((item) => {
@@ -95,7 +95,7 @@ export default function BottomNav() {
       >
         <div className="absolute inset-0 bg-black/45" onClick={() => setSheetOpen(false)} aria-hidden="true" />
         <div
-          className={`absolute bottom-0 left-0 right-0 bg-surface rounded-t-2xl pb-safe shadow-[0_-8px_28px_rgba(0,0,0,0.22)] transition-transform duration-300 ease-out ${
+          className={`absolute bottom-0 left-0 right-0 bg-surface rounded-t-2xl pb-[max(16px,env(safe-area-inset-bottom))] shadow-[0_-8px_28px_rgba(0,0,0,0.22)] transition-transform duration-300 ease-out ${
             sheetOpen ? 'translate-y-0' : 'translate-y-full'
           }`}
         >
