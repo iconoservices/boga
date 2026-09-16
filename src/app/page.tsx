@@ -555,7 +555,7 @@ export default function HomePage() {
             {COMER_LISTAS.map((lista) => (
               <div
                 key={lista.id}
-                className="snap-start shrink-0 w-[86%] sm:w-[380px] lg:w-[420px] bg-white border border-surface-container-highest shadow-sm flex flex-col"
+                className="snap-start shrink-0 w-[86%] sm:w-[380px] lg:w-[420px] bg-white border border-surface-container-highest shadow-sm rounded-2xl overflow-hidden flex flex-col"
               >
                 <div className="flex items-center justify-between px-4 py-3 border-b border-surface-container-high">
                   <h3 className="font-headline-sm text-sm text-on-surface">{lista.titulo}</h3>
@@ -564,14 +564,13 @@ export default function HomePage() {
                   )}
                 </div>
                 <div className="flex flex-col">
-                  {lista.lugares.map((r, i) => (
+                  {lista.lugares.map((r) => (
                     <Link
                       href="/market"
                       key={r.name}
                       className="group flex items-center gap-3 p-3 border-b border-surface-container-low last:border-0 hover:bg-surface-container-low transition-colors"
                     >
-                      <span className="w-6 h-6 rounded-full bg-primary text-white text-[12px] font-black flex items-center justify-center shrink-0">{i + 1}</span>
-                      <div className="w-14 h-14 overflow-hidden shrink-0 bg-surface-container-low">
+                      <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-surface-container-low">
                         <img src={r.img} alt={r.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                       </div>
                       <div className="min-w-0 flex-1">
