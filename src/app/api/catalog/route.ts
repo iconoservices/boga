@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     const [{ data: banners }, { data: estilo }] = await Promise.all([
       supabase
         .from('market_banners')
-        .select('id,image,tag,title1,title2,sub,link')
+        .select('id,image,tag,title1,title2,sub,link,show_text')
         .eq('active', true)
         .eq('page', page)
         .order('sort_order', { ascending: true }),
@@ -52,7 +52,7 @@ export async function GET(request: Request) {
       .select('id,name,price,category,image,store,status'),
     supabase
       .from('market_banners')
-      .select('id,image,tag,title1,title2,sub,link')
+      .select('id,image,tag,title1,title2,sub,link,show_text')
       .eq('active', true)
       .eq('page', 'market')
       .order('sort_order', { ascending: true }),

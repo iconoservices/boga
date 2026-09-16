@@ -16,7 +16,7 @@ import { BannerOverlay, type BannerStyle } from '@/components/BannerOverlay';
 // Portada rotativa — un solo banner que va cambiando entre notas REALES de la
 // Revista (vía /api/revista) y promos de cada hub. Las promas siguen siendo de
 // muestra hasta que cada hub exponga sus destacados; las de Revista ya son reales.
-type Slide = { kicker: string; title: string; href: string; img: string; portrait?: string };
+type Slide = { kicker: string; title: string; href: string; img: string; portrait?: string; pura?: boolean };
 
 // Promos de los otros hubs (de muestra). Se intercalan con las notas de Revista.
 const PROMO_SLIDES: Slide[] = [
@@ -217,7 +217,14 @@ function PortadaCarrusel({ notas, promos, style }: { notas: NotaCard[]; promos: 
         <div className="flex h-full transition-transform duration-500 ease-out" style={{ transform: `translateX(-${i * 100}%)` }}>
           {slides.map((s) => (
             <Link key={s.title} href={s.href} className="group relative w-full h-full shrink-0">
-              <img src={s.img} alt={s.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
+              {s.pura ? (
+                <>
+                  <img src={s.img} alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110 opacity-60" />
+                  <img src={s.img} alt={s.title} className="absolute inset-0 w-full h-full object-contain" />
+                </>
+              ) : (
+                <img src={s.img} alt={s.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
+              )}
               {s.portrait && (
                 <div className="absolute top-3 left-3 lg:top-5 lg:left-5 w-16 h-16 lg:w-24 lg:h-24 rounded-full overflow-hidden border-4 border-white shadow-xl z-10">
                   <img src={s.portrait} alt="" className="w-full h-full object-cover" />
@@ -384,12 +391,16 @@ export default function HomePage() {
   useEffect(() => {
     fetchBanners('home').then(({ banners, style }) => {
       setBannerStyle(style);
-      setPromoBanners(banners.map((b: any) => ({
-        kicker: b.tag || 'Promo',
-        title: [b.title1, b.title2].filter(Boolean).join(' '),
-        href: b.link || '/market',
-        img: b.image,
-      })));
+      setPromoBanners(banners.map((b: any) => {
+        const conTexto = b.show_text !== false && (b.tag || b.title1 || b.title2 || b.sub);
+        return {
+          kicker: conTexto ? (b.tag || 'Promo') : '',
+          title: conTexto ? [b.title1, b.title2].filter(Boolean).join(' ') : '',
+          href: b.link || '/market',
+          img: b.image,
+          pura: !conTexto,
+        };
+      }));
     });
   }, []);
 

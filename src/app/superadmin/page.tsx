@@ -584,7 +584,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     if (error) alert('No se pudo guardar el estilo: ' + error.message);
   };
   const [editingMarketBannerId, setEditingMarketBannerId] = useState<string | 'new' | null>(null);
-  const [marketBannerForm, setMarketBannerForm] = useState({ tag: '', title1: '', title2: '', sub: '', link: '', active: true });
+  const [marketBannerForm, setMarketBannerForm] = useState({ tag: '', title1: '', title2: '', sub: '', link: '', active: true, showText: true });
   const [marketBannerImageFile, setMarketBannerImageFile] = useState<File | null>(null);
   const [marketBannerImagePreview, setMarketBannerImagePreview] = useState<string | null>(null);
   const [isSavingMarketBanner, setIsSavingMarketBanner] = useState(false);
@@ -601,14 +601,14 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
 
   const handleOpenNewMarketBanner = () => {
     setEditingMarketBannerId('new');
-    setMarketBannerForm({ tag: '', title1: '', title2: '', sub: '', link: '', active: true });
+    setMarketBannerForm({ tag: '', title1: '', title2: '', sub: '', link: '', active: true, showText: true });
     setMarketBannerImageFile(null);
     setMarketBannerImagePreview(null);
   };
 
   const handleOpenEditMarketBanner = (b: any) => {
     setEditingMarketBannerId(b.id);
-    setMarketBannerForm({ tag: b.tag || '', title1: b.title1 || '', title2: b.title2 || '', sub: b.sub || '', link: b.link || '', active: b.active !== false });
+    setMarketBannerForm({ tag: b.tag || '', title1: b.title1 || '', title2: b.title2 || '', sub: b.sub || '', link: b.link || '', active: b.active !== false, showText: b.show_text !== false });
     setMarketBannerImageFile(null);
     setMarketBannerImagePreview(b.image || null);
   };
@@ -636,15 +636,36 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         sub: marketBannerForm.sub || null,
         link: marketBannerForm.link || null,
         active: marketBannerForm.active,
+        show_text: marketBannerForm.showText,
       };
-      if (isNew) {
-        const maxOrder = visibleMarketBanners.reduce((max, b) => Math.max(max, b.sort_order || 0), 0);
-        const { error } = await supabase.from('market_banners').insert([{ ...payload, sort_order: maxOrder + 1, page: bannerPageTab }]);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from('market_banners').update(payload).eq('id', editingMarketBannerId);
-        if (error) throw error;
+      const fullPayload: Record<string, any> = isNew
+        ? { ...payload, sort_order: visibleMarketBanners.reduce((max, b) => Math.max(max, b.sort_order || 0), 0) + 1, page: bannerPageTab }
+        : payload;
+
+      const escribir = () =>
+        isNew
+          ? supabase.from('market_banners').insert([fullPayload])
+          : supabase.from('market_banners').update(fullPayload).eq('id', editingMarketBannerId);
+
+      let { error } = await escribir();
+
+      // Mismo problema de siempre: si `show_text` o `page` todavia no existen
+      // en la base (falta correr la migracion), reintenta sin esa columna en
+      // vez de que el banner entero no se pueda guardar.
+      const columnasOpcionales = ['show_text', 'page'];
+      const columnasFaltantes: string[] = [];
+      let faltante = columnasOpcionales.find((col) => col in fullPayload && new RegExp(col).test(error?.message || ''));
+      while (error && faltante) {
+        delete fullPayload[faltante];
+        columnasFaltantes.push(faltante);
+        ({ error } = await escribir());
+        faltante = columnasOpcionales.find((col) => col in fullPayload && new RegExp(col).test(error?.message || ''));
       }
+      if (!error && columnasFaltantes.length) {
+        alert(`Banner guardado, pero faltó correr una migración pendiente en Supabase para: ${columnasFaltantes.join(', ')}.`);
+      }
+      if (error) throw error;
+
       setEditingMarketBannerId(null);
       await fetchMarketBanners();
     } catch (err: any) {
@@ -3108,15 +3129,26 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                         className="w-full bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-medium text-[#191b23] outline-none focus:border-[#0058be]"
                       />
                       <div className="flex items-center justify-between pt-1">
-                        <label className="flex items-center gap-2 text-[11px] font-bold text-[#424754] cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={marketBannerForm.active}
-                            onChange={(e) => setMarketBannerForm(prev => ({ ...prev, active: e.target.checked }))}
-                            className="w-4 h-4 accent-[#0058be]"
-                          />
-                          Visible en /market
-                        </label>
+                        <div className="flex items-center gap-4">
+                          <label className="flex items-center gap-2 text-[11px] font-bold text-[#424754] cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={marketBannerForm.active}
+                              onChange={(e) => setMarketBannerForm(prev => ({ ...prev, active: e.target.checked }))}
+                              className="w-4 h-4 accent-[#0058be]"
+                            />
+                            Visible en {bannerPageTab === 'market' ? '/market' : 'el Inicio'}
+                          </label>
+                          <label className="flex items-center gap-2 text-[11px] font-bold text-[#424754] cursor-pointer" title="Desmarcá esto si tu imagen ya trae el texto dibujado — el tag/título/descripción quedan guardados pero no se dibujan encima.">
+                            <input
+                              type="checkbox"
+                              checked={marketBannerForm.showText}
+                              onChange={(e) => setMarketBannerForm(prev => ({ ...prev, showText: e.target.checked }))}
+                              className="w-4 h-4 accent-[#0058be]"
+                            />
+                            Mostrar texto encima
+                          </label>
+                        </div>
                         <div className="flex gap-2">
                           <button type="button" onClick={() => setEditingMarketBannerId(null)} className="px-3 py-2 rounded-md font-bold text-xs text-[#424754] hover:bg-[#e6e7f2] transition-colors">
                             Cancelar

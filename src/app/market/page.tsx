@@ -13,9 +13,9 @@ import { BannerOverlay, type BannerStyle } from '@/components/BannerOverlay';
 // Se usan solo si todavia no se cargo ningun banner desde superadmin (tabla
 // market_banners): asi la pagina nunca se ve vacia antes de configurar nada.
 const DEFAULT_BANNERS = [
-  { id: 'deliv',  img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1200", tag: null,            title1: 'DELIVERY', title2: 'GRATIS',        sub: 'En tu primera orden', link: null },
-  { id: 'burger', img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1200", tag: 'Promo Exclusiva', title1: '2x1 EN',    title2: 'HAMBURGUESAS',  sub: 'Solo por hoy en locales seleccionados', link: null },
-  { id: 'salad',  img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1200", tag: 'Saludable',      title1: '30% OFF',   title2: 'EN ENSALADAS',  sub: 'Empieza la semana con energía natural', link: null },
+  { id: 'deliv',  img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1200", tag: null,            title1: 'DELIVERY', title2: 'GRATIS',        sub: 'En tu primera orden', link: null, pura: false },
+  { id: 'burger', img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1200", tag: 'Promo Exclusiva', title1: '2x1 EN',    title2: 'HAMBURGUESAS',  sub: 'Solo por hoy en locales seleccionados', link: null, pura: false },
+  { id: 'salad',  img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1200", tag: 'Saludable',      title1: '30% OFF',   title2: 'EN ENSALADAS',  sub: 'Empieza la semana con energía natural', link: null, pura: false },
 ];
 
 
@@ -54,9 +54,20 @@ export default function Home() {
 
       setBannerStyle(dbBannerStyle);
       if (dbBannersData && dbBannersData.length > 0) {
-        setBanners(dbBannersData.map((b: any) => ({
-          id: b.id, img: b.image, tag: b.tag, title1: b.title1, title2: b.title2, sub: b.sub, link: b.link,
-        })));
+        setBanners(dbBannersData.map((b: any) => {
+          const conTexto = b.show_text !== false && (b.tag || b.title1 || b.title2 || b.sub);
+          return {
+            id: b.id, img: b.image, link: b.link,
+            // Sin texto (imagen ya armada, ej. un flyer de Canva): no se le
+            // pisa nada encima, y la imagen se ve completa (object-contain)
+            // en vez de recortada a la fuerza al ratio del banner.
+            tag: conTexto ? b.tag : null,
+            title1: conTexto ? b.title1 : null,
+            title2: conTexto ? b.title2 : null,
+            sub: conTexto ? b.sub : null,
+            pura: !conTexto,
+          };
+        }));
       }
 
       const allStores: Record<string, any> = {};
@@ -463,7 +474,17 @@ export default function Home() {
                   className="relative aspect-[16/9] sm:aspect-[21/9] lg:aspect-auto lg:h-[300px] overflow-hidden shadow-sm shrink-0 group w-full block"
                   style={{ scrollSnapAlign: 'start', flex: '0 0 100%' }}
                 >
-                  <img alt="" className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" src={b.img} />
+                  {b.pura ? (
+                    <>
+                      {/* Imagen ya armada (flyer de Canva, etc.): se ve completa,
+                          sin recortar al ratio del banner. El fondo borroso rellena
+                          los espacios en vez de dejar barras negras feas. */}
+                      <img alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110 opacity-60" src={b.img} />
+                      <img alt="" className="absolute inset-0 w-full h-full object-contain" src={b.img} />
+                    </>
+                  ) : (
+                    <img alt="" className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" src={b.img} />
+                  )}
                   <BannerOverlay style={bannerStyle} tag={b.tag} title1={b.title1} title2={b.title2} sub={b.sub} />
                 </Slide>
               );

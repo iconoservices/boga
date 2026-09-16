@@ -170,6 +170,10 @@ CREATE TABLE IF NOT EXISTS public.market_banners (
 );
 CREATE INDEX IF NOT EXISTS market_banners_sort_idx ON public.market_banners (sort_order);
 ALTER TABLE public.market_banners ADD COLUMN IF NOT EXISTS page TEXT DEFAULT 'market';
+-- Oculta el tag/titulos/sub sin borrarlos (para cuando la imagen ya trae el
+-- texto dibujado pero se quiere guardar el texto igual, por si despues se
+-- vuelve a mostrar).
+ALTER TABLE public.market_banners ADD COLUMN IF NOT EXISTS show_text BOOLEAN DEFAULT true;
 
 -- Estilo visual del carrusel de CADA seccion (no de cada banner individual):
 -- 'center' = texto centrado con degradado desde la izquierda (el look de
