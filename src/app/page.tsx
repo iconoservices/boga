@@ -594,7 +594,7 @@ export default function HomePage() {
           <SectionHead title="Qué hacer en Pucallpa hoy" href="/eventos" cta="Ver eventos" />
           <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
             {EXPERIENCES.map((e) => (
-              <Link href="/eventos" key={e.id} className="min-w-[220px] w-[220px] lg:min-w-[260px] lg:w-[260px] bg-white border border-surface-container-highest overflow-hidden shadow-sm snap-start group flex flex-col">
+              <Link href="/eventos" key={e.id} className="min-w-[220px] w-[220px] lg:min-w-[260px] lg:w-[260px] bg-white border border-surface-container-highest overflow-hidden shadow-sm rounded-2xl snap-start group flex flex-col">
                 <div className="relative h-32 overflow-hidden bg-surface-container-low">
                   <img src={e.img} alt={e.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <span className="absolute top-2 left-2 bg-white/95 backdrop-blur-sm text-on-surface text-[10px] font-label-md px-2 py-0.5 flex items-center gap-1">
@@ -616,7 +616,7 @@ export default function HomePage() {
           <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
             {masRevista.map((n) => (
               <Link href={n.href} key={n.key} className="min-w-[260px] w-[260px] lg:min-w-[300px] lg:w-[300px] snap-start group flex flex-col">
-                <div className="relative aspect-[16/10] overflow-hidden bg-surface-container-low">
+                <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-surface-container-low">
                   <img src={n.img} alt={n.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/75 to-transparent" />
                   <span className="absolute top-2 left-2 bg-white text-on-surface text-[9px] font-label-md px-2 py-0.5 uppercase tracking-wider">{n.cat}</span>
