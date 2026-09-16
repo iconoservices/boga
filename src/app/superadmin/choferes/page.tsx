@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import { CIUDADES } from '@/lib/ciudades';
+import SuperadminSidebarNav from '@/components/superadmin/SuperadminSidebarNav';
 
 const VERDE = '#00875A';
 const TIPOS = ['Mototaxi', 'Auto', 'Moto'];
@@ -133,7 +134,11 @@ export default function ChoferesAdmin() {
   const campo = 'w-full bg-surface-container-low border border-surface-container-highest rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:border-primary';
 
   return (
-    <div style={{ ['--color-primary' as string]: VERDE } as React.CSSProperties} className="min-h-screen bg-background text-on-background font-body-md">
+    <div className="min-h-screen bg-[#f9f9ff] flex">
+      <aside className="hidden md:flex flex-col h-screen w-64 bg-[#f2f3fd] border-r border-[#c2c6d6] p-4 gap-2 shrink-0 sticky top-0">
+        <SuperadminSidebarNav />
+      </aside>
+      <div style={{ ['--color-primary' as string]: VERDE } as React.CSSProperties} className="flex-1 min-w-0 bg-background text-on-background font-body-md">
       <header className="border-b border-surface-container-highest bg-surface">
         <div className="max-w-[900px] mx-auto px-container-margin py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -257,6 +262,7 @@ export default function ChoferesAdmin() {
           )}
         </section>
       </main>
+      </div>
     </div>
   );
 }

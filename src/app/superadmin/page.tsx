@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import SuperadminSidebarNav from '@/components/superadmin/SuperadminSidebarNav';
 import { type StoreConfig } from '@/lib/stores.config';
 import { getTemplate, getDemoProducts, getAllTemplates } from '@/lib/templates.config';
 import { useDemo } from '@/context/DemoContext';
@@ -518,12 +519,24 @@ export default function AdminPage() {
     );
   }
 
-  return <SuperadminDashboard onSignOut={async () => { await signOut(); router.replace('/login'); }} />;
+  return (
+    <Suspense fallback={null}>
+      <SuperadminDashboard onSignOut={async () => { await signOut(); router.replace('/login'); }} />
+    </Suspense>
+  );
 }
 
 function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   const { user: authUser } = useAuth();
-  const [activeTab, setActiveTab] = useState<'tiendas' | 'usuarios' | 'personalizacion' | 'paquetes' | 'plantillas'>('tiendas');
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState<'tiendas' | 'usuarios' | 'personalizacion' | 'paquetes' | 'plantillas'>(
+    (searchParams.get('tab') as any) || 'tiendas'
+  );
+  React.useEffect(() => {
+    const t = searchParams.get('tab');
+    if (t && t !== activeTab) setActiveTab(t as any);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
   const [search, setSearch] = useState('');
   
   // Dynamic stores states
@@ -2179,92 +2192,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
 
       {/* ── Sidebar ── */}
       <aside className="hidden md:flex flex-col h-screen w-64 bg-[#f2f3fd] border-r border-[#c2c6d6] p-4 gap-2 shrink-0">
-        <div className="mb-6 px-2 py-1">
-          <h1 className="text-xl font-bold tracking-tight text-[#0058be]">Boga Admin</h1>
-          <p className="text-[#424754] text-xs font-semibold opacity-70">Feature Control</p>
-        </div>
-        <nav className="flex flex-col gap-1 flex-1">
-          {NAV.map((n) => {
-            const isActive = activeTab === n.id;
-            return (
-              <button
-                key={n.id}
-                onClick={() => setActiveTab(n.id)}
-                className={`flex items-center gap-3 px-4 py-2.5 text-xs font-semibold transition-all rounded-md active:scale-95 duration-150 ${
-                  isActive 
-                    ? 'bg-[#2170e4] text-[#fefcff] shadow-[0_4px_12px_-2px_rgba(33,112,228,0.2)] font-bold' 
-                    : 'text-[#424754] hover:bg-[#e6e7f2]'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[18px]">{n.icon}</span>
-                {n.label}
-              </button>
-            );
-          })}
-        </nav>
-        <Link
-          href="/superadmin/revista"
-          className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold rounded-md text-[#424754]/60 hover:bg-[#e6e7f2] hover:text-[#424754] transition-all"
-        >
-          <span className="material-symbols-outlined text-[18px]">menu_book</span>
-          Revista
-        </Link>
-        <Link
-          href="/superadmin/notas"
-          className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold rounded-md text-[#424754]/60 hover:bg-[#e6e7f2] hover:text-[#424754] transition-all"
-        >
-          <span className="material-symbols-outlined text-[18px]">sticky_note_2</span>
-          Notas internas
-        </Link>
-        <Link
-          href="/superadmin/choferes"
-          className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold rounded-md text-[#424754]/60 hover:bg-[#e6e7f2] hover:text-[#424754] transition-all"
-        >
-          <span className="material-symbols-outlined text-[18px]">local_taxi</span>
-          Choferes
-        </Link>
-        <Link
-          href="/superadmin/alquileres"
-          className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold rounded-md text-[#424754]/60 hover:bg-[#e6e7f2] hover:text-[#424754] transition-all"
-        >
-          <span className="material-symbols-outlined text-[18px]">bed</span>
-          Alquileres
-        </Link>
-        <Link
-          href="/superadmin/modulos"
-          className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold rounded-md text-[#424754]/60 hover:bg-[#e6e7f2] hover:text-[#424754] transition-all"
-        >
-          <span className="material-symbols-outlined text-[18px]">extension</span>
-          Módulos y Estrategia
-        </Link>
-        <Link
-          href="/superadmin/mapa"
-          className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold rounded-md text-[#424754]/60 hover:bg-[#e6e7f2] hover:text-[#424754] transition-all"
-        >
-          <span className="material-symbols-outlined text-[18px]">account_tree</span>
-          Mapa de Apps
-        </Link>
-        <Link
-          href="/superadmin/facturacion"
-          className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold rounded-md text-[#424754]/60 hover:bg-[#e6e7f2] hover:text-[#424754] transition-all"
-        >
-          <span className="material-symbols-outlined text-[18px]">payments</span>
-          Facturación
-        </Link>
-        <Link
-          href="/superadmin/reclamaciones"
-          className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold rounded-md text-[#424754]/60 hover:bg-[#e6e7f2] hover:text-[#424754] transition-all"
-        >
-          <span className="material-symbols-outlined text-[18px]">menu_book</span>
-          Reclamaciones
-        </Link>
-        <Link
-          href="/superadmin/legal"
-          className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold rounded-md text-[#424754]/60 hover:bg-[#e6e7f2] hover:text-[#424754] transition-all"
-        >
-          <span className="material-symbols-outlined text-[18px]">gavel</span>
-          Legal
-        </Link>
+        <SuperadminSidebarNav />
         <div className="mt-auto pt-4 border-t border-[#c2c6d6]">
           <div className="flex items-center gap-3 px-2 mb-4">
             <div className="w-10 h-10 rounded-full bg-[#d5e0f8] flex items-center justify-center overflow-hidden">
