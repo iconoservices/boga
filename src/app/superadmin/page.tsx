@@ -2224,6 +2224,13 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
           Choferes
         </Link>
         <Link
+          href="/superadmin/alquileres"
+          className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold rounded-md text-[#424754]/60 hover:bg-[#e6e7f2] hover:text-[#424754] transition-all"
+        >
+          <span className="material-symbols-outlined text-[18px]">bed</span>
+          Alquileres
+        </Link>
+        <Link
           href="/superadmin/modulos"
           className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold rounded-md text-[#424754]/60 hover:bg-[#e6e7f2] hover:text-[#424754] transition-all"
         >

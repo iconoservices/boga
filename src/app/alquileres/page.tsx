@@ -1,14 +1,17 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
+import { fetchAlquileres, type Aviso, type TipoAviso } from '@/lib/alquileres';
 
 // Alquileres = espacio para arriendos mensuales en Pucallpa: habitaciones,
-// mini-departamentos, casas y pensiones (con comidas). Directorio curado a
-// mano; el contacto sale por WhatsApp directo. Sin pagos dentro de la app.
+// mini-departamentos, casas y pensiones (con comidas). Directorio administrable
+// desde /superadmin/alquileres (tabla `rental_listings`); mientras esté vacía,
+// la página cae al seed hardcodeado de abajo. Contacto por WhatsApp directo,
+// sin pagos dentro de la app.
 
-type Tipo = 'Habitación' | 'Mini-dpto' | 'Casa' | 'Pensión';
+type Tipo = TipoAviso;
 
 const FILTROS: (Tipo | 'Todos')[] = ['Todos', 'Habitación', 'Mini-dpto', 'Casa', 'Pensión'];
 
@@ -19,21 +22,7 @@ const ICONO: Record<Tipo, string> = {
   'Pensión': 'dining',
 };
 
-type Aviso = {
-  id: string;
-  tipo: Tipo;
-  titulo: string;
-  zona: string;
-  precio: number;      // soles / mes
-  extras: string[];
-  incluyeServicios?: boolean;
-  incluyeComidas?: boolean;
-  verificado?: boolean;
-  wsp: string;
-  img: string;
-};
-
-const AVISOS: Aviso[] = [
+const AVISOS_SEED: Aviso[] = [
   { id: 'a1', tipo: 'Habitación', titulo: 'Habitación amoblada con baño propio', zona: 'Callería', precio: 450, extras: ['Baño propio', 'Amoblada', 'Wifi'], incluyeServicios: true, verificado: true, wsp: '51963000001', img: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80' },
   { id: 'a2', tipo: 'Mini-dpto', titulo: 'Mini-departamento para 1–2 personas', zona: 'Yarinacocha', precio: 800, extras: ['Cocina', 'Amoblado', 'Agua incluida'], verificado: true, wsp: '51963000002', img: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80' },
   { id: 'a3', tipo: 'Pensión', titulo: 'Pensión familiar · cuarto + 3 comidas', zona: 'Centro', precio: 950, extras: ['Desayuno', 'Almuerzo', 'Cena', 'Lavandería'], incluyeComidas: true, verificado: true, wsp: '51963000003', img: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800&q=80' },
@@ -51,8 +40,15 @@ function waLink(numero: string, texto: string) {
 export default function Alquileres() {
   const { cartCount, setIsCartOpen } = useCart();
   const [filtro, setFiltro] = useState<Tipo | 'Todos'>('Todos');
+  const [avisos, setAvisos] = useState<Aviso[]>(AVISOS_SEED);
 
-  const lista = filtro === 'Todos' ? AVISOS : AVISOS.filter((a) => a.tipo === filtro);
+  useEffect(() => {
+    fetchAlquileres().then((rows) => {
+      if (rows.length > 0) setAvisos(rows);
+    });
+  }, []);
+
+  const lista = filtro === 'Todos' ? avisos : avisos.filter((a) => a.tipo === filtro);
 
   return (
     <>

@@ -256,9 +256,8 @@ function PortadaCarrusel({ notas, promos, style }: { notas: NotaCard[]; promos: 
   );
 }
 
-// Panel "Pulso metropolitano" — al lado de la portada en escritorio, apilado en
-// móvil. Accesos rápidos a los hubs de servicio con la data que ya mostramos en
-// las tarjetas de "Todo Boga en un vistazo".
+// Accesos rápidos a los hubs de servicio (Taxi Seguro, técnicos, sorteos),
+// parte del panel "Todo Pucallpa en una sola app".
 const PULSO_CARDS = [
   {
     href: '/taxi-seguro',
@@ -296,10 +295,22 @@ const PULSO_CARDS = [
 function PortalesPanel() {
   return (
     <div className="px-container-margin lg:px-0 pt-6 lg:pt-0">
-      <div className="flex flex-col gap-3 lg:h-full lg:justify-center">
-        <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-xl lg:text-2xl leading-tight">
-          Todo Pucallpa en una sola app
-        </h2>
+      <div className="flex flex-col gap-4 lg:h-full lg:justify-center">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-xl lg:text-2xl leading-tight">
+              Todo Pucallpa en una sola app
+            </h2>
+            <p className="font-body-md text-secondary text-xs mt-1.5 max-w-[52ch]">
+              Transporte verificado, servicios de confianza y la agenda de la ciudad, en tiempo real.
+            </p>
+          </div>
+          <span className="flex items-center gap-1.5 font-label-md text-[10px] text-secondary shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#0F8A55] animate-pulse" />
+            Sincronizado
+          </span>
+        </div>
+
         <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1 snap-x lg:flex-wrap lg:overflow-visible" style={{ scrollbarWidth: 'none' }}>
           {PORTALES.map((p) => (
             <Link
@@ -317,58 +328,34 @@ function PortalesPanel() {
             </Link>
           ))}
         </div>
+
+        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 lg:flex-col">
+          {PULSO_CARDS.map((c) => (
+            <Link
+              key={c.href}
+              href={c.href}
+              className="group bg-white border border-surface-container-high rounded-xl p-3 flex items-center gap-3 hover:border-primary/40 hover:shadow-md transition-all shrink-0 w-[82%] snap-start lg:w-auto lg:shrink"
+            >
+              <span className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${c.tint}`}>
+                <span className="material-symbols-outlined text-[20px]">{c.icon}</span>
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-headline-sm text-[13px] text-on-surface leading-tight line-clamp-1">{c.title}</span>
+                <span className="block font-body-md text-secondary text-[11px] leading-tight line-clamp-1">{c.sub}</span>
+              </span>
+              <span className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${c.btn}`}>
+                <span className="material-symbols-outlined text-[18px]">{c.action}</span>
+              </span>
+            </Link>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-between border-t border-surface-container-high pt-3 font-label-md text-[10px]">
+          <span className="text-secondary">Callería · Yarinacocha · Manantay</span>
+          <span className="text-[#0b7a48] font-bold">100% ucayalino</span>
+        </div>
       </div>
     </div>
-  );
-}
-
-// Panel "Pulso metropolitano" — banda de accesos rápidos a los hubs de servicio,
-// debajo de la portada. 3 tarjetas en fila en escritorio, apiladas en móvil.
-function PulsoPanel() {
-  return (
-    <section className="flex flex-col gap-4">
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <span className="font-label-md text-[10px] uppercase tracking-[0.22em] text-[#0b7a48] font-bold">Pulso metropolitano</span>
-          <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-2xl lg:text-3xl leading-tight">
-            Pucallpa en una sola app
-          </h2>
-          <p className="font-body-md text-secondary text-xs mt-1.5 max-w-[52ch]">
-            Transporte verificado, servicios de confianza y la agenda de la ciudad, en tiempo real.
-          </p>
-        </div>
-        <span className="flex items-center gap-1.5 font-label-md text-[10px] text-secondary shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#0F8A55] animate-pulse" />
-          Sincronizado
-        </span>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {PULSO_CARDS.map((c) => (
-          <Link
-            key={c.href}
-            href={c.href}
-            className="group bg-white border border-surface-container-high rounded-xl p-3 flex items-center gap-3 hover:border-primary/40 hover:shadow-md transition-all"
-          >
-            <span className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${c.tint}`}>
-              <span className="material-symbols-outlined text-[20px]">{c.icon}</span>
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block font-headline-sm text-[13px] text-on-surface leading-tight line-clamp-1">{c.title}</span>
-              <span className="block font-body-md text-secondary text-[11px] leading-tight line-clamp-1">{c.sub}</span>
-            </span>
-            <span className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${c.btn}`}>
-              <span className="material-symbols-outlined text-[18px]">{c.action}</span>
-            </span>
-          </Link>
-        ))}
-      </div>
-
-      <div className="flex items-center justify-between border-t border-surface-container-high pt-3 font-label-md text-[10px]">
-        <span className="text-secondary">Callería · Yarinacocha · Manantay</span>
-        <span className="text-[#0b7a48] font-bold">100% ucayalino</span>
-      </div>
-    </section>
   );
 }
 
@@ -533,9 +520,6 @@ export default function HomePage() {
             ))}
           </div>
         </section>
-
-        {/* Pulso metropolitano */}
-        <PulsoPanel />
 
         {/* Del Market — Dónde comer esta semana (carrusel de listas) */}
         <section className="flex flex-col gap-4">

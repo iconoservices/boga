@@ -798,3 +798,51 @@ BEGIN
 END;
 $$;
 GRANT EXECUTE ON FUNCTION public.presentar_reclamacion(jsonb) TO anon, authenticated;
+
+-- ============================================================
+-- 14. ALQUILERES  (directorio de habitaciones, mini-dptos, casas y pensiones)
+-- ============================================================
+-- `rental_listings`: el directorio curado de /alquileres ("Dónde quedarte").
+-- Antes era un array hardcodeado en la página. Lectura pública SOLO de
+-- status='activo'; escritura solo superadmin (desde /superadmin/alquileres).
+-- Leer siempre por endpoint cacheado (/api/alquileres) — nunca select('*')
+-- desde el cliente (ver egress).
+CREATE TABLE IF NOT EXISTS public.rental_listings (
+  id                  UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at          TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  tipo                TEXT NOT NULL DEFAULT 'Habitación', -- Habitación | Mini-dpto | Casa | Pensión
+  titulo              TEXT NOT NULL,
+  zona                TEXT,
+  precio              NUMERIC(10,2) NOT NULL DEFAULT 0,   -- soles / mes
+  extras              JSONB NOT NULL DEFAULT '[]'::jsonb, -- ["Baño propio", "Wifi", ...]
+  incluye_servicios   BOOLEAN NOT NULL DEFAULT false,
+  incluye_comidas     BOOLEAN NOT NULL DEFAULT false,
+  verificado          BOOLEAN NOT NULL DEFAULT false,
+  wsp                 TEXT,                                -- WhatsApp (E.164 sin +)
+  img                 TEXT,
+  ciudad              TEXT NOT NULL DEFAULT 'pucallpa',
+  orden               INT  NOT NULL DEFAULT 0,
+  status              TEXT NOT NULL DEFAULT 'activo'        -- activo | oculto
+);
+CREATE INDEX IF NOT EXISTS rental_listings_status_idx ON public.rental_listings (status);
+CREATE INDEX IF NOT EXISTS rental_listings_ciudad_idx ON public.rental_listings (ciudad);
+
+ALTER TABLE public.rental_listings ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "rental_listings: lectura pública de activos" ON public.rental_listings;
+DROP POLICY IF EXISTS "rental_listings: superadmin inserta"         ON public.rental_listings;
+DROP POLICY IF EXISTS "rental_listings: superadmin edita"           ON public.rental_listings;
+DROP POLICY IF EXISTS "rental_listings: superadmin borra"           ON public.rental_listings;
+
+CREATE POLICY "rental_listings: lectura pública de activos"
+ON public.rental_listings FOR SELECT
+USING (status = 'activo' OR public.is_superadmin());
+
+CREATE POLICY "rental_listings: superadmin inserta"
+ON public.rental_listings FOR INSERT WITH CHECK (public.is_superadmin());
+
+CREATE POLICY "rental_listings: superadmin edita"
+ON public.rental_listings FOR UPDATE USING (public.is_superadmin());
+
+CREATE POLICY "rental_listings: superadmin borra"
+ON public.rental_listings FOR DELETE USING (public.is_superadmin());

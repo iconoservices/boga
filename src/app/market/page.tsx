@@ -430,11 +430,12 @@ export default function Home() {
 
   return (
     <>
-      <AppHeader 
-        showSearch={true} 
-        placeholder="Busca lo que necesites..." 
+      <AppHeader
+        showSearch={true}
+        placeholder="Busca lo que necesites..."
         cartCount={cartCount}
         onCartClick={() => setIsCartOpen(true)}
+        showChat={false}
       />
 
       <HomeFloatingActions />
@@ -534,55 +535,31 @@ export default function Home() {
                 <span className="material-symbols-outlined text-[16px]">chevron_right</span>
               </Link>
             </div>
-            <div className={`
-              transition-all duration-500 ease-in-out
-              ${activeCategory === 'Todas'
-                ? 'grid grid-cols-4 gap-2 lg:gap-3'
-                : 'flex gap-3 overflow-x-auto hide-scrollbar pb-1.5'
-              }`}
+            <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1.5 transition-all duration-500 ease-in-out"
               style={{ scrollbarWidth: 'none' }}
             >
               {macroCategories.map((cat) => {
                 const isActive = activeCategory === cat.id;
                 return (
-                  <button 
+                  <button
                     key={cat.id}
                     onClick={() => {
                       setActiveCategory(cat.id);
                       setShowAllSubCategories(false);
                     }}
                     className={`
-                      flex transition-all duration-300 active:scale-95 shrink-0 group
-                      ${activeCategory === 'Todas' 
-                        ? 'flex-col items-center justify-center gap-0.5 py-1.5 px-1 lg:py-2 lg:px-1.5 rounded-xl shadow-[0px_8px_12px_rgba(0,0,0,0.04)] hover:bg-primary-container' 
-                        : 'flex-row items-center gap-1.5 px-4 py-1.5 rounded-full shadow-sm'
-                      }
-                      ${isActive 
-                        ? 'bg-primary text-white border-primary shadow-md' 
+                      flex flex-row items-center gap-1.5 px-4 py-1.5 rounded-full shadow-sm
+                      transition-all duration-300 active:scale-95 shrink-0 group
+                      ${isActive
+                        ? 'bg-primary text-white border-primary shadow-md'
                         : 'bg-white border border-surface-container-highest text-secondary'
                       }
                     `}
                   >
-                    <div className={`
-                      transition-colors rounded-full flex items-center justify-center
-                      ${activeCategory === 'Todas' 
-                        ? 'w-8 h-8 lg:w-9 lg:h-9' 
-                        : 'w-auto h-auto'
-                      }
-                      ${activeCategory === 'Todas'
-                        ? isActive ? 'bg-white/20' : 'bg-surface-container group-hover:bg-white'
-                        : ''
-                      }
-                    `}>
-                      <span className={`material-symbols-outlined shrink-0 transition-all ${
-                        activeCategory === 'Todas' ? 'text-lg lg:text-xl' : 'text-[18px]'
-                      } ${isActive ? 'text-white' : 'text-primary'}`}>
-                        {cat.icon}
-                      </span>
-                    </div>
-                    <span className={`font-label-md transition-all ${
-                      activeCategory === 'Todas' ? 'text-[9px] lg:text-[10px] text-center leading-tight mt-0.5' : 'text-[11px] whitespace-nowrap'
-                    } ${isActive ? 'text-white' : 'text-secondary group-hover:text-on-primary-container'}`}>
+                    <span className={`material-symbols-outlined shrink-0 transition-all text-[18px] ${isActive ? 'text-white' : 'text-primary'}`}>
+                      {cat.icon}
+                    </span>
+                    <span className={`font-label-md transition-all text-[11px] whitespace-nowrap ${isActive ? 'text-white' : 'text-secondary group-hover:text-on-primary-container'}`}>
                       {cat.name}
                     </span>
                   </button>
