@@ -9,6 +9,18 @@
 
 export type Ciudad = { slug: string; nombre: string; region: string };
 
+// Nombres que el reverse-geocoding puede devolver en vez del nombre "oficial"
+// de la ciudad (ej. el distrito urbano en vez de la provincia, o viceversa).
+// Sin esto, alguien en Pucallpa podia recibir "Callería" o "Coronel Portillo"
+// del GPS y quedar sin match porque ninguno de los dos contiene "pucallpa".
+const ALIAS_CIUDAD: Record<string, string> = {
+  'calleria': 'pucallpa',
+  'yarinacocha': 'pucallpa',
+  'manantay': 'pucallpa',
+  'coronel portillo': 'pucallpa',
+  'provincia de coronel portillo': 'pucallpa',
+};
+
 // Ciudades que el selector ofrece. No es toda la lista del Perú, son las
 // plazas con las que tiene sentido empezar. Agregá las que necesites.
 export const CIUDADES: Ciudad[] = [
@@ -59,7 +71,8 @@ export function slugDesdeNombre(texto: string | null | undefined): string | null
   const exacta = CIUDADES.find((c) => norm(c.nombre) === t);
   if (exacta) return exacta.slug;
   const parcial = CIUDADES.find((c) => t.includes(c.slug) || c.slug.includes(t));
-  return parcial ? parcial.slug : null;
+  if (parcial) return parcial.slug;
+  return ALIAS_CIUDAD[t] ?? null;
 }
 
 // ── Persistencia (por navegador) ──

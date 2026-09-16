@@ -67,6 +67,7 @@ export default function Home() {
             template: s.template || 'default',
             heroImage: s.hero_image || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
             heroAlt: s.hero_alt || 'store image',
+            logoImage: s.logo_image || '',
             theme: s.theme || {},
             categories: s.categories || []
           };
@@ -81,7 +82,10 @@ export default function Home() {
           category: s.tagline || 'TIENDA OFICIAL',
           time: '20-40 min',
           delivery: 'S/ 5.00',
-          logo: s.heroImage,
+          // Logo real de la tienda, no la portada: antes usaba heroImage y una
+          // tienda sin portada propia mostraba la foto generica de la
+          // plantilla (ej. una hamburguesa) como si fuera su logo.
+          logo: s.logoImage || '',
           products: [
             { name: 'Producto Destacado', price: 'S/ 25.00', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400' },
             { name: 'Oferta Especial', price: 'S/ 15.00', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400' },
@@ -103,7 +107,7 @@ export default function Home() {
             slug: p.store,
             image: p.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80',
             store: storeDef?.name || p.store,
-            logo: storeDef?.heroImage || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=100',
+            logo: storeDef?.logoImage || '',
             rating: (4 + Math.random()).toFixed(1),
             reviews: `(${Math.floor(Math.random() * 200) + 10}+)`
           }
@@ -291,6 +295,7 @@ export default function Home() {
             template: s.template || 'default',
             heroImage: s.hero_image || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
             heroAlt: s.hero_alt || 'store image',
+            logoImage: s.logo_image || '',
             theme: s.theme || {},
             categories: s.categories || []
           };
@@ -313,7 +318,8 @@ export default function Home() {
             store: storeDef?.name || p.store,
             slug: p.store,
             image: p.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800',
-            logo: storeDef?.heroImage || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200',
+            // Logo real, no la portada (ver comentario igual mas arriba).
+            logo: storeDef?.logoImage || '',
           }
         });
 
@@ -643,8 +649,12 @@ export default function Home() {
                             ))}
                           </div>
                           <div className="flex gap-3 items-center border-t border-surface-container pt-3">
-                            <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-surface-container-highest">
-                              <img src={featuredStore.logo} className="w-full h-full object-cover" alt={featuredStore.name} />
+                            <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-surface-container-highest bg-surface-container-low flex items-center justify-center">
+                              {featuredStore.logo ? (
+                                <img src={featuredStore.logo} className="w-full h-full object-cover" alt={featuredStore.name} />
+                              ) : (
+                                <span className="text-secondary font-headline-sm text-sm">{featuredStore.name?.charAt(0)}</span>
+                              )}
                             </div>
                             <div className="flex flex-col flex-1 min-w-0">
                               <span className="font-headline-sm text-sm text-on-surface leading-tight">{featuredStore.name}</span>
@@ -669,7 +679,11 @@ export default function Home() {
                             <span className="material-symbols-outlined text-[10px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span> Destacado
                           </div>
                           <div className="flex gap-2 items-center mt-1">
-                            <img alt={prod.store} className="w-5 h-5 rounded-full object-cover border border-surface-container-highest" src={prod.logo} />
+                            {prod.logo ? (
+                              <img alt={prod.store} className="w-5 h-5 rounded-full object-cover border border-surface-container-highest" src={prod.logo} />
+                            ) : (
+                              <span className="w-5 h-5 rounded-full bg-surface-container-highest flex items-center justify-center text-[9px] font-bold text-secondary shrink-0">{prod.store?.charAt(0)}</span>
+                            )}
                             <span className="text-[11px] font-label-md text-secondary">{prod.store}</span>
                           </div>
                           <div>
@@ -724,7 +738,11 @@ export default function Home() {
                           <span className="material-symbols-outlined text-[18px] text-secondary" style={isFav ? { fontVariationSettings: "'FILL' 1" } : {}}>favorite</span>
                         </button>
                         <div className="absolute bottom-2 left-2 bg-white/95 backdrop-blur-sm shadow-sm rounded-lg px-2 py-1 flex items-center gap-1 border border-surface-container-highest">
-                          <img alt={prod.store} className="w-3.5 h-3.5 rounded-full object-cover" src={prod.logo} />
+                          {prod.logo ? (
+                            <img alt={prod.store} className="w-3.5 h-3.5 rounded-full object-cover" src={prod.logo} />
+                          ) : (
+                            <span className="w-3.5 h-3.5 rounded-full bg-surface-container-highest flex items-center justify-center text-[7px] font-bold text-secondary shrink-0">{prod.store?.charAt(0)}</span>
+                          )}
                           <span className="text-[9px] font-label-md text-on-surface uppercase truncate max-w-[65px]">{prod.store}</span>
                         </div>
                       </div>

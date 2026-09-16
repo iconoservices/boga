@@ -150,9 +150,10 @@ CREATE TABLE IF NOT EXISTS public.city_interest (
 );
 CREATE INDEX IF NOT EXISTS city_interest_city_idx ON public.city_interest (city);
 
--- Banners del carrusel principal de /market (2x1 hamburguesas, delivery
--- gratis, etc.). Antes vivian hardcodeados en el codigo (BANNERS_RAW en
--- market/page.tsx); ahora los edita el superadmin sin tocar codigo.
+-- Banners de los carruseles de portada (/market Y el Inicio "/"). Antes
+-- vivian hardcodeados en el codigo (BANNERS_RAW en market/page.tsx,
+-- PROMO_SLIDES en page.tsx); ahora los edita el superadmin sin tocar codigo.
+-- `page` distingue en cual de los dos carruseles aparece cada uno.
 CREATE TABLE IF NOT EXISTS public.market_banners (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
@@ -164,9 +165,11 @@ CREATE TABLE IF NOT EXISTS public.market_banners (
   /** A donde lleva al tocarlo: interno (/promotions) o externo. Vacio = no clickeable. */
   link TEXT,
   sort_order INTEGER DEFAULT 0,
-  active BOOLEAN DEFAULT true
+  active BOOLEAN DEFAULT true,
+  page TEXT DEFAULT 'market'
 );
 CREATE INDEX IF NOT EXISTS market_banners_sort_idx ON public.market_banners (sort_order);
+ALTER TABLE public.market_banners ADD COLUMN IF NOT EXISTS page TEXT DEFAULT 'market';
 
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,

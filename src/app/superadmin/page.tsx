@@ -558,6 +558,13 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   // market_banners (via el mismo endpoint cacheado /api/catalog).
   const [marketBanners, setMarketBanners] = useState<any[]>([]);
   const [isLoadingMarketBanners, setIsLoadingMarketBanners] = useState(true);
+  // Que carrusel se esta editando: /market o el de Inicio "/". Misma tabla,
+  // solo cambia el filtro y a que pagina se le asigna lo nuevo.
+  const [bannerPageTab, setBannerPageTab] = useState<'market' | 'home'>('market');
+  const visibleMarketBanners = React.useMemo(
+    () => marketBanners.filter(b => (b.page || 'market') === bannerPageTab),
+    [marketBanners, bannerPageTab]
+  );
   const [editingMarketBannerId, setEditingMarketBannerId] = useState<string | 'new' | null>(null);
   const [marketBannerForm, setMarketBannerForm] = useState({ tag: '', title1: '', title2: '', sub: '', link: '', active: true });
   const [marketBannerImageFile, setMarketBannerImageFile] = useState<File | null>(null);
@@ -610,8 +617,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         active: marketBannerForm.active,
       };
       if (isNew) {
-        const maxOrder = marketBanners.reduce((max, b) => Math.max(max, b.sort_order || 0), 0);
-        const { error } = await supabase.from('market_banners').insert([{ ...payload, sort_order: maxOrder + 1 }]);
+        const maxOrder = visibleMarketBanners.reduce((max, b) => Math.max(max, b.sort_order || 0), 0);
+        const { error } = await supabase.from('market_banners').insert([{ ...payload, sort_order: maxOrder + 1, page: bannerPageTab }]);
         if (error) throw error;
       } else {
         const { error } = await supabase.from('market_banners').update(payload).eq('id', editingMarketBannerId);
@@ -634,14 +641,16 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   };
 
   const handleMoveMarketBanner = async (id: string, direction: -1 | 1) => {
-    const idx = marketBanners.findIndex(b => b.id === id);
+    const idx = visibleMarketBanners.findIndex(b => b.id === id);
     const swapIdx = idx + direction;
-    if (idx < 0 || swapIdx < 0 || swapIdx >= marketBanners.length) return;
-    const a = marketBanners[idx];
-    const b = marketBanners[swapIdx];
-    const next = [...marketBanners];
-    [next[idx], next[swapIdx]] = [next[swapIdx], next[idx]];
-    setMarketBanners(next);
+    if (idx < 0 || swapIdx < 0 || swapIdx >= visibleMarketBanners.length) return;
+    const a = visibleMarketBanners[idx];
+    const b = visibleMarketBanners[swapIdx];
+    setMarketBanners(prev => prev.map(x => {
+      if (x.id === a.id) return { ...x, sort_order: b.sort_order };
+      if (x.id === b.id) return { ...x, sort_order: a.sort_order };
+      return x;
+    }));
     await Promise.all([
       supabase.from('market_banners').update({ sort_order: b.sort_order }).eq('id', a.id),
       supabase.from('market_banners').update({ sort_order: a.sort_order }).eq('id', b.id),
@@ -2966,12 +2975,12 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
           {/* ─── PERSONALIZACION ─── */}
           {activeTab === 'personalizacion' && (
             <div className="space-y-6 animate-fade-in">
-              {/* Banners del carrusel de /market — no son de una tienda puntual, son del sitio entero */}
+              {/* Banners de los carruseles de portada — no son de una tienda puntual, son del sitio entero */}
               <div className="bg-white rounded-md border border-[#c2c6d6] overflow-hidden shadow-sm">
                 <div className="p-5 border-b border-[#c2c6d6] flex items-center justify-between">
                   <div>
-                    <h2 className="text-sm font-bold text-[#191b23]">Banners de /market</h2>
-                    <p className="text-[11px] text-[#424754] mt-0.5">El carrusel principal (2x1 hamburguesas, delivery gratis, etc.) — es del sitio entero, no de una tienda.</p>
+                    <h2 className="text-sm font-bold text-[#191b23]">Banners de Portada</h2>
+                    <p className="text-[11px] text-[#424754] mt-0.5">Los carruseles de /market y del Inicio — son del sitio entero, no de una tienda.</p>
                   </div>
                   <button
                     onClick={handleOpenNewMarketBanner}
@@ -2980,6 +2989,20 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                     <span className="material-symbols-outlined text-[16px]">add</span>
                     Nuevo Banner
                   </button>
+                </div>
+
+                <div className="px-5 pt-3 flex gap-1.5">
+                  {([['market', 'Market'], ['home', 'Inicio']] as const).map(([id, label]) => (
+                    <button
+                      key={id}
+                      onClick={() => setBannerPageTab(id)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${
+                        bannerPageTab === id ? 'bg-[#0058be] text-white' : 'bg-[#f2f3fd] text-[#545f73] hover:bg-[#e6e7f2]'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
 
                 <div className="p-4">
@@ -3062,11 +3085,13 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
 
                   {isLoadingMarketBanners ? (
                     <p className="text-xs text-[#727785] italic py-3 text-center">Cargando…</p>
-                  ) : marketBanners.length === 0 ? (
-                    <p className="text-xs text-[#727785] italic py-3 text-center">Sin banners cargados — /market muestra los 3 de ejemplo por defecto.</p>
+                  ) : visibleMarketBanners.length === 0 ? (
+                    <p className="text-xs text-[#727785] italic py-3 text-center">
+                      Sin banners cargados para {bannerPageTab === 'market' ? '/market' : 'el Inicio'} — muestra los de ejemplo por defecto.
+                    </p>
                   ) : (
                     <div className="space-y-1.5">
-                      {marketBanners.map((b, idx) => (
+                      {visibleMarketBanners.map((b, idx) => (
                         <div key={b.id} className="flex items-center gap-3 p-2 rounded-lg border border-[#ecedf7]">
                           <img src={b.image} alt="" className="w-16 h-9 rounded-md object-cover shrink-0 bg-[#e6e7f2]" />
                           <div className="min-w-0 flex-1">
@@ -3078,7 +3103,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           </div>
                           <div className="flex items-center gap-0.5 shrink-0">
                             <button onClick={() => handleMoveMarketBanner(b.id, -1)} disabled={idx === 0} className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] p-1 hover:bg-[#e6e7f2] rounded disabled:opacity-30 disabled:pointer-events-none">arrow_upward</button>
-                            <button onClick={() => handleMoveMarketBanner(b.id, 1)} disabled={idx === marketBanners.length - 1} className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] p-1 hover:bg-[#e6e7f2] rounded disabled:opacity-30 disabled:pointer-events-none">arrow_downward</button>
+                            <button onClick={() => handleMoveMarketBanner(b.id, 1)} disabled={idx === visibleMarketBanners.length - 1} className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] p-1 hover:bg-[#e6e7f2] rounded disabled:opacity-30 disabled:pointer-events-none">arrow_downward</button>
                             <button onClick={() => handleOpenEditMarketBanner(b)} className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] p-1 hover:bg-[#e6e7f2] rounded">edit</button>
                             <button onClick={() => handleDeleteMarketBanner(b.id)} className="material-symbols-outlined text-[16px] text-[#727785] hover:text-red-600 p-1 hover:bg-red-50 rounded">delete</button>
                           </div>

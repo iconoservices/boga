@@ -35,6 +35,7 @@ export default function Explore() {
             template: s.template || 'default',
             heroImage: s.hero_image || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
             heroAlt: s.hero_alt || 'store image',
+            logoImage: s.logo_image || '',
             theme: s.theme || {},
             categories: s.categories || []
           };
@@ -58,7 +59,9 @@ export default function Explore() {
             macroCat,
             time: '20-40 min',
             delivery: 'S/ 5.00',
-            logo: s.heroImage,
+            // Logo real, no la portada (una tienda sin foto propia mostraba
+            // la generica de la plantilla como si fuera su logo).
+            logo: s.logoImage || '',
             products: [
               { name: 'Producto Destacado', price: 'S/ 25.00', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400' },
               { name: 'Oferta Especial', price: 'S/ 15.00', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400' },
@@ -428,8 +431,12 @@ export default function Explore() {
                       ))}
                     </div>
                     <div className="flex gap-3 items-center border-t border-surface-container pt-3">
-                      <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-surface-container-highest">
-                        <img src={store.logo} className="w-full h-full object-cover" alt={store.name} />
+                      <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-surface-container-highest bg-surface-container-low flex items-center justify-center">
+                        {store.logo ? (
+                          <img src={store.logo} className="w-full h-full object-cover" alt={store.name} />
+                        ) : (
+                          <span className="text-secondary font-headline-sm text-sm">{store.name?.charAt(0)}</span>
+                        )}
                       </div>
                       <div className="flex flex-col flex-1 min-w-0">
                         <span className="font-headline-sm text-sm text-on-surface leading-tight">{store.name}</span>
@@ -516,8 +523,12 @@ export default function Explore() {
                     ))}
                   </div>
                   <div className="flex gap-2 items-center border-t border-surface-container pt-2.5 mt-0.5">
-                    <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 border border-surface-container-highest">
-                      <img src={store.logo} className="w-full h-full object-cover" alt={store.name} />
+                    <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 border border-surface-container-highest bg-surface-container-low flex items-center justify-center">
+                      {store.logo ? (
+                        <img src={store.logo} className="w-full h-full object-cover" alt={store.name} />
+                      ) : (
+                        <span className="text-secondary font-headline-sm text-[10px]">{store.name?.charAt(0)}</span>
+                      )}
                     </div>
                     <div className="flex flex-col flex-1 min-w-0">
                       <span className="font-headline-sm text-xs text-on-surface leading-tight truncate">{store.name}</span>

@@ -19,6 +19,18 @@ export async function fetchCatalogo(): Promise<{ stores: any[]; products: any[];
   }
 }
 
+/** Banners activos de un carrusel puntual (ej. 'home' para el Inicio "/"). */
+export async function fetchBanners(page: string): Promise<any[]> {
+  try {
+    const res = await fetch(`/api/catalog?page=${encodeURIComponent(page)}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.banners ?? [];
+  } catch {
+    return [];
+  }
+}
+
 /** Productos de una sola tienda (para las plantillas de storefront). */
 export async function fetchProductosDeTienda(slug: string): Promise<any[]> {
   try {

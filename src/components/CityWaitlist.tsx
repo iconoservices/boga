@@ -152,6 +152,16 @@ export function CitySwitcher({ variant }: { variant: 'mobile' | 'desktop' }) {
         )}
       </button>
 
+      {/* Si la deteccion automatica al entrar fallo (permiso denegado, ciudad
+          no reconocida, etc.), antes ese aviso quedaba enterrado dentro del
+          dropdown cerrado: el header seguia diciendo "Elige tu ciudad" sin
+          ninguna pista de que ya lo intento y por que no funciono. */}
+      {!abierto && avisoGeo && (
+        <p className="absolute left-0 top-full mt-0.5 text-[10px] text-tertiary font-body-md whitespace-nowrap z-[55]">
+          {avisoGeo}
+        </p>
+      )}
+
       {abierto && (
         <div className="absolute left-0 top-full mt-2 z-[60] w-[280px] rounded-2xl border border-surface-container-highest bg-surface shadow-[0_20px_40px_rgba(0,0,0,0.12)] p-2">
           <button

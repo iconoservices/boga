@@ -5,6 +5,7 @@ import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
 import { fetchNotasRevista, type NotaCard } from '@/lib/revista';
+import { fetchBanners } from '@/lib/catalogo';
 
 // "/" = el Inicio del lado consumidor. Es el índice vivo de Boga: un vistazo a
 // cada hub + contenido editorial fresco (SEO). Nada se resuelve acá, solo se
@@ -51,16 +52,18 @@ const PORTADA_FALLBACK: Slide[] = [
 ];
 
 // Construye la lista de slides: intercala las 2 notas más recientes de la
-// Revista con las promos.
-function armarSlides(notas: NotaCard[]): Slide[] {
-  if (!notas.length) return PORTADA_FALLBACK;
+// Revista con las promos (las que cargó el superadmin, o las de muestra si
+// todavía no cargó ninguna).
+function armarSlides(notas: NotaCard[], promos: Slide[]): Slide[] {
+  const p = promos.length ? promos : PROMO_SLIDES;
+  if (!notas.length) return [PORTADA_FALLBACK[0], ...p];
   const rev: Slide[] = notas.slice(0, 2).map((n) => ({
     kicker: `Revista · ${n.kicker}`,
     title: n.titulo,
     href: `/revista/${n.slug}`,
     img: n.img,
   }));
-  return [rev[0], PROMO_SLIDES[0], PROMO_SLIDES[1], rev[1], PROMO_SLIDES[2]].filter(Boolean) as Slide[];
+  return [rev[0], p[0], p[1], rev[1], p[2]].filter(Boolean) as Slide[];
 }
 
 // Los 8 Portales de Boga — el lanzador de la ciudad. Un ícono por hub, cada
@@ -190,8 +193,8 @@ const CAROUSEL = "flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin
 // Un solo banner de portada que rota entre notas de la Revista y promos.
 // Mismo diseño en móvil y escritorio: foto a sangre, kicker + titular abajo,
 // flechas a los lados y puntos de posición. Rota solo cada 6 s.
-function PortadaCarrusel({ notas }: { notas: NotaCard[] }) {
-  const slides = React.useMemo(() => armarSlides(notas), [notas]);
+function PortadaCarrusel({ notas, promos }: { notas: NotaCard[]; promos: Slide[] }) {
+  const slides = React.useMemo(() => armarSlides(notas, promos), [notas, promos]);
   const [i, setI] = useState(0);
   const n = slides.length;
 
@@ -378,6 +381,21 @@ export default function HomePage() {
   const [notasRevista, setNotasRevista] = useState<NotaCard[]>([]);
   useEffect(() => { fetchNotasRevista().then(setNotasRevista); }, []);
 
+  // Promos del banner de portada, editables desde superadmin (tabla
+  // market_banners con page='home'). Si todavia no cargaron ninguna, el
+  // carrusel sigue usando PROMO_SLIDES de muestra (ver armarSlides).
+  const [promoBanners, setPromoBanners] = useState<Slide[]>([]);
+  useEffect(() => {
+    fetchBanners('home').then((rows) => {
+      setPromoBanners(rows.map((b: any) => ({
+        kicker: b.tag || 'Promo',
+        title: [b.title1, b.title2].filter(Boolean).join(' '),
+        href: b.link || '/market',
+        img: b.image,
+      })));
+    });
+  }, []);
+
   const masRevista = notasRevista.length
     ? notasRevista.slice(0, 8).map((n) => ({ key: n.slug, href: `/revista/${n.slug}`, cat: n.kicker, title: n.titulo, img: n.img }))
     : SELVA_NOTES.map((n) => ({ key: n.id, href: '/revista', cat: n.cat, title: n.title, img: n.img }));
@@ -407,7 +425,7 @@ export default function HomePage() {
       {/* Portada rotativa + panel "Los 8 Portales de Boga" (lado a lado en escritorio) */}
       <div className="max-w-[1440px] mx-auto w-full lg:px-8 pt-4 lg:pt-6">
         <div className="lg:grid lg:grid-cols-[1.7fr_1fr] lg:gap-5 lg:items-stretch">
-          <PortadaCarrusel notas={notasRevista} />
+          <PortadaCarrusel notas={notasRevista} promos={promoBanners} />
           <PortalesPanel />
         </div>
       </div>
