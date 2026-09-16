@@ -130,12 +130,12 @@ const COMER_LISTAS: ComerLista[] = [
 // manda al portal que la resuelve; la guía completa (clima, plata, etc.)
 // vive en /guia. Tarjetas compactas (ícono + texto), sin foto.
 const GUIA_PUCALLPA = [
-  { href: '/alquileres',  icon: 'bed',          titulo: 'Dónde quedarte', sub: 'Cuartos, hostales y minidepas — por día o por mes', color: '#8B7FD4' },
-  { href: '/taxi-seguro', icon: 'local_taxi',   titulo: 'Cómo moverte',   sub: 'Mototaxi, auto o moto con chofer verificado',       color: '#E4655A' },
-  { href: '/eventos',     icon: 'map',          titulo: 'Qué hacer',      sub: 'Yarinacocha, Boquerón, ferias y agenda cultural',   color: '#EBB05C' },
-  { href: '/market',      icon: 'ramen_dining', titulo: 'Dónde comer',    sub: 'Huariques, menús del día y cocina de la selva',     color: '#E8894A' },
-  { href: '/servicios',   icon: 'construction', titulo: 'Buscar chamba',  sub: 'Técnicos de confianza y bolsa de empleo local',     color: '#3E9B5F' },
-  { href: '/market',      icon: 'storefront',   titulo: 'Qué comprar',    sub: 'Pescado y carne fresca, abarrotes y artesanía',     color: '#D97742' },
+  { href: '/alquileres',  icon: 'bed',          titulo: 'Dónde quedarte', sub: 'Cuartos, hostales y minidepas — por día o por mes', color: '#8B7FD4', img: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&q=80' },
+  { href: '/taxi-seguro', icon: 'local_taxi',   titulo: 'Cómo moverte',   sub: 'Mototaxi, auto o moto con chofer verificado',       color: '#E4655A', img: 'https://images.unsplash.com/photo-1558980664-10ea4e9b8f95?w=400&q=80' },
+  { href: '/eventos',     icon: 'map',          titulo: 'Qué hacer',      sub: 'Yarinacocha, Boquerón, ferias y agenda cultural',   color: '#EBB05C', img: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80' },
+  { href: '/market',      icon: 'ramen_dining', titulo: 'Dónde comer',    sub: 'Huariques, menús del día y cocina de la selva',     color: '#E8894A', img: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400&q=80' },
+  { href: '/servicios',   icon: 'construction', titulo: 'Buscar chamba',  sub: 'Técnicos de confianza y bolsa de empleo local',     color: '#3E9B5F', img: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=400&q=80' },
+  { href: '/market',      icon: 'storefront',   titulo: 'Qué comprar',    sub: 'Pescado y carne fresca, abarrotes y artesanía',     color: '#D97742', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80' },
 ];
 
 // Peek: Eventos / turismo → "¿Qué hacer en Pucallpa hoy?"
@@ -298,7 +298,7 @@ function PortalesPanel() {
     <div className="px-container-margin lg:px-0 pt-6 lg:pt-0">
       <div className="flex flex-col gap-3 lg:h-full lg:justify-center">
         <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-xl lg:text-2xl leading-tight">
-          Todo Pucallpa, de tu lado
+          Todo Pucallpa en una sola app
         </h2>
         <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1 snap-x lg:flex-wrap lg:overflow-visible" style={{ scrollbarWidth: 'none' }}>
           {PORTALES.map((p) => (
@@ -517,16 +517,18 @@ export default function HomePage() {
               <Link
                 href={g.href}
                 key={g.titulo}
-                className="group bg-white border border-surface-container-highest p-4 shadow-sm hover:border-primary/30 hover:shadow-md transition-all flex flex-col gap-2 min-w-[180px] w-[180px] snap-start shrink-0"
+                className="group bg-white border border-surface-container-highest rounded-2xl overflow-hidden shadow-sm hover:border-primary/30 hover:shadow-md transition-all min-w-[150px] w-[150px] snap-start shrink-0"
               >
-                <span className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm" style={{ backgroundColor: g.color }}>
-                  <span className="material-symbols-outlined text-white text-[19px]" style={{ fontVariationSettings: "'FILL' 1" }}>{g.icon}</span>
-                </span>
-                <h3 className="font-headline-sm text-sm text-on-surface leading-tight">{g.titulo}</h3>
-                <p className="font-body-md text-secondary text-[11px] leading-snug">{g.sub}</p>
-                <span className="mt-auto pt-1 text-primary font-label-md text-[11px] flex items-center gap-0.5">
-                  Ver <span className="material-symbols-outlined text-[13px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
-                </span>
+                <div className="aspect-square bg-surface-container-low overflow-hidden relative">
+                  <img src={g.img} alt={g.titulo} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <span className="absolute top-2 left-2 w-7 h-7 rounded-lg flex items-center justify-center shadow-sm" style={{ backgroundColor: g.color }}>
+                    <span className="material-symbols-outlined text-white text-[15px]" style={{ fontVariationSettings: "'FILL' 1" }}>{g.icon}</span>
+                  </span>
+                </div>
+                <div className="p-2.5 flex flex-col gap-0.5">
+                  <h3 className="font-headline-sm text-xs text-on-surface leading-tight">{g.titulo}</h3>
+                  <p className="font-body-md text-secondary text-[10px] leading-snug line-clamp-2">{g.sub}</p>
+                </div>
               </Link>
             ))}
           </div>
