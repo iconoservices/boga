@@ -10,21 +10,14 @@ import { fetchCatalogo } from '@/lib/catalogo';
 import { MarketCityBanner } from '@/components/CityWaitlist';
 import { BannerOverlay, type BannerStyle } from '@/components/BannerOverlay';
 
-// Se usan solo si todavia no se cargo ningun banner desde superadmin (tabla
-// market_banners): asi la pagina nunca se ve vacia antes de configurar nada.
-const DEFAULT_BANNERS = [
-  { id: 'deliv',  img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1200", tag: null,            title1: 'DELIVERY', title2: 'GRATIS',        sub: 'En tu primera orden', link: null, pura: false },
-  { id: 'burger', img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1200", tag: 'Promo Exclusiva', title1: '2x1 EN',    title2: 'HAMBURGUESAS',  sub: 'Solo por hoy en locales seleccionados', link: null, pura: false },
-  { id: 'salad',  img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1200", tag: 'Saludable',      title1: '30% OFF',   title2: 'EN ENSALADAS',  sub: 'Empieza la semana con energía natural', link: null, pura: false },
-];
-
-
 export default function Home() {
-  // Banner slider
+  // Banner slider — sin banners de muestra: si superadmin no cargo ninguno
+  // activo para /market, la seccion simplemente no se muestra (ver el
+  // "banners.length > 0 &&" mas abajo) en vez de mostrar fotos demo.
   const sliderRef = useRef<HTMLDivElement>(null);
   const [bannerIdx, setBannerIdx] = useState(0);
   const bannerIdxRef = useRef(0);
-  const [banners, setBanners] = useState(DEFAULT_BANNERS);
+  const [banners, setBanners] = useState<{ id: string; img: string; tag: string | null; title1: string | null; title2: string | null; sub: string | null; link: string | null; pura: boolean }[]>([]);
   const [bannerStyle, setBannerStyle] = useState<BannerStyle>('center');
   const bannerCount = banners.length;
 
@@ -219,6 +212,7 @@ export default function Home() {
 
   // Auto-advance every 4s
   useEffect(() => {
+    if (bannerCount === 0) return;
     const id = setInterval(() => {
       const next = (bannerIdxRef.current + 1) % bannerCount;
       scrollToBanner(next);
@@ -452,7 +446,9 @@ export default function Home() {
       <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-4 lg:gap-6 mt-4 lg:mt-5 pb-12">
         {/* Banner + Explorar Categorías — lado a lado (mitad y mitad) en escritorio */}
         <div className="lg:grid lg:grid-cols-2 lg:gap-6 lg:items-center lg:px-6">
-        {/* Banners Section */}
+        {/* Banners Section — no se muestra nada si no hay banners activos
+            (antes mostraba 3 fotos de stock como relleno) */}
+        {banners.length > 0 && (
         <section className="w-screen mx-[calc(50%-50vw)] px-container-margin lg:w-auto lg:mx-0 lg:px-0">
           {/* Scroll-snap slider — clientWidth based, no clone tricks */}
           <div className="relative rounded-xl overflow-hidden">
@@ -525,6 +521,7 @@ export default function Home() {
             ))}
           </div>
         </section>
+        )}
 
         {/* Categorías + subcategorías — la otra mitad, junto al banner en escritorio */}
         <div className="flex flex-col gap-4 lg:gap-4 mt-4 lg:mt-0">

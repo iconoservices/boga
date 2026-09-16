@@ -578,10 +578,24 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       return next;
     });
   };
+  // /api/catalog cachea hasta ~12 min (s-maxage=120 + stale-while-revalidate=600).
+  // Sin esto, guardar/borrar/reordenar un banner (o cambiar el estilo) podia
+  // tardar todo eso en verse reflejado en /market, /explore o el Inicio.
+  const revalidarCatalogo = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      await fetch('/api/revalidate-catalog', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+    } catch { /* no bloquea el guardado si esto falla */ }
+  };
+
   const handleSetBannerStyle = async (style: 'center' | 'bottom') => {
     setBannerStyles(prev => ({ ...prev, [bannerPageTab]: style }));
     const { error } = await supabase.from('banner_page_settings').upsert({ page: bannerPageTab, style }, { onConflict: 'page' });
-    if (error) alert('No se pudo guardar el estilo: ' + error.message);
+    if (error) { alert('No se pudo guardar el estilo: ' + error.message); return; }
+    await revalidarCatalogo();
   };
   const [editingMarketBannerId, setEditingMarketBannerId] = useState<string | 'new' | null>(null);
   const [marketBannerForm, setMarketBannerForm] = useState({ tag: '', title1: '', title2: '', sub: '', link: '', active: true, showText: true });
@@ -668,6 +682,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
 
       setEditingMarketBannerId(null);
       await fetchMarketBanners();
+      await revalidarCatalogo();
     } catch (err: any) {
       alert('No se pudo guardar el banner: ' + err.message);
     } finally {
@@ -680,6 +695,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     const { error } = await supabase.from('market_banners').delete().eq('id', id);
     if (error) { alert('No se pudo eliminar: ' + error.message); return; }
     setMarketBanners(prev => prev.filter(b => b.id !== id));
+    await revalidarCatalogo();
   };
 
   const handleMoveMarketBanner = async (id: string, direction: -1 | 1) => {
@@ -697,6 +713,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       supabase.from('market_banners').update({ sort_order: b.sort_order }).eq('id', a.id),
       supabase.from('market_banners').update({ sort_order: a.sort_order }).eq('id', b.id),
     ]);
+    await revalidarCatalogo();
   };
 
   // Borrar tienda: antes era un confirm() nativo, muy facil de tocar sin
@@ -1018,6 +1035,10 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   const [isSendingInvite, setIsSendingInvite] = useState(false);
   const [editingUser, setEditingUser] = useState<UserRow | null>(null);
   const [editingUserOriginalStore, setEditingUserOriginalStore] = useState('');
+  // Solo se usa en el panel de Usuarios (no en el modal de "administrador de
+  // esta tienda puntual", que sigue siendo de una sola por diseño): las
+  // tiendas que va a terminar administrando esta persona al guardar.
+  const [editingUserStores, setEditingUserStores] = useState<Set<string>>(new Set());
   const [isCopyingLink, setIsCopyingLink] = useState(false);
   // Slug de la tienda cuyo modal de "Asignar/Editar Administrador" está
   // abierto (se abre desde la fila en Gestión de Tiendas, sin cambiar de
@@ -1326,6 +1347,21 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     }
   };
 
+  // Abre el panel de Usuarios (no el modal de una tienda puntual) precargando
+  // TODAS las tiendas que esta persona ya administra, para el checklist de
+  // "Tiendas Asignadas".
+  const abrirEditorUsuarioMulti = (u: UserRow) => {
+    // Fuerza 'store_admin' aca: esto solo edita que tiendas administra, no el
+    // rol — si dejara 'super_admin' (la fila del superadmin mismo), el guard
+    // de handleSaveUser bloquearia el guardado por completo.
+    setEditingUser({ ...u, role: 'store_admin' });
+    setEditingUserOriginalStore(u.store);
+    setEditingUserStores(new Set(
+      Object.entries(storeOwners).filter(([, id]) => id === u.id).map(([slug]) => slug)
+    ));
+    setInviteSent(false);
+  };
+
   const handleSaveUser = async () => {
     if (!editingUser) return;
     if (editingUser.role === 'super_admin') {
@@ -1336,20 +1372,45 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       return;
     }
     await supabase.from('profiles').update({ name: editingUser.name }).eq('id', editingUser.id);
-    // Le quita la tienda anterior (si tenia otra) y le asigna la nueva.
-    if (editingUserOriginalStore && editingUserOriginalStore !== editingUser.store) {
-      await supabase.from('stores').update({ user_id: null }).eq('slug', editingUserOriginalStore);
+
+    if (assignStoreSlug) {
+      // Modal de "administrador de esta tienda puntual": una sola, como siempre.
+      if (editingUserOriginalStore && editingUserOriginalStore !== editingUser.store) {
+        await supabase.from('stores').update({ user_id: null }).eq('slug', editingUserOriginalStore);
+      }
+      if (editingUser.store) {
+        const { error } = await supabase.from('stores').update({ user_id: editingUser.id }).eq('slug', editingUser.store);
+        if (error) { alert('No se pudo guardar: ' + error.message); return; }
+      }
+      setStoreOwners(prev => {
+        const next = { ...prev };
+        if (editingUserOriginalStore) next[editingUserOriginalStore] = null;
+        if (editingUser.store) next[editingUser.store] = editingUser.id;
+        return next;
+      });
+    } else {
+      // Panel de Usuarios: puede quedar administrando varias tiendas a la vez.
+      const actuales = new Set(
+        Object.entries(storeOwners).filter(([, id]) => id === editingUser.id).map(([slug]) => slug)
+      );
+      const aAsignar = [...editingUserStores].filter((slug) => !actuales.has(slug));
+      const aQuitar = [...actuales].filter((slug) => !editingUserStores.has(slug));
+      for (const slug of aAsignar) {
+        const { error } = await supabase.from('stores').update({ user_id: editingUser.id }).eq('slug', slug);
+        if (error) { alert(`No se pudo asignar "${stores[slug]?.name || slug}": ${error.message}`); return; }
+      }
+      for (const slug of aQuitar) {
+        const { error } = await supabase.from('stores').update({ user_id: null }).eq('slug', slug);
+        if (error) { alert(`No se pudo quitar "${stores[slug]?.name || slug}": ${error.message}`); return; }
+      }
+      setStoreOwners(prev => {
+        const next = { ...prev };
+        aAsignar.forEach((slug) => { next[slug] = editingUser.id; });
+        aQuitar.forEach((slug) => { next[slug] = null; });
+        return next;
+      });
     }
-    if (editingUser.store) {
-      const { error } = await supabase.from('stores').update({ user_id: editingUser.id }).eq('slug', editingUser.store);
-      if (error) { alert('No se pudo guardar: ' + error.message); return; }
-    }
-    setStoreOwners(prev => {
-      const next = { ...prev };
-      if (editingUserOriginalStore) next[editingUserOriginalStore] = null;
-      if (editingUser.store) next[editingUser.store] = editingUser.id;
-      return next;
-    });
+
     setProfiles(prev => prev.map(p => p.id === editingUser.id ? { ...p, name: editingUser.name } : p));
     setEditingUser(null);
   };
@@ -2936,8 +2997,10 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                               </>
                             ) : unica.store ? (
                               stores[unica.store]?.name || unica.store
-                            ) : (
+                            ) : g.role === 'super_admin' ? (
                               <span className="text-[#c2c6d6] italic">Todas (Super)</span>
+                            ) : (
+                              <span className="text-[#c2c6d6] italic">Sin tienda</span>
                             )}
                           </span>
                           <div className="flex items-center gap-1.5">
@@ -2958,7 +3021,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                             {!multi && (
                               <>
                                 <button
-                                  onClick={(e) => { e.stopPropagation(); setEditingUser({...unica}); setEditingUserOriginalStore(unica.store); setInviteSent(false); }}
+                                  onClick={(e) => { e.stopPropagation(); abrirEditorUsuarioMulti(unica); }}
                                   className="w-7 h-7 flex items-center justify-center text-[#424754] hover:text-[#0058be] hover:bg-[#ecedf7] rounded-lg transition-colors"
                                   title="Editar usuario"
                                 >
@@ -2972,6 +3035,15 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                                   <span className="material-symbols-outlined text-[15px]">person_remove</span>
                                 </button>
                               </>
+                            )}
+                            {multi && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); abrirEditorUsuarioMulti(g.filas[0]); }}
+                                className="w-7 h-7 flex items-center justify-center text-[#424754] hover:text-[#0058be] hover:bg-[#ecedf7] rounded-lg transition-colors"
+                                title="Editar tiendas asignadas"
+                              >
+                                <span className="material-symbols-outlined text-[15px]">edit</span>
+                              </button>
                             )}
                           </div>
                         </div>
@@ -2996,7 +3068,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                             </span>
                             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button
-                                onClick={() => { setEditingUser({...u}); setEditingUserOriginalStore(u.store); setInviteSent(false); }}
+                                onClick={() => abrirEditorUsuarioMulti(u)}
                                 className="w-7 h-7 flex items-center justify-center text-[#424754] hover:text-[#0058be] hover:bg-[#ecedf7] rounded-lg transition-colors"
                                 title="Editar usuario"
                               >
@@ -3064,14 +3136,29 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                         </div>
                         {editingUser.role === 'store_admin' && (
                           <div>
-                            <label className="block text-[10px] font-bold text-[#424754] mb-1.5 uppercase tracking-wide">Tienda Asignada</label>
-                            <select value={editingUser.store} onChange={(e) => setEditingUser(prev => prev ? {...prev, store: e.target.value} : prev)}
-                              className="w-full bg-[#f2f3fd] border border-[#c2c6d6] rounded-lg px-3 py-2 text-xs font-bold outline-none focus:border-[#0058be] focus:bg-white transition-colors">
-                              <option value="">Sin tienda asignada</option>
+                            <label className="block text-[10px] font-bold text-[#424754] mb-1.5 uppercase tracking-wide">
+                              Tiendas Asignadas {editingUserStores.size > 0 && `(${editingUserStores.size})`}
+                            </label>
+                            <div className="max-h-40 overflow-y-auto bg-[#f2f3fd] border border-[#c2c6d6] rounded-lg divide-y divide-[#e6e7f2]">
+                              {Object.values(stores).length === 0 && (
+                                <p className="px-3 py-2 text-xs text-[#727785] italic">No hay tiendas creadas todavía.</p>
+                              )}
                               {Object.values(stores).map(s => (
-                                <option key={s.slug} value={s.slug}>{s.name}</option>
+                                <label key={s.slug} className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-[#191b23] cursor-pointer hover:bg-white/60 transition-colors">
+                                  <input
+                                    type="checkbox"
+                                    checked={editingUserStores.has(s.slug)}
+                                    onChange={(e) => setEditingUserStores(prev => {
+                                      const next = new Set(prev);
+                                      if (e.target.checked) next.add(s.slug); else next.delete(s.slug);
+                                      return next;
+                                    })}
+                                    className="w-3.5 h-3.5 accent-[#0058be]"
+                                  />
+                                  {s.name}
+                                </label>
                               ))}
-                            </select>
+                            </div>
                           </div>
                         )}
                         <div className="flex gap-2 pt-2">

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
 import { fetchNotasRevista, type NotaCard } from '@/lib/revista';
-import { fetchBanners } from '@/lib/catalogo';
+import { fetchBanners, fetchCatalogo } from '@/lib/catalogo';
 import { BannerOverlay, type BannerStyle } from '@/components/BannerOverlay';
 
 // "/" = el Inicio del lado consumidor. Es el índice vivo de Boga: un vistazo a
@@ -290,33 +290,30 @@ const PULSO_CARDS = [
 ];
 
 // Panel "Los 8 Portales de Boga" — el lanzador de la ciudad, al lado de la
-// portada en escritorio y apilado en móvil. Un ícono por hub, en 2 columnas.
+// portada en escritorio y apilado en móvil. Antes era una grilla 3x3 con
+// descripción (~400px de alto); ahora es una tira horizontal compacta
+// (ícono + nombre, sin descripción) para no competir tanto con el banner.
 function PortalesPanel() {
   return (
     <div className="px-container-margin lg:px-0 pt-6 lg:pt-0">
-      <div className="flex flex-col gap-4 lg:h-full">
-        <div>
-          <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-xl lg:text-2xl leading-tight">
-            Todo Pucallpa, de tu lado
-          </h2>
-        </div>
-
-        {/* Grilla compacta de 3 columnas; scroll vertical si no entra en el alto del banner */}
-        <div className="grid grid-cols-3 gap-2 lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:content-start hide-scrollbar">
+      <div className="flex flex-col gap-3 lg:h-full lg:justify-center">
+        <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-xl lg:text-2xl leading-tight">
+          Todo Pucallpa, de tu lado
+        </h2>
+        <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1 snap-x lg:flex-wrap lg:overflow-visible" style={{ scrollbarWidth: 'none' }}>
           {PORTALES.map((p) => (
             <Link
               key={p.href}
               href={p.href}
-              className="group bg-white border border-surface-container-high rounded-xl p-2 flex flex-col items-center text-center gap-1 hover:border-primary/40 hover:shadow-md transition-all"
+              className="group flex flex-col items-center gap-1.5 shrink-0 w-16 snap-start"
             >
               <span
-                className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm"
+                className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform"
                 style={{ backgroundColor: p.color }}
               >
-                <span className="material-symbols-outlined text-white text-[17px]" style={{ fontVariationSettings: "'FILL' 1" }}>{p.icon}</span>
+                <span className="material-symbols-outlined text-white text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>{p.icon}</span>
               </span>
-              <span className="block font-headline-sm text-[11px] text-on-surface leading-tight line-clamp-1 w-full">{p.label}</span>
-              <span className="block font-body-md text-secondary text-[9px] leading-snug line-clamp-2">{p.sub}</span>
+              <span className="font-label-md text-[10px] text-on-surface text-center leading-tight line-clamp-1 w-full">{p.label}</span>
             </Link>
           ))}
         </div>
@@ -404,6 +401,33 @@ export default function HomePage() {
     });
   }, []);
 
+  // Productos de comida reales que se venden en Boga Market (mismo catalogo
+  // cacheado que usa /market), para el carrusel de abajo. Se excluyen los
+  // rubros claramente no-comida (moda, salud, servicios); todo lo demas
+  // entra, porque hoy casi todo el catalogo real es comida/bebida.
+  const [comidaProducts, setComidaProducts] = useState<{ id: string; name: string; price: number; image: string; storeSlug: string; storeName: string }[]>([]);
+  useEffect(() => {
+    fetchCatalogo().then(({ stores: dbStores, products: dbProducts }) => {
+      const tiendasPorSlug: Record<string, any> = {};
+      (dbStores || []).forEach((s: any) => { tiendasPorSlug[s.slug] = s; });
+      const noComida = ['moda', 'salud', 'servicio', 'boutique', 'belleza'];
+      const items = (dbProducts || [])
+        .filter((p: any) => {
+          const cat = (tiendasPorSlug[p.store]?.marketplace_category || '').toLowerCase();
+          return tiendasPorSlug[p.store] && !noComida.some((n) => cat.includes(n));
+        })
+        .map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          price: Number(p.price) || 0,
+          image: p.image,
+          storeSlug: p.store,
+          storeName: tiendasPorSlug[p.store]?.name || p.store,
+        }));
+      setComidaProducts(items.sort(() => Math.random() - 0.5).slice(0, 12));
+    });
+  }, []);
+
   const masRevista = notasRevista.length
     ? notasRevista.slice(0, 8).map((n) => ({ key: n.slug, href: `/revista/${n.slug}`, cat: n.kicker, title: n.titulo, img: n.img }))
     : SELVA_NOTES.map((n) => ({ key: n.id, href: '/revista', cat: n.cat, title: n.title, img: n.img }));
@@ -439,6 +463,38 @@ export default function HomePage() {
       </div>
 
       <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-9 lg:gap-12 py-9 lg:py-12 px-container-margin lg:px-8">
+
+        {/* Lo que se pide en Market — productos reales del catalogo, justo
+            debajo de la tira de portales */}
+        {comidaProducts.length > 0 && (
+          <section className="flex flex-col gap-4">
+            <div className="flex items-end justify-between gap-4">
+              <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-2xl lg:text-3xl">Lo que se pide en Market</h2>
+              <Link href="/market" className="group shrink-0 font-label-md text-[12px] text-primary flex items-center gap-0.5 whitespace-nowrap">
+                Ver todo
+                <span className="material-symbols-outlined text-[14px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
+              </Link>
+            </div>
+            <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
+              {comidaProducts.map((p) => (
+                <Link
+                  href={`/${p.storeSlug}`}
+                  key={p.id}
+                  className="group bg-white border border-surface-container-highest rounded-2xl overflow-hidden shadow-sm hover:border-primary/30 hover:shadow-md transition-all min-w-[150px] w-[150px] snap-start shrink-0"
+                >
+                  <div className="aspect-square bg-surface-container-low overflow-hidden">
+                    <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  </div>
+                  <div className="p-2.5 flex flex-col gap-0.5">
+                    <span className="font-label-md text-[9px] text-secondary uppercase tracking-wide truncate">{p.storeName}</span>
+                    <h3 className="font-headline-sm text-xs text-on-surface leading-tight line-clamp-1">{p.name}</h3>
+                    <span className="font-price-lg text-primary text-sm mt-0.5">S/ {p.price.toFixed(2)}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Guía rápida — ¿Primera vez en Pucallpa? (debajo del banner) */}
         <section className="flex flex-col gap-4">
