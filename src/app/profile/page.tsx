@@ -32,6 +32,31 @@ export default function ProfilePage() {
   const [notifPromos, setNotifPromos] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
 
+  // Cambiar contraseña: la sesion ya esta autenticada, asi que Supabase no
+  // pide la clave actual para updateUser — no hace falta el flujo de "te
+  // mandamos un correo" que sí necesita quien no puede entrar.
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const [passwordSaved, setPasswordSaved] = useState(false);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError(null);
+    if (newPassword.length < 6) { setPasswordError('La contraseña tiene que tener al menos 6 caracteres.'); return; }
+    if (newPassword !== confirmPassword) { setPasswordError('Las contraseñas no coinciden.'); return; }
+    setIsSavingPassword(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setIsSavingPassword(false);
+    if (error) { setPasswordError(error.message); return; }
+    setPasswordSaved(true);
+    setNewPassword('');
+    setConfirmPassword('');
+    setTimeout(() => { setShowPasswordModal(false); setPasswordSaved(false); }, 1800);
+  };
+
   // Sin sesión real no hay perfil que mostrar — a /login. Cada cuenta ve
   // sus propios datos, no un "Carlos Mejía" fijo para cualquiera que entre.
   useEffect(() => {
@@ -300,14 +325,21 @@ export default function ProfilePage() {
             {/* Cuenta */}
             <div className="bg-white rounded-2xl border border-surface-container-highest shadow-[0_15px_15px_rgba(0,0,0,0.04)] overflow-hidden">
               <h3 className="font-bold text-sm text-on-surface p-5 pb-3">Cuenta</h3>
+              <button
+                onClick={() => setShowPasswordModal(true)}
+                className="flex items-center gap-3.5 px-5 py-3.5 border-t border-surface-container-low w-full text-left bg-transparent border-0 cursor-pointer text-on-surface hover:bg-surface-container-low transition-colors"
+              >
+                <span className="material-symbols-outlined text-[20px] text-secondary/40">lock</span>
+                <span className="font-bold text-xs flex-1">Cambiar contraseña</span>
+                <span className="material-symbols-outlined text-[18px] text-secondary/35">chevron_right</span>
+              </button>
               {[
-                { icon: 'lock', label: 'Cambiar contraseña', action: '#' },
                 { icon: 'help', label: 'Centro de ayuda', action: '#' },
                 { icon: 'privacy_tip', label: 'Privacidad y términos', action: '#' },
               ].map(({ icon, label, action }) => (
-                <a 
-                  key={label} 
-                  href={action} 
+                <a
+                  key={label}
+                  href={action}
                   className="flex items-center gap-3.5 px-5 py-3.5 border-t border-surface-container-low text-on-surface hover:bg-surface-container-low transition-colors"
                 >
                   <span className="material-symbols-outlined text-[20px] text-secondary/40">{icon}</span>
@@ -333,6 +365,76 @@ export default function ProfilePage() {
         )}
 
       </main>
+
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-[380px] bg-white rounded-3xl p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="font-headline-md text-lg text-on-surface font-black">Cambiar contraseña</h3>
+              <button
+                onClick={() => { setShowPasswordModal(false); setPasswordError(null); setNewPassword(''); setConfirmPassword(''); }}
+                className="w-8 h-8 flex items-center justify-center rounded-full text-secondary hover:bg-surface-container-low transition-colors"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+            <p className="text-xs text-secondary mb-5 leading-normal font-body-md">
+              Como ya iniciaste sesión, no hace falta la contraseña actual — solo elegí una nueva.
+            </p>
+
+            {passwordError && (
+              <div className="mb-4 px-3.5 py-2.5 rounded-xl bg-error-container text-on-error-container text-xs font-bold">
+                {passwordError}
+              </div>
+            )}
+
+            {passwordSaved ? (
+              <div className="px-3.5 py-2.5 rounded-xl bg-primary-container/20 text-on-surface text-xs font-bold border border-primary/20">
+                ¡Listo! Tu contraseña se actualizó.
+              </div>
+            ) : (
+              <form onSubmit={handleChangePassword} className="flex flex-col gap-4">
+                <div className="flex flex-col">
+                  <label className="text-[10px] font-bold text-secondary mb-1.5 uppercase tracking-wider">Contraseña nueva</label>
+                  <input
+                    type="password"
+                    required
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="••••••••••••"
+                    className="w-full px-4 py-3 bg-surface-container-low border border-transparent rounded-xl focus:ring-2 focus:ring-primary/20 focus:outline-none text-sm text-on-surface transition-all focus:bg-white focus:border-surface-container-highest placeholder:text-secondary/40 font-body-md"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="text-[10px] font-bold text-secondary mb-1.5 uppercase tracking-wider">Repetila</label>
+                  <input
+                    type="password"
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••••••"
+                    className="w-full px-4 py-3 bg-surface-container-low border border-transparent rounded-xl focus:ring-2 focus:ring-primary/20 focus:outline-none text-sm text-on-surface transition-all focus:bg-white focus:border-surface-container-highest placeholder:text-secondary/40 font-body-md"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={isSavingPassword}
+                  className={`w-full mt-1 py-3 bg-primary text-white font-bold rounded-xl text-sm hover:bg-primary-container active:scale-95 transition-all flex items-center justify-center gap-2 shadow-md ${
+                    isSavingPassword ? 'opacity-70 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {isSavingPassword ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Guardando...
+                    </>
+                  ) : 'Guardar contraseña →'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }

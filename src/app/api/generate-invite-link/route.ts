@@ -26,16 +26,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
   }
 
-  const { email, redirectTo, slug } = await request.json();
+  const { email, redirectTo, slug, linkType } = await request.json();
   if (!email || typeof email !== 'string') {
     return NextResponse.json({ error: 'Falta el correo' }, { status: 400 });
   }
 
-  const { data, error } = await supabaseAdmin.auth.admin.generateLink({
-    type: 'magiclink',
-    email,
-    options: { redirectTo },
-  });
+  let data, error;
+  if (linkType === 'password') {
+    // 'invite' es para cuentas nuevas (crea la cuenta y la persona pone su
+    // contraseña al tocar el link); si el correo ya tiene cuenta, Supabase
+    // devuelve "already been registered" y ahi se reintenta con 'recovery',
+    // que sirve para poner/cambiar la contraseña de una cuenta existente.
+    ({ data, error } = await supabaseAdmin.auth.admin.generateLink({ type: 'invite', email, options: { redirectTo } }));
+    if (error?.message?.toLowerCase().includes('already been registered')) {
+      ({ data, error } = await supabaseAdmin.auth.admin.generateLink({ type: 'recovery', email, options: { redirectTo } }));
+    }
+  } else {
+    ({ data, error } = await supabaseAdmin.auth.admin.generateLink({ type: 'magiclink', email, options: { redirectTo } }));
+  }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

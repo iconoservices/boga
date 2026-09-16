@@ -1276,22 +1276,30 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   // Alternativa a mandar el correo: genera el mismo link de acceso y lo
   // copia, para poder mandarlo vos por WhatsApp. Pasa por /api porque hace
   // falta la service_role key, que nunca debe tocar el navegador.
-  const handleCopyInviteLink = async () => {
+  const handleCopyInviteLink = async (linkType: 'login' | 'password' = 'login') => {
     if (!inviteEmail) return;
     setIsCopyingLink(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const redirectTo = `${window.location.origin}${inviteRole === 'super_admin' ? '/superadmin' : '/admin'}`;
+      // 'login': entra directo, sin contraseña. 'password': cae en
+      // /reset-password para que la persona elija su propia contraseña (y
+      // de ahi en mas pueda entrar por /login con correo + clave, sin
+      // depender de un link nuevo cada vez).
+      const redirectTo = linkType === 'password'
+        ? `${window.location.origin}/reset-password`
+        : `${window.location.origin}${inviteRole === 'super_admin' ? '/superadmin' : '/admin'}`;
       const res = await fetch('/api/generate-invite-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
-        body: JSON.stringify({ email: inviteEmail, redirectTo }),
+        body: JSON.stringify({ email: inviteEmail, redirectTo, linkType }),
       });
       const data = await res.json();
       if (!res.ok) { alert(data.error || 'No se pudo generar el link'); return; }
       await asignarTiendaInvitada(data.userId);
       await navigator.clipboard.writeText(data.link);
-      alert('Link copiado — mandalo por WhatsApp o donde prefieras.');
+      alert(linkType === 'password'
+        ? 'Link copiado — al tocarlo va a poder crear su propia contraseña.'
+        : 'Link copiado — mandalo por WhatsApp o donde prefieras.');
     } catch (err: any) {
       alert('No se pudo copiar el link: ' + err.message);
     } finally {
@@ -1392,12 +1400,20 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
             {isSendingInvite ? 'Enviando...' : 'Enviar por correo'}
           </button>
           <button
-            onClick={handleCopyInviteLink}
+            onClick={() => handleCopyInviteLink('login')}
             disabled={isCopyingLink || !inviteEmail || faltaTienda}
-            title="Copiar link de acceso (para mandar por WhatsApp)"
+            title="Copiar link de acceso directo, sin contraseña (para mandar por WhatsApp)"
             className="w-11 shrink-0 py-2.5 bg-[#ecedf7] text-[#424754] rounded-lg font-bold text-xs flex items-center justify-center hover:bg-[#e6e7f2] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <span className={`material-symbols-outlined text-[16px] ${isCopyingLink ? 'animate-spin' : ''}`}>{isCopyingLink ? 'progress_activity' : 'content_copy'}</span>
+          </button>
+          <button
+            onClick={() => handleCopyInviteLink('password')}
+            disabled={isCopyingLink || !inviteEmail || faltaTienda}
+            title="Copiar link para que elija su propia contraseña (para mandar por WhatsApp)"
+            className="w-11 shrink-0 py-2.5 bg-[#ecedf7] text-[#424754] rounded-lg font-bold text-xs flex items-center justify-center hover:bg-[#e6e7f2] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <span className={`material-symbols-outlined text-[16px] ${isCopyingLink ? 'animate-spin' : ''}`}>{isCopyingLink ? 'progress_activity' : 'key'}</span>
           </button>
         </div>
       </div>
