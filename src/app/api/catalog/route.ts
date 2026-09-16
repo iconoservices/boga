@@ -16,22 +16,34 @@ export const revalidate = 120;
 // `page` distingue el carrusel de banners a devolver: 'market' (default, con
 // tiendas+productos) o 'home' (el Inicio "/", que no necesita ni tiendas ni
 // productos — pedirlos igual seria egress de mas por nada).
+// Sin fila en banner_page_settings para una pagina, cae al estilo que esa
+// pagina ya tenia hardcodeado antes de que esto fuera editable.
+const ESTILO_DEFECTO: Record<string, string> = { market: 'center', home: 'bottom' };
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const page = searchParams.get('page') || 'market';
   const cacheHeaders = { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' };
 
+  const estiloPromise = supabase.from('banner_page_settings').select('style').eq('page', page).maybeSingle();
+
   if (page !== 'market') {
-    const { data: banners } = await supabase
-      .from('market_banners')
-      .select('id,image,tag,title1,title2,sub,link')
-      .eq('active', true)
-      .eq('page', page)
-      .order('sort_order', { ascending: true });
-    return NextResponse.json({ stores: [], products: [], banners: banners ?? [] }, { headers: cacheHeaders });
+    const [{ data: banners }, { data: estilo }] = await Promise.all([
+      supabase
+        .from('market_banners')
+        .select('id,image,tag,title1,title2,sub,link')
+        .eq('active', true)
+        .eq('page', page)
+        .order('sort_order', { ascending: true }),
+      estiloPromise,
+    ]);
+    return NextResponse.json(
+      { stores: [], products: [], banners: banners ?? [], bannerStyle: estilo?.style || ESTILO_DEFECTO[page] || 'center' },
+      { headers: cacheHeaders },
+    );
   }
 
-  const [stores, products, banners] = await Promise.all([
+  const [stores, products, banners, estilo] = await Promise.all([
     supabase
       .from('stores')
       .select('slug,name,tagline,marketplace_category,template,hero_image,hero_alt,logo_image,theme,categories,status'),
@@ -44,10 +56,16 @@ export async function GET(request: Request) {
       .eq('active', true)
       .eq('page', 'market')
       .order('sort_order', { ascending: true }),
+    estiloPromise,
   ]);
 
   return NextResponse.json(
-    { stores: stores.data ?? [], products: products.data ?? [], banners: banners.data ?? [] },
+    {
+      stores: stores.data ?? [],
+      products: products.data ?? [],
+      banners: banners.data ?? [],
+      bannerStyle: estilo.data?.style || ESTILO_DEFECTO.market,
+    },
     { headers: cacheHeaders },
   );
 }

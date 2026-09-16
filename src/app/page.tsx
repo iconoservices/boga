@@ -6,6 +6,7 @@ import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
 import { fetchNotasRevista, type NotaCard } from '@/lib/revista';
 import { fetchBanners } from '@/lib/catalogo';
+import { BannerOverlay, type BannerStyle } from '@/components/BannerOverlay';
 
 // "/" = el Inicio del lado consumidor. Es el índice vivo de Boga: un vistazo a
 // cada hub + contenido editorial fresco (SEO). Nada se resuelve acá, solo se
@@ -193,7 +194,7 @@ const CAROUSEL = "flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin
 // Un solo banner de portada que rota entre notas de la Revista y promos.
 // Mismo diseño en móvil y escritorio: foto a sangre, kicker + titular abajo,
 // flechas a los lados y puntos de posición. Rota solo cada 6 s.
-function PortadaCarrusel({ notas, promos }: { notas: NotaCard[]; promos: Slide[] }) {
+function PortadaCarrusel({ notas, promos, style }: { notas: NotaCard[]; promos: Slide[]; style: BannerStyle }) {
   const slides = React.useMemo(() => armarSlides(notas, promos), [notas, promos]);
   const [i, setI] = useState(0);
   const n = slides.length;
@@ -217,18 +218,12 @@ function PortadaCarrusel({ notas, promos }: { notas: NotaCard[]; promos: Slide[]
           {slides.map((s) => (
             <Link key={s.title} href={s.href} className="group relative w-full h-full shrink-0">
               <img src={s.img} alt={s.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
               {s.portrait && (
-                <div className="absolute top-3 left-3 lg:top-5 lg:left-5 w-16 h-16 lg:w-24 lg:h-24 rounded-full overflow-hidden border-4 border-white shadow-xl">
+                <div className="absolute top-3 left-3 lg:top-5 lg:left-5 w-16 h-16 lg:w-24 lg:h-24 rounded-full overflow-hidden border-4 border-white shadow-xl z-10">
                   <img src={s.portrait} alt="" className="w-full h-full object-cover" />
                 </div>
               )}
-              <div className="absolute inset-x-0 bottom-0 px-12 pb-10 pt-5 sm:px-14 sm:pb-11 lg:px-8 lg:pb-8">
-                <span className="font-label-md text-[10px] uppercase tracking-[0.25em] text-white/70">{s.kicker}</span>
-                <h2 className="font-headline-lg font-extrabold tracking-tight text-white leading-[1.06] text-lg sm:text-2xl lg:text-4xl mt-1.5 max-w-[24ch] line-clamp-2">
-                  {s.title}
-                </h2>
-              </div>
+              <BannerOverlay style={style} tag={s.kicker} title1={s.title} />
             </Link>
           ))}
         </div>
@@ -385,9 +380,11 @@ export default function HomePage() {
   // market_banners con page='home'). Si todavia no cargaron ninguna, el
   // carrusel sigue usando PROMO_SLIDES de muestra (ver armarSlides).
   const [promoBanners, setPromoBanners] = useState<Slide[]>([]);
+  const [bannerStyle, setBannerStyle] = useState<BannerStyle>('bottom');
   useEffect(() => {
-    fetchBanners('home').then((rows) => {
-      setPromoBanners(rows.map((b: any) => ({
+    fetchBanners('home').then(({ banners, style }) => {
+      setBannerStyle(style);
+      setPromoBanners(banners.map((b: any) => ({
         kicker: b.tag || 'Promo',
         title: [b.title1, b.title2].filter(Boolean).join(' '),
         href: b.link || '/market',
@@ -425,7 +422,7 @@ export default function HomePage() {
       {/* Portada rotativa + panel "Los 8 Portales de Boga" (lado a lado en escritorio) */}
       <div className="max-w-[1440px] mx-auto w-full lg:px-8 pt-4 lg:pt-6">
         <div className="lg:grid lg:grid-cols-[1.7fr_1fr] lg:gap-5 lg:items-stretch">
-          <PortadaCarrusel notas={notasRevista} promos={promoBanners} />
+          <PortadaCarrusel notas={notasRevista} promos={promoBanners} style={bannerStyle} />
           <PortalesPanel />
         </div>
       </div>

@@ -8,26 +8,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 /** Todas las tiendas + productos + banners del marketplace (para /market y /explore). */
-export async function fetchCatalogo(): Promise<{ stores: any[]; products: any[]; banners: any[] }> {
+export async function fetchCatalogo(): Promise<{ stores: any[]; products: any[]; banners: any[]; bannerStyle: 'center' | 'bottom' }> {
   try {
     const res = await fetch('/api/catalog');
-    if (!res.ok) return { stores: [], products: [], banners: [] };
+    if (!res.ok) return { stores: [], products: [], banners: [], bannerStyle: 'center' };
     const data = await res.json();
-    return { stores: data.stores ?? [], products: data.products ?? [], banners: data.banners ?? [] };
+    return { stores: data.stores ?? [], products: data.products ?? [], banners: data.banners ?? [], bannerStyle: data.bannerStyle || 'center' };
   } catch {
-    return { stores: [], products: [], banners: [] };
+    return { stores: [], products: [], banners: [], bannerStyle: 'center' };
   }
 }
 
-/** Banners activos de un carrusel puntual (ej. 'home' para el Inicio "/"). */
-export async function fetchBanners(page: string): Promise<any[]> {
+/** Banners activos de un carrusel puntual (ej. 'home' para el Inicio "/") + su estilo. */
+export async function fetchBanners(page: string): Promise<{ banners: any[]; style: 'center' | 'bottom' }> {
   try {
     const res = await fetch(`/api/catalog?page=${encodeURIComponent(page)}`);
-    if (!res.ok) return [];
+    if (!res.ok) return { banners: [], style: 'bottom' };
     const data = await res.json();
-    return data.banners ?? [];
+    return { banners: data.banners ?? [], style: data.bannerStyle || 'bottom' };
   } catch {
-    return [];
+    return { banners: [], style: 'bottom' };
   }
 }
 

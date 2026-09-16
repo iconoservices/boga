@@ -8,6 +8,7 @@ import { useCart } from '@/context/CartContext';
 
 import { fetchCatalogo } from '@/lib/catalogo';
 import { MarketCityBanner } from '@/components/CityWaitlist';
+import { BannerOverlay, type BannerStyle } from '@/components/BannerOverlay';
 
 // Se usan solo si todavia no se cargo ningun banner desde superadmin (tabla
 // market_banners): asi la pagina nunca se ve vacia antes de configurar nada.
@@ -24,6 +25,7 @@ export default function Home() {
   const [bannerIdx, setBannerIdx] = useState(0);
   const bannerIdxRef = useRef(0);
   const [banners, setBanners] = useState(DEFAULT_BANNERS);
+  const [bannerStyle, setBannerStyle] = useState<BannerStyle>('center');
   const bannerCount = banners.length;
 
   const [activeCategory, setActiveCategory] = useState('Todas');
@@ -48,8 +50,9 @@ export default function Home() {
   useEffect(() => {
     const fetchRealData = async () => {
       // 1. Fetch dynamic stores
-      const { stores: dbStoresData, products: dbProductsData, banners: dbBannersData } = await fetchCatalogo();
+      const { stores: dbStoresData, products: dbProductsData, banners: dbBannersData, bannerStyle: dbBannerStyle } = await fetchCatalogo();
 
+      setBannerStyle(dbBannerStyle);
       if (dbBannersData && dbBannersData.length > 0) {
         setBanners(dbBannersData.map((b: any) => ({
           id: b.id, img: b.image, tag: b.tag, title1: b.title1, title2: b.title2, sub: b.sub, link: b.link,
@@ -461,17 +464,7 @@ export default function Home() {
                   style={{ scrollSnapAlign: 'start', flex: '0 0 100%' }}
                 >
                   <img alt="" className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" src={b.img} />
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent flex flex-col justify-center p-6 sm:pl-12 lg:pl-10 lg:pr-12 z-10">
-                    {b.tag && (
-                      <span className="inline-block px-3 py-1 bg-primary text-white font-label-md text-[10px] rounded-lg mb-1.5 uppercase tracking-wider w-fit">
-                        {b.tag}
-                      </span>
-                    )}
-                    <h2 className="font-headline-lg lg:text-[30px] lg:leading-none lg:font-extrabold text-white leading-tight">
-                      {b.title1}<br />{b.title2}
-                    </h2>
-                    <p className="text-white/80 font-body-md lg:text-sm mt-1 lg:mt-3 lg:mb-3 max-w-md">{b.sub}</p>
-                  </div>
+                  <BannerOverlay style={bannerStyle} tag={b.tag} title1={b.title1} title2={b.title2} sub={b.sub} />
                 </Slide>
               );
             })}

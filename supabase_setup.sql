@@ -171,6 +171,17 @@ CREATE TABLE IF NOT EXISTS public.market_banners (
 CREATE INDEX IF NOT EXISTS market_banners_sort_idx ON public.market_banners (sort_order);
 ALTER TABLE public.market_banners ADD COLUMN IF NOT EXISTS page TEXT DEFAULT 'market';
 
+-- Estilo visual del carrusel de CADA seccion (no de cada banner individual):
+-- 'center' = texto centrado con degradado desde la izquierda (el look de
+-- siempre de /market); 'bottom' = texto pegado abajo con degradado desde
+-- abajo (el look de siempre del Inicio). Sin fila para una pagina, el
+-- default en el codigo es 'center' para market y 'bottom' para home (los
+-- que ya tenian hardcodeados).
+CREATE TABLE IF NOT EXISTS public.banner_page_settings (
+  page TEXT PRIMARY KEY,
+  style TEXT NOT NULL DEFAULT 'center'
+);
+
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
@@ -185,6 +196,7 @@ ALTER TABLE public.store_requests  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.city_interest   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profiles        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.market_banners  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.banner_page_settings ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================
 -- 2. LIMPIEZA: borrar TODAS las políticas permisivas históricas
@@ -396,6 +408,19 @@ USING (true);
 
 CREATE POLICY "market_banners: solo superadmin gestiona"
 ON public.market_banners FOR ALL
+USING (public.is_superadmin())
+WITH CHECK (public.is_superadmin());
+
+-- banner_page_settings: mismo patron (lectura publica, solo superadmin edita).
+DROP POLICY IF EXISTS "banner_page_settings: lectura pública" ON public.banner_page_settings;
+DROP POLICY IF EXISTS "banner_page_settings: solo superadmin gestiona" ON public.banner_page_settings;
+
+CREATE POLICY "banner_page_settings: lectura pública"
+ON public.banner_page_settings FOR SELECT
+USING (true);
+
+CREATE POLICY "banner_page_settings: solo superadmin gestiona"
+ON public.banner_page_settings FOR ALL
 USING (public.is_superadmin())
 WITH CHECK (public.is_superadmin());
 

@@ -565,6 +565,24 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     () => marketBanners.filter(b => (b.page || 'market') === bannerPageTab),
     [marketBanners, bannerPageTab]
   );
+  // Estilo visual de cada carrusel completo (no de cada banner): 'center'
+  // (el look de siempre de /market) o 'bottom' (el look de siempre del
+  // Inicio). Tabla banner_page_settings, una fila por pagina.
+  const [bannerStyles, setBannerStyles] = useState<Record<string, 'center' | 'bottom'>>({ market: 'center', home: 'bottom' });
+  const fetchBannerStyles = async () => {
+    const { data } = await supabase.from('banner_page_settings').select('page,style');
+    if (!data) return;
+    setBannerStyles(prev => {
+      const next = { ...prev };
+      data.forEach((row: any) => { next[row.page] = row.style; });
+      return next;
+    });
+  };
+  const handleSetBannerStyle = async (style: 'center' | 'bottom') => {
+    setBannerStyles(prev => ({ ...prev, [bannerPageTab]: style }));
+    const { error } = await supabase.from('banner_page_settings').upsert({ page: bannerPageTab, style }, { onConflict: 'page' });
+    if (error) alert('No se pudo guardar el estilo: ' + error.message);
+  };
   const [editingMarketBannerId, setEditingMarketBannerId] = useState<string | 'new' | null>(null);
   const [marketBannerForm, setMarketBannerForm] = useState({ tag: '', title1: '', title2: '', sub: '', link: '', active: true });
   const [marketBannerImageFile, setMarketBannerImageFile] = useState<File | null>(null);
@@ -579,7 +597,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     setMarketBanners(data || []);
   };
 
-  React.useEffect(() => { fetchMarketBanners(); }, []);
+  React.useEffect(() => { fetchMarketBanners(); fetchBannerStyles(); }, []);
 
   const handleOpenNewMarketBanner = () => {
     setEditingMarketBannerId('new');
@@ -597,7 +615,10 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
 
   const handleSaveMarketBanner = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!marketBannerForm.title1.trim()) { alert('Falta el título principal.'); return; }
+    // El titulo es opcional a proposito: si la imagen ya trae el texto
+    // dibujado (un flyer armado en Canva, etc.), forzar un titulo aca
+    // terminaba dibujando el texto de la web ENCIMA del de la imagen,
+    // pisados los dos.
     const isNew = editingMarketBannerId === 'new';
     const current = !isNew ? marketBanners.find(b => b.id === editingMarketBannerId) : null;
     if (!marketBannerImageFile && !current?.image) { alert('Falta la imagen del banner.'); return; }
@@ -2991,25 +3012,50 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                   </button>
                 </div>
 
-                <div className="px-5 pt-3 flex gap-1.5">
-                  {([['market', 'Market'], ['home', 'Inicio']] as const).map(([id, label]) => (
-                    <button
-                      key={id}
-                      onClick={() => setBannerPageTab(id)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${
-                        bannerPageTab === id ? 'bg-[#0058be] text-white' : 'bg-[#f2f3fd] text-[#545f73] hover:bg-[#e6e7f2]'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
+                <div className="px-5 pt-3 flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex gap-1.5">
+                    {([['market', 'Market'], ['home', 'Inicio']] as const).map(([id, label]) => (
+                      <button
+                        key={id}
+                        onClick={() => setBannerPageTab(id)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${
+                          bannerPageTab === id ? 'bg-[#0058be] text-white' : 'bg-[#f2f3fd] text-[#545f73] hover:bg-[#e6e7f2]'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-[#727785] uppercase tracking-wide">Estilo del carrusel:</span>
+                    <div className="flex gap-1 bg-[#f2f3fd] p-0.5 rounded-full">
+                      {([['center', 'Centrado'], ['bottom', 'Abajo']] as const).map(([id, label]) => (
+                        <button
+                          key={id}
+                          onClick={() => handleSetBannerStyle(id)}
+                          className={`px-3 py-1 rounded-full text-[11px] font-bold transition-colors ${
+                            (bannerStyles[bannerPageTab] || 'center') === id ? 'bg-white text-[#0058be] shadow-sm' : 'text-[#727785] hover:text-[#424754]'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
+                <p className="px-5 pb-1 text-[10px] text-[#727785] font-semibold">
+                  Afecta a TODOS los banners de {bannerPageTab === 'market' ? '/market' : 'el Inicio'}, no solo al que estés editando.
+                </p>
 
                 <div className="p-4">
                   {editingMarketBannerId && (
                     <form onSubmit={handleSaveMarketBanner} className="mb-4 p-4 bg-[#f2f3fd]/40 rounded-lg border border-[#c2c6d6] space-y-3">
                       <p className="text-[10px] font-black text-[#424754] uppercase tracking-widest">
                         {editingMarketBannerId === 'new' ? 'Nuevo banner' : 'Editar banner'}
+                      </p>
+                      <p className="text-[10px] text-[#727785] font-semibold -mt-1.5">
+                        Si tu imagen ya tiene el texto dibujado (un flyer armado en Canva u otra herramienta), dejá el tag y los títulos vacíos — si los llenás, la web dibuja ese texto ENCIMA del de tu imagen y se pisan.
                       </p>
                       <div className="flex gap-3">
                         <label className="shrink-0 w-20 h-14 rounded-lg border-2 border-dashed border-[#c2c6d6] flex items-center justify-center cursor-pointer hover:bg-white transition-colors overflow-hidden bg-white">
@@ -3036,7 +3082,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                             className="col-span-2 bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be]"
                           />
                           <input
-                            type="text" required placeholder="Título línea 1 (ej: 2X1 EN)"
+                            type="text" placeholder="Título línea 1 (ej: 2X1 EN) — opcional"
                             value={marketBannerForm.title1}
                             onChange={(e) => setMarketBannerForm(prev => ({ ...prev, title1: e.target.value }))}
                             className="bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be]"
