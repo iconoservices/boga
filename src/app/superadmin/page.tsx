@@ -553,6 +553,76 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   const [showDiagnosticModal, setShowDiagnosticModal] = useState(false);
   const [diagnosticStore, setDiagnosticStore] = useState<any | null>(null);
 
+  // Productos por tienda: para poder cargar la carta completa desde acá mismo
+  // al crear una tienda, sin depender de /admin (que administra el dueño, no
+  // siempre vos).
+  const [productsStoreSlug, setProductsStoreSlug] = useState<string | null>(null);
+  const [storeProductsList, setStoreProductsList] = useState<any[]>([]);
+  const [isLoadingStoreProducts, setIsLoadingStoreProducts] = useState(false);
+  const [newStoreProduct, setNewStoreProduct] = useState({ name: '', price: '', category: '', subcategory: '', desc: '' });
+  const [newStoreProductFile, setNewStoreProductFile] = useState<File | null>(null);
+  const [storeProductPreview, setStoreProductPreview] = useState<string | null>(null);
+  const [isSavingStoreProduct, setIsSavingStoreProduct] = useState(false);
+  const [deletingStoreProductId, setDeletingStoreProductId] = useState<string | null>(null);
+
+  const handleOpenStoreProducts = async (slug: string) => {
+    setProductsStoreSlug(slug);
+    setNewStoreProduct({ name: '', price: '', category: '', subcategory: '', desc: '' });
+    setNewStoreProductFile(null);
+    setStoreProductPreview(null);
+    setIsLoadingStoreProducts(true);
+    const { data, error } = await supabase.from('products').select('*').eq('store', slug).order('created_at', { ascending: false });
+    setIsLoadingStoreProducts(false);
+    if (error) { alert('No se pudieron cargar los productos: ' + error.message); return; }
+    setStoreProductsList(data || []);
+  };
+
+  const handleAddStoreProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!productsStoreSlug) return;
+    if (!newStoreProduct.name.trim() || !newStoreProduct.price) {
+      alert('Faltan el nombre o el precio.');
+      return;
+    }
+    if (!newStoreProductFile) {
+      alert('Selecciona una foto para el producto.');
+      return;
+    }
+    setIsSavingStoreProduct(true);
+    try {
+      const imageUrl = await uploadFile(newStoreProductFile, `product-images/${productsStoreSlug}`);
+      const { data, error } = await supabase.from('products').insert([{
+        name: newStoreProduct.name.trim(),
+        store: productsStoreSlug,
+        price: parseFloat(newStoreProduct.price) || 0,
+        category: newStoreProduct.category || null,
+        subcategory: newStoreProduct.subcategory || null,
+        image: imageUrl,
+        description: newStoreProduct.desc || null,
+        stock: 0,
+        status: 'Activo',
+      }]).select();
+      if (error) throw error;
+      setStoreProductsList(prev => [...(data || []), ...prev]);
+      setNewStoreProduct({ name: '', price: '', category: '', subcategory: '', desc: '' });
+      setNewStoreProductFile(null);
+      setStoreProductPreview(null);
+    } catch (err: any) {
+      alert('No se pudo guardar el producto: ' + err.message);
+    } finally {
+      setIsSavingStoreProduct(false);
+    }
+  };
+
+  const handleDeleteStoreProduct = async (id: string) => {
+    if (!confirm('¿Eliminar este producto?')) return;
+    setDeletingStoreProductId(id);
+    const { error } = await supabase.from('products').delete().eq('id', id);
+    setDeletingStoreProductId(null);
+    if (error) { alert('No se pudo eliminar: ' + error.message); return; }
+    setStoreProductsList(prev => prev.filter(p => p.id !== id));
+  };
+
   // Store modal states
   const [showStoreModal, setShowStoreModal] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('mobile');
@@ -1003,20 +1073,45 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   const [isTemplateSaving, setIsTemplateSaving] = useState(false);
   const templateImageInputRef = useRef<HTMLInputElement>(null);
 
-  // Manda un link de acceso real (magic link: si el correo no tiene cuenta,
-  // Supabase la crea sola al tocarlo). No usa la service_role key — esa nunca
-  // debe tocar el navegador — asi que no podemos asignarle la tienda de una,
-  // recien sabemos quien es cuando entra por primera vez.
+  // Ademas de mandar/copiar el link, si se eligio tienda le asigna el user_id
+  // ya mismo: generateLink (con la service_role key, solo en /api) resuelve o
+  // crea la cuenta y devuelve su id de una, sin esperar a que la persona
+  // toque el link. Antes esto quedaba pendiente ("volvé a mano despues").
+  const asignarTiendaInvitada = async (userId: string | null | undefined) => {
+    if (!userId || inviteRole !== 'store_admin' || !inviteStore) return;
+    const { error } = await supabase.from('stores').update({ user_id: userId }).eq('slug', inviteStore);
+    if (error) { alert(`Se invitó, pero no se pudo asignar la tienda: ${error.message}`); return; }
+    setStoreOwners(prev => ({ ...prev, [inviteStore]: userId }));
+  };
+
+  // Manda un link de acceso real por correo (magic link: si el correo no
+  // tiene cuenta, Supabase la crea sola al tocarlo).
   const handleSendInvite = async () => {
     if (!inviteEmail) return;
     setIsSendingInvite(true);
     const redirectTo = `${window.location.origin}${inviteRole === 'super_admin' ? '/superadmin' : '/admin'}`;
     const { error } = await supabase.auth.signInWithOtp({ email: inviteEmail, options: { emailRedirectTo: redirectTo } });
-    setIsSendingInvite(false);
     if (error) {
+      setIsSendingInvite(false);
       alert('No se pudo enviar la invitación: ' + error.message);
       return;
     }
+    // signInWithOtp no devuelve el id del usuario (a proposito, para no poder
+    // enumerar correos desde el cliente): se resuelve aparte por /api con la
+    // service_role key, solo para asignar la tienda ya mismo.
+    if (inviteRole === 'store_admin' && inviteStore) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const res = await fetch('/api/generate-invite-link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+          body: JSON.stringify({ email: inviteEmail, redirectTo }),
+        });
+        const data = await res.json();
+        if (res.ok) await asignarTiendaInvitada(data.userId);
+      } catch { /* la invitacion ya se mando; la asignacion se puede hacer a mano despues */ }
+    }
+    setIsSendingInvite(false);
     setInviteSent(true);
     setTimeout(() => {
       setInviteEmail(''); setInviteStore(''); setInviteRole('store_admin'); setInviteSent(false);
@@ -1039,6 +1134,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       });
       const data = await res.json();
       if (!res.ok) { alert(data.error || 'No se pudo generar el link'); return; }
+      await asignarTiendaInvitada(data.userId);
       await navigator.clipboard.writeText(data.link);
       alert('Link copiado — mandalo por WhatsApp o donde prefieras.');
     } catch (err: any) {
@@ -2509,6 +2605,13 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                                   edit
                                 </button>
                                 <button
+                                  onClick={() => handleOpenStoreProducts(store.slug)}
+                                  className="material-symbols-outlined text-[18px] text-[#545f73] hover:text-[#0058be] transition-colors p-1 hover:bg-[#e6e7f2] rounded"
+                                  title="Cargar Productos"
+                                >
+                                  restaurant_menu
+                                </button>
+                                <button
                                   onClick={() => {
                                     // Abre el modal de asignar/editar admin sin salir de esta
                                     // pestaña: si ya hay un admin de tienda lo carga para
@@ -2725,7 +2828,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                   ) : inviteSent ? (
                     avisoInvitacionEnviada(
                       inviteRole === 'store_admin' && inviteStore
-                        ? `Cuando entre por primera vez, volvé acá y editalo para asignarle "${stores[inviteStore]?.name || inviteStore}" — el correo solo abre la puerta, la tienda se asigna a mano.`
+                        ? `Ya le asignamos "${stores[inviteStore]?.name || inviteStore}". Recibió un correo con un link para entrar directo, sin contraseña.`
                         : 'Recibió un correo con un link para entrar directo, sin contraseña.'
                     )
                   ) : (
@@ -4207,6 +4310,150 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     )}
 
     {/* ── DIAGNÓSTICO DE TIENDA ── */}
+    {/* ── PRODUCTOS DE LA TIENDA: cargar la carta desde superadmin, sin pasar por /admin ── */}
+    {productsStoreSlug && (
+      <div className="fixed inset-0 z-[200] bg-[#191b23]/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg border border-[#c2c6d6] shadow-2xl w-[90vw] md:w-[640px] max-w-[640px] max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="px-5 py-4 border-b border-[#c2c6d6] bg-[#f2f3fd] flex items-center justify-between shrink-0">
+            <div>
+              <h3 className="font-bold text-sm text-[#191b23]">Productos de {stores[productsStoreSlug]?.name || productsStoreSlug}</h3>
+              <p className="text-[10px] text-[#727785] font-semibold">/{productsStoreSlug}</p>
+            </div>
+            <button
+              onClick={() => setProductsStoreSlug(null)}
+              className="w-7 h-7 flex items-center justify-center text-[#424754] hover:bg-[#e6e7f2] rounded-lg transition-colors"
+            >
+              <span className="material-symbols-outlined text-base">close</span>
+            </button>
+          </div>
+
+          <div className="p-5 flex-1 overflow-y-auto min-h-0 space-y-5">
+            {/* Formulario para agregar */}
+            <form onSubmit={handleAddStoreProduct} className="space-y-3 pb-4 border-b border-[#ecedf7]">
+              <p className="text-[10px] font-black text-[#424754] uppercase tracking-widest">Nuevo Producto</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-[#545f73] mb-1">Nombre</label>
+                  <input
+                    type="text" required
+                    value={newStoreProduct.name}
+                    onChange={(e) => setNewStoreProduct(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
+                    placeholder="Ej: Cholao Original"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-[#545f73] mb-1">Precio (S/)</label>
+                  <input
+                    type="number" required min={0} step={0.1}
+                    value={newStoreProduct.price}
+                    onChange={(e) => setNewStoreProduct(prev => ({ ...prev, price: e.target.value }))}
+                    className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-[#545f73] mb-1">Categoría</label>
+                  <select
+                    value={newStoreProduct.category}
+                    onChange={(e) => setNewStoreProduct(prev => ({ ...prev, category: e.target.value }))}
+                    className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all appearance-none"
+                  >
+                    <option value="">Sin categoría</option>
+                    {(stores[productsStoreSlug]?.categories || []).map((c) => (
+                      <option key={c.href} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-[#545f73] mb-1">Sección (opcional)</label>
+                  <input
+                    type="text"
+                    value={newStoreProduct.subcategory}
+                    onChange={(e) => setNewStoreProduct(prev => ({ ...prev, subcategory: e.target.value }))}
+                    className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
+                    placeholder="Ej: Entradas"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-[#545f73] mb-1">Descripción (opcional)</label>
+                <textarea
+                  value={newStoreProduct.desc}
+                  onChange={(e) => setNewStoreProduct(prev => ({ ...prev, desc: e.target.value }))}
+                  rows={2}
+                  className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-medium text-[#191b23] outline-none focus:border-[#0058be] transition-all resize-none"
+                  placeholder="Ingredientes, tamaño, etc."
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <label className="shrink-0 w-16 h-16 rounded-lg border-2 border-dashed border-[#c2c6d6] flex items-center justify-center cursor-pointer hover:bg-[#f2f3fd]/60 transition-colors overflow-hidden bg-[#f8fafc]">
+                  {storeProductPreview ? (
+                    <img src={storeProductPreview} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="material-symbols-outlined text-[#727785] text-[20px]">add_a_photo</span>
+                  )}
+                  <input
+                    type="file" accept="image/*" className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setNewStoreProductFile(file);
+                      setStoreProductPreview(URL.createObjectURL(file));
+                    }}
+                  />
+                </label>
+                <p className="text-[10px] text-[#727785] font-semibold flex-1">Foto del producto (obligatoria).</p>
+                <button
+                  type="submit"
+                  disabled={isSavingStoreProduct}
+                  className="px-4 py-2.5 bg-[#0058be] text-white rounded-md font-bold text-xs hover:bg-[#004395] transition-colors disabled:opacity-50 shrink-0"
+                >
+                  {isSavingStoreProduct ? 'Guardando…' : 'Agregar'}
+                </button>
+              </div>
+            </form>
+
+            {/* Lista de productos ya cargados */}
+            <div>
+              <p className="text-[10px] font-black text-[#424754] uppercase tracking-widest mb-2">
+                Carta actual ({storeProductsList.length})
+              </p>
+              {isLoadingStoreProducts ? (
+                <p className="text-xs text-[#727785] italic py-4 text-center">Cargando…</p>
+              ) : storeProductsList.length === 0 ? (
+                <p className="text-xs text-[#727785] italic py-4 text-center">Todavía no hay productos cargados.</p>
+              ) : (
+                <div className="space-y-1.5">
+                  {storeProductsList.map((p) => (
+                    <div key={p.id} className="flex items-center gap-3 p-2 rounded-lg border border-[#ecedf7] bg-[#f9f9ff]">
+                      <img src={p.image} alt="" className="w-10 h-10 rounded-md object-cover shrink-0 bg-[#e6e7f2]" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-[#191b23] truncate">{p.name}</p>
+                        <p className="text-[10px] text-[#727785] font-semibold">
+                          S/ {Number(p.price).toFixed(2)}{p.category ? ` · ${p.category}` : ''}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteStoreProduct(p.id)}
+                        disabled={deletingStoreProductId === p.id}
+                        className="material-symbols-outlined text-[16px] text-[#727785] hover:text-red-600 transition-colors p-1 hover:bg-red-50 rounded shrink-0"
+                        title="Eliminar"
+                      >
+                        delete
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+
     {showDiagnosticModal && diagnosticStore && (() => {
       const ds = diagnosticStore;
       const dMeta = storeMeta[ds.slug] || { emoji: '🏪', cat: 'Tienda' };
