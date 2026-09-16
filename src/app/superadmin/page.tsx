@@ -553,6 +553,110 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   const [showDiagnosticModal, setShowDiagnosticModal] = useState(false);
   const [diagnosticStore, setDiagnosticStore] = useState<any | null>(null);
 
+  // Banners del carrusel de /market: antes vivian hardcodeados en el codigo
+  // (BANNERS_RAW), ahora se editan aca y /market los lee de la tabla
+  // market_banners (via el mismo endpoint cacheado /api/catalog).
+  const [marketBanners, setMarketBanners] = useState<any[]>([]);
+  const [isLoadingMarketBanners, setIsLoadingMarketBanners] = useState(true);
+  const [editingMarketBannerId, setEditingMarketBannerId] = useState<string | 'new' | null>(null);
+  const [marketBannerForm, setMarketBannerForm] = useState({ tag: '', title1: '', title2: '', sub: '', link: '', active: true });
+  const [marketBannerImageFile, setMarketBannerImageFile] = useState<File | null>(null);
+  const [marketBannerImagePreview, setMarketBannerImagePreview] = useState<string | null>(null);
+  const [isSavingMarketBanner, setIsSavingMarketBanner] = useState(false);
+
+  const fetchMarketBanners = async () => {
+    setIsLoadingMarketBanners(true);
+    const { data, error } = await supabase.from('market_banners').select('*').order('sort_order', { ascending: true });
+    setIsLoadingMarketBanners(false);
+    if (error) { console.error('Error cargando banners:', error); return; }
+    setMarketBanners(data || []);
+  };
+
+  React.useEffect(() => { fetchMarketBanners(); }, []);
+
+  const handleOpenNewMarketBanner = () => {
+    setEditingMarketBannerId('new');
+    setMarketBannerForm({ tag: '', title1: '', title2: '', sub: '', link: '', active: true });
+    setMarketBannerImageFile(null);
+    setMarketBannerImagePreview(null);
+  };
+
+  const handleOpenEditMarketBanner = (b: any) => {
+    setEditingMarketBannerId(b.id);
+    setMarketBannerForm({ tag: b.tag || '', title1: b.title1 || '', title2: b.title2 || '', sub: b.sub || '', link: b.link || '', active: b.active !== false });
+    setMarketBannerImageFile(null);
+    setMarketBannerImagePreview(b.image || null);
+  };
+
+  const handleSaveMarketBanner = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!marketBannerForm.title1.trim()) { alert('Falta el título principal.'); return; }
+    const isNew = editingMarketBannerId === 'new';
+    const current = !isNew ? marketBanners.find(b => b.id === editingMarketBannerId) : null;
+    if (!marketBannerImageFile && !current?.image) { alert('Falta la imagen del banner.'); return; }
+    setIsSavingMarketBanner(true);
+    try {
+      let imageUrl = current?.image || '';
+      if (marketBannerImageFile) {
+        imageUrl = await uploadFile(marketBannerImageFile, 'store-assets/market-banners');
+      }
+      const payload = {
+        image: imageUrl,
+        tag: marketBannerForm.tag || null,
+        title1: marketBannerForm.title1.trim(),
+        title2: marketBannerForm.title2 || null,
+        sub: marketBannerForm.sub || null,
+        link: marketBannerForm.link || null,
+        active: marketBannerForm.active,
+      };
+      if (isNew) {
+        const maxOrder = marketBanners.reduce((max, b) => Math.max(max, b.sort_order || 0), 0);
+        const { error } = await supabase.from('market_banners').insert([{ ...payload, sort_order: maxOrder + 1 }]);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('market_banners').update(payload).eq('id', editingMarketBannerId);
+        if (error) throw error;
+      }
+      setEditingMarketBannerId(null);
+      await fetchMarketBanners();
+    } catch (err: any) {
+      alert('No se pudo guardar el banner: ' + err.message);
+    } finally {
+      setIsSavingMarketBanner(false);
+    }
+  };
+
+  const handleDeleteMarketBanner = async (id: string) => {
+    if (!confirm('¿Eliminar este banner?')) return;
+    const { error } = await supabase.from('market_banners').delete().eq('id', id);
+    if (error) { alert('No se pudo eliminar: ' + error.message); return; }
+    setMarketBanners(prev => prev.filter(b => b.id !== id));
+  };
+
+  const handleMoveMarketBanner = async (id: string, direction: -1 | 1) => {
+    const idx = marketBanners.findIndex(b => b.id === id);
+    const swapIdx = idx + direction;
+    if (idx < 0 || swapIdx < 0 || swapIdx >= marketBanners.length) return;
+    const a = marketBanners[idx];
+    const b = marketBanners[swapIdx];
+    const next = [...marketBanners];
+    [next[idx], next[swapIdx]] = [next[swapIdx], next[idx]];
+    setMarketBanners(next);
+    await Promise.all([
+      supabase.from('market_banners').update({ sort_order: b.sort_order }).eq('id', a.id),
+      supabase.from('market_banners').update({ sort_order: a.sort_order }).eq('id', b.id),
+    ]);
+  };
+
+  // Borrar tienda: antes era un confirm() nativo, muy facil de tocar sin
+  // querer. Ahora hay que escribir BORRAR a mano, como el borrado de un repo
+  // en GitHub — la tienda no se va a poder recuperar ni sus productos quedan
+  // enlazados a nada despues.
+  const [deletingStoreSlug, setDeletingStoreSlug] = useState<string | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isDeletingStore, setIsDeletingStore] = useState(false);
+  const [deletingStoreProductCount, setDeletingStoreProductCount] = useState(0);
+
   // Productos por tienda: para poder cargar la carta completa desde acá mismo
   // al crear una tienda, sin depender de /admin (que administra el dueño, no
   // siempre vos).
@@ -1496,32 +1600,35 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   };
 
   const handleDeleteStore = async (slug: string) => {
-    if (confirm(`¿Estás seguro de que deseas eliminar la tienda "${stores[slug]?.name || slug}"?`)) {
-      try {
-        const { error } = await supabase
-          .from('stores')
-          .delete()
-          .eq('slug', slug);
-          
-        if (error) throw error;
+    setIsDeletingStore(true);
+    try {
+      const { error } = await supabase
+        .from('stores')
+        .delete()
+        .eq('slug', slug);
 
-        setStores(prev => {
-          const next = { ...prev };
-          delete next[slug];
-          return next;
-        });
-        setActiveStores(prev => {
-          const next = { ...prev };
-          delete next[slug];
-          return next;
-        });
-        setStoreDetails(prev => { const next = { ...prev }; delete next[slug]; return next; });
-        setStoreMeta(prev => { const next = { ...prev }; delete next[slug]; return next; });
-        setStoreTiers(prev => { const next = { ...prev }; delete next[slug]; return next; });
-        setStoreIds(prev => { const next = { ...prev }; delete next[slug]; return next; });
-      } catch (err: any) {
-        alert('Error al eliminar tienda de Supabase: ' + err.message);
-      }
+      if (error) throw error;
+
+      setStores(prev => {
+        const next = { ...prev };
+        delete next[slug];
+        return next;
+      });
+      setActiveStores(prev => {
+        const next = { ...prev };
+        delete next[slug];
+        return next;
+      });
+      setStoreDetails(prev => { const next = { ...prev }; delete next[slug]; return next; });
+      setStoreMeta(prev => { const next = { ...prev }; delete next[slug]; return next; });
+      setStoreTiers(prev => { const next = { ...prev }; delete next[slug]; return next; });
+      setStoreIds(prev => { const next = { ...prev }; delete next[slug]; return next; });
+      setDeletingStoreSlug(null);
+      setDeleteConfirmText('');
+    } catch (err: any) {
+      alert('Error al eliminar tienda de Supabase: ' + err.message);
+    } finally {
+      setIsDeletingStore(false);
     }
   };
 
@@ -2634,7 +2741,13 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                                   manage_accounts
                                 </button>
                                 <button
-                                  onClick={() => handleDeleteStore(store.slug)}
+                                  onClick={async () => {
+                                    setDeletingStoreSlug(store.slug);
+                                    setDeleteConfirmText('');
+                                    setDeletingStoreProductCount(0);
+                                    const { count } = await supabase.from('products').select('id', { count: 'exact', head: true }).eq('store', store.slug);
+                                    setDeletingStoreProductCount(count || 0);
+                                  }}
                                   className="material-symbols-outlined text-[18px] text-[#545f73] hover:text-red-600 transition-colors p-1 hover:bg-red-50 rounded"
                                   title="Eliminar Tienda"
                                 >
@@ -2853,6 +2966,129 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
           {/* ─── PERSONALIZACION ─── */}
           {activeTab === 'personalizacion' && (
             <div className="space-y-6 animate-fade-in">
+              {/* Banners del carrusel de /market — no son de una tienda puntual, son del sitio entero */}
+              <div className="bg-white rounded-md border border-[#c2c6d6] overflow-hidden shadow-sm">
+                <div className="p-5 border-b border-[#c2c6d6] flex items-center justify-between">
+                  <div>
+                    <h2 className="text-sm font-bold text-[#191b23]">Banners de /market</h2>
+                    <p className="text-[11px] text-[#424754] mt-0.5">El carrusel principal (2x1 hamburguesas, delivery gratis, etc.) — es del sitio entero, no de una tienda.</p>
+                  </div>
+                  <button
+                    onClick={handleOpenNewMarketBanner}
+                    className="px-3 py-2 bg-[#0058be] text-white rounded-md font-bold text-xs hover:bg-[#004395] transition-colors flex items-center gap-1.5 shrink-0"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">add</span>
+                    Nuevo Banner
+                  </button>
+                </div>
+
+                <div className="p-4">
+                  {editingMarketBannerId && (
+                    <form onSubmit={handleSaveMarketBanner} className="mb-4 p-4 bg-[#f2f3fd]/40 rounded-lg border border-[#c2c6d6] space-y-3">
+                      <p className="text-[10px] font-black text-[#424754] uppercase tracking-widest">
+                        {editingMarketBannerId === 'new' ? 'Nuevo banner' : 'Editar banner'}
+                      </p>
+                      <div className="flex gap-3">
+                        <label className="shrink-0 w-20 h-14 rounded-lg border-2 border-dashed border-[#c2c6d6] flex items-center justify-center cursor-pointer hover:bg-white transition-colors overflow-hidden bg-white">
+                          {marketBannerImagePreview ? (
+                            <img src={marketBannerImagePreview} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="material-symbols-outlined text-[#727785] text-[20px]">add_a_photo</span>
+                          )}
+                          <input
+                            type="file" accept="image/*" className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              setMarketBannerImageFile(file);
+                              setMarketBannerImagePreview(URL.createObjectURL(file));
+                            }}
+                          />
+                        </label>
+                        <div className="flex-1 grid grid-cols-2 gap-2">
+                          <input
+                            type="text" placeholder="Tag (opcional, ej: Promo Exclusiva)"
+                            value={marketBannerForm.tag}
+                            onChange={(e) => setMarketBannerForm(prev => ({ ...prev, tag: e.target.value }))}
+                            className="col-span-2 bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be]"
+                          />
+                          <input
+                            type="text" required placeholder="Título línea 1 (ej: 2X1 EN)"
+                            value={marketBannerForm.title1}
+                            onChange={(e) => setMarketBannerForm(prev => ({ ...prev, title1: e.target.value }))}
+                            className="bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be]"
+                          />
+                          <input
+                            type="text" placeholder="Título línea 2 (ej: HAMBURGUESAS)"
+                            value={marketBannerForm.title2}
+                            onChange={(e) => setMarketBannerForm(prev => ({ ...prev, title2: e.target.value }))}
+                            className="bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be]"
+                          />
+                        </div>
+                      </div>
+                      <input
+                        type="text" placeholder="Descripción corta (ej: Solo por hoy en locales seleccionados)"
+                        value={marketBannerForm.sub}
+                        onChange={(e) => setMarketBannerForm(prev => ({ ...prev, sub: e.target.value }))}
+                        className="w-full bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-medium text-[#191b23] outline-none focus:border-[#0058be]"
+                      />
+                      <input
+                        type="text" placeholder="Link opcional al tocarlo (ej: /promotions o una url)"
+                        value={marketBannerForm.link}
+                        onChange={(e) => setMarketBannerForm(prev => ({ ...prev, link: e.target.value }))}
+                        className="w-full bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-medium text-[#191b23] outline-none focus:border-[#0058be]"
+                      />
+                      <div className="flex items-center justify-between pt-1">
+                        <label className="flex items-center gap-2 text-[11px] font-bold text-[#424754] cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={marketBannerForm.active}
+                            onChange={(e) => setMarketBannerForm(prev => ({ ...prev, active: e.target.checked }))}
+                            className="w-4 h-4 accent-[#0058be]"
+                          />
+                          Visible en /market
+                        </label>
+                        <div className="flex gap-2">
+                          <button type="button" onClick={() => setEditingMarketBannerId(null)} className="px-3 py-2 rounded-md font-bold text-xs text-[#424754] hover:bg-[#e6e7f2] transition-colors">
+                            Cancelar
+                          </button>
+                          <button type="submit" disabled={isSavingMarketBanner} className="px-4 py-2 bg-[#0058be] text-white rounded-md font-bold text-xs hover:bg-[#004395] transition-colors disabled:opacity-50">
+                            {isSavingMarketBanner ? 'Guardando…' : 'Guardar'}
+                          </button>
+                        </div>
+                      </div>
+                    </form>
+                  )}
+
+                  {isLoadingMarketBanners ? (
+                    <p className="text-xs text-[#727785] italic py-3 text-center">Cargando…</p>
+                  ) : marketBanners.length === 0 ? (
+                    <p className="text-xs text-[#727785] italic py-3 text-center">Sin banners cargados — /market muestra los 3 de ejemplo por defecto.</p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {marketBanners.map((b, idx) => (
+                        <div key={b.id} className="flex items-center gap-3 p-2 rounded-lg border border-[#ecedf7]">
+                          <img src={b.image} alt="" className="w-16 h-9 rounded-md object-cover shrink-0 bg-[#e6e7f2]" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-bold text-[#191b23] truncate">
+                              {b.title1} {b.title2}
+                              {!b.active && <span className="ml-2 text-[9px] font-bold text-amber-600 uppercase">Oculto</span>}
+                            </p>
+                            <p className="text-[10px] text-[#727785] truncate">{b.sub}{b.link ? ` · → ${b.link}` : ''}</p>
+                          </div>
+                          <div className="flex items-center gap-0.5 shrink-0">
+                            <button onClick={() => handleMoveMarketBanner(b.id, -1)} disabled={idx === 0} className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] p-1 hover:bg-[#e6e7f2] rounded disabled:opacity-30 disabled:pointer-events-none">arrow_upward</button>
+                            <button onClick={() => handleMoveMarketBanner(b.id, 1)} disabled={idx === marketBanners.length - 1} className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] p-1 hover:bg-[#e6e7f2] rounded disabled:opacity-30 disabled:pointer-events-none">arrow_downward</button>
+                            <button onClick={() => handleOpenEditMarketBanner(b)} className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] p-1 hover:bg-[#e6e7f2] rounded">edit</button>
+                            <button onClick={() => handleDeleteMarketBanner(b.id)} className="material-symbols-outlined text-[16px] text-[#727785] hover:text-red-600 p-1 hover:bg-red-50 rounded">delete</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="border-b border-[#c2c6d6] pb-4">
                 <h2 className="text-xl font-bold text-[#191b23]">Personalización de Tiendas</h2>
                 <p className="text-xs text-[#424754] mt-1">Ajusta la apariencia visual, banners promocionales y contenido demostrativo de cada comercio.</p>
@@ -4310,6 +4546,60 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     )}
 
     {/* ── DIAGNÓSTICO DE TIENDA ── */}
+    {/* ── BORRAR TIENDA: hay que escribir BORRAR, un confirm() nativo era muy facil de tocar sin querer ── */}
+    {deletingStoreSlug && (() => {
+      const targetStore = stores[deletingStoreSlug];
+      const productCount = deletingStoreProductCount;
+      return (
+        <div className="fixed inset-0 z-[210] bg-[#191b23]/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg border border-[#c2c6d6] shadow-2xl w-[90vw] md:w-[420px] max-w-[420px] overflow-hidden flex flex-col">
+            <div className="px-5 py-4 border-b border-[#c2c6d6] bg-red-50 flex items-center gap-2">
+              <span className="material-symbols-outlined text-red-600 text-base">warning</span>
+              <h3 className="font-bold text-sm text-[#191b23]">Eliminar tienda</h3>
+            </div>
+            <div className="p-5 space-y-3">
+              <p className="text-xs text-[#191b23] font-medium">
+                Vas a eliminar <strong>{targetStore?.name || deletingStoreSlug}</strong> (/{deletingStoreSlug}) para siempre. No se puede deshacer.
+              </p>
+              {productCount > 0 && (
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2.5">
+                  Tiene {productCount} {productCount === 1 ? 'producto cargado' : 'productos cargados'}. La tienda se borra, pero esos productos quedan huérfanos en la base (no se borran solos).
+                </p>
+              )}
+              <div>
+                <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">
+                  Escribí BORRAR para confirmar
+                </label>
+                <input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-red-500 transition-all"
+                  placeholder="BORRAR"
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div className="p-4 border-t border-[#c2c6d6] flex justify-end gap-2 bg-[#f9f9ff]">
+              <button
+                onClick={() => { setDeletingStoreSlug(null); setDeleteConfirmText(''); }}
+                className="px-4 py-2 rounded-md font-bold text-xs text-[#424754] hover:bg-[#e6e7f2] transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => handleDeleteStore(deletingStoreSlug)}
+                disabled={deleteConfirmText.trim().toUpperCase() !== 'BORRAR' || isDeletingStore}
+                className="px-4 py-2 bg-red-600 text-white rounded-md font-bold text-xs hover:bg-red-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {isDeletingStore ? 'Eliminando…' : 'Eliminar para siempre'}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    })()}
+
     {/* ── PRODUCTOS DE LA TIENDA: cargar la carta desde superadmin, sin pasar por /admin ── */}
     {productsStoreSlug && (
       <div className="fixed inset-0 z-[200] bg-[#191b23]/60 backdrop-blur-sm flex items-center justify-center p-4">

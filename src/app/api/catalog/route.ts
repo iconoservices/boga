@@ -14,17 +14,22 @@ import { supabase } from '@/lib/supabase';
 export const revalidate = 120;
 
 export async function GET() {
-  const [stores, products] = await Promise.all([
+  const [stores, products, banners] = await Promise.all([
     supabase
       .from('stores')
       .select('slug,name,tagline,marketplace_category,template,hero_image,hero_alt,theme,categories,status'),
     supabase
       .from('products')
       .select('id,name,price,category,image,store,status'),
+    supabase
+      .from('market_banners')
+      .select('id,image,tag,title1,title2,sub,link')
+      .eq('active', true)
+      .order('sort_order', { ascending: true }),
   ]);
 
   return NextResponse.json(
-    { stores: stores.data ?? [], products: products.data ?? [] },
+    { stores: stores.data ?? [], products: products.data ?? [], banners: banners.data ?? [] },
     { headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' } },
   );
 }

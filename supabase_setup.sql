@@ -150,6 +150,24 @@ CREATE TABLE IF NOT EXISTS public.city_interest (
 );
 CREATE INDEX IF NOT EXISTS city_interest_city_idx ON public.city_interest (city);
 
+-- Banners del carrusel principal de /market (2x1 hamburguesas, delivery
+-- gratis, etc.). Antes vivian hardcodeados en el codigo (BANNERS_RAW en
+-- market/page.tsx); ahora los edita el superadmin sin tocar codigo.
+CREATE TABLE IF NOT EXISTS public.market_banners (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  image TEXT NOT NULL,
+  tag TEXT,
+  title1 TEXT NOT NULL,
+  title2 TEXT,
+  sub TEXT,
+  /** A donde lleva al tocarlo: interno (/promotions) o externo. Vacio = no clickeable. */
+  link TEXT,
+  sort_order INTEGER DEFAULT 0,
+  active BOOLEAN DEFAULT true
+);
+CREATE INDEX IF NOT EXISTS market_banners_sort_idx ON public.market_banners (sort_order);
+
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
@@ -163,6 +181,7 @@ ALTER TABLE public.orders          ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.store_requests  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.city_interest   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profiles        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.market_banners  ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================
 -- 2. LIMPIEZA: borrar TODAS las políticas permisivas históricas
@@ -362,6 +381,20 @@ USING (auth.uid() = id OR public.is_superadmin());
 CREATE POLICY "profiles: cada quien actualiza el suyo"
 ON public.profiles FOR UPDATE
 USING (auth.uid() = id OR public.is_superadmin());
+
+-- market_banners: lectura pública (el carrusel de /market lo ve cualquiera),
+-- solo el superadmin lo edita.
+DROP POLICY IF EXISTS "market_banners: lectura pública" ON public.market_banners;
+DROP POLICY IF EXISTS "market_banners: solo superadmin gestiona" ON public.market_banners;
+
+CREATE POLICY "market_banners: lectura pública"
+ON public.market_banners FOR SELECT
+USING (true);
+
+CREATE POLICY "market_banners: solo superadmin gestiona"
+ON public.market_banners FOR ALL
+USING (public.is_superadmin())
+WITH CHECK (public.is_superadmin());
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$

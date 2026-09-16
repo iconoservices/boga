@@ -7,15 +7,15 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-/** Todas las tiendas + productos del marketplace (para /market y /explore). */
-export async function fetchCatalogo(): Promise<{ stores: any[]; products: any[] }> {
+/** Todas las tiendas + productos + banners del marketplace (para /market y /explore). */
+export async function fetchCatalogo(): Promise<{ stores: any[]; products: any[]; banners: any[] }> {
   try {
     const res = await fetch('/api/catalog');
-    if (!res.ok) return { stores: [], products: [] };
+    if (!res.ok) return { stores: [], products: [], banners: [] };
     const data = await res.json();
-    return { stores: data.stores ?? [], products: data.products ?? [] };
+    return { stores: data.stores ?? [], products: data.products ?? [], banners: data.banners ?? [] };
   } catch {
-    return { stores: [], products: [] };
+    return { stores: [], products: [], banners: [] };
   }
 }
 
