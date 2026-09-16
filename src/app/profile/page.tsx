@@ -77,10 +77,15 @@ export default function ProfilePage() {
     };
     setUser({ ...base, isMerchant: false, merchantStoreName: '' });
 
-    // ¿Esta cuenta ya tiene una tienda? (stores.user_id la referencia)
-    supabase.from('stores').select('name').eq('user_id', authUser.id).maybeSingle()
+    // ¿Esta cuenta ya tiene tienda(s)? (stores.user_id la referencia). Antes
+    // usaba maybeSingle(), que rompe en silencio si hay MAS de una tienda con
+    // el mismo dueño (ej. superadmin con varias) — nunca marcaba isMerchant.
+    supabase.from('stores').select('name').eq('user_id', authUser.id)
       .then(({ data }) => {
-        if (data) setUser((u) => ({ ...u, isMerchant: true, merchantStoreName: data.name }));
+        if (data && data.length > 0) {
+          const nombre = data.length === 1 ? data[0].name : `${data[0].name} y ${data.length - 1} más`;
+          setUser((u) => ({ ...u, isMerchant: true, merchantStoreName: nombre }));
+        }
       });
   }, [authLoading, authUser, router]);
 
