@@ -36,12 +36,14 @@ export function CategoryChips({
               boxShadow: isActive ? `0 4px 12px ${t.primary}40` : 'none',
             }}
           >
-            <span
-              className={`material-symbols-outlined ${ICON.sm}`}
-              style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}
-            >
-              {tab.icon}
-            </span>
+            {tab.icon && (
+              <span
+                className={`material-symbols-outlined ${ICON.sm}`}
+                style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}
+              >
+                {tab.icon}
+              </span>
+            )}
             {tab.label}
           </button>
         );
@@ -417,14 +419,22 @@ export function CartPanel({
    ════════════════════════════════════════════ */
 
 export function ContactPanel({
-  t, telefonoVisible, direccionVisible, horarioVisible, onEnviar,
+  t, telefonoVisible, direccionVisible, horarioVisible, facebookVisible, instagramVisible, tiktokVisible, onEnviar,
 }: {
   t: StoreTheme;
   telefonoVisible: string | null;
   direccionVisible?: string | null;
   horarioVisible?: string | null;
+  facebookVisible?: string | null;
+  instagramVisible?: string | null;
+  tiktokVisible?: string | null;
   onEnviar: (datos: { nombre: string; telefono: string; mensaje: string }) => void;
 }) {
+  const redes = [
+    ...(facebookVisible ? [{ href: facebookVisible, label: 'Facebook' }] : []),
+    ...(instagramVisible ? [{ href: instagramVisible, label: 'Instagram' }] : []),
+    ...(tiktokVisible ? [{ href: tiktokVisible, label: 'TikTok' }] : []),
+  ];
   const campos = [
     { name: 'nombre', label: 'Nombre Completo', type: 'text' },
     { name: 'telefono', label: 'Tu Teléfono', type: 'tel' },
@@ -460,6 +470,25 @@ export function ContactPanel({
             </div>
           ))}
         </div>
+
+        {redes.length > 0 && (
+          <div className="flex gap-2.5 pt-1">
+            {redes.map((r) => (
+              <a
+                key={r.label}
+                href={r.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={r.label}
+                title={r.label}
+                className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md transition-transform active:scale-90"
+                style={{ backgroundColor: t.primary, color: t.onPrimary }}
+              >
+                <span className={`material-symbols-outlined ${ICON.md}`}>link</span>
+              </a>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="p-6 rounded-3xl border shadow-sm space-y-4" style={{ background: t.surface, borderColor: `${t.outlineVariant}40` }}>

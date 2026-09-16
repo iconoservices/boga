@@ -6,7 +6,7 @@ import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { getDemoProducts } from '@/lib/templates.config';
 import { debeMostrarDemo } from '@/lib/demo';
 import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
-import { soles, type Producto, type Categoria } from './tokens';
+import { soles, iconForCategory, type Producto, type Categoria } from './tokens';
 
 /**
  * El motor de las plantillas de comida: catalogo, categorias y carrito.
@@ -113,10 +113,16 @@ export function useCatalogo(store: StoreConfig) {
   // Salen de las categorias reales de la tienda; si no cargo ninguna, se
   // deducen del catalogo para no dejar el menu con un unico chip "Todos".
   const categoriasEfectivas: Categoria[] = categorias.length
-    ? categorias.map((c) => ({ id: c.href, label: c.name, icon: c.icon }))
+    ? categorias.map((c) => ({
+        id: c.href,
+        label: c.name,
+        // 'category' es el icono generico que se guardaba antes por defecto
+        // para toda categoria nueva; se recalcula para no dejarlo pegado.
+        icon: c.icon && c.icon !== 'category' ? c.icon : iconForCategory(c.name),
+      }))
     : [...new Set(products.map((p) => p.category))]
         .filter(Boolean)
-        .map((c) => ({ id: c, label: c.charAt(0).toUpperCase() + c.slice(1), icon: 'category' }));
+        .map((c) => ({ id: c, label: c.charAt(0).toUpperCase() + c.slice(1), icon: iconForCategory(c) }));
 
   const categoryTabs: Categoria[] = [{ id: 'all', label: 'Todos', icon: 'apps' }, ...categoriasEfectivas];
 

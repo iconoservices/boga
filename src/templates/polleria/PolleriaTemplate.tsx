@@ -414,6 +414,9 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
             telefonoVisible={c.telefonoVisible}
             direccionVisible={store.direccion}
             horarioVisible={store.horario}
+            facebookVisible={store.facebook}
+            instagramVisible={store.instagram}
+            tiktokVisible={store.tiktok}
             onEnviar={(d) =>
               enviarPedidoPorWhatsApp(store, `Hola ${store.name}, soy ${d.nombre} (${d.telefono}).\n\n${d.mensaje}`)
             }

@@ -30,6 +30,10 @@ export interface StoreConfig {
   rating?: number;
   /** Metodos que el comercio acepta de verdad (ninguno se procesa en la app: el pago se coordina por WhatsApp). Si no cargo ninguno, se asume solo Efectivo. */
   metodosPago?: string[];
+  /** Links a sus redes: opcionales, cada uno se oculta si no lo cargo. */
+  facebook?: string;
+  instagram?: string;
+  tiktok?: string;
   /**
    * Mostrar los productos de ejemplo de la plantilla mientras la tienda esta
    * vacia. Solo aplica si no cargo productos propios (ver lib/demo.ts).

@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
   }
 
-  const { email, redirectTo } = await request.json();
+  const { email, redirectTo, slug } = await request.json();
   if (!email || typeof email !== 'string') {
     return NextResponse.json({ error: 'Falta el correo' }, { status: 400 });
   }
@@ -38,5 +38,20 @@ export async function POST(request: Request) {
   });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ link: data.properties?.action_link });
+
+  // generateLink ya crea la cuenta si no existia y devuelve su id de una, sin
+  // esperar a que la persona toque el link: eso permite asignarle la tienda
+  // en el mismo momento de invitarla, en vez de tener que volver despues a
+  // mano cuando entre por primera vez.
+  if (typeof slug === 'string' && slug && data.user?.id) {
+    const { error: assignError } = await supabaseAdmin
+      .from('stores')
+      .update({ user_id: data.user.id })
+      .eq('slug', slug);
+    if (assignError) {
+      return NextResponse.json({ error: `Se generó el link pero no se pudo asignar la tienda: ${assignError.message}` }, { status: 500 });
+    }
+  }
+
+  return NextResponse.json({ link: data.properties?.action_link, userId: data.user?.id ?? null });
 }

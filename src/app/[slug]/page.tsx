@@ -135,6 +135,9 @@ async function cargarTienda(slug: string) {
         horario: dbStore.horario || undefined,
         rating: dbStore.rating ?? undefined,
         metodosPago: dbStore.metodos_pago || undefined,
+        facebook: dbStore.facebook || undefined,
+        instagram: dbStore.instagram || undefined,
+        tiktok: dbStore.tiktok || undefined,
       };
     }
   } catch (err) {
@@ -208,6 +211,9 @@ export default async function StorePage({ params, searchParams }: Props) {
         horario: undefined,
         rating: undefined,
         metodosPago: undefined,
+        facebook: undefined,
+        instagram: undefined,
+        tiktok: undefined,
       };
     } else {
       notFound();

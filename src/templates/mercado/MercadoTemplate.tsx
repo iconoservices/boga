@@ -7,6 +7,7 @@ import { getDemoProducts } from '@/lib/templates.config';
 import { debeMostrarDemo } from '@/lib/demo';
 import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
+import { iconForCategory } from '@/templates/shared/tokens';
 
 interface MercadoTemplateProps {
   store: StoreConfig;
@@ -138,13 +139,19 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
   // ── Categorias: las de la tienda, o las que se deducen del catalogo ──
   const categorias = React.useMemo(() => {
     if (store.categories?.length) {
-      return store.categories.map((c) => ({ id: c.name.toLowerCase(), nombre: c.name, icono: c.icon }));
+      return store.categories.map((c) => ({
+        id: c.name.toLowerCase(),
+        nombre: c.name,
+        // 'category' es el icono generico que se guardaba antes por defecto
+        // para toda categoria nueva; se recalcula para no dejarlo pegado.
+        icono: c.icon && c.icon !== 'category' ? c.icon : iconForCategory(c.name),
+      }));
     }
     const vistas = new Map<string, string>();
     productos.forEach((p) => {
       if (!vistas.has(p.category)) vistas.set(p.category, p.category);
     });
-    return [...vistas.keys()].map((c) => ({ id: c, nombre: c.charAt(0).toUpperCase() + c.slice(1), icono: 'category' }));
+    return [...vistas.keys()].map((c) => ({ id: c, nombre: c.charAt(0).toUpperCase() + c.slice(1), icono: iconForCategory(c) }));
   }, [store.categories, productos]);
 
   const filtrados = productos.filter((p) => {
@@ -319,7 +326,7 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
                       border: `1px solid ${activa ? t.primary : t.outlineVariant}`,
                     }}
                   >
-                    <span className="material-symbols-outlined text-[22px]">{c.icono}</span>
+                    {c.icono && <span className="material-symbols-outlined text-[22px]">{c.icono}</span>}
                     <span className="text-[10px] font-semibold leading-tight text-center line-clamp-2">{c.nombre}</span>
                   </button>
                 );

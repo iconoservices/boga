@@ -14,6 +14,7 @@ import { COLOR_PRESETS, getColorPreset } from '@/lib/colorPresets';
 import { extractThemeFromImageClient } from '@/lib/extractThemeClient';
 import { uploadFile } from '@/lib/uploadClient';
 import type { StoreTheme } from '@/lib/templates.config';
+import { iconForCategory } from '@/templates/shared/tokens';
 
 interface Product {
   id: string;
@@ -184,6 +185,9 @@ function AdminDashboard({ user }: { user: User }) {
           whatsapp: s.whatsapp || undefined,
           horario: s.horario || undefined,
           metodosPago: s.metodos_pago || undefined,
+          facebook: s.facebook || undefined,
+          instagram: s.instagram || undefined,
+          tiktok: s.tiktok || undefined,
           categories: s.categories || [],
           theme: s.theme || {
             primary: '#0058be',
@@ -276,7 +280,7 @@ function AdminDashboard({ user }: { user: User }) {
   const [isStoreEditorOpen, setIsStoreEditorOpen] = useState(false);
   const [editingStoreSlug, setEditingStoreSlug] = useState<string | null>(null);
   const [isStoreSaving, setIsStoreSaving] = useState(false);
-  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '', show_demo_products: true, zona: '', direccion: '', horario: '', rating: '', metodos_pago: [] as string[] });
+  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '', show_demo_products: true, zona: '', direccion: '', horario: '', rating: '', metodos_pago: [] as string[], facebook: '', instagram: '', tiktok: '' });
   const [storeLogoFile, setStoreLogoFile] = useState<File | null>(null);
   const [storeHeroFile, setStoreHeroFile] = useState<File | null>(null);
   const [storeLogoPreview, setStoreLogoPreview] = useState<string | null>(null);
@@ -502,6 +506,9 @@ function AdminDashboard({ user }: { user: User }) {
       horario: dbData?.horario || config?.horario || '',
       rating: dbData?.rating != null ? String(dbData.rating) : (config?.rating != null ? String(config.rating) : ''),
       metodos_pago: dbData?.metodos_pago || config?.metodosPago || [],
+      facebook: dbData?.facebook || config?.facebook || '',
+      instagram: dbData?.instagram || config?.instagram || '',
+      tiktok: dbData?.tiktok || config?.tiktok || '',
     });
     setStoreHeroPreview(dbData?.hero_image || config?.heroImage || null);
     setStoreLogoPreview(dbData?.logo_image || config?.logoImage || null);
@@ -572,6 +579,9 @@ function AdminDashboard({ user }: { user: User }) {
         horario: storeForm.horario || null,
         rating: storeForm.rating !== '' ? Number(storeForm.rating) : null,
         metodos_pago: storeForm.metodos_pago.length ? storeForm.metodos_pago : null,
+        facebook: storeForm.facebook || null,
+        instagram: storeForm.instagram || null,
+        tiktok: storeForm.tiktok || null,
         categories: storeCategories,
         status: 'active',
       };
@@ -602,7 +612,7 @@ function AdminDashboard({ user }: { user: User }) {
       // en vez de perder todo el guardado. Paso exactamente esto con `whatsapp`:
       // el panel quedo sin poder guardar NADA de ninguna tienda hasta correr la
       // migracion. Columnas opcionales porque llegaron despues del lanzamiento.
-      const columnasOpcionales = ['show_demo_products', 'zona', 'direccion', 'horario', 'rating', 'metodos_pago', 'categories'];
+      const columnasOpcionales = ['show_demo_products', 'zona', 'direccion', 'horario', 'rating', 'metodos_pago', 'categories', 'facebook', 'instagram', 'tiktok'];
       const columnasFaltantes: string[] = [];
       let faltante = columnasOpcionales.find((col) => col in upsertData && new RegExp(col).test(error?.message || ''));
       while (error && faltante) {
@@ -2633,7 +2643,7 @@ function AdminDashboard({ user }: { user: User }) {
                       if (!name) return;
                       const href = name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
                       if (storeCategories.some(c => c.href === href)) { setNewCategoryName(''); return; }
-                      setStoreCategories(prev => [...prev, { name, icon: 'category', href }]);
+                      setStoreCategories(prev => [...prev, { name, icon: iconForCategory(name), href }]);
                       setNewCategoryName('');
                     }}
                     placeholder="Ej: Bebidas"
@@ -2646,7 +2656,7 @@ function AdminDashboard({ user }: { user: User }) {
                       if (!name) return;
                       const href = name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
                       if (storeCategories.some(c => c.href === href)) { setNewCategoryName(''); return; }
-                      setStoreCategories(prev => [...prev, { name, icon: 'category', href }]);
+                      setStoreCategories(prev => [...prev, { name, icon: iconForCategory(name), href }]);
                       setNewCategoryName('');
                     }}
                     className="px-4 py-2.5 bg-black text-white rounded-md font-bold text-sm hover:bg-gray-800 transition-colors"
@@ -2723,7 +2733,7 @@ function AdminDashboard({ user }: { user: User }) {
               </div>
 
               {/* Name */}
-              <div>
+              <div id="editor-datos" className="scroll-mt-4">
                 <label className="block text-sm font-bold text-gray-700 mb-2">Nombre de la Tienda</label>
                 <input
                   type="text"
@@ -2875,6 +2885,48 @@ function AdminDashboard({ user }: { user: User }) {
                     className="w-full sm:w-40 px-4 py-3 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
                     placeholder="Ej: 4.8"
                   />
+                </div>
+              </div>
+
+              {/* Redes sociales: opcional, se muestran como links en la ficha de contacto */}
+              <div id="editor-redes" className="space-y-4 pt-2 border-t border-gray-100 scroll-mt-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">Redes sociales (opcional)</label>
+                  <p className="text-xs text-gray-500">
+                    Pegá el link completo de tu perfil. Si dejás uno vacío, tu tienda simplemente no lo muestra.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Facebook</label>
+                    <input
+                      type="url"
+                      value={storeForm.facebook}
+                      onChange={e => setStoreForm({ ...storeForm, facebook: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                      placeholder="https://facebook.com/tu-negocio"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Instagram</label>
+                    <input
+                      type="url"
+                      value={storeForm.instagram}
+                      onChange={e => setStoreForm({ ...storeForm, instagram: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                      placeholder="https://instagram.com/tu-negocio"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1.5">TikTok</label>
+                    <input
+                      type="url"
+                      value={storeForm.tiktok}
+                      onChange={e => setStoreForm({ ...storeForm, tiktok: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                      placeholder="https://tiktok.com/@tu-negocio"
+                    />
+                  </div>
                 </div>
               </div>
 

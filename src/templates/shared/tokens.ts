@@ -49,3 +49,47 @@ export interface Categoria {
   label: string;
   icon: string;
 }
+
+/**
+ * Icono de Material Symbols para una categoria por nombre/palabra clave.
+ *
+ * Las categorias del menu las escribe el dueño de la tienda (son texto libre:
+ * "Cholaos", "Raspadillas", "Menu del dia"...), asi que no hay forma de
+ * acertar siempre. Por eso esto solo reconoce rubros comunes de comida y
+ * bebida (el vocabulario ya usado en los templates de templates.config.ts) y
+ * devuelve '' para lo que no reconoce: mejor sin icono que uno generico
+ * repetido en todas las categorias, que no dice nada.
+ */
+const REGLAS_ICONO_CATEGORIA: [RegExp, string][] = [
+  [/bebid|jugo|gaseosa|refresc|limonada|chicha|emolien/, 'local_bar'],
+  [/cafe|capuchin|expres/, 'coffee'],
+  [/cholao/, 'local_drink'],
+  [/raspadilla|helad|cremolada|granizad|icecream/, 'icecream'],
+  [/postre|dulce|torta|pastel|keke|queque|cake/, 'cake'],
+  [/pollo.*brasa|brasa|parrill|anticucho|churrasco|carne/, 'outdoor_grill'],
+  [/pizza/, 'local_pizza'],
+  [/hamburgu/, 'lunch_dining'],
+  [/sandwich|sanguch/, 'lunch_dining'],
+  [/pan\b|panaderia|pasteleria|bakery/, 'bakery_dining'],
+  [/desayuno/, 'free_breakfast'],
+  [/ceviche|pescad|mariscos/, 'set_meal'],
+  [/arroz/, 'rice_bowl'],
+  [/sopa|caldo|chupe|ramen/, 'ramen_dining'],
+  [/piqueo|entrada|snack|tapas/, 'tapas'],
+  [/combo|promo|oferta/, 'takeout_dining'],
+  [/comida|plato|menu|almuerzo|criollo|cocina/, 'restaurant'],
+  [/abarrote/, 'shopping_basket'],
+  [/limpieza/, 'cleaning_services'],
+  [/lacteo|leche|queso|yogurt/, 'egg'],
+  [/verdura/, 'eco'],
+  [/fruta/, 'nutrition'],
+  [/flor|ramo/, 'local_florist'],
+];
+
+export function iconForCategory(nombre: string): string {
+  const n = nombre
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '');
+  return REGLAS_ICONO_CATEGORIA.find(([re]) => re.test(n))?.[1] ?? '';
+}

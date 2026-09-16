@@ -573,8 +573,15 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     direccion: '',
     horario: '',
     rating: '',
-    metodosPago: [] as string[]
+    metodosPago: [] as string[],
+    facebook: '',
+    instagram: '',
+    tiktok: '',
+    ownerEmail: ''
   });
+  // Para saber si storeForm.ownerEmail realmente cambio al guardar (y no
+  // reasignar la tienda en cada edicion solo porque el campo llega precargado).
+  const [originalOwnerEmail, setOriginalOwnerEmail] = useState('');
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
   const [slugChecking, setSlugChecking] = useState(false);
@@ -706,7 +713,14 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       horario: '',
       rating: '',
       metodosPago: [],
+      facebook: '',
+      instagram: '',
+      tiktok: '',
+      // El correo de la solicitud: asi al guardar la tienda ya queda asignada
+      // a quien la pidio, sin tener que ir despues a mano a "Usuarios".
+      ownerEmail: req.email || '',
     });
+    setOriginalOwnerEmail('');
     setShowStoreModal(true);
     supabase.from('store_requests').update({ status: 'approved' }).eq('id', req.id).then(() => {
       setStoreRequests(prev => prev.filter(r => r.id !== req.id));
@@ -1204,6 +1218,9 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
               horario: dbStore.horario || undefined,
               rating: dbStore.rating ?? undefined,
               metodosPago: dbStore.metodos_pago || undefined,
+              facebook: dbStore.facebook || undefined,
+              instagram: dbStore.instagram || undefined,
+              tiktok: dbStore.tiktok || undefined,
               theme: (() => {
                 if (dbStore.theme && Object.keys(dbStore.theme).length > 0) return dbStore.theme;
                 const tmpl = dbStore.template as string;
@@ -1289,8 +1306,13 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       direccion: '',
       horario: '',
       rating: '',
-      metodosPago: []
+      metodosPago: [],
+      facebook: '',
+      instagram: '',
+      tiktok: '',
+      ownerEmail: ''
     });
+    setOriginalOwnerEmail('');
     setShowStoreModal(true);
   };
 
@@ -1325,8 +1347,15 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       direccion: store.direccion || '',
       horario: store.horario || '',
       rating: store.rating != null ? String(store.rating) : '',
-      metodosPago: store.metodosPago || []
+      metodosPago: store.metodosPago || [],
+      facebook: store.facebook || '',
+      instagram: store.instagram || '',
+      tiktok: store.tiktok || '',
+      // Sale del dueño actual, no de la tienda. Si lo dejan igual al guardar
+      // no se reasigna nada (ver originalOwnerEmail en handleSaveStore).
+      ownerEmail: profiles.find((p) => p.id === storeOwners[slug])?.email || ''
     });
+    setOriginalOwnerEmail(profiles.find((p) => p.id === storeOwners[slug])?.email || '');
     setShowStoreModal(true);
 
     // Detecta si esta tienda ya tiene cargados los productos demo de su
@@ -1466,6 +1495,34 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     ]);
     const heroImage = heroUrl || existingStoreObj.heroImage || tpl?.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80';
 
+    // Si cargaron un correo de dueño nuevo (o distinto al que ya tenia la
+    // tienda), lo resuelve con la service_role key -crea la cuenta si no
+    // existia- y guarda su id junto con el resto de la tienda en un solo
+    // paso. Sin esto, una tienda creada desde superadmin queda sin dueño
+    // hasta que alguien vuelva a mano a "Usuarios" a asignarsela (ver
+    // handleSendInvite mas arriba).
+    const ownerEmailTrim = storeForm.ownerEmail.trim();
+    let ownerUserId: string | null = null;
+    let ownerInviteLink: string | null = null;
+    if (ownerEmailTrim && ownerEmailTrim.toLowerCase() !== originalOwnerEmail.trim().toLowerCase()) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const res = await fetch('/api/generate-invite-link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+          body: JSON.stringify({ email: ownerEmailTrim, redirectTo: `${window.location.origin}/admin` }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'No se pudo asignar el dueño');
+        ownerUserId = data.userId;
+        ownerInviteLink = data.link;
+      } catch (err: any) {
+        setSaving(false);
+        alert('No se pudo asignar el dueño: ' + err.message + '\n\nLa tienda todavía no se guardó.');
+        return;
+      }
+    }
+
     const upsertData: Record<string, any> = {
       slug,
       name: storeForm.name,
@@ -1483,7 +1540,11 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       horario: storeForm.horario || null,
       rating: storeForm.rating !== '' ? Number(storeForm.rating) : null,
       metodos_pago: storeForm.metodosPago.length ? storeForm.metodosPago : null,
+      facebook: storeForm.facebook || null,
+      instagram: storeForm.instagram || null,
+      tiktok: storeForm.tiktok || null,
     };
+    if (ownerUserId) upsertData.user_id = ownerUserId;
     if (logoUrl) {
       upsertData.logo_image = logoUrl;
     } else if (logoRemoved) {
@@ -1507,7 +1568,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       // Mismo problema que ya paso con `whatsapp` en el panel del cliente: si una
       // columna nueva todavia no existe en la base, reintenta sin ella en vez de
       // perder el guardado completo de la tienda.
-      const columnasOpcionales = ['whatsapp', 'zona', 'direccion', 'horario', 'rating', 'show_demo_products', 'metodos_pago'];
+      const columnasOpcionales = ['whatsapp', 'zona', 'direccion', 'horario', 'rating', 'show_demo_products', 'metodos_pago', 'facebook', 'instagram', 'tiktok'];
       const columnasFaltantes: string[] = [];
       let faltante = columnasOpcionales.find((col) => col in upsertData && new RegExp(col).test(error?.message || ''));
       while (error && faltante) {
@@ -1567,6 +1628,10 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
 
       setActiveStores(prev => rekey(prev, storeForm.active));
 
+      if (ownerUserId) {
+        setStoreOwners(prev => rekey(prev, ownerUserId as string));
+      }
+
       if (editingStore?.id) {
         setStoreIds(prev => rekey(prev, editingStore.id));
       }
@@ -1586,6 +1651,15 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       }));
 
       setShowStoreModal(false);
+
+      if (ownerInviteLink) {
+        try {
+          await navigator.clipboard.writeText(ownerInviteLink);
+          alert(`Tienda guardada y asignada a ${ownerEmailTrim}. Le copiamos un link de acceso al portapapeles — mandaselo por WhatsApp o correo para que entre a /admin.`);
+        } catch {
+          alert(`Tienda guardada y asignada a ${ownerEmailTrim}. Link de acceso: ${ownerInviteLink}`);
+        }
+      }
     } catch (err: any) {
       alert('Error al guardar en Supabase: ' + err.message);
     } finally {
@@ -3649,6 +3723,22 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           </p>
                         )}
                       </div>
+
+                      <div>
+                        <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Correo del Dueño (Opcional)</label>
+                        <input
+                          type="email"
+                          value={storeForm.ownerEmail}
+                          onChange={(e) => setStoreForm(prev => ({ ...prev, ownerEmail: e.target.value }))}
+                          className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
+                          placeholder="dueño@negocio.com"
+                        />
+                        <p className="text-[10px] text-[#727785] font-semibold mt-1">
+                          {storeForm.ownerEmail.trim() && storeForm.ownerEmail.trim().toLowerCase() !== originalOwnerEmail.trim().toLowerCase()
+                            ? 'Al guardar: si el correo no tiene cuenta, se crea sola. Te copiamos un link de acceso para mandarle.'
+                            : 'Si lo dejás vacío, la tienda queda sin dueño (solo vos la ves en /superadmin) hasta que se la asignes después.'}
+                        </p>
+                      </div>
                     </div>
                   </section>
 
@@ -3942,6 +4032,48 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                       />
                     </div>
                   </section>
+
+                  {/* REDES SOCIALES: opcional, se muestran como links en la ficha publica */}
+                  <section className="space-y-4">
+                    <div className="flex items-center gap-2 border-b border-[#ecedf7] pb-2">
+                      <span className="material-symbols-outlined text-[#0058be] text-[16px] font-bold">share</span>
+                      <h3 className="text-[10px] font-black text-[#424754] uppercase tracking-widest">Redes Sociales (Opcional)</h3>
+                    </div>
+                    <p className="text-[10px] text-[#727785] font-semibold -mt-2">
+                      Pegá el link completo del perfil. Si dejás uno vacío, no se muestra.
+                    </p>
+
+                    <div>
+                      <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Facebook</label>
+                      <input
+                        type="url"
+                        value={storeForm.facebook}
+                        onChange={(e) => setStoreForm(prev => ({ ...prev, facebook: e.target.value }))}
+                        className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
+                        placeholder="https://facebook.com/tu-negocio"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Instagram</label>
+                      <input
+                        type="url"
+                        value={storeForm.instagram}
+                        onChange={(e) => setStoreForm(prev => ({ ...prev, instagram: e.target.value }))}
+                        className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
+                        placeholder="https://instagram.com/tu-negocio"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">TikTok</label>
+                      <input
+                        type="url"
+                        value={storeForm.tiktok}
+                        onChange={(e) => setStoreForm(prev => ({ ...prev, tiktok: e.target.value }))}
+                        className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
+                        placeholder="https://tiktok.com/@tu-negocio"
+                      />
+                    </div>
+                  </section>
                 </div>
 
                 {/* Footer Buttons */}
@@ -4044,8 +4176,13 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           direccion: '',
                           horario: '',
                           rating: '',
-                          metodosPago: []
+                          metodosPago: [],
+                          facebook: '',
+                          instagram: '',
+                          tiktok: '',
+                          ownerEmail: ''
                         });
+                        setOriginalOwnerEmail('');
                         if (logoPreview?.startsWith('blob:')) URL.revokeObjectURL(logoPreview);
                         setLogoFile(null);
                         setLogoPreview(null);
