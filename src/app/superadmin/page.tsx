@@ -1070,6 +1070,25 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     return rows;
   }, [profiles, storeOwners, authUser]);
 
+  // Agrupa las filas de derivedUsers por persona: antes un dueño de varias
+  // tiendas (ej. vos, el superadmin) aparecia como el mismo correo repetido
+  // una vez por tienda, como si fueran cuentas distintas.
+  const groupedUsers = React.useMemo(() => {
+    const porId = new Map<string, { id: string; email: string; name: string; role: UserRole; status: UserRow['status']; filas: UserRow[] }>();
+    derivedUsers.forEach((u) => {
+      const g = porId.get(u.id);
+      if (g) g.filas.push(u);
+      else porId.set(u.id, { id: u.id, email: u.email, name: u.name, role: u.role, status: u.status, filas: [u] });
+    });
+    return Array.from(porId.values());
+  }, [derivedUsers]);
+  const [expandedUserIds, setExpandedUserIds] = useState<Set<string>>(new Set());
+  const toggleExpandedUser = (id: string) => setExpandedUserIds((prev) => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+
   // Cuentas que ya existen (se registraron solo, o vos las invitaste y ya
   // entraron) pero todavía no administran ninguna tienda. Sirve para poder
   // asignarle una tienda a alguien que ya tiene cuenta, en vez de mandarle
@@ -2882,57 +2901,116 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                     <span className="text-[10px] font-bold uppercase tracking-wider text-[#424754]">Acceso / Estado</span>
                     <span />
                   </div>
-                  {/* Rows */}
-                  {derivedUsers.length === 0 && (
+                  {/* Rows — agrupadas por persona: quien administra varias tiendas
+                      (vos, el superadmin, o cualquier dueño de multiples locales)
+                      sale una sola vez, con la lista de tiendas plegable. */}
+                  {groupedUsers.length === 0 && (
                     <div className="px-4 py-8 text-center text-xs text-[#727785] font-semibold italic">
                       Todavía no hay perfiles registrados.
                     </div>
                   )}
-                  {derivedUsers.map((u) => (
-                    <div
-                      key={`${u.id}-${u.store || u.role}`}
-                      style={{ display: 'grid', gridTemplateColumns: '160px 1fr 130px 160px 72px', gap: '12px' }} 
-                      className={`items-center px-4 py-3.5 border-b border-[#ecedf7] last:border-0 transition-colors group cursor-pointer ${ 
-                        editingUser?.id === u.id ? 'bg-[#ecedf7]/30' : 'hover:bg-[#f2f3fd]/20'
-                      }`}
-                    >
-                      <p className="font-bold text-xs text-[#191b23] truncate">{u.name}</p>
-                      <p className="text-xs text-[#424754] font-semibold truncate">{u.email}</p>
-                      <span className="text-xs font-semibold text-[#424754] truncate">
-                        {u.store ? (stores[u.store]?.name || u.store) : <span className="text-[#c2c6d6] italic">Todas (Super)</span>}
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md border whitespace-nowrap ${
-                          u.role === 'super_admin' ? 'bg-[#0058be] text-white border-[#0058be]' : 'bg-[#e6e7f2] text-[#424754] border-[#c2c6d6]'
-                        }`}>
-                          {u.role === 'super_admin' ? 'Super' : 'Tienda'}
-                        </span>
-                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md border whitespace-nowrap ${
-                          u.status === 'activo' 
-                            ? 'border-emerald-100 bg-emerald-50 text-emerald-700' 
-                            : 'border-amber-100 bg-amber-50 text-amber-700'
-                        }`}>
-                          {u.status}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => { setEditingUser({...u}); setEditingUserOriginalStore(u.store); setInviteSent(false); }}
-                          className="w-7 h-7 flex items-center justify-center text-[#424754] hover:text-[#0058be] hover:bg-[#ecedf7] rounded-lg transition-colors"
-                          title="Editar usuario"
+                  {groupedUsers.map((g) => {
+                    const multi = g.filas.length > 1;
+                    const isExpanded = expandedUserIds.has(g.id);
+                    const unica = g.filas[0];
+                    return (
+                      <React.Fragment key={g.id}>
+                        <div
+                          onClick={multi ? () => toggleExpandedUser(g.id) : undefined}
+                          style={{ display: 'grid', gridTemplateColumns: '160px 1fr 130px 160px 72px', gap: '12px' }}
+                          className={`items-center px-4 py-3.5 border-b border-[#ecedf7] last:border-0 transition-colors group ${multi ? 'cursor-pointer' : 'cursor-default'} ${
+                            editingUser?.id === g.id && !multi ? 'bg-[#ecedf7]/30' : 'hover:bg-[#f2f3fd]/20'
+                          }`}
                         >
-                          <span className="material-symbols-outlined text-[15px]">edit</span>
-                        </button>
-                        <button
-                          onClick={() => handleRevokeAccess(u)}
-                          className="w-7 h-7 flex items-center justify-center text-[#c2c6d6] hover:text-[#ba1a1a] hover:bg-red-50 rounded-lg transition-colors"
-                          title="Revocar acceso"
-                        >
-                          <span className="material-symbols-outlined text-[15px]">person_remove</span>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                          <p className="font-bold text-xs text-[#191b23] truncate">{g.name}</p>
+                          <p className="text-xs text-[#424754] font-semibold truncate">{g.email}</p>
+                          <span className="text-xs font-semibold text-[#424754] truncate flex items-center gap-1">
+                            {multi ? (
+                              <>
+                                <span className="material-symbols-outlined text-[16px] text-[#727785]">{isExpanded ? 'expand_less' : 'expand_more'}</span>
+                                {g.filas.length} tiendas
+                              </>
+                            ) : unica.store ? (
+                              stores[unica.store]?.name || unica.store
+                            ) : (
+                              <span className="text-[#c2c6d6] italic">Todas (Super)</span>
+                            )}
+                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md border whitespace-nowrap ${
+                              g.role === 'super_admin' ? 'bg-[#0058be] text-white border-[#0058be]' : 'bg-[#e6e7f2] text-[#424754] border-[#c2c6d6]'
+                            }`}>
+                              {g.role === 'super_admin' ? 'Super' : 'Tienda'}
+                            </span>
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md border whitespace-nowrap ${
+                              g.status === 'activo'
+                                ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                                : 'border-amber-100 bg-amber-50 text-amber-700'
+                            }`}>
+                              {g.status}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {!multi && (
+                              <>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setEditingUser({...unica}); setEditingUserOriginalStore(unica.store); setInviteSent(false); }}
+                                  className="w-7 h-7 flex items-center justify-center text-[#424754] hover:text-[#0058be] hover:bg-[#ecedf7] rounded-lg transition-colors"
+                                  title="Editar usuario"
+                                >
+                                  <span className="material-symbols-outlined text-[15px]">edit</span>
+                                </button>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleRevokeAccess(unica); }}
+                                  className="w-7 h-7 flex items-center justify-center text-[#c2c6d6] hover:text-[#ba1a1a] hover:bg-red-50 rounded-lg transition-colors"
+                                  title="Revocar acceso"
+                                >
+                                  <span className="material-symbols-outlined text-[15px]">person_remove</span>
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {multi && isExpanded && g.filas.map((u) => (
+                          <div
+                            key={`${u.id}-${u.store}`}
+                            style={{ display: 'grid', gridTemplateColumns: '160px 1fr 130px 160px 72px', gap: '12px' }}
+                            className={`items-center px-4 py-2.5 border-b border-[#ecedf7] last:border-0 bg-[#f9f9ff] transition-colors group ${
+                              editingUser?.id === u.id && editingUserOriginalStore === u.store ? 'bg-[#ecedf7]/30' : 'hover:bg-[#f2f3fd]/40'
+                            }`}
+                          >
+                            <span />
+                            <span />
+                            <span className="text-xs font-semibold text-[#545f73] truncate pl-1">↳ {stores[u.store]?.name || u.store}</span>
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md border whitespace-nowrap w-fit ${
+                              u.status === 'activo'
+                                ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                                : 'border-amber-100 bg-amber-50 text-amber-700'
+                            }`}>
+                              {u.status}
+                            </span>
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => { setEditingUser({...u}); setEditingUserOriginalStore(u.store); setInviteSent(false); }}
+                                className="w-7 h-7 flex items-center justify-center text-[#424754] hover:text-[#0058be] hover:bg-[#ecedf7] rounded-lg transition-colors"
+                                title="Editar usuario"
+                              >
+                                <span className="material-symbols-outlined text-[15px]">edit</span>
+                              </button>
+                              <button
+                                onClick={() => handleRevokeAccess(u)}
+                                className="w-7 h-7 flex items-center justify-center text-[#c2c6d6] hover:text-[#ba1a1a] hover:bg-red-50 rounded-lg transition-colors"
+                                title="Revocar acceso"
+                              >
+                                <span className="material-symbols-outlined text-[15px]">person_remove</span>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </React.Fragment>
+                    );
+                  })}
                 </div>
 
                 {/* Info strip */}
