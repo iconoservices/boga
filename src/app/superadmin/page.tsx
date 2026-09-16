@@ -2910,9 +2910,13 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                     </div>
                   )}
                   {groupedUsers.map((g) => {
-                    const multi = g.filas.length > 1;
+                    // La fila "super_admin" (store: '') es la cuenta en si, no
+                    // una tienda mas — no cuenta para "N tiendas" ni se lista
+                    // aparte al expandir.
+                    const tiendas = g.filas.filter((f) => f.store);
+                    const multi = tiendas.length > 1;
                     const isExpanded = expandedUserIds.has(g.id);
-                    const unica = g.filas[0];
+                    const unica = tiendas[0] || g.filas[0];
                     return (
                       <React.Fragment key={g.id}>
                         <div
@@ -2928,7 +2932,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                             {multi ? (
                               <>
                                 <span className="material-symbols-outlined text-[16px] text-[#727785]">{isExpanded ? 'expand_less' : 'expand_more'}</span>
-                                {g.filas.length} tiendas
+                                {tiendas.length} tiendas
                               </>
                             ) : unica.store ? (
                               stores[unica.store]?.name || unica.store
@@ -2972,7 +2976,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           </div>
                         </div>
 
-                        {multi && isExpanded && g.filas.map((u) => (
+                        {multi && isExpanded && tiendas.map((u) => (
                           <div
                             key={`${u.id}-${u.store}`}
                             style={{ display: 'grid', gridTemplateColumns: '160px 1fr 130px 160px 72px', gap: '12px' }}
