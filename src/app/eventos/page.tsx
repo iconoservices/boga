@@ -187,6 +187,9 @@ export default function Eventos() {
               >
                 <img referrerPolicy="no-referrer" src={l.img} alt={l.nombre} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                {l.tag?.toLowerCase().includes('gratis') && (
+                  <span className="absolute top-2.5 right-2.5 bg-primary text-white text-[10px] font-label-md px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">Gratis</span>
+                )}
                 <div className="absolute inset-x-0 bottom-0 p-3">
                   <span className="font-label-md text-[9px] uppercase tracking-wider text-white/70">{l.tag}</span>
                   <h3 className="font-headline-sm text-white text-sm leading-tight mt-0.5">{l.nombre}</h3>
