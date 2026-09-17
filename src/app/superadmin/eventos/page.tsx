@@ -34,7 +34,7 @@ type Ficha = typeof FICHA_VACIA;
 type PlaceRow = Record<string, any>;
 const FICHA_LUGAR_VACIA = {
   id: null as string | null,
-  nombre: '', tag: '', img: '', ciudad: 'pucallpa', orden: 0, status: 'activo',
+  nombre: '', tag: '', descripcion: '', img: '', ciudad: 'pucallpa', orden: 0, status: 'activo',
 };
 type FichaLugar = typeof FICHA_LUGAR_VACIA;
 
@@ -134,7 +134,7 @@ export default function EventosAdmin() {
 
   const editarLugar = (l: PlaceRow) => {
     setFichaLugar({
-      id: l.id, nombre: l.nombre ?? '', tag: l.tag ?? '', img: l.img ?? '',
+      id: l.id, nombre: l.nombre ?? '', tag: l.tag ?? '', descripcion: l.descripcion ?? '', img: l.img ?? '',
       ciudad: l.ciudad ?? 'pucallpa', orden: l.orden ?? 0, status: l.status ?? 'activo',
     });
     setMsgLugar('');
@@ -147,7 +147,8 @@ export default function EventosAdmin() {
     setMsgLugar('');
 
     const payload = {
-      nombre: fichaLugar.nombre, tag: fichaLugar.tag || null, img: fichaLugar.img || null,
+      nombre: fichaLugar.nombre, tag: fichaLugar.tag || null, descripcion: fichaLugar.descripcion || null,
+      img: fichaLugar.img || null,
       ciudad: fichaLugar.ciudad, orden: Number(fichaLugar.orden) || 0, status: fichaLugar.status,
     };
 
@@ -285,6 +286,8 @@ export default function EventosAdmin() {
               <input required value={fichaLugar.nombre} onChange={(e) => setFichaLugar({ ...fichaLugar, nombre: e.target.value })} className={campo} placeholder="Laguna de Yarinacocha" /></label>
             <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Tag (categoría · duración)
               <input value={fichaLugar.tag} onChange={(e) => setFichaLugar({ ...fichaLugar, tag: e.target.value })} className={campo} placeholder="Naturaleza · medio día" /></label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Descripción (para la ficha ampliada)
+              <textarea value={fichaLugar.descripcion} onChange={(e) => setFichaLugar({ ...fichaLugar, descripcion: e.target.value })} rows={4} className={campo} placeholder="Qué es, por qué visitarlo, cómo llegar…" /></label>
             <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Ciudad
               <select value={fichaLugar.ciudad} onChange={(e) => setFichaLugar({ ...fichaLugar, ciudad: e.target.value })} className={campo}>
                 {CIUDADES.map((c) => <option key={c.slug} value={c.slug}>{c.nombre}</option>)}</select></label>

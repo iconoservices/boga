@@ -907,6 +907,7 @@ CREATE TABLE IF NOT EXISTS public.places (
   created_at  TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
   nombre      TEXT NOT NULL,
   tag         TEXT,                              -- "Naturaleza · medio día"
+  descripcion TEXT,                              -- texto largo para la ficha ampliada
   img         TEXT,
   ciudad      TEXT NOT NULL DEFAULT 'pucallpa',
   orden       INT  NOT NULL DEFAULT 0,
@@ -914,6 +915,9 @@ CREATE TABLE IF NOT EXISTS public.places (
 );
 CREATE INDEX IF NOT EXISTS places_status_idx ON public.places (status);
 CREATE INDEX IF NOT EXISTS places_ciudad_idx ON public.places (ciudad);
+
+-- Migracion: `places` ya existia sin esta columna cuando se agrego la ficha ampliada.
+ALTER TABLE public.places ADD COLUMN IF NOT EXISTS descripcion TEXT;
 
 ALTER TABLE public.places ENABLE ROW LEVEL SECURITY;
 

@@ -1,12 +1,11 @@
 // "¿A dónde ir en Pucallpa?" (/eventos). La página los lee del endpoint
-// cacheado /api/lugares (no de Supabase directo). Si la tabla `places`
-// todavía está vacía, la página cae al seed hardcodeado (LUGARES_SEED en la
-// propia página).
+// cacheado /api/lugares (no de Supabase directo).
 
 export type Lugar = {
   id: string;
   nombre: string;
   tag: string;
+  descripcion?: string;
   img: string;
 };
 
@@ -15,6 +14,7 @@ function fromRow(r: Record<string, unknown>): Lugar {
     id: String(r.id),
     nombre: (r.nombre as string) ?? '',
     tag: (r.tag as string) ?? '',
+    descripcion: (r.descripcion as string) ?? '',
     img: (r.img as string) ?? '',
   };
 }

@@ -9,7 +9,7 @@ export const revalidate = 300;
 export async function GET() {
   const { data, error } = await supabase
     .from('places')
-    .select('id,nombre,tag,img,orden')
+    .select('id,nombre,tag,descripcion,img,orden')
     .eq('status', 'activo')
     .order('orden', { ascending: true })
     .order('created_at', { ascending: true });

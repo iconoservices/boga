@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
 import { fetchEventos } from '@/lib/eventos';
-import { fetchLugares } from '@/lib/lugares';
+import { fetchLugares, type Lugar } from '@/lib/lugares';
 
 // Eventos = agenda + descubrimiento local de Pucallpa, estilo plataforma de
 // tickets (Joinnus): carrusel destacado, categorías, "a dónde ir" y agenda.
@@ -36,8 +36,9 @@ export default function Eventos() {
   const [cat, setCat] = useState<Cat | null>(null);
   const [slide, setSlide] = useState(0);
   const [eventos, setEventos] = useState<Evento[]>([]);
-  const [lugares, setLugares] = useState<{ id: string; nombre: string; tag: string; img: string }[]>([]);
+  const [lugares, setLugares] = useState<Lugar[]>([]);
   const [eventoAbierto, setEventoAbierto] = useState<Evento | null>(null);
+  const [lugarAbierto, setLugarAbierto] = useState<Lugar | null>(null);
 
   useEffect(() => {
     fetchEventos().then(setEventos);
@@ -70,7 +71,7 @@ export default function Eventos() {
         {/* Carrusel destacado */}
         {carrusel.length > 0 && (
         <section>
-          <div className="relative overflow-hidden rounded-2xl shadow-sm aspect-[16/9] sm:aspect-[21/9] lg:aspect-auto lg:min-h-[340px]">
+          <div className="relative overflow-hidden rounded-2xl shadow-sm aspect-[16/9] sm:aspect-[21/9] lg:aspect-auto lg:h-[340px]">
             <div
               className="flex h-full transition-transform duration-500 ease-out"
               style={{ transform: `translateX(-${slide * 100}%)` }}
@@ -179,23 +180,18 @@ export default function Eventos() {
           </div>
           <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
             {lugares.map((l) => (
-              <a
+              <div
                 key={l.id}
-                href={`https://www.google.com/maps/search/${encodeURIComponent(l.nombre + ', Pucallpa')}`}
-                target="_blank"
-                rel="noreferrer"
-                className="relative min-w-[220px] w-[220px] lg:min-w-[250px] lg:w-[250px] aspect-[4/5] rounded-2xl overflow-hidden snap-start shadow-[0_15px_15px_rgba(0,0,0,0.04)] group block"
+                onClick={() => setLugarAbierto(l)}
+                className="relative min-w-[220px] w-[220px] lg:min-w-[250px] lg:w-[250px] aspect-[4/5] rounded-2xl overflow-hidden snap-start shadow-[0_15px_15px_rgba(0,0,0,0.04)] group cursor-pointer active:scale-[0.98] transition-transform"
               >
                 <img referrerPolicy="no-referrer" src={l.img} alt={l.nombre} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                <span className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
-                  <span className="material-symbols-outlined text-white text-[15px]">open_in_new</span>
-                </span>
                 <div className="absolute inset-x-0 bottom-0 p-3">
                   <span className="font-label-md text-[9px] uppercase tracking-wider text-white/70">{l.tag}</span>
                   <h3 className="font-headline-sm text-white text-sm leading-tight mt-0.5">{l.nombre}</h3>
                 </div>
-              </a>
+              </div>
             ))}
           </div>
         </section>
@@ -366,6 +362,48 @@ export default function Eventos() {
                   Cerrar
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ficha ampliada del lugar */}
+      {lugarAbierto && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          onClick={() => setLugarAbierto(null)}
+        >
+          <div
+            className="bg-white w-full sm:max-w-[480px] sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative aspect-[4/3] bg-surface-container-low">
+              <img referrerPolicy="no-referrer" src={lugarAbierto.img} alt={lugarAbierto.nombre} className="w-full h-full object-cover" />
+              <button
+                onClick={() => setLugarAbierto(null)}
+                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center"
+                aria-label="Cerrar"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
+            <div className="p-5 flex flex-col gap-3">
+              <span className="w-fit bg-primary-fixed text-primary text-[10px] font-label-md px-2 py-0.5 rounded-full uppercase tracking-wider">{lugarAbierto.tag}</span>
+              <h3 className="font-headline-lg text-xl text-on-surface leading-tight">{lugarAbierto.nombre}</h3>
+              {lugarAbierto.descripcion && (
+                <p className="text-on-surface font-body-md text-sm leading-relaxed border-t border-surface-container pt-3">
+                  {lugarAbierto.descripcion}
+                </p>
+              )}
+              <a
+                href={`https://www.google.com/maps/search/${encodeURIComponent(lugarAbierto.nombre + ', Pucallpa')}`}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1 flex items-center justify-center gap-1.5 bg-primary text-white font-label-md text-sm px-5 py-2.5 rounded-full active:scale-95 transition-transform"
+              >
+                <span className="material-symbols-outlined text-[16px]">location_on</span>
+                Ver en Google Maps
+              </a>
             </div>
           </div>
         </div>
