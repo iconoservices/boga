@@ -894,3 +894,39 @@ ON public.events FOR UPDATE USING (public.is_superadmin());
 
 CREATE POLICY "events: superadmin borra"
 ON public.events FOR DELETE USING (public.is_superadmin());
+
+-- `places`: "¿A dónde ir en Pucallpa?" en /eventos — lugares para visitar sin
+-- fecha fija (turismo local), separado de `events` porque no tiene ni
+-- categoria ni precio ni organizador, es una ficha mucho mas simple.
+CREATE TABLE IF NOT EXISTS public.places (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at  TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  nombre      TEXT NOT NULL,
+  tag         TEXT,                              -- "Naturaleza · medio día"
+  img         TEXT,
+  ciudad      TEXT NOT NULL DEFAULT 'pucallpa',
+  orden       INT  NOT NULL DEFAULT 0,
+  status      TEXT NOT NULL DEFAULT 'activo'      -- activo | oculto
+);
+CREATE INDEX IF NOT EXISTS places_status_idx ON public.places (status);
+CREATE INDEX IF NOT EXISTS places_ciudad_idx ON public.places (ciudad);
+
+ALTER TABLE public.places ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "places: lectura publica de activos" ON public.places;
+DROP POLICY IF EXISTS "places: superadmin inserta"          ON public.places;
+DROP POLICY IF EXISTS "places: superadmin edita"             ON public.places;
+DROP POLICY IF EXISTS "places: superadmin borra"             ON public.places;
+
+CREATE POLICY "places: lectura publica de activos"
+ON public.places FOR SELECT
+USING (status = 'activo' OR public.is_superadmin());
+
+CREATE POLICY "places: superadmin inserta"
+ON public.places FOR INSERT WITH CHECK (public.is_superadmin());
+
+CREATE POLICY "places: superadmin edita"
+ON public.places FOR UPDATE USING (public.is_superadmin());
+
+CREATE POLICY "places: superadmin borra"
+ON public.places FOR DELETE USING (public.is_superadmin());

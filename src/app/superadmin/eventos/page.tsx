@@ -4,6 +4,7 @@
 // useEsSuperadmin() como /superadmin/alquileres.
 //
 //   - events (la agenda de /eventos): crear, editar, ocultar, borrar.
+//   - places ("¿A dónde ir en Pucallpa?", misma página pública): idem.
 
 import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -30,6 +31,13 @@ const FICHA_VACIA = {
 };
 type Ficha = typeof FICHA_VACIA;
 
+type PlaceRow = Record<string, any>;
+const FICHA_LUGAR_VACIA = {
+  id: null as string | null,
+  nombre: '', tag: '', img: '', ciudad: 'pucallpa', orden: 0, status: 'activo',
+};
+type FichaLugar = typeof FICHA_LUGAR_VACIA;
+
 export default function EventosAdmin() {
   const { esSuperadmin, cargando } = useEsSuperadmin();
   const router = useRouter();
@@ -39,6 +47,12 @@ export default function EventosAdmin() {
   const [ficha, setFicha] = useState<Ficha>(FICHA_VACIA);
   const [guardando, setGuardando] = useState(false);
   const [msg, setMsg] = useState('');
+
+  const [lugares, setLugares] = useState<PlaceRow[]>([]);
+  const [cargandoLugares, setCargandoLugares] = useState(true);
+  const [fichaLugar, setFichaLugar] = useState<FichaLugar>(FICHA_LUGAR_VACIA);
+  const [guardandoLugar, setGuardandoLugar] = useState(false);
+  const [msgLugar, setMsgLugar] = useState('');
 
   const recargar = useCallback(async () => {
     setCargandoDatos(true);
@@ -51,11 +65,22 @@ export default function EventosAdmin() {
     setCargandoDatos(false);
   }, []);
 
+  const recargarLugares = useCallback(async () => {
+    setCargandoLugares(true);
+    const { data } = await supabase
+      .from('places')
+      .select('*')
+      .order('orden', { ascending: true })
+      .order('created_at', { ascending: true });
+    setLugares(data ?? []);
+    setCargandoLugares(false);
+  }, []);
+
   useEffect(() => {
     if (!cargando && !esSuperadmin) router.replace('/login?redirect=/superadmin/eventos');
   }, [cargando, esSuperadmin, router]);
 
-  useEffect(() => { if (esSuperadmin) recargar(); }, [esSuperadmin, recargar]);
+  useEffect(() => { if (esSuperadmin) { recargar(); recargarLugares(); } }, [esSuperadmin, recargar, recargarLugares]);
 
   if (cargando) return <div className="p-10 text-center text-secondary font-body-md">Verificando acceso…</div>;
   if (!esSuperadmin) return null;
@@ -103,6 +128,47 @@ export default function EventosAdmin() {
     if (!confirm(`¿Borrar el evento "${e.titulo}"? No se puede deshacer.`)) return;
     await supabase.from('events').delete().eq('id', e.id);
     recargar();
+  };
+
+  const editarLugar = (l: PlaceRow) => {
+    setFichaLugar({
+      id: l.id, nombre: l.nombre ?? '', tag: l.tag ?? '', img: l.img ?? '',
+      ciudad: l.ciudad ?? 'pucallpa', orden: l.orden ?? 0, status: l.status ?? 'activo',
+    });
+    setMsgLugar('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const guardarLugar = async (ev: React.FormEvent) => {
+    ev.preventDefault();
+    setGuardandoLugar(true);
+    setMsgLugar('');
+
+    const payload = {
+      nombre: fichaLugar.nombre, tag: fichaLugar.tag || null, img: fichaLugar.img || null,
+      ciudad: fichaLugar.ciudad, orden: Number(fichaLugar.orden) || 0, status: fichaLugar.status,
+    };
+
+    const res = fichaLugar.id
+      ? await supabase.from('places').update(payload).eq('id', fichaLugar.id)
+      : await supabase.from('places').insert(payload);
+
+    setGuardandoLugar(false);
+    if (res.error) { setMsgLugar(`Error: ${res.error.message}`); return; }
+    setFichaLugar(FICHA_LUGAR_VACIA);
+    setMsgLugar(fichaLugar.id ? 'Lugar actualizado.' : 'Lugar agregado.');
+    recargarLugares();
+  };
+
+  const toggleStatusLugar = async (l: PlaceRow) => {
+    await supabase.from('places').update({ status: l.status === 'activo' ? 'oculto' : 'activo' }).eq('id', l.id);
+    recargarLugares();
+  };
+
+  const borrarLugar = async (l: PlaceRow) => {
+    if (!confirm(`¿Borrar el lugar "${l.nombre}"? No se puede deshacer.`)) return;
+    await supabase.from('places').delete().eq('id', l.id);
+    recargarLugares();
   };
 
   const campo = 'w-full bg-surface-container-low border border-surface-container-highest rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:border-primary';
@@ -199,6 +265,65 @@ export default function EventosAdmin() {
                     {e.status === 'activo' ? 'Ocultar' : 'Mostrar'}
                   </button>
                   <button onClick={() => borrar(e)} className="text-xs font-bold px-3 py-1.5 rounded-lg text-red-600">Borrar</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Formulario lugar */}
+        <section>
+          <h2 className="font-headline-md text-lg text-on-surface mb-3">
+            {fichaLugar.id ? 'Editar lugar' : 'Agregar lugar'} — "¿A dónde ir en Pucallpa?"
+          </h2>
+          <form onSubmit={guardarLugar} className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-surface-container-lowest border border-surface-container-highest rounded-2xl p-5">
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Nombre
+              <input required value={fichaLugar.nombre} onChange={(e) => setFichaLugar({ ...fichaLugar, nombre: e.target.value })} className={campo} placeholder="Laguna de Yarinacocha" /></label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Tag (categoría · duración)
+              <input value={fichaLugar.tag} onChange={(e) => setFichaLugar({ ...fichaLugar, tag: e.target.value })} className={campo} placeholder="Naturaleza · medio día" /></label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Ciudad
+              <select value={fichaLugar.ciudad} onChange={(e) => setFichaLugar({ ...fichaLugar, ciudad: e.target.value })} className={campo}>
+                {CIUDADES.map((c) => <option key={c.slug} value={c.slug}>{c.nombre}</option>)}</select></label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Foto (URL)
+              <input value={fichaLugar.img} onChange={(e) => setFichaLugar({ ...fichaLugar, img: e.target.value })} className={campo} /></label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Orden (menor = primero)
+              <input type="number" value={fichaLugar.orden} onChange={(e) => setFichaLugar({ ...fichaLugar, orden: Number(e.target.value) })} className={campo} /></label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Estado
+              <select value={fichaLugar.status} onChange={(e) => setFichaLugar({ ...fichaLugar, status: e.target.value })} className={campo}>
+                <option value="activo">Activo (visible)</option>
+                <option value="oculto">Oculto</option></select></label>
+            <div className="sm:col-span-2 flex items-center gap-3 pt-1">
+              <button type="submit" disabled={guardandoLugar} className="bg-primary text-on-primary font-bold text-sm px-5 py-2.5 rounded-xl disabled:opacity-60">
+                {guardandoLugar ? 'Guardando…' : fichaLugar.id ? 'Guardar cambios' : 'Agregar lugar'}
+              </button>
+              {fichaLugar.id && (
+                <button type="button" onClick={() => { setFichaLugar(FICHA_LUGAR_VACIA); setMsgLugar(''); }} className="text-sm text-secondary underline">
+                  Cancelar edición
+                </button>
+              )}
+              {msgLugar && <span className="text-xs font-bold text-primary">{msgLugar}</span>}
+            </div>
+          </form>
+        </section>
+
+        {/* Lista de lugares */}
+        <section>
+          <h2 className="font-headline-md text-lg text-on-surface mb-3">Lugares ({lugares.length})</h2>
+          {cargandoLugares ? <p className="text-secondary text-sm">Cargando…</p> :
+            lugares.length === 0 ? <p className="text-secondary text-sm">Todavía no hay lugares en la tabla. La página usa el seed hardcodeado hasta que agregues al menos uno.</p> : (
+            <div className="flex flex-col gap-2">
+              {lugares.map((l) => (
+                <div key={l.id} className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-3 flex flex-wrap items-center gap-3">
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${l.status === 'activo' ? 'bg-primary' : 'bg-surface-container-highest'}`} />
+                  <div className="flex-1 min-w-[180px]">
+                    <p className="font-bold text-sm text-on-surface">{l.nombre} <span className="text-secondary font-normal">· {l.ciudad}</span></p>
+                    <p className="text-xs text-secondary">{l.tag}</p>
+                  </div>
+                  <button onClick={() => editarLugar(l)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest text-on-surface">Editar</button>
+                  <button onClick={() => toggleStatusLugar(l)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest text-secondary">
+                    {l.status === 'activo' ? 'Ocultar' : 'Mostrar'}
+                  </button>
+                  <button onClick={() => borrarLugar(l)} className="text-xs font-bold px-3 py-1.5 rounded-lg text-red-600">Borrar</button>
                 </div>
               ))}
             </div>

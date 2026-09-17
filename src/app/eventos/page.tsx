@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
 import { fetchEventos } from '@/lib/eventos';
+import { fetchLugares } from '@/lib/lugares';
 
 // Eventos = agenda + descubrimiento local de Pucallpa, estilo plataforma de
 // tickets (Joinnus): carrusel destacado, categorías, "a dónde ir" y agenda.
@@ -49,7 +50,7 @@ const EVENTOS_SEED: Evento[] = [
 ];
 
 // "A dónde ir" — lugares para visitar (turismo local, no eventos con fecha).
-const LUGARES = [
+const LUGARES_SEED = [
   { id: 'l1', nombre: 'Laguna de Yarinacocha',          tag: 'Naturaleza · medio día', img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=700&q=80' },
   { id: 'l2', nombre: 'Parque Natural de Pucallpa',      tag: 'Familia · 2–3 h',        img: 'https://images.unsplash.com/photo-1500673922987-e212871fec22?w=700&q=80' },
   { id: 'l3', nombre: 'Jardín Botánico y Serpentario',   tag: 'Naturaleza · 2 h',       img: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=700&q=80' },
@@ -70,10 +71,14 @@ export default function Eventos() {
   const [cat, setCat] = useState<Cat | null>(null);
   const [slide, setSlide] = useState(0);
   const [eventos, setEventos] = useState<Evento[]>(EVENTOS_SEED);
+  const [lugares, setLugares] = useState(LUGARES_SEED);
 
   useEffect(() => {
     fetchEventos().then((rows) => {
       if (rows.length > 0) setEventos(rows);
+    });
+    fetchLugares().then((rows) => {
+      if (rows.length > 0) setLugares(rows);
     });
   }, []);
 
@@ -207,7 +212,7 @@ export default function Eventos() {
             </div>
           </div>
           <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
-            {LUGARES.map((l) => (
+            {lugares.map((l) => (
               <div key={l.id} className="relative min-w-[220px] w-[220px] lg:min-w-[250px] lg:w-[250px] aspect-[4/5] rounded-2xl overflow-hidden snap-start shadow-[0_15px_15px_rgba(0,0,0,0.04)] group">
                 <img src={l.img} alt={l.nombre} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
