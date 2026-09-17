@@ -79,6 +79,8 @@ export default function PlazaChatBubble() {
   const [inputText, setInputText] = useState('');
   const [authorName, setAuthorName] = useState('');
   const [hasNewBadge, setHasNewBadge] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Cargar mensajes y nombre guardados en localStorage
@@ -154,22 +156,48 @@ export default function PlazaChatBubble() {
       likes: 0,
     };
 
-    setMessages((prev) => {
-      const updated = [...prev, newMsg];
-      try {
-        const customOnly = updated.filter((m) => m.id.startsWith('usr-'));
-        localStorage.setItem('boga_plaza_messages', JSON.stringify(customOnly));
-      } catch {}
-      return updated;
-    });
-
+    setMessages((prev) => persistCustom([...prev, newMsg]));
     setInputText('');
+  };
+
+  // Guarda en localStorage solo los mensajes propios (id "usr-...") y
+  // devuelve la lista completa, para poder hacer setMessages(persistCustom(...)).
+  const persistCustom = (updated: ChatMessage[]) => {
+    try {
+      const customOnly = updated.filter((m) => m.id.startsWith('usr-'));
+      localStorage.setItem('boga_plaza_messages', JSON.stringify(customOnly));
+    } catch {}
+    return updated;
   };
 
   const handleLike = (id: string) => {
     setMessages((prev) =>
       prev.map((m) => (m.id === id ? { ...m, likes: m.likes + 1 } : m))
     );
+  };
+
+  const handleStartEdit = (msg: ChatMessage) => {
+    setEditingId(msg.id);
+    setEditingText(msg.text);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditingText('');
+  };
+
+  const handleSaveEdit = () => {
+    const body = editingText.trim();
+    if (!body || !editingId) { handleCancelEdit(); return; }
+    setMessages((prev) =>
+      persistCustom(prev.map((m) => (m.id === editingId ? { ...m, text: body } : m)))
+    );
+    handleCancelEdit();
+  };
+
+  const handleDeleteMessage = (id: string) => {
+    if (!confirm('¿Borrar este comentario?')) return;
+    setMessages((prev) => persistCustom(prev.filter((m) => m.id !== id)));
   };
 
   return (
@@ -179,7 +207,7 @@ export default function PlazaChatBubble() {
         <div
           className={`fixed z-40 transition-all duration-300 ${
             isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'
-          } bottom-20 right-4 sm:bottom-6 sm:right-6`}
+          } bottom-[calc(80px+env(safe-area-inset-bottom)+12px)] right-4 sm:bottom-6 sm:right-6`}
         >
         <button
           onClick={() => setIsOpen(true)}
@@ -211,19 +239,24 @@ export default function PlazaChatBubble() {
 
       {/* Ventana / Drawer de Chat */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-end justify-end pointer-events-none sm:p-6">
-          {/* Backdrop oscurecido para móvil */}
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-end sm:justify-end pointer-events-none sm:p-6">
+          {/* Backdrop oscurecido para móvil y escritorio */}
           <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-xs pointer-events-auto sm:hidden transition-opacity"
+            className="fixed inset-0 bg-black/60 pointer-events-auto transition-opacity"
             onClick={() => setIsOpen(false)}
           />
 
           <section
             aria-label="Plaza Boga comunidad"
-            className="pointer-events-auto w-full sm:w-[410px] h-[85vh] sm:h-[600px] max-h-[92vh] bg-surface-container-lowest dark:bg-inverse-surface border border-surface-container-high dark:border-white/10 rounded-t-[28px] sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-200"
+            className="relative z-10 pointer-events-auto w-full sm:w-[410px] h-[85vh] sm:h-[600px] max-h-[92vh] bg-white dark:bg-[#1c1b1f] border border-gray-200 dark:border-white/10 rounded-t-[28px] sm:rounded-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.3)] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-200"
           >
+            {/* Tirador móvil (handle bar) */}
+            <div className="sm:hidden flex justify-center pt-2.5 pb-1 bg-white dark:bg-[#1c1b1f]">
+              <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-neutral-700" />
+            </div>
+
             {/* Header del Chat */}
-            <div className="bg-surface-container-low dark:bg-black/20 border-b border-surface-container-high px-4 py-3 flex items-center justify-between shrink-0">
+            <div className="bg-white dark:bg-[#1c1b1f] border-b border-gray-200 dark:border-white/10 px-4 py-3 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold">
                   <span className="material-symbols-outlined text-[20px]">
@@ -232,12 +265,12 @@ export default function PlazaChatBubble() {
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <h3 className="font-bold text-sm text-on-surface">
+                    <h3 className="font-bold text-sm text-gray-900 dark:text-white">
                       Plaza Boga
                     </h3>
-                    <span className="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                   </div>
-                  <p className="text-[11px] text-secondary">
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400">
                     Charla & Comunidad Pucallpa
                   </p>
                 </div>
@@ -246,7 +279,7 @@ export default function PlazaChatBubble() {
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-1.5 text-secondary hover:text-on-surface hover:bg-surface-container-high rounded-full transition-colors"
+                  className="p-1.5 text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-full transition-colors"
                   title="Cerrar chat"
                 >
                   <span className="material-symbols-outlined text-[20px]">
@@ -257,17 +290,17 @@ export default function PlazaChatBubble() {
             </div>
 
             {/* Canales / Pestañas de filtros */}
-            <div className="px-3 py-2 bg-surface border-b border-surface-container-high/60 flex items-center gap-1.5 overflow-x-auto hide-scrollbar shrink-0">
+            <div className="px-3 py-2 bg-gray-50 dark:bg-[#252429] border-b border-gray-200 dark:border-white/10 flex items-center gap-1.5 overflow-x-auto hide-scrollbar shrink-0" style={{ scrollbarWidth: 'none' }}>
               {CHANNELS.map((ch) => {
                 const active = activeChannel === ch.id;
                 return (
                   <button
                     key={ch.id}
                     onClick={() => setActiveChannel(ch.id)}
-                    className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1 ${
+                    className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-all flex items-center gap-1 ${
                       active
                         ? 'bg-primary text-white shadow-xs font-semibold'
-                        : 'bg-surface-container hover:bg-surface-container-high text-secondary'
+                        : 'bg-white dark:bg-neutral-800 hover:bg-gray-200 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-neutral-700'
                     }`}
                   >
                     <span>{ch.label}</span>
@@ -277,9 +310,9 @@ export default function PlazaChatBubble() {
             </div>
 
             {/* Lista de Mensajes */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3.5 text-sm">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3.5 text-sm bg-white dark:bg-[#1c1b1f]">
               {filteredMessages.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center p-6 text-secondary">
+                <div className="h-full flex flex-col items-center justify-center text-center p-6 text-gray-500">
                   <span className="material-symbols-outlined text-4xl mb-2 opacity-40">
                     chat_bubble_outline
                   </span>
@@ -298,45 +331,89 @@ export default function PlazaChatBubble() {
                   >
                     {/* Avatar */}
                     <div
-                      className={`w-7 h-7 rounded-full text-white font-bold text-[11px] flex items-center justify-center shrink-0 ${msg.avatarColor}`}
+                      className={`w-7 h-7 rounded-full text-white font-bold text-[11px] flex items-center justify-center shrink-0 shadow-xs ${msg.avatarColor}`}
                     >
                       {msg.author.charAt(0).toUpperCase()}
                     </div>
 
                     {/* Contenido */}
-                    <div className="flex-1 bg-surface-container-low dark:bg-white/5 rounded-2xl p-2.5 rounded-tl-xs border border-surface-container-high/60">
+                    <div className="flex-1 bg-gray-50 dark:bg-neutral-800/80 rounded-2xl p-2.5 rounded-tl-xs border border-gray-200 dark:border-neutral-700">
                       <div className="flex items-center justify-between gap-1 mb-0.5">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-bold text-xs text-on-surface">
+                          <span className="font-bold text-xs text-gray-900 dark:text-white">
                             {msg.author}
                           </span>
                           {msg.role && (
-                            <span className="text-[9px] px-1.5 py-0.2 rounded-sm bg-surface-container-high font-medium text-secondary">
+                            <span className="text-[9px] px-1.5 py-0.2 rounded-sm bg-gray-200 dark:bg-neutral-700 font-medium text-gray-700 dark:text-gray-300">
                               {msg.role}
                             </span>
                           )}
-                          <span className="text-[10px] text-secondary font-light">
+                          <span className="text-[10px] text-gray-500 font-light">
                             • #{msg.channel}
                           </span>
                         </div>
-                        <span className="text-[10px] text-secondary">
+                        <span className="text-[10px] text-gray-500">
                           {msg.time}
                         </span>
                       </div>
 
-                      <p className="text-xs text-on-surface leading-relaxed whitespace-pre-wrap">
-                        {msg.text}
-                      </p>
+                      {editingId === msg.id ? (
+                        <div className="flex flex-col gap-1.5 mt-1">
+                          <textarea
+                            value={editingText}
+                            onChange={(e) => setEditingText(e.target.value)}
+                            rows={2}
+                            autoFocus
+                            className="w-full bg-white dark:bg-neutral-900 border border-primary rounded-lg px-2 py-1.5 text-xs text-gray-900 dark:text-white outline-none resize-none"
+                          />
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={handleSaveEdit}
+                              className="text-[11px] font-bold text-primary hover:underline"
+                            >
+                              Guardar
+                            </button>
+                            <button
+                              onClick={handleCancelEdit}
+                              className="text-[11px] text-gray-500 hover:underline"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">
+                          {msg.text}
+                        </p>
+                      )}
 
-                      {/* Reacción */}
+                      {/* Reacción + Editar/Borrar (solo en mensajes propios) */}
                       <div className="mt-1.5 flex items-center gap-2">
                         <button
                           onClick={() => handleLike(msg.id)}
-                          className="text-[11px] text-secondary hover:text-primary flex items-center gap-1 transition-colors active:scale-95"
+                          className="text-[11px] text-gray-500 hover:text-primary flex items-center gap-1 transition-colors active:scale-95"
                         >
                           <span>❤️</span>
                           <span>{msg.likes > 0 ? msg.likes : ''}</span>
                         </button>
+                        {msg.id.startsWith('usr-') && editingId !== msg.id && (
+                          <>
+                            <button
+                              onClick={() => handleStartEdit(msg)}
+                              className="text-[11px] text-gray-500 hover:text-primary flex items-center gap-1 transition-colors active:scale-95"
+                            >
+                              <span className="material-symbols-outlined text-[13px]">edit</span>
+                              Editar
+                            </button>
+                            <button
+                              onClick={() => handleDeleteMessage(msg.id)}
+                              className="text-[11px] text-gray-500 hover:text-red-600 flex items-center gap-1 transition-colors active:scale-95"
+                            >
+                              <span className="material-symbols-outlined text-[13px]">delete</span>
+                              Borrar
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -346,12 +423,12 @@ export default function PlazaChatBubble() {
             </div>
 
             {/* Prompts Rápidos */}
-            <div className="px-3 pt-2 pb-1 flex items-center gap-1.5 overflow-x-auto hide-scrollbar shrink-0 bg-surface border-t border-surface-container-high/50">
+            <div className="px-3 pt-2 pb-1.5 flex items-center gap-1.5 overflow-x-auto hide-scrollbar shrink-0 bg-gray-50 dark:bg-[#252429] border-t border-gray-200 dark:border-white/10" style={{ scrollbarWidth: 'none' }}>
               {QUICK_PROMPTS.map((prompt, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleSendMessage(prompt)}
-                  className="text-[11px] bg-surface-container-low hover:bg-surface-container text-secondary hover:text-on-surface px-2.5 py-1 rounded-full whitespace-nowrap transition-colors border border-surface-container-high"
+                  className="text-[11px] bg-white dark:bg-neutral-800 hover:bg-gray-100 text-gray-700 dark:text-gray-300 px-2.5 py-1 rounded-full whitespace-nowrap transition-colors border border-gray-200 dark:border-neutral-700"
                 >
                   {prompt}
                 </button>
@@ -359,16 +436,20 @@ export default function PlazaChatBubble() {
             </div>
 
             {/* Input Footer */}
-            <div className="p-3 bg-surface-container-lowest dark:bg-inverse-surface border-t border-surface-container-high shrink-0">
+            <div className="p-3 bg-white dark:bg-[#1c1b1f] border-t border-gray-200 dark:border-white/10 shrink-0">
+              {/* Canal donde se publica */}
+              <p className="text-[10px] text-gray-500 px-1 mb-1.5">
+                Vas a publicar en <span className="font-bold text-primary">#{activeChannel === 'todos' ? 'general' : activeChannel}</span> — tocá otro canal arriba para cambiarlo.
+              </p>
               {/* Alias / Nombre de usuario */}
-              <div className="flex items-center justify-between mb-2 text-[11px] text-secondary px-1">
+              <div className="flex items-center justify-between mb-2 text-[11px] text-gray-500 px-1">
                 <span>Tu nombre / alias:</span>
                 <input
                   type="text"
                   placeholder="Ej. Juan P. o Anónimo"
                   value={authorName}
                   onChange={(e) => setAuthorName(e.target.value)}
-                  className="bg-transparent border-b border-surface-container-high focus:border-primary outline-none px-1 text-on-surface text-right font-medium max-w-[150px]"
+                  className="bg-transparent border-b border-gray-300 dark:border-neutral-700 focus:border-primary outline-none px-1 text-gray-900 dark:text-white text-right font-medium max-w-[150px]"
                 />
               </div>
 
@@ -384,7 +465,7 @@ export default function PlazaChatBubble() {
                   placeholder="Escribe un comentario o consulta..."
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
-                  className="flex-1 bg-surface-container px-3.5 py-2.5 rounded-xl text-xs text-on-surface placeholder:text-secondary focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="flex-1 bg-gray-100 dark:bg-neutral-800 px-3.5 py-2.5 rounded-xl text-xs text-gray-900 dark:text-white placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-primary border border-gray-200 dark:border-neutral-700"
                 />
                 <button
                   type="submit"
