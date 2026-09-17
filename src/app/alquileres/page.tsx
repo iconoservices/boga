@@ -91,7 +91,7 @@ export default function Alquileres() {
           {lista.map((a) => (
             <div key={a.id} className="bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col">
               <div className="relative h-40 overflow-hidden bg-surface-container-low">
-                <img src={a.img} alt={a.titulo} className="w-full h-full object-cover" />
+                <img referrerPolicy="no-referrer" src={a.img} alt={a.titulo} className="w-full h-full object-cover" />
                 <span className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-label-md px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
                   <span className="material-symbols-outlined text-[12px]">{ICONO[a.tipo]}</span>{a.tipo}
                 </span>
