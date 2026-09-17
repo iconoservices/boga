@@ -10,7 +10,7 @@
 /** Todas las tiendas + productos + banners del marketplace (para /market y /explore). */
 export async function fetchCatalogo(): Promise<{ stores: any[]; products: any[]; banners: any[]; bannerStyle: 'center' | 'bottom' }> {
   try {
-    const res = await fetch('/api/catalog');
+    const res = await fetch('/api/catalog', { cache: 'no-store' });
     if (!res.ok) return { stores: [], products: [], banners: [], bannerStyle: 'center' };
     const data = await res.json();
     return { stores: data.stores ?? [], products: data.products ?? [], banners: data.banners ?? [], bannerStyle: data.bannerStyle || 'center' };
@@ -22,7 +22,7 @@ export async function fetchCatalogo(): Promise<{ stores: any[]; products: any[];
 /** Banners activos de un carrusel puntual (ej. 'home' para el Inicio "/") + su estilo. */
 export async function fetchBanners(page: string): Promise<{ banners: any[]; style: 'center' | 'bottom' }> {
   try {
-    const res = await fetch(`/api/catalog?page=${encodeURIComponent(page)}`);
+    const res = await fetch(`/api/catalog?page=${encodeURIComponent(page)}`, { cache: 'no-store' });
     if (!res.ok) return { banners: [], style: 'bottom' };
     const data = await res.json();
     return { banners: data.banners ?? [], style: data.bannerStyle || 'bottom' };
@@ -34,7 +34,7 @@ export async function fetchBanners(page: string): Promise<{ banners: any[]; styl
 /** Productos de una sola tienda (para las plantillas de storefront). */
 export async function fetchProductosDeTienda(slug: string): Promise<any[]> {
   try {
-    const res = await fetch(`/api/catalog/${encodeURIComponent(slug)}`);
+    const res = await fetch(`/api/catalog/${encodeURIComponent(slug)}`, { cache: 'no-store' });
     if (!res.ok) return [];
     const data = await res.json();
     return data.products ?? [];

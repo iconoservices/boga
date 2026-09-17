@@ -37,7 +37,7 @@ function fromRow(r: Record<string, unknown>): Evento {
 
 export async function fetchEventos(): Promise<Evento[]> {
   try {
-    const res = await fetch('/api/eventos');
+    const res = await fetch('/api/eventos', { cache: 'no-store' });
     if (!res.ok) return [];
     const { events } = await res.json();
     return Array.isArray(events) ? events.map(fromRow) : [];

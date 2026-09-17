@@ -45,7 +45,7 @@ function fromRow(r: Record<string, unknown>): Chofer {
 
 export async function fetchChoferes(): Promise<Chofer[]> {
   try {
-    const res = await fetch('/api/drivers');
+    const res = await fetch('/api/drivers', { cache: 'no-store' });
     if (!res.ok) return [];
     const { drivers } = await res.json();
     return Array.isArray(drivers) ? drivers.map(fromRow) : [];

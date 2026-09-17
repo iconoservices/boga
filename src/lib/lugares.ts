@@ -21,7 +21,7 @@ function fromRow(r: Record<string, unknown>): Lugar {
 
 export async function fetchLugares(): Promise<Lugar[]> {
   try {
-    const res = await fetch('/api/lugares');
+    const res = await fetch('/api/lugares', { cache: 'no-store' });
     if (!res.ok) return [];
     const { places } = await res.json();
     return Array.isArray(places) ? places.map(fromRow) : [];
