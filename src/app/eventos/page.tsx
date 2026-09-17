@@ -179,14 +179,23 @@ export default function Eventos() {
           </div>
           <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
             {lugares.map((l) => (
-              <div key={l.id} className="relative min-w-[220px] w-[220px] lg:min-w-[250px] lg:w-[250px] aspect-[4/5] rounded-2xl overflow-hidden snap-start shadow-[0_15px_15px_rgba(0,0,0,0.04)] group">
+              <a
+                key={l.id}
+                href={`https://www.google.com/maps/search/${encodeURIComponent(l.nombre + ', Pucallpa')}`}
+                target="_blank"
+                rel="noreferrer"
+                className="relative min-w-[220px] w-[220px] lg:min-w-[250px] lg:w-[250px] aspect-[4/5] rounded-2xl overflow-hidden snap-start shadow-[0_15px_15px_rgba(0,0,0,0.04)] group block"
+              >
                 <img referrerPolicy="no-referrer" src={l.img} alt={l.nombre} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <span className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                  <span className="material-symbols-outlined text-white text-[15px]">open_in_new</span>
+                </span>
                 <div className="absolute inset-x-0 bottom-0 p-3">
                   <span className="font-label-md text-[9px] uppercase tracking-wider text-white/70">{l.tag}</span>
                   <h3 className="font-headline-sm text-white text-sm leading-tight mt-0.5">{l.nombre}</h3>
                 </div>
-              </div>
+              </a>
             ))}
           </div>
         </section>
