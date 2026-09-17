@@ -51,7 +51,16 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
-  turbopack: {}
+  turbopack: {},
+  async redirects() {
+    return [
+      {
+        source: '/alquileres',
+        destination: '/inmuebles',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default withPWA(nextConfig);

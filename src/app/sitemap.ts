@@ -20,7 +20,8 @@ const ROUTES: { path: string; changeFrequency: MetadataRoute.Sitemap[number]['ch
   { path: '/pandero',       changeFrequency: 'weekly',  priority: 0.6 },
   { path: '/servicios',     changeFrequency: 'weekly',  priority: 0.7 },
   { path: '/taxi-seguro',   changeFrequency: 'weekly',  priority: 0.7 },
-  { path: '/alquileres',    changeFrequency: 'daily',   priority: 0.8 },
+  { path: '/inmuebles',    changeFrequency: 'daily',   priority: 0.8 },
+  { path: '/viajes',       changeFrequency: 'weekly',  priority: 0.7 },
   { path: '/promotions',    changeFrequency: 'daily',   priority: 0.6 },
   { path: '/negocios',      changeFrequency: 'monthly', priority: 0.6 },
   // /vende-con-boga redirige a /negocios#registro — no va en el sitemap.

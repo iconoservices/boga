@@ -9,6 +9,7 @@ export type Aviso = {
   id: string;
   tipo: TipoAviso;
   titulo: string;
+  descripcion?: string;
   zona: string;
   precio: number;
   extras: string[];
@@ -25,6 +26,7 @@ function fromRow(r: Record<string, unknown>): Aviso {
     id: String(r.id),
     tipo: ((r.tipo as string) ?? 'Habitación') as TipoAviso,
     titulo: (r.titulo as string) ?? '',
+    descripcion: (r.descripcion as string) ?? '',
     zona: (r.zona as string) ?? '',
     precio: Number(r.precio) || 0,
     extras: Array.isArray(r.extras) ? (r.extras as string[]) : [],
@@ -38,7 +40,7 @@ function fromRow(r: Record<string, unknown>): Aviso {
 
 export async function fetchAlquileres(): Promise<Aviso[]> {
   try {
-    const res = await fetch('/api/alquileres', { cache: 'no-store' });
+    const res = await fetch('/api/inmuebles', { cache: 'no-store' });
     if (!res.ok) return [];
     const { listings } = await res.json();
     return Array.isArray(listings) ? listings.map(fromRow) : [];

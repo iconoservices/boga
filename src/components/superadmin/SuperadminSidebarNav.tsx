@@ -23,7 +23,7 @@ const SUBRUTAS = [
   { href: '/superadmin/revista',        icon: 'menu_book',    label: 'Revista' },
   { href: '/superadmin/notas',          icon: 'sticky_note_2',label: 'Notas internas' },
   { href: '/superadmin/choferes',       icon: 'local_taxi',   label: 'Choferes' },
-  { href: '/superadmin/alquileres',     icon: 'bed',          label: 'Alquileres' },
+  { href: '/superadmin/alquileres',     icon: 'real_estate_agent', label: 'Inmuebles' },
   { href: '/superadmin/eventos',        icon: 'celebration',  label: 'Eventos' },
   { href: '/superadmin/modulos',        icon: 'extension',    label: 'Módulos y Estrategia' },
   { href: '/superadmin/mapa',           icon: 'account_tree', label: 'Mapa de Apps' },

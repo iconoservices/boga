@@ -18,7 +18,8 @@ export const metadata: Metadata = {
   applicationName: 'Boga',
   keywords: [
     'Pucallpa', 'Ucayali', 'delivery Pucallpa', 'restaurantes Pucallpa',
-    'qué hacer en Pucallpa', 'eventos Pucallpa', 'alquileres Pucallpa',
+    'qué hacer en Pucallpa', 'eventos Pucallpa', 'inmuebles Pucallpa',
+    'viajes Pucallpa', 'rápidos Pucallpa', 'transporte fluvial Ucayali',
     'mototaxi seguro', 'trabajo Pucallpa', 'marketplace Pucallpa', 'Boga',
   ],
   // OJO: no poner `alternates.canonical` acá — se hereda a TODAS las rutas y
@@ -93,7 +94,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `(function(){try{
               var p=window.location.pathname;
-              var routes=['/market','/pension','/servicios','/taxi-seguro','/alquileres','/eventos','/sorteos','/pandero','/revista','/guia'];
+              var routes=['/market','/pension','/servicios','/taxi-seguro','/inmuebles','/viajes','/eventos','/sorteos','/pandero','/revista','/guia'];
               var show=p==='/'||routes.some(function(r){return p.indexOf(r)===0;});
               if(show){document.documentElement.dataset.sidebar=localStorage.getItem('boga_sidebar_open')==='1'?'open':'rail';}
             }catch(e){}})();`,

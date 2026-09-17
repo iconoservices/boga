@@ -814,6 +814,7 @@ CREATE TABLE IF NOT EXISTS public.rental_listings (
   created_at          TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
   tipo                TEXT NOT NULL DEFAULT 'Habitación', -- Habitación | Mini-dpto | Casa | Pensión
   titulo              TEXT NOT NULL,
+  descripcion         TEXT,                                -- texto largo para la ficha ampliada
   zona                TEXT,
   precio              NUMERIC(10,2) NOT NULL DEFAULT 0,   -- soles / mes
   extras              JSONB NOT NULL DEFAULT '[]'::jsonb, -- ["Baño propio", "Wifi", ...]
@@ -828,6 +829,9 @@ CREATE TABLE IF NOT EXISTS public.rental_listings (
 );
 CREATE INDEX IF NOT EXISTS rental_listings_status_idx ON public.rental_listings (status);
 CREATE INDEX IF NOT EXISTS rental_listings_ciudad_idx ON public.rental_listings (ciudad);
+
+-- Migracion: `rental_listings` ya existia sin esta columna cuando se agrego la ficha ampliada.
+ALTER TABLE public.rental_listings ADD COLUMN IF NOT EXISTS descripcion TEXT;
 
 ALTER TABLE public.rental_listings ENABLE ROW LEVEL SECURITY;
 

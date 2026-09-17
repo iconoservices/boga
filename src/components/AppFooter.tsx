@@ -16,7 +16,8 @@ export default function AppFooter() {
     pathname.startsWith('/promotions') ||
     pathname.startsWith('/servicios') ||
     pathname.startsWith('/taxi-seguro') ||
-    pathname.startsWith('/alquileres') ||
+    pathname.startsWith('/inmuebles') ||
+    pathname.startsWith('/viajes') ||
     pathname.startsWith('/eventos') ||
     pathname.startsWith('/sorteos') ||
     pathname.startsWith('/revista');
@@ -29,7 +30,7 @@ export default function AppFooter() {
         <div className="flex flex-col gap-4">
           <span className="font-headline-sm text-headline-sm text-primary font-bold">Boga</span>
           <p className="font-body-md text-body-md text-secondary max-w-xs leading-normal">
-            El sistema operativo digital de Pucallpa: comercio, movilidad segura, trabajo, alquileres y estilo de vida en un solo lugar.
+            El sistema operativo digital de Pucallpa: comercio, movilidad segura, trabajo, inmuebles, viajes y estilo de vida en un solo lugar.
           </p>
           <div className="flex gap-4">
             <span className="material-symbols-outlined text-secondary cursor-pointer hover:text-primary transition-colors">facebook</span>

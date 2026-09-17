@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
           id: '/',
           name: 'Boga · Todo Pucallpa en una app',
           short_name: 'Boga',
-          description: 'El sistema operativo digital de Pucallpa: comercio, movilidad, trabajo, alquileres y eventos.',
+          description: 'El sistema operativo digital de Pucallpa: comercio, movilidad, trabajo, inmuebles, viajes y eventos.',
           start_url: '/',
           scope: '/',
           theme_color: '#B8130E',

@@ -20,7 +20,7 @@ type ListingRow = Record<string, any>;
 
 const FICHA_VACIA = {
   id: null as string | null,
-  tipo: 'Habitación', titulo: '', zona: '', precio: '',
+  tipo: 'Habitación', titulo: '', descripcion: '', zona: '', precio: '',
   extras: '["Baño propio", "Wifi"]',
   incluye_servicios: false, incluye_comidas: false, verificado: false,
   wsp: '', img: '', ciudad: 'pucallpa', orden: 0, status: 'activo',
@@ -59,7 +59,7 @@ export default function AlquileresAdmin() {
 
   const editar = (a: ListingRow) => {
     setFicha({
-      id: a.id, tipo: a.tipo ?? 'Habitación', titulo: a.titulo ?? '', zona: a.zona ?? '',
+      id: a.id, tipo: a.tipo ?? 'Habitación', titulo: a.titulo ?? '', descripcion: a.descripcion ?? '', zona: a.zona ?? '',
       precio: a.precio ?? '',
       extras: JSON.stringify(a.extras ?? [], null, 2),
       incluye_servicios: Boolean(a.incluye_servicios), incluye_comidas: Boolean(a.incluye_comidas),
@@ -79,7 +79,7 @@ export default function AlquileresAdmin() {
     catch { setGuardando(false); setMsg('El campo "extras" no es JSON válido.'); return; }
 
     const payload = {
-      tipo: ficha.tipo, titulo: ficha.titulo, zona: ficha.zona || null,
+      tipo: ficha.tipo, titulo: ficha.titulo, descripcion: ficha.descripcion || null, zona: ficha.zona || null,
       precio: Number(ficha.precio) || 0, extras,
       incluye_servicios: ficha.incluye_servicios, incluye_comidas: ficha.incluye_comidas,
       verificado: ficha.verificado, wsp: ficha.wsp || null, img: ficha.img || null,
@@ -125,7 +125,7 @@ export default function AlquileresAdmin() {
             <span className="text-secondary">/</span>
             <span className="font-headline-sm text-headline-sm text-on-surface">Alquileres · Dónde quedarte</span>
           </div>
-          <Link href="/alquileres" className="text-sm text-primary">Ver la página →</Link>
+          <Link href="/inmuebles" className="text-sm text-primary">Ver la página →</Link>
         </div>
       </header>
 
@@ -144,6 +144,8 @@ export default function AlquileresAdmin() {
                 {TIPOS.map((t) => <option key={t}>{t}</option>)}</select></label>
             <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Zona
               <input value={ficha.zona} onChange={(e) => setFicha({ ...ficha, zona: e.target.value })} className={campo} placeholder="Callería" /></label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Descripción (para la ficha ampliada)
+              <textarea value={ficha.descripcion} onChange={(e) => setFicha({ ...ficha, descripcion: e.target.value })} rows={4} className={campo} placeholder="Detalle del lugar: comodidades, reglas, cómo llegar…" /></label>
             <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Precio (S/ al mes)
               <input type="number" min="0" step="0.01" value={ficha.precio} onChange={(e) => setFicha({ ...ficha, precio: e.target.value })} className={campo} /></label>
             <label className="flex flex-col gap-1 text-xs font-bold text-secondary">WhatsApp (E.164 sin +)

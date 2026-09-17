@@ -76,7 +76,8 @@ const PORTALES = [
   { href: '/market',      label: 'Market',      icon: 'storefront',          sub: 'Te traemos pescado, carne y tienda', color: '#E8894A' },
   { href: '/servicios',   label: 'Chamba',      icon: 'construction',        sub: 'Te conseguimos técnico o trabajo',   color: '#3E9B5F' },
   { href: '/taxi-seguro', label: 'Taxi Seguro', icon: 'local_taxi',          sub: 'Te llevamos con chofer verificado',  color: '#E4655A' },
-  { href: '/alquileres',  label: 'Alquileres',  icon: 'bed',                 sub: 'Te encontramos dónde vivir',         color: '#8B7FD4' },
+  { href: '/inmuebles',   label: 'Inmuebles',   icon: 'real_estate_agent',   sub: 'Te encontramos dónde vivir o invertir', color: '#8B7FD4' },
+  { href: '/viajes',      label: 'Viajes',      icon: 'directions_boat',     sub: 'Te conectamos con rápidos y buses',  color: '#1B8EBF' },
   { href: '/eventos',     label: 'Eventos',     icon: 'celebration',         sub: 'Te armamos el finde en la ciudad',   color: '#EBB05C' },
   { href: '/sorteos',     label: 'La Suerte',   icon: 'confirmation_number', sub: 'Te hacemos ganar con tus compras',   color: '#2E9B76' },
   { href: '/revista',     label: 'Revista',     icon: 'menu_book',           sub: 'Te contamos la selva y sus historias', color: '#D97742' },
@@ -132,7 +133,7 @@ const COMER_LISTAS: ComerLista[] = [
 // manda al portal que la resuelve; la guía completa (clima, plata, etc.)
 // vive en /guia. Tarjetas compactas (ícono + texto), sin foto.
 const GUIA_PUCALLPA = [
-  { href: '/alquileres',  icon: 'bed',          titulo: 'Dónde quedarte', sub: 'Cuartos, hostales y minidepas — por día o por mes', color: '#8B7FD4', img: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&q=80' },
+  { href: '/inmuebles',   icon: 'real_estate_agent', titulo: 'Dónde quedarte', sub: 'Alquiler y venta de cuartos, casas y terrenos', color: '#8B7FD4', img: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&q=80' },
   { href: '/taxi-seguro', icon: 'local_taxi',   titulo: 'Cómo moverte',   sub: 'Mototaxi, auto o moto con chofer verificado',       color: '#E4655A', img: 'https://images.unsplash.com/photo-1558980664-10ea4e9b8f95?w=400&q=80' },
   { href: '/eventos',     icon: 'map',          titulo: 'Qué hacer',      sub: 'Yarinacocha, Boquerón, ferias y agenda cultural',   color: '#EBB05C', img: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80' },
   { href: '/market',      icon: 'ramen_dining', titulo: 'Dónde comer',    sub: 'Huariques, menús del día y cocina de la selva',     color: '#E8894A', img: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400&q=80' },
@@ -156,11 +157,18 @@ const SERVICIOS_PEEK = [
   { id: 'sv3', nombre: 'Karen Vela',    oficio: 'Fotografía de eventos',     zona: 'Centro',      img: 'https://images.unsplash.com/photo-1554048612-b6a482bc67e5?w=400&q=80' },
 ];
 
-// Peek: Alquileres.
-const ALQUILERES_PEEK = [
-  { id: 'al1', titulo: 'Habitación amoblada con baño propio',  zona: 'Callería',    precio: 'S/ 450', img: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&q=80' },
-  { id: 'al2', titulo: 'Mini-departamento para 1–2 personas',  zona: 'Yarinacocha', precio: 'S/ 800', img: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&q=80' },
-  { id: 'al3', titulo: 'Pensión familiar · cuarto + 3 comidas', zona: 'Centro',     precio: 'S/ 950', img: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=600&q=80' },
+// Peek: Inmuebles.
+const INMUEBLES_PEEK = [
+  { id: 'al1', titulo: 'Habitación amoblada con baño propio',  zona: 'Callería',    precio: 'S/ 450', tag: 'Alquiler', img: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&q=80' },
+  { id: 'al2', titulo: 'Mini-departamento para 1–2 personas',  zona: 'Yarinacocha', precio: 'S/ 800', tag: 'Alquiler', img: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&q=80' },
+  { id: 'al3', titulo: 'Terreno 200 m² con título de propiedad', zona: 'Campo Verde', precio: 'S/ 45,000', tag: 'Venta', img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&q=80' },
+];
+
+// Peek: Viajes.
+const VIAJES_PEEK = [
+  { id: 'vj1', titulo: 'Rápido a Contamana',   medio: 'Fluvial',   tiempo: '~12 h',   precio: 'S/ 80–120', icon: 'directions_boat' },
+  { id: 'vj2', titulo: 'Colectivo a Lima',     medio: 'Terrestre', tiempo: '~18 h',   precio: 'S/ 60–100', icon: 'directions_bus' },
+  { id: 'vj3', titulo: 'Vuelo a Lima',         medio: 'Aéreo',     tiempo: '~1 h 10 min', precio: 'S/ 120–350', icon: 'flight' },
 ];
 
 // Peek: Sorteos.
@@ -460,7 +468,7 @@ export default function HomePage() {
             <div className="marquee-track flex w-max gap-16 whitespace-nowrap">
               {Array.from({ length: 4 }).map((_, i) => (
                 <p key={i} className="font-body-md text-background/60 text-xs" aria-hidden={i > 0 || undefined}>
-                  Comercio, movilidad, trabajo, alquileres y estilo de vida — en un solo lugar.
+                  Comercio, movilidad, trabajo, inmuebles, viajes y estilo de vida — en un solo lugar.
                 </p>
               ))}
             </div>
@@ -661,15 +669,16 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Dónde vivir — Alquileres */}
+        {/* Dónde vivir — Inmuebles */}
         <section className="flex flex-col gap-4">
-          <SectionHead title="Dónde vivir" href="/alquileres" cta="Ver alquileres" />
+          <SectionHead title="Dónde vivir" href="/inmuebles" cta="Ver inmuebles" />
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {ALQUILERES_PEEK.map((a) => (
-              <Link href="/alquileres" key={a.id} className="bg-white border border-surface-container-highest overflow-hidden shadow-sm group flex flex-col">
+            {INMUEBLES_PEEK.map((a) => (
+              <Link href="/inmuebles" key={a.id} className="bg-white border border-surface-container-highest overflow-hidden shadow-sm group flex flex-col">
                 <div className="relative h-32 overflow-hidden bg-surface-container-low">
                   <img src={a.img} alt={a.titulo} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <span className="absolute bottom-2 right-2 bg-white text-primary font-price-lg text-sm px-2 py-0.5 shadow-sm">{a.precio}<span className="text-[9px] text-secondary font-label-md"> /mes</span></span>
+                  <span className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-label-md px-2 py-0.5 rounded-full uppercase tracking-wider">{a.tag}</span>
+                  <span className="absolute bottom-2 right-2 bg-white text-primary font-price-lg text-sm px-2 py-0.5 shadow-sm">{a.precio}</span>
                 </div>
                 <div className="p-3">
                   <h4 className="font-headline-sm text-sm text-on-surface line-clamp-2 leading-tight">{a.titulo}</h4>
@@ -677,6 +686,26 @@ export default function HomePage() {
                     <span className="material-symbols-outlined text-[12px]">location_on</span>{a.zona}
                   </span>
                 </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* Viajes & Transporte */}
+        <section className="flex flex-col gap-4">
+          <SectionHead title="Viajes desde Pucallpa" href="/viajes" cta="Ver rutas" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {VIAJES_PEEK.map((v) => (
+              <Link href="/viajes" key={v.id} className="bg-white border border-surface-container-highest overflow-hidden shadow-sm group flex items-center gap-3 p-3">
+                <div className="w-11 h-11 rounded-xl bg-[#1B8EBF]/10 flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[#1B8EBF] text-[22px]">{v.icon}</span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-headline-sm text-sm text-on-surface leading-tight line-clamp-1">{v.titulo}</h4>
+                  <span className="font-label-md text-[11px] text-secondary">{v.medio} · {v.tiempo}</span>
+                  <span className="block font-price-lg text-primary text-xs mt-0.5">{v.precio}</span>
+                </div>
+                <span className="material-symbols-outlined text-secondary/40 text-[18px] shrink-0 group-hover:translate-x-1 transition-transform">chevron_right</span>
               </Link>
             ))}
           </div>
@@ -701,7 +730,7 @@ export default function HomePage() {
           <span className="font-label-md text-[10px] uppercase tracking-[0.25em] text-background/50">Qué es Boga</span>
           <p className="font-headline-lg font-extrabold tracking-tight text-lg lg:text-2xl leading-snug mt-2 max-w-[46ch]">
             Boga es el sistema operativo digital de Pucallpa: una super-app que reúne el comercio,
-            la movilidad segura, el trabajo, el alquiler de viviendas y el estilo de vida de la ciudad
+            la movilidad segura, el trabajo, los inmuebles, los viajes y el estilo de vida de la ciudad
             en un solo lugar.
           </p>
           <Link href="/negocios" className="inline-flex items-center gap-1 mt-4 font-label-md text-[12px] text-primary-fixed">
