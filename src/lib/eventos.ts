@@ -10,6 +10,7 @@ export type Evento = {
   id: string;
   titulo: string;
   cat: CategoriaEvento;
+  descripcion?: string;
   lugar: string;
   dia: string;
   mes: string;
@@ -25,6 +26,7 @@ function fromRow(r: Record<string, unknown>): Evento {
     id: String(r.id),
     titulo: (r.titulo as string) ?? '',
     cat: ((r.categoria as string) ?? 'Fiestas') as CategoriaEvento,
+    descripcion: (r.descripcion as string) ?? '',
     lugar: (r.lugar as string) ?? '',
     dia: (r.dia as string) ?? '',
     mes: (r.mes as string) ?? '',

@@ -25,7 +25,7 @@ type EventRow = Record<string, any>;
 
 const FICHA_VACIA = {
   id: null as string | null,
-  titulo: '', categoria: 'Fiestas', lugar: '', dia: '', mes: 'SEP',
+  titulo: '', categoria: 'Fiestas', descripcion: '', lugar: '', dia: '', mes: 'SEP',
   precio: 'Libre', organiza: '', img: '', destacado: false,
   ciudad: 'pucallpa', orden: 0, status: 'activo',
 };
@@ -87,7 +87,8 @@ export default function EventosAdmin() {
 
   const editar = (e: EventRow) => {
     setFicha({
-      id: e.id, titulo: e.titulo ?? '', categoria: e.categoria ?? 'Fiestas', lugar: e.lugar ?? '',
+      id: e.id, titulo: e.titulo ?? '', categoria: e.categoria ?? 'Fiestas', descripcion: e.descripcion ?? '',
+      lugar: e.lugar ?? '',
       dia: e.dia ?? '', mes: e.mes ?? 'SEP', precio: e.precio ?? 'Libre', organiza: e.organiza ?? '',
       img: e.img ?? '', destacado: Boolean(e.destacado),
       ciudad: e.ciudad ?? 'pucallpa', orden: e.orden ?? 0, status: e.status ?? 'activo',
@@ -102,7 +103,8 @@ export default function EventosAdmin() {
     setMsg('');
 
     const payload = {
-      titulo: ficha.titulo, categoria: ficha.categoria, lugar: ficha.lugar || null,
+      titulo: ficha.titulo, categoria: ficha.categoria, descripcion: ficha.descripcion || null,
+      lugar: ficha.lugar || null,
       dia: ficha.dia || null, mes: ficha.mes || null, precio: ficha.precio || null,
       organiza: ficha.organiza || null, img: ficha.img || null, destacado: ficha.destacado,
       ciudad: ficha.ciudad, orden: Number(ficha.orden) || 0, status: ficha.status,
@@ -216,6 +218,8 @@ export default function EventosAdmin() {
               <input value={ficha.precio} onChange={(e) => setFicha({ ...ficha, precio: e.target.value })} className={campo} placeholder="S/ 30 o Libre" /></label>
             <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Organiza
               <input value={ficha.organiza} onChange={(e) => setFicha({ ...ficha, organiza: e.target.value })} className={campo} /></label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Descripción (para la ficha ampliada)
+              <textarea value={ficha.descripcion} onChange={(e) => setFicha({ ...ficha, descripcion: e.target.value })} rows={4} className={campo} placeholder="Detalle del evento: qué incluye, horarios, cómo llegar…" /></label>
             <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Foto (URL)
               <input value={ficha.img} onChange={(e) => setFicha({ ...ficha, img: e.target.value })} className={campo} /></label>
             <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Ciudad

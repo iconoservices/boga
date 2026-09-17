@@ -12,7 +12,7 @@ export const revalidate = 300;
 export async function GET() {
   const { data } = await supabase
     .from('events')
-    .select('id,titulo,categoria,lugar,dia,mes,precio,organiza,img,destacado,orden')
+    .select('id,titulo,categoria,descripcion,lugar,dia,mes,precio,organiza,img,destacado,orden')
     .eq('status', 'activo')
     .order('orden', { ascending: true })
     .order('created_at', { ascending: true });

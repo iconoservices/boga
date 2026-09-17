@@ -861,6 +861,7 @@ CREATE TABLE IF NOT EXISTS public.events (
   created_at  TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
   titulo      TEXT NOT NULL,
   categoria   TEXT NOT NULL DEFAULT 'Fiestas',  -- una de las categorias fijas de /eventos
+  descripcion TEXT,                              -- texto largo para la ficha ampliada
   lugar       TEXT,
   dia         TEXT,                              -- "12" (numero de dia, como texto para el formato de la tarjeta)
   mes         TEXT,                              -- "SEP" (3 letras mayusculas)
@@ -874,6 +875,9 @@ CREATE TABLE IF NOT EXISTS public.events (
 );
 CREATE INDEX IF NOT EXISTS events_status_idx ON public.events (status);
 CREATE INDEX IF NOT EXISTS events_ciudad_idx ON public.events (ciudad);
+
+-- Migracion: `events` ya existia sin esta columna cuando se agrego la ficha ampliada.
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS descripcion TEXT;
 
 ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
 

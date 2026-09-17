@@ -33,7 +33,7 @@ const CARRUSEL = [
 ];
 
 type Evento = {
-  id: string; titulo: string; cat: Cat; lugar: string; dia: string; mes: string;
+  id: string; titulo: string; cat: Cat; descripcion?: string; lugar: string; dia: string; mes: string;
   precio: string; organiza: string; img: string;
 };
 
@@ -72,6 +72,7 @@ export default function Eventos() {
   const [slide, setSlide] = useState(0);
   const [eventos, setEventos] = useState<Evento[]>(EVENTOS_SEED);
   const [lugares, setLugares] = useState(LUGARES_SEED);
+  const [eventoAbierto, setEventoAbierto] = useState<Evento | null>(null);
 
   useEffect(() => {
     fetchEventos().then((rows) => {
@@ -230,7 +231,7 @@ export default function Eventos() {
           <h2 className="font-headline-lg text-on-surface">Planes imperdibles</h2>
           <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
             {eventos.slice(0, 7).map((e) => (
-              <div key={e.id} className="min-w-[180px] w-[180px] lg:min-w-[210px] lg:w-[210px] bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest snap-start flex flex-col">
+              <div key={e.id} onClick={() => setEventoAbierto(e)} className="min-w-[180px] w-[180px] lg:min-w-[210px] lg:w-[210px] bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest snap-start flex flex-col cursor-pointer active:scale-[0.98] transition-transform">
                 <div className="relative aspect-square overflow-hidden bg-surface-container-low">
                   <img src={e.img} alt={e.titulo} className="w-full h-full object-cover" />
                 </div>
@@ -255,7 +256,7 @@ export default function Eventos() {
           </h2>
           <div className="flex gap-4 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
             {eventos.slice(1, 6).map((e, i) => (
-              <div key={e.id} className="flex items-end gap-1 shrink-0 snap-start">
+              <div key={e.id} onClick={() => setEventoAbierto(e)} className="flex items-end gap-1 shrink-0 snap-start cursor-pointer active:scale-[0.98] transition-transform">
                 <span className="font-headline-lg font-black text-primary/25 text-[64px] leading-[0.7] select-none">{i + 1}</span>
                 <div className="w-[150px] lg:w-[170px]">
                   <div className="relative aspect-square rounded-xl overflow-hidden bg-surface-container-low">
@@ -283,7 +284,7 @@ export default function Eventos() {
             </div>
             <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1 snap-x" style={{ scrollbarWidth: 'none' }}>
               {eventos.filter((e) => ['Conciertos', 'Fiestas', 'Ferias'].includes(e.cat)).map((e) => (
-                <div key={e.id} className="min-w-[150px] w-[150px] shrink-0 snap-start">
+                <div key={e.id} onClick={() => setEventoAbierto(e)} className="min-w-[150px] w-[150px] shrink-0 snap-start cursor-pointer active:scale-[0.98] transition-transform">
                   <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-white/10">
                     <img src={e.img} alt={e.titulo} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
@@ -306,7 +307,7 @@ export default function Eventos() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {lista.map((e) => (
-                <div key={e.id} className="bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col">
+                <div key={e.id} onClick={() => setEventoAbierto(e)} className="bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col cursor-pointer active:scale-[0.98] transition-transform">
                   <div className="relative h-36 overflow-hidden bg-surface-container-low">
                     <img src={e.img} alt={e.titulo} className="w-full h-full object-cover" />
                     <div className="absolute top-2 left-2 bg-white rounded-lg px-2 py-1 text-center shadow-sm">
@@ -336,6 +337,65 @@ export default function Eventos() {
           ¿Organizas un evento en Pucallpa? Publícalo en Boga y llega a miles de personas. Escríbenos por WhatsApp.
         </p>
       </main>
+
+      {/* Ficha ampliada del evento */}
+      {eventoAbierto && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          onClick={() => setEventoAbierto(null)}
+        >
+          <div
+            className="bg-white w-full sm:max-w-[480px] sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative aspect-[4/3] bg-surface-container-low">
+              <img src={eventoAbierto.img} alt={eventoAbierto.titulo} className="w-full h-full object-cover" />
+              <button
+                onClick={() => setEventoAbierto(null)}
+                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center"
+                aria-label="Cerrar"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+              <span className="absolute top-3 left-3 bg-white rounded-lg px-2.5 py-1.5 text-center shadow-sm">
+                <span className="block font-price-lg text-primary text-base leading-none">{eventoAbierto.dia}</span>
+                <span className="block font-label-md text-[10px] text-secondary uppercase">{eventoAbierto.mes}</span>
+              </span>
+            </div>
+            <div className="p-5 flex flex-col gap-3">
+              <span className="w-fit bg-primary-fixed text-primary text-[10px] font-label-md px-2 py-0.5 rounded-full uppercase tracking-wider">{eventoAbierto.cat}</span>
+              <h3 className="font-headline-lg text-xl text-on-surface leading-tight">{eventoAbierto.titulo}</h3>
+              <a
+                href={`https://www.google.com/maps/search/${encodeURIComponent(eventoAbierto.lugar)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-secondary font-label-md text-[13px] flex items-center gap-1.5 hover:text-primary"
+              >
+                <span className="material-symbols-outlined text-[16px]">location_on</span>
+                {eventoAbierto.lugar}
+                <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+              </a>
+              {eventoAbierto.organiza && (
+                <span className="text-secondary/70 font-label-md text-[11px] uppercase tracking-wider">Organiza · {eventoAbierto.organiza}</span>
+              )}
+              {eventoAbierto.descripcion && (
+                <p className="text-on-surface font-body-md text-sm leading-relaxed border-t border-surface-container pt-3">
+                  {eventoAbierto.descripcion}
+                </p>
+              )}
+              <div className="flex items-center justify-between border-t border-surface-container pt-3 mt-1">
+                <span className="font-price-lg text-primary text-lg">{eventoAbierto.precio}</span>
+                <button
+                  onClick={() => setEventoAbierto(null)}
+                  className="bg-primary text-white font-label-md text-sm px-5 py-2.5 rounded-full active:scale-95 transition-transform"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
