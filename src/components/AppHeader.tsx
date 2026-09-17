@@ -27,7 +27,7 @@ export default function AppHeader({
   cartCount: propCartCount,
   onCartClick: propOnCartClick,
   showLocation = true,
-  showChat = true,
+  showChat = false,
   showCart = true
 }: AppHeaderProps) {
   const { cartCount: contextCartCount, setIsCartOpen } = useCart();
