@@ -7,11 +7,11 @@ export type Hub = { href: string; label: string; long?: string; icon: string; ap
 export const HUBS: Hub[] = [
   { href: '/',            label: 'Inicio',      icon: 'home' },
   { href: '/market',      label: 'Market',      icon: 'storefront' },
+  { href: '/alquileres',  label: 'Alquileres',  icon: 'bed' },
+  { href: '/eventos',     label: 'Eventos',     long: 'Eventos & Agenda', icon: 'celebration' },
   { href: '/pension',     label: 'Pensión',     long: 'Pensión de almuerzos', icon: 'lunch_dining' },
   { href: '/servicios',   label: 'Servicios',   long: 'Servicios & Chamba', icon: 'construction' },
   { href: '/taxi-seguro', label: 'Taxi Seguro', icon: 'local_taxi' },
-  { href: '/alquileres',  label: 'Alquileres',  icon: 'bed' },
-  { href: '/eventos',     label: 'Eventos',     long: 'Eventos & Agenda', icon: 'celebration' },
   { href: '/sorteos',     label: 'Sorteos',     icon: 'confirmation_number' },
   { href: '/pandero',     label: 'Pandero',     long: 'Pandero · ahorro en grupo', icon: 'savings' },
   { href: '/revista',     label: 'Revista',     long: 'Yo Soy de la Selva', icon: 'menu_book' },

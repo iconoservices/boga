@@ -7,9 +7,8 @@ import { fetchAlquileres, type Aviso, type TipoAviso } from '@/lib/alquileres';
 
 // Alquileres = espacio para arriendos mensuales en Pucallpa: habitaciones,
 // mini-departamentos, casas y pensiones (con comidas). Directorio administrable
-// desde /superadmin/alquileres (tabla `rental_listings`); mientras esté vacía,
-// la página cae al seed hardcodeado de abajo. Contacto por WhatsApp directo,
-// sin pagos dentro de la app.
+// desde /superadmin/alquileres (tabla `rental_listings`). Contacto por
+// WhatsApp directo, sin pagos dentro de la app.
 
 type Tipo = TipoAviso;
 
@@ -22,17 +21,6 @@ const ICONO: Record<Tipo, string> = {
   'Pensión': 'dining',
 };
 
-const AVISOS_SEED: Aviso[] = [
-  { id: 'a1', tipo: 'Habitación', titulo: 'Habitación amoblada con baño propio', zona: 'Callería', precio: 450, extras: ['Baño propio', 'Amoblada', 'Wifi'], incluyeServicios: true, verificado: true, wsp: '51963000001', img: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80' },
-  { id: 'a2', tipo: 'Mini-dpto', titulo: 'Mini-departamento para 1–2 personas', zona: 'Yarinacocha', precio: 800, extras: ['Cocina', 'Amoblado', 'Agua incluida'], verificado: true, wsp: '51963000002', img: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80' },
-  { id: 'a3', tipo: 'Pensión', titulo: 'Pensión familiar · cuarto + 3 comidas', zona: 'Centro', precio: 950, extras: ['Desayuno', 'Almuerzo', 'Cena', 'Lavandería'], incluyeComidas: true, verificado: true, wsp: '51963000003', img: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800&q=80' },
-  { id: 'a4', tipo: 'Casa', titulo: 'Casa de 3 dormitorios en Manantay', zona: 'Manantay', precio: 1500, extras: ['3 dorm.', 'Cochera', 'Patio'], wsp: '51963000004', img: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80' },
-  { id: 'a5', tipo: 'Habitación', titulo: 'Cuarto económico para estudiante', zona: 'Cerca a la UNU', precio: 300, extras: ['Baño compartido', 'Wifi', 'Solo damas'], incluyeServicios: true, wsp: '51963000005', img: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80' },
-  { id: 'a6', tipo: 'Mini-dpto', titulo: 'Departamento nuevo, 2do piso', zona: 'Bellavista', precio: 1100, extras: ['2 dorm.', 'Balcón', 'Sin amoblar'], verificado: true, wsp: '51963000006', img: 'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800&q=80' },
-  { id: 'a7', tipo: 'Pensión', titulo: 'Pensión solo almuerzos (sin cuarto)', zona: 'Centro', precio: 320, extras: ['Almuerzo L–S', 'Menú variado', 'Delivery'], incluyeComidas: true, wsp: '51963000007', img: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80' },
-  { id: 'a8', tipo: 'Casa', titulo: 'Casa amoblada para familia', zona: 'Yarinacocha', precio: 1800, extras: ['Amoblada', '4 dorm.', 'Jardín'], verificado: true, wsp: '51963000008', img: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&q=80' },
-];
-
 function waLink(numero: string, texto: string) {
   return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
 }
@@ -40,7 +28,7 @@ function waLink(numero: string, texto: string) {
 export default function Alquileres() {
   const { cartCount, setIsCartOpen } = useCart();
   const [filtro, setFiltro] = useState<Tipo | 'Todos'>('Todos');
-  const [avisos, setAvisos] = useState<Aviso[]>(AVISOS_SEED);
+  const [avisos, setAvisos] = useState<Aviso[]>([]);
 
   useEffect(() => {
     fetchAlquileres().then((rows) => {
