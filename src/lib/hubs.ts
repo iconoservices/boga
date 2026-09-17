@@ -7,8 +7,8 @@ export type Hub = { href: string; label: string; long?: string; icon: string; ap
 export const HUBS: Hub[] = [
   { href: '/',            label: 'Inicio',      icon: 'home' },
   { href: '/market',      label: 'Market',      icon: 'storefront' },
-  { href: '/alquileres',  label: 'Alquileres',  icon: 'bed' },
   { href: '/eventos',     label: 'Eventos',     long: 'Eventos & Agenda', icon: 'celebration' },
+  { href: '/alquileres',  label: 'Alquileres',  icon: 'bed' },
   { href: '/pension',     label: 'Pensión',     long: 'Pensión de almuerzos', icon: 'lunch_dining' },
   { href: '/servicios',   label: 'Servicios',   long: 'Servicios & Chamba', icon: 'construction' },
   { href: '/taxi-seguro', label: 'Taxi Seguro', icon: 'local_taxi' },
