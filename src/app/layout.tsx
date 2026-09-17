@@ -67,6 +67,7 @@ import { StoreSettingsProvider } from '@/context/StoreSettingsContext';
 import { AuthProvider } from '@/context/AuthContext';
 import SharedUI from '@/components/SharedUI';
 import MarketTabs from '@/components/MarketTabs';
+import PlazaChatBubble from '@/components/PlazaChatBubble';
 
 export default function RootLayout({
   children,
@@ -111,6 +112,7 @@ export default function RootLayout({
                 <AppFooter />
                 <BottomNav />
                 <SharedUI />
+                <PlazaChatBubble />
               </CartProvider>
             </DemoProvider>
           </StoreSettingsProvider>

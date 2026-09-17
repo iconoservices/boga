@@ -949,3 +949,51 @@ ON public.places FOR UPDATE USING (public.is_superadmin());
 
 CREATE POLICY "places: superadmin borra"
 ON public.places FOR DELETE USING (public.is_superadmin());
+
+-- ============================================================
+-- 16. VENTAS  (inmuebles en venta, pestaña "En Venta" de /inmuebles)
+-- ============================================================
+-- `sale_listings`: terrenos, lotes, casas y chacras en venta. Antes era un
+-- array hardcodeado (VENTAS_SEED) en la página. Mismo patrón que
+-- `rental_listings`: lectura pública SOLO de status='activo'; escritura solo
+-- superadmin. Leer siempre por endpoint cacheado (/api/ventas) — nunca
+-- select('*') desde el cliente (ver egress).
+CREATE TABLE IF NOT EXISTS public.sale_listings (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at  TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  tipo        TEXT NOT NULL DEFAULT 'Terreno',   -- Terreno | Lote | Casa | Chacra
+  titulo      TEXT NOT NULL,
+  descripcion TEXT,                               -- texto largo para la ficha ampliada
+  zona        TEXT,
+  precio      NUMERIC(12,2) NOT NULL DEFAULT 0,
+  moneda      TEXT NOT NULL DEFAULT 'PEN',         -- PEN | USD
+  area        TEXT,                                -- "200 m²", "5 ha"
+  extras      JSONB NOT NULL DEFAULT '[]'::jsonb,  -- ["Título saneado", "Agua y luz", ...]
+  wsp         TEXT,                                -- WhatsApp (E.164 sin +)
+  img         TEXT,
+  ciudad      TEXT NOT NULL DEFAULT 'pucallpa',
+  orden       INT  NOT NULL DEFAULT 0,
+  status      TEXT NOT NULL DEFAULT 'activo'        -- activo | oculto
+);
+CREATE INDEX IF NOT EXISTS sale_listings_status_idx ON public.sale_listings (status);
+CREATE INDEX IF NOT EXISTS sale_listings_ciudad_idx ON public.sale_listings (ciudad);
+
+ALTER TABLE public.sale_listings ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "sale_listings: lectura publica de activos" ON public.sale_listings;
+DROP POLICY IF EXISTS "sale_listings: superadmin inserta"         ON public.sale_listings;
+DROP POLICY IF EXISTS "sale_listings: superadmin edita"           ON public.sale_listings;
+DROP POLICY IF EXISTS "sale_listings: superadmin borra"           ON public.sale_listings;
+
+CREATE POLICY "sale_listings: lectura publica de activos"
+ON public.sale_listings FOR SELECT
+USING (status = 'activo' OR public.is_superadmin());
+
+CREATE POLICY "sale_listings: superadmin inserta"
+ON public.sale_listings FOR INSERT WITH CHECK (public.is_superadmin());
+
+CREATE POLICY "sale_listings: superadmin edita"
+ON public.sale_listings FOR UPDATE USING (public.is_superadmin());
+
+CREATE POLICY "sale_listings: superadmin borra"
+ON public.sale_listings FOR DELETE USING (public.is_superadmin());

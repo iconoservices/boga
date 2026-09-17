@@ -3,7 +3,8 @@
 // Panel de Alquileres ("Dónde quedarte") — subruta propia, guard con
 // useEsSuperadmin() como /superadmin/choferes.
 //
-//   - rental_listings (el directorio de /alquileres): crear, editar, ocultar, borrar.
+//   - rental_listings (pestaña "En Alquiler" de /inmuebles): crear, editar, ocultar, borrar.
+//   - sale_listings (pestaña "En Venta" de /inmuebles): idem.
 
 import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -15,6 +16,7 @@ import SuperadminSidebarNav from '@/components/superadmin/SuperadminSidebarNav';
 
 const VERDE = '#00875A';
 const TIPOS = ['Habitación', 'Mini-dpto', 'Casa', 'Pensión'];
+const TIPOS_VENTA = ['Terreno', 'Lote', 'Casa', 'Chacra'];
 
 type ListingRow = Record<string, any>;
 
@@ -27,6 +29,15 @@ const FICHA_VACIA = {
 };
 type Ficha = typeof FICHA_VACIA;
 
+type SaleRow = Record<string, any>;
+const FICHA_VENTA_VACIA = {
+  id: null as string | null,
+  tipo: 'Terreno', titulo: '', descripcion: '', zona: '', precio: '', moneda: 'PEN', area: '',
+  extras: '["Título saneado"]',
+  wsp: '', img: '', ciudad: 'pucallpa', orden: 0, status: 'activo',
+};
+type FichaVenta = typeof FICHA_VENTA_VACIA;
+
 export default function AlquileresAdmin() {
   const { esSuperadmin, cargando } = useEsSuperadmin();
   const router = useRouter();
@@ -36,6 +47,12 @@ export default function AlquileresAdmin() {
   const [ficha, setFicha] = useState<Ficha>(FICHA_VACIA);
   const [guardando, setGuardando] = useState(false);
   const [msg, setMsg] = useState('');
+
+  const [ventas, setVentas] = useState<SaleRow[]>([]);
+  const [cargandoVentas, setCargandoVentas] = useState(true);
+  const [fichaVenta, setFichaVenta] = useState<FichaVenta>(FICHA_VENTA_VACIA);
+  const [guardandoVenta, setGuardandoVenta] = useState(false);
+  const [msgVenta, setMsgVenta] = useState('');
 
   const recargar = useCallback(async () => {
     setCargandoDatos(true);
@@ -48,11 +65,22 @@ export default function AlquileresAdmin() {
     setCargandoDatos(false);
   }, []);
 
+  const recargarVentas = useCallback(async () => {
+    setCargandoVentas(true);
+    const { data } = await supabase
+      .from('sale_listings')
+      .select('*')
+      .order('orden', { ascending: true })
+      .order('created_at', { ascending: true });
+    setVentas(data ?? []);
+    setCargandoVentas(false);
+  }, []);
+
   useEffect(() => {
     if (!cargando && !esSuperadmin) router.replace('/login?redirect=/superadmin/alquileres');
   }, [cargando, esSuperadmin, router]);
 
-  useEffect(() => { if (esSuperadmin) recargar(); }, [esSuperadmin, recargar]);
+  useEffect(() => { if (esSuperadmin) { recargar(); recargarVentas(); } }, [esSuperadmin, recargar, recargarVentas]);
 
   if (cargando) return <div className="p-10 text-center text-secondary font-body-md">Verificando acceso…</div>;
   if (!esSuperadmin) return null;
@@ -106,6 +134,56 @@ export default function AlquileresAdmin() {
     if (!confirm(`¿Borrar el aviso "${a.titulo}"? No se puede deshacer.`)) return;
     await supabase.from('rental_listings').delete().eq('id', a.id);
     recargar();
+  };
+
+  const editarVenta = (v: SaleRow) => {
+    setFichaVenta({
+      id: v.id, tipo: v.tipo ?? 'Terreno', titulo: v.titulo ?? '', descripcion: v.descripcion ?? '',
+      zona: v.zona ?? '', precio: v.precio ?? '', moneda: v.moneda ?? 'PEN', area: v.area ?? '',
+      extras: JSON.stringify(v.extras ?? [], null, 2),
+      wsp: v.wsp ?? '', img: v.img ?? '',
+      ciudad: v.ciudad ?? 'pucallpa', orden: v.orden ?? 0, status: v.status ?? 'activo',
+    });
+    setMsgVenta('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const guardarVenta = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setGuardandoVenta(true);
+    setMsgVenta('');
+    let extras: unknown = [];
+    try { extras = JSON.parse(fichaVenta.extras || '[]'); }
+    catch { setGuardandoVenta(false); setMsgVenta('El campo "extras" no es JSON válido.'); return; }
+
+    const payload = {
+      tipo: fichaVenta.tipo, titulo: fichaVenta.titulo, descripcion: fichaVenta.descripcion || null,
+      zona: fichaVenta.zona || null, precio: Number(fichaVenta.precio) || 0, moneda: fichaVenta.moneda,
+      area: fichaVenta.area || null, extras,
+      wsp: fichaVenta.wsp || null, img: fichaVenta.img || null,
+      ciudad: fichaVenta.ciudad, orden: Number(fichaVenta.orden) || 0, status: fichaVenta.status,
+    };
+
+    const res = fichaVenta.id
+      ? await supabase.from('sale_listings').update(payload).eq('id', fichaVenta.id)
+      : await supabase.from('sale_listings').insert(payload);
+
+    setGuardandoVenta(false);
+    if (res.error) { setMsgVenta(`Error: ${res.error.message}`); return; }
+    setFichaVenta(FICHA_VENTA_VACIA);
+    setMsgVenta(fichaVenta.id ? 'Aviso actualizado.' : 'Aviso agregado.');
+    recargarVentas();
+  };
+
+  const toggleStatusVenta = async (v: SaleRow) => {
+    await supabase.from('sale_listings').update({ status: v.status === 'activo' ? 'oculto' : 'activo' }).eq('id', v.id);
+    recargarVentas();
+  };
+
+  const borrarVenta = async (v: SaleRow) => {
+    if (!confirm(`¿Borrar el aviso "${v.titulo}"? No se puede deshacer.`)) return;
+    await supabase.from('sale_listings').delete().eq('id', v.id);
+    recargarVentas();
   };
 
   const campo = 'w-full bg-surface-container-low border border-surface-container-highest rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:border-primary';
@@ -193,7 +271,7 @@ export default function AlquileresAdmin() {
 
         {/* Directorio */}
         <section>
-          <h2 className="font-headline-md text-lg text-on-surface mb-3">Directorio ({listings.length})</h2>
+          <h2 className="font-headline-md text-lg text-on-surface mb-3">En Alquiler ({listings.length})</h2>
           {cargandoDatos ? <p className="text-secondary text-sm">Cargando…</p> :
             listings.length === 0 ? <p className="text-secondary text-sm">Todavía no hay avisos en la tabla. La página usa el seed hardcodeado hasta que agregues al menos uno.</p> : (
             <div className="flex flex-col gap-2">
@@ -209,6 +287,82 @@ export default function AlquileresAdmin() {
                     {a.status === 'activo' ? 'Ocultar' : 'Mostrar'}
                   </button>
                   <button onClick={() => borrar(a)} className="text-xs font-bold px-3 py-1.5 rounded-lg text-red-600">Borrar</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Formulario venta */}
+        <section>
+          <h2 className="font-headline-md text-lg text-on-surface mb-3">
+            {fichaVenta.id ? 'Editar aviso de venta' : 'Agregar aviso de venta'}
+          </h2>
+          <form onSubmit={guardarVenta} className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-surface-container-lowest border border-surface-container-highest rounded-2xl p-5">
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Título
+              <input required value={fichaVenta.titulo} onChange={(e) => setFichaVenta({ ...fichaVenta, titulo: e.target.value })} className={campo} placeholder="Terreno 200 m² con título de propiedad" /></label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Tipo
+              <select value={fichaVenta.tipo} onChange={(e) => setFichaVenta({ ...fichaVenta, tipo: e.target.value })} className={campo}>
+                {TIPOS_VENTA.map((t) => <option key={t}>{t}</option>)}</select></label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Zona
+              <input value={fichaVenta.zona} onChange={(e) => setFichaVenta({ ...fichaVenta, zona: e.target.value })} className={campo} placeholder="Campo Verde" /></label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Descripción (para la ficha ampliada)
+              <textarea value={fichaVenta.descripcion} onChange={(e) => setFichaVenta({ ...fichaVenta, descripcion: e.target.value })} rows={4} className={campo} placeholder="Detalle del inmueble: documentación, servicios, cómo llegar…" /></label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Precio
+              <input type="number" min="0" step="0.01" value={fichaVenta.precio} onChange={(e) => setFichaVenta({ ...fichaVenta, precio: e.target.value })} className={campo} /></label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Moneda
+              <select value={fichaVenta.moneda} onChange={(e) => setFichaVenta({ ...fichaVenta, moneda: e.target.value })} className={campo}>
+                <option value="PEN">Soles (S/)</option>
+                <option value="USD">Dólares (US$)</option></select></label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Área
+              <input value={fichaVenta.area} onChange={(e) => setFichaVenta({ ...fichaVenta, area: e.target.value })} className={campo} placeholder="200 m² o 5 ha" /></label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">WhatsApp (E.164 sin +)
+              <input value={fichaVenta.wsp} onChange={(e) => setFichaVenta({ ...fichaVenta, wsp: e.target.value })} className={campo} placeholder="51963000001" /></label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Foto (URL)
+              <input value={fichaVenta.img} onChange={(e) => setFichaVenta({ ...fichaVenta, img: e.target.value })} className={campo} /></label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Ciudad
+              <select value={fichaVenta.ciudad} onChange={(e) => setFichaVenta({ ...fichaVenta, ciudad: e.target.value })} className={campo}>
+                {CIUDADES.map((c) => <option key={c.slug} value={c.slug}>{c.nombre}</option>)}</select></label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Orden (menor = primero)
+              <input type="number" value={fichaVenta.orden} onChange={(e) => setFichaVenta({ ...fichaVenta, orden: Number(e.target.value) })} className={campo} /></label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Extras (JSON: lista de textos)
+              <textarea value={fichaVenta.extras} onChange={(e) => setFichaVenta({ ...fichaVenta, extras: e.target.value })} rows={4} className={`${campo} font-mono text-xs`} /></label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Estado
+              <select value={fichaVenta.status} onChange={(e) => setFichaVenta({ ...fichaVenta, status: e.target.value })} className={campo}>
+                <option value="activo">Activo (visible)</option>
+                <option value="oculto">Oculto</option></select></label>
+            <div className="sm:col-span-2 flex items-center gap-3 pt-1">
+              <button type="submit" disabled={guardandoVenta} className="bg-primary text-on-primary font-bold text-sm px-5 py-2.5 rounded-xl disabled:opacity-60">
+                {guardandoVenta ? 'Guardando…' : fichaVenta.id ? 'Guardar cambios' : 'Agregar aviso'}
+              </button>
+              {fichaVenta.id && (
+                <button type="button" onClick={() => { setFichaVenta(FICHA_VENTA_VACIA); setMsgVenta(''); }} className="text-sm text-secondary underline">
+                  Cancelar edición
+                </button>
+              )}
+              {msgVenta && <span className="text-xs font-bold text-primary">{msgVenta}</span>}
+            </div>
+          </form>
+        </section>
+
+        {/* Directorio de ventas */}
+        <section>
+          <h2 className="font-headline-md text-lg text-on-surface mb-3">En Venta ({ventas.length})</h2>
+          {cargandoVentas ? <p className="text-secondary text-sm">Cargando…</p> :
+            ventas.length === 0 ? <p className="text-secondary text-sm">Todavía no hay avisos en la tabla. La página usa el seed hardcodeado hasta que agregues al menos uno.</p> : (
+            <div className="flex flex-col gap-2">
+              {ventas.map((v) => (
+                <div key={v.id} className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-3 flex flex-wrap items-center gap-3">
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${v.status === 'activo' ? 'bg-primary' : 'bg-surface-container-highest'}`} />
+                  <div className="flex-1 min-w-[180px]">
+                    <p className="font-bold text-sm text-on-surface">{v.titulo} <span className="text-secondary font-normal">· {v.tipo} · {v.ciudad}</span></p>
+                    <p className="text-xs text-secondary">{[v.zona, `${v.moneda === 'USD' ? 'US$' : 'S/'} ${v.precio}`].filter(Boolean).join(' · ')}</p>
+                  </div>
+                  <button onClick={() => editarVenta(v)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest text-on-surface">Editar</button>
+                  <button onClick={() => toggleStatusVenta(v)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest text-secondary">
+                    {v.status === 'activo' ? 'Ocultar' : 'Mostrar'}
+                  </button>
+                  <button onClick={() => borrarVenta(v)} className="text-xs font-bold px-3 py-1.5 rounded-lg text-red-600">Borrar</button>
                 </div>
               ))}
             </div>

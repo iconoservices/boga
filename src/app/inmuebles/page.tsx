@@ -4,15 +4,16 @@ import React, { useEffect, useState } from 'react';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
 import { fetchAlquileres, type Aviso, type TipoAviso } from '@/lib/alquileres';
+import { fetchVentas, type AvisoVenta, type TipoVenta } from '@/lib/ventas';
 
 // Inmuebles = hub unificado de bienes raíces en Pucallpa: alquileres (cuartos,
 // mini-dptos, casas, pensiones) y ventas (terrenos, lotes, casas, chacras).
-// Los alquileres vienen de la tabla `rental_listings` vía /api/inmuebles.
-// La pestaña "En Venta" es de muestra hasta que se cree la tabla correspondiente.
+// Los alquileres vienen de `rental_listings` vía /api/inmuebles, las ventas
+// de `sale_listings` vía /api/ventas. Ambas caen al seed hardcodeado
+// mientras su tabla esté vacía.
 
 type Modo = 'alquiler' | 'venta';
 type Tipo = TipoAviso;
-type TipoVenta = 'Terreno' | 'Lote' | 'Casa' | 'Chacra';
 
 const FILTROS_ALQUILER: (Tipo | 'Todos')[] = ['Todos', 'Habitación', 'Mini-dpto', 'Casa', 'Pensión'];
 const FILTROS_VENTA: (TipoVenta | 'Todos')[] = ['Todos', 'Terreno', 'Lote', 'Casa', 'Chacra'];
@@ -31,20 +32,7 @@ const ICONO_VENTA: Record<TipoVenta, string> = {
   'Chacra': 'agriculture',
 };
 
-// Data de muestra para la pestaña "En Venta" — hasta que haya tabla en Supabase.
-type AvisoVenta = {
-  id: string;
-  tipo: TipoVenta;
-  titulo: string;
-  zona: string;
-  precio: number;
-  moneda: 'PEN' | 'USD';
-  area: string;
-  extras: string[];
-  wsp: string;
-  img: string;
-};
-
+// Seed de "En Venta" — se usa mientras `sale_listings` esté vacía.
 const VENTAS_SEED: AvisoVenta[] = [
   {
     id: 'v1', tipo: 'Terreno', titulo: 'Terreno 200 m² con título de propiedad',
@@ -95,15 +83,20 @@ export default function Inmuebles() {
   const [filtroVta, setFiltroVta] = useState<TipoVenta | 'Todos'>('Todos');
   const [avisos, setAvisos] = useState<Aviso[]>([]);
   const [avisoAbierto, setAvisoAbierto] = useState<Aviso | null>(null);
+  const [ventas, setVentas] = useState<AvisoVenta[]>(VENTAS_SEED);
+  const [ventaAbierta, setVentaAbierta] = useState<AvisoVenta | null>(null);
 
   useEffect(() => {
     fetchAlquileres().then((rows) => {
       if (rows.length > 0) setAvisos(rows);
     });
+    fetchVentas().then((rows) => {
+      if (rows.length > 0) setVentas(rows);
+    });
   }, []);
 
   const listaAlq = filtroAlq === 'Todos' ? avisos : avisos.filter((a) => a.tipo === filtroAlq);
-  const listaVta = filtroVta === 'Todos' ? VENTAS_SEED : VENTAS_SEED.filter((v) => v.tipo === filtroVta);
+  const listaVta = filtroVta === 'Todos' ? ventas : ventas.filter((v) => v.tipo === filtroVta);
 
   return (
     <>
@@ -275,7 +268,11 @@ export default function Inmuebles() {
             {/* Grilla de avisos de venta */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {listaVta.map((v) => (
-                <div key={v.id} className="bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col">
+                <div
+                  key={v.id}
+                  onClick={() => setVentaAbierta(v)}
+                  className="bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col cursor-pointer active:scale-[0.98] transition-transform"
+                >
                   <div className="relative h-40 overflow-hidden bg-surface-container-low">
                     <img referrerPolicy="no-referrer" src={v.img} alt={v.titulo} className="w-full h-full object-cover" />
                     <span className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-label-md px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
@@ -306,6 +303,7 @@ export default function Inmuebles() {
                         href={waLink(v.wsp, `Hola, vi tu aviso "${v.titulo}" (${v.zona}) en Inmuebles de Boga. ¿Sigue disponible?`)}
                         target="_blank"
                         rel="noreferrer"
+                        onClick={(ev) => ev.stopPropagation()}
                         className="flex items-center gap-1.5 bg-[#25D366] text-white text-[12px] font-label-md px-3 py-1.5 rounded-full active:scale-95 transition-transform"
                       >
                         <span className="material-symbols-outlined text-[15px]" style={{ fontVariationSettings: "'FILL' 1" }}>chat</span>
@@ -389,6 +387,76 @@ export default function Inmuebles() {
                 </div>
                 <a
                   href={waLink(avisoAbierto.wsp, `Hola, vi tu aviso "${avisoAbierto.titulo}" (${avisoAbierto.zona}) en Inmuebles de Boga. ¿Sigue disponible?`)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-1.5 bg-[#25D366] text-white font-label-md text-sm px-4 py-2.5 rounded-full active:scale-95 transition-transform"
+                >
+                  <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>chat</span>
+                  Contactar
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ficha ampliada del aviso de venta */}
+      {ventaAbierta && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          onClick={() => setVentaAbierta(null)}
+        >
+          <div
+            className="bg-white w-full sm:max-w-[480px] sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative aspect-[4/3] bg-surface-container-low">
+              <img referrerPolicy="no-referrer" src={ventaAbierta.img} alt={ventaAbierta.titulo} className="w-full h-full object-cover" />
+              <button
+                onClick={() => setVentaAbierta(null)}
+                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center"
+                aria-label="Cerrar"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+              <span className="absolute top-3 left-3 bg-white text-primary text-[10px] font-label-md px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                <span className="material-symbols-outlined text-[13px]">straighten</span>{ventaAbierta.area}
+              </span>
+            </div>
+            <div className="p-5 flex flex-col gap-3">
+              <span className="w-fit bg-primary-fixed text-primary text-[10px] font-label-md px-2 py-0.5 rounded-full uppercase tracking-wider">{ventaAbierta.tipo}</span>
+              <h3 className="font-headline-lg text-xl text-on-surface leading-tight">{ventaAbierta.titulo}</h3>
+              <a
+                href={`https://www.google.com/maps/search/${encodeURIComponent(ventaAbierta.zona + ', Pucallpa')}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-secondary font-label-md text-[13px] flex items-center gap-1.5 hover:text-primary"
+              >
+                <span className="material-symbols-outlined text-[16px]">location_on</span>
+                {ventaAbierta.zona}
+                <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+              </a>
+              {ventaAbierta.extras.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {ventaAbierta.extras.map((x) => (
+                    <span key={x} className="bg-surface-container-low text-secondary text-[10px] font-label-md px-2 py-0.5 rounded-full border border-surface-container-highest">{x}</span>
+                  ))}
+                </div>
+              )}
+              {ventaAbierta.descripcion && (
+                <p className="text-on-surface font-body-md text-sm leading-relaxed border-t border-surface-container pt-3">
+                  {ventaAbierta.descripcion}
+                </p>
+              )}
+              <div className="flex items-center justify-between border-t border-surface-container pt-3 mt-1">
+                <div className="flex flex-col">
+                  <span className="font-price-lg text-primary text-lg leading-none">
+                    {ventaAbierta.moneda === 'USD' ? 'US$ ' : 'S/ '}{ventaAbierta.precio.toLocaleString('es-PE')}
+                  </span>
+                  <span className="text-secondary font-label-md text-[10px] mt-0.5">precio de venta</span>
+                </div>
+                <a
+                  href={waLink(ventaAbierta.wsp, `Hola, vi tu aviso "${ventaAbierta.titulo}" (${ventaAbierta.zona}) en Inmuebles de Boga. ¿Sigue disponible?`)}
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-1.5 bg-[#25D366] text-white font-label-md text-sm px-4 py-2.5 rounded-full active:scale-95 transition-transform"
