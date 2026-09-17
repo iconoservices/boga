@@ -24,6 +24,7 @@ const SUBRUTAS = [
   { href: '/superadmin/notas',          icon: 'sticky_note_2',label: 'Notas internas' },
   { href: '/superadmin/choferes',       icon: 'local_taxi',   label: 'Choferes' },
   { href: '/superadmin/alquileres',     icon: 'bed',          label: 'Alquileres' },
+  { href: '/superadmin/eventos',        icon: 'celebration',  label: 'Eventos' },
   { href: '/superadmin/modulos',        icon: 'extension',    label: 'Módulos y Estrategia' },
   { href: '/superadmin/mapa',           icon: 'account_tree', label: 'Mapa de Apps' },
   { href: '/superadmin/facturacion',    icon: 'payments',     label: 'Facturación' },

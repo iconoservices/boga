@@ -8,6 +8,8 @@ import { fetchNotasRevista, type NotaCard } from '@/lib/revista';
 import { fetchBanners, fetchCatalogo } from '@/lib/catalogo';
 import { BannerOverlay, type BannerStyle } from '@/components/BannerOverlay';
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app';
+
 // "/" = el Inicio del lado consumidor. Es el índice vivo de Boga: un vistazo a
 // cada hub + contenido editorial fresco (SEO). Nada se resuelve acá, solo se
 // descubre; cada bloque termina en "Ver todo". Buscador = /market, B2B = /negocios.
@@ -420,8 +422,32 @@ export default function HomePage() {
     ? notasRevista.slice(0, 8).map((n) => ({ key: n.slug, href: `/revista/${n.slug}`, cat: n.kicker, title: n.titulo, img: n.img }))
     : SELVA_NOTES.map((n) => ({ key: n.id, href: '/revista', cat: n.cat, title: n.title, img: n.img }));
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        name: 'Boga',
+        url: SITE_URL,
+        logo: `${SITE_URL}/icon.png`,
+        sameAs: [] as string[],
+      },
+      {
+        '@type': 'WebSite',
+        name: 'Boga · Todo Pucallpa en una app',
+        url: SITE_URL,
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: `${SITE_URL}/market?q={search_term_string}`,
+          'query-input': 'required name=search_term_string',
+        },
+      },
+    ],
+  };
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <AppHeader showSearch={false} cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
 
       {/* Banda negra compacta */}

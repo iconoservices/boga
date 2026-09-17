@@ -848,3 +848,49 @@ ON public.rental_listings FOR UPDATE USING (public.is_superadmin());
 
 CREATE POLICY "rental_listings: superadmin borra"
 ON public.rental_listings FOR DELETE USING (public.is_superadmin());
+
+-- ============================================================
+-- 15. EVENTOS  (agenda de Pucallpa)
+-- ============================================================
+-- `events`: la agenda de /eventos. Antes era un array hardcodeado en la
+-- pagina. Lectura publica SOLO de status='activo'; escritura solo superadmin
+-- (desde /superadmin/eventos). Leer siempre por endpoint cacheado
+-- (/api/eventos) — nunca select('*') desde el cliente (ver egress).
+CREATE TABLE IF NOT EXISTS public.events (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at  TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  titulo      TEXT NOT NULL,
+  categoria   TEXT NOT NULL DEFAULT 'Fiestas',  -- una de las categorias fijas de /eventos
+  lugar       TEXT,
+  dia         TEXT,                              -- "12" (numero de dia, como texto para el formato de la tarjeta)
+  mes         TEXT,                              -- "SEP" (3 letras mayusculas)
+  precio      TEXT,                              -- "S/ 30" o "Libre"
+  organiza    TEXT,
+  img         TEXT,
+  destacado   BOOLEAN NOT NULL DEFAULT false,     -- aparece en el carrusel de arriba
+  ciudad      TEXT NOT NULL DEFAULT 'pucallpa',
+  orden       INT  NOT NULL DEFAULT 0,
+  status      TEXT NOT NULL DEFAULT 'activo'      -- activo | oculto
+);
+CREATE INDEX IF NOT EXISTS events_status_idx ON public.events (status);
+CREATE INDEX IF NOT EXISTS events_ciudad_idx ON public.events (ciudad);
+
+ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "events: lectura publica de activos" ON public.events;
+DROP POLICY IF EXISTS "events: superadmin inserta"          ON public.events;
+DROP POLICY IF EXISTS "events: superadmin edita"             ON public.events;
+DROP POLICY IF EXISTS "events: superadmin borra"             ON public.events;
+
+CREATE POLICY "events: lectura publica de activos"
+ON public.events FOR SELECT
+USING (status = 'activo' OR public.is_superadmin());
+
+CREATE POLICY "events: superadmin inserta"
+ON public.events FOR INSERT WITH CHECK (public.is_superadmin());
+
+CREATE POLICY "events: superadmin edita"
+ON public.events FOR UPDATE USING (public.is_superadmin());
+
+CREATE POLICY "events: superadmin borra"
+ON public.events FOR DELETE USING (public.is_superadmin());

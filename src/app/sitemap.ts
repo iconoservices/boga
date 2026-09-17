@@ -1,13 +1,14 @@
 import type { MetadataRoute } from 'next';
 import { fechaISO } from '@/lib/revista';
 import { getNotasPublicadas } from '@/lib/revista.data';
+import { supabase } from '@/lib/supabase';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app';
 
 export const revalidate = 300;
 
-// Rutas públicas indexables. Las tiendas dinámicas (/[slug]) se podrían sumar
-// leyéndolas de Supabase cuando haga falta.
+// Rutas fijas indexables. Las tiendas dinámicas (/[slug]) se agregan mas
+// abajo, leyendo los slugs activos de Supabase.
 const ROUTES: { path: string; changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency']; priority: number }[] = [
   { path: '/',              changeFrequency: 'daily',   priority: 1 },
   { path: '/market',        changeFrequency: 'daily',   priority: 0.9 },
@@ -44,5 +45,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...rutasFijas, ...notas];
+  // Cada tienda activa como URL propia e indexable (antes solo se descubrían
+  // por los links internos de /market y /explore, nunca por el sitemap).
+  const { data: activeStores } = await supabase.from('stores').select('slug').eq('status', 'active');
+  const tiendas: MetadataRoute.Sitemap = (activeStores ?? []).map((s) => ({
+    url: `${SITE_URL}/${s.slug}`,
+    lastModified: now,
+    changeFrequency: 'weekly',
+    priority: 0.7,
+  }));
+
+  return [...rutasFijas, ...tiendas, ...notas];
 }

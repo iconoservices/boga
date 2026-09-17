@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
+import { fetchEventos } from '@/lib/eventos';
 
 // Eventos = agenda + descubrimiento local de Pucallpa, estilo plataforma de
 // tickets (Joinnus): carrusel destacado, categorías, "a dónde ir" y agenda.
@@ -35,7 +36,7 @@ type Evento = {
   precio: string; organiza: string; img: string;
 };
 
-const EVENTOS: Evento[] = [
+const EVENTOS_SEED: Evento[] = [
   { id: 'e1', titulo: 'Noche de Cumbia Amazónica',   cat: 'Conciertos',        lugar: 'Complejo La Cabaña',   dia: '12', mes: 'SEP', precio: 'S/ 30',  organiza: 'Producciones Selva', img: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=700&q=80' },
   { id: 'e2', titulo: 'Feria Gastronómica del Juane', cat: 'Comidas & Bebidas', lugar: 'Plaza de Armas',        dia: '14', mes: 'SEP', precio: 'Libre',  organiza: 'Municipalidad',       img: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=700&q=80' },
   { id: 'e3', titulo: 'Torneo de Fútbol Playa',       cat: 'Deporte',           lugar: 'Playa de Yarinacocha',  dia: '20', mes: 'SEP', precio: 'Libre',  organiza: 'Liga Distrital',      img: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=700&q=80' },
@@ -68,6 +69,13 @@ export default function Eventos() {
   const { cartCount, setIsCartOpen } = useCart();
   const [cat, setCat] = useState<Cat | null>(null);
   const [slide, setSlide] = useState(0);
+  const [eventos, setEventos] = useState<Evento[]>(EVENTOS_SEED);
+
+  useEffect(() => {
+    fetchEventos().then((rows) => {
+      if (rows.length > 0) setEventos(rows);
+    });
+  }, []);
 
   const next = useCallback(() => setSlide((s) => (s + 1) % CARRUSEL.length), []);
   const prev = () => setSlide((s) => (s - 1 + CARRUSEL.length) % CARRUSEL.length);
@@ -77,7 +85,7 @@ export default function Eventos() {
     return () => clearInterval(id);
   }, [next]);
 
-  const lista = cat ? EVENTOS.filter((e) => e.cat === cat) : EVENTOS;
+  const lista = cat ? eventos.filter((e) => e.cat === cat) : eventos;
 
   return (
     <>
@@ -216,7 +224,7 @@ export default function Eventos() {
         <section className="flex flex-col gap-3">
           <h2 className="font-headline-lg text-on-surface">Planes imperdibles</h2>
           <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
-            {EVENTOS.slice(0, 7).map((e) => (
+            {eventos.slice(0, 7).map((e) => (
               <div key={e.id} className="min-w-[180px] w-[180px] lg:min-w-[210px] lg:w-[210px] bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest snap-start flex flex-col">
                 <div className="relative aspect-square overflow-hidden bg-surface-container-low">
                   <img src={e.img} alt={e.titulo} className="w-full h-full object-cover" />
@@ -241,7 +249,7 @@ export default function Eventos() {
             Lo más vendido esta semana
           </h2>
           <div className="flex gap-4 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
-            {EVENTOS.slice(1, 6).map((e, i) => (
+            {eventos.slice(1, 6).map((e, i) => (
               <div key={e.id} className="flex items-end gap-1 shrink-0 snap-start">
                 <span className="font-headline-lg font-black text-primary/25 text-[64px] leading-[0.7] select-none">{i + 1}</span>
                 <div className="w-[150px] lg:w-[170px]">
@@ -269,7 +277,7 @@ export default function Eventos() {
               </button>
             </div>
             <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1 snap-x" style={{ scrollbarWidth: 'none' }}>
-              {EVENTOS.filter((e) => ['Conciertos', 'Fiestas', 'Ferias'].includes(e.cat)).map((e) => (
+              {eventos.filter((e) => ['Conciertos', 'Fiestas', 'Ferias'].includes(e.cat)).map((e) => (
                 <div key={e.id} className="min-w-[150px] w-[150px] shrink-0 snap-start">
                   <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-white/10">
                     <img src={e.img} alt={e.titulo} className="w-full h-full object-cover" />

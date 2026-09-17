@@ -171,6 +171,17 @@ export async function generateMetadata({ params }: Omit<Props, 'searchParams'>) 
     title: `${store.name} | Boga Market`,
     description: store.tagline,
     manifest: `/manifest.json?slug=${slug}`,
+    openGraph: {
+      title: store.name,
+      description: store.tagline,
+      images: [{ url: store.heroImage }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: store.name,
+      description: store.tagline,
+      images: [store.heroImage],
+    },
     icons: {
       icon: [
         { url: iconUrl, sizes: 'any' },
