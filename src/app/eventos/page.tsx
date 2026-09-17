@@ -26,70 +26,38 @@ const CATEGORIAS: { cat: Cat; icon: string }[] = [
   { cat: 'Fiestas',           icon: 'celebration' },
 ];
 
-const CARRUSEL = [
-  { id: 'c1', titulo: 'Trueno en Pucallpa', sub: 'Gira Sudamérica 2026', dia: '01', mes: 'OCT', lugar: 'Anfiteatro Municipal', precio: 'Desde S/ 89', cta: 'Comprar entradas', img: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=1400&q=80' },
-  { id: 'c2', titulo: 'Feria Regional de la Amazonía', sub: 'Dos días de gastronomía y música', dia: '13', mes: 'SEP', lugar: 'Parque Natural de Pucallpa', precio: 'Entrada libre', cta: 'Ver programa', img: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=1400&q=80' },
-  { id: 'c3', titulo: 'Noche de Cumbia Amazónica', sub: 'Los clásicos en vivo', dia: '12', mes: 'SEP', lugar: 'Complejo La Cabaña', precio: 'Desde S/ 30', cta: 'Comprar entradas', img: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1400&q=80' },
-];
-
 type Evento = {
   id: string; titulo: string; cat: Cat; descripcion?: string; lugar: string; dia: string; mes: string;
-  precio: string; organiza: string; img: string;
+  precio: string; organiza: string; img: string; destacado?: boolean;
 };
-
-const EVENTOS_SEED: Evento[] = [
-  { id: 'e1', titulo: 'Noche de Cumbia Amazónica',   cat: 'Conciertos',        lugar: 'Complejo La Cabaña',   dia: '12', mes: 'SEP', precio: 'S/ 30',  organiza: 'Producciones Selva', img: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=700&q=80' },
-  { id: 'e2', titulo: 'Feria Gastronómica del Juane', cat: 'Comidas & Bebidas', lugar: 'Plaza de Armas',        dia: '14', mes: 'SEP', precio: 'Libre',  organiza: 'Municipalidad',       img: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=700&q=80' },
-  { id: 'e3', titulo: 'Torneo de Fútbol Playa',       cat: 'Deporte',           lugar: 'Playa de Yarinacocha',  dia: '20', mes: 'SEP', precio: 'Libre',  organiza: 'Liga Distrital',      img: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=700&q=80' },
-  { id: 'e4', titulo: 'Expo Artesanía Shipiba',       cat: 'Arte & Cultura',    lugar: 'Casa de la Cultura',    dia: '18', mes: 'SEP', precio: 'S/ 5',   organiza: 'Colectivo Shipibo',   img: 'https://images.unsplash.com/photo-1528181304800-259b08848526?w=700&q=80' },
-  { id: 'e5', titulo: 'Taller de fotografía de selva', cat: 'Cursos y talleres', lugar: 'Estudio Klima',        dia: '21', mes: 'SEP', precio: 'S/ 60',  organiza: 'S. Klima',            img: 'https://images.unsplash.com/photo-1554048612-b6a482bc67e5?w=700&q=80' },
-  { id: 'e6', titulo: 'Cine bajo las estrellas',      cat: 'Cine',              lugar: 'Malecón Bellavista',    dia: '24', mes: 'SEP', precio: 'Libre',  organiza: 'Cultura Pucallpa',    img: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=700&q=80' },
-  { id: 'e7', titulo: 'Concierto Rock en la Selva',   cat: 'Conciertos',        lugar: 'Anfiteatro Municipal',  dia: '27', mes: 'SEP', precio: 'S/ 45',  organiza: 'Selva Sound',         img: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=700&q=80' },
-  { id: 'e8', titulo: 'Aniversario de Pucallpa',      cat: 'Fiestas',           lugar: 'Malecón Bellavista',    dia: '13', mes: 'OCT', precio: 'Libre',  organiza: 'Municipalidad',       img: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=700&q=80' },
-  { id: 'e9', titulo: 'Domingo familiar en el Parque', cat: 'Familia',          lugar: 'Parque Natural',        dia: '15', mes: 'SEP', precio: 'S/ 3',   organiza: 'Parque Natural',      img: 'https://images.unsplash.com/photo-1500673922987-e212871fec22?w=700&q=80' },
-];
-
-// "A dónde ir" — lugares para visitar (turismo local, no eventos con fecha).
-const LUGARES_SEED = [
-  { id: 'l1', nombre: 'Laguna de Yarinacocha',          tag: 'Naturaleza · medio día', img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=700&q=80' },
-  { id: 'l2', nombre: 'Parque Natural de Pucallpa',      tag: 'Familia · 2–3 h',        img: 'https://images.unsplash.com/photo-1500673922987-e212871fec22?w=700&q=80' },
-  { id: 'l3', nombre: 'Jardín Botánico y Serpentario',   tag: 'Naturaleza · 2 h',       img: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=700&q=80' },
-  { id: 'l4', nombre: 'Boquerón del Padre Abad',         tag: 'Aventura · día completo', img: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=700&q=80' },
-  { id: 'l5', nombre: 'Malecón de Bellavista',           tag: 'Paseo · gratis',         img: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=700&q=80' },
-  { id: 'l6', nombre: 'Comunidad Shipiba San Francisco', tag: 'Cultura · 3–4 h',        img: 'https://images.unsplash.com/photo-1516214104703-d870798883c5?w=700&q=80' },
-];
-
-const TENDENCIAS = [
-  'Trueno en Pucallpa — quedan pocas entradas',
-  'Feria del Juane: horarios y puestos confirmados',
-  'Rock en la Selva anuncia segunda fecha',
-  'Aniversario de Pucallpa: programa completo',
-];
 
 export default function Eventos() {
   const { cartCount, setIsCartOpen } = useCart();
   const [cat, setCat] = useState<Cat | null>(null);
   const [slide, setSlide] = useState(0);
-  const [eventos, setEventos] = useState<Evento[]>(EVENTOS_SEED);
-  const [lugares, setLugares] = useState(LUGARES_SEED);
+  const [eventos, setEventos] = useState<Evento[]>([]);
+  const [lugares, setLugares] = useState<{ id: string; nombre: string; tag: string; img: string }[]>([]);
   const [eventoAbierto, setEventoAbierto] = useState<Evento | null>(null);
 
   useEffect(() => {
-    fetchEventos().then((rows) => {
-      if (rows.length > 0) setEventos(rows);
-    });
-    fetchLugares().then((rows) => {
-      if (rows.length > 0) setLugares(rows);
-    });
+    fetchEventos().then(setEventos);
+    fetchLugares().then(setLugares);
   }, []);
 
-  const next = useCallback(() => setSlide((s) => (s + 1) % CARRUSEL.length), []);
-  const prev = () => setSlide((s) => (s - 1 + CARRUSEL.length) % CARRUSEL.length);
+  // El carrusel de arriba usa los eventos marcados "Destacado" en el admin;
+  // si todavia no marcaron ninguno, cae a los primeros 3 para no dejar el
+  // carrusel vacio.
+  const destacados = eventos.filter((e) => e.destacado);
+  const carrusel = destacados.length > 0 ? destacados : eventos.slice(0, 3);
+
+  const next = useCallback(() => setSlide((s) => (carrusel.length ? (s + 1) % carrusel.length : 0)), [carrusel.length]);
+  const prev = () => setSlide((s) => (carrusel.length ? (s - 1 + carrusel.length) % carrusel.length : 0));
 
   useEffect(() => {
+    if (carrusel.length < 2) return;
     const id = setInterval(next, 5000);
     return () => clearInterval(id);
-  }, [next]);
+  }, [next, carrusel.length]);
 
   const lista = cat ? eventos.filter((e) => e.cat === cat) : eventos;
 
@@ -99,15 +67,20 @@ export default function Eventos() {
 
       <main className="max-w-[1200px] mx-auto px-container-margin lg:px-6 w-full pt-4 flex flex-col gap-8 pb-14">
 
-        {/* Carrusel destacado + Tendencias al costado */}
-        <section className="grid lg:grid-cols-[1fr_320px] gap-5">
+        {/* Carrusel destacado */}
+        {carrusel.length > 0 && (
+        <section>
           <div className="relative overflow-hidden rounded-2xl shadow-sm aspect-[16/9] sm:aspect-[21/9] lg:aspect-auto lg:min-h-[340px]">
             <div
               className="flex h-full transition-transform duration-500 ease-out"
               style={{ transform: `translateX(-${slide * 100}%)` }}
             >
-              {CARRUSEL.map((c) => (
-                <div key={c.id} className="relative w-full h-full shrink-0 bg-surface-container-low">
+              {carrusel.map((c) => (
+                <div
+                  key={c.id}
+                  onClick={() => setEventoAbierto(c)}
+                  className="relative w-full h-full shrink-0 bg-surface-container-low cursor-pointer"
+                >
                   <img src={c.img} alt={c.titulo} className="absolute inset-0 w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-black/10" />
                   <div className="absolute inset-0 flex flex-col justify-center gap-2 p-5 lg:p-10 max-w-[560px]">
@@ -119,55 +92,47 @@ export default function Eventos() {
                       <span className="bg-primary text-white text-[10px] font-label-md px-2 py-1 rounded-full uppercase tracking-wider">Destacado</span>
                     </div>
                     <h2 className="font-headline-lg text-white text-2xl sm:text-4xl font-extrabold leading-[1.05]">{c.titulo}</h2>
-                    <p className="text-white/80 font-body-md text-xs sm:text-sm">{c.sub}</p>
+                    <p className="text-white/80 font-body-md text-xs sm:text-sm">{c.organiza}</p>
                     <div className="flex flex-wrap items-center gap-2 mt-1">
                       <span className="text-white/90 font-label-md text-[11px] flex items-center gap-1">
                         <span className="material-symbols-outlined text-[13px]">location_on</span>{c.lugar}
                       </span>
                       <span className="text-white/90 font-label-md text-[11px]">· {c.precio}</span>
                     </div>
-                    <button className="w-fit mt-2 bg-primary text-white font-label-md text-[12px] px-4 py-2 rounded-full active:scale-95 transition-transform">
-                      {c.cta}
+                    <button
+                      onClick={(ev) => { ev.stopPropagation(); setEventoAbierto(c); }}
+                      className="w-fit mt-2 bg-primary text-white font-label-md text-[12px] px-4 py-2 rounded-full active:scale-95 transition-transform"
+                    >
+                      Ver más
                     </button>
                   </div>
                 </div>
               ))}
             </div>
 
-            <button onClick={prev} aria-label="Anterior" className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 flex items-center justify-center shadow-md active:scale-90 transition-transform">
-              <span className="material-symbols-outlined text-[20px] text-on-surface">chevron_left</span>
-            </button>
-            <button onClick={next} aria-label="Siguiente" className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 flex items-center justify-center shadow-md active:scale-90 transition-transform">
-              <span className="material-symbols-outlined text-[20px] text-on-surface">chevron_right</span>
-            </button>
-            <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
-              {CARRUSEL.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSlide(i)}
-                  aria-label={`Ir al destacado ${i + 1}`}
-                  className={`h-1.5 rounded-full transition-all ${i === slide ? 'w-5 bg-white' : 'w-1.5 bg-white/50'}`}
-                />
-              ))}
-            </div>
+            {carrusel.length > 1 && (
+              <>
+                <button onClick={prev} aria-label="Anterior" className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 flex items-center justify-center shadow-md active:scale-90 transition-transform">
+                  <span className="material-symbols-outlined text-[20px] text-on-surface">chevron_left</span>
+                </button>
+                <button onClick={next} aria-label="Siguiente" className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 flex items-center justify-center shadow-md active:scale-90 transition-transform">
+                  <span className="material-symbols-outlined text-[20px] text-on-surface">chevron_right</span>
+                </button>
+                <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+                  {carrusel.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setSlide(i)}
+                      aria-label={`Ir al destacado ${i + 1}`}
+                      className={`h-1.5 rounded-full transition-all ${i === slide ? 'w-5 bg-white' : 'w-1.5 bg-white/50'}`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
-
-          {/* Nuestras tendencias */}
-          <aside className="bg-surface-container-low rounded-2xl p-4 flex flex-col">
-            <h3 className="font-headline-sm text-on-surface flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-primary text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>trending_up</span>
-              Nuestras tendencias
-            </h3>
-            <ol className="mt-2 divide-y divide-on-surface/10 flex-1">
-              {TENDENCIAS.map((t, i) => (
-                <li key={i} className="flex items-baseline gap-3 py-3">
-                  <span className="font-headline-lg font-black text-primary text-lg tabular-nums shrink-0">{i + 1}</span>
-                  <span className="font-body-md text-on-surface text-[13px] leading-snug">{t}</span>
-                </li>
-              ))}
-            </ol>
-          </aside>
         </section>
+        )}
 
         {/* Categorías */}
         <section className="flex flex-col gap-3">

@@ -10,7 +10,7 @@ import { supabase } from '@/lib/supabase';
 export const revalidate = 300;
 
 export async function GET() {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('drivers')
     .select(
       'id,nombre,tipo,comite,experiencia,placa,modelo,sellos,ruta,precio,paradero,resena,resena_autor,tel,img,veh_img,ciudad,orden',
@@ -18,6 +18,8 @@ export async function GET() {
     .eq('status', 'activo')
     .order('orden', { ascending: true })
     .order('created_at', { ascending: true });
+
+  if (error) console.error('[api/drivers]', error.message);
 
   return NextResponse.json(
     { drivers: data ?? [] },

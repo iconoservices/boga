@@ -10,7 +10,7 @@ import { supabase } from '@/lib/supabase';
 export const revalidate = 300;
 
 export async function GET() {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('rental_listings')
     .select(
       'id,tipo,titulo,zona,precio,extras,incluye_servicios,incluye_comidas,verificado,wsp,img,ciudad,orden',
@@ -18,6 +18,8 @@ export async function GET() {
     .eq('status', 'activo')
     .order('orden', { ascending: true })
     .order('created_at', { ascending: true });
+
+  if (error) console.error('[api/alquileres]', error.message);
 
   return NextResponse.json(
     { listings: data ?? [] },

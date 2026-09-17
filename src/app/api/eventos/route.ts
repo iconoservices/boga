@@ -10,12 +10,14 @@ import { supabase } from '@/lib/supabase';
 export const revalidate = 300;
 
 export async function GET() {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('events')
     .select('id,titulo,categoria,descripcion,lugar,dia,mes,precio,organiza,img,destacado,orden')
     .eq('status', 'activo')
     .order('orden', { ascending: true })
     .order('created_at', { ascending: true });
+
+  if (error) console.error('[api/eventos]', error.message);
 
   return NextResponse.json(
     { events: data ?? [] },

@@ -7,12 +7,14 @@ import { supabase } from '@/lib/supabase';
 export const revalidate = 300;
 
 export async function GET() {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('places')
     .select('id,nombre,tag,img,orden')
     .eq('status', 'activo')
     .order('orden', { ascending: true })
     .order('created_at', { ascending: true });
+
+  if (error) console.error('[api/lugares]', error.message);
 
   return NextResponse.json(
     { places: data ?? [] },
