@@ -27,7 +27,7 @@ const INITIAL_MESSAGES: ChatMessage[] = [
   },
   {
     id: 'msg-2',
-    author: 'Doña Rosa',
+    author: 'Rosa P.',
     role: 'Comerciante',
     avatarColor: 'bg-amber-600',
     channel: 'avisos',
