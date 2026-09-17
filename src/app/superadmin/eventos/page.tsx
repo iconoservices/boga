@@ -293,9 +293,12 @@ export default function EventosAdmin() {
 
         {/* Formulario lugar */}
         <section>
-          <h2 className="font-headline-md text-lg text-on-surface mb-3">
+          <h2 className="font-headline-md text-lg text-on-surface mb-1">
             {fichaLugar.id ? 'Editar lugar' : 'Agregar lugar'} — "¿A dónde ir en Pucallpa?"
           </h2>
+          <p className="text-[11px] text-secondary/80 font-semibold mb-3">
+            Destinos permanentes sin fecha (una laguna, un parque…) — no confundir con Eventos, que sí tienen fecha y desaparecen solos cuando pasan.
+          </p>
           <form onSubmit={guardarLugar} className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-surface-container-lowest border border-surface-container-highest rounded-2xl p-5">
             <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Nombre
               <input required value={fichaLugar.nombre} onChange={(e) => setFichaLugar({ ...fichaLugar, nombre: e.target.value })} className={campo} placeholder="Laguna de Yarinacocha" /></label>
