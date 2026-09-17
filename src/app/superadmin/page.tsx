@@ -972,6 +972,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       facebook: '',
       instagram: '',
       tiktok: '',
+      externalUrl: '',
       // El correo de la solicitud: asi al guardar la tienda ya queda asignada
       // a quien la pidio, sin tener que ir despues a mano a "Usuarios".
       ownerEmail: req.email || '',
