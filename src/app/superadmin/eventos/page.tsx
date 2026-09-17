@@ -273,11 +273,16 @@ export default function EventosAdmin() {
           {cargandoDatos ? <p className="text-secondary text-sm">Cargando…</p> :
             eventos.length === 0 ? <p className="text-secondary text-sm">Todavía no hay eventos en la tabla. La página usa el seed hardcodeado hasta que agregues al menos uno.</p> : (
             <div className="flex flex-col gap-2">
-              {eventos.map((e) => (
-                <div key={e.id} className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-3 flex flex-wrap items-center gap-3">
+              {eventos.map((e) => {
+                const vencido = e.fecha && e.fecha < new Date().toISOString().slice(0, 10);
+                return (
+                <div key={e.id} className={`bg-surface-container-lowest border border-surface-container-highest rounded-xl p-3 flex flex-wrap items-center gap-3 ${vencido ? 'opacity-60' : ''}`}>
                   <span className={`w-2 h-2 rounded-full shrink-0 ${e.status === 'activo' ? 'bg-primary' : 'bg-surface-container-highest'}`} />
                   <div className="flex-1 min-w-[180px]">
-                    <p className="font-bold text-sm text-on-surface">{e.titulo} <span className="text-secondary font-normal">· {e.categoria} · {e.ciudad}</span></p>
+                    <p className="font-bold text-sm text-on-surface">
+                      {e.titulo} <span className="text-secondary font-normal">· {e.categoria} · {e.ciudad}</span>
+                      {vencido && <span className="ml-1.5 bg-red-100 text-red-700 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full align-middle">Vencido</span>}
+                    </p>
                     <p className="text-xs text-secondary">{[e.lugar, `${e.dia} ${e.mes}`, e.precio].filter(Boolean).join(' · ')}{e.destacado ? ' · ⭐ destacado' : ''}</p>
                   </div>
                   <button onClick={() => editar(e)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest text-on-surface">Editar</button>
@@ -286,7 +291,8 @@ export default function EventosAdmin() {
                   </button>
                   <button onClick={() => borrar(e)} className="text-xs font-bold px-3 py-1.5 rounded-lg text-red-600">Borrar</button>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
