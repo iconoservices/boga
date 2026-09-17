@@ -125,10 +125,16 @@ export default function Alquileres() {
                 </div>
                 <div className="flex items-end justify-between border-t border-surface-container pt-2.5 mt-auto">
                   <div className="flex flex-col">
-                    <span className="font-price-lg text-primary text-base leading-none">S/ {a.precio.toLocaleString('es-PE')}</span>
-                    <span className="text-secondary font-label-md text-[10px] mt-0.5">
-                      al mes{a.incluyeComidas ? ' · con comidas' : a.incluyeServicios ? ' · servicios incl.' : ''}
-                    </span>
+                    {a.precio > 0 ? (
+                      <>
+                        <span className="font-price-lg text-primary text-base leading-none">S/ {a.precio.toLocaleString('es-PE')}</span>
+                        <span className="text-secondary font-label-md text-[10px] mt-0.5">
+                          al mes{a.incluyeComidas ? ' · con comidas' : a.incluyeServicios ? ' · servicios incl.' : ''}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="font-price-lg text-primary text-sm leading-none">Consultar precio</span>
+                    )}
                   </div>
                   <a
                     href={waLink(a.wsp, `Hola, vi tu aviso "${a.titulo}" (${a.zona}) en Alquileres de Boga. ¿Sigue disponible?`)}
