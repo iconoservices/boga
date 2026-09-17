@@ -14,6 +14,7 @@ export type Evento = {
   lugar: string;
   dia: string;
   mes: string;
+  fecha?: string;
   precio: string;
   organiza: string;
   img: string;
@@ -30,6 +31,7 @@ function fromRow(r: Record<string, unknown>): Evento {
     lugar: (r.lugar as string) ?? '',
     dia: (r.dia as string) ?? '',
     mes: (r.mes as string) ?? '',
+    fecha: (r.fecha as string) ?? '',
     precio: (r.precio as string) ?? '',
     organiza: (r.organiza as string) ?? '',
     img: (r.img as string) ?? '',

@@ -25,7 +25,7 @@ type EventRow = Record<string, any>;
 
 const FICHA_VACIA = {
   id: null as string | null,
-  titulo: '', categoria: 'Fiestas', descripcion: '', lugar: '', dia: '', mes: 'SEP',
+  titulo: '', categoria: 'Fiestas', descripcion: '', lugar: '', dia: '', mes: 'SEP', fecha: '',
   precio: 'Libre', organiza: '', img: '', destacado: false,
   ciudad: 'pucallpa', orden: 0, status: 'activo',
 };
@@ -89,7 +89,7 @@ export default function EventosAdmin() {
     setFicha({
       id: e.id, titulo: e.titulo ?? '', categoria: e.categoria ?? 'Fiestas', descripcion: e.descripcion ?? '',
       lugar: e.lugar ?? '',
-      dia: e.dia ?? '', mes: e.mes ?? 'SEP', precio: e.precio ?? 'Libre', organiza: e.organiza ?? '',
+      dia: e.dia ?? '', mes: e.mes ?? 'SEP', fecha: e.fecha ?? '', precio: e.precio ?? 'Libre', organiza: e.organiza ?? '',
       img: e.img ?? '', destacado: Boolean(e.destacado),
       ciudad: e.ciudad ?? 'pucallpa', orden: e.orden ?? 0, status: e.status ?? 'activo',
     });
@@ -105,7 +105,7 @@ export default function EventosAdmin() {
     const payload = {
       titulo: ficha.titulo, categoria: ficha.categoria, descripcion: ficha.descripcion || null,
       lugar: ficha.lugar || null,
-      dia: ficha.dia || null, mes: ficha.mes || null, precio: ficha.precio || null,
+      dia: ficha.dia || null, mes: ficha.mes || null, fecha: ficha.fecha || null, precio: ficha.precio || null,
       organiza: ficha.organiza || null, img: ficha.img || null, destacado: ficha.destacado,
       ciudad: ficha.ciudad, orden: Number(ficha.orden) || 0, status: ficha.status,
     };
@@ -210,11 +210,26 @@ export default function EventosAdmin() {
                 {CATEGORIAS.map((c) => <option key={c}>{c}</option>)}</select></label>
             <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Lugar
               <input value={ficha.lugar} onChange={(e) => setFicha({ ...ficha, lugar: e.target.value })} className={campo} placeholder="Complejo La Cabaña" /></label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Fecha real (con año)
+              <input
+                type="date"
+                value={ficha.fecha}
+                onChange={(e) => {
+                  const f = e.target.value;
+                  if (!f) { setFicha({ ...ficha, fecha: '' }); return; }
+                  const d = new Date(f + 'T00:00:00');
+                  setFicha({ ...ficha, fecha: f, dia: String(d.getDate()), mes: MESES[d.getMonth()] });
+                }}
+                className={campo}
+              /></label>
             <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Día (número)
               <input value={ficha.dia} onChange={(e) => setFicha({ ...ficha, dia: e.target.value })} className={campo} placeholder="12" /></label>
             <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Mes
               <select value={ficha.mes} onChange={(e) => setFicha({ ...ficha, mes: e.target.value })} className={campo}>
                 {MESES.map((m) => <option key={m}>{m}</option>)}</select></label>
+            <p className="text-[9px] text-secondary/70 font-semibold sm:col-span-2 -mt-2">
+              La fecha real oculta el evento solo después de pasar. Si la dejás vacía, no se oculta automático — lo tenés que hacer a mano con "Estado".
+            </p>
             <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Precio
               <input value={ficha.precio} onChange={(e) => setFicha({ ...ficha, precio: e.target.value })} className={campo} placeholder="S/ 30 o Libre" /></label>
             <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Organiza

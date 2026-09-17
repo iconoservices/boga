@@ -865,6 +865,11 @@ CREATE TABLE IF NOT EXISTS public.events (
   lugar       TEXT,
   dia         TEXT,                              -- "12" (numero de dia, como texto para el formato de la tarjeta)
   mes         TEXT,                              -- "SEP" (3 letras mayusculas)
+  -- Fecha real (con año), opcional: si esta cargada y ya paso, el evento se
+  -- oculta solo de /eventos sin que el superadmin tenga que acordarse. Si
+  -- queda vacia (eventos viejos, o el superadmin prefiere ocultar a mano),
+  -- no cambia nada del comportamiento anterior.
+  fecha       DATE,
   precio      TEXT,                              -- "S/ 30" o "Libre"
   organiza    TEXT,
   img         TEXT,
@@ -878,6 +883,8 @@ CREATE INDEX IF NOT EXISTS events_ciudad_idx ON public.events (ciudad);
 
 -- Migracion: `events` ya existia sin esta columna cuando se agrego la ficha ampliada.
 ALTER TABLE public.events ADD COLUMN IF NOT EXISTS descripcion TEXT;
+-- Migracion: `events` ya existia sin esta columna cuando se agrego el ocultado automatico.
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS fecha DATE;
 
 ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
 
