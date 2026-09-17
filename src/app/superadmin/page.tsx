@@ -832,6 +832,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     facebook: '',
     instagram: '',
     tiktok: '',
+    externalUrl: '',
     ownerEmail: ''
   });
   // Para saber si storeForm.ownerEmail realmente cambio al guardar (y no
@@ -1581,6 +1582,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
               facebook: dbStore.facebook || undefined,
               instagram: dbStore.instagram || undefined,
               tiktok: dbStore.tiktok || undefined,
+              externalUrl: dbStore.external_url || undefined,
               theme: (() => {
                 if (dbStore.theme && Object.keys(dbStore.theme).length > 0) return dbStore.theme;
                 const tmpl = dbStore.template as string;
@@ -1670,6 +1672,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       facebook: '',
       instagram: '',
       tiktok: '',
+      externalUrl: '',
       ownerEmail: ''
     });
     setOriginalOwnerEmail('');
@@ -1711,6 +1714,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       facebook: store.facebook || '',
       instagram: store.instagram || '',
       tiktok: store.tiktok || '',
+      externalUrl: store.externalUrl || '',
       // Sale del dueño actual, no de la tienda. Si lo dejan igual al guardar
       // no se reasigna nada (ver originalOwnerEmail en handleSaveStore).
       ownerEmail: profiles.find((p) => p.id === storeOwners[slug])?.email || ''
@@ -1906,6 +1910,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       facebook: storeForm.facebook || null,
       instagram: storeForm.instagram || null,
       tiktok: storeForm.tiktok || null,
+      external_url: storeForm.externalUrl || null,
     };
     if (ownerUserId) upsertData.user_id = ownerUserId;
     if (logoUrl) {
@@ -1931,7 +1936,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       // Mismo problema que ya paso con `whatsapp` en el panel del cliente: si una
       // columna nueva todavia no existe en la base, reintenta sin ella en vez de
       // perder el guardado completo de la tienda.
-      const columnasOpcionales = ['whatsapp', 'zona', 'direccion', 'horario', 'rating', 'show_demo_products', 'metodos_pago', 'facebook', 'instagram', 'tiktok'];
+      const columnasOpcionales = ['whatsapp', 'zona', 'direccion', 'horario', 'rating', 'show_demo_products', 'metodos_pago', 'facebook', 'instagram', 'tiktok', 'external_url'];
       const columnasFaltantes: string[] = [];
       let faltante = columnasOpcionales.find((col) => col in upsertData && new RegExp(col).test(error?.message || ''));
       while (error && faltante) {
@@ -4489,6 +4494,20 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                       </div>
 
                       <div>
+                        <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Link externo (opcional)</label>
+                        <input
+                          type="url"
+                          value={storeForm.externalUrl}
+                          onChange={(e) => setStoreForm(prev => ({ ...prev, externalUrl: e.target.value }))}
+                          className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
+                          placeholder="https://mitienda.vercel.app"
+                        />
+                        <p className="text-[9px] text-[#727785] font-semibold mt-1">
+                          Para negocios que ya tienen su propia página armada. Si lo cargás, los links a esta tienda en todo el marketplace mandan ahí en vez de a la página de Boga.
+                        </p>
+                      </div>
+
+                      <div>
                         <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Métodos de Pago que Acepta</label>
                         <div className="flex flex-wrap gap-2">
                           {['Efectivo', 'Yape/Plin', 'Transferencia', 'Visa', 'Mastercard'].map((metodo) => {
@@ -4742,6 +4761,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           facebook: '',
                           instagram: '',
                           tiktok: '',
+                          externalUrl: '',
                           ownerEmail: ''
                         });
                         setOriginalOwnerEmail('');

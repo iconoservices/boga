@@ -392,7 +392,7 @@ export default function HomePage() {
   // cacheado que usa /market), para el carrusel de abajo. Se excluyen los
   // rubros claramente no-comida (moda, salud, servicios); todo lo demas
   // entra, porque hoy casi todo el catalogo real es comida/bebida.
-  const [comidaProducts, setComidaProducts] = useState<{ id: string; name: string; price: number; image: string; storeSlug: string; storeName: string }[]>([]);
+  const [comidaProducts, setComidaProducts] = useState<{ id: string; name: string; price: number; image: string; storeSlug: string; storeName: string; storeExternalUrl?: string }[]>([]);
   useEffect(() => {
     fetchCatalogo().then(({ stores: dbStores, products: dbProducts }) => {
       const tiendasPorSlug: Record<string, any> = {};
@@ -410,6 +410,7 @@ export default function HomePage() {
           image: p.image,
           storeSlug: p.store,
           storeName: tiendasPorSlug[p.store]?.name || p.store,
+          storeExternalUrl: tiendasPorSlug[p.store]?.external_url || undefined,
         }));
       setComidaProducts(items.sort(() => Math.random() - 0.5).slice(0, 12));
     });
@@ -465,8 +466,10 @@ export default function HomePage() {
             <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
               {comidaProducts.map((p) => (
                 <Link
-                  href={`/${p.storeSlug}`}
+                  href={p.storeExternalUrl || `/${p.storeSlug}`}
                   key={p.id}
+                  target={p.storeExternalUrl ? '_blank' : undefined}
+                  rel={p.storeExternalUrl ? 'noreferrer' : undefined}
                   className="group bg-white border border-surface-container-highest rounded-2xl overflow-hidden shadow-sm hover:border-primary/30 hover:shadow-md transition-all min-w-[150px] w-[150px] snap-start shrink-0"
                 >
                   <div className="aspect-square bg-surface-container-low overflow-hidden">

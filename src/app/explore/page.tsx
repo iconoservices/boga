@@ -16,7 +16,7 @@ export default function Explore() {
   const [addedItems, setAddedItems] = useState<Record<string, boolean>>({});
   const [activeSort, setActiveSort] = useState('Populares');
 
-  type StoreDataType = { name: string, slug: string, category: string, macroCat: string, time: string, delivery: string, logo: string, products: { name: string, price: string, img: string, status?: string }[] };
+  type StoreDataType = { name: string, slug: string, category: string, macroCat: string, time: string, delivery: string, logo: string, externalUrl?: string, products: { name: string, price: string, img: string, status?: string }[] };
   const [storeData, setStoreData] = useState<StoreDataType[]>([]);
 
   useEffect(() => {
@@ -37,7 +37,8 @@ export default function Explore() {
             heroAlt: s.hero_alt || 'store image',
             logoImage: s.logo_image || '',
             theme: s.theme || {},
-            categories: s.categories || []
+            categories: s.categories || [],
+            externalUrl: s.external_url || undefined,
           };
         });
       }
@@ -62,6 +63,7 @@ export default function Explore() {
             // Logo real, no la portada (una tienda sin foto propia mostraba
             // la generica de la plantilla como si fuera su logo).
             logo: s.logoImage || '',
+            externalUrl: s.externalUrl,
             products: [
               { name: 'Producto Destacado', price: 'S/ 25.00', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400' },
               { name: 'Oferta Especial', price: 'S/ 15.00', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400' },
@@ -418,7 +420,13 @@ export default function Explore() {
               </div>
               <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin pb-3 snap-x" style={{ scrollbarWidth: 'none' }}>
                 {storeData.map((store) => (
-                  <Link href={`/${store.slug}`} key={store.slug} className="min-w-[280px] w-[80vw] max-w-[310px] bg-white rounded-2xl p-4 shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest snap-start flex flex-col gap-3 group">
+                  <Link
+                    href={store.externalUrl || `/${store.slug}`}
+                    key={store.slug}
+                    target={store.externalUrl ? '_blank' : undefined}
+                    rel={store.externalUrl ? 'noreferrer' : undefined}
+                    className="min-w-[280px] w-[80vw] max-w-[310px] bg-white rounded-2xl p-4 shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest snap-start flex flex-col gap-3 group"
+                  >
                     <div className="flex gap-2 overflow-x-auto hide-scrollbar snap-x" style={{ scrollbarWidth: 'none' }}>
                       {store.products.map((p, i) => (
                         <div key={`${p.name}-${i}`} className="min-w-[85px] w-[85px] snap-start flex flex-col gap-1">
@@ -514,7 +522,13 @@ export default function Explore() {
             
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {storeData.filter(s => activeCategory === 'Todas' || s.macroCat === activeCategory).map((store) => (
-                <Link href={`/${store.slug}`} key={store.slug} className="bg-white rounded-2xl p-3 shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col gap-3 group hover:border-primary/20 transition-all">
+                <Link
+                  href={store.externalUrl || `/${store.slug}`}
+                  key={store.slug}
+                  target={store.externalUrl ? '_blank' : undefined}
+                  rel={store.externalUrl ? 'noreferrer' : undefined}
+                  className="bg-white rounded-2xl p-3 shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col gap-3 group hover:border-primary/20 transition-all"
+                >
                   <div className="flex gap-2">
                     {store.products.slice(0, 2).map((p, i) => (
                       <div key={i} className="flex-1 aspect-square rounded-xl overflow-hidden bg-surface-container-low">

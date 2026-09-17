@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS public.stores (
   facebook TEXT,
   instagram TEXT,
   tiktok TEXT,
+  external_url TEXT,
   status TEXT DEFAULT 'active'
 );
 
@@ -73,6 +74,7 @@ ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS metodos_pago TEXT[];
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS facebook TEXT;
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS instagram TEXT;
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS tiktok TEXT;
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS external_url TEXT;
 
 CREATE INDEX IF NOT EXISTS stores_slug_idx ON public.stores (slug);
 CREATE INDEX IF NOT EXISTS stores_user_id_idx ON public.stores (user_id);

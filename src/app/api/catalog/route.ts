@@ -46,7 +46,7 @@ export async function GET(request: Request) {
   const [stores, products, banners, estilo] = await Promise.all([
     supabase
       .from('stores')
-      .select('slug,name,tagline,marketplace_category,template,hero_image,hero_alt,logo_image,theme,categories,status'),
+      .select('slug,name,tagline,marketplace_category,template,hero_image,hero_alt,logo_image,theme,categories,status,external_url'),
     supabase
       .from('products')
       .select('id,name,price,category,image,store,status'),

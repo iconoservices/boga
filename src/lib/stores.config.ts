@@ -35,6 +35,12 @@ export interface StoreConfig {
   instagram?: string;
   tiktok?: string;
   /**
+   * Para negocios que ya tienen su propia pagina armada (fuera de Boga). Si
+   * esta cargado, los links a esta tienda en todo el marketplace mandan aca
+   * en vez de a la pagina-plantilla de Boga (/slug).
+   */
+  externalUrl?: string;
+  /**
    * Mostrar los productos de ejemplo de la plantilla mientras la tienda esta
    * vacia. Solo aplica si no cargo productos propios (ver lib/demo.ts).
    */

@@ -38,7 +38,7 @@ export default function Home() {
   const [favorites, setFavorites] = useState<any[]>([]);
   const [marketplaceProducts, setMarketplaceProducts] = useState<any[]>([]);
 
-  const [storeData, setStoreData] = useState<{ name: string; slug: string; category: string; time: string; delivery: string; logo: string; products: { name: string; price: string; img: string }[] }[]>([]);
+  const [storeData, setStoreData] = useState<{ name: string; slug: string; category: string; time: string; delivery: string; logo: string; externalUrl?: string; products: { name: string; price: string; img: string }[] }[]>([]);
 
   useEffect(() => {
     const fetchRealData = async () => {
@@ -76,7 +76,8 @@ export default function Home() {
             heroAlt: s.hero_alt || 'store image',
             logoImage: s.logo_image || '',
             theme: s.theme || {},
-            categories: s.categories || []
+            categories: s.categories || [],
+            externalUrl: s.external_url || undefined,
           };
         });
       }
@@ -93,6 +94,7 @@ export default function Home() {
           // tienda sin portada propia mostraba la foto generica de la
           // plantilla (ej. una hamburguesa) como si fuera su logo.
           logo: s.logoImage || '',
+          externalUrl: s.externalUrl,
           products: [
             { name: 'Producto Destacado', price: 'S/ 25.00', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400' },
             { name: 'Oferta Especial', price: 'S/ 15.00', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400' },
@@ -305,7 +307,8 @@ export default function Home() {
             heroAlt: s.hero_alt || 'store image',
             logoImage: s.logo_image || '',
             theme: s.theme || {},
-            categories: s.categories || []
+            categories: s.categories || [],
+            externalUrl: s.external_url || undefined,
           };
         });
       }
@@ -328,6 +331,7 @@ export default function Home() {
             image: p.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800',
             // Logo real, no la portada (ver comentario igual mas arriba).
             logo: storeDef?.logoImage || '',
+            externalUrl: storeDef?.externalUrl,
           }
         });
 
@@ -623,7 +627,13 @@ export default function Home() {
                     const featuredStore = storeData[storeIdx];
                     if (featuredStore) {
                       return (
-                        <Link href={`/${featuredStore.slug}`} key={`store-${idx}`} className="col-span-2 bg-white rounded-2xl p-4 shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col gap-3 group">
+                        <Link
+                          href={featuredStore.externalUrl || `/${featuredStore.slug}`}
+                          key={`store-${idx}`}
+                          target={featuredStore.externalUrl ? '_blank' : undefined}
+                          rel={featuredStore.externalUrl ? 'noreferrer' : undefined}
+                          className="col-span-2 bg-white rounded-2xl p-4 shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col gap-3 group"
+                        >
                           <div className="flex gap-3">
                             {featuredStore.products?.slice(0, 3).map((sp, i) => (
                               <div key={i} className="flex-1 flex flex-col gap-1">
@@ -656,7 +666,13 @@ export default function Home() {
                   if (isFeaturedProduct) {
                     const isFav = favorites.some(f => String(f.id) === String(prod.id));
                     return (
-                      <Link key={prod.id} href={`/${prod.slug}`} className="col-span-2 relative bg-white rounded-2xl shadow-[0_15px_15px_rgba(0,0,0,0.04)] overflow-hidden flex group min-h-[150px] border border-surface-container-highest">
+                      <Link
+                        key={prod.id}
+                        href={prod.externalUrl || `/${prod.slug}`}
+                        target={prod.externalUrl ? '_blank' : undefined}
+                        rel={prod.externalUrl ? 'noreferrer' : undefined}
+                        className="col-span-2 relative bg-white rounded-2xl shadow-[0_15px_15px_rgba(0,0,0,0.04)] overflow-hidden flex group min-h-[150px] border border-surface-container-highest"
+                      >
                         <div className="w-[42%] relative overflow-hidden shrink-0 bg-surface-container-low">
                           <img alt={prod.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src={prod.image} />
                           <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/80" />
@@ -712,7 +728,13 @@ export default function Home() {
 
                   const isFav = favorites.some(f => String(f.id) === String(prod.id));
                   return (
-                    <Link key={prod.id} href={`/${prod.slug}`} className="col-span-1 bg-white rounded-2xl shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest overflow-hidden group flex flex-col">
+                    <Link
+                      key={prod.id}
+                      href={prod.externalUrl || `/${prod.slug}`}
+                      target={prod.externalUrl ? '_blank' : undefined}
+                      rel={prod.externalUrl ? 'noreferrer' : undefined}
+                      className="col-span-1 bg-white rounded-2xl shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest overflow-hidden group flex flex-col"
+                    >
                       <div className="relative aspect-square overflow-hidden bg-surface-container-low p-4">
                         <img alt={prod.title} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" src={prod.image} />
                         <button 
