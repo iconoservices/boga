@@ -343,11 +343,6 @@ export default function PlazaChatBubble() {
                           <span className="font-bold text-xs text-gray-900 dark:text-white">
                             {msg.author}
                           </span>
-                          {msg.role && (
-                            <span className="text-[9px] px-1.5 py-0.2 rounded-sm bg-gray-200 dark:bg-neutral-700 font-medium text-gray-700 dark:text-gray-300">
-                              {msg.role}
-                            </span>
-                          )}
                           <span className="text-[10px] text-gray-500 font-light">
                             • #{msg.channel}
                           </span>
