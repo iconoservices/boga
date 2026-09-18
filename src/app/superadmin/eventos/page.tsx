@@ -29,6 +29,7 @@ const FICHA_VACIA = {
   precio: 'Libre', organiza: '', img: '', destacado: false,
   ciudad: 'pucallpa', orden: 0, status: 'activo',
   reservable: false, aforo: '' as string | number,
+  organizer_id: '',
 };
 type Ficha = typeof FICHA_VACIA;
 
@@ -48,6 +49,8 @@ export default function EventosAdmin() {
   const [ficha, setFicha] = useState<Ficha>(FICHA_VACIA);
   const [guardando, setGuardando] = useState(false);
   const [msg, setMsg] = useState('');
+
+  const [organizadores, setOrganizadores] = useState<{ id: string; nombre: string }[]>([]);
 
   const [lugares, setLugares] = useState<PlaceRow[]>([]);
   const [cargandoLugares, setCargandoLugares] = useState(true);
@@ -83,6 +86,11 @@ export default function EventosAdmin() {
 
   useEffect(() => { if (esSuperadmin) { recargar(); recargarLugares(); } }, [esSuperadmin, recargar, recargarLugares]);
 
+  useEffect(() => {
+    if (!esSuperadmin) return;
+    supabase.from('organizers').select('id,nombre').order('orden', { ascending: true }).then(({ data }) => setOrganizadores(data ?? []));
+  }, [esSuperadmin]);
+
   if (cargando) return <div className="p-10 text-center text-secondary font-body-md">Verificando acceso…</div>;
   if (!esSuperadmin) return null;
 
@@ -94,6 +102,7 @@ export default function EventosAdmin() {
       img: e.img ?? '', destacado: Boolean(e.destacado),
       ciudad: e.ciudad ?? 'pucallpa', orden: e.orden ?? 0, status: e.status ?? 'activo',
       reservable: Boolean(e.reservable), aforo: e.aforo ?? '',
+      organizer_id: e.organizer_id ?? '',
     });
     setMsg('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -111,6 +120,9 @@ export default function EventosAdmin() {
       organiza: ficha.organiza || null, img: ficha.img || null, destacado: ficha.destacado,
       ciudad: ficha.ciudad, orden: Number(ficha.orden) || 0, status: ficha.status,
       reservable: ficha.reservable, aforo: ficha.aforo === '' ? null : Number(ficha.aforo),
+      // Solo se manda si hay uno elegido: así guardar un evento sigue andando
+      // aunque la columna organizer_id todavía no exista en la base.
+      ...(ficha.organizer_id ? { organizer_id: ficha.organizer_id } : {}),
     };
 
     const res = ficha.id
@@ -240,6 +252,10 @@ export default function EventosAdmin() {
             </p>
             <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Precio
               <input value={ficha.precio} onChange={(e) => setFicha({ ...ficha, precio: e.target.value })} className={campo} placeholder="S/ 30 o Libre" /></label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Organizador (su espacio /org/…)
+              <select value={ficha.organizer_id} onChange={(e) => setFicha({ ...ficha, organizer_id: e.target.value })} className={campo}>
+                <option value="">— Ninguno (evento suelto de la agenda) —</option>
+                {organizadores.map((o) => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select></label>
             <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Organiza
               <input value={ficha.organiza} onChange={(e) => setFicha({ ...ficha, organiza: e.target.value })} className={campo} /></label>
             <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Descripción (para la ficha ampliada)

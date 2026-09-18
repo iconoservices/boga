@@ -1119,3 +1119,50 @@ BEGIN
 END;
 $$;
 GRANT EXECUTE ON FUNCTION public.validar_ticket(text) TO authenticated;
+
+-- ============================================================
+-- 18. ORGANIZADORES  (discotecas / productoras — espacio /org/[slug])
+-- ============================================================
+-- `organizers`: cada discoteca u organizadora tiene su espacio publico en
+-- /org/<slug> (estilo NovikPass). Lectura publica SOLO de status='activo';
+-- escritura solo superadmin (desde /superadmin/organizadores). Fase 1: solo
+-- el registro; ligar eventos (events.organizer_id), PINs de staff y
+-- promotores vienen despues.
+CREATE TABLE IF NOT EXISTS public.organizers (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at  TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  slug        TEXT UNIQUE NOT NULL,               -- /org/<slug>
+  nombre      TEXT NOT NULL,
+  tagline     TEXT,                                -- "Discoteca · Av. San Martín"
+  color       TEXT NOT NULL DEFAULT '#d4af37',     -- acento del espacio
+  logo        TEXT,
+  ciudad      TEXT NOT NULL DEFAULT 'pucallpa',
+  orden       INT  NOT NULL DEFAULT 0,
+  status      TEXT NOT NULL DEFAULT 'activo'       -- activo | oculto
+);
+CREATE INDEX IF NOT EXISTS organizers_status_idx ON public.organizers (status);
+
+ALTER TABLE public.organizers ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "organizers: lectura publica de activos" ON public.organizers;
+DROP POLICY IF EXISTS "organizers: superadmin inserta"         ON public.organizers;
+DROP POLICY IF EXISTS "organizers: superadmin edita"           ON public.organizers;
+DROP POLICY IF EXISTS "organizers: superadmin borra"           ON public.organizers;
+
+CREATE POLICY "organizers: lectura publica de activos"
+ON public.organizers FOR SELECT
+USING (status = 'activo' OR public.is_superadmin());
+
+CREATE POLICY "organizers: superadmin inserta"
+ON public.organizers FOR INSERT WITH CHECK (public.is_superadmin());
+
+CREATE POLICY "organizers: superadmin edita"
+ON public.organizers FOR UPDATE USING (public.is_superadmin());
+
+CREATE POLICY "organizers: superadmin borra"
+ON public.organizers FOR DELETE USING (public.is_superadmin());
+
+-- Fase 2: cada evento puede pertenecer a un organizador (sus "proximas
+-- noches" en /org/<slug>). NULL = evento suelto de la agenda general.
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS organizer_id UUID REFERENCES public.organizers(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS events_organizer_idx ON public.events (organizer_id);
