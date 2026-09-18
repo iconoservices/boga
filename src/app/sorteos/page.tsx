@@ -80,7 +80,7 @@ export default function Sorteos() {
 
   return (
     <>
-      <AppHeader showSearch={false} cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
+      <AppHeader cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
 
       <div className="min-h-screen bg-[#3a1a6e] text-white">
         <div className="max-w-[1200px] mx-auto px-container-margin lg:px-6 pt-5 pb-16 flex flex-col gap-7">

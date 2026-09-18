@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
@@ -9,8 +8,6 @@ import SectionNav from '@/components/SectionNav';
 import { CitySwitcher } from '@/components/CityWaitlist';
 
 interface AppHeaderProps {
-  showSearch?: boolean;
-  placeholder?: string;
   cartCount?: number;
   onCartClick?: () => void;
   /** Bloque "Entregar en <dirección>". Se apaga en pantallas de lectura (Revista). */
@@ -22,8 +19,6 @@ interface AppHeaderProps {
 }
 
 export default function AppHeader({
-  showSearch = true,
-  placeholder = "¿Qué buscas hoy?",
   cartCount: propCartCount,
   onCartClick: propOnCartClick,
   showLocation = true,
@@ -39,29 +34,6 @@ export default function AppHeader({
   // Use props if provided, otherwise use context
   const displayCartCount = propCartCount !== undefined ? propCartCount : contextCartCount;
   const handleCartClick = propOnCartClick || (() => setIsCartOpen(true));
-
-  // El buscador (mobile) se esconde apenas empezás a bajar y vuelve apenas
-  // volvés cerca del tope; la fila de dirección/iconos arriba se queda
-  // siempre fija (pedido explícito). Dos umbrales distintos (no uno solo)
-  // para esconder y para mostrar: con el rebote del scroll elástico en
-  // mobile, el scroll pasa varias veces por el mismo punto al asentarse, y
-  // un solo umbral hace que el buscador parpadee cada vez que lo cruza.
-  const [searchHidden, setSearchHidden] = useState(false);
-  useEffect(() => {
-    if (!showSearch) return;
-    let ticking = false;
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        const y = window.scrollY;
-        setSearchHidden((prev) => (prev ? y > 24 : y > 80));
-        ticking = false;
-      });
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, [showSearch]);
 
   return (
     <header className="bg-surface sticky top-0 z-50 w-full shadow-[0px_15px_15px_rgba(0,0,0,0.04)] border-b border-surface-container-high">
@@ -107,28 +79,22 @@ export default function AppHeader({
             <button className="p-2 bg-white rounded-full shadow-sm hover:shadow-md transition-all active:scale-90 flex items-center justify-center">
               <span className="material-symbols-outlined text-on-surface text-[20px]">notifications</span>
             </button>
+
+            {/* Perfil / iniciar sesión */}
+            <Link
+              href={user ? '/profile' : '/login'}
+              aria-label={firstName ? `Perfil de ${firstName}` : 'Iniciar sesión'}
+              className="p-2 bg-white rounded-full shadow-sm hover:shadow-md transition-all active:scale-90 flex items-center justify-center"
+            >
+              <span
+                className={`material-symbols-outlined text-[20px] ${pathname.startsWith('/profile') ? 'text-primary' : 'text-on-surface'}`}
+                style={user ? { fontVariationSettings: "'FILL' 1" } : {}}
+              >
+                person
+              </span>
+            </Link>
           </div>
         </div>
-
-        {/* Pill-shaped Search Bar — colapsa al bajar, la fila de arriba no se mueve */}
-        {showSearch && (
-          <div
-            className={`overflow-hidden transition-all duration-300 ${
-              searchHidden ? 'max-h-0 opacity-0' : 'max-h-16 opacity-100 mt-4'
-            }`}
-          >
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
-                <span className="material-symbols-outlined text-secondary text-[20px]">search</span>
-              </div>
-              <input
-                className="block w-full pl-11 pr-4 py-3 bg-white border-none rounded-full shadow-[0_15px_15px_rgba(0,0,0,0.04)] focus:ring-2 focus:ring-primary/20 text-body-md font-body-md transition-all focus:outline-none placeholder:text-secondary/60"
-                placeholder={placeholder}
-                type="text"
-              />
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Desktop Nav Row */}
@@ -141,21 +107,7 @@ export default function AppHeader({
           {showLocation && <CitySwitcher variant="desktop" />}
         </div>
 
-        {/* Middle Right: Centered Search Bar */}
-        {showSearch ? (
-          <div className="flex-1 max-w-xl px-2">
-            <div className="relative group">
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-secondary group-focus-within:text-primary transition-colors text-[20px]">search</span>
-              <input 
-                className="w-full bg-surface-container-low border-none rounded-full py-2.5 pl-11 pr-4 focus:ring-2 focus:ring-primary/20 focus:bg-white focus:outline-none transition-all text-body-md placeholder:text-secondary/60" 
-                placeholder={placeholder} 
-                type="text"
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="flex-1" />
-        )}
+        <div className="flex-1" />
 
         {/* Right: Actions — soporte · notificaciones · pedidos · carrito · perfil */}
         <div className="flex items-center gap-1.5 shrink-0">

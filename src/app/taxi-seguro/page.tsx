@@ -315,7 +315,7 @@ export default function TaxiSeguro() {
 
   return (
     <div style={themeVars}>
-      <AppHeader showSearch={false} cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
+      <AppHeader cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
 
       {/* Banda cívica */}
       <div className="bg-on-surface text-background">

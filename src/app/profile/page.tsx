@@ -100,7 +100,7 @@ export default function ProfilePage() {
   if (authLoading || !authUser) {
     return (
       <>
-        <AppHeader showSearch={false} cartCount={0} />
+        <AppHeader cartCount={0} />
         <main className="max-w-[640px] mx-auto px-container-margin pt-20 pb-12 flex items-center justify-center text-secondary text-sm">
           {authLoading ? 'Cargando tu perfil…' : 'Redirigiendo a inicio de sesión…'}
         </main>
@@ -116,7 +116,6 @@ export default function ProfilePage() {
   return (
     <>
       <AppHeader 
-        showSearch={false} 
         cartCount={0}
       />
 
@@ -196,6 +195,21 @@ export default function ProfilePage() {
             </Link>
           </div>
         )}
+
+        {/* Mis pedidos */}
+        <Link
+          href="/orders"
+          className="bg-white rounded-2xl p-4 border border-surface-container-highest shadow-sm flex items-center gap-4 hover:border-primary/30 hover:shadow-md transition-all active:scale-[0.99]"
+        >
+          <div className="w-11 h-11 bg-primary-fixed text-primary rounded-xl flex items-center justify-center shrink-0">
+            <span className="material-symbols-outlined text-[22px]">receipt_long</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-sm text-on-surface">Mis pedidos</p>
+            <p className="text-secondary text-xs mt-0.5">Sigue tus compras y revisa tu historial.</p>
+          </div>
+          <span className="material-symbols-outlined text-[20px] text-secondary/40">chevron_right</span>
+        </Link>
 
         {/* Section Nav Tabs */}
         <div className="flex gap-1 bg-surface-container p-1 rounded-xl border border-surface-container-highest shadow-inner">

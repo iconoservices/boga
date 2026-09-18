@@ -297,8 +297,6 @@ export default function Explore() {
   return (
     <>
       <AppHeader 
-        showSearch={true} 
-        placeholder="Busca lo que necesites..." 
         cartCount={cartCount}
         onCartClick={() => setIsCartOpen(true)}
       />

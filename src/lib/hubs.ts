@@ -7,7 +7,7 @@ export type Hub = { href: string; label: string; long?: string; icon: string; ap
 export const HUBS: Hub[] = [
   { href: '/',            label: 'Inicio',      icon: 'home' },
   { href: '/market',      label: 'Market',      icon: 'storefront' },
-  { href: '/eventos',     label: 'Eventos',     long: 'Eventos & Agenda', icon: 'celebration' },
+  { href: '/eventos',     label: 'Agenda',      long: 'Agenda & Eventos', icon: 'celebration' },
   { href: '/inmuebles',   label: 'Inmuebles',   icon: 'real_estate_agent' },
   { href: '/pension',     label: 'Pensión',     long: 'Pensión de almuerzos', icon: 'lunch_dining' },
   { href: '/servicios',   label: 'Servicios',   long: 'Servicios & Chamba', icon: 'construction' },
@@ -20,10 +20,8 @@ export const HUBS: Hub[] = [
 ];
 
 // Accesos de cuenta — acompañan a los hubs en la barra inferior móvil.
-export const ACCOUNT_LINKS: Hub[] = [
-  { href: '/orders',  label: 'Pedidos', icon: 'receipt_long' },
-  { href: '/profile', label: 'Perfil',  icon: 'person' },
-];
+// Hoy vacío: el perfil vive arriba (cabecera) y "Mis pedidos" dentro del perfil.
+export const ACCOUNT_LINKS: Hub[] = [];
 
 export function isHubActive(pathname: string, href: string) {
   if (href === '/' || href === '/market') return pathname === href;

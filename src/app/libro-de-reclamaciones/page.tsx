@@ -54,7 +54,7 @@ export default function LibroDeReclamacionesPage() {
 
   return (
     <>
-      <AppHeader showSearch={false} showLocation={false} showChat={false} showCart={false} />
+      <AppHeader showLocation={false} showChat={false} showCart={false} />
       <main className="mx-auto w-full max-w-[720px] px-container-margin pb-20 pt-6 lg:px-8">
         <Link
           href="/legal/libro-de-reclamaciones"

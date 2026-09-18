@@ -151,3 +151,13 @@ body { transition: padding-left 0.2s ease; }
     animation: none;
   }
 }
+
+/* Oculta la barra de desplazamiento en carruseles/tiras horizontales
+   (se sigue deslizando con el dedo o el mouse). */
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}

@@ -100,24 +100,27 @@ export default function Inmuebles() {
 
   return (
     <>
-      <AppHeader showSearch cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} placeholder="Busca por zona o tipo…" />
+      <AppHeader cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
 
       <main className="max-w-[1200px] mx-auto px-container-margin lg:px-6 w-full pt-5 flex flex-col gap-6 pb-14">
 
         {/* Encabezado + Pestañas en una fila */}
-        <div className="flex items-end justify-between gap-4 border-b border-surface-container-high pb-0">
-          <div className="flex flex-col gap-0.5 pb-2.5">
-            <h1 className="font-headline-lg text-on-surface">Inmuebles 🏠</h1>
-            <p className="text-secondary font-body-md text-sm">Encuentra dónde vivir o invierte en terrenos, casas y lotes en Pucallpa.</p>
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3 lg:gap-4 border-b border-surface-container-high pb-0">
+          <div className="flex flex-col gap-1 lg:pb-2.5">
+            <h1 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">Inmuebles 🏠</h1>
+            <p className="font-body-md text-secondary text-xs">
+              <span className="lg:hidden">Dónde vivir e invertir en Pucallpa.</span>
+              <span className="hidden lg:inline">Encuentra dónde vivir o invierte en terrenos, casas y lotes en Pucallpa.</span>
+            </p>
           </div>
-          <div className="flex gap-0 shrink-0">
+          <div className="flex gap-0 lg:shrink-0">
             <button
               onClick={() => setModo('alquiler')}
-              className={`px-5 py-2.5 font-headline-sm text-sm transition-all relative ${
+              className={`flex-1 lg:flex-none px-5 py-2.5 font-headline-sm text-sm transition-all relative ${
                 modo === 'alquiler' ? 'text-primary' : 'text-secondary hover:text-on-surface'
               }`}
             >
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center justify-center gap-1.5">
                 <span className="material-symbols-outlined text-[18px]">bed</span>
                 En Alquiler
               </span>
@@ -125,11 +128,11 @@ export default function Inmuebles() {
             </button>
             <button
               onClick={() => setModo('venta')}
-              className={`px-5 py-2.5 font-headline-sm text-sm transition-all relative ${
+              className={`flex-1 lg:flex-none px-5 py-2.5 font-headline-sm text-sm transition-all relative ${
                 modo === 'venta' ? 'text-primary' : 'text-secondary hover:text-on-surface'
               }`}
             >
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center justify-center gap-1.5">
                 <span className="material-symbols-outlined text-[18px]">sell</span>
                 En Venta
               </span>

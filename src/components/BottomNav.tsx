@@ -49,7 +49,7 @@ export default function BottomNav() {
 
       <nav className="fixed bottom-0 left-0 w-full z-50 flex items-stretch bg-surface-container-lowest dark:bg-inverse-surface shadow-[0_-4px_15px_rgba(0,0,0,0.04)] rounded-t-xl border-t border-surface-container-high lg:hidden pb-[max(12px,env(safe-area-inset-bottom))]">
         <div
-          className="flex-1 flex gap-1 overflow-x-auto hide-scrollbar px-2 py-3 snap-x"
+          className="flex-1 flex gap-1 overflow-x-auto hide-scrollbar px-4 py-3 snap-x scroll-pl-4"
           style={{ scrollbarWidth: 'none' }}
         >
           {ALL.map((item) => {

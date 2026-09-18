@@ -31,7 +31,6 @@ export default function Promotions() {
   return (
     <>
       <AppHeader 
-        showSearch={false} 
         cartCount={cartCount}
         onCartClick={() => setIsCartOpen(true)}
       />

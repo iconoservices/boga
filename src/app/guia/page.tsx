@@ -122,7 +122,7 @@ export default function GuiaPage() {
 
   return (
     <>
-      <AppHeader showSearch={false} cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
+      <AppHeader cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
 
       {/* Banda de portada */}
       <div className="bg-on-surface text-background">

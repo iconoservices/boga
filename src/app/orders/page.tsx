@@ -29,7 +29,6 @@ export default function Orders() {
   return (
     <>
       <AppHeader 
-        showSearch={false} 
         cartCount={cartCount}
         onCartClick={() => setIsCartOpen(true)}
       />

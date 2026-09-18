@@ -80,7 +80,7 @@ const PORTALES = [
   { href: '/taxi-seguro', label: 'Taxi Seguro', icon: 'local_taxi',          sub: 'Te llevamos con chofer verificado',  color: '#E4655A' },
   { href: '/inmuebles',   label: 'Inmuebles',   icon: 'real_estate_agent',   sub: 'Te encontramos dónde vivir o invertir', color: '#8B7FD4' },
   { href: '/viajes',      label: 'Viajes',      icon: 'directions_boat',     sub: 'Te conectamos con rápidos y buses',  color: '#1B8EBF' },
-  { href: '/eventos',     label: 'Eventos',     icon: 'celebration',         sub: 'Te armamos el finde en la ciudad',   color: '#EBB05C' },
+  { href: '/eventos',     label: 'Agenda',      icon: 'celebration',         sub: 'Te armamos el finde en la ciudad',   color: '#EBB05C' },
   { href: '/sorteos',     label: 'La Suerte',   icon: 'confirmation_number', sub: 'Te hacemos ganar con tus compras',   color: '#2E9B76' },
   { href: '/revista',     label: 'Revista',     icon: 'menu_book',           sub: 'Te contamos la selva y sus historias', color: '#D97742' },
   { href: '/negocios',    label: 'Negocios',    icon: 'work',                sub: 'Te ponemos a vender por WhatsApp',   color: '#2F3B4C' },
@@ -424,7 +424,7 @@ export default function HomePage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <AppHeader showSearch={false} cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
+      <AppHeader cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
 
       {/* Banda negra compacta */}
       <div className="bg-on-surface text-background overflow-hidden">
@@ -532,7 +532,7 @@ export default function HomePage() {
 
         {/* Qué hacer en Pucallpa hoy */}
         <section className="flex flex-col gap-4">
-          <SectionHead title="Qué hacer en Pucallpa hoy" href="/eventos" cta="Ver eventos" />
+          <SectionHead title="Qué hacer en Pucallpa hoy" href="/eventos" cta="Ver agenda" />
           <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
             {queHacer.map((e) => (
               <Link href="/eventos" key={e.id} className="min-w-[220px] w-[220px] lg:min-w-[260px] lg:w-[260px] bg-white border border-surface-container-highest overflow-hidden shadow-sm rounded-2xl snap-start group flex flex-col">
@@ -553,17 +553,17 @@ export default function HomePage() {
 
         {/* Del Market — Dónde comer esta semana (carrusel de listas) */}
         <section className="flex flex-col gap-4">
-          <div className="flex items-end justify-between">
-            <div>
-              <span className="w-fit bg-tertiary-fixed text-on-tertiary-fixed-variant text-[10px] font-label-md px-2 py-0.5 rounded-full flex items-center gap-1 uppercase tracking-wider mb-1.5">
-                <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>restaurant</span>Selección Boga
-              </span>
+          <div className="flex flex-col gap-1">
+            <span className="w-fit bg-tertiary-fixed text-on-tertiary-fixed-variant text-[10px] font-label-md px-2 py-0.5 rounded-full flex items-center gap-1 uppercase tracking-wider mb-0.5">
+              <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>restaurant</span>Selección Boga
+            </span>
+            <div className="flex items-end justify-between gap-4">
               <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">Dónde comer esta semana</h2>
-              <p className="font-body-md text-secondary text-xs mt-1">Listas por antojo — desliza para ver más.</p>
+              <Link href="/market" className="group shrink-0 font-label-md text-[12px] text-primary flex items-center gap-0.5 whitespace-nowrap">
+                Ver Market<span className="material-symbols-outlined text-[14px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
+              </Link>
             </div>
-            <Link href="/market" className="font-label-md text-[12px] text-primary shrink-0 flex items-center gap-0.5 whitespace-nowrap">
-              Ver Market<span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-            </Link>
+            <p className="font-body-md text-secondary text-xs">Listas por antojo — desliza para ver más.</p>
           </div>
           <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
             {COMER_LISTAS.map((lista) => (
@@ -622,11 +622,11 @@ export default function HomePage() {
 
         {/* Servicios y chamba */}
         <section className="flex flex-col gap-4">
-          <SectionHead title="Chamba y servicios" href="/servicios" cta="Ver todo" />
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <SectionHead title="Chamba y oficios" href="/servicios" cta="Ver todo" />
+          <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
             {SERVICIOS_PEEK.map((s) => (
-              <Link href="/servicios" key={s.id} className="bg-white border border-surface-container-highest p-3 flex items-center gap-3 shadow-sm hover:border-primary/30 transition-colors">
-                <div className="w-14 h-14 overflow-hidden shrink-0 bg-surface-container-low">
+              <Link href="/servicios" key={s.id} className="min-w-[240px] w-[240px] lg:min-w-[280px] lg:w-[280px] snap-start shrink-0 bg-white border border-surface-container-highest rounded-2xl p-3 flex items-center gap-3 shadow-sm hover:border-primary/30 hover:shadow-md transition-all">
+                <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-surface-container-low">
                   <img src={s.img} alt={s.nombre} className="w-full h-full object-cover" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -644,9 +644,9 @@ export default function HomePage() {
         {/* Dónde vivir — Inmuebles */}
         <section className="flex flex-col gap-4">
           <SectionHead title="Dónde vivir" href="/inmuebles" cta="Ver inmuebles" />
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
             {INMUEBLES_PEEK.map((a) => (
-              <Link href="/inmuebles" key={a.id} className="bg-white border border-surface-container-highest overflow-hidden shadow-sm group flex flex-col">
+              <Link href="/inmuebles" key={a.id} className="min-w-[220px] w-[220px] lg:min-w-[260px] lg:w-[260px] bg-white border border-surface-container-highest overflow-hidden shadow-sm rounded-2xl snap-start group flex flex-col">
                 <div className="relative h-32 overflow-hidden bg-surface-container-low">
                   <img src={a.img} alt={a.titulo} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <span className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-label-md px-2 py-0.5 rounded-full uppercase tracking-wider">{a.tag}</span>
@@ -666,9 +666,9 @@ export default function HomePage() {
         {/* Viajes & Transporte */}
         <section className="flex flex-col gap-4">
           <SectionHead title="Viajes desde Pucallpa" href="/viajes" cta="Ver rutas" />
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
             {VIAJES_PEEK.map((v) => (
-              <Link href="/viajes" key={v.id} className="bg-white border border-surface-container-highest overflow-hidden shadow-sm group flex items-center gap-3 p-3">
+              <Link href="/viajes" key={v.id} className="min-w-[250px] w-[250px] lg:min-w-[290px] lg:w-[290px] snap-start shrink-0 bg-white border border-surface-container-highest rounded-2xl overflow-hidden shadow-sm hover:border-primary/30 hover:shadow-md transition-all group flex items-center gap-3 p-3">
                 <div className="w-11 h-11 rounded-xl bg-[#1B8EBF]/10 flex items-center justify-center shrink-0">
                   <span className="material-symbols-outlined text-[#1B8EBF] text-[22px]">{v.icon}</span>
                 </div>
@@ -686,7 +686,7 @@ export default function HomePage() {
         {/* Sorteo del mes */}
         <section className="flex flex-col gap-4">
           <SectionHead title="Sorteo del mes" href="/sorteos" cta="Ver sorteos" />
-          <Link href="/sorteos" className="group relative block overflow-hidden aspect-[16/9] sm:aspect-[21/9] bg-[#3a1a6e] shadow-sm">
+          <Link href="/sorteos" className="group relative block overflow-hidden rounded-2xl aspect-[16/9] sm:aspect-[21/9] bg-[#3a1a6e] shadow-sm">
             <img src={SORTEO_PEEK.img} alt={SORTEO_PEEK.titulo} className="absolute inset-0 w-full h-full object-cover opacity-80 transition-transform duration-700 group-hover:scale-[1.03]" />
             <div className="absolute inset-0 bg-gradient-to-r from-[#3a1a6e]/95 via-[#3a1a6e]/50 to-transparent" />
             <div className="absolute inset-0 flex flex-col justify-center gap-1.5 p-5 lg:p-10 max-w-[520px]">
@@ -698,7 +698,7 @@ export default function HomePage() {
         </section>
 
         {/* Qué es Boga */}
-        <section className="bg-on-surface text-background p-6 lg:p-10">
+        <section className="bg-on-surface text-background rounded-2xl p-6 lg:p-10">
           <span className="font-label-md text-[10px] uppercase tracking-[0.25em] text-background/50">Qué es Boga</span>
           <p className="font-headline-lg font-extrabold tracking-tight text-lg lg:text-2xl leading-snug mt-2 max-w-[46ch]">
             Boga es el sistema operativo digital de Pucallpa: una super-app que reúne el comercio,

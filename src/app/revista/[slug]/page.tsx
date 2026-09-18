@@ -122,7 +122,7 @@ export default async function ArticuloPage({ params }: Props) {
 
   return (
     <>
-      <AppHeader showSearch={false} showLocation={false} showChat={false} showCart={false} />
+      <AppHeader showLocation={false} showChat={false} showCart={false} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       <main className="w-full pb-16">
