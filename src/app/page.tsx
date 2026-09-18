@@ -6,6 +6,8 @@ import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
 import { fetchNotasRevista, type NotaCard } from '@/lib/revista';
 import { fetchBanners, fetchCatalogo } from '@/lib/catalogo';
+import { fetchEventos } from '@/lib/eventos';
+import { fetchLugares } from '@/lib/lugares';
 import { BannerOverlay, type BannerStyle } from '@/components/BannerOverlay';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app';
@@ -287,15 +289,6 @@ const PULSO_CARDS = [
     tint: 'bg-[#d7f0e2] text-[#0b7a48]',
     btn: 'bg-[#0F8A55] text-white',
   },
-  {
-    href: '/sorteos',
-    icon: 'confirmation_number',
-    title: 'Sorteo del mes: moto 0 km',
-    sub: 'Honda XR 150 · suma tickets con tus compras',
-    action: 'chevron_right',
-    tint: 'bg-primary-fixed text-primary',
-    btn: 'bg-primary text-white',
-  },
 ];
 
 // Panel "Los 8 Portales de Boga" — el lanzador de la ciudad, al lado de la
@@ -377,6 +370,14 @@ export default function HomePage() {
   const [notasRevista, setNotasRevista] = useState<NotaCard[]>([]);
   useEffect(() => { fetchNotasRevista().then(setNotasRevista); }, []);
 
+  // "Qué hacer en Pucallpa hoy" jala de las dos fuentes reales de /eventos:
+  // la agenda (events) y los lugares para visitar (lugares), mezcladas en
+  // una sola tira. Si el admin todavía no cargó ninguna, cae a EXPERIENCES.
+  const [eventosHome, setEventosHome] = useState<Awaited<ReturnType<typeof fetchEventos>>>([]);
+  const [lugaresHome, setLugaresHome] = useState<Awaited<ReturnType<typeof fetchLugares>>>([]);
+  useEffect(() => { fetchEventos().then(setEventosHome); }, []);
+  useEffect(() => { fetchLugares().then(setLugaresHome); }, []);
+
   // Promos del banner de portada, editables desde superadmin (tabla
   // market_banners con page='home'). Si todavia no cargaron ninguna, el
   // carrusel sigue usando PROMO_SLIDES de muestra (ver armarSlides).
@@ -429,6 +430,21 @@ export default function HomePage() {
   const masRevista = notasRevista.length
     ? notasRevista.slice(0, 8).map((n) => ({ key: n.slug, href: `/revista/${n.slug}`, cat: n.kicker, title: n.titulo, img: n.img }))
     : SELVA_NOTES.map((n) => ({ key: n.id, href: '/revista', cat: n.cat, title: n.title, img: n.img }));
+
+  const queHacer = eventosHome.length || lugaresHome.length
+    ? [
+        ...eventosHome.slice(0, 4).map((e) => ({
+          id: e.id, title: e.titulo, img: e.img,
+          tag: [e.dia, e.mes].filter(Boolean).join(' ') || 'Evento',
+          meta: e.precio ? `Desde ${e.precio}` : 'Ver evento',
+        })),
+        ...lugaresHome.slice(0, 4).map((l) => ({
+          id: l.id, title: l.nombre, img: l.img,
+          tag: l.tag || 'Para visitar',
+          meta: 'Para visitar',
+        })),
+      ]
+    : EXPERIENCES.map((e) => ({ id: e.id, title: e.title, img: e.img, tag: e.tag, meta: `Desde ${e.from}` }));
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -614,7 +630,7 @@ export default function HomePage() {
         <section className="flex flex-col gap-4">
           <SectionHead title="Qué hacer en Pucallpa hoy" href="/eventos" cta="Ver eventos" />
           <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
-            {EXPERIENCES.map((e) => (
+            {queHacer.map((e) => (
               <Link href="/eventos" key={e.id} className="min-w-[220px] w-[220px] lg:min-w-[260px] lg:w-[260px] bg-white border border-surface-container-highest overflow-hidden shadow-sm rounded-2xl snap-start group flex flex-col">
                 <div className="relative h-32 overflow-hidden bg-surface-container-low">
                   <img src={e.img} alt={e.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -624,7 +640,7 @@ export default function HomePage() {
                 </div>
                 <div className="p-3 flex flex-col gap-1 flex-1">
                   <h4 className="font-headline-sm text-sm text-on-surface line-clamp-2">{e.title}</h4>
-                  <span className="text-secondary font-label-md text-[11px] mt-auto">Desde <span className="font-price-lg text-primary text-sm">{e.from}</span></span>
+                  <span className="text-secondary font-label-md text-[11px] mt-auto"><span className="font-price-lg text-primary text-sm">{e.meta}</span></span>
                 </div>
               </Link>
             ))}
