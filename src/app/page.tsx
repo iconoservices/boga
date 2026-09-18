@@ -7,6 +7,8 @@ import { useCart } from '@/context/CartContext';
 import { fetchNotasRevista, type NotaCard } from '@/lib/revista';
 import { fetchBanners, fetchCatalogo } from '@/lib/catalogo';
 import { fetchEventos } from '@/lib/eventos';
+import { fetchAlquileres } from '@/lib/alquileres';
+import { fetchVentas } from '@/lib/ventas';
 import { fetchLugares } from '@/lib/lugares';
 import { BannerOverlay, type BannerStyle } from '@/components/BannerOverlay';
 
@@ -328,6 +330,29 @@ export default function HomePage() {
   const [eventosHome, setEventosHome] = useState<Awaited<ReturnType<typeof fetchEventos>>>([]);
   const [lugaresHome, setLugaresHome] = useState<Awaited<ReturnType<typeof fetchLugares>>>([]);
   useEffect(() => { fetchEventos().then(setEventosHome); }, []);
+
+  // "Dónde quedarte": avisos reales de /inmuebles (alquileres + ventas, vía los
+  // endpoints cacheados). Mientras no haya ninguno cargado, muestra el demo.
+  const [inmueblesHome, setInmueblesHome] = useState(INMUEBLES_PEEK);
+  useEffect(() => {
+    Promise.all([fetchAlquileres(), fetchVentas()]).then(([alq, vta]) => {
+      const precio = (n: number, moneda: string) =>
+        n > 0 ? `${moneda === 'USD' ? '$' : 'S/'} ${n.toLocaleString('es-PE')}` : 'Consultar';
+      const reales = [
+        ...alq.slice(0, 4).map((a) => ({
+          id: `alq-${a.id}`, titulo: a.titulo, zona: a.zona,
+          precio: precio(a.precio, 'PEN'), tag: a.tipo === 'Pensión' ? 'Hotel' : a.tipo,
+          img: a.img || INMUEBLES_PEEK[0].img,
+        })),
+        ...vta.slice(0, 2).map((v) => ({
+          id: `vta-${v.id}`, titulo: v.titulo, zona: v.zona,
+          precio: precio(v.precio, v.moneda), tag: 'Venta',
+          img: v.img || INMUEBLES_PEEK[2].img,
+        })),
+      ];
+      if (reales.length > 0) setInmueblesHome(reales);
+    });
+  }, []);
   useEffect(() => { fetchLugares().then(setLugaresHome); }, []);
 
   // Promos del banner de portada, editables desde superadmin (tabla
@@ -551,16 +576,16 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Del Market — Dónde comer esta semana (carrusel de listas) */}
+        {/* Dónde comer — guía de locales (experiencia local, no delivery) */}
         <section className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
             <span className="w-fit bg-tertiary-fixed text-on-tertiary-fixed-variant text-[10px] font-label-md px-2 py-0.5 rounded-full flex items-center gap-1 uppercase tracking-wider mb-0.5">
               <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>restaurant</span>Selección Boga
             </span>
             <div className="flex items-end justify-between gap-4">
-              <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">Dónde comer esta semana</h2>
+              <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">Dónde comer</h2>
               <Link href="/market" className="group shrink-0 font-label-md text-[12px] text-primary flex items-center gap-0.5 whitespace-nowrap">
-                Ver Market<span className="material-symbols-outlined text-[14px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
+                Ver todos<span className="material-symbols-outlined text-[14px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
               </Link>
             </div>
             <p className="font-body-md text-secondary text-xs">Listas por antojo — desliza para ver más.</p>
@@ -641,11 +666,11 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Dónde vivir — Inmuebles */}
+        {/* Dónde quedarte — Inmuebles (avisos reales; demo si aún no hay) */}
         <section className="flex flex-col gap-4">
-          <SectionHead title="Dónde vivir" href="/inmuebles" cta="Ver inmuebles" />
+          <SectionHead title="Dónde quedarte" href="/inmuebles" cta="Ver inmuebles" />
           <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
-            {INMUEBLES_PEEK.map((a) => (
+            {inmueblesHome.map((a) => (
               <Link href="/inmuebles" key={a.id} className="min-w-[220px] w-[220px] lg:min-w-[260px] lg:w-[260px] bg-white border border-surface-container-highest overflow-hidden shadow-sm rounded-2xl snap-start group flex flex-col">
                 <div className="relative h-32 overflow-hidden bg-surface-container-low">
                   <img src={a.img} alt={a.titulo} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -655,7 +680,7 @@ export default function HomePage() {
                 <div className="p-3">
                   <h4 className="font-headline-sm text-sm text-on-surface line-clamp-2 leading-tight">{a.titulo}</h4>
                   <span className="font-label-md text-[11px] text-secondary flex items-center gap-0.5 mt-1">
-                    <span className="material-symbols-outlined text-[12px]">location_on</span>{a.zona}
+                    <span className="material-symbols-outlined text-[12px] shrink-0">location_on</span><span className="truncate">{a.zona}</span>
                   </span>
                 </div>
               </Link>
