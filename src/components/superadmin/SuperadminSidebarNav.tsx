@@ -16,10 +16,10 @@ const NAV_TABS = [
   { id: 'paquetes',        icon: 'inventory_2',   label: 'Paquetes' },
   { id: 'usuarios',        icon: 'group',         label: 'Usuarios' },
   { id: 'personalizacion', icon: 'tune',          label: 'Personalización' },
-  { id: 'plantillas',      icon: 'layers',        label: 'Plantillas' },
 ] as const;
 
 const SUBRUTAS = [
+  { href: '/superadmin/plantillas',     icon: 'layers',       label: 'Plantillas' },
   { href: '/superadmin/revista',        icon: 'menu_book',    label: 'Revista' },
   { href: '/superadmin/notas',          icon: 'sticky_note_2',label: 'Notas internas' },
   { href: '/superadmin/choferes',       icon: 'local_taxi',   label: 'Choferes' },
