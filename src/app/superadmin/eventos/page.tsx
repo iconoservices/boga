@@ -119,6 +119,7 @@ export default function EventosAdmin() {
   const [ficha, setFicha] = useState<Ficha>(FICHA_VACIA);
   const [modalEvento, setModalEvento] = useState(false);
   const [busqueda, setBusqueda] = useState('');
+  const [vista, setVista] = useState<'todos' | 'agenda' | 'lugares'>('todos');
   const [guardando, setGuardando] = useState(false);
   const [msg, setMsg] = useState('');
 
@@ -302,7 +303,7 @@ export default function EventosAdmin() {
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             className={campo + ' pl-10 pr-10 shadow-sm'}
-            placeholder="Buscar en Agenda y Lugares (título, lugar, categoría, organizador…)"
+            placeholder="Buscar en Agenda y Lugares…"
           />
           {busqueda && (
             <button type="button" aria-label="Limpiar búsqueda" onClick={() => setBusqueda('')} className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full hover:bg-surface-container flex items-center justify-center text-secondary">
@@ -404,25 +405,59 @@ export default function EventosAdmin() {
         </div>
         )}
 
-        {/* Agenda */}
+        {/* Lista única: Agenda + Lugares, con filtro */}
         <section>
           <div className="flex flex-wrap items-center gap-2 mb-3">
-            <h2 className="font-headline-md text-lg text-on-surface mr-auto">Agenda ({eventos.length})</h2>
+            <h2 className="font-headline-md text-lg text-on-surface mr-auto">Contenido</h2>
             <button type="button" onClick={() => { setFicha(FICHA_VACIA); setMsg(''); setModalEvento(true); }} className="bg-primary text-on-primary font-bold text-sm px-4 py-2 rounded-xl flex items-center gap-1 active:scale-95 transition-transform">
               <span className="material-symbols-outlined text-[18px]">add</span> Agregar evento
             </button>
+            <button type="button" onClick={() => { setFichaLugar(FICHA_LUGAR_VACIA); setMsgLugar(''); setModalLugar(true); }} className="bg-surface-container text-on-surface font-bold text-sm px-4 py-2 rounded-xl flex items-center gap-1 border border-surface-container-highest active:scale-95 transition-transform">
+              <span className="material-symbols-outlined text-[18px]">add</span> Agregar lugar
+            </button>
           </div>
-          {msg && !modalEvento && <p className="text-xs font-bold text-primary mb-2">{msg}</p>}
-          {cargandoDatos ? <p className="text-secondary text-sm">Cargando…</p> :
-            eventos.length === 0 ? <p className="text-secondary text-sm">Todavía no hay eventos en la tabla. La página usa el seed hardcodeado hasta que agregues al menos uno.</p> : (
+
+          <div className="flex gap-2 mb-3 overflow-x-auto hide-scrollbar">
+            {([
+              ['todos', 'Todos', eventos.length + lugares.length, 'apps'],
+              ['agenda', 'Agenda', eventos.length, 'event'],
+              ['lugares', 'Lugares', lugares.length, 'place'],
+            ] as const).map(([id, label, n, icon]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setVista(id)}
+                className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all active:scale-95 ${
+                  vista === id
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'bg-white border border-surface-container-highest text-secondary hover:shadow-sm'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[16px]">{icon}</span>
+                {label} <span className="opacity-70 font-normal">({n})</span>
+              </button>
+            ))}
+          </div>
+
+          {(msg && !modalEvento) && <p className="text-xs font-bold text-primary mb-2">{msg}</p>}
+          {(msgLugar && !modalLugar) && <p className="text-xs font-bold text-primary mb-2">{msgLugar}</p>}
+
+          {(cargandoDatos || cargandoLugares) ? <p className="text-secondary text-sm">Cargando…</p> : (() => {
+            const evs = vista === 'lugares' ? [] : eventos.filter((e) => coincide(busqueda, e.titulo, e.lugar, e.categoria, e.organiza, e.ciudad));
+            const lgs = vista === 'agenda' ? [] : lugares.filter((l) => coincide(busqueda, l.nombre, l.tag, l.ciudad, l.descripcion));
+            if (evs.length + lgs.length === 0) {
+              return <p className="text-secondary text-sm">{busqueda ? 'Nada coincide con la búsqueda.' : 'Todavía no hay nada cargado. La página pública usa contenido de muestra hasta que agregues al menos uno.'}</p>;
+            }
+            return (
             <div className="flex flex-col gap-2">
-              {eventos.filter((e) => coincide(busqueda, e.titulo, e.lugar, e.categoria, e.organiza, e.ciudad)).map((e) => {
+              {evs.map((e) => {
                 const vencido = e.fecha && e.fecha < new Date().toISOString().slice(0, 10);
                 return (
-                <div key={e.id} className={`bg-surface-container-lowest border border-surface-container-highest rounded-xl p-3 flex flex-wrap items-center gap-3 ${vencido ? 'opacity-60' : ''}`}>
+                <div key={`e-${e.id}`} className={`bg-surface-container-lowest border border-surface-container-highest rounded-xl p-3 flex flex-wrap items-center gap-3 ${vencido ? 'opacity-60' : ''}`}>
                   <span className={`w-2 h-2 rounded-full shrink-0 ${e.status === 'activo' ? 'bg-primary' : 'bg-surface-container-highest'}`} />
                   <div className="flex-1 min-w-[180px]">
                     <p className="font-bold text-sm text-on-surface">
+                      <span className="mr-1.5 bg-primary-fixed text-primary text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full align-middle">Evento</span>
                       {e.titulo} <span className="text-secondary font-normal">· {e.categoria} · {e.ciudad}</span>
                       {vencido && <span className="ml-1.5 bg-red-100 text-red-700 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full align-middle">Vencido</span>}
                       {e.reservable && <span className="ml-1.5 bg-emerald-100 text-emerald-700 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full align-middle">Reservable{e.aforo ? ` · aforo ${e.aforo}` : ''}</span>}
@@ -437,8 +472,26 @@ export default function EventosAdmin() {
                 </div>
                 );
               })}
+              {lgs.map((l) => (
+                <div key={`l-${l.id}`} className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-3 flex flex-wrap items-center gap-3">
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${l.status === 'activo' ? 'bg-primary' : 'bg-surface-container-highest'}`} />
+                  <div className="flex-1 min-w-[180px]">
+                    <p className="font-bold text-sm text-on-surface">
+                      <span className="mr-1.5 bg-emerald-100 text-emerald-700 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full align-middle">Lugar</span>
+                      {l.nombre} <span className="text-secondary font-normal">· {l.ciudad}</span>
+                    </p>
+                    <p className="text-xs text-secondary">{l.tag}</p>
+                  </div>
+                  <button onClick={() => editarLugar(l)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest text-on-surface">Editar</button>
+                  <button onClick={() => toggleStatusLugar(l)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest text-secondary">
+                    {l.status === 'activo' ? 'Ocultar' : 'Mostrar'}
+                  </button>
+                  <button onClick={() => borrarLugar(l)} className="text-xs font-bold px-3 py-1.5 rounded-lg text-red-600">Borrar</button>
+                </div>
+              ))}
             </div>
-          )}
+            );
+          })()}
         </section>
 
         {/* Formulario lugar — ventana flotante */}
@@ -489,36 +542,6 @@ export default function EventosAdmin() {
           </div>
         </div>
         )}
-
-        {/* Lista de lugares */}
-        <section>
-          <div className="flex flex-wrap items-center gap-2 mb-3">
-            <h2 className="font-headline-md text-lg text-on-surface mr-auto">Lugares ({lugares.length})</h2>
-            <button type="button" onClick={() => { setFichaLugar(FICHA_LUGAR_VACIA); setMsgLugar(''); setModalLugar(true); }} className="bg-primary text-on-primary font-bold text-sm px-4 py-2 rounded-xl flex items-center gap-1 active:scale-95 transition-transform">
-              <span className="material-symbols-outlined text-[18px]">add</span> Agregar lugar
-            </button>
-          </div>
-          {msgLugar && !modalLugar && <p className="text-xs font-bold text-primary mb-2">{msgLugar}</p>}
-          {cargandoLugares ? <p className="text-secondary text-sm">Cargando…</p> :
-            lugares.length === 0 ? <p className="text-secondary text-sm">Todavía no hay lugares en la tabla. La página usa el seed hardcodeado hasta que agregues al menos uno.</p> : (
-            <div className="flex flex-col gap-2">
-              {lugares.filter((l) => coincide(busqueda, l.nombre, l.tag, l.ciudad, l.descripcion)).map((l) => (
-                <div key={l.id} className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-3 flex flex-wrap items-center gap-3">
-                  <span className={`w-2 h-2 rounded-full shrink-0 ${l.status === 'activo' ? 'bg-primary' : 'bg-surface-container-highest'}`} />
-                  <div className="flex-1 min-w-[180px]">
-                    <p className="font-bold text-sm text-on-surface">{l.nombre} <span className="text-secondary font-normal">· {l.ciudad}</span></p>
-                    <p className="text-xs text-secondary">{l.tag}</p>
-                  </div>
-                  <button onClick={() => editarLugar(l)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest text-on-surface">Editar</button>
-                  <button onClick={() => toggleStatusLugar(l)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest text-secondary">
-                    {l.status === 'activo' ? 'Ocultar' : 'Mostrar'}
-                  </button>
-                  <button onClick={() => borrarLugar(l)} className="text-xs font-bold px-3 py-1.5 rounded-lg text-red-600">Borrar</button>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
       </main>
       </div>
     </div>
