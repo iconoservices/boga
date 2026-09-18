@@ -26,16 +26,6 @@ const INITIAL_MESSAGES: ChatMessage[] = [
     likes: 4,
   },
   {
-    id: 'msg-2',
-    author: 'Rosa P.',
-    role: 'Comerciante',
-    avatarColor: 'bg-amber-600',
-    channel: 'avisos',
-    text: 'Recuerden que hoy tenemos tacacho con cecina fresco en Jr. Sucre. ¡Bienvenidos!',
-    time: 'Hace 25 min',
-    likes: 7,
-  },
-  {
     id: 'msg-3',
     author: 'Gerson V.',
     role: 'Conductor',
@@ -71,6 +61,15 @@ const QUICK_PROMPTS = [
   '🛵 ¿Cómo está el tráfico?',
 ];
 
+// "juan pérez ramos" -> "Juan R." (primer nombre + inicial del último apellido)
+function shortName(raw: string) {
+  const words = raw.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return '';
+  const cap = (w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+  if (words.length === 1) return cap(words[0]);
+  return `${cap(words[0])} ${words[words.length - 1].charAt(0).toUpperCase()}.`;
+}
+
 export default function PlazaChatBubble() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
@@ -79,6 +78,7 @@ export default function PlazaChatBubble() {
   const [inputText, setInputText] = useState('');
   const [authorName, setAuthorName] = useState('');
   const [hasNewBadge, setHasNewBadge] = useState(true);
+  const [likedIds, setLikedIds] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -88,6 +88,12 @@ export default function PlazaChatBubble() {
     try {
       const savedName = localStorage.getItem('boga_user_nickname');
       if (savedName) setAuthorName(savedName);
+
+      const savedLikes = localStorage.getItem('boga_plaza_likes');
+      if (savedLikes) {
+        const parsedLikes = JSON.parse(savedLikes);
+        if (Array.isArray(parsedLikes)) setLikedIds(parsedLikes);
+      }
 
       const savedMsgs = localStorage.getItem('boga_plaza_messages');
       if (savedMsgs) {
@@ -138,12 +144,11 @@ export default function PlazaChatBubble() {
     const body = (textToSend || inputText).trim();
     if (!body) return;
 
-    const nickname = authorName.trim() || 'Pucallpino Anónimo';
-    if (authorName.trim()) {
-      try {
-        localStorage.setItem('boga_user_nickname', authorName.trim());
-      } catch {}
-    }
+    const nickname = shortName(authorName);
+    if (!nickname) return; // sin nombre no se publica
+    try {
+      localStorage.setItem('boga_user_nickname', authorName.trim());
+    } catch {}
 
     const newMsg: ChatMessage = {
       id: `usr-${Date.now()}`,
@@ -170,9 +175,16 @@ export default function PlazaChatBubble() {
     return updated;
   };
 
+  // Un solo like por mensaje: tocar de nuevo lo quita.
   const handleLike = (id: string) => {
+    const already = likedIds.includes(id);
+    const nextLiked = already ? likedIds.filter((x) => x !== id) : [...likedIds, id];
+    setLikedIds(nextLiked);
+    try {
+      localStorage.setItem('boga_plaza_likes', JSON.stringify(nextLiked));
+    } catch {}
     setMessages((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, likes: m.likes + 1 } : m))
+      prev.map((m) => (m.id === id ? { ...m, likes: Math.max(0, m.likes + (already ? -1 : 1)) } : m))
     );
   };
 
@@ -388,7 +400,7 @@ export default function PlazaChatBubble() {
                           onClick={() => handleLike(msg.id)}
                           className="text-[11px] text-gray-500 hover:text-primary flex items-center gap-1 transition-colors active:scale-95"
                         >
-                          <span>❤️</span>
+                          <span>{likedIds.includes(msg.id) ? '❤️' : '🤍'}</span>
                           <span>{msg.likes > 0 ? msg.likes : ''}</span>
                         </button>
                         {msg.id.startsWith('usr-') && editingId !== msg.id && (
@@ -423,7 +435,8 @@ export default function PlazaChatBubble() {
                 <button
                   key={idx}
                   onClick={() => handleSendMessage(prompt)}
-                  className="text-[11px] bg-white dark:bg-neutral-800 hover:bg-gray-100 text-gray-700 dark:text-gray-300 px-2.5 py-1 rounded-full whitespace-nowrap transition-colors border border-gray-200 dark:border-neutral-700"
+                  disabled={!authorName.trim()}
+                  className="text-[11px] disabled:opacity-40 bg-white dark:bg-neutral-800 hover:bg-gray-100 text-gray-700 dark:text-gray-300 px-2.5 py-1 rounded-full whitespace-nowrap transition-colors border border-gray-200 dark:border-neutral-700"
                 >
                   {prompt}
                 </button>
@@ -438,15 +451,26 @@ export default function PlazaChatBubble() {
               </p>
               {/* Alias / Nombre de usuario */}
               <div className="flex items-center justify-between mb-2 text-[11px] text-gray-500 px-1">
-                <span>Tu nombre / alias:</span>
+                <span>Tu nombre <span className="text-primary">*</span></span>
                 <input
                   type="text"
-                  placeholder="Ej. Juan P. o Anónimo"
+                  placeholder="Ej. Juan Pérez"
                   value={authorName}
-                  onChange={(e) => setAuthorName(e.target.value)}
+                  onChange={(e) => {
+                    setAuthorName(e.target.value);
+                    try {
+                      localStorage.setItem('boga_user_nickname', e.target.value);
+                    } catch {}
+                  }}
                   className="bg-transparent border-b border-gray-300 dark:border-neutral-700 focus:border-primary outline-none px-1 text-gray-900 dark:text-white text-right font-medium max-w-[150px]"
                 />
               </div>
+
+              {!authorName.trim() && (
+                <p className="text-[10px] text-primary px-1 mb-1.5">
+                  Escribe tu nombre para poder comentar. Se mostrará como &quot;{'Juan P.'}&quot;.
+                </p>
+              )}
 
               <form
                 onSubmit={(e) => {
@@ -464,7 +488,7 @@ export default function PlazaChatBubble() {
                 />
                 <button
                   type="submit"
-                  disabled={!inputText.trim()}
+                  disabled={!inputText.trim() || !authorName.trim()}
                   className="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center shrink-0 disabled:opacity-40 active:scale-95 transition-all shadow-sm"
                   title="Enviar"
                 >
