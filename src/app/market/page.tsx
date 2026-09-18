@@ -572,15 +572,15 @@ export default function Home() {
           {/* Specific Sub-Categories (Filtered) */}
           <section className="hide-scrollbar overflow-x-auto flex gap-4 items-start w-full px-container-margin lg:px-0">
             <div
-              className={`py-1 ${showAllSubCategories ? 'flex flex-wrap gap-x-3 gap-y-2.5 justify-start w-full' : 'flex gap-3.5 items-center'}`}
+              className={`py-1 ${showAllSubCategories ? 'flex flex-wrap gap-x-3 gap-y-2.5 justify-start w-full' : 'flex gap-3 items-center'}`}
               style={{ scrollbarWidth: 'none' }}
             >
               <div 
                 onClick={() => setShowAllSubCategories(!showAllSubCategories)}
                 className="flex flex-col items-center gap-1 shrink-0 group cursor-pointer active:scale-90 transition-transform"
               >
-                <div className="w-14 h-14 rounded-full bg-primary-fixed flex items-center justify-center text-primary shadow-sm">
-                  <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
+                <div className="w-11 h-11 rounded-full bg-primary-fixed flex items-center justify-center text-primary shadow-sm">
+                  <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
                     {showAllSubCategories ? 'unfold_less' : 'unfold_more'}
                   </span>
                 </div>
@@ -591,8 +591,8 @@ export default function Home() {
 
               {currentSubCategories.map((sub, idx) => (
                 <div key={idx} className="flex flex-col items-center gap-1 shrink-0 group cursor-pointer active:scale-90 transition-transform">
-                  <div className="w-14 h-14 rounded-full bg-white border border-surface-container-highest flex items-center justify-center text-on-surface shadow-sm group-hover:border-primary group-hover:shadow-md transition-all">
-                    <span className="material-symbols-outlined text-[22px]">
+                  <div className="w-11 h-11 rounded-full bg-white border border-surface-container-highest flex items-center justify-center text-on-surface shadow-sm group-hover:border-primary group-hover:shadow-md transition-all">
+                    <span className="material-symbols-outlined text-[18px]">
                       {sub.icon}
                     </span>
                   </div>

@@ -328,14 +328,14 @@ export default function Inmuebles() {
       {/* Ficha ampliada del aviso de alquiler */}
       {avisoAbierto && (
         <div
-          className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          className="fixed inset-0 z-[80] bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4"
           onClick={() => setAvisoAbierto(null)}
         >
           <div
-            className="bg-white w-full sm:max-w-[480px] sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-y-auto"
+            className="bg-white w-full sm:max-w-[480px] sm:rounded-2xl rounded-t-2xl min-h-[92dvh] sm:min-h-0 max-h-[98dvh] pb-[env(safe-area-inset-bottom)] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="relative aspect-[4/3] bg-surface-container-low">
+            <div className="relative aspect-[16/10] sm:aspect-[4/3] bg-surface-container-low">
               <img referrerPolicy="no-referrer" src={avisoAbierto.img} alt={avisoAbierto.titulo} className="w-full h-full object-cover" />
               <button
                 onClick={() => setAvisoAbierto(null)}
@@ -406,14 +406,14 @@ export default function Inmuebles() {
       {/* Ficha ampliada del aviso de venta */}
       {ventaAbierta && (
         <div
-          className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          className="fixed inset-0 z-[80] bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4"
           onClick={() => setVentaAbierta(null)}
         >
           <div
-            className="bg-white w-full sm:max-w-[480px] sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-y-auto"
+            className="bg-white w-full sm:max-w-[480px] sm:rounded-2xl rounded-t-2xl min-h-[92dvh] sm:min-h-0 max-h-[98dvh] pb-[env(safe-area-inset-bottom)] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="relative aspect-[4/3] bg-surface-container-low">
+            <div className="relative aspect-[16/10] sm:aspect-[4/3] bg-surface-container-low">
               <img referrerPolicy="no-referrer" src={ventaAbierta.img} alt={ventaAbierta.titulo} className="w-full h-full object-cover" />
               <button
                 onClick={() => setVentaAbierta(null)}

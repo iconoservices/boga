@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
 import { fetchEventos } from '@/lib/eventos';
@@ -54,6 +54,7 @@ export default function Eventos() {
   const carrusel = destacados.length > 0 ? destacados : eventos.slice(0, 3);
 
   const next = useCallback(() => setSlide((s) => (carrusel.length ? (s + 1) % carrusel.length : 0)), [carrusel.length]);
+  const swipeX = useRef<number | null>(null);
   const prev = () => setSlide((s) => (carrusel.length ? (s - 1 + carrusel.length) % carrusel.length : 0));
 
   useEffect(() => {
@@ -73,7 +74,16 @@ export default function Eventos() {
         {/* Carrusel destacado */}
         {carrusel.length > 0 && (
         <section>
-          <div className="relative overflow-hidden rounded-2xl shadow-sm aspect-[16/9] sm:aspect-[21/9] lg:aspect-auto lg:h-[340px]">
+          <div
+            className="relative overflow-hidden rounded-xl shadow-sm h-[360px] sm:h-auto sm:aspect-[21/9] lg:aspect-auto lg:h-[340px]"
+            onTouchStart={(e) => { swipeX.current = e.touches[0].clientX; }}
+            onTouchEnd={(e) => {
+              if (swipeX.current === null) return;
+              const dx = e.changedTouches[0].clientX - swipeX.current;
+              swipeX.current = null;
+              if (Math.abs(dx) > 40) (dx < 0 ? next : prev)();
+            }}
+          >
             <div
               className="flex h-full transition-transform duration-500 ease-out"
               style={{ transform: `translateX(-${slide * 100}%)` }}
@@ -84,9 +94,9 @@ export default function Eventos() {
                   onClick={() => setEventoAbierto(c)}
                   className="relative w-full h-full shrink-0 bg-surface-container-low cursor-pointer"
                 >
-                  <img referrerPolicy="no-referrer" src={c.img} alt={c.titulo} className="absolute inset-0 w-full h-full object-cover" />
+                  <img referrerPolicy="no-referrer" src={c.img || undefined} alt={c.titulo} className="absolute inset-0 w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-black/10" />
-                  <div className="absolute inset-0 flex flex-col justify-center gap-2 p-5 lg:p-10 max-w-[560px]">
+                  <div className="absolute inset-0 flex flex-col justify-center gap-2 px-5 pt-5 pb-12 lg:p-10 max-w-[560px]">
                     <div className="flex items-center gap-2">
                       <div className="bg-white rounded-lg px-2.5 py-1 text-center shadow-md">
                         <span className="block font-price-lg text-primary text-base leading-none">{c.dia}</span>
@@ -94,8 +104,8 @@ export default function Eventos() {
                       </div>
                       <span className="bg-primary text-white text-[10px] font-label-md px-2 py-1 rounded-full uppercase tracking-wider">Destacado</span>
                     </div>
-                    <h2 className="font-headline-lg text-white text-2xl sm:text-4xl font-extrabold leading-[1.05]">{c.titulo}</h2>
-                    <p className="text-white/80 font-body-md text-xs sm:text-sm">{c.organiza}</p>
+                    <h2 className="font-headline-lg text-white text-xl sm:text-4xl font-extrabold leading-[1.1] line-clamp-3">{c.titulo}</h2>
+                    <p className="text-white/80 font-body-md text-xs sm:text-sm line-clamp-1">{c.organiza}</p>
                     <div className="flex flex-wrap items-center gap-2 mt-1">
                       <span className="text-white/90 font-label-md text-[11px] flex items-center gap-1">
                         <span className="material-symbols-outlined text-[13px]">location_on</span>{c.lugar}
@@ -114,26 +124,39 @@ export default function Eventos() {
             </div>
 
             {carrusel.length > 1 && (
-              <>
-                <button onClick={prev} aria-label="Anterior" className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 flex items-center justify-center shadow-md active:scale-90 transition-transform">
-                  <span className="material-symbols-outlined text-[20px] text-on-surface">chevron_left</span>
+              <div className="absolute bottom-3 right-3 flex gap-1.5 z-20">
+                <button
+                  type="button"
+                  onClick={(ev) => { ev.stopPropagation(); prev(); }}
+                  aria-label="Anterior"
+                  className="flex w-8 h-8 rounded-full bg-white/90 items-center justify-center shadow-md active:scale-90 transition-transform"
+                >
+                  <span className="material-symbols-outlined text-[18px] text-on-surface">chevron_left</span>
                 </button>
-                <button onClick={next} aria-label="Siguiente" className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 flex items-center justify-center shadow-md active:scale-90 transition-transform">
-                  <span className="material-symbols-outlined text-[20px] text-on-surface">chevron_right</span>
+                <button
+                  type="button"
+                  onClick={(ev) => { ev.stopPropagation(); next(); }}
+                  aria-label="Siguiente"
+                  className="flex w-8 h-8 rounded-full bg-white/90 items-center justify-center shadow-md active:scale-90 transition-transform"
+                >
+                  <span className="material-symbols-outlined text-[18px] text-on-surface">chevron_right</span>
                 </button>
-                <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
-                  {carrusel.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setSlide(i)}
-                      aria-label={`Ir al destacado ${i + 1}`}
-                      className={`h-1.5 rounded-full transition-all ${i === slide ? 'w-5 bg-white' : 'w-1.5 bg-white/50'}`}
-                    />
-                  ))}
-                </div>
-              </>
+              </div>
             )}
           </div>
+
+          {carrusel.length > 1 && (
+            <div className="flex justify-center gap-1.5 mt-1.5">
+              {carrusel.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSlide(i)}
+                  aria-label={`Ir al destacado ${i + 1}`}
+                  className={`rounded-full transition-all duration-300 ${i === slide ? 'w-4 h-1.5 bg-primary' : 'w-1.5 h-1.5 bg-surface-container-highest'}`}
+                />
+              ))}
+            </div>
+          )}
         </section>
         )}
 
@@ -180,14 +203,14 @@ export default function Eventos() {
               <p className="text-secondary font-body-md text-xs mt-0.5">Lugares para visitar cualquier día, con o sin evento</p>
             </div>
           </div>
-          <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
+          <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x scroll-pl-container-margin lg:scroll-pl-0" style={{ scrollbarWidth: 'none' }}>
             {lugares.map((l) => (
               <div
                 key={l.id}
                 onClick={() => setLugarAbierto(l)}
-                className="relative min-w-[220px] w-[220px] lg:min-w-[250px] lg:w-[250px] aspect-[4/5] rounded-2xl overflow-hidden snap-start shadow-[0_15px_15px_rgba(0,0,0,0.04)] group cursor-pointer active:scale-[0.98] transition-transform"
+                className="relative min-w-[180px] w-[180px] h-[200px] lg:min-w-[210px] lg:w-[210px] lg:h-[230px] shrink-0 rounded-2xl overflow-hidden snap-start shadow-[0_15px_15px_rgba(0,0,0,0.04)] group cursor-pointer active:scale-[0.98] transition-transform"
               >
-                <img referrerPolicy="no-referrer" src={l.img} alt={l.nombre} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                <img referrerPolicy="no-referrer" src={l.img || undefined} alt={l.nombre} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 {l.tag?.toLowerCase().includes('gratis') && (
                   <span className="absolute top-2.5 right-2.5 bg-primary text-white text-[10px] font-label-md px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">Gratis</span>
@@ -204,11 +227,11 @@ export default function Eventos() {
         {/* Planes imperdibles — carrusel de eventos */}
         <section className="flex flex-col gap-3">
           <h2 className="font-headline-lg text-on-surface">Planes imperdibles</h2>
-          <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
+          <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x scroll-pl-container-margin lg:scroll-pl-0" style={{ scrollbarWidth: 'none' }}>
             {eventos.slice(0, 7).map((e) => (
               <div key={e.id} onClick={() => setEventoAbierto(e)} className="min-w-[180px] w-[180px] lg:min-w-[210px] lg:w-[210px] bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest snap-start flex flex-col cursor-pointer active:scale-[0.98] transition-transform">
                 <div className="relative aspect-square overflow-hidden bg-surface-container-low">
-                  <img referrerPolicy="no-referrer" src={e.img} alt={e.titulo} className="w-full h-full object-cover" />
+                  <img referrerPolicy="no-referrer" src={e.img || undefined} alt={e.titulo} className="w-full h-full object-cover" />
                 </div>
                 <div className="p-3 flex flex-col gap-1 flex-1">
                   <span className="w-fit bg-primary-fixed text-primary text-[10px] font-label-md px-2 py-0.5 rounded-full">{e.dia} {e.mes}</span>
@@ -229,13 +252,13 @@ export default function Eventos() {
             <span className="material-symbols-outlined text-tertiary" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
             Lo más vendido esta semana
           </h2>
-          <div className="flex gap-4 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
+          <div className="flex gap-4 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x scroll-pl-container-margin lg:scroll-pl-0" style={{ scrollbarWidth: 'none' }}>
             {eventos.slice(1, 6).map((e, i) => (
               <div key={e.id} onClick={() => setEventoAbierto(e)} className="flex items-end gap-1 shrink-0 snap-start cursor-pointer active:scale-[0.98] transition-transform">
                 <span className="font-headline-lg font-black text-primary/25 text-[64px] leading-[0.7] select-none">{i + 1}</span>
                 <div className="w-[150px] lg:w-[170px]">
                   <div className="relative aspect-square rounded-xl overflow-hidden bg-surface-container-low">
-                    <img referrerPolicy="no-referrer" src={e.img} alt={e.titulo} className="w-full h-full object-cover" />
+                    <img referrerPolicy="no-referrer" src={e.img || undefined} alt={e.titulo} className="w-full h-full object-cover" />
                   </div>
                   <span className="font-label-md text-[10px] text-secondary uppercase tracking-wider mt-2 block">{e.dia} {e.mes} · {e.lugar.split(' ')[0]}</span>
                   <h4 className="font-headline-sm text-[13px] text-on-surface line-clamp-2 leading-tight mt-0.5">{e.titulo}</h4>
@@ -261,7 +284,7 @@ export default function Eventos() {
               {eventos.filter((e) => ['Conciertos', 'Fiestas', 'Ferias'].includes(e.cat)).map((e) => (
                 <div key={e.id} onClick={() => setEventoAbierto(e)} className="min-w-[150px] w-[150px] shrink-0 snap-start cursor-pointer active:scale-[0.98] transition-transform">
                   <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-white/10">
-                    <img referrerPolicy="no-referrer" src={e.img} alt={e.titulo} className="w-full h-full object-cover" />
+                    <img referrerPolicy="no-referrer" src={e.img || undefined} alt={e.titulo} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                     <div className="absolute inset-x-0 bottom-0 p-2">
                       <span className="font-label-md text-[9px] uppercase tracking-wider text-white/70">{e.dia} {e.mes}</span>
@@ -284,7 +307,7 @@ export default function Eventos() {
               {lista.map((e) => (
                 <div key={e.id} onClick={() => setEventoAbierto(e)} className="bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col cursor-pointer active:scale-[0.98] transition-transform">
                   <div className="relative h-36 overflow-hidden bg-surface-container-low">
-                    <img referrerPolicy="no-referrer" src={e.img} alt={e.titulo} className="w-full h-full object-cover" />
+                    <img referrerPolicy="no-referrer" src={e.img || undefined} alt={e.titulo} className="w-full h-full object-cover" />
                     <div className="absolute top-2 left-2 bg-white rounded-lg px-2 py-1 text-center shadow-sm">
                       <span className="block font-price-lg text-primary text-sm leading-none">{e.dia}</span>
                       <span className="block font-label-md text-[9px] text-secondary uppercase">{e.mes}</span>
@@ -316,15 +339,15 @@ export default function Eventos() {
       {/* Ficha ampliada del evento */}
       {eventoAbierto && (
         <div
-          className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          className="fixed inset-0 z-[80] bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4"
           onClick={() => setEventoAbierto(null)}
         >
           <div
-            className="bg-white w-full sm:max-w-[480px] sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-y-auto"
+            className="bg-white w-full sm:max-w-[480px] sm:rounded-2xl rounded-t-2xl min-h-[92dvh] sm:min-h-0 max-h-[98dvh] pb-[env(safe-area-inset-bottom)] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="relative aspect-[4/3] bg-surface-container-low">
-              <img referrerPolicy="no-referrer" src={eventoAbierto.img} alt={eventoAbierto.titulo} className="w-full h-full object-cover" />
+            <div className="relative aspect-[16/10] sm:aspect-[4/3] bg-surface-container-low">
+              <img referrerPolicy="no-referrer" src={eventoAbierto.img || undefined} alt={eventoAbierto.titulo} className="w-full h-full object-cover" />
               <button
                 onClick={() => setEventoAbierto(null)}
                 className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center"
@@ -376,15 +399,15 @@ export default function Eventos() {
       {/* Ficha ampliada del lugar */}
       {lugarAbierto && (
         <div
-          className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          className="fixed inset-0 z-[80] bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4"
           onClick={() => setLugarAbierto(null)}
         >
           <div
-            className="bg-white w-full sm:max-w-[480px] sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-y-auto"
+            className="bg-white w-full sm:max-w-[480px] sm:rounded-2xl rounded-t-2xl min-h-[92dvh] sm:min-h-0 max-h-[98dvh] pb-[env(safe-area-inset-bottom)] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="relative aspect-[4/3] bg-surface-container-low">
-              <img referrerPolicy="no-referrer" src={lugarAbierto.img} alt={lugarAbierto.nombre} className="w-full h-full object-cover" />
+            <div className="relative aspect-[16/10] sm:aspect-[4/3] bg-surface-container-low">
+              <img referrerPolicy="no-referrer" src={lugarAbierto.img || undefined} alt={lugarAbierto.nombre} className="w-full h-full object-cover" />
               <button
                 onClick={() => setLugarAbierto(null)}
                 className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center"

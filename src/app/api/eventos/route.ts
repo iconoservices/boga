@@ -20,6 +20,9 @@ export async function GET() {
     .select('id,titulo,categoria,descripcion,lugar,dia,mes,fecha,precio,organiza,img,destacado,orden,reservable,aforo')
     .eq('status', 'activo')
     .or(`fecha.is.null,fecha.gte.${hoy}`)
+    // Del más próximo al más lejano; los que no tienen fecha van al final y
+    // entre ellos (o a igual fecha) manda el orden manual del superadmin.
+    .order('fecha', { ascending: true, nullsFirst: false })
     .order('orden', { ascending: true })
     .order('created_at', { ascending: true });
 

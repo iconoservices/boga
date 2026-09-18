@@ -48,7 +48,15 @@ export async function fetchEventos(): Promise<Evento[]> {
     const res = await fetch('/api/eventos', { cache: 'no-store' });
     if (!res.ok) return [];
     const { events } = await res.json();
-    return Array.isArray(events) ? events.map(fromRow) : [];
+    if (!Array.isArray(events)) return [];
+    // Del más próximo al más lejano (sin fecha al final). Array.sort es estable:
+    // a igual fecha se respeta el orden manual que ya trae el endpoint.
+    return events.map(fromRow).sort((a, b) => {
+      if (!a.fecha && !b.fecha) return 0;
+      if (!a.fecha) return 1;
+      if (!b.fecha) return -1;
+      return a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : 0;
+    });
   } catch {
     return [];
   }
