@@ -24,53 +24,17 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app';
 // muestra hasta que cada hub exponga sus destacados; las de Revista ya son reales.
 type Slide = { kicker: string; title: string; href: string; img: string; portrait?: string; pura?: boolean };
 
-// Promos de los otros hubs (de muestra). Se intercalan con las notas de Revista.
-const PROMO_SLIDES: Slide[] = [
-  {
-    kicker: 'Promo · Market',
-    title: '2x1 en hamburguesas — solo por hoy',
-    href: '/market',
-    img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1600&q=80',
-  },
-  {
-    kicker: 'Sorteo del mes',
-    title: 'Suma tickets con tus compras y gana una moto lineal 0 km',
-    href: '/sorteos',
-    img: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=1600&q=80',
-  },
-  {
-    kicker: 'Eventos',
-    title: 'Trueno en Pucallpa · 1 de octubre en el Anfiteatro',
-    href: '/eventos',
-    img: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=1600&q=80',
-  },
-];
-
-// Fallback completo si /api/revista no responde (egress caído, tabla vacía):
-// el banner nunca queda en blanco.
-const PORTADA_FALLBACK: Slide[] = [
-  {
-    kicker: 'Revista',
-    title: 'Historias, cultura y rutas de Pucallpa',
-    href: '/revista',
-    img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1600&q=80',
-  },
-  ...PROMO_SLIDES,
-];
-
-// Construye la lista de slides: intercala las 2 notas más recientes de la
-// Revista con las promos (las que cargó el superadmin, o las de muestra si
-// todavía no cargó ninguna).
+// Construye la lista de slides con datos REALES: las 2 notas más recientes de la
+// Revista intercaladas con las promos que cargó el superadmin. Sin demos: si no
+// hay nada, la lista queda vacía y el banner no se muestra.
 function armarSlides(notas: NotaCard[], promos: Slide[]): Slide[] {
-  const p = promos.length ? promos : PROMO_SLIDES;
-  if (!notas.length) return [PORTADA_FALLBACK[0], ...p];
   const rev: Slide[] = notas.slice(0, 2).map((n) => ({
     kicker: `Revista · ${n.kicker}`,
     title: n.titulo,
     href: `/revista/${n.slug}`,
     img: n.img,
   }));
-  return [rev[0], p[0], p[1], rev[1], p[2]].filter(Boolean) as Slide[];
+  return [rev[0], promos[0], promos[1], rev[1], ...promos.slice(2)].filter(Boolean) as Slide[];
 }
 
 // Los 8 Portales de Boga — el lanzador de la ciudad. Un ícono por hub, cada
@@ -208,7 +172,7 @@ const CAROUSEL = "flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin
 // Un solo banner de portada que rota entre notas de la Revista y promos.
 // Mismo diseño en móvil y escritorio: foto a sangre, kicker + titular abajo,
 // flechas a los lados y puntos de posición. Rota solo cada 6 s.
-function PortadaCarrusel({ notas, promos, style }: { notas: NotaCard[]; promos: Slide[]; style: BannerStyle }) {
+function PortadaCarrusel({ notas, promos, style, cargando }: { notas: NotaCard[]; promos: Slide[]; style: BannerStyle; cargando: boolean }) {
   const slides = React.useMemo(() => armarSlides(notas, promos), [notas, promos]);
   const [i, setI] = useState(0);
   const n = slides.length;
@@ -217,13 +181,24 @@ function PortadaCarrusel({ notas, promos, style }: { notas: NotaCard[]; promos: 
   // índice fuera de rango.
   useEffect(() => { setI((v) => (v < n ? v : 0)); }, [n]);
 
-  const next = useCallback(() => setI((v) => (v + 1) % n), [n]);
-  const prev = () => setI((v) => (v - 1 + n) % n);
+  const next = useCallback(() => setI((v) => (n ? (v + 1) % n : 0)), [n]);
+  const prev = () => setI((v) => (n ? (v - 1 + n) % n : 0));
 
   useEffect(() => {
+    if (n < 2) return;
     const id = setInterval(next, 6000);
     return () => clearInterval(id);
-  }, [next]);
+  }, [next, n]);
+
+  // Mientras llegan los datos reales: recuadro gris neutro (nunca un flyer de muestra).
+  if (cargando) {
+    return (
+      <div className="w-screen mx-[calc(50%-50vw)] lg:w-full lg:mx-0">
+        <div className="bg-surface-container-low animate-pulse aspect-[16/10] sm:aspect-[2/1] lg:aspect-auto lg:h-[380px] lg:rounded-2xl" aria-hidden="true" />
+      </div>
+    );
+  }
+  if (n === 0) return null;
 
   return (
     <div className="w-screen mx-[calc(50%-50vw)] lg:w-full lg:mx-0">
@@ -322,7 +297,8 @@ export default function HomePage() {
   // Notas reales de la Revista (endpoint cacheado). Alimentan el banner de
   // portada y el carrusel "Más de la Revista".
   const [notasRevista, setNotasRevista] = useState<NotaCard[]>([]);
-  useEffect(() => { fetchNotasRevista().then(setNotasRevista); }, []);
+  const [notasListas, setNotasListas] = useState(false);
+  useEffect(() => { fetchNotasRevista().then((n) => { setNotasRevista(n); setNotasListas(true); }); }, []);
 
   // "Qué hacer en Pucallpa hoy" jala de las dos fuentes reales de /eventos:
   // la agenda (events) y los lugares para visitar (lugares), mezcladas en
@@ -357,11 +333,13 @@ export default function HomePage() {
 
   // Promos del banner de portada, editables desde superadmin (tabla
   // market_banners con page='home'). Si todavia no cargaron ninguna, el
-  // carrusel sigue usando PROMO_SLIDES de muestra (ver armarSlides).
+  // carrusel muestra solo las notas de la Revista (sin flyers de muestra).
   const [promoBanners, setPromoBanners] = useState<Slide[]>([]);
+  const [promosListas, setPromosListas] = useState(false);
   const [bannerStyle, setBannerStyle] = useState<BannerStyle>('bottom');
   useEffect(() => {
     fetchBanners('home').then(({ banners, style }) => {
+      setPromosListas(true);
       setBannerStyle(style);
       setPromoBanners(banners.map((b: any) => {
         const conTexto = b.show_text !== false && (b.tag || b.title1 || b.title2 || b.sub);
@@ -474,7 +452,7 @@ export default function HomePage() {
       {/* Portada rotativa + panel "Los 8 Portales de Boga" (lado a lado en escritorio) */}
       <div className="max-w-[1440px] mx-auto w-full lg:px-8 pt-4 lg:pt-6">
         <div className="lg:grid lg:grid-cols-[1.7fr_1fr] lg:gap-5 lg:items-stretch">
-          <PortadaCarrusel notas={notasRevista} promos={promoBanners} style={bannerStyle} />
+          <PortadaCarrusel notas={notasRevista} promos={promoBanners} style={bannerStyle} cargando={!(notasListas && promosListas)} />
           <PortalesPanel />
         </div>
       </div>

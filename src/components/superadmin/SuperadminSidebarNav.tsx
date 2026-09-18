@@ -11,14 +11,14 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 
-const NAV_TABS = [
+export const NAV_TABS = [
   { id: 'tiendas',         icon: 'storefront',    label: 'Tiendas' },
   { id: 'paquetes',        icon: 'inventory_2',   label: 'Paquetes' },
   { id: 'usuarios',        icon: 'group',         label: 'Usuarios' },
   { id: 'personalizacion', icon: 'tune',          label: 'Personalización' },
 ] as const;
 
-const SUBRUTAS = [
+export const SUBRUTAS = [
   { href: '/superadmin/plantillas',     icon: 'layers',       label: 'Plantillas' },
   { href: '/superadmin/revista',        icon: 'menu_book',    label: 'Revista' },
   { href: '/superadmin/notas',          icon: 'sticky_note_2',label: 'Notas internas' },
