@@ -6,12 +6,15 @@ import { uploadToR2 } from '@/lib/r2';
 // políticas exigían `auth.role() = 'authenticated'`. Al mover la subida acá
 // esa condición hay que revalidarla a mano: sin esto, cualquiera podría
 // escribir en el bucket con la llave del servidor.
-const supabaseAuth = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function POST(request: Request) {
+  // Se crea al atender la petición, no al cargar el módulo: si falta la llave
+  // (p. ej. variable no configurada en Vercel) el deploy no se cae al construir,
+  // solo falla esta ruta cuando se usa.
+  const supabaseAuth = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
   const token = (request.headers.get('authorization') || '').replace('Bearer ', '');
   if (!token) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
