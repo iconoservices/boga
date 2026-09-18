@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import PasswordInput from '@/components/PasswordInput';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -199,8 +200,7 @@ export default function LoginPage() {
                     </div>
                     <div className="relative">
                       <span className="material-symbols-outlined text-secondary/40 text-[18px] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">lock</span>
-                      <input
-                        type="password"
+                      <PasswordInput
                         required
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}

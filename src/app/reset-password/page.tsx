@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import PasswordInput from '@/components/PasswordInput';
 
 /**
  * A donde Supabase manda el link de "recuperar contraseña". El link ya trae
@@ -62,8 +63,7 @@ export default function ResetPasswordPage() {
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col">
               <label className="text-[10px] font-bold text-secondary mb-1.5 uppercase tracking-wider">Contraseña nueva</label>
-              <input
-                type="password"
+              <PasswordInput
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -73,8 +73,7 @@ export default function ResetPasswordPage() {
             </div>
             <div className="flex flex-col">
               <label className="text-[10px] font-bold text-secondary mb-1.5 uppercase tracking-wider">Repetila</label>
-              <input
-                type="password"
+              <PasswordInput
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}

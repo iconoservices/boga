@@ -7,6 +7,7 @@ import AppHeader from '@/components/AppHeader';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useEsSuperadmin } from '@/lib/superadmin';
+import PasswordInput from '@/components/PasswordInput';
 
 // Placeholder mientras se resuelve la sesión / mientras redirige a /login.
 // El contenido real de la página sale de la cuenta autenticada, no de esto.
@@ -119,17 +120,17 @@ export default function ProfilePage() {
         cartCount={0}
       />
 
-      <main className="max-w-[640px] mx-auto px-container-margin pt-6 pb-12 flex flex-col gap-6">
+      <main className="max-w-[640px] mx-auto px-container-margin pt-6 pb-12 flex flex-col gap-3">
         
         {/* Hero / Avatar Card */}
-        <div className="bg-gradient-to-r from-on-surface to-inverse-surface rounded-2xl p-6 flex items-center gap-5 shadow-lg text-white">
-          <div className="w-[72px] h-[72px] rounded-full bg-gradient-to-r from-primary to-primary-container flex items-center justify-center shrink-0 shadow-md">
-            <span className="font-bold text-2xl text-white">{initials}</span>
+        <div className="bg-gradient-to-r from-on-surface to-inverse-surface rounded-2xl p-4 flex items-center gap-3 shadow-md text-white">
+          <div className="w-11 h-11 rounded-full bg-gradient-to-r from-primary to-primary-container flex items-center justify-center shrink-0 shadow-md">
+            <span className="font-bold text-lg text-white">{initials}</span>
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-white/50 text-[10px] uppercase tracking-wider mb-0.5 font-bold">Bienvenido 👋</p>
-            <h1 className="font-bold text-xl text-white leading-tight">{user.name}</h1>
-            <p className="text-white/40 text-xs mt-1">
+            <h1 className="font-bold text-base text-white leading-tight truncate">{user.name}</h1>
+            <p className="text-white/40 text-[11px] mt-0.5 truncate">
               {user.email} · Miembro desde {user.joinedDate}
             </p>
           </div>
@@ -137,17 +138,17 @@ export default function ProfilePage() {
 
         {/* Superadmin Card — atajo a TODAS las tiendas, no solo la propia */}
         {isSuperadmin && (
-          <div className="bg-gradient-to-r from-[#1a1a1a] to-[#333] rounded-2xl p-5 flex items-center gap-4 shadow-md text-white">
-            <div className="w-12 h-12 bg-white/15 rounded-xl flex items-center justify-center shrink-0 backdrop-blur-md">
-              <span className="material-symbols-outlined text-white text-[24px]">admin_panel_settings</span>
+          <div className="bg-gradient-to-r from-[#1a1a1a] to-[#333] rounded-2xl p-4 flex items-center gap-3 shadow-md text-white">
+            <div className="w-11 h-11 bg-white/15 rounded-xl flex items-center justify-center shrink-0 backdrop-blur-md">
+              <span className="material-symbols-outlined text-white text-[22px]">admin_panel_settings</span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-white/70 text-[10px] font-bold uppercase tracking-wider">Acceso Super Admin</p>
-              <p className="font-bold text-sm text-white mt-0.5">Gestionar todas las tiendas de Boga</p>
+              <p className="font-bold text-sm text-white mt-0.5 truncate">Todas las tiendas de Boga</p>
             </div>
             <Link
               href="/superadmin"
-              className="bg-white text-on-surface hover:bg-neutral-50 transition-all font-bold text-xs py-2 px-4 rounded-xl flex items-center gap-1.5 shadow-sm active:scale-95 shrink-0"
+              className="bg-white text-on-surface hover:bg-neutral-50 transition-all font-bold text-xs py-1.5 px-3 rounded-xl flex items-center gap-1 shadow-sm active:scale-95 shrink-0"
             >
               <span className="material-symbols-outlined text-[16px]">dashboard</span>
               Mis tiendas
@@ -157,17 +158,17 @@ export default function ProfilePage() {
 
         {/* Merchant Card */}
         {user.isMerchant && (
-          <div className="bg-gradient-to-r from-primary to-primary-container rounded-2xl p-5 flex items-center gap-4 shadow-md text-white">
-            <div className="w-12 h-12 bg-white/15 rounded-xl flex items-center justify-center shrink-0 backdrop-blur-md">
-              <span className="material-symbols-outlined text-white text-[24px]">storefront</span>
+          <div className="bg-gradient-to-r from-primary to-primary-container rounded-2xl p-4 flex items-center gap-3 shadow-md text-white">
+            <div className="w-11 h-11 bg-white/15 rounded-xl flex items-center justify-center shrink-0 backdrop-blur-md">
+              <span className="material-symbols-outlined text-white text-[22px]">storefront</span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-white/70 text-[10px] font-bold uppercase tracking-wider">Tu tienda en Boga</p>
-              <p className="font-bold text-sm text-white mt-0.5">{user.merchantStoreName}</p>
+              <p className="font-bold text-sm text-white mt-0.5 truncate">{user.merchantStoreName}</p>
             </div>
             <Link 
               href="/admin" 
-              className="bg-white text-primary hover:bg-neutral-50 transition-all font-bold text-xs py-2 px-4 rounded-xl flex items-center gap-1.5 shadow-sm active:scale-95 shrink-0"
+              className="bg-white text-primary hover:bg-neutral-50 transition-all font-bold text-xs py-1.5 px-3 rounded-xl flex items-center gap-1 shadow-sm active:scale-95 shrink-0"
             >
               <span className="material-symbols-outlined text-[16px]">dashboard</span>
               Admin
@@ -415,8 +416,7 @@ export default function ProfilePage() {
               <form onSubmit={handleChangePassword} className="flex flex-col gap-4">
                 <div className="flex flex-col">
                   <label className="text-[10px] font-bold text-secondary mb-1.5 uppercase tracking-wider">Contraseña nueva</label>
-                  <input
-                    type="password"
+                  <PasswordInput
                     required
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
@@ -426,8 +426,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="flex flex-col">
                   <label className="text-[10px] font-bold text-secondary mb-1.5 uppercase tracking-wider">Repetila</label>
-                  <input
-                    type="password"
+                  <PasswordInput
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
