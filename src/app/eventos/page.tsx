@@ -5,6 +5,7 @@ import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
 import { fetchEventos } from '@/lib/eventos';
 import { fetchLugares, type Lugar } from '@/lib/lugares';
+import ReservaEntrada from '@/components/ReservaEntrada';
 
 // Eventos = agenda + descubrimiento local de Pucallpa, estilo plataforma de
 // tickets (Joinnus): carrusel destacado, categorías, "a dónde ir" y agenda.
@@ -29,6 +30,7 @@ const CATEGORIAS: { cat: Cat; icon: string }[] = [
 type Evento = {
   id: string; titulo: string; cat: Cat; descripcion?: string; lugar: string; dia: string; mes: string;
   precio: string; organiza: string; img: string; destacado?: boolean;
+  reservable?: boolean; aforo?: number | null;
 };
 
 export default function Eventos() {
@@ -365,6 +367,7 @@ export default function Eventos() {
                   Cerrar
                 </button>
               </div>
+              {eventoAbierto.reservable && <ReservaEntrada eventoId={eventoAbierto.id} />}
             </div>
           </div>
         </div>

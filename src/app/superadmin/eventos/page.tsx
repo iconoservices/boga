@@ -28,6 +28,7 @@ const FICHA_VACIA = {
   titulo: '', categoria: 'Fiestas', descripcion: '', lugar: '', dia: '', mes: 'SEP', fecha: '',
   precio: 'Libre', organiza: '', img: '', destacado: false,
   ciudad: 'pucallpa', orden: 0, status: 'activo',
+  reservable: false, aforo: '' as string | number,
 };
 type Ficha = typeof FICHA_VACIA;
 
@@ -92,6 +93,7 @@ export default function EventosAdmin() {
       dia: e.dia ?? '', mes: e.mes ?? 'SEP', fecha: e.fecha ?? '', precio: e.precio ?? 'Libre', organiza: e.organiza ?? '',
       img: e.img ?? '', destacado: Boolean(e.destacado),
       ciudad: e.ciudad ?? 'pucallpa', orden: e.orden ?? 0, status: e.status ?? 'activo',
+      reservable: Boolean(e.reservable), aforo: e.aforo ?? '',
     });
     setMsg('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -108,6 +110,7 @@ export default function EventosAdmin() {
       dia: ficha.dia || null, mes: ficha.mes || null, fecha: ficha.fecha || null, precio: ficha.precio || null,
       organiza: ficha.organiza || null, img: ficha.img || null, destacado: ficha.destacado,
       ciudad: ficha.ciudad, orden: Number(ficha.orden) || 0, status: ficha.status,
+      reservable: ficha.reservable, aforo: ficha.aforo === '' ? null : Number(ficha.aforo),
     };
 
     const res = ficha.id
@@ -191,7 +194,12 @@ export default function EventosAdmin() {
             <span className="text-secondary">/</span>
             <span className="font-headline-sm text-headline-sm text-on-surface">Eventos · Agenda</span>
           </div>
-          <Link href="/eventos" className="text-sm text-primary">Ver la página →</Link>
+          <div className="flex items-center gap-4">
+            <Link href="/eventos/validar" className="text-sm text-primary flex items-center gap-1">
+              <span className="material-symbols-outlined text-[16px]">qr_code_scanner</span> Validar entradas
+            </Link>
+            <Link href="/eventos" className="text-sm text-primary">Ver la página →</Link>
+          </div>
         </div>
       </header>
 
@@ -248,7 +256,15 @@ export default function EventosAdmin() {
                 <input type="checkbox" checked={ficha.destacado} onChange={(e) => setFicha({ ...ficha, destacado: e.target.checked })} />
                 Destacado (aparece en el carrusel de arriba)
               </label>
+              <label className="flex items-center gap-1.5 text-xs font-bold text-secondary">
+                <input type="checkbox" checked={ficha.reservable} onChange={(e) => setFicha({ ...ficha, reservable: e.target.checked })} />
+                Reservable (muestra botón "Reservar" con QR)
+              </label>
             </div>
+            {ficha.reservable && (
+              <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Aforo (dejar vacío = sin límite)
+                <input type="number" min="0" value={ficha.aforo} onChange={(e) => setFicha({ ...ficha, aforo: e.target.value })} className={campo} placeholder="Ej. 200" /></label>
+            )}
             <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Estado
               <select value={ficha.status} onChange={(e) => setFicha({ ...ficha, status: e.target.value })} className={campo}>
                 <option value="activo">Activo (visible)</option>
@@ -282,6 +298,7 @@ export default function EventosAdmin() {
                     <p className="font-bold text-sm text-on-surface">
                       {e.titulo} <span className="text-secondary font-normal">· {e.categoria} · {e.ciudad}</span>
                       {vencido && <span className="ml-1.5 bg-red-100 text-red-700 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full align-middle">Vencido</span>}
+                      {e.reservable && <span className="ml-1.5 bg-emerald-100 text-emerald-700 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full align-middle">Reservable{e.aforo ? ` · aforo ${e.aforo}` : ''}</span>}
                     </p>
                     <p className="text-xs text-secondary">{[e.lugar, `${e.dia} ${e.mes}`, e.precio].filter(Boolean).join(' · ')}{e.destacado ? ' · ⭐ destacado' : ''}</p>
                   </div>

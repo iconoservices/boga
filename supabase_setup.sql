@@ -997,3 +997,125 @@ ON public.sale_listings FOR UPDATE USING (public.is_superadmin());
 
 CREATE POLICY "sale_listings: superadmin borra"
 ON public.sale_listings FOR DELETE USING (public.is_superadmin());
+
+-- ============================================================
+-- 17. TICKETING DE EVENTOS  (reservas con QR para /eventos)
+-- ============================================================
+-- MVP sin pago online: un evento marcado `reservable=true` deja reservar
+-- entrada con nombre (+telefono opcional), sin plata de por medio — se paga
+-- en puerta. La reserva genera un `tickets.token` unico que se codifica en
+-- un QR (qrcode.react, ya instalado). En la puerta, /eventos/validar lo
+-- escanea (html5-qrcode) y llama a validar_ticket, que marca 'usado' de
+-- forma atomica: 1 fila afectada = valido, 0 = ya usado. Sin promotores ni
+-- pasarela de pago todavia (nivel 2 — ver memoria eventos-ticketing).
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS reservable BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS aforo INT;  -- limite de tickets; NULL = sin limite
+
+CREATE TABLE IF NOT EXISTS public.tickets (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at  TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  event_id    UUID NOT NULL REFERENCES public.events(id) ON DELETE CASCADE,
+  nombre      TEXT NOT NULL,
+  telefono    TEXT,
+  token       TEXT NOT NULL UNIQUE,               -- va codificado en el QR
+  estado      TEXT NOT NULL DEFAULT 'valido',      -- valido | usado
+  usado_at    TIMESTAMP WITH TIME ZONE
+);
+CREATE INDEX IF NOT EXISTS tickets_event_idx ON public.tickets (event_id);
+CREATE INDEX IF NOT EXISTS tickets_token_idx ON public.tickets (token);
+
+ALTER TABLE public.tickets ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "tickets: solo superadmin lee" ON public.tickets;
+
+CREATE POLICY "tickets: solo superadmin lee"
+ON public.tickets FOR SELECT USING (public.is_superadmin());
+
+-- Sin policy publica de INSERT/UPDATE: los tickets se crean y validan solo
+-- a traves de las dos funciones de abajo (SECURITY DEFINER), que ademas
+-- chequean aforo y estado del evento de forma atomica.
+
+-- Reserva una entrada: valida que el evento admita reservas, chequea el
+-- aforo bloqueando la fila del evento (FOR UPDATE) para que dos reservas
+-- simultaneas no lo pasen, y devuelve el token para armar el QR.
+CREATE OR REPLACE FUNCTION public.reservar_ticket(p jsonb)
+RETURNS TABLE (id uuid, token text, created_at timestamptz)
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+DECLARE
+  v_event_id   uuid := (p->>'event_id')::uuid;
+  v_nombre     text := p->>'nombre';
+  v_aforo      int;
+  v_status     text;
+  v_reservable boolean;
+  v_vendidos   int;
+  v_token      text;
+BEGIN
+  IF v_event_id IS NULL OR COALESCE(v_nombre,'') = '' THEN
+    RAISE EXCEPTION 'Faltan datos (evento o nombre).';
+  END IF;
+
+  SELECT events.aforo, events.status, events.reservable
+  INTO v_aforo, v_status, v_reservable
+  FROM public.events WHERE events.id = v_event_id
+  FOR UPDATE;
+
+  IF NOT FOUND OR v_status <> 'activo' OR NOT v_reservable THEN
+    RAISE EXCEPTION 'Este evento ya no admite reservas.';
+  END IF;
+
+  IF v_aforo IS NOT NULL THEN
+    SELECT count(*) INTO v_vendidos FROM public.tickets WHERE tickets.event_id = v_event_id;
+    IF v_vendidos >= v_aforo THEN
+      RAISE EXCEPTION 'Se agotaron las entradas para este evento.';
+    END IF;
+  END IF;
+
+  v_token := encode(gen_random_bytes(16), 'hex');
+
+  RETURN QUERY
+  INSERT INTO public.tickets (event_id, nombre, telefono, token)
+  VALUES (v_event_id, v_nombre, NULLIF(p->>'telefono',''), v_token)
+  RETURNING tickets.id, tickets.token, tickets.created_at;
+END;
+$$;
+GRANT EXECUTE ON FUNCTION public.reservar_ticket(jsonb) TO anon, authenticated;
+
+-- Valida una entrada en la puerta: marca el ticket 'usado' de forma atomica.
+-- Solo superadmin por ahora (promotores es nivel 2). Devuelve un resultado
+-- para que /eventos/validar muestre valido / ya_usado / no_encontrado.
+CREATE OR REPLACE FUNCTION public.validar_ticket(p_token text)
+RETURNS TABLE (resultado text, evento_titulo text, nombre text)
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+DECLARE
+  v_id     uuid;
+  v_estado text;
+  v_evento text;
+  v_nombre text;
+BEGIN
+  IF NOT public.is_superadmin() THEN
+    RAISE EXCEPTION 'No autorizado.';
+  END IF;
+
+  SELECT tickets.id, tickets.estado, events.titulo, tickets.nombre
+  INTO v_id, v_estado, v_evento, v_nombre
+  FROM public.tickets
+  JOIN public.events ON events.id = tickets.event_id
+  WHERE tickets.token = p_token;
+
+  IF NOT FOUND THEN
+    RETURN QUERY SELECT 'no_encontrado'::text, NULL::text, NULL::text;
+    RETURN;
+  END IF;
+
+  IF v_estado = 'usado' THEN
+    RETURN QUERY SELECT 'ya_usado'::text, v_evento, v_nombre;
+    RETURN;
+  END IF;
+
+  UPDATE public.tickets SET estado = 'usado', usado_at = now() WHERE tickets.id = v_id;
+  RETURN QUERY SELECT 'valido'::text, v_evento, v_nombre;
+END;
+$$;
+GRANT EXECUTE ON FUNCTION public.validar_ticket(text) TO authenticated;

@@ -17,7 +17,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('events')
-    .select('id,titulo,categoria,descripcion,lugar,dia,mes,fecha,precio,organiza,img,destacado,orden')
+    .select('id,titulo,categoria,descripcion,lugar,dia,mes,fecha,precio,organiza,img,destacado,orden,reservable,aforo')
     .eq('status', 'activo')
     .or(`fecha.is.null,fecha.gte.${hoy}`)
     .order('orden', { ascending: true })

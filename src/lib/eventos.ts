@@ -19,6 +19,8 @@ export type Evento = {
   organiza: string;
   img: string;
   destacado?: boolean;
+  reservable?: boolean;
+  aforo?: number | null;
 };
 
 // Mapea una fila de la tabla `events` (snake_case) al shape que usa la UI.
@@ -36,6 +38,8 @@ function fromRow(r: Record<string, unknown>): Evento {
     organiza: (r.organiza as string) ?? '',
     img: (r.img as string) ?? '',
     destacado: Boolean(r.destacado),
+    reservable: Boolean(r.reservable),
+    aforo: r.aforo == null ? null : Number(r.aforo),
   };
 }
 
