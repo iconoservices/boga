@@ -108,7 +108,7 @@ const COMER_LISTAS: ComerLista[] = [
     lugares: [
       { name: 'Doña Fela · Comida Criolla', cuisine: 'Menú casero',        rating: '4.8', img: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&q=80' },
       { name: 'El Almuerzo de la Tía',      cuisine: 'Menú económico',      rating: '4.5', img: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=400&q=80' },
-      { name: 'Sabor Ucayalino',           cuisine: 'Criollo y selvático',  rating: '4.6', img: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400&q=80' },
+      { name: 'Sabor Ucayalino',           cuisine: 'Criollo y selvático',  rating: '4.6', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Tacacho_con_cecina.jpg/500px-Tacacho_con_cecina.jpg' },
     ],
   },
   {
@@ -135,12 +135,12 @@ const COMER_LISTAS: ComerLista[] = [
 // manda al portal que la resuelve; la guía completa (clima, plata, etc.)
 // vive en /guia. Tarjetas compactas (ícono + texto), sin foto.
 const GUIA_PUCALLPA = [
-  { href: '/inmuebles',   icon: 'real_estate_agent', titulo: 'Dónde quedarte', sub: 'Alquiler y venta de cuartos, casas y terrenos', color: '#8B7FD4', img: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&q=80' },
-  { href: '/taxi-seguro', icon: 'local_taxi',   titulo: 'Cómo moverte',   sub: 'Mototaxi, auto o moto con chofer verificado',       color: '#E4655A', img: 'https://images.unsplash.com/photo-1502877338535-766e1452684a?w=400&q=80' },
-  { href: '/eventos',     icon: 'map',          titulo: 'Qué hacer',      sub: 'Yarinacocha, Boquerón, ferias y agenda cultural',   color: '#EBB05C', img: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80' },
-  { href: '/market',      icon: 'ramen_dining', titulo: 'Dónde comer',    sub: 'Huariques, menús del día y cocina de la selva',     color: '#E8894A', img: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400&q=80' },
-  { href: '/servicios',   icon: 'construction', titulo: 'Buscar chamba',  sub: 'Técnicos de confianza y bolsa de empleo local',     color: '#3E9B5F', img: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=400&q=80' },
-  { href: '/market',      icon: 'storefront',   titulo: 'Qué comprar',    sub: 'Pescado y carne fresca, abarrotes y artesanía',     color: '#D97742', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80' },
+  { href: '/inmuebles',   icon: 'real_estate_agent', titulo: 'Dónde quedarte', sub: 'Alquiler y venta de cuartos, casas y terrenos', color: '#8B7FD4', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/La_catedral_de_Pucallpa_2022.jpg/500px-La_catedral_de_Pucallpa_2022.jpg' },
+  { href: '/taxi-seguro', icon: 'local_taxi',   titulo: 'Cómo moverte',   sub: 'Mototaxi, auto o moto con chofer verificado',       color: '#E4655A', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Jir%C3%B3n_Sucre_Pucallpa.jpg/500px-Jir%C3%B3n_Sucre_Pucallpa.jpg' },
+  { href: '/eventos',     icon: 'map',          titulo: 'Qué hacer',      sub: 'Yarinacocha, Boquerón, ferias y agenda cultural',   color: '#EBB05C', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Laguna_de_Yarinacocha_desde_un_bote_01.jpg/500px-Laguna_de_Yarinacocha_desde_un_bote_01.jpg' },
+  { href: '/market',      icon: 'ramen_dining', titulo: 'Dónde comer',    sub: 'Huariques, menús del día y cocina de la selva',     color: '#E8894A', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Tacacho_con_cecina.jpg/500px-Tacacho_con_cecina.jpg' },
+  { href: '/servicios',   icon: 'construction', titulo: 'Buscar chamba',  sub: 'Técnicos de confianza y bolsa de empleo local',     color: '#3E9B5F', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Textiler%C3%ADa_shipiba_en_pucalla.jpg/500px-Textiler%C3%ADa_shipiba_en_pucalla.jpg' },
+  { href: '/market',      icon: 'storefront',   titulo: 'Qué comprar',    sub: 'Pescado y carne fresca, abarrotes y artesanía',     color: '#D97742', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Feria_Artesanal_por_el_Mes_Patrio%2C%2C_estudiantes_observando_las_l%C3%ADneas_shipibas.jpg/500px-Feria_Artesanal_por_el_Mes_Patrio%2C%2C_estudiantes_observando_las_l%C3%ADneas_shipibas.jpg' },
 ];
 
 // Peek: Eventos / turismo → "¿Qué hacer en Pucallpa hoy?"
@@ -192,7 +192,7 @@ const SELVA_NOTES = [
 function SectionHead({ title, href, cta = 'Ver todo' }: { title: string; href: string; cta?: string }) {
   return (
     <div className="flex items-end justify-between">
-      <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-2xl lg:text-3xl">{title}</h2>
+      <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">{title}</h2>
       <Link href={href} className="font-label-md text-[12px] text-primary shrink-0 flex items-center gap-0.5 whitespace-nowrap">
         {cta}
         <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
@@ -268,29 +268,6 @@ function PortadaCarrusel({ notas, promos, style }: { notas: NotaCard[]; promos: 
   );
 }
 
-// Accesos rápidos a los hubs de servicio (Taxi Seguro, técnicos, sorteos),
-// parte del panel "Todo Pucallpa en una sola app".
-const PULSO_CARDS = [
-  {
-    href: '/taxi-seguro',
-    icon: 'local_taxi',
-    title: 'Taxi Seguro a tu puerta',
-    sub: 'Choferes verificados · mototaxi, auto y moto',
-    action: 'arrow_outward',
-    tint: 'bg-tertiary-fixed text-tertiary',
-    btn: 'bg-tertiary text-on-tertiary',
-  },
-  {
-    href: '/servicios',
-    icon: 'construction',
-    title: '¿Necesitas un técnico?',
-    sub: 'Electricistas y gasfiteros activos + bolsa de empleos',
-    action: 'search',
-    tint: 'bg-[#d7f0e2] text-[#0b7a48]',
-    btn: 'bg-[#0F8A55] text-white',
-  },
-];
-
 // Panel "Los 8 Portales de Boga" — el lanzador de la ciudad, al lado de la
 // portada en escritorio y apilado en móvil. Antes era una grilla 3x3 con
 // descripción (~400px de alto); ahora es una tira horizontal compacta
@@ -300,15 +277,16 @@ function PortalesPanel() {
     <div className="px-container-margin lg:px-0 pt-6 lg:pt-0">
       <div className="flex flex-col gap-4 lg:h-full lg:justify-center">
         <div className="flex items-end justify-between gap-4">
-          <div>
-            <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-xl lg:text-2xl leading-tight">
+          <div className="min-w-0">
+            <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">
               Todo Pucallpa en una sola app
             </h2>
-            <p className="font-body-md text-secondary text-xs mt-1.5 max-w-[52ch]">
-              Transporte verificado, servicios de confianza y la agenda de la ciudad, en tiempo real.
+            <p className="font-body-md text-secondary text-xs mt-1 max-w-[52ch]">
+              <span className="lg:hidden">Transporte, servicios y agenda de la ciudad.</span>
+              <span className="hidden lg:inline">Transporte verificado, servicios de confianza y la agenda de la ciudad, en tiempo real.</span>
             </p>
           </div>
-          <span className="flex items-center gap-1.5 font-label-md text-[10px] text-secondary shrink-0">
+          <span className="hidden sm:flex items-center gap-1.5 font-label-md text-[10px] text-secondary shrink-0">
             <span className="w-1.5 h-1.5 rounded-full bg-[#0F8A55] animate-pulse" />
             Sincronizado
           </span>
@@ -330,32 +308,6 @@ function PortalesPanel() {
               <span className="font-label-md text-[10px] text-on-surface text-center leading-tight line-clamp-1 w-full">{p.label}</span>
             </Link>
           ))}
-        </div>
-
-        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 lg:flex-col">
-          {PULSO_CARDS.map((c) => (
-            <Link
-              key={c.href}
-              href={c.href}
-              className="group bg-white border border-surface-container-high rounded-xl p-3 flex items-center gap-3 hover:border-primary/40 hover:shadow-md transition-all shrink-0 w-[82%] snap-start lg:w-auto lg:shrink"
-            >
-              <span className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${c.tint}`}>
-                <span className="material-symbols-outlined text-[20px]">{c.icon}</span>
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block font-headline-sm text-[13px] text-on-surface leading-tight line-clamp-1">{c.title}</span>
-                <span className="block font-body-md text-secondary text-[11px] leading-tight line-clamp-1">{c.sub}</span>
-              </span>
-              <span className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${c.btn}`}>
-                <span className="material-symbols-outlined text-[18px]">{c.action}</span>
-              </span>
-            </Link>
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between border-t border-surface-container-high pt-3 font-label-md text-[10px]">
-          <span className="text-secondary">Callería · Yarinacocha · Manantay</span>
-          <span className="text-[#0b7a48] font-bold">100% ucayalino</span>
         </div>
       </div>
     </div>
@@ -477,7 +429,7 @@ export default function HomePage() {
       {/* Banda negra compacta */}
       <div className="bg-on-surface text-background overflow-hidden">
         <div className="w-full px-container-margin lg:px-8 py-1 lg:py-1.5 flex items-center gap-x-6">
-          <h1 className="shrink-0 font-headline-lg font-extrabold tracking-tight text-lg lg:text-xl">
+          <h1 className="shrink-0 font-headline-lg font-extrabold tracking-tight text-base lg:text-lg">
             Descubre <span className="text-primary-fixed">Pucallpa</span>
           </h1>
           <div className="flex-1 min-w-0 overflow-hidden">
@@ -485,6 +437,8 @@ export default function HomePage() {
               {Array.from({ length: 4 }).map((_, i) => (
                 <p key={i} className="font-body-md text-background/60 text-xs" aria-hidden={i > 0 || undefined}>
                   Comercio, movilidad, trabajo, inmuebles, viajes y estilo de vida — en un solo lugar.
+                  <span className="mx-6 text-background/30">•</span>
+                  Callería · Yarinacocha · Manantay — <span className="text-primary-fixed font-bold">100% ucayalino</span>
                 </p>
               ))}
             </div>
@@ -500,14 +454,14 @@ export default function HomePage() {
         </div>
       </div>
 
-      <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-9 lg:gap-12 py-9 lg:py-12 px-container-margin lg:px-8">
+      <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-9 lg:gap-12 pt-3 pb-9 lg:pt-8 lg:pb-12 px-container-margin lg:px-8">
 
         {/* Lo que se pide en Market — productos reales del catalogo, justo
             debajo de la tira de portales */}
         {comidaProducts.length > 0 && (
           <section className="flex flex-col gap-4">
             <div className="flex items-end justify-between gap-4">
-              <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-2xl lg:text-3xl">Lo que se pide en Market</h2>
+              <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">Lo que se pide en Market</h2>
               <Link href="/market" className="group shrink-0 font-label-md text-[12px] text-primary flex items-center gap-0.5 whitespace-nowrap">
                 Ver todo
                 <span className="material-symbols-outlined text-[14px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
@@ -538,19 +492,21 @@ export default function HomePage() {
 
         {/* Guía rápida — ¿Primera vez en Pucallpa? (debajo del banner) */}
         <section className="flex flex-col gap-4">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <span className="font-label-md text-[10px] uppercase tracking-[0.2em] text-secondary">Guía rápida</span>
-              <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-2xl lg:text-3xl">¿Primera vez en Pucallpa?</h2>
-              <p className="font-body-md text-secondary text-xs mt-1">Lo esencial para moverte, dormir, comer y pasarla bien.</p>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-end justify-between gap-4">
+              <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">¿Primera vez en Pucallpa?</h2>
+              <Link
+                href="/guia"
+                className="group shrink-0 font-label-md text-[12px] text-primary flex items-center gap-0.5 whitespace-nowrap"
+              >
+                Guía completa
+                <span className="material-symbols-outlined text-[14px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
+              </Link>
             </div>
-            <Link
-              href="/guia"
-              className="group shrink-0 mt-1 font-label-md text-[12px] text-primary flex items-center gap-0.5 whitespace-nowrap"
-            >
-              Guía completa
-              <span className="material-symbols-outlined text-[14px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
-            </Link>
+            <p className="font-body-md text-secondary text-xs">
+              <span className="sm:hidden">Lo esencial para moverte, dormir y comer.</span>
+              <span className="hidden sm:inline">Lo esencial para moverte, dormir, comer y pasarla bien.</span>
+            </p>
           </div>
           <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
             {GUIA_PUCALLPA.map((g) => (
@@ -574,6 +530,27 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Qué hacer en Pucallpa hoy */}
+        <section className="flex flex-col gap-4">
+          <SectionHead title="Qué hacer en Pucallpa hoy" href="/eventos" cta="Ver eventos" />
+          <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
+            {queHacer.map((e) => (
+              <Link href="/eventos" key={e.id} className="min-w-[220px] w-[220px] lg:min-w-[260px] lg:w-[260px] bg-white border border-surface-container-highest overflow-hidden shadow-sm rounded-2xl snap-start group flex flex-col">
+                <div className="relative h-32 overflow-hidden bg-surface-container-low">
+                  <img src={e.img} alt={e.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <span className="absolute top-2 left-2 bg-white/95 backdrop-blur-sm text-on-surface text-[10px] font-label-md px-2 py-0.5 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[12px]">schedule</span>{e.tag}
+                  </span>
+                </div>
+                <div className="p-3 flex flex-col gap-1 flex-1">
+                  <h4 className="font-headline-sm text-sm text-on-surface line-clamp-2">{e.title}</h4>
+                  <span className="text-secondary font-label-md text-[11px] mt-auto"><span className="font-price-lg text-primary text-sm">{e.meta}</span></span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
         {/* Del Market — Dónde comer esta semana (carrusel de listas) */}
         <section className="flex flex-col gap-4">
           <div className="flex items-end justify-between">
@@ -581,7 +558,7 @@ export default function HomePage() {
               <span className="w-fit bg-tertiary-fixed text-on-tertiary-fixed-variant text-[10px] font-label-md px-2 py-0.5 rounded-full flex items-center gap-1 uppercase tracking-wider mb-1.5">
                 <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>restaurant</span>Selección Boga
               </span>
-              <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-2xl lg:text-3xl">Dónde comer esta semana</h2>
+              <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">Dónde comer esta semana</h2>
               <p className="font-body-md text-secondary text-xs mt-1">Listas por antojo — desliza para ver más.</p>
             </div>
             <Link href="/market" className="font-label-md text-[12px] text-primary shrink-0 flex items-center gap-0.5 whitespace-nowrap">
@@ -622,27 +599,6 @@ export default function HomePage() {
                   ))}
                 </div>
               </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Qué hacer en Pucallpa hoy */}
-        <section className="flex flex-col gap-4">
-          <SectionHead title="Qué hacer en Pucallpa hoy" href="/eventos" cta="Ver eventos" />
-          <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
-            {queHacer.map((e) => (
-              <Link href="/eventos" key={e.id} className="min-w-[220px] w-[220px] lg:min-w-[260px] lg:w-[260px] bg-white border border-surface-container-highest overflow-hidden shadow-sm rounded-2xl snap-start group flex flex-col">
-                <div className="relative h-32 overflow-hidden bg-surface-container-low">
-                  <img src={e.img} alt={e.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <span className="absolute top-2 left-2 bg-white/95 backdrop-blur-sm text-on-surface text-[10px] font-label-md px-2 py-0.5 flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[12px]">schedule</span>{e.tag}
-                  </span>
-                </div>
-                <div className="p-3 flex flex-col gap-1 flex-1">
-                  <h4 className="font-headline-sm text-sm text-on-surface line-clamp-2">{e.title}</h4>
-                  <span className="text-secondary font-label-md text-[11px] mt-auto"><span className="font-price-lg text-primary text-sm">{e.meta}</span></span>
-                </div>
-              </Link>
             ))}
           </div>
         </section>

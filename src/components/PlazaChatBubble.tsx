@@ -224,20 +224,10 @@ export default function PlazaChatBubble() {
         <button
           onClick={() => setIsOpen(true)}
           aria-label="Abrir Plaza Boga Chat"
-          className="group relative flex items-center gap-2.5 bg-gradient-to-r from-primary to-[#d82a20] text-white px-4 py-3 sm:px-4 sm:py-3.5 rounded-full shadow-[0_8px_25px_rgba(184,19,14,0.4)] hover:shadow-[0_12px_30px_rgba(184,19,14,0.55)] active:scale-95 transition-all duration-200 border border-white/20"
+          className="group relative flex items-center justify-center w-14 h-14 bg-gradient-to-r from-primary to-[#d82a20] text-white rounded-full shadow-[0_8px_25px_rgba(184,19,14,0.4)] hover:shadow-[0_12px_30px_rgba(184,19,14,0.55)] active:scale-95 transition-all duration-200 border border-white/20"
         >
-          {/* Pulso animado */}
-          <span className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
-          </span>
-
-          <span className="material-symbols-outlined text-[22px] text-white">
+          <span className="material-symbols-outlined text-[26px] text-white">
             forum
-          </span>
-
-          <span className="font-bold text-sm tracking-tight pr-0.5">
-            Plaza Boga
           </span>
 
           {hasNewBadge && (
