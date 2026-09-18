@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import PasswordInput from '@/components/PasswordInput';
+import PedidosPanel from '@/components/PedidosPanel';
 
 // Placeholder mientras se resuelve la sesión / mientras redirige a /login.
 // El contenido real de la página sale de la cuenta autenticada, no de esto.
@@ -28,7 +29,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState(EMPTY_USER);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ name: user.name, phone: user.phone, address: user.address });
-  const [activeSection, setActiveSection] = useState<'perfil' | 'ajustes'>('perfil');
+  const [activeSection, setActiveSection] = useState<'perfil' | 'ajustes' | 'pedidos'>('perfil');
   const [notifOrders, setNotifOrders] = useState(true);
   const [notifPromos, setNotifPromos] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
@@ -112,6 +113,7 @@ export default function ProfilePage() {
   const navTabs: { key: typeof activeSection; label: string; icon: string }[] = [
     { key: 'perfil', label: 'Mi Perfil', icon: 'person' },
     { key: 'ajustes', label: 'Ajustes', icon: 'settings' },
+    { key: 'pedidos', label: 'Pedidos', icon: 'receipt_long' },
   ];
 
   return (
@@ -136,91 +138,15 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Superadmin Card — atajo a TODAS las tiendas, no solo la propia */}
-        {isSuperadmin && (
-          <div className="bg-gradient-to-r from-[#1a1a1a] to-[#333] rounded-2xl p-4 flex items-center gap-3 shadow-md text-white">
-            <div className="w-11 h-11 bg-white/15 rounded-xl flex items-center justify-center shrink-0 backdrop-blur-md">
-              <span className="material-symbols-outlined text-white text-[22px]">admin_panel_settings</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-white/70 text-[10px] font-bold uppercase tracking-wider">Acceso Super Admin</p>
-              <p className="font-bold text-sm text-white mt-0.5 truncate">Todas las tiendas de Boga</p>
-            </div>
-            <Link
-              href="/superadmin"
-              className="bg-white text-on-surface hover:bg-neutral-50 transition-all font-bold text-xs py-1.5 px-3 rounded-xl flex items-center gap-1 shadow-sm active:scale-95 shrink-0"
-            >
-              <span className="material-symbols-outlined text-[16px]">dashboard</span>
-              Mis tiendas
-            </Link>
-          </div>
-        )}
-
-        {/* Merchant Card */}
-        {user.isMerchant && (
-          <div className="bg-gradient-to-r from-primary to-primary-container rounded-2xl p-4 flex items-center gap-3 shadow-md text-white">
-            <div className="w-11 h-11 bg-white/15 rounded-xl flex items-center justify-center shrink-0 backdrop-blur-md">
-              <span className="material-symbols-outlined text-white text-[22px]">storefront</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-white/70 text-[10px] font-bold uppercase tracking-wider">Tu tienda en Boga</p>
-              <p className="font-bold text-sm text-white mt-0.5 truncate">{user.merchantStoreName}</p>
-            </div>
-            <Link 
-              href="/admin" 
-              className="bg-white text-primary hover:bg-neutral-50 transition-all font-bold text-xs py-1.5 px-3 rounded-xl flex items-center gap-1 shadow-sm active:scale-95 shrink-0"
-            >
-              <span className="material-symbols-outlined text-[16px]">dashboard</span>
-              Admin
-            </Link>
-          </div>
-        )}
-
-        {/* No-merchant CTA */}
-        {!user.isMerchant && (
-          <div className="bg-white rounded-2xl p-5 border-2 border-dashed border-surface-container-highest flex items-center gap-4">
-            <div className="w-12 h-12 bg-primary-fixed text-primary rounded-xl flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-[22px]">add_business</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-sm text-on-surface">¿Tienes un negocio?</p>
-              <p className="text-secondary text-xs mt-0.5 leading-normal">
-                Crea tu carta digital o catálogo en Boga gratis.
-              </p>
-            </div>
-            <Link
-              href="/negocios"
-              className="bg-primary text-white hover:bg-primary-container transition-all font-bold text-xs py-2 px-4 rounded-xl active:scale-95 shrink-0"
-            >
-              Saber más
-            </Link>
-          </div>
-        )}
-
-        {/* Mis pedidos */}
-        <Link
-          href="/orders"
-          className="bg-white rounded-2xl p-4 border border-surface-container-highest shadow-sm flex items-center gap-4 hover:border-primary/30 hover:shadow-md transition-all active:scale-[0.99]"
-        >
-          <div className="w-11 h-11 bg-primary-fixed text-primary rounded-xl flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-[22px]">receipt_long</span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-bold text-sm text-on-surface">Mis pedidos</p>
-            <p className="text-secondary text-xs mt-0.5">Sigue tus compras y revisa tu historial.</p>
-          </div>
-          <span className="material-symbols-outlined text-[20px] text-secondary/40">chevron_right</span>
-        </Link>
-
-        {/* Section Nav Tabs */}
+        {/* Selector: Mi Perfil · Ajustes · Pedidos */}
         <div className="flex gap-1 bg-surface-container p-1 rounded-xl border border-surface-container-highest shadow-inner">
           {navTabs.map(tab => (
             <button
               key={tab.key}
               onClick={() => setActiveSection(tab.key)}
               className={`flex-1 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 ${
-                activeSection === tab.key 
-                  ? 'bg-primary text-white shadow-sm' 
+                activeSection === tab.key
+                  ? 'bg-primary text-white shadow-sm'
                   : 'text-secondary opacity-60 hover:opacity-100'
               }`}
             >
@@ -229,6 +155,60 @@ export default function ProfilePage() {
             </button>
           ))}
         </div>
+
+        {/* Superadmin + Tienda — tarjetas que son el botón entero, en la misma fila */}
+        {(isSuperadmin || user.isMerchant) && (() => {
+          const par = isSuperadmin && user.isMerchant;
+          const tarjeta = 'rounded-xl shadow-md text-white flex items-center gap-2 p-2.5 min-w-0 active:scale-[0.98] hover:brightness-110 transition-all';
+          return (
+            <div className={`grid gap-3 ${par ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              {/* Superadmin — atajo a TODAS las tiendas, no solo la propia */}
+              {isSuperadmin && (
+                <Link href="/superadmin" className={`bg-gradient-to-r from-[#1a1a1a] to-[#333] ${tarjeta}`}>
+                  <div className="w-8 h-8 bg-white/15 rounded-lg flex items-center justify-center shrink-0 backdrop-blur-md">
+                    <span className="material-symbols-outlined text-white text-[18px]">admin_panel_settings</span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-white/70 text-[9px] font-bold uppercase tracking-wider leading-tight whitespace-nowrap">Super Admin</p>
+                    <p className="font-bold text-xs text-white truncate leading-tight mt-0.5">Tiendas</p>
+                  </div>
+                  {!par && <span className="material-symbols-outlined text-white/60 text-[18px] shrink-0">chevron_right</span>}
+                </Link>
+              )}
+
+              {/* Tienda propia */}
+              {user.isMerchant && (
+                <Link href="/admin" className={`bg-gradient-to-r from-primary to-primary-container ${tarjeta}`}>
+                  <div className="w-8 h-8 bg-white/15 rounded-lg flex items-center justify-center shrink-0 backdrop-blur-md">
+                    <span className="material-symbols-outlined text-white text-[18px]">storefront</span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-white/70 text-[9px] font-bold uppercase tracking-wider leading-tight whitespace-nowrap">Tu tienda</p>
+                    <p className="font-bold text-xs text-white truncate leading-tight mt-0.5">{user.merchantStoreName}</p>
+                  </div>
+                  {!par && <span className="material-symbols-outlined text-white/60 text-[18px] shrink-0">chevron_right</span>}
+                </Link>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* No-merchant CTA — mismo formato que Super Admin / Tu tienda */}
+        {!user.isMerchant && (
+          <Link
+            href="/negocios"
+            className="bg-gradient-to-r from-primary to-primary-container rounded-xl shadow-md text-white flex items-center gap-2 p-2.5 min-w-0 active:scale-[0.98] hover:brightness-110 transition-all"
+          >
+            <div className="w-8 h-8 bg-white/15 rounded-lg flex items-center justify-center shrink-0 backdrop-blur-md">
+              <span className="material-symbols-outlined text-white text-[18px]">add_business</span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-white/70 text-[9px] font-bold uppercase tracking-wider leading-tight whitespace-nowrap">¿Tienes un negocio?</p>
+              <p className="font-bold text-xs text-white truncate leading-tight mt-0.5">Crea tu carta digital gratis</p>
+            </div>
+            <span className="material-symbols-outlined text-white/60 text-[18px] shrink-0">chevron_right</span>
+          </Link>
+        )}
 
         {/* SECTION: Mi Perfil */}
         {activeSection === 'perfil' && (
@@ -300,6 +280,8 @@ export default function ProfilePage() {
         )}
 
         {/* SECTION: Ajustes */}
+        {activeSection === 'pedidos' && <PedidosPanel />}
+
         {activeSection === 'ajustes' && (
           <div className="flex flex-col gap-4">
 

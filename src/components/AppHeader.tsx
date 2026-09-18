@@ -80,19 +80,24 @@ export default function AppHeader({
               <span className="material-symbols-outlined text-on-surface text-[20px]">notifications</span>
             </button>
 
-            {/* Perfil / iniciar sesión */}
-            <Link
-              href={user ? '/profile' : '/login'}
-              aria-label={firstName ? `Perfil de ${firstName}` : 'Iniciar sesión'}
-              className="p-2 bg-white rounded-full shadow-sm hover:shadow-md transition-all active:scale-90 flex items-center justify-center"
-            >
-              <span
-                className={`material-symbols-outlined text-[20px] ${pathname.startsWith('/profile') ? 'text-primary' : 'text-on-surface'}`}
-                style={user ? { fontVariationSettings: "'FILL' 1" } : {}}
-              >
-                person
-              </span>
-            </Link>
+            {/* Perfil / iniciar sesión — dentro del perfil se vuelve "Inicio" */}
+            {(() => {
+              const enPerfil = pathname.startsWith('/profile');
+              return (
+                <Link
+                  href={enPerfil ? '/' : user ? '/profile' : '/login'}
+                  aria-label={enPerfil ? 'Ir al inicio' : firstName ? `Perfil de ${firstName}` : 'Iniciar sesión'}
+                  className="p-2 bg-white rounded-full shadow-sm hover:shadow-md transition-all active:scale-90 flex items-center justify-center"
+                >
+                  <span
+                    className="material-symbols-outlined text-[20px] text-on-surface"
+                    style={user ? { fontVariationSettings: "'FILL' 1" } : {}}
+                  >
+                    {enPerfil ? 'home' : 'person'}
+                  </span>
+                </Link>
+              );
+            })()}
           </div>
         </div>
       </div>
