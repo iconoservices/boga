@@ -27,10 +27,24 @@ const CATEGORIAS: { cat: Cat; icon: string }[] = [
   { cat: 'Fiestas',           icon: 'celebration' },
 ];
 
+// Foto de evento/lugar: si no hay imagen (o la dirección falla) muestra un
+// fondo de marca en vez del ícono roto con el texto.
+function Foto({ src, alt, className }: { src?: string; alt: string; className?: string }) {
+  const [falla, setFalla] = useState(false);
+  if (!src || falla) {
+    return (
+      <div className={`${className ?? ''} bg-gradient-to-br from-primary-fixed to-surface-container flex items-center justify-center`} aria-label={alt} role="img">
+        <span className="material-symbols-outlined text-primary/40 text-[40px]">celebration</span>
+      </div>
+    );
+  }
+  return <img referrerPolicy="no-referrer" src={src} alt={alt} className={className} onError={() => setFalla(true)} />;
+}
+
 type Evento = {
   id: string; titulo: string; cat: Cat; descripcion?: string; lugar: string; dia: string; mes: string;
   precio: string; organiza: string; img: string; destacado?: boolean;
-  reservable?: boolean; aforo?: number | null;
+  reservable?: boolean; aforo?: number | null; linkEntradas?: string;
 };
 
 export default function Eventos() {
@@ -94,7 +108,7 @@ export default function Eventos() {
                   onClick={() => setEventoAbierto(c)}
                   className="relative w-full h-full shrink-0 bg-surface-container-low cursor-pointer"
                 >
-                  <img referrerPolicy="no-referrer" src={c.img || undefined} alt={c.titulo} className="absolute inset-0 w-full h-full object-cover" />
+                  <Foto src={c.img} alt={c.titulo} className="absolute inset-0 w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-black/10" />
                   <div className="absolute inset-0 flex flex-col justify-center gap-2 px-5 pt-5 pb-12 lg:p-10 max-w-[560px]">
                     <div className="flex items-center gap-2">
@@ -210,7 +224,7 @@ export default function Eventos() {
                 onClick={() => setLugarAbierto(l)}
                 className="relative min-w-[180px] w-[180px] h-[200px] lg:min-w-[210px] lg:w-[210px] lg:h-[230px] shrink-0 rounded-2xl overflow-hidden snap-start shadow-[0_15px_15px_rgba(0,0,0,0.04)] group cursor-pointer active:scale-[0.98] transition-transform"
               >
-                <img referrerPolicy="no-referrer" src={l.img || undefined} alt={l.nombre} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                <Foto src={l.img} alt={l.nombre} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 {l.tag?.toLowerCase().includes('gratis') && (
                   <span className="absolute top-2.5 right-2.5 bg-primary text-white text-[10px] font-label-md px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">Gratis</span>
@@ -231,7 +245,7 @@ export default function Eventos() {
             {eventos.slice(0, 7).map((e) => (
               <div key={e.id} onClick={() => setEventoAbierto(e)} className="min-w-[180px] w-[180px] lg:min-w-[210px] lg:w-[210px] bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest snap-start flex flex-col cursor-pointer active:scale-[0.98] transition-transform">
                 <div className="relative aspect-square overflow-hidden bg-surface-container-low">
-                  <img referrerPolicy="no-referrer" src={e.img || undefined} alt={e.titulo} className="w-full h-full object-cover" />
+                  <Foto src={e.img} alt={e.titulo} className="w-full h-full object-cover" />
                 </div>
                 <div className="p-3 flex flex-col gap-1 flex-1">
                   <span className="w-fit bg-primary-fixed text-primary text-[10px] font-label-md px-2 py-0.5 rounded-full">{e.dia} {e.mes}</span>
@@ -258,7 +272,7 @@ export default function Eventos() {
                 <span className="font-headline-lg font-black text-primary/25 text-[64px] leading-[0.7] select-none">{i + 1}</span>
                 <div className="w-[150px] lg:w-[170px]">
                   <div className="relative aspect-square rounded-xl overflow-hidden bg-surface-container-low">
-                    <img referrerPolicy="no-referrer" src={e.img || undefined} alt={e.titulo} className="w-full h-full object-cover" />
+                    <Foto src={e.img} alt={e.titulo} className="w-full h-full object-cover" />
                   </div>
                   <span className="font-label-md text-[10px] text-secondary uppercase tracking-wider mt-2 block">{e.dia} {e.mes} · {e.lugar.split(' ')[0]}</span>
                   <h4 className="font-headline-sm text-[13px] text-on-surface line-clamp-2 leading-tight mt-0.5">{e.titulo}</h4>
@@ -284,7 +298,7 @@ export default function Eventos() {
               {eventos.filter((e) => ['Conciertos', 'Fiestas', 'Ferias'].includes(e.cat)).map((e) => (
                 <div key={e.id} onClick={() => setEventoAbierto(e)} className="min-w-[150px] w-[150px] shrink-0 snap-start cursor-pointer active:scale-[0.98] transition-transform">
                   <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-white/10">
-                    <img referrerPolicy="no-referrer" src={e.img || undefined} alt={e.titulo} className="w-full h-full object-cover" />
+                    <Foto src={e.img} alt={e.titulo} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                     <div className="absolute inset-x-0 bottom-0 p-2">
                       <span className="font-label-md text-[9px] uppercase tracking-wider text-white/70">{e.dia} {e.mes}</span>
@@ -307,7 +321,7 @@ export default function Eventos() {
               {lista.map((e) => (
                 <div key={e.id} onClick={() => setEventoAbierto(e)} className="bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col cursor-pointer active:scale-[0.98] transition-transform">
                   <div className="relative h-36 overflow-hidden bg-surface-container-low">
-                    <img referrerPolicy="no-referrer" src={e.img || undefined} alt={e.titulo} className="w-full h-full object-cover" />
+                    <Foto src={e.img} alt={e.titulo} className="w-full h-full object-cover" />
                     <div className="absolute top-2 left-2 bg-white rounded-lg px-2 py-1 text-center shadow-sm">
                       <span className="block font-price-lg text-primary text-sm leading-none">{e.dia}</span>
                       <span className="block font-label-md text-[9px] text-secondary uppercase">{e.mes}</span>
@@ -322,6 +336,7 @@ export default function Eventos() {
                     <span className="text-secondary/70 font-label-md text-[10px] uppercase tracking-wider">Organiza · {e.organiza}</span>
                     <div className="flex items-center justify-between border-t border-surface-container pt-2.5 mt-2">
                       <span className="font-price-lg text-primary text-sm">{e.precio}</span>
+                      {e.linkEntradas && <span className="bg-primary-fixed text-primary text-[10px] font-label-md px-2 py-0.5 rounded-full flex items-center gap-1"><span className="material-symbols-outlined text-[12px]">confirmation_number</span>Entradas online</span>}
                       <span className="text-primary font-label-md text-[11px] flex items-center gap-1">Más info<span className="material-symbols-outlined text-[13px]">arrow_forward</span></span>
                     </div>
                   </div>
@@ -347,7 +362,7 @@ export default function Eventos() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative aspect-[16/10] sm:aspect-[4/3] bg-surface-container-low">
-              <img referrerPolicy="no-referrer" src={eventoAbierto.img || undefined} alt={eventoAbierto.titulo} className="w-full h-full object-cover" />
+              <Foto src={eventoAbierto.img} alt={eventoAbierto.titulo} className="w-full h-full object-cover" />
               <button
                 onClick={() => setEventoAbierto(null)}
                 className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center"
@@ -390,6 +405,18 @@ export default function Eventos() {
                   Cerrar
                 </button>
               </div>
+              {eventoAbierto.linkEntradas && (
+                <a
+                  href={eventoAbierto.linkEntradas}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 bg-primary text-white font-label-md text-sm px-5 py-3 rounded-full active:scale-95 transition-transform"
+                >
+                  <span className="material-symbols-outlined text-[18px]">confirmation_number</span>
+                  Comprar entradas
+                  <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                </a>
+              )}
               {eventoAbierto.reservable && <ReservaEntrada eventoId={eventoAbierto.id} />}
             </div>
           </div>
@@ -407,7 +434,7 @@ export default function Eventos() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative aspect-[16/10] sm:aspect-[4/3] bg-surface-container-low">
-              <img referrerPolicy="no-referrer" src={lugarAbierto.img || undefined} alt={lugarAbierto.nombre} className="w-full h-full object-cover" />
+              <Foto src={lugarAbierto.img} alt={lugarAbierto.nombre} className="w-full h-full object-cover" />
               <button
                 onClick={() => setLugarAbierto(null)}
                 className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center"

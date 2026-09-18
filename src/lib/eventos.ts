@@ -21,6 +21,8 @@ export type Evento = {
   destacado?: boolean;
   reservable?: boolean;
   aforo?: number | null;
+  /** Enlace externo de entradas o registro (Novikpass, etc.). */
+  linkEntradas?: string;
 };
 
 // Mapea una fila de la tabla `events` (snake_case) al shape que usa la UI.
@@ -40,7 +42,25 @@ function fromRow(r: Record<string, unknown>): Evento {
     destacado: Boolean(r.destacado),
     reservable: Boolean(r.reservable),
     aforo: r.aforo == null ? null : Number(r.aforo),
+    linkEntradas: (r.link_entradas as string) ?? '',
   };
+}
+
+const MESES = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+
+// Clave "AAAA-MM-DD" para ordenar. Si el evento no tiene `fecha` completa pero sí
+// día y mes (los escritos a mano), se arma con el año en curso, o el siguiente si
+// esa fecha ya pasó. Sin nada de eso va al final.
+function claveFecha(e: Evento): string {
+  if (e.fecha) return e.fecha;
+  const dia = parseInt(e.dia, 10);
+  const mes = MESES.indexOf((e.mes || '').toUpperCase().slice(0, 3));
+  if (!dia || mes < 0) return '9999-12-31';
+  const hoy = new Date();
+  const hoyClave = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+  const armar = (y: number) => `${y}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+  const esteAnio = armar(hoy.getFullYear());
+  return esteAnio >= hoyClave ? esteAnio : armar(hoy.getFullYear() + 1);
 }
 
 export async function fetchEventos(): Promise<Evento[]> {
@@ -49,14 +69,9 @@ export async function fetchEventos(): Promise<Evento[]> {
     if (!res.ok) return [];
     const { events } = await res.json();
     if (!Array.isArray(events)) return [];
-    // Del más próximo al más lejano (sin fecha al final). Array.sort es estable:
-    // a igual fecha se respeta el orden manual que ya trae el endpoint.
-    return events.map(fromRow).sort((a, b) => {
-      if (!a.fecha && !b.fecha) return 0;
-      if (!a.fecha) return 1;
-      if (!b.fecha) return -1;
-      return a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : 0;
-    });
+    // Del más próximo al más lejano. Array.sort es estable: a igual fecha se
+    // respeta el orden manual que ya trae el endpoint.
+    return events.map(fromRow).sort((a, b) => claveFecha(a).localeCompare(claveFecha(b)));
   } catch {
     return [];
   }

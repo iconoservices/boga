@@ -1011,6 +1011,12 @@ ON public.sale_listings FOR DELETE USING (public.is_superadmin());
 ALTER TABLE public.events ADD COLUMN IF NOT EXISTS reservable BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE public.events ADD COLUMN IF NOT EXISTS aforo INT;  -- limite de tickets; NULL = sin limite
 
+-- Enlace externo de entradas o registro (ej. Novikpass). Si está, el detalle del
+-- evento muestra el botón "Comprar entradas" que abre ese enlace.
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS link_entradas TEXT;
+-- UPDATE public.events SET link_entradas = 'https://fiestasbravas.novikpass.com/r/FIESBRAV'
+--   WHERE titulo ILIKE '%Lil Silvio%';
+
 CREATE TABLE IF NOT EXISTS public.tickets (
   id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   created_at  TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
