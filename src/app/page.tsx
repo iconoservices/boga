@@ -10,6 +10,7 @@ import { fetchEventos } from '@/lib/eventos';
 import { fetchAlquileres } from '@/lib/alquileres';
 import { fetchVentas } from '@/lib/ventas';
 import { fetchViajes } from '@/lib/viajes';
+import { fetchChamba } from '@/lib/chamba';
 import { fetchLugares } from '@/lib/lugares';
 import { BannerOverlay, type BannerStyle } from '@/components/BannerOverlay';
 
@@ -265,6 +266,14 @@ export default function HomePage() {
 
   // "Dónde quedarte": avisos reales de /inmuebles (alquileres + ventas, vía los
   // endpoints cacheados). Mientras no haya ninguno cargado, muestra el demo.
+  // "Chamba y oficios": oficios reales de /api/chamba; demo mientras no haya.
+  const [oficiosHome, setOficiosHome] = useState<{ id: string; nombre: string; oficio: string; zona: string; img: string }[]>(SERVICIOS_PEEK);
+  useEffect(() => {
+    fetchChamba().then(({ oficios }) => {
+      if (oficios.length > 0) setOficiosHome(oficios.slice(0, 6).map((o) => ({ id: o.id, nombre: o.nombre, oficio: o.oficio, zona: o.zona, img: o.img })));
+    });
+  }, []);
+
   // "Viajes desde Pucallpa": rutas reales de /api/viajes; demo mientras no haya.
   const [viajesHome, setViajesHome] = useState(VIAJES_PEEK);
   useEffect(() => {
@@ -624,10 +633,14 @@ export default function HomePage() {
         <section className="flex flex-col gap-4">
           <SectionHead title="Chamba y oficios" href="/servicios" cta="Ver todo" />
           <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
-            {SERVICIOS_PEEK.map((s) => (
+            {oficiosHome.map((s) => (
               <Link href="/servicios" key={s.id} className="min-w-[240px] w-[240px] lg:min-w-[280px] lg:w-[280px] snap-start shrink-0 bg-white border border-surface-container-highest rounded-2xl p-3 flex items-center gap-3 shadow-sm hover:border-primary/30 hover:shadow-md transition-all">
                 <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-surface-container-low">
-                  <img src={s.img} alt={s.nombre} className="w-full h-full object-cover" />
+                  {s.img ? (
+                    <img src={s.img} alt={s.nombre} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-secondary/40"><span className="material-symbols-outlined text-[24px]">construction</span></div>
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <span className="font-headline-sm text-sm text-on-surface leading-tight line-clamp-1">{s.nombre}</span>

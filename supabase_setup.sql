@@ -1220,3 +1220,62 @@ ON public.travel_routes FOR UPDATE USING (public.is_superadmin());
 
 CREATE POLICY "travel_routes: superadmin borra"
 ON public.travel_routes FOR DELETE USING (public.is_superadmin());
+
+
+-- ============================================================
+-- 17. CHAMBA Y OFICIOS  (empleos + técnicos/oficios de /servicios)
+-- ============================================================
+-- `job_listings` (avisos de empleo) y `service_providers` (gente que ofrece su
+-- oficio). Antes eran arrays hardcodeados en /servicios. Lectura pública SOLO de
+-- status='activo'; escritura solo superadmin (desde /superadmin/chamba). Leer
+-- siempre por el endpoint cacheado /api/chamba (egress).
+CREATE TABLE IF NOT EXISTS public.job_listings (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at  TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  puesto      TEXT NOT NULL,
+  negocio     TEXT,
+  tipo        TEXT,                                 -- "Tiempo completo", "Medio tiempo", "Por día"…
+  zona        TEXT,
+  pago        TEXT,                                 -- "S/ 1200 + propinas", "A convenir"
+  wsp         TEXT,
+  ciudad      TEXT NOT NULL DEFAULT 'pucallpa',
+  orden       INT  NOT NULL DEFAULT 0,
+  status      TEXT NOT NULL DEFAULT 'activo'
+);
+
+CREATE TABLE IF NOT EXISTS public.service_providers (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at  TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  nombre      TEXT NOT NULL,
+  oficio      TEXT NOT NULL,                        -- "Electricista domiciliario"
+  zona        TEXT,
+  img         TEXT,
+  wsp         TEXT,
+  ciudad      TEXT NOT NULL DEFAULT 'pucallpa',
+  orden       INT  NOT NULL DEFAULT 0,
+  status      TEXT NOT NULL DEFAULT 'activo'
+);
+
+CREATE INDEX IF NOT EXISTS job_listings_status_idx     ON public.job_listings (status);
+CREATE INDEX IF NOT EXISTS service_providers_status_idx ON public.service_providers (status);
+
+ALTER TABLE public.job_listings      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.service_providers ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "job_listings: lectura pública de activos" ON public.job_listings;
+DROP POLICY IF EXISTS "job_listings: superadmin inserta"         ON public.job_listings;
+DROP POLICY IF EXISTS "job_listings: superadmin edita"           ON public.job_listings;
+DROP POLICY IF EXISTS "job_listings: superadmin borra"           ON public.job_listings;
+CREATE POLICY "job_listings: lectura pública de activos" ON public.job_listings FOR SELECT USING (status = 'activo' OR public.is_superadmin());
+CREATE POLICY "job_listings: superadmin inserta" ON public.job_listings FOR INSERT WITH CHECK (public.is_superadmin());
+CREATE POLICY "job_listings: superadmin edita"   ON public.job_listings FOR UPDATE USING (public.is_superadmin());
+CREATE POLICY "job_listings: superadmin borra"   ON public.job_listings FOR DELETE USING (public.is_superadmin());
+
+DROP POLICY IF EXISTS "service_providers: lectura pública de activos" ON public.service_providers;
+DROP POLICY IF EXISTS "service_providers: superadmin inserta"         ON public.service_providers;
+DROP POLICY IF EXISTS "service_providers: superadmin edita"           ON public.service_providers;
+DROP POLICY IF EXISTS "service_providers: superadmin borra"           ON public.service_providers;
+CREATE POLICY "service_providers: lectura pública de activos" ON public.service_providers FOR SELECT USING (status = 'activo' OR public.is_superadmin());
+CREATE POLICY "service_providers: superadmin inserta" ON public.service_providers FOR INSERT WITH CHECK (public.is_superadmin());
+CREATE POLICY "service_providers: superadmin edita"   ON public.service_providers FOR UPDATE USING (public.is_superadmin());
+CREATE POLICY "service_providers: superadmin borra"   ON public.service_providers FOR DELETE USING (public.is_superadmin());

@@ -25,6 +25,7 @@ export const SUBRUTAS = [
   { href: '/superadmin/choferes',       icon: 'local_taxi',   label: 'Choferes' },
   { href: '/superadmin/alquileres',     icon: 'real_estate_agent', label: 'Inmuebles' },
   { href: '/superadmin/viajes',         icon: 'directions_boat', label: 'Viajes y Transportes' },
+  { href: '/superadmin/chamba',         icon: 'construction', label: 'Chamba y oficios' },
   { href: '/superadmin/eventos',        icon: 'celebration',  label: 'Eventos' },
   { href: '/superadmin/organizadores',  icon: 'nightlife',    label: 'Organizadores' },
   { href: '/superadmin/modulos',        icon: 'extension',    label: 'Módulos y Estrategia' },

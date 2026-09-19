@@ -1,0 +1,52 @@
+'use client';
+
+import React, { useState } from 'react';
+import { uploadFile } from '@/lib/uploadClient';
+
+// Campo de foto: pegar una dirección, subir un archivo o pegar una imagen del
+// portapapeles (Ctrl+V). Sube a R2 vía /api/upload (comprime antes de subir).
+export default function CampoFoto({ value, onChange, carpeta, inputClass }: {
+  value: string; onChange: (url: string) => void; carpeta: string; inputClass: string;
+}) {
+  const [subiendo, setSubiendo] = useState(false);
+  const [error, setError] = useState('');
+
+  const subir = async (file: File) => {
+    setSubiendo(true); setError('');
+    try {
+      onChange(await uploadFile(file, carpeta));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo subir la foto');
+    } finally {
+      setSubiendo(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-1.5 text-xs font-bold text-secondary sm:col-span-2">
+      Foto
+      {value && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={value} alt="" referrerPolicy="no-referrer" className="w-full max-h-48 object-cover rounded-lg border border-surface-container-highest" />
+      )}
+      <div className="flex gap-2 items-center flex-wrap">
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onPaste={(e) => {
+            const f = Array.from(e.clipboardData.files).find((x) => x.type.startsWith('image/'));
+            if (f) { e.preventDefault(); subir(f); }
+          }}
+          className={inputClass + ' flex-1 min-w-[200px]'}
+          placeholder="Pega la dirección de la foto, o una imagen (Ctrl+V), o sube un archivo →"
+        />
+        <label className="px-3 py-2 rounded-lg bg-surface-container text-xs font-bold cursor-pointer hover:bg-surface-container-high whitespace-nowrap">
+          {subiendo ? 'Subiendo…' : 'Subir foto'}
+          <input type="file" accept="image/*" className="hidden" disabled={subiendo}
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) subir(f); e.target.value = ''; }} />
+        </label>
+      </div>
+      {error && <span className="text-red-600 font-bold">{error}</span>}
+    </div>
+  );
+}

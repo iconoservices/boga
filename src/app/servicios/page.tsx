@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
+import { fetchChamba } from '@/lib/chamba';
 
 // Servicios = tablero local de trabajo, oficios y empleos. Por ahora es un DIRECTORIO curado a mano
 // (sin tabla en Supabase todavía): gente que ofrece su oficio y avisos de
@@ -37,6 +38,16 @@ export default function Servicios() {
   // directorio de oficios.
   const [vista, setVista] = useState<Vista>('empleos');
 
+  // Datos reales de /api/chamba; mientras las tablas estén vacías, los de muestra.
+  const [servicios, setServicios] = useState<any[]>(SERVICIOS);
+  const [empleos, setEmpleos] = useState<any[]>(EMPLEOS);
+  useEffect(() => {
+    fetchChamba().then(({ empleos: e, oficios: o }) => {
+      if (o.length > 0) setServicios(o);
+      if (e.length > 0) setEmpleos(e);
+    });
+  }, []);
+
   return (
     <>
       <AppHeader cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
@@ -70,19 +81,25 @@ export default function Servicios() {
         {/* Directorio de servicios */}
         {vista === 'servicios' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {SERVICIOS.map((s) => (
+            {servicios.map((s) => (
               <div key={s.id} className="bg-white rounded-2xl p-4 shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col gap-3">
                 <div className="flex items-center gap-3">
                   <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-surface-container-low">
-                    <img src={s.img} alt={s.nombre} className="w-full h-full object-cover" />
+                    {s.img ? (
+                      <img src={s.img} alt={s.nombre} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-secondary/40"><span className="material-symbols-outlined text-[24px]">construction</span></div>
+                    )}
                   </div>
                   <div className="flex flex-col min-w-0 flex-1">
                     <span className="font-headline-sm text-sm text-on-surface leading-tight line-clamp-1">{s.nombre}</span>
                     <span className="text-secondary font-label-md text-[11px] line-clamp-1">{s.oficio}</span>
-                    <div className="flex items-center gap-1 mt-1">
-                      <span className="material-symbols-outlined text-tertiary text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                      <span className="text-[11px] font-label-md text-secondary">{s.rating} <span className="opacity-60">· {s.trabajos} trabajos</span></span>
-                    </div>
+                    {s.rating && (
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className="material-symbols-outlined text-tertiary text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                        <span className="text-[11px] font-label-md text-secondary">{s.rating} <span className="opacity-60">· {s.trabajos} trabajos</span></span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center justify-between border-t border-surface-container pt-3">
@@ -107,7 +124,7 @@ export default function Servicios() {
         {/* Avisos de empleo */}
         {vista === 'empleos' && (
           <div className="flex flex-col gap-3">
-            {EMPLEOS.map((e) => (
+            {empleos.map((e) => (
               <div key={e.id} className="bg-white rounded-2xl p-4 shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex items-center gap-4">
                 <div className="w-11 h-11 rounded-xl bg-primary-fixed flex items-center justify-center shrink-0">
                   <span className="material-symbols-outlined text-primary text-[20px]">work</span>
