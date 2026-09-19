@@ -9,6 +9,7 @@ import { fetchBanners, fetchCatalogo } from '@/lib/catalogo';
 import { fetchEventos } from '@/lib/eventos';
 import { fetchAlquileres } from '@/lib/alquileres';
 import { fetchVentas } from '@/lib/ventas';
+import { fetchViajes } from '@/lib/viajes';
 import { fetchLugares } from '@/lib/lugares';
 import { BannerOverlay, type BannerStyle } from '@/components/BannerOverlay';
 
@@ -264,6 +265,19 @@ export default function HomePage() {
 
   // "Dónde quedarte": avisos reales de /inmuebles (alquileres + ventas, vía los
   // endpoints cacheados). Mientras no haya ninguno cargado, muestra el demo.
+  // "Viajes desde Pucallpa": rutas reales de /api/viajes; demo mientras no haya.
+  const [viajesHome, setViajesHome] = useState(VIAJES_PEEK);
+  useEffect(() => {
+    fetchViajes().then((rows) => {
+      if (rows.length === 0) return;
+      const nombreMedio = { fluvial: 'Fluvial', terrestre: 'Terrestre', aereo: 'Aéreo' } as const;
+      setViajesHome(rows.slice(0, 6).map((r) => ({
+        id: r.id, titulo: r.destino, medio: nombreMedio[r.medio], tiempo: r.duracion,
+        precio: r.precio || 'Consultar', icon: r.icon,
+      })));
+    });
+  }, []);
+
   const [inmueblesHome, setInmueblesHome] = useState(INMUEBLES_PEEK);
   useEffect(() => {
     Promise.all([fetchAlquileres(), fetchVentas()]).then(([alq, vta]) => {
@@ -653,7 +667,7 @@ export default function HomePage() {
         <section className="flex flex-col gap-4">
           <SectionHead title="Viajes desde Pucallpa" href="/viajes" cta="Ver rutas" />
           <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
-            {VIAJES_PEEK.map((v) => (
+            {viajesHome.map((v) => (
               <Link href="/viajes" key={v.id} className="min-w-[250px] w-[250px] lg:min-w-[290px] lg:w-[290px] snap-start shrink-0 bg-white border border-surface-container-highest rounded-2xl overflow-hidden shadow-sm hover:border-primary/30 hover:shadow-md transition-all group flex items-center gap-3 p-3">
                 <div className="w-11 h-11 rounded-xl bg-[#1B8EBF]/10 flex items-center justify-center shrink-0">
                   <span className="material-symbols-outlined text-[#1B8EBF] text-[22px]">{v.icon}</span>

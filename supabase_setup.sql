@@ -1172,3 +1172,51 @@ ON public.organizers FOR DELETE USING (public.is_superadmin());
 -- noches" en /org/<slug>). NULL = evento suelto de la agenda general.
 ALTER TABLE public.events ADD COLUMN IF NOT EXISTS organizer_id UUID REFERENCES public.organizers(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS events_organizer_idx ON public.events (organizer_id);
+
+
+-- ============================================================
+-- 16. VIAJES & TRANSPORTE  (rutas desde Pucallpa)
+-- ============================================================
+-- `travel_routes`: el directorio de /viajes (rápidos fluviales, buses, vuelos).
+-- Antes era un array hardcodeado. Lectura pública SOLO de status='activo';
+-- escritura solo superadmin (desde /superadmin/viajes). Leer siempre por el
+-- endpoint cacheado /api/viajes — nunca select('*') desde el cliente (egress).
+CREATE TABLE IF NOT EXISTS public.travel_routes (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at  TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  medio       TEXT NOT NULL DEFAULT 'terrestre',   -- fluvial | terrestre | aereo
+  destino     TEXT NOT NULL,
+  via         TEXT,                                 -- "Río Ucayali · Puerto Henry"
+  agencia     TEXT,
+  duracion    TEXT,                                 -- "~10–12 h"
+  frecuencia  TEXT,                                 -- "Diario, 5:00 AM"
+  precio      TEXT,                                 -- "S/ 80–120"
+  wsp         TEXT,                                 -- 51999999999
+  notas       TEXT,
+  ciudad      TEXT NOT NULL DEFAULT 'pucallpa',
+  orden       INT  NOT NULL DEFAULT 0,
+  status      TEXT NOT NULL DEFAULT 'activo'        -- activo | oculto
+);
+
+CREATE INDEX IF NOT EXISTS travel_routes_status_idx ON public.travel_routes (status);
+CREATE INDEX IF NOT EXISTS travel_routes_medio_idx  ON public.travel_routes (medio);
+
+ALTER TABLE public.travel_routes ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "travel_routes: lectura pública de activas" ON public.travel_routes;
+DROP POLICY IF EXISTS "travel_routes: superadmin inserta"         ON public.travel_routes;
+DROP POLICY IF EXISTS "travel_routes: superadmin edita"           ON public.travel_routes;
+DROP POLICY IF EXISTS "travel_routes: superadmin borra"           ON public.travel_routes;
+
+CREATE POLICY "travel_routes: lectura pública de activas"
+ON public.travel_routes FOR SELECT
+USING (status = 'activo' OR public.is_superadmin());
+
+CREATE POLICY "travel_routes: superadmin inserta"
+ON public.travel_routes FOR INSERT WITH CHECK (public.is_superadmin());
+
+CREATE POLICY "travel_routes: superadmin edita"
+ON public.travel_routes FOR UPDATE USING (public.is_superadmin());
+
+CREATE POLICY "travel_routes: superadmin borra"
+ON public.travel_routes FOR DELETE USING (public.is_superadmin());

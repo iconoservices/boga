@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
+import { fetchViajes } from '@/lib/viajes';
 
 // Viajes & Transporte desde Pucallpa — directorio de agencias de transporte
 // fluvial (rápidos), terrestre (colectivos/buses) y aéreo (vuelos).
@@ -114,12 +115,18 @@ export default function Viajes() {
   const { cartCount, setIsCartOpen } = useCart();
   const [filtro, setFiltro] = useState<Medio>('todos');
 
-  const lista = filtro === 'todos' ? RUTAS : RUTAS.filter((r) => r.medio === filtro);
+  // Rutas reales de /api/viajes; mientras la tabla esté vacía, las de muestra.
+  const [rutas, setRutas] = useState<Ruta[]>(RUTAS);
+  useEffect(() => {
+    fetchViajes().then((rows) => { if (rows.length > 0) setRutas(rows); });
+  }, []);
+
+  const lista = filtro === 'todos' ? rutas : rutas.filter((r) => r.medio === filtro);
 
   const conteo = {
-    fluvial: RUTAS.filter((r) => r.medio === 'fluvial').length,
-    terrestre: RUTAS.filter((r) => r.medio === 'terrestre').length,
-    aereo: RUTAS.filter((r) => r.medio === 'aereo').length,
+    fluvial: rutas.filter((r) => r.medio === 'fluvial').length,
+    terrestre: rutas.filter((r) => r.medio === 'terrestre').length,
+    aereo: rutas.filter((r) => r.medio === 'aereo').length,
   };
 
   return (
