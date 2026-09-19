@@ -52,51 +52,6 @@ const PORTALES = [
   { href: '/negocios',    label: 'Negocios',    icon: 'work',                sub: 'Te ponemos a vender por WhatsApp',   color: '#2F3B4C' },
 ];
 
-// Peek: Market → "Dónde comer esta semana". Un carrusel de listas por antojo;
-// cada lista trae 3 locales. La posición dentro de la lista la paga el local
-// (las listas marcadas "patrocinado").
-type ComerLugar = { name: string; cuisine: string; rating: string; img: string };
-type ComerLista = { id: string; titulo: string; patrocinado?: boolean; lugares: ComerLugar[] };
-const COMER_LISTAS: ComerLista[] = [
-  {
-    id: 'parrillas',
-    titulo: 'Parrillas y ahumados',
-    patrocinado: true,
-    lugares: [
-      { name: 'La Anaconda Parrillas',   cuisine: 'Parrilla amazónica',     rating: '4.9', img: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=400&q=80' },
-      { name: 'El Ahumadero de Yarina',  cuisine: 'Ahumados a la leña',      rating: '4.7', img: 'https://images.unsplash.com/photo-1558030006-450675393462?w=400&q=80' },
-      { name: 'Brasa Shipiba',           cuisine: 'Carnes y chorizo regional', rating: '4.6', img: 'https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=400&q=80' },
-    ],
-  },
-  {
-    id: 'menu',
-    titulo: 'Menú del día',
-    lugares: [
-      { name: 'Doña Fela · Comida Criolla', cuisine: 'Menú casero',        rating: '4.8', img: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&q=80' },
-      { name: 'El Almuerzo de la Tía',      cuisine: 'Menú económico',      rating: '4.5', img: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=400&q=80' },
-      { name: 'Sabor Ucayalino',           cuisine: 'Criollo y selvático',  rating: '4.6', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Tacacho_con_cecina.jpg/500px-Tacacho_con_cecina.jpg' },
-    ],
-  },
-  {
-    id: 'selva',
-    titulo: 'Cocina de la selva',
-    lugares: [
-      { name: 'El Fogón · Juanes & Tacacho', cuisine: 'Regional selvática',           rating: '4.7', img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&q=80' },
-      { name: 'Tacacho & Cecina "El Boquerón"', cuisine: 'Platos típicos',            rating: '4.6', img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80' },
-      { name: 'La Patarashca de Manuel',     cuisine: 'Pescado en hoja de bijao',     rating: '4.8', img: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&q=80' },
-    ],
-  },
-  {
-    id: 'llevar',
-    titulo: 'Para llevar y delivery',
-    lugares: [
-      { name: 'Pollería La Leña Brava',     cuisine: 'Pollo a la brasa',    rating: '4.5', img: 'https://images.unsplash.com/photo-1626082927389-6cd097cee6a6?w=400&q=80' },
-      { name: 'Anticuchos del Malecón',     cuisine: 'Anticucho y parrilla', rating: '4.7', img: 'https://images.unsplash.com/photo-1633896949673-1eb9d131a9b4?w=400&q=80' },
-      { name: 'Juguería Amazonía',          cuisine: 'Jugos y sánguches',    rating: '4.6', img: 'https://images.unsplash.com/photo-1502741224143-90386d7f8c82?w=400&q=80' },
-    ],
-  },
-];
-
 // Guía rápida — "¿Primera vez en Pucallpa?". 6 necesidades, cada tarjeta
 // manda al portal que la resuelve; la guía completa (clima, plata, etc.)
 // vive en /guia. Tarjetas compactas (ícono + texto), sin foto.
@@ -550,58 +505,6 @@ export default function HomePage() {
                   <span className="text-secondary font-label-md text-[11px] mt-auto"><span className="font-price-lg text-primary text-sm">{e.meta}</span></span>
                 </div>
               </Link>
-            ))}
-          </div>
-        </section>
-
-        {/* Dónde comer — guía de locales (experiencia local, no delivery) */}
-        <section className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1">
-            <span className="w-fit bg-tertiary-fixed text-on-tertiary-fixed-variant text-[10px] font-label-md px-2 py-0.5 rounded-full flex items-center gap-1 uppercase tracking-wider mb-0.5">
-              <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>restaurant</span>Selección BogaHub
-            </span>
-            <div className="flex items-end justify-between gap-4">
-              <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">Dónde comer</h2>
-              <Link href="/market" className="group shrink-0 font-label-md text-[12px] text-primary flex items-center gap-0.5 whitespace-nowrap">
-                Ver todos<span className="material-symbols-outlined text-[14px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
-              </Link>
-            </div>
-            <p className="font-body-md text-secondary text-xs">Listas por antojo — desliza para ver más.</p>
-          </div>
-          <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
-            {COMER_LISTAS.map((lista) => (
-              <div
-                key={lista.id}
-                className="snap-start shrink-0 w-[86%] sm:w-[380px] lg:w-[420px] bg-white border border-surface-container-highest shadow-sm rounded-2xl overflow-hidden flex flex-col"
-              >
-                <div className="flex items-center justify-between px-4 py-3 border-b border-surface-container-high">
-                  <h3 className="font-headline-sm text-sm text-on-surface">{lista.titulo}</h3>
-                  {lista.patrocinado && (
-                    <span className="text-[9px] font-label-md uppercase tracking-wider text-secondary shrink-0">Patrocinado</span>
-                  )}
-                </div>
-                <div className="flex flex-col">
-                  {lista.lugares.map((r) => (
-                    <Link
-                      href="/market"
-                      key={r.name}
-                      className="group flex items-center gap-3 p-3 border-b border-surface-container-low last:border-0 hover:bg-surface-container-low transition-colors"
-                    >
-                      <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-surface-container-low">
-                        <img src={r.img} alt={r.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <h4 className="font-headline-sm text-sm text-on-surface leading-tight line-clamp-1">{r.name}</h4>
-                        <div className="flex items-center gap-1 mt-0.5 text-secondary">
-                          <span className="material-symbols-outlined text-tertiary text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                          <span className="text-[11px] font-label-md line-clamp-1">{r.rating} · {r.cuisine}</span>
-                        </div>
-                      </div>
-                      <span className="material-symbols-outlined text-secondary/40 text-[18px] group-hover:text-primary transition-colors shrink-0">chevron_right</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
             ))}
           </div>
         </section>
