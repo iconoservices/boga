@@ -1279,3 +1279,8 @@ CREATE POLICY "service_providers: lectura pública de activos" ON public.service
 CREATE POLICY "service_providers: superadmin inserta" ON public.service_providers FOR INSERT WITH CHECK (public.is_superadmin());
 CREATE POLICY "service_providers: superadmin edita"   ON public.service_providers FOR UPDATE USING (public.is_superadmin());
 CREATE POLICY "service_providers: superadmin borra"   ON public.service_providers FOR DELETE USING (public.is_superadmin());
+
+-- Los empleos vencen solos: cada aviso nuevo dura 30 días (se puede renovar desde
+-- /superadmin/chamba). Pasada `expira_el`, /api/chamba deja de mostrarlo.
+ALTER TABLE public.job_listings ADD COLUMN IF NOT EXISTS expira_el DATE DEFAULT (CURRENT_DATE + 30);
+UPDATE public.job_listings SET expira_el = created_at::date + 30 WHERE expira_el IS NULL;

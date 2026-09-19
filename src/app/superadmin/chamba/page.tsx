@@ -76,12 +76,14 @@ export default function ChambaAdmin() {
 
   const recargar = useCallback(async () => {
     setCargandoDatos(true);
-    const [e, o] = await Promise.all([
-      supabase.from('job_listings').select('id,puesto,negocio,tipo,zona,pago,wsp,ciudad,orden,status')
-        .order('orden', { ascending: true }).order('created_at', { ascending: true }),
-      supabase.from('service_providers').select('id,nombre,oficio,zona,img,wsp,ciudad,orden,status')
-        .order('orden', { ascending: true }).order('created_at', { ascending: true }),
-    ]);
+    const colsE = 'id,puesto,negocio,tipo,zona,pago,wsp,ciudad,orden,status';
+    const pedirEmpleos = (cols: string) => supabase.from('job_listings').select(cols)
+      .order('orden', { ascending: true }).order('created_at', { ascending: false });
+    // `expira_el` es una columna nueva: si todavía no existe, se pide sin ella.
+    let e: { data: any[] | null } = await pedirEmpleos(colsE + ',expira_el') as any;
+    if (!e.data) e = await pedirEmpleos(colsE) as any;
+    const o = await supabase.from('service_providers').select('id,nombre,oficio,zona,img,wsp,ciudad,orden,status')
+      .order('orden', { ascending: true }).order('created_at', { ascending: false });
     setEmpleos(e.data ?? []);
     setOficios(o.data ?? []);
     setCargandoDatos(false);
@@ -153,6 +155,13 @@ export default function ChambaAdmin() {
 
   const toggleE = async (r: Fila) => { await supabase.from('job_listings').update({ status: r.status === 'activo' ? 'oculto' : 'activo' }).eq('id', r.id); recargar(); };
   const toggleO = async (r: Fila) => { await supabase.from('service_providers').update({ status: r.status === 'activo' ? 'oculto' : 'activo' }).eq('id', r.id); recargar(); };
+  // Renovar: el aviso vuelve a durar 30 días desde hoy.
+  const renovarE = async (r: Fila) => {
+    const nueva = new Date(); nueva.setDate(nueva.getDate() + 30);
+    const { error } = await supabase.from('job_listings').update({ expira_el: nueva.toISOString().slice(0, 10), status: 'activo' }).eq('id', r.id);
+    setMsg(error ? `Error: ${error.message}` : 'Empleo renovado por 30 días.');
+    recargar();
+  };
   const borrarE = async (r: Fila) => {
     if (!confirm(`¿Borrar el empleo "${r.puesto}"? No se puede deshacer.`)) return;
     await supabase.from('job_listings').delete().eq('id', r.id); recargar();
@@ -167,6 +176,13 @@ export default function ChambaAdmin() {
   const ofs = vista === 'empleos' ? [] : oficios.filter((r) => coincide(busqueda, r.nombre, r.oficio, r.zona, r.ciudad));
 
   const botones = 'text-xs font-bold px-3 py-1.5 rounded-lg';
+  const hoyClave = new Date().toISOString().slice(0, 10);
+  // "Vence en N días" / "Vencido" a partir de expira_el (YYYY-MM-DD). Sin fecha, no vence.
+  const vencimiento = (r: Fila) => {
+    if (!r.expira_el) return null;
+    const dias = Math.ceil((new Date(r.expira_el + 'T23:59:59').getTime() - Date.now()) / 86400000);
+    return { vencido: r.expira_el < hoyClave, dias };
+  };
 
   return (
     <div className="min-h-screen bg-[#f9f9ff] flex">
@@ -244,22 +260,29 @@ export default function ChambaAdmin() {
                 </p>
               ) : (
                 <div className="flex flex-col gap-2">
-                  {evs.map((r) => (
-                    <div key={`e-${r.id}`} className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-3 flex flex-wrap items-center gap-3">
+                  {evs.map((r) => {
+                    const v = vencimiento(r);
+                    return (
+                    <div key={`e-${r.id}`} className={`bg-surface-container-lowest border border-surface-container-highest rounded-xl p-3 flex flex-wrap items-center gap-3 ${v?.vencido ? 'opacity-60' : ''}`}>
                       <span className={`w-2 h-2 rounded-full shrink-0 ${r.status === 'activo' ? 'bg-primary' : 'bg-surface-container-highest'}`} />
                       <Miniatura icono="work" />
                       <div className="flex-1 min-w-[180px]">
                         <p className="font-bold text-sm text-on-surface">
                           <span className="mr-1.5 bg-primary-fixed text-primary text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full align-middle">Empleo</span>
                           {r.puesto} <span className="text-secondary font-normal">· {r.negocio || 'Sin negocio'} · {r.ciudad}</span>
+                          {v && (v.vencido
+                            ? <span className="ml-1.5 bg-red-100 text-red-700 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full align-middle">Vencido</span>
+                            : <span className="ml-1.5 bg-amber-100 text-amber-700 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full align-middle">Vence en {v.dias} {v.dias === 1 ? 'día' : 'días'}</span>)}
                         </p>
                         <p className="text-xs text-secondary">{[r.tipo, r.zona, r.pago].filter(Boolean).join(' · ')}</p>
                       </div>
                       <button onClick={() => editarE(r)} className={`${botones} border border-surface-container-highest text-on-surface`}>Editar</button>
+                      {v && <button onClick={() => renovarE(r)} className={`${botones} border border-primary/40 text-primary`}>Renovar 30 días</button>}
                       <button onClick={() => toggleE(r)} className={`${botones} border border-surface-container-highest text-secondary`}>{r.status === 'activo' ? 'Ocultar' : 'Mostrar'}</button>
                       <button onClick={() => borrarE(r)} className={`${botones} text-red-600`}>Borrar</button>
                     </div>
-                  ))}
+                    );
+                  })}
                   {ofs.map((r) => (
                     <div key={`o-${r.id}`} className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-3 flex flex-wrap items-center gap-3">
                       <span className={`w-2 h-2 rounded-full shrink-0 ${r.status === 'activo' ? 'bg-primary' : 'bg-surface-container-highest'}`} />
