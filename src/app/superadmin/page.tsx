@@ -2413,48 +2413,35 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                 </div>
               )}
 
-              {/* Summary Metrics Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white border border-[#c2c6d6] p-4 rounded-md flex flex-col gap-1 group hover:border-[#0058be] transition-colors">
-                  <span className="text-[10px] font-bold text-[#424754] uppercase tracking-wider">Total Tiendas</span>
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-[#191b23]">{storeList.length}</span>
-                    <div className="w-10 h-10 bg-[#d5e0f8]/40 rounded-full flex items-center justify-center text-[#0058be]">
-                      <span className="material-symbols-outlined text-[18px]">store</span>
+              {/* Métricas + buscador en una sola fila */}
+              <div className="flex flex-col lg:flex-row lg:items-stretch gap-3">
+                <div className="grid grid-cols-3 gap-2 lg:flex lg:gap-3 lg:shrink-0">
+                  {([
+                    ['Total', storeList.length, 'store', 'bg-[#d5e0f8]/40 text-[#0058be]', false],
+                    ['Activas', activeCount, 'check_circle', 'bg-emerald-50 text-emerald-700', true],
+                    ['En pausa', pausedCount, 'pause_circle', 'bg-red-50 text-red-700', false],
+                  ] as const).map(([label, valor, icono, color, relleno]) => (
+                    <div key={label} className="bg-white border border-[#c2c6d6] px-3 py-2.5 rounded-md flex items-center gap-2.5 lg:min-w-[132px] hover:border-[#0058be] transition-colors">
+                      <div className={`hidden sm:flex w-8 h-8 rounded-full items-center justify-center shrink-0 ${color}`}>
+                        <span className="material-symbols-outlined text-[16px]" style={relleno ? { fontVariationSettings: "'FILL' 1" } : {}}>{icono}</span>
+                      </div>
+                      <div className="min-w-0">
+                        <span className="block text-[10px] font-bold text-[#424754] uppercase tracking-wider leading-tight">{label}</span>
+                        <span className="block text-xl font-bold text-[#191b23] leading-tight">{valor}</span>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                
-                <div className="bg-white border border-[#c2c6d6] p-4 rounded-md flex flex-col gap-1 group hover:border-[#0058be] transition-colors">
-                  <span className="text-[10px] font-bold text-[#424754] uppercase tracking-wider">Tiendas Activas</span>
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-[#191b23]">{activeCount}</span>
-                    <div className="w-10 h-10 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-700">
-                      <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                    </div>
-                  </div>
+                  ))}
                 </div>
 
-                <div className="bg-white border border-[#c2c6d6] p-4 rounded-md flex flex-col gap-1 group hover:border-[#0058be] transition-colors">
-                  <span className="text-[10px] font-bold text-[#424754] uppercase tracking-wider">Tiendas en Pausa</span>
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-[#191b23]">{pausedCount}</span>
-                    <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center text-red-700">
-                      <span className="material-symbols-outlined text-[18px]">pause_circle</span>
-                    </div>
-                  </div>
+                <div className="flex-1 min-w-0 bg-white border border-[#c2c6d6] rounded-md px-4 py-2.5 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#424754] text-[18px]">search</span>
+                  <input
+                    placeholder="Buscar tienda por nombre o id..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="flex-1 min-w-0 bg-transparent border-none outline-none text-xs font-semibold text-[#191b23] placeholder-[#c2c6d6]"
+                  />
                 </div>
-              </div>
-
-              {/* Search & Filter bar */}
-              <div className="bg-white border border-[#c2c6d6] rounded-md px-4 py-2.5 flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#424754] text-[18px]">search</span>
-                <input
-                  placeholder="Buscar tienda por nombre o id..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="flex-1 bg-transparent border-none outline-none text-xs font-semibold text-[#191b23] placeholder-[#c2c6d6]"
-                />
               </div>
 
               {/* Stores Data Table */}
