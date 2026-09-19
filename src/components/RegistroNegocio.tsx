@@ -20,7 +20,7 @@ const INTERESES = [
   { value: 'ambos',       label: 'Ambos' },
 ];
 
-const ACCENT = '#b8130e'; // rojo Boga (= --color-primary)
+const ACCENT = '#b8130e'; // rojo BogaHub (= --color-primary)
 
 export default function RegistroNegocio({
   interest,
@@ -140,7 +140,7 @@ export default function RegistroNegocio({
             Registra tu negocio
           </h2>
           <p style={{ fontSize: '13px', color: '#999', fontWeight: 500, marginBottom: '24px', lineHeight: 1.5 }}>
-            Cuéntanos de tu negocio y te contactamos para montarlo en Boga.
+            Cuéntanos de tu negocio y te contactamos para montarlo en BogaHub.
           </p>
 
           <form onSubmit={handleSubmit}>

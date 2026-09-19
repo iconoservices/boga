@@ -915,7 +915,7 @@ function AdminDashboard({ user }: { user: User }) {
           <p className="px-4 text-[11px] text-gray-400 font-semibold truncate">{user.email}</p>
           <Link href="/market" className="flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-gray-900 font-semibold transition-colors">
             <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-            Volver a Boga
+            Volver a BogaHub
           </Link>
           <button
             onClick={async () => { await signOut(); router.replace('/login'); }}
@@ -991,7 +991,7 @@ function AdminDashboard({ user }: { user: User }) {
               <span className="material-symbols-outlined text-gray-400 text-[28px]">storefront</span>
             </div>
             <h3 className="font-bold text-gray-900">Todavía no tenés ninguna carta</h3>
-            <p className="text-gray-500 text-sm mt-1">Reclamá la que te creó el equipo de Boga para empezar.</p>
+            <p className="text-gray-500 text-sm mt-1">Reclamá la que te creó el equipo de BogaHub para empezar.</p>
             <button
               onClick={() => { setPickerDraft([]); setIsStorePickerOpen(true); }}
               className="mt-5 px-4 py-2.5 bg-[#b8130e] text-white font-bold rounded-md text-sm"
@@ -3172,7 +3172,7 @@ function AdminDashboard({ user }: { user: User }) {
 
                 <Link href="/market" className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-md font-semibold transition-colors">
                   <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-                  Volver a Boga
+                  Volver a BogaHub
                 </Link>
                 
                 <button 
@@ -3402,7 +3402,7 @@ function AdminDashboard({ user }: { user: User }) {
             <div className="px-6 py-5 border-b border-gray-100">
               <h3 className="font-extrabold text-lg text-gray-900">¿Cuál es tu tienda?</h3>
               <p className="text-gray-500 text-xs font-medium mt-1">
-                Reclama la tienda que te creó el equipo de Boga: queda asociada a tu cuenta ({user.email}) y nadie más va a poder editarla.
+                Reclama la tienda que te creó el equipo de BogaHub: queda asociada a tu cuenta ({user.email}) y nadie más va a poder editarla.
               </p>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
@@ -3441,7 +3441,7 @@ function AdminDashboard({ user }: { user: User }) {
               )}
               {dbStores.length > 0 && unclaimedStores.length === 0 && (
                 <p className="text-gray-400 text-sm text-center py-6 font-medium">
-                  No hay tiendas sin reclamar. Si el equipo de Boga ya te creó la tuya y no aparece acá, escribile para que la verifique.
+                  No hay tiendas sin reclamar. Si el equipo de BogaHub ya te creó la tuya y no aparece acá, escribile para que la verifique.
                 </p>
               )}
             </div>

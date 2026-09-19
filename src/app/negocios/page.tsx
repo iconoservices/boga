@@ -1,4 +1,4 @@
-// Landing B2B única de Boga. Marketing puro; el formulario está en su propia
+// Landing B2B única de BogaHub. Marketing puro; el formulario está en su propia
 // página (/negocios/registro). Los CTA linkean ahí con ?i= para pre-seleccionar
 // "¿Qué te interesa?".
 //
@@ -21,7 +21,7 @@ const FEATURES = [
   { icon: 'storefront',   title: 'Tu catálogo propio',           body: 'Tu propia página de pedidos para compartir donde quieras. Gestionas tus productos, pedidos y clientes sin depender de nadie.' },
   { icon: 'extension',    title: 'Módulos que sumas al crecer',  body: 'Empieza con lo básico y agrega fidelización, facturación electrónica, inventario o notificaciones cuando lo necesites.' },
   { icon: 'military_tech',title: 'Fidelización real',            body: 'Puntos, niveles y notificaciones automáticas para que tus clientes vuelvan — sin que tengas que acordarte de nada.' },
-  { icon: 'travel_explore',title: 'Más gente de tu ciudad te encuentra', body: 'Activa el Marketplace de Boga cuando quieras y tus productos aparecen frente a clientes de tu zona que aún no te conocían.' },
+  { icon: 'travel_explore',title: 'Más gente de tu ciudad te encuentra', body: 'Activa el Marketplace de BogaHub cuando quieras y tus productos aparecen frente a clientes de tu zona que aún no te conocían.' },
 ];
 
 export default function NegociosPage() {
@@ -32,7 +32,7 @@ export default function NegociosPage() {
         <div className="max-w-[1200px] mx-auto px-container-margin py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <img src="/logo-mark.svg" alt="" className="w-8 h-8 shrink-0" />
-            <span className="font-headline-sm text-headline-sm text-on-background">Boga</span>
+            <span className="font-headline-sm text-headline-sm text-on-background">BogaHub</span>
             <span className="hidden sm:inline text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">Negocios</span>
           </Link>
           <div className="hidden md:flex items-center gap-6">
@@ -55,7 +55,7 @@ export default function NegociosPage() {
               href="/"
               className="font-label-md text-label-md px-4 py-2 rounded-full border border-surface-container-highest text-on-background hover:border-primary hover:text-primary transition-colors"
             >
-              Abrir Boga
+              Abrir BogaHub
             </Link>
           </nav>
         </div>
@@ -72,7 +72,7 @@ export default function NegociosPage() {
               <div className="relative rounded-[1.5rem] lg:rounded-[2rem] overflow-hidden shadow-2xl aspect-[16/10] lg:aspect-[4/3] lg:max-w-[440px] lg:ml-auto lg:rotate-2">
                 <img
                   src="https://images.unsplash.com/photo-1600891964599-f61ba0e24092?w=900&q=80"
-                  alt="Negocio local usando Boga"
+                  alt="Negocio local usando BogaHub"
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/0 to-transparent" />
@@ -93,7 +93,7 @@ export default function NegociosPage() {
                 Infraestructura digital para negocios locales
               </span>
               <h1 className="font-headline-lg text-on-background text-4xl md:text-5xl font-extrabold tracking-tight leading-[1.05]">
-                Digitaliza tu negocio con <span className="text-primary">Boga</span>
+                Digitaliza tu negocio con <span className="text-primary">BogaHub</span>
               </h1>
               <p className="text-secondary font-body-lg text-base md:text-lg max-w-[480px]">
                 Tu propio catálogo online, pedidos por WhatsApp y fidelización de clientes.
@@ -161,7 +161,7 @@ export default function NegociosPage() {
       </main>
 
       <footer className="w-full px-container-margin py-8 text-center border-t border-surface-container-highest">
-        <p className="text-secondary font-body-md text-xs">© {new Date().getFullYear()} Boga. Todos los derechos reservados.</p>
+        <p className="text-secondary font-body-md text-xs">© {new Date().getFullYear()} BogaHub. Todos los derechos reservados.</p>
       </footer>
     </div>
   );

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
 
-// Sorteos = "La Casa de la Suerte" de Boga. Estética morada, energética.
+// Sorteos = "La Casa de la Suerte" de BogaHub. Estética morada, energética.
 // Todo es contenido de muestra + una tómbola de demo en el cliente (sin motor
 // de tickets ni premios reales todavía). Negocio:
 //  - Tickets automáticos por compras (cada S/ 20 = 1 ticket).
@@ -41,7 +41,7 @@ const SORTEOS_PROMO = [
 const SORTEOS_ACTIVOS = [
   { id: 's1', titulo: 'Canasta gigante de la selva', sub: 'Abarrotes para todo el mes',     cierra: '15 sep', tickets: 3, patrocina: 'Minimarket El Ahorro', img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&q=80' },
   { id: 's2', titulo: 'Cena para 2 en La Anaconda',  sub: 'Parrilla + bebidas incluidas',   cierra: '12 sep', tickets: 1, patrocina: 'La Anaconda Parrillas', img: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&q=80' },
-  { id: 's3', titulo: 'Vale de S/ 500 en Boga',      sub: 'Para gastar en cualquier tienda', cierra: '20 sep', tickets: 5, patrocina: 'Boga',                  img: 'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?w=600&q=80' },
+  { id: 's3', titulo: 'Vale de S/ 500 en BogaHub',      sub: 'Para gastar en cualquier tienda', cierra: '20 sep', tickets: 5, patrocina: 'BogaHub',                  img: 'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?w=600&q=80' },
 ];
 
 const GANADORES = [
@@ -118,7 +118,7 @@ export default function Sorteos() {
               <h2 className="font-headline-lg font-extrabold text-2xl lg:text-4xl leading-[1.02]">
                 Suma tickets<br />con <span style={{ color: LIMA }}>cada compra</span>
               </h2>
-              <p className="text-white/80 font-body-md text-xs lg:text-sm mt-2">Cada S/ 20 en cualquier tienda de Boga = 1 ticket automático para todos los premios.</p>
+              <p className="text-white/80 font-body-md text-xs lg:text-sm mt-2">Cada S/ 20 en cualquier tienda de BogaHub = 1 ticket automático para todos los premios.</p>
             </div>
             <button className="relative font-headline-sm text-sm text-[#2a1155] px-6 py-3 rounded-full active:scale-95 transition-transform shrink-0" style={{ backgroundColor: LIMA }}>
               ¡Quiero participar!
@@ -244,7 +244,7 @@ export default function Sorteos() {
               {intentos <= 0 && (
                 <div className="bg-white/5 rounded-xl p-3 flex items-start gap-2">
                   <span className="material-symbols-outlined text-[18px] shrink-0" style={{ color: LIMA }}>shopping_bag</span>
-                  <span className="text-[11px] font-body-md text-white/70">Te quedaste sin intentos. Consigues 1 intento nuevo por cada compra en Boga.</span>
+                  <span className="text-[11px] font-body-md text-white/70">Te quedaste sin intentos. Consigues 1 intento nuevo por cada compra en BogaHub.</span>
                 </div>
               )}
 
@@ -305,7 +305,7 @@ export default function Sorteos() {
           </section>
 
           <p className="text-white/50 font-body-md text-[11px] text-center pt-2">
-            Sorteos válidos en Pucallpa. Boga contacta al ganador por teléfono y lo publica en sus redes. La tómbola de esta pantalla es una demostración.
+            Sorteos válidos en Pucallpa. BogaHub contacta al ganador por teléfono y lo publica en sus redes. La tómbola de esta pantalla es una demostración.
           </p>
         </div>
       </div>

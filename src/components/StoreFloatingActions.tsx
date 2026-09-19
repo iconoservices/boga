@@ -46,7 +46,7 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
 
     // Solo cuenta como instalada ESTA tienda, no "estamos dentro de alguna PWA":
     // todas las tiendas viven en el mismo dominio, así que estar en standalone
-    // puede significar que estás dentro de Boga Hub o de otra tienda, y ahí el
+    // puede significar que estás dentro de BogaHub o de otra tienda, y ahí el
     // botón sí tiene que aparecer (con el aviso de abrirlo en el navegador).
     // En iOS no existe el evento `appinstalled`, así que no hay forma de saber
     // cuál app se instaló: si está en standalone se asume que es esta.
@@ -74,7 +74,7 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
       return;
     }
 
-    // Ya estamos dentro de OTRA app instalada (Boga Hub, o la de otra
+    // Ya estamos dentro de OTRA app instalada (BogaHub, o la de otra
     // tienda) — el navegador no ofrece instalar una segunda PWA desde acá
     // adentro (no hay chrome del navegador). Hay que sacar el link afuera.
     const yaEnStandalone = (window.navigator as any).standalone || window.matchMedia('(display-mode: standalone)').matches;

@@ -215,7 +215,7 @@ export default function PlazaChatBubble() {
   return (
     <>
       {/* Botón / Burbuja flotante */}
-      <aside aria-label="Plaza Boga" className="contents">
+      <aside aria-label="Plaza BogaHub" className="contents">
         <div
           className={`fixed z-40 transition-all duration-300 ${
             isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'
@@ -249,7 +249,7 @@ export default function PlazaChatBubble() {
           />
 
           <section
-            aria-label="Plaza Boga comunidad"
+            aria-label="Plaza BogaHub comunidad"
             className="relative z-10 pointer-events-auto w-full sm:w-[410px] h-[85vh] sm:h-[600px] max-h-[92vh] bg-white dark:bg-[#1c1b1f] border border-gray-200 dark:border-white/10 rounded-t-[28px] sm:rounded-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.3)] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-200"
           >
             {/* Tirador móvil (handle bar) */}
@@ -268,7 +268,7 @@ export default function PlazaChatBubble() {
                 <div>
                   <div className="flex items-center gap-1.5">
                     <h3 className="font-bold text-sm text-gray-900 dark:text-white">
-                      Plaza Boga
+                      Plaza BogaHub
                     </h3>
                     <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                   </div>

@@ -87,7 +87,7 @@ export default function BottomNav() {
         </button>
       </nav>
 
-      {/* Hoja "Todo Boga" */}
+      {/* Hoja "Todo BogaHub" */}
       <div
         className={`lg:hidden fixed inset-0 z-[70] transition-opacity duration-200 ${
           sheetOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
@@ -103,7 +103,7 @@ export default function BottomNav() {
             <span className="w-10 h-1 rounded-full bg-surface-container-high" />
           </div>
           <div className="flex items-center justify-between px-5 pb-2">
-            <h3 className="font-headline-sm font-bold text-on-surface">Todo Boga</h3>
+            <h3 className="font-headline-sm font-bold text-on-surface">Todo BogaHub</h3>
             <button
               onClick={() => setSheetOpen(false)}
               aria-label="Cerrar"

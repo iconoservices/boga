@@ -28,7 +28,7 @@ export default function AppFooter() {
     <footer className="hidden lg:flex w-full px-container-margin py-10 flex-col items-center bg-surface-container-lowest border-t border-surface-container-high mt-16">
       <div className="w-full max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-8 text-secondary">
         <div className="flex flex-col gap-4">
-          <span className="font-headline-sm text-headline-sm text-primary font-bold">Boga</span>
+          <span className="font-headline-sm text-headline-sm text-primary font-bold">BogaHub</span>
           <p className="font-body-md text-body-md text-secondary max-w-xs leading-normal">
             El sistema operativo digital de Pucallpa: comercio, movilidad segura, trabajo, inmuebles, viajes y estilo de vida en un solo lugar.
           </p>
@@ -41,7 +41,7 @@ export default function AppFooter() {
         <div className="flex flex-col gap-4">
           <span className="font-label-md text-on-surface uppercase font-bold tracking-wider text-xs">Empresa</span>
           <nav className="flex flex-col gap-2">
-            <a className="font-body-md text-secondary hover:text-primary transition-colors duration-200" href="/negocios">Vende con Boga</a>
+            <a className="font-body-md text-secondary hover:text-primary transition-colors duration-200" href="/negocios">Vende con BogaHub</a>
             <a className="font-body-md text-secondary hover:text-primary transition-colors duration-200" href="/negocios/registro">Crear tu tienda</a>
             <a className="font-body-md text-secondary hover:text-primary transition-colors duration-200" href="#">Carreras</a>
           </nav>

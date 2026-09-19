@@ -1,4 +1,4 @@
-// Única fuente de verdad de "en qué ciudades opera Boga".
+// Única fuente de verdad de "en qué ciudades opera BogaHub".
 //
 // Boga Market (el marketplace / hub local) arranca ciudad por ciudad, como
 // Uber o Rappi. Donde NO está activo, la app igual funciona (verticales,

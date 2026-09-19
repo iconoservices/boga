@@ -278,7 +278,7 @@ const TEMPLATES: Record<string, TemplateConfig> = {
 
   mercado: {
     id: 'mercado',
-    name: 'Mercado Boga',
+    name: 'Mercado BogaHub',
     category: 'Mercado',
     heroImage: 'https://images.unsplash.com/photo-1580913428735-bd3c269d6a82?w=1200&q=80',
     heroAlt: 'Pasillo de minimarket surtido con productos de abarrotes',

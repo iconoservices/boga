@@ -133,7 +133,7 @@ export default function InicioCatalogoTemplate({ store }: Props) {
                     Categorías
                   </h2>
                 </div>
-                <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
+                <div className="hide-scrollbar flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
                   {c.categoriasConFoto(6).map((cat) => (
                     <button
                       key={cat.id}

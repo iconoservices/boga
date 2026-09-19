@@ -13,7 +13,7 @@ export default function HomeFloatingActions() {
     };
 
     // Solo cuenta como instalada ESTA app, no "estamos dentro de alguna PWA":
-    // si estás dentro de la app de una tienda, Boga Hub sigue sin instalarse y
+    // si estás dentro de la app de una tienda, BogaHub sigue sin instalarse y
     // el botón tiene que aparecer. En iOS no existe el evento `appinstalled`,
     // así que si está en standalone se asume que es esta.
     const checkInstalled = () => {

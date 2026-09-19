@@ -47,7 +47,7 @@ export default function AppHeader({
           ) : (
             <Link href="/" className="flex items-center gap-2 min-w-0 flex-1 pr-2">
               <img src="/logo-mark.svg" alt="" className="w-8 h-8 shrink-0" />
-              <span className="font-headline-sm text-headline-sm text-on-surface">Boga</span>
+              <span className="font-headline-sm text-headline-sm text-on-surface">BogaHub</span>
             </Link>
           )}
 
@@ -106,8 +106,8 @@ export default function AppHeader({
       <div className="hidden lg:flex items-center justify-between px-container-margin py-2.5 max-w-[1440px] mx-auto gap-4">
         {/* Left: Brand logo & Location */}
         <div className="flex items-center gap-5 shrink-0">
-          <Link href="/" className="flex items-center shrink-0" aria-label="Boga — Inicio">
-            <img src="/logo.svg" alt="Boga" className="h-8 w-auto" />
+          <Link href="/" className="flex items-center shrink-0" aria-label="BogaHub — Inicio">
+            <img src="/logo.svg" alt="BogaHub" className="h-8 w-auto" />
           </Link>
           {showLocation && <CitySwitcher variant="desktop" />}
         </div>

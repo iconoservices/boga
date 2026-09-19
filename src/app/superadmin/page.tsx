@@ -150,10 +150,10 @@ const INITIAL_MODULES: StoreModule[] = [
   },
   {
     id: 'presencia-marketplace',
-    name: 'Presencia en el Marketplace Boga',
+    name: 'Presencia en el Marketplace BogaHub',
     icon: 'storefront',
     price: 'S/ 99 /mes',
-    description: 'Aparecer también en el marketplace compartido de Boga (búsqueda y categorías cruzadas entre tiendas), no solo en la tienda propia del negocio. Más alcance, pero comparte vidriera con otros comercios.',
+    description: 'Aparecer también en el marketplace compartido de BogaHub (búsqueda y categorías cruzadas entre tiendas), no solo en la tienda propia del negocio. Más alcance, pero comparte vidriera con otros comercios.',
     active: true,
     tier: 'Basic',
     buildStatus: 'parcial',
@@ -241,7 +241,7 @@ const INITIAL_MODULES: StoreModule[] = [
     name: 'Marca 100% Blanca',
     icon: 'visibility_off',
     price: 'S/ 149 /mes',
-    description: 'Saca cualquier rastro de "Powered by Boga" de la tienda — para el comercio que no quiere que se note qué tecnología usa por debajo.',
+    description: 'Saca cualquier rastro de "Powered by BogaHub" de la tienda — para el comercio que no quiere que se note qué tecnología usa por debajo.',
     active: false,
     tier: 'Enterprise',
     buildStatus: 'no_construido',
@@ -329,7 +329,7 @@ const INITIAL_MODULES: StoreModule[] = [
     name: 'Página Web / Sitio Propio',
     icon: 'language',
     price: 'Desde S/ 199 pago único + S/ 39 /mes',
-    description: 'Landing page o catálogo con dominio propio, fuera del ecosistema Boga — para SEO y para compartir un link "serio" en redes. El esfuerzo no es el mismo para todos los rubros: una carta de restaurante con pocos platos es mucho más simple que un catálogo de ecommerce con cientos de productos, así que el precio final se cotiza según cuánto tiene la tienda.',
+    description: 'Landing page o catálogo con dominio propio, fuera del ecosistema BogaHub — para SEO y para compartir un link "serio" en redes. El esfuerzo no es el mismo para todos los rubros: una carta de restaurante con pocos platos es mucho más simple que un catálogo de ecommerce con cientos de productos, así que el precio final se cotiza según cuánto tiene la tienda.',
     active: false,
     tier: 'Pro',
     buildStatus: 'parcial',
@@ -4091,7 +4091,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           placeholder="https://mitienda.vercel.app"
                         />
                         <p className="text-[9px] text-[#727785] font-semibold mt-1">
-                          Para negocios que ya tienen su propia página armada. Si lo cargás, los links a esta tienda en todo el marketplace mandan ahí en vez de a la página de Boga.
+                          Para negocios que ya tienen su propia página armada. Si lo cargás, los links a esta tienda en todo el marketplace mandan ahí en vez de a la página de BogaHub.
                         </p>
                       </div>
 

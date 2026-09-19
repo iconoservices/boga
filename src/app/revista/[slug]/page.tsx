@@ -101,7 +101,7 @@ export default async function ArticuloPage({ params }: Props) {
         author: { '@type': 'Organization', name: nota.autor, url: SITE_URL },
         publisher: {
           '@type': 'Organization',
-          name: 'Boga',
+          name: 'BogaHub',
           logo: { '@type': 'ImageObject', url: `${SITE_URL}/logo.svg` },
         },
         mainEntityOfPage: { '@type': 'WebPage', '@id': url },
@@ -148,7 +148,7 @@ export default async function ArticuloPage({ params }: Props) {
             <div className="relative overflow-hidden rounded-sm aspect-[16/9]">
               <img src={nota.img} alt={nota.titulo} className="absolute inset-0 w-full h-full object-cover" />
             </div>
-            <figcaption className="font-label-md text-[11px] text-secondary mt-2">{nota.imgCredito || 'Foto: archivo Boga · imagen referencial'}</figcaption>
+            <figcaption className="font-label-md text-[11px] text-secondary mt-2">{nota.imgCredito || 'Foto: archivo BogaHub · imagen referencial'}</figcaption>
           </figure>
 
           <div className="max-w-[680px] mx-auto px-container-margin lg:px-8 mt-8">
@@ -197,7 +197,7 @@ export default async function ArticuloPage({ params }: Props) {
                 ) : (
                   nota.fuente.nombre
                 )}
-                . Texto compilado y reescrito por Boga.
+                . Texto compilado y reescrito por BogaHub.
               </p>
             )}
 

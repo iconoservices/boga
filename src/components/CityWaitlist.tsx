@@ -5,7 +5,7 @@
 //   • useCiudad()        — hook: ciudad guardada + detección por GPS
 //   • <CitySwitcher/>     — el "Entregar en <ciudad>" del AppHeader, ahora con
 //                           dropdown (lista + "usar mi ubicación")
-//   • <MarketCityBanner/> — el aviso arriba del Market cuando Boga todavía no
+//   • <MarketCityBanner/> — el aviso arriba del Market cuando BogaHub todavía no
 //                           opera en la ciudad elegida (NO tiene selector propio:
 //                           la ciudad se cambia desde el header)
 //
@@ -259,7 +259,7 @@ function WaitlistForm({
     return (
       <p className="text-sm text-on-surface font-body-md flex items-center gap-2">
         <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>
-        Listo. Te escribimos apenas Boga llegue a {ciudad.nombre}.
+        Listo. Te escribimos apenas BogaHub llegue a {ciudad.nombre}.
       </p>
     );
   }

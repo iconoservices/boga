@@ -18,7 +18,7 @@ export default function LoginPage() {
   const [confirmMessage, setConfirmMessage] = useState<string | null>(null);
 
   // A dónde volver tras entrar: el link que trajo a la persona acá decide
-  // (?redirect=/admin para comercios desde "Vende con Boga", /profile por
+  // (?redirect=/admin para comercios desde "Vende con BogaHub", /profile por
   // defecto para el resto) — antes siempre mandaba a /admin, así que un
   // cliente normal terminaba en el panel de la tienda en vez de su perfil.
   const getRedirectTarget = () => new URLSearchParams(window.location.search).get('redirect') || '/profile';
@@ -92,7 +92,7 @@ export default function LoginPage() {
               de distancia.
             </h1>
             <p className="font-body-md text-sm text-white/60 leading-relaxed">
-              Descubre menús irresistibles, productos de tus tiendas locales favoritas y gestiona todo de forma rápida y sencilla. Boga te conecta al instante con el sabor y estilo que más disfrutas.
+              Descubre menús irresistibles, productos de tus tiendas locales favoritas y gestiona todo de forma rápida y sencilla. BogaHub te conecta al instante con el sabor y estilo que más disfrutas.
             </p>
             <div className="mt-10 flex gap-8 items-center">
               <div>
@@ -133,7 +133,7 @@ export default function LoginPage() {
                 {useMagicLink
                   ? 'Escribí tu correo y te mandamos un link para entrar, sin contraseña.'
                   : isSignUp
-                  ? 'Únete a Boga y crea tu carta, catálogo o tienda local favorita en un clic.'
+                  ? 'Únete a BogaHub y crea tu carta, catálogo o tienda local favorita en un clic.'
                   : 'Ingresa para disfrutar, pedir o gestionar tus tiendas locales.'}
               </p>
 

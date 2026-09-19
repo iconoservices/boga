@@ -19,7 +19,7 @@ export function CategoryChips({
 }) {
   return (
     <nav
-      className={`px-5 md:px-6 overflow-x-auto flex gap-3 whitespace-nowrap sticky ${sticky} py-3 z-40`}
+      className={`hide-scrollbar px-5 md:px-6 overflow-x-auto flex gap-3 whitespace-nowrap sticky ${sticky} py-3 z-40`}
       style={{ background: `${t.background}F0`, backdropFilter: 'blur(12px)' }}
     >
       {tabs.map((tab) => {

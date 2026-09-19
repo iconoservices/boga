@@ -24,9 +24,9 @@ const PLANES: Plan[] = [
   {
     id: 'tienda',
     icon: 'storefront',
-    nombre: 'Tu Tienda Boga',
+    nombre: 'Tu Tienda BogaHub',
     featured: false,
-    body: 'Tu página de pedidos con tu propio link (bogahub.app/tu-negocio) para compartir en WhatsApp o Instagram. Tú vendes y cobras directo — Boga no toca tu plata.',
+    body: 'Tu página de pedidos con tu propio link (bogahub.app/tu-negocio) para compartir en WhatsApp o Instagram. Tú vendes y cobras directo — BogaHub no toca tu plata.',
     bullets: [
       'Catálogo, inventario y gestión de pedidos',
       'Pedidos directo a tu WhatsApp, sin comisión',
@@ -40,14 +40,14 @@ const PLANES: Plan[] = [
     icon: 'travel_explore',
     nombre: 'Vende en Boga Market',
     featured: true,
-    body: 'Todo lo de Tu Tienda Boga y, además, tu negocio aparece en el Market de tu ciudad, junto a otros comercios locales, frente a gente que todavía no te conoce.',
+    body: 'Todo lo de Tu Tienda BogaHub y, además, tu negocio aparece en el Market de tu ciudad, junto a otros comercios locales, frente a gente que todavía no te conoce.',
     bullets: [
-      'Todo lo del plan Tu Tienda Boga',
+      'Todo lo del plan Tu Tienda BogaHub',
       'Clientes de tu ciudad te descubren',
       'Coordinación de entrega, lo activas cuando quieras',
     ],
-    mes: { precio: 'S/ 100', periodo: '/mes', nota: 'Solo donde Boga opera' },
-    anio: { precio: 'S/ 1 000', periodo: '/año', nota: '2 meses gratis · solo donde Boga opera' },
+    mes: { precio: 'S/ 100', periodo: '/mes', nota: 'Solo donde BogaHub opera' },
+    anio: { precio: 'S/ 1 000', periodo: '/año', nota: '2 meses gratis · solo donde BogaHub opera' },
   },
 ];
 
@@ -60,7 +60,7 @@ export default function NegociosPlanes() {
         <h2 className="font-headline-md text-2xl md:text-3xl font-extrabold text-on-background">Un plan fijo, sin comisión</h2>
         <p className="text-secondary font-body-md text-sm md:text-base mt-2">
           Empieza con tu tienda propia y suma el Market cuando quieras. Lo que vendes es 100% tuyo:
-          cobras tú, directo a tu cliente — Boga solo te cobra el plan.
+          cobras tú, directo a tu cliente — BogaHub solo te cobra el plan.
         </p>
       </div>
 

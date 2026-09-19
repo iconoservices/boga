@@ -90,6 +90,22 @@ function coincide(q: string, ...campos: unknown[]) {
   return !n || campos.some((c) => norm(c).includes(n));
 }
 
+// Miniatura de la foto para reconocer el evento/lugar de un vistazo. Sin foto (o
+// si la dirección falla) muestra un ícono.
+function Miniatura({ src, icono }: { src?: string; icono: string }) {
+  const [falla, setFalla] = useState(false);
+  return (
+    <div className="w-12 h-12 rounded-lg overflow-hidden bg-surface-container shrink-0 flex items-center justify-center border border-surface-container-highest">
+      {src && !falla ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setFalla(true)} className="w-full h-full object-cover" />
+      ) : (
+        <span className="material-symbols-outlined text-secondary/40 text-[22px]">{icono}</span>
+      )}
+    </div>
+  );
+}
+
 type EventRow = Record<string, any>;
 
 const FICHA_VACIA = {
@@ -455,6 +471,7 @@ export default function EventosAdmin() {
                 return (
                 <div key={`e-${e.id}`} className={`bg-surface-container-lowest border border-surface-container-highest rounded-xl p-3 flex flex-wrap items-center gap-3 ${vencido ? 'opacity-60' : ''}`}>
                   <span className={`w-2 h-2 rounded-full shrink-0 ${e.status === 'activo' ? 'bg-primary' : 'bg-surface-container-highest'}`} />
+                  <Miniatura src={e.img} icono="celebration" />
                   <div className="flex-1 min-w-[180px]">
                     <p className="font-bold text-sm text-on-surface">
                       <span className="mr-1.5 bg-primary-fixed text-primary text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full align-middle">Evento</span>
@@ -475,6 +492,7 @@ export default function EventosAdmin() {
               {lgs.map((l) => (
                 <div key={`l-${l.id}`} className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-3 flex flex-wrap items-center gap-3">
                   <span className={`w-2 h-2 rounded-full shrink-0 ${l.status === 'activo' ? 'bg-primary' : 'bg-surface-container-highest'}`} />
+                  <Miniatura src={l.img} icono="place" />
                   <div className="flex-1 min-w-[180px]">
                     <p className="font-bold text-sm text-on-surface">
                       <span className="mr-1.5 bg-emerald-100 text-emerald-700 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full align-middle">Lugar</span>

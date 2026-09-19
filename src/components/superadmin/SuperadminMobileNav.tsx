@@ -99,7 +99,7 @@ function Inner() {
             ))}
             <Link href="/" onClick={() => setAbierto(false)} className="flex flex-col items-center justify-center gap-1 rounded-xl px-2 py-3 text-center bg-white border border-[#c2c6d6] text-[#424754] active:scale-95 transition-transform">
               <span className="material-symbols-outlined text-[24px]">home</span>
-              <span className="text-[11px] font-semibold leading-tight">Ir a Boga</span>
+              <span className="text-[11px] font-semibold leading-tight">Ir a BogaHub</span>
             </Link>
           </div>
         </div>

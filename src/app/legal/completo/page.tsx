@@ -15,7 +15,7 @@ const TODOS_VIGENTES = DOCS.every((d) => d.estado === 'vigente');
 
 export const metadata: Metadata = {
   title: 'Términos, Políticas y Anexos',
-  description: 'Todos los términos, políticas y anexos de Boga en un solo documento.',
+  description: 'Todos los términos, políticas y anexos de BogaHub en un solo documento.',
   alternates: { canonical: '/legal/completo' },
   robots: TODOS_VIGENTES ? { index: true, follow: true } : { index: false, follow: false },
 };
@@ -61,7 +61,7 @@ export default function LegalCompleto() {
       </div>
 
       <h1 className="mt-4 font-headline-lg text-3xl font-extrabold tracking-tight text-on-surface">
-        Términos, Políticas y Anexos de Boga
+        Términos, Políticas y Anexos de BogaHub
       </h1>
       <p className="mt-2 font-body-md text-[13px] text-secondary">
         Última actualización: {FECHA_BORRADOR}.

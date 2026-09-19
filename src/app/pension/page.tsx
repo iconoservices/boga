@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
 
-// Pensión Boga — almuerzo casero por suscripción (semana / quincena / mes).
+// Pensión BogaHub — almuerzo casero por suscripción (semana / quincena / mes).
 // Placeholder: estructura lista, contenido de muestra. Todavía no hay motor de
 // suscripciones ni cobro; el botón solo registra interés (local, sin backend).
 // Cuando esté: planes reales desde Supabase + pago + menú semanal editable.
@@ -46,7 +46,7 @@ const MENU_SEMANA = [
 ];
 
 const PREGUNTAS = [
-  { q: '¿Cómo pago?', a: 'Por semana, quincena o mes, por adelantado. Vas a poder pagar dentro de Boga o por Yape/Plin.' },
+  { q: '¿Cómo pago?', a: 'Por semana, quincena o mes, por adelantado. Vas a poder pagar dentro de BogaHub o por Yape/Plin.' },
   { q: '¿Puedo elegir el menú?', a: 'El menú lo armamos nosotros y cambia cada día. Si tenés una restricción (sin picante, sin cerdo, etc.) la anotás al reservar.' },
   { q: '¿Y si un día no voy a estar?', a: 'Avisás con un día de anticipación y ese almuerzo se corre para más adelante. No se pierde.' },
   { q: '¿A qué zonas llega?', a: 'Al arrancar: centro de Pucallpa, Yarinacocha y Manantay. Después sumamos más.' },
@@ -71,7 +71,7 @@ export default function Pension() {
               Próximamente
             </span>
             <h1 className="font-headline-lg font-extrabold tracking-tight text-3xl sm:text-4xl lg:text-5xl leading-[1.03]">
-              Pensión <span style={{ color: ORO }}>Boga</span>
+              Pensión <span style={{ color: ORO }}>BogaHub</span>
             </h1>
             <p className="font-body-lg text-base lg:text-lg leading-relaxed max-w-[52ch]" style={{ color: CREMA + 'cc' }}>
               Tu almuerzo casero, todos los días. Pagás por semana, quincena o mes — nosotros

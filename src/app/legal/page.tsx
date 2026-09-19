@@ -12,7 +12,7 @@ const TODOS_VIGENTES = DOCS.every((d) => d.estado === 'vigente');
 export const metadata: Metadata = {
   title: 'Términos y Políticas',
   description:
-    'Términos y Condiciones, Política de Privacidad, Cookies, Libro de Reclamaciones y anexos por servicio de Boga.',
+    'Términos y Condiciones, Política de Privacidad, Cookies, Libro de Reclamaciones y anexos por servicio de BogaHub.',
   alternates: { canonical: '/legal' },
   robots: TODOS_VIGENTES ? { index: true, follow: true } : { index: false, follow: false },
 };
@@ -29,14 +29,14 @@ export default function LegalIndex() {
           className="flex items-center gap-1.5 font-label-md text-[12px] uppercase tracking-wider text-secondary transition-colors hover:text-on-surface"
         >
           <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-          Volver a Boga
+          Volver a BogaHub
         </Link>
 
         <h1 className="mt-5 font-headline-lg text-3xl font-extrabold tracking-tight text-on-surface lg:text-[40px]">
           Términos y Políticas
         </h1>
         <p className="mt-3 font-body-lg text-base leading-relaxed text-on-surface/70">
-          Las reglas que rigen el uso de Boga. Hay un documento principal para toda la app, políticas
+          Las reglas que rigen el uso de BogaHub. Hay un documento principal para toda la app, políticas
           transversales y un anexo por cada servicio. Si un anexo dice algo distinto al documento
           principal, para ese servicio manda el anexo.
         </p>

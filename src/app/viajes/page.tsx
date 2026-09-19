@@ -256,7 +256,7 @@ export default function Viajes() {
                     <span className="text-secondary font-label-md text-[10px] mt-0.5">por persona</span>
                   </div>
                   <a
-                    href={waLink(r.wsp, `Hola, vi la ruta "${r.destino}" (${r.medio}) en Viajes de Boga. ¿Tienen disponibilidad?`)}
+                    href={waLink(r.wsp, `Hola, vi la ruta "${r.destino}" (${r.medio}) en Viajes de BogaHub. ¿Tienen disponibilidad?`)}
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center gap-1.5 bg-[#25D366] text-white text-[12px] font-label-md px-3 py-1.5 rounded-full active:scale-95 transition-transform"
@@ -272,7 +272,7 @@ export default function Viajes() {
 
         {/* CTA para agencias */}
         <a
-          href={waLink('51963000000', 'Hola Boga, soy agencia de transporte y quiero aparecer en la sección Viajes.')}
+          href={waLink('51963000000', 'Hola BogaHub, soy agencia de transporte y quiero aparecer en la sección Viajes.')}
           target="_blank"
           rel="noreferrer"
           className="relative overflow-hidden rounded-2xl bg-inverse-surface text-inverse-on-surface p-4 flex items-center gap-3 group"
@@ -289,7 +289,7 @@ export default function Viajes() {
         </a>
 
         <p className="text-secondary/70 font-body-md text-[11px] text-center pt-2">
-          Los horarios y precios son referenciales. Confirma directamente con la agencia antes de viajar. Boga solo conecta.
+          Los horarios y precios son referenciales. Confirma directamente con la agencia antes de viajar. BogaHub solo conecta.
         </p>
       </main>
     </>

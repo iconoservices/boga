@@ -5,22 +5,22 @@ import AppFooter from '@/components/AppFooter';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app';
 const SITE_DESC =
-  'Boga es el sistema operativo digital de Pucallpa: comercio, movilidad segura, ' +
+  'BogaHub es el sistema operativo digital de Pucallpa: comercio, movilidad segura, ' +
   'trabajo, alquiler de viviendas, eventos y estilo de vida de la ciudad en una sola app.';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'Boga · Todo Pucallpa en una app',
-    template: '%s · Boga',
+    default: 'BogaHub · Todo Pucallpa en una app',
+    template: '%s · BogaHub',
   },
   description: SITE_DESC,
-  applicationName: 'Boga',
+  applicationName: 'BogaHub',
   keywords: [
     'Pucallpa', 'Ucayali', 'delivery Pucallpa', 'restaurantes Pucallpa',
     'qué hacer en Pucallpa', 'eventos Pucallpa', 'inmuebles Pucallpa',
     'viajes Pucallpa', 'rápidos Pucallpa', 'transporte fluvial Ucayali',
-    'mototaxi seguro', 'trabajo Pucallpa', 'marketplace Pucallpa', 'Boga',
+    'mototaxi seguro', 'trabajo Pucallpa', 'marketplace Pucallpa', 'BogaHub',
   ],
   // OJO: no poner `alternates.canonical` acá — se hereda a TODAS las rutas y
   // haría que /market, /revista, etc. se declaren copia de la home. Cada page
@@ -29,13 +29,13 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'es_PE',
     url: SITE_URL,
-    siteName: 'Boga',
-    title: 'Boga · Todo Pucallpa en una app',
+    siteName: 'BogaHub',
+    title: 'BogaHub · Todo Pucallpa en una app',
     description: SITE_DESC,
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Boga · Todo Pucallpa en una app',
+    title: 'BogaHub · Todo Pucallpa en una app',
     description: SITE_DESC,
   },
   robots: {
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Boga',
+    title: 'BogaHub',
   },
   // Los íconos (favicon + apple-touch) los resuelve el App Router por convención
   // de archivos: src/app/icon.png y src/app/apple-icon.png.

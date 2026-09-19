@@ -60,14 +60,14 @@ export default function RegistroChoferPage() {
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,.5), rgba(4,20,13,.92))' }} />
         <div style={{ position: 'absolute', top: '-12%', right: '-12%', width: '60%', height: '60%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,229,153,.22), transparent 70%)' }} />
         <div style={{ position: 'relative', zIndex: 10, maxWidth: '400px' }}>
-          <Link href="/" aria-label="Boga">
-            <img src="/logo-mark.svg" alt="Boga" style={{ width: '46px', height: '46px', marginBottom: '24px' }} />
+          <Link href="/" aria-label="BogaHub">
+            <img src="/logo-mark.svg" alt="BogaHub" style={{ width: '46px', height: '46px', marginBottom: '24px' }} />
           </Link>
           <h1 style={{ fontSize: '36px', fontWeight: 800, color: '#fff', lineHeight: 1.15, marginBottom: '16px', letterSpacing: '-0.02em' }}>
             Maneja con el <span style={{ color: '#00E599' }}>respaldo de tu barrio</span>.
           </h1>
           <p style={{ fontSize: '15px', color: '#9fb3ab', fontWeight: 500, lineHeight: 1.7 }}>
-            Entra al padrón de choferes verificados de Boga. Los vecinos te contactan directo —
+            Entra al padrón de choferes verificados de BogaHub. Los vecinos te contactan directo —
             sin comisiones, sin intermediarios.
           </p>
           <div style={{ marginTop: '34px', display: 'flex', gap: '24px' }}>
@@ -90,7 +90,7 @@ export default function RegistroChoferPage() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '22px' }}>
             <Link href="/taxi-seguro" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
               <img src="/logo-mark.svg" alt="" style={{ width: '30px', height: '30px' }} />
-              <span style={{ fontSize: '16px', fontWeight: 800, color: '#111' }}>Boga</span>
+              <span style={{ fontSize: '16px', fontWeight: 800, color: '#111' }}>BogaHub</span>
               <span style={{ fontSize: '10px', fontWeight: 700, color: VERDE, backgroundColor: '#d3f1e4', padding: '2px 6px', borderRadius: '5px' }}>Taxi Seguro</span>
             </Link>
             <Link href="/taxi-seguro" style={{ fontSize: '12px', fontWeight: 600, color: '#7a8a83', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '3px' }}>
@@ -173,7 +173,7 @@ export default function RegistroChoferPage() {
             )}
           </div>
           <p style={{ marginTop: '16px', textAlign: 'center', fontSize: '11px', color: '#aebdb7', fontWeight: 500 }}>
-            © {new Date().getFullYear()} Boga. El directorio de choferes es y seguirá siendo gratis.
+            © {new Date().getFullYear()} BogaHub. El directorio de choferes es y seguirá siendo gratis.
           </p>
         </div>
       </div>

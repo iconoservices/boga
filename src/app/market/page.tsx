@@ -636,7 +636,7 @@ export default function Home() {
                             {featuredStore.products?.slice(0, 3).map((sp, i) => (
                               <div key={i} className="flex-1 flex flex-col gap-1">
                                 <div className="aspect-square rounded-xl overflow-hidden relative bg-surface-container-low">
-                                  <img src={sp.img} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={sp.name} />
+                                  <img loading="lazy" decoding="async" src={sp.img} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={sp.name} />
                                 </div>
                                 <h4 className="text-[10px] font-label-md text-secondary uppercase leading-tight line-clamp-1 mt-1">{sp.name}</h4>
                                 <span className="font-price-lg text-primary text-xs">{sp.price}</span>
@@ -646,7 +646,7 @@ export default function Home() {
                           <div className="flex gap-3 items-center border-t border-surface-container pt-3">
                             <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-surface-container-highest bg-surface-container-low flex items-center justify-center">
                               {featuredStore.logo ? (
-                                <img src={featuredStore.logo} className="w-full h-full object-cover" alt={featuredStore.name} />
+                                <img loading="lazy" decoding="async" src={featuredStore.logo} className="w-full h-full object-cover" alt={featuredStore.name} />
                               ) : (
                                 <span className="text-secondary font-headline-sm text-sm">{featuredStore.name?.charAt(0)}</span>
                               )}
@@ -672,7 +672,7 @@ export default function Home() {
                         className="col-span-2 relative bg-white rounded-2xl shadow-[0_15px_15px_rgba(0,0,0,0.04)] overflow-hidden flex group min-h-[150px] border border-surface-container-highest"
                       >
                         <div className="w-[42%] relative overflow-hidden shrink-0 bg-surface-container-low">
-                          <img alt={prod.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src={prod.image} />
+                          <img loading="lazy" decoding="async" alt={prod.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src={prod.image} />
                           <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/80" />
                         </div>
                         <div className="w-[58%] p-4 flex flex-col justify-between relative z-10">
@@ -681,7 +681,7 @@ export default function Home() {
                           </div>
                           <div className="flex gap-2 items-center mt-1">
                             {prod.logo ? (
-                              <img alt={prod.store} className="w-5 h-5 rounded-full object-cover border border-surface-container-highest" src={prod.logo} />
+                              <img loading="lazy" decoding="async" alt={prod.store} className="w-5 h-5 rounded-full object-cover border border-surface-container-highest" src={prod.logo} />
                             ) : (
                               <span className="w-5 h-5 rounded-full bg-surface-container-highest flex items-center justify-center text-[9px] font-bold text-secondary shrink-0">{prod.store?.charAt(0)}</span>
                             )}
@@ -734,7 +734,7 @@ export default function Home() {
                       className="col-span-1 bg-white rounded-2xl shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest overflow-hidden group flex flex-col"
                     >
                       <div className="relative aspect-square overflow-hidden bg-surface-container-low p-4">
-                        <img alt={prod.title} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" src={prod.image} />
+                        <img loading="lazy" decoding="async" alt={prod.title} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" src={prod.image} />
                         <button 
                           onClick={(e) => {
                             e.preventDefault();
@@ -746,7 +746,7 @@ export default function Home() {
                         </button>
                         <div className="absolute bottom-2 left-2 bg-white/95 backdrop-blur-sm shadow-sm rounded-lg px-2 py-1 flex items-center gap-1 border border-surface-container-highest">
                           {prod.logo ? (
-                            <img alt={prod.store} className="w-3.5 h-3.5 rounded-full object-cover" src={prod.logo} />
+                            <img loading="lazy" decoding="async" alt={prod.store} className="w-3.5 h-3.5 rounded-full object-cover" src={prod.logo} />
                           ) : (
                             <span className="w-3.5 h-3.5 rounded-full bg-surface-container-highest flex items-center justify-center text-[7px] font-bold text-secondary shrink-0">{prod.store?.charAt(0)}</span>
                           )}
@@ -780,14 +780,6 @@ export default function Home() {
                     </Link>
                   );
                 })}
-              </div>
-
-              <div className="w-full py-4 flex flex-col justify-center items-center gap-2 opacity-50">
-                <svg className="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                <span className="text-[11px] font-label-md text-secondary">Cargando más recomendados...</span>
               </div>
             </section>
           </div>
@@ -833,7 +825,7 @@ export default function Home() {
                 return (
                   <div key={idx} className="bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col">
                     <div className="relative aspect-square overflow-hidden bg-surface-container-low p-4">
-                      <img className="w-full h-full object-contain" src={p.img} alt={p.name} />
+                      <img loading="lazy" decoding="async" className="w-full h-full object-contain" src={p.img} alt={p.name} />
                       <button 
                         onClick={(e) => {
                           e.preventDefault();

@@ -14,7 +14,7 @@ import { BannerOverlay, type BannerStyle } from '@/components/BannerOverlay';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app';
 
-// "/" = el Inicio del lado consumidor. Es el índice vivo de Boga: un vistazo a
+// "/" = el Inicio del lado consumidor. Es el índice vivo de BogaHub: un vistazo a
 // cada hub + contenido editorial fresco (SEO). Nada se resuelve acá, solo se
 // descubre; cada bloque termina en "Ver todo". Buscador = /market, B2B = /negocios.
 // Data de muestra hasta que cada hub exponga sus destacados reales.
@@ -37,8 +37,8 @@ function armarSlides(notas: NotaCard[], promos: Slide[]): Slide[] {
   return [rev[0], promos[0], promos[1], rev[1], ...promos.slice(2)].filter(Boolean) as Slide[];
 }
 
-// Los 8 Portales de Boga — el lanzador de la ciudad. Un ícono por hub, cada
-// uno con su color. El "sub" está escrito como lo que Boga te resuelve, no
+// Los 8 Portales de BogaHub — el lanzador de la ciudad. Un ícono por hub, cada
+// uno con su color. El "sub" está escrito como lo que BogaHub te resuelve, no
 // como una categoría: "cómo te ayudamos", en lenguaje cercano.
 const PORTALES = [
   { href: '/market',      label: 'Market',      icon: 'storefront',          sub: 'Te traemos pescado, carne y tienda', color: '#E8894A' },
@@ -245,7 +245,7 @@ function PortadaCarrusel({ notas, promos, style, cargando }: { notas: NotaCard[]
   );
 }
 
-// Panel "Los 8 Portales de Boga" — el lanzador de la ciudad, al lado de la
+// Panel "Los 8 Portales de BogaHub" — el lanzador de la ciudad, al lado de la
 // portada en escritorio y apilado en móvil. Antes era una grilla 3x3 con
 // descripción (~400px de alto); ahora es una tira horizontal compacta
 // (ícono + nombre, sin descripción) para no competir tanto con el banner.
@@ -406,14 +406,14 @@ export default function HomePage() {
     '@graph': [
       {
         '@type': 'Organization',
-        name: 'Boga',
+        name: 'BogaHub',
         url: SITE_URL,
         logo: `${SITE_URL}/icon.png`,
         sameAs: [] as string[],
       },
       {
         '@type': 'WebSite',
-        name: 'Boga · Todo Pucallpa en una app',
+        name: 'BogaHub · Todo Pucallpa en una app',
         url: SITE_URL,
         potentialAction: {
           '@type': 'SearchAction',
@@ -449,7 +449,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Portada rotativa + panel "Los 8 Portales de Boga" (lado a lado en escritorio) */}
+      {/* Portada rotativa + panel "Los 8 Portales de BogaHub" (lado a lado en escritorio) */}
       <div className="max-w-[1440px] mx-auto w-full lg:px-8 pt-4 lg:pt-6">
         <div className="lg:grid lg:grid-cols-[1.7fr_1fr] lg:gap-5 lg:items-stretch">
           <PortadaCarrusel notas={notasRevista} promos={promoBanners} style={bannerStyle} cargando={!(notasListas && promosListas)} />
@@ -558,7 +558,7 @@ export default function HomePage() {
         <section className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
             <span className="w-fit bg-tertiary-fixed text-on-tertiary-fixed-variant text-[10px] font-label-md px-2 py-0.5 rounded-full flex items-center gap-1 uppercase tracking-wider mb-0.5">
-              <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>restaurant</span>Selección Boga
+              <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>restaurant</span>Selección BogaHub
             </span>
             <div className="flex items-end justify-between gap-4">
               <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">Dónde comer</h2>
@@ -700,16 +700,16 @@ export default function HomePage() {
           </Link>
         </section>
 
-        {/* Qué es Boga */}
+        {/* Qué es BogaHub */}
         <section className="bg-on-surface text-background rounded-2xl p-6 lg:p-10">
-          <span className="font-label-md text-[10px] uppercase tracking-[0.25em] text-background/50">Qué es Boga</span>
+          <span className="font-label-md text-[10px] uppercase tracking-[0.25em] text-background/50">Qué es BogaHub</span>
           <p className="font-headline-lg font-extrabold tracking-tight text-lg lg:text-2xl leading-snug mt-2 max-w-[46ch]">
-            Boga es el sistema operativo digital de Pucallpa: una super-app que reúne el comercio,
+            BogaHub es el sistema operativo digital de Pucallpa: una super-app que reúne el comercio,
             la movilidad segura, el trabajo, los inmuebles, los viajes y el estilo de vida de la ciudad
             en un solo lugar.
           </p>
           <Link href="/negocios" className="inline-flex items-center gap-1 mt-4 font-label-md text-[12px] text-primary-fixed">
-            ¿Tienes un negocio? Vende con Boga
+            ¿Tienes un negocio? Vende con BogaHub
             <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
           </Link>
         </section>

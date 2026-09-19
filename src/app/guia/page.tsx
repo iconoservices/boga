@@ -105,7 +105,7 @@ const TEMAS = [
     id: 'llegar', icon: 'flight_land', titulo: 'Cómo llegar y moverte',
     parrafos: [
       'El aeropuerto está a unos 5 minutos del centro; hay vuelos diarios desde Lima (alrededor de 1 hora). Por tierra, los buses desde Lima vía Tingo María toman entre 18 y 20 horas.',
-      'Dentro de la ciudad: mototaxi para trayectos cortos —pregunta el precio antes de subir— y colectivos al puerto de Yarinacocha desde el centro. Con Boga pides Taxi Seguro con chofer verificado.',
+      'Dentro de la ciudad: mototaxi para trayectos cortos —pregunta el precio antes de subir— y colectivos al puerto de Yarinacocha desde el centro. Con BogaHub pides Taxi Seguro con chofer verificado.',
     ],
   },
   {

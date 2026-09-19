@@ -42,7 +42,7 @@ export default function ReservaEntrada({ eventoId }: { eventoId: string }) {
         </div>
         <p className="text-secondary font-body-md text-xs leading-relaxed">
           Muestra este QR en la puerta — captura la pantalla por si acaso.
-          Se paga en el local, Boga solo confirma tu lugar.
+          Se paga en el local, BogaHub solo confirma tu lugar.
         </p>
       </div>
     );

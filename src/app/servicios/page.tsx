@@ -90,7 +90,7 @@ export default function Servicios() {
                     <span className="material-symbols-outlined text-[14px]">location_on</span>{s.zona}
                   </span>
                   <a
-                    href={waLink(s.wsp, `Hola ${s.nombre}, te contacto desde Boga por tu servicio de ${s.oficio}.`)}
+                    href={waLink(s.wsp, `Hola ${s.nombre}, te contacto desde BogaHub por tu servicio de ${s.oficio}.`)}
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center gap-1.5 bg-[#25D366] text-white text-[12px] font-label-md px-3 py-1.5 rounded-full active:scale-95 transition-transform"
@@ -121,7 +121,7 @@ export default function Servicios() {
                   </div>
                 </div>
                 <a
-                  href={waLink(e.wsp, `Hola, vi el aviso de "${e.puesto}" en ${e.negocio} por Boga. Me interesa postular.`)}
+                  href={waLink(e.wsp, `Hola, vi el aviso de "${e.puesto}" en ${e.negocio} por BogaHub. Me interesa postular.`)}
                   target="_blank"
                   rel="noreferrer"
                   className="shrink-0 flex items-center gap-1.5 bg-primary text-white text-[12px] font-label-md px-3 py-2 rounded-full active:scale-95 transition-transform"
@@ -137,7 +137,7 @@ export default function Servicios() {
         {/* CTAs */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <a
-            href={waLink('51961000000', 'Hola Boga, quiero publicar un aviso en Servicios de Boga (servicio / empleo).')}
+            href={waLink('51961000000', 'Hola BogaHub, quiero publicar un aviso en Servicios de BogaHub (servicio / empleo).')}
             target="_blank"
             rel="noreferrer"
             className="relative overflow-hidden rounded-2xl bg-inverse-surface text-inverse-on-surface p-4 flex items-center gap-3 group"
@@ -157,7 +157,7 @@ export default function Servicios() {
               El sistema completo (?ref=, columna referido_por, panel) está en
               memoria: afiliados.md. */}
           <a
-            href={waLink('51961000000', 'Hola Boga, quiero ganar dinero recomendando Boga (negocios, choferes). ¿Cómo funciona?')}
+            href={waLink('51961000000', 'Hola BogaHub, quiero ganar dinero recomendando BogaHub (negocios, choferes). ¿Cómo funciona?')}
             target="_blank"
             rel="noreferrer"
             className="relative overflow-hidden rounded-2xl bg-primary text-on-primary p-4 flex items-center gap-3 group"
@@ -167,7 +167,7 @@ export default function Servicios() {
               <span className="material-symbols-outlined text-[22px]">payments</span>
             </div>
             <div className="relative flex flex-col min-w-0 flex-1">
-              <span className="font-headline-sm text-sm leading-tight">Gana dinero con Boga</span>
+              <span className="font-headline-sm text-sm leading-tight">Gana dinero con BogaHub</span>
               <span className="text-on-primary/80 font-body-md text-xs mt-0.5">Recomienda negocios y choferes, gana comisión por cada uno</span>
             </div>
             <span className="material-symbols-outlined text-on-primary/70 shrink-0 group-hover:translate-x-1 transition-transform">chevron_right</span>
@@ -175,7 +175,7 @@ export default function Servicios() {
         </div>
 
         <p className="text-secondary/70 font-body-md text-[11px] text-center pt-2">
-          Boga conecta, pero no es empleador ni responsable de los acuerdos. Verifica siempre con quién tratas.
+          BogaHub conecta, pero no es empleador ni responsable de los acuerdos. Verifica siempre con quién tratas.
         </p>
       </main>
     </>

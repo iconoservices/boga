@@ -13,7 +13,7 @@ import { fetchChoferes, type Chofer } from '@/lib/drivers';
 
 type Filtro = 'Todos' | 'Mototaxi' | 'Auto' | 'Moto';
 
-// Paleta propia de Taxi Seguro (verde/cian, distinta del rojo Boga). El
+// Paleta propia de Taxi Seguro (verde/cian, distinta del rojo BogaHub). El
 // `themeVars` se aplica en el <div> raíz y redefine los tokens `--color-*`
 // para todo el subárbol, así `bg-primary`, `text-primary`, `text-tertiary`,
 // etc. salen en verde solo en esta página.
@@ -173,7 +173,7 @@ const CHOFERES_SEED: Chofer[] = [
 const ICONO: Record<string, string> = { Mototaxi: 'electric_rickshaw', Auto: 'directions_car', Moto: 'two_wheeler' };
 
 // Planes fijos — placeholder. El directorio de choferes sigue gratis; estos
-// planes por suscripción son cómo Boga va a sostener el servicio sin cobrarle
+// planes por suscripción son cómo BogaHub va a sostener el servicio sin cobrarle
 // comisión al chofer. Todavía sin motor de reservas ni cobro.
 const PLANES_TRANSPORTE = [
   {
@@ -196,7 +196,7 @@ const PLANES_TRANSPORTE = [
 
 function DriverCard({ c }: { c: Chofer }) {
   const waText = encodeURIComponent(
-    `Hola ${c.nombre.split(' ')[0]}, lo/la vi en Boga · Taxi Seguro. ¿Está libre para una carrera?\nOrigen: \nDestino: `
+    `Hola ${c.nombre.split(' ')[0]}, lo/la vi en BogaHub · Taxi Seguro. ¿Está libre para una carrera?\nOrigen: \nDestino: `
   );
 
   return (
@@ -211,7 +211,7 @@ function DriverCard({ c }: { c: Chofer }) {
             <span
               className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center border-2 border-white"
               style={{ backgroundColor: VERDE }}
-              title="Verificado por Boga"
+              title="Verificado por BogaHub"
             >
               <span className="material-symbols-outlined text-white text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
             </span>
@@ -336,7 +336,7 @@ export default function TaxiSeguro() {
             </span>
             <h1 className="font-headline-lg text-on-surface tracking-tight text-2xl lg:text-3xl">Muévete tranquilo por Pucallpa</h1>
             <p className="text-secondary font-body-md text-sm">
-              Choferes verificados por la comunidad Boga. Los contactas directo por llamada o WhatsApp — sin tarifas ocultas ni comisiones a intermediarios.
+              Choferes verificados por la comunidad BogaHub. Los contactas directo por llamada o WhatsApp — sin tarifas ocultas ni comisiones a intermediarios.
             </p>
             <a
               href="/taxi-seguro/registro"
@@ -402,7 +402,7 @@ export default function TaxiSeguro() {
           </div>
           <p className="text-secondary font-body-md text-sm max-w-[62ch]">
             El directorio de choferes es y va a seguir siendo gratis. Aparte, pronto vas a poder
-            contratar planes fijos — así Boga sostiene el servicio sin cobrarle comisión al chofer.
+            contratar planes fijos — así BogaHub sostiene el servicio sin cobrarle comisión al chofer.
           </p>
           <div className="grid sm:grid-cols-2 gap-3">
             {PLANES_TRANSPORTE.map((p) => (
@@ -431,7 +431,7 @@ export default function TaxiSeguro() {
         </section>
 
         <p className="text-secondary/70 font-body-md text-[11px] text-center pt-2">
-          Boga solo conecta pasajeros y choferes verificados. La tarifa se acuerda directamente entre las partes.
+          BogaHub solo conecta pasajeros y choferes verificados. La tarifa se acuerda directamente entre las partes.
         </p>
       </main>
     </div>

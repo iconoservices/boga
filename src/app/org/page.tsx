@@ -23,9 +23,9 @@ export default function OrgDirectorio() {
     <div className="fixed inset-0 z-[55] overflow-y-auto bg-[#0f0f10] text-white flex flex-col items-center px-4 py-10">
       <div className="text-center mb-2">
         <p className="text-2xl font-extrabold tracking-tight">
-          Boga<span className="text-amber-400">Pass</span>
+          BogaHub<span className="text-amber-400">Pass</span>
         </p>
-        <p className="text-xs text-white/50">by Boga</p>
+        <p className="text-xs text-white/50">by BogaHub</p>
       </div>
 
       <h1 className="text-3xl sm:text-4xl font-extrabold uppercase mt-6 text-center leading-tight">¿A cuál perteneces?</h1>

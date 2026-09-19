@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
 
-// El Pandero de Boga — junta / fondo colectivo (pandero, pasanaco): un grupo
+// El Pandero de BogaHub — junta / fondo colectivo (pandero, pasanaco): un grupo
 // pone una cuota mensual y cada mes uno se lleva todo el fondo, por sorteo o
 // remate. Placeholder: estructura lista, contenido de muestra. Todavía sin
 // motor de grupos, pagos ni sorteo. Cuando esté: grupos + cuotas + KYC +
@@ -39,8 +39,8 @@ const GRUPOS = [
 ];
 
 const CONFIANZA = [
-  { icon: 'badge', txt: 'Todos los miembros verificados con DNI y con historial en Boga' },
-  { icon: 'account_balance', txt: 'Boga administra los pagos — la plata no pasa por una sola persona' },
+  { icon: 'badge', txt: 'Todos los miembros verificados con DNI y con historial en BogaHub' },
+  { icon: 'account_balance', txt: 'BogaHub administra los pagos — la plata no pasa por una sola persona' },
   { icon: 'visibility', txt: 'El sorteo es público y queda registrado, cualquiera lo puede revisar' },
   { icon: 'handshake', txt: 'Contrato firmado por todo el grupo antes de arrancar' },
 ];
@@ -48,11 +48,11 @@ const CONFIANZA = [
 const PARA_QUE = ['Una moto', 'Una refrigeradora', 'Capital para tu negocio', 'El inicial de un lote', 'Útiles del colegio', 'Un viaje'];
 
 const PREGUNTAS = [
-  { q: '¿Y si alguien deja de pagar?', a: 'Cada miembro entra con garantía y contrato. Si alguien falla, Boga cubre esa cuota del fondo con la garantía y esa persona queda fuera y con mala calificación. El grupo no se perjudica.' },
+  { q: '¿Y si alguien deja de pagar?', a: 'Cada miembro entra con garantía y contrato. Si alguien falla, BogaHub cubre esa cuota del fondo con la garantía y esa persona queda fuera y con mala calificación. El grupo no se perjudica.' },
   { q: '¿Es legal?', a: 'El pandero (o junta) es una práctica de ahorro tradicional y legal en el Perú. La diferencia con hacerlo "a la antigua" es que acá está todo registrado, con contrato y sin que la plata dependa de una sola persona.' },
   { q: '¿Cuándo me toca?', a: 'Depende del método del grupo: por sorteo (al azar, un mes distinto para cada uno) o por remate (el que más adelanta cuotas cobra antes). Lo eligen entre todos al armar el grupo.' },
   { q: '¿Puedo adelantar mi turno?', a: 'Sí, en los grupos por remate: ofrecés adelantar cuotas y si nadie ofrece más, cobrás ese mes. Es la forma de tener la plata antes si la necesitás urgente.' },
-  { q: '¿Puedo salir antes de terminar?', a: 'Si ya cobraste, tenés que terminar de pagar tus cuotas (esa plata es de los demás). Si todavía no cobraste, podés ceder tu lugar a alguien que valide Boga.' },
+  { q: '¿Puedo salir antes de terminar?', a: 'Si ya cobraste, tenés que terminar de pagar tus cuotas (esa plata es de los demás). Si todavía no cobraste, podés ceder tu lugar a alguien que valide BogaHub.' },
 ];
 
 export default function Pandero() {
@@ -74,7 +74,7 @@ export default function Pandero() {
               Próximamente
             </span>
             <h1 className="font-headline-lg font-extrabold tracking-tight text-3xl sm:text-4xl lg:text-5xl leading-[1.03]">
-              El <span style={{ color: ORO }}>Pandero</span> de Boga
+              El <span style={{ color: ORO }}>Pandero</span> de BogaHub
             </h1>
             <p className="font-body-lg text-base lg:text-lg leading-relaxed max-w-[54ch]" style={{ color: CREMA + 'cc' }}>
               Ahorrá en grupo y comprá lo grande sin préstamo ni intereses. El pandero de

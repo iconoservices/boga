@@ -42,7 +42,7 @@ type Form = {
 const HOY = () => new Date().toISOString().slice(0, 10);
 
 const FORM_VACIO: Form = {
-  id: null, slug: '', kicker: 'Actualidad', titulo: '', dek: '', autor_nombre: 'Redacción Boga',
+  id: null, slug: '', kicker: 'Actualidad', titulo: '', dek: '', autor_nombre: 'Redacción BogaHub',
   fecha: HOY(), lectura: '3 min', img: '', img_credito: '', cuerpo: '',
   cita_texto: '', cita_autor: '', ubicacion_maps: '', fuente_nombre: '', fuente_url: '',
   destacado: false, portada: false, estado: 'borrador',
@@ -69,7 +69,7 @@ function formAFila(form: Form, autorId: string | null) {
     titulo: form.titulo.trim(),
     dek: form.dek.trim(),
     autor_id: autorId,
-    autor_nombre: form.autor_nombre.trim() || 'Redacción Boga',
+    autor_nombre: form.autor_nombre.trim() || 'Redacción BogaHub',
     fecha: form.fecha || HOY(),
     lectura: form.lectura.trim() || '3 min',
     img: form.img.trim(),
@@ -461,7 +461,7 @@ export default function AdminRevista() {
         {esSuperadmin && (
           <div className="rounded-xl border border-white/10 bg-white/[0.02] p-5 flex flex-col gap-3">
             <h2 className="font-bold">Redactores</h2>
-            <p className="text-white/50 text-sm">Pueden crear y editar notas, pero no publicarlas. La cuenta ya tiene que estar registrada en Boga.</p>
+            <p className="text-white/50 text-sm">Pueden crear y editar notas, pero no publicarlas. La cuenta ya tiene que estar registrada en BogaHub.</p>
             <div className="flex gap-2">
               <input value={nuevoRedactor} onChange={(e) => setNuevoRedactor(e.target.value)} placeholder="correo@ejemplo.com" className={inp + ' flex-1'} />
               <button onClick={() => toggleRedactor(nuevoRedactor, true)} disabled={!nuevoRedactor.trim()} className="px-4 py-2 rounded-lg bg-white/10 text-sm hover:bg-white/20 disabled:opacity-40">Agregar</button>

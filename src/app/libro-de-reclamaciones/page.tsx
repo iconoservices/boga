@@ -181,7 +181,7 @@ export default function LibroDeReclamacionesPage() {
               {error && <p className="font-body-md text-[13px] font-semibold text-error">{error}</p>}
 
               <p className="font-body-md text-[12px] leading-relaxed text-secondary">
-                Al enviar declarás que la información es verdadera y aceptás que Boga trate estos
+                Al enviar declarás que la información es verdadera y aceptás que BogaHub trate estos
                 datos para atender tu reclamo, según la{' '}
                 <Link href="/legal/privacidad" className="underline hover:text-on-surface">Política de Privacidad</Link>.
               </p>
@@ -263,7 +263,7 @@ function HojaEnviada({ h, enviada }: { h: HojaReclamacion; enviada: Enviada }) {
         href="/"
         className="mt-6 inline-block rounded-xl bg-surface-container-high px-4 py-2 font-label-md text-[12px] uppercase tracking-wider text-on-surface print:hidden"
       >
-        Volver a Boga
+        Volver a BogaHub
       </Link>
     </div>
   );

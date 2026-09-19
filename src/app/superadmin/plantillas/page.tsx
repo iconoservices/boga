@@ -62,7 +62,7 @@ const TEMPLATE_PRESENTATION: Record<string, { category?: string; description: st
   },
   mercado: {
     category: 'Comercio',
-    description: 'El look del marketplace de Boga para una sola tienda: banners, categorías y catálogo amplio. Ideal para minimarket, ferretería, farmacia o distribuidora.',
+    description: 'El look del marketplace de BogaHub para una sola tienda: banners, categorías y catálogo amplio. Ideal para minimarket, ferretería, farmacia o distribuidora.',
     previewUrl: 'https://images.unsplash.com/photo-1580913428735-bd3c269d6a82?w=600&q=80',
   },
   flores: {

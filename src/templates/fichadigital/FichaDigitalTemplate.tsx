@@ -199,7 +199,7 @@ export default function FichaDigitalTemplate({ store }: Props) {
             {/* ══ CATEGORÍAS EN CÍRCULO ══ */}
             {categoriasCirculo.length > 0 && (
               <section className="px-5 md:px-6 pt-8">
-                <div className="flex gap-5 overflow-x-auto pb-2">
+                <div className="hide-scrollbar flex gap-5 overflow-x-auto pb-2">
                   <button onClick={() => setCategoriaHome('all')} className="flex flex-col items-center gap-2 shrink-0 w-20">
                     <div
                       className="w-16 h-16 rounded-full flex items-center justify-center border-2"

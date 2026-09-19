@@ -23,7 +23,7 @@ interface Producto {
 }
 
 /**
- * Plantilla "Mercado": toma el lenguaje visual del marketplace de Boga
+ * Plantilla "Mercado": toma el lenguaje visual del marketplace de BogaHub
  * (banners, grilla de categorias, secciones de productos) pero muestra el
  * catalogo de UNA sola tienda. Pensada para clientes con catalogo grande:
  * minimarket, ferreteria, farmacia, distribuidora.
@@ -253,7 +253,7 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
 
           <div
             ref={sliderRef}
-            className="flex overflow-x-auto rounded-lg"
+            className="hide-scrollbar flex overflow-x-auto rounded-lg"
             style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
           >
             {banners.map((b, i) => (

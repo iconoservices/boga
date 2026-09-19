@@ -44,8 +44,8 @@ export async function GET(request: NextRequest) {
         }
       : {
           id: '/',
-          name: 'Boga · Todo Pucallpa en una app',
-          short_name: 'Boga',
+          name: 'BogaHub · Todo Pucallpa en una app',
+          short_name: 'BogaHub',
           description: 'El sistema operativo digital de Pucallpa: comercio, movilidad, trabajo, inmuebles, viajes y eventos.',
           start_url: '/',
           scope: '/',

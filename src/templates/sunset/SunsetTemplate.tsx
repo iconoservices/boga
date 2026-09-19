@@ -335,7 +335,7 @@ export default function SunsetTemplate({ store }: SunsetTemplateProps) {
 
         {/* Category tabs */}
         <div
-          className="flex gap-8 mb-10 overflow-x-auto pb-4"
+          className="hide-scrollbar flex gap-8 mb-10 overflow-x-auto pb-4"
           style={{ borderBottom: `1px solid ${t.outlineVariant}26` }}
         >
           {[

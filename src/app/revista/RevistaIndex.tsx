@@ -8,7 +8,7 @@ import {
   notaHref, type Nota,
 } from '@/lib/revista';
 
-// "Yo Soy de la Selva" — portada de la revista/blog digital de Boga. Masthead +
+// "Yo Soy de la Selva" — portada de la revista/blog digital de BogaHub. Masthead +
 // barra de secciones + grilla de notas. Cada nota abre en su propia URL
 // (/revista/<slug>), que es una página server-rendered con su metadata y
 // JSON-LD para que Google y los motores de IA la indexen y la citen.
@@ -192,8 +192,8 @@ export default function RevistaIndex({ notas }: { notas: Nota[] }) {
           <footer className="px-container-margin lg:px-8 mt-14 pt-6 border-t border-on-surface/15">
             <p className="font-label-md text-[11px] uppercase tracking-[0.25em] text-secondary">Yo Soy de la Selva</p>
             <p className="font-body-md text-secondary/80 text-xs mt-2 max-w-[62ch] leading-relaxed">
-              Revista digital de Boga. Historias de Pucallpa y la Amazonía peruana, compiladas por el
-              equipo de Boga a partir de fuentes públicas. Fotografías de Wikimedia Commons,
+              Revista digital de BogaHub. Historias de Pucallpa y la Amazonía peruana, compiladas por el
+              equipo de BogaHub a partir de fuentes públicas. Fotografías de Wikimedia Commons,
               acreditadas en cada nota.
             </p>
           </footer>

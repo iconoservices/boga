@@ -35,9 +35,9 @@ export interface StoreConfig {
   instagram?: string;
   tiktok?: string;
   /**
-   * Para negocios que ya tienen su propia pagina armada (fuera de Boga). Si
+   * Para negocios que ya tienen su propia pagina armada (fuera de BogaHub). Si
    * esta cargado, los links a esta tienda en todo el marketplace mandan aca
-   * en vez de a la pagina-plantilla de Boga (/slug).
+   * en vez de a la pagina-plantilla de BogaHub (/slug).
    */
   externalUrl?: string;
   /**

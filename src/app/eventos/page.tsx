@@ -85,6 +85,9 @@ export default function Eventos() {
 
       <main className="max-w-[1200px] mx-auto px-container-margin lg:px-6 w-full pt-4 flex flex-col gap-8 pb-14">
 
+        {/* Destacado + categorías: lado a lado en escritorio (como el Market) */}
+        <div className={carrusel.length > 0 ? 'flex flex-col gap-8 lg:grid lg:grid-cols-[1.6fr_1fr] lg:gap-6 lg:items-center' : 'contents'}>
+
         {/* Carrusel destacado */}
         {carrusel.length > 0 && (
         <section>
@@ -177,10 +180,10 @@ export default function Eventos() {
         {/* Categorías */}
         <section className="flex flex-col gap-3">
           <h2 className="font-headline-lg text-on-surface">Explora por categoría</h2>
-          <div className="flex gap-4 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-1" style={{ scrollbarWidth: 'none' }}>
+          <div className="flex gap-4 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-1 lg:grid lg:grid-cols-5 lg:gap-x-2 lg:gap-y-4 lg:overflow-visible" style={{ scrollbarWidth: 'none' }}>
             <button
               onClick={() => setCat(null)}
-              className="flex flex-col items-center gap-1.5 shrink-0 w-[68px] group"
+              className="flex flex-col items-center gap-1.5 shrink-0 w-[68px] lg:w-auto group"
             >
               <span className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
                 cat === null ? 'bg-primary text-white' : 'bg-surface-container-low text-primary group-hover:bg-primary-fixed'
@@ -195,7 +198,7 @@ export default function Eventos() {
                 <button
                   key={c.cat}
                   onClick={() => setCat(active ? null : c.cat)}
-                  className="flex flex-col items-center gap-1.5 shrink-0 w-[68px] group"
+                  className="flex flex-col items-center gap-1.5 shrink-0 w-[68px] lg:w-auto group"
                 >
                   <span className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
                     active ? 'bg-primary text-white' : 'bg-surface-container-low text-primary group-hover:bg-primary-fixed'
@@ -208,6 +211,8 @@ export default function Eventos() {
             })}
           </div>
         </section>
+
+        </div>
 
         {/* A dónde ir — lugares para visitar */}
         <section className="flex flex-col gap-3">
@@ -347,7 +352,7 @@ export default function Eventos() {
         </section>
 
         <p className="text-secondary/70 font-body-md text-[11px] text-center pt-2">
-          ¿Organizas un evento en Pucallpa? Publícalo en Boga y llega a miles de personas. Escríbenos por WhatsApp.
+          ¿Organizas un evento en Pucallpa? Publícalo en BogaHub y llega a miles de personas. Escríbenos por WhatsApp.
         </p>
       </main>
 

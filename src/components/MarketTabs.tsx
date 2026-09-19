@@ -24,7 +24,7 @@ export default function MarketTabs() {
   // Arranca colapsado (56px), igual que lo que renderiza el servidor — la
   // preferencia guardada (si el usuario lo dejó expandido) recién se aplica
   // en el efecto de abajo. Iniciarlo ya expandido en el cliente rompe la
-  // hidratación: el <aside> tendría hijos distintos (el link "Explora Boga",
+  // hidratación: el <aside> tendría hijos distintos (el link "Explora BogaHub",
   // las etiquetas de texto) a los del HTML que mandó el servidor.
   const [deskOpen, setDeskOpen] = useState(false);
   const isActive = (href: string) => isHubActive(pathname, href);
@@ -87,7 +87,7 @@ export default function MarketTabs() {
         {deskOpen && (
           <Link href="/" className="flex items-center gap-2 min-w-0">
             <img src="/logo-mark.svg" alt="" className="w-7 h-7 shrink-0" />
-            <span className="font-headline-sm text-on-surface truncate">Explora Boga</span>
+            <span className="font-headline-sm text-on-surface truncate">Explora BogaHub</span>
           </Link>
         )}
         <button

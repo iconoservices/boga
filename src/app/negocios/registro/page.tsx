@@ -41,11 +41,11 @@ export default function RegistroNegocioPage() {
         <div style={{ position: 'absolute', top: '-12%', right: '-12%', width: '60%', height: '60%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(184,19,14,0.28), transparent 70%)' }} />
 
         <div style={{ position: 'relative', zIndex: 10, maxWidth: '400px' }}>
-          <Link href="/" aria-label="Boga">
-            <img src="/logo-mark.svg" alt="Boga" style={{ width: '48px', height: '48px', marginBottom: '26px' }} />
+          <Link href="/" aria-label="BogaHub">
+            <img src="/logo-mark.svg" alt="BogaHub" style={{ width: '48px', height: '48px', marginBottom: '26px' }} />
           </Link>
           <h1 style={{ fontSize: '38px', fontWeight: 800, color: '#fff', lineHeight: 1.15, marginBottom: '18px', letterSpacing: '-0.02em' }}>
-            Digitaliza tu negocio con <span style={{ color: '#ff5c52' }}>Boga</span>.
+            Digitaliza tu negocio con <span style={{ color: '#ff5c52' }}>BogaHub</span>.
           </h1>
           <p style={{ fontSize: '15px', color: '#b3b3b3', fontWeight: 500, lineHeight: 1.7 }}>
             Creamos tu catálogo y tu carta digital para que tus clientes vean todo tu negocio
@@ -73,7 +73,7 @@ export default function RegistroNegocioPage() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '22px' }}>
             <Link href="/negocios" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
               <img src="/logo-mark.svg" alt="" style={{ width: '30px', height: '30px' }} />
-              <span style={{ fontSize: '16px', fontWeight: 800, color: '#111' }}>Boga</span>
+              <span style={{ fontSize: '16px', fontWeight: 800, color: '#111' }}>BogaHub</span>
               <span style={{ fontSize: '10px', fontWeight: 700, color: '#b8130e', backgroundColor: 'rgba(184,19,14,0.1)', padding: '2px 6px', borderRadius: '5px' }}>Negocios</span>
             </Link>
             <Link href="/negocios" style={{ fontSize: '12px', fontWeight: 600, color: '#888', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '3px' }}>
@@ -84,7 +84,7 @@ export default function RegistroNegocioPage() {
 
           {/* Titular — en móvil reemplaza al panel */}
           <h2 className="rn-mobile-title" style={{ fontSize: '24px', fontWeight: 800, color: '#111', lineHeight: 1.2, marginBottom: '6px', letterSpacing: '-0.01em' }}>
-            Digitaliza tu negocio con <span style={{ color: '#b8130e' }}>Boga</span>
+            Digitaliza tu negocio con <span style={{ color: '#b8130e' }}>BogaHub</span>
           </h2>
           <p className="rn-mobile-title" style={{ fontSize: '13px', color: '#777', fontWeight: 500, lineHeight: 1.55, marginBottom: '20px' }}>
             Creamos tu catálogo y carta digital para que tus clientes vean todo y te pidan por WhatsApp.
@@ -93,7 +93,7 @@ export default function RegistroNegocioPage() {
           <RegistroNegocio interest={interest} setInterest={setInterest} />
 
           <p style={{ marginTop: '16px', textAlign: 'center', fontSize: '11px', color: '#bbb', fontWeight: 500 }}>
-            © {new Date().getFullYear()} Boga. ·{' '}
+            © {new Date().getFullYear()} BogaHub. ·{' '}
             <Link href="/negocios" style={{ color: '#999' }}>Ver todo lo que incluye</Link>
           </p>
         </div>

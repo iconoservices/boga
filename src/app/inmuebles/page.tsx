@@ -144,8 +144,8 @@ export default function Inmuebles() {
         {/* CTA publicar */}
         <a
           href={waLink('51963000000', modo === 'alquiler'
-            ? 'Hola Boga, quiero publicar un alquiler (habitación / mini-dpto / casa / pensión).'
-            : 'Hola Boga, quiero publicar un inmueble en venta (terreno / lote / casa / chacra).'
+            ? 'Hola BogaHub, quiero publicar un alquiler (habitación / mini-dpto / casa / pensión).'
+            : 'Hola BogaHub, quiero publicar un inmueble en venta (terreno / lote / casa / chacra).'
           )}
           target="_blank"
           rel="noreferrer"
@@ -230,7 +230,7 @@ export default function Inmuebles() {
                         )}
                       </div>
                       <a
-                        href={waLink(a.wsp, `Hola, vi tu aviso "${a.titulo}" (${a.zona}) en Inmuebles de Boga. ¿Sigue disponible?`)}
+                        href={waLink(a.wsp, `Hola, vi tu aviso "${a.titulo}" (${a.zona}) en Inmuebles de BogaHub. ¿Sigue disponible?`)}
                         target="_blank"
                         rel="noreferrer"
                         onClick={(ev) => ev.stopPropagation()}
@@ -303,7 +303,7 @@ export default function Inmuebles() {
                         <span className="text-secondary font-label-md text-[10px] mt-0.5">precio de venta</span>
                       </div>
                       <a
-                        href={waLink(v.wsp, `Hola, vi tu aviso "${v.titulo}" (${v.zona}) en Inmuebles de Boga. ¿Sigue disponible?`)}
+                        href={waLink(v.wsp, `Hola, vi tu aviso "${v.titulo}" (${v.zona}) en Inmuebles de BogaHub. ¿Sigue disponible?`)}
                         target="_blank"
                         rel="noreferrer"
                         onClick={(ev) => ev.stopPropagation()}
@@ -321,7 +321,7 @@ export default function Inmuebles() {
         )}
 
         <p className="text-secondary/70 font-body-md text-[11px] text-center pt-2">
-          Boga solo conecta. Visita el lugar antes de pagar cualquier adelanto y no transfieras dinero sin ver el contrato o título.
+          BogaHub solo conecta. Visita el lugar antes de pagar cualquier adelanto y no transfieras dinero sin ver el contrato o título.
         </p>
       </main>
 
@@ -389,7 +389,7 @@ export default function Inmuebles() {
                   )}
                 </div>
                 <a
-                  href={waLink(avisoAbierto.wsp, `Hola, vi tu aviso "${avisoAbierto.titulo}" (${avisoAbierto.zona}) en Inmuebles de Boga. ¿Sigue disponible?`)}
+                  href={waLink(avisoAbierto.wsp, `Hola, vi tu aviso "${avisoAbierto.titulo}" (${avisoAbierto.zona}) en Inmuebles de BogaHub. ¿Sigue disponible?`)}
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-1.5 bg-[#25D366] text-white font-label-md text-sm px-4 py-2.5 rounded-full active:scale-95 transition-transform"
@@ -459,7 +459,7 @@ export default function Inmuebles() {
                   <span className="text-secondary font-label-md text-[10px] mt-0.5">precio de venta</span>
                 </div>
                 <a
-                  href={waLink(ventaAbierta.wsp, `Hola, vi tu aviso "${ventaAbierta.titulo}" (${ventaAbierta.zona}) en Inmuebles de Boga. ¿Sigue disponible?`)}
+                  href={waLink(ventaAbierta.wsp, `Hola, vi tu aviso "${ventaAbierta.titulo}" (${ventaAbierta.zona}) en Inmuebles de BogaHub. ¿Sigue disponible?`)}
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-1.5 bg-[#25D366] text-white font-label-md text-sm px-4 py-2.5 rounded-full active:scale-95 transition-transform"
