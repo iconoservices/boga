@@ -309,21 +309,23 @@ export default function HomePage() {
     });
   }, []);
 
-  // Productos de comida reales que se venden en Boga Market (mismo catalogo
-  // cacheado que usa /market), para el carrusel de abajo. Se excluyen los
-  // rubros claramente no-comida (moda, salud, servicios); todo lo demas
-  // entra, porque hoy casi todo el catalogo real es comida/bebida.
-  const [comidaProducts, setComidaProducts] = useState<{ id: string; name: string; price: number; image: string; storeSlug: string; storeName: string; storeExternalUrl?: string }[]>([]);
+  // "Lo que se pide en Market": productos reales del catálogo de TODAS las
+  // categorías (comida, moda, belleza…). Se reparten por tienda (una de cada
+  // una, en rondas) para que no domine la que tiene más productos.
+  // "Tiendas de comida": solo las tiendas de rubro comida/bebida, con su logo y
+  // los productos que ofrecen.
+  type ProductoHome = { id: string; name: string; price: number; image: string; storeSlug: string; storeName: string; storeExternalUrl?: string };
+  type TiendaComida = { slug: string; name: string; tagline: string; logo: string; externalUrl?: string; productos: { id: string; name: string; price: number; image: string }[] };
+  const [comidaProducts, setComidaProducts] = useState<ProductoHome[]>([]);
+  const [tiendasComida, setTiendasComida] = useState<TiendaComida[]>([]);
   useEffect(() => {
     fetchCatalogo().then(({ stores: dbStores, products: dbProducts }) => {
       const tiendasPorSlug: Record<string, any> = {};
       (dbStores || []).forEach((s: any) => { tiendasPorSlug[s.slug] = s; });
-      const noComida = ['moda', 'salud', 'servicio', 'boutique', 'belleza'];
-      const items = (dbProducts || [])
-        .filter((p: any) => {
-          const cat = (tiendasPorSlug[p.store]?.marketplace_category || '').toLowerCase();
-          return tiendasPorSlug[p.store] && !noComida.some((n) => cat.includes(n));
-        })
+      const mezclar = <T,>(a: T[]) => [...a].sort(() => Math.random() - 0.5);
+
+      const items: ProductoHome[] = (dbProducts || [])
+        .filter((p: any) => tiendasPorSlug[p.store] && p.image)
         .map((p: any) => ({
           id: p.id,
           name: p.name,
@@ -333,7 +335,35 @@ export default function HomePage() {
           storeName: tiendasPorSlug[p.store]?.name || p.store,
           storeExternalUrl: tiendasPorSlug[p.store]?.external_url || undefined,
         }));
-      setComidaProducts(items.sort(() => Math.random() - 0.5).slice(0, 12));
+
+      // Reparto en rondas: 1 producto de cada tienda, luego otro de cada una…
+      const porTienda: Record<string, ProductoHome[]> = {};
+      mezclar(items).forEach((it) => { (porTienda[it.storeSlug] ||= []).push(it); });
+      const colas = mezclar(Object.values(porTienda));
+      const repartidos: ProductoHome[] = [];
+      while (repartidos.length < 12 && colas.some((c) => c.length)) {
+        for (const c of colas) {
+          const it = c.shift();
+          if (it && repartidos.length < 12) repartidos.push(it);
+        }
+      }
+      setComidaProducts(repartidos);
+
+      const esComida = (cat: string) => /restaur|comida|pizz|pollo|caf[eé]|helad|bebida|panader|pasteler|jugo|hamburg|chifa|parrilla|snack/.test(cat.toLowerCase());
+      const comida: TiendaComida[] = (dbStores || [])
+        .filter((st: any) => esComida(st.marketplace_category || ''))
+        .map((st: any) => ({
+          slug: st.slug,
+          name: st.name,
+          tagline: st.tagline || st.marketplace_category || '',
+          logo: st.logo_image || '',
+          externalUrl: st.external_url || undefined,
+          productos: mezclar((dbProducts || []).filter((p: any) => p.store === st.slug && p.image))
+            .slice(0, 3)
+            .map((p: any) => ({ id: p.id, name: p.name, price: Number(p.price) || 0, image: p.image })),
+        }))
+        .filter((t: TiendaComida) => t.productos.length > 0);
+      setTiendasComida(comida);
     });
   }, []);
 
@@ -414,7 +444,7 @@ export default function HomePage() {
 
       <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-9 lg:gap-12 pt-3 pb-9 lg:pt-8 lg:pb-12 px-container-margin lg:px-8">
 
-        {/* Lo que se pide en Market — productos reales del catalogo, justo
+        {/* Lo que se pide en Market — productos reales de todas las categorías, justo
             debajo de la tira de portales */}
         {comidaProducts.length > 0 && (
           <section className="flex flex-col gap-4">
@@ -508,6 +538,56 @@ export default function HomePage() {
             ))}
           </div>
         </section>
+
+        {/* Tiendas de comida — solo rubro comida/bebida, con su logo y sus productos */}
+        {tiendasComida.length > 0 && (
+          <section className="flex flex-col gap-4">
+            <div className="flex items-end justify-between gap-4">
+              <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">Tiendas de comida</h2>
+              <Link href="/market" className="group shrink-0 font-label-md text-[12px] text-primary flex items-center gap-0.5 whitespace-nowrap">
+                Ver todas
+                <span className="material-symbols-outlined text-[14px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
+              </Link>
+            </div>
+            <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
+              {tiendasComida.map((t) => (
+                <Link
+                  key={t.slug}
+                  href={t.externalUrl || `/${t.slug}`}
+                  target={t.externalUrl ? '_blank' : undefined}
+                  rel={t.externalUrl ? 'noreferrer' : undefined}
+                  className="group snap-start shrink-0 w-[290px] bg-white border border-surface-container-highest rounded-2xl overflow-hidden shadow-sm hover:border-primary/30 hover:shadow-md transition-all"
+                >
+                  <div className="flex items-center gap-3 p-3 border-b border-surface-container-high">
+                    <div className="w-11 h-11 rounded-xl overflow-hidden bg-surface-container-low border border-surface-container-highest flex items-center justify-center shrink-0">
+                      {t.logo ? (
+                        <img src={t.logo} alt={t.name} loading="lazy" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="font-headline-sm text-primary">{t.name.charAt(0).toUpperCase()}</span>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-headline-sm text-sm text-on-surface leading-tight line-clamp-1">{t.name}</h3>
+                      <p className="font-body-md text-[11px] text-secondary leading-tight line-clamp-1 mt-0.5">{t.tagline}</p>
+                    </div>
+                    <span className="material-symbols-outlined text-secondary/40 text-[18px] shrink-0 group-hover:translate-x-0.5 transition-transform">chevron_right</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 p-3">
+                    {t.productos.map((p) => (
+                      <div key={p.id} className="min-w-0">
+                        <div className="aspect-square rounded-lg overflow-hidden bg-surface-container-low">
+                          <img src={p.image} alt={p.name} loading="lazy" className="w-full h-full object-cover" />
+                        </div>
+                        <p className="font-label-md text-[10px] text-on-surface leading-tight line-clamp-1 mt-1">{p.name}</p>
+                        <p className="font-price-lg text-primary text-[11px]">S/ {p.price.toFixed(2)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Más de la Revista — SEO */}
         <section className="flex flex-col gap-4">
