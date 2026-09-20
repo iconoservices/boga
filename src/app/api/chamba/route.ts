@@ -23,7 +23,7 @@ export async function GET() {
   const BASE = 'id,puesto,negocio,tipo,zona,pago,wsp,ciudad,orden';
 
   const [jobsA, providers] = await Promise.all([
-    empleos(BASE + ',link', true),
+    empleos(BASE + ',link,img', true),
     supabase
       .from('service_providers')
       .select('id,nombre,oficio,zona,img,wsp,ciudad,orden')
@@ -32,7 +32,8 @@ export async function GET() {
       .order('created_at', { ascending: false }),
   ]);
   let jobs = jobsA;
-  if (jobs.error) jobs = await empleos(BASE, true);       // sin `link`
+  if (jobs.error) jobs = await empleos(BASE + ',link', true); // sin `img`
+  if (jobs.error) jobs = await empleos(BASE, true);       // sin `link` ni `img`
   if (jobs.error) jobs = await empleos(BASE, false);      // sin `link` ni `expira_el`
 
   if (jobs.error) console.error('[api/chamba] empleos', jobs.error.message);

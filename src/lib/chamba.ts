@@ -12,6 +12,8 @@ export type Empleo = {
   wsp: string;
   /** Enlace de la publicación / formulario. Si está, "Postular" lleva ahí. */
   link?: string;
+  /** Imagen (flyer) del aviso, opcional. */
+  img?: string;
 };
 
 export type Oficio = {
@@ -36,7 +38,7 @@ export async function fetchChamba(): Promise<{ empleos: Empleo[]; oficios: Ofici
       empleos: Array.isArray(jobs)
         ? jobs.map((r: Record<string, unknown>) => ({
             id: String(r.id), puesto: txt(r.puesto), negocio: txt(r.negocio), tipo: txt(r.tipo),
-            zona: txt(r.zona), pago: txt(r.pago), wsp: txt(r.wsp), link: txt(r.link),
+            zona: txt(r.zona), pago: txt(r.pago), wsp: txt(r.wsp), link: txt(r.link), img: txt(r.img),
           }))
         : [],
       oficios: Array.isArray(providers)

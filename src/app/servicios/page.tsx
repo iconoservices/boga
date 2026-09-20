@@ -125,9 +125,15 @@ export default function Servicios() {
             )}
             {empleos.map((e) => (
               <div key={e.id} className="bg-white rounded-2xl p-4 shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex items-center gap-4">
-                <div className="w-11 h-11 rounded-xl bg-primary-fixed flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-primary text-[20px]">work</span>
-                </div>
+                {e.img ? (
+                  <a href={e.img} target="_blank" rel="noopener noreferrer" aria-label={`Ver imagen del aviso de ${e.puesto}`} className="w-16 h-16 rounded-xl overflow-hidden bg-surface-container-low shrink-0 border border-surface-container-highest">
+                    <img src={e.img} alt={e.puesto} loading="lazy" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                  </a>
+                ) : (
+                  <div className="w-11 h-11 rounded-xl bg-primary-fixed flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-primary text-[20px]">work</span>
+                  </div>
+                )}
                 <div className="flex flex-col min-w-0 flex-1">
                   <span className="font-headline-sm text-sm text-on-surface leading-tight line-clamp-1">{e.puesto}</span>
                   <span className="text-secondary font-label-md text-[11px] line-clamp-1">{e.negocio} · {e.zona}</span>

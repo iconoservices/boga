@@ -1288,3 +1288,6 @@ UPDATE public.job_listings SET expira_el = created_at::date + 30 WHERE expira_el
 -- Enlace opcional del empleo (publicación, post, formulario…). Si está, el botón
 -- "Postular" de /servicios lleva ahí en vez de a WhatsApp.
 ALTER TABLE public.job_listings ADD COLUMN IF NOT EXISTS link TEXT;
+
+-- Imagen opcional del empleo (el flyer del aviso). Se muestra en la tarjeta.
+ALTER TABLE public.job_listings ADD COLUMN IF NOT EXISTS img TEXT;
