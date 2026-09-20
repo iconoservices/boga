@@ -67,109 +67,71 @@ function Barra({ vendidos, meta, fechaSorteo, grande = false }: { vendidos: numb
   );
 }
 
-function TarjetaSorteo({ s, etiqueta }: { s: Sorteo; etiqueta: string }) {
+// Tarjeta de sorteo: mismo formato que las tarjetas del inicio (tamaño fijo, foto arriba).
+function TarjetaSorteo({ s }: { s: Sorteo }) {
   return (
-    <article className="rounded-2xl bg-white/[0.06] border border-white/15 overflow-hidden grid grid-cols-1 md:grid-cols-[1fr_1.1fr] h-full">
-      <div className="relative aspect-[4/3] md:aspect-auto md:min-h-[300px] bg-gradient-to-br from-[#5b21b6] to-[#312e81]">
-        {s.img && <img src={s.img} alt={s.titulo} className="absolute inset-0 w-full h-full object-cover" />}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+    <article className="snap-start shrink-0 w-[270px] lg:w-[300px] rounded-2xl bg-white/[0.06] border border-white/15 overflow-hidden flex flex-col">
+      <div className="relative aspect-[4/3] bg-gradient-to-br from-[#5b21b6] to-[#312e81]">
+        {s.img && <img src={s.img} alt={s.titulo} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
         {s.patrocinador && (
-          <span className="absolute top-3 left-3 bg-black/55 backdrop-blur-sm text-white text-[11px] font-label-md px-2.5 py-1 rounded-full flex items-center gap-1">
-            <span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>storefront</span>Patrocina {s.patrocinador}
+          <span className="absolute top-2.5 left-2.5 max-w-[85%] truncate bg-black/55 backdrop-blur-sm text-white text-[10px] font-label-md px-2 py-0.5 rounded-full flex items-center gap-1">
+            <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>storefront</span>Patrocina {s.patrocinador}
+          </span>
+        )}
+        {s.precioTicket && (
+          <span className="absolute bottom-2.5 right-2.5 text-[#2a1155] text-[11px] font-headline-sm px-2.5 py-0.5 rounded-full" style={{ backgroundColor: LIMA }}>
+            Ticket {s.precioTicket}
           </span>
         )}
       </div>
-      <div className="p-4 lg:p-6 flex flex-col gap-3">
-        <span className="w-fit text-[10px] font-label-md uppercase tracking-wider px-2 py-0.5 rounded-full text-[#2a1155]" style={{ backgroundColor: LIMA }}>{etiqueta}</span>
-        <h2 className="font-headline-lg font-extrabold text-xl lg:text-3xl leading-tight">{s.titulo}</h2>
-        {s.descripcion && <p className="text-white/75 font-body-md text-sm leading-relaxed whitespace-pre-line line-clamp-3">{s.descripcion}</p>}
-        <Barra vendidos={s.vendidos} meta={s.meta} fechaSorteo={s.cierraEl} grande />
-        <ul className="text-white/80 font-body-md text-xs flex flex-col gap-1">
-          {s.comoParticipar && <li className="flex items-start gap-1.5"><span className="material-symbols-outlined text-[15px] mt-px" style={{ color: LIMA }}>confirmation_number</span>{s.comoParticipar}</li>}
-          {s.precioTicket && <li className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[15px]" style={{ color: LIMA }}>sell</span>Ticket: {s.precioTicket}</li>}
-          {s.cierraEl && s.meta && <li className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[15px]" style={{ color: LIMA }}>schedule</span>Cierra el {fechaCorta(s.cierraEl)} o al llenarse</li>}
-        </ul>
+      <div className="p-3.5 flex flex-col gap-2.5 flex-1">
+        <h3 className="font-headline-sm text-[15px] leading-tight line-clamp-2">{s.titulo}</h3>
+        <Barra vendidos={s.vendidos} meta={s.meta} fechaSorteo={s.cierraEl} />
+        {s.comoParticipar && (
+          <p className="text-white/65 font-body-md text-[11px] leading-snug flex items-start gap-1">
+            <span className="material-symbols-outlined text-[14px] shrink-0 mt-px" style={{ color: LIMA }}>confirmation_number</span>
+            <span className="line-clamp-2">{s.comoParticipar}</span>
+          </p>
+        )}
         <a
           href={waParticipar(s.titulo)}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-auto w-full sm:w-fit flex items-center justify-center gap-1.5 font-headline-sm text-sm text-[#2a1155] px-6 py-3 rounded-full active:scale-95 transition-transform"
+          className="mt-auto flex items-center justify-center gap-1 font-headline-sm text-[13px] text-[#2a1155] py-2.5 rounded-full active:scale-95 transition-transform"
           style={{ backgroundColor: LIMA }}
         >
           ¡Quiero participar!
-          <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+          <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
         </a>
       </div>
     </article>
   );
 }
 
-// Carrusel: una tarjeta grande por sorteo abierto. Se desliza con el dedo o con las
-// flechas, y los puntitos muestran en cuál vas. Con un solo sorteo no hay controles.
+// Carrusel como el de las tarjetas del inicio: tarjetas de tamaño fijo en una fila que
+// se desliza (la siguiente se asoma al costado). En pantalla grande hay flechas.
 function CarruselSorteos({ items }: { items: Sorteo[] }) {
   const pista = useRef<HTMLDivElement>(null);
-  const [actual, setActual] = useState(0);
-  const n = items.length;
-
-  const ir = (i: number) => {
-    const el = pista.current;
-    if (!el) return;
-    const destino = Math.max(0, Math.min(n - 1, i));
-    el.scrollTo({ left: destino * el.clientWidth, behavior: 'smooth' });
-  };
-
-  const alDeslizar = () => {
-    const el = pista.current;
-    if (el && el.clientWidth) setActual(Math.round(el.scrollLeft / el.clientWidth));
-  };
+  const mover = (dir: 1 | -1) => pista.current?.scrollBy({ left: dir * 316, behavior: 'smooth' });
 
   return (
     <div className="relative">
       <div
         ref={pista}
-        onScroll={alDeslizar}
-        className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar rounded-2xl"
+        className="flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x scroll-pl-container-margin lg:scroll-pl-0"
         style={{ scrollbarWidth: 'none' }}
       >
-        {items.map((s, i) => (
-          <div key={s.id} className="snap-start shrink-0 w-full">
-            <TarjetaSorteo s={s} etiqueta={n > 1 ? `Sorteo ${i + 1} de ${n}` : 'Sorteo destacado'} />
-          </div>
-        ))}
+        {items.map((s) => <TarjetaSorteo key={s.id} s={s} />)}
       </div>
-
-      {n > 1 && (
+      {items.length > 3 && (
         <>
-          <button
-            type="button"
-            aria-label="Sorteo anterior"
-            onClick={() => ir(actual - 1)}
-            disabled={actual === 0}
-            className="hidden md:flex absolute left-2 top-[150px] -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 text-[#3a1a6e] items-center justify-center shadow-lg disabled:opacity-30 active:scale-90 transition"
-          >
+          <button type="button" aria-label="Anterior" onClick={() => mover(-1)} className="hidden lg:flex absolute -left-4 top-[120px] w-9 h-9 rounded-full bg-white/90 text-[#3a1a6e] items-center justify-center shadow-lg active:scale-90 transition">
             <span className="material-symbols-outlined">chevron_left</span>
           </button>
-          <button
-            type="button"
-            aria-label="Sorteo siguiente"
-            onClick={() => ir(actual + 1)}
-            disabled={actual === n - 1}
-            className="hidden md:flex absolute right-2 top-[150px] -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 text-[#3a1a6e] items-center justify-center shadow-lg disabled:opacity-30 active:scale-90 transition"
-          >
+          <button type="button" aria-label="Siguiente" onClick={() => mover(1)} className="hidden lg:flex absolute -right-4 top-[120px] w-9 h-9 rounded-full bg-white/90 text-[#3a1a6e] items-center justify-center shadow-lg active:scale-90 transition">
             <span className="material-symbols-outlined">chevron_right</span>
           </button>
-          <div className="flex justify-center gap-1.5 mt-3">
-            {items.map((s, i) => (
-              <button
-                key={s.id}
-                type="button"
-                aria-label={`Ir al sorteo ${i + 1}`}
-                onClick={() => ir(i)}
-                className={`h-1.5 rounded-full transition-all ${i === actual ? 'w-6' : 'w-1.5 bg-white/35'}`}
-                style={i === actual ? { backgroundColor: LIMA } : undefined}
-              />
-            ))}
-          </div>
         </>
       )}
     </div>
