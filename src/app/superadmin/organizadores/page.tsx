@@ -153,7 +153,7 @@ export default function OrganizadoresAdmin() {
                   {ficha.logo
                     ? <img src={ficha.logo} alt="" className="w-14 h-14 rounded-full object-cover border border-[#c2c6d6]" />
                     : <span className="w-14 h-14 rounded-full border border-dashed border-[#c2c6d6] flex items-center justify-center text-[#c2c6d6] material-symbols-outlined">image</span>}
-                  <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && subirLogo(e.target.files[0])} />
+                  <input ref={fileRef} type="file" accept="image/*" className="sr-only" onChange={(e) => e.target.files?.[0] && subirLogo(e.target.files[0])} />
                   <button type="button" onClick={() => fileRef.current?.click()} disabled={subiendo} className="text-xs font-bold px-3 py-2 rounded-lg border border-[#c2c6d6] disabled:opacity-60">
                     {subiendo ? 'Subiendo…' : 'Subir logo'}
                   </button>

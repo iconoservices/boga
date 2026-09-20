@@ -347,7 +347,7 @@ export default function AdminRevista() {
                 <input value={form.img} onChange={(e) => set('img', e.target.value)} className={inp + ' flex-1 min-w-[200px]'} placeholder="Pegá la URL (ej. Wikimedia) o subí un archivo →" />
                 <label className="px-3 py-2 rounded-lg bg-white/10 text-sm cursor-pointer hover:bg-white/20 whitespace-nowrap">
                   {subiendo ? 'Subiendo…' : 'Subir archivo'}
-                  <input type="file" accept="image/*" className="hidden" disabled={subiendo}
+                  <input type="file" accept="image/*" className="sr-only" disabled={subiendo}
                     onChange={(e) => { const f = e.target.files?.[0]; if (f) subirFoto(f); }} />
                 </label>
               </div>

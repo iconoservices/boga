@@ -2344,7 +2344,7 @@ function AdminDashboard({ user }: { user: User }) {
                 ref={fileInputRef} 
                 onChange={handleFileChange} 
                 accept="image/*" 
-                className="hidden" 
+                className="sr-only" 
               />
               <div
                 onClick={() => fileInputRef.current?.click()}
@@ -2529,7 +2529,7 @@ function AdminDashboard({ user }: { user: User }) {
               {/* Hero Image Upload */}
               <div id="editor-portada" className="scroll-mt-4">
                 <label className="block text-sm font-bold text-gray-700 mb-2">Foto de Portada</label>
-                <input type="file" ref={storeHeroInputRef} onChange={e => { if (e.target.files?.[0]) { setStoreHeroFile(e.target.files[0]); setStoreHeroPreview(URL.createObjectURL(e.target.files[0])); }}} accept="image/*" className="hidden" />
+                <input type="file" ref={storeHeroInputRef} onChange={e => { if (e.target.files?.[0]) { setStoreHeroFile(e.target.files[0]); setStoreHeroPreview(URL.createObjectURL(e.target.files[0])); }}} accept="image/*" className="sr-only" />
                 <div
                   onClick={() => storeHeroInputRef.current?.click()}
                   tabIndex={0}
@@ -2566,7 +2566,7 @@ function AdminDashboard({ user }: { user: User }) {
               {/* Logo Upload */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Logo / Miniatura</label>
-                <input type="file" ref={storeLogoInputRef} onChange={e => { if (e.target.files?.[0]) { setStoreLogoFile(e.target.files[0]); setStoreLogoPreview(URL.createObjectURL(e.target.files[0])); }}} accept="image/*" className="hidden" />
+                <input type="file" ref={storeLogoInputRef} onChange={e => { if (e.target.files?.[0]) { setStoreLogoFile(e.target.files[0]); setStoreLogoPreview(URL.createObjectURL(e.target.files[0])); }}} accept="image/*" className="sr-only" />
                 <div className="flex items-center gap-4">
                   <div
                     onClick={() => storeLogoInputRef.current?.click()}

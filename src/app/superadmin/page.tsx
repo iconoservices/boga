@@ -377,7 +377,7 @@ function ImageUploadInput({ value, onChange, placeholder }: { value: string; onC
         onChange={(e) => onChange(e.target.value)}
         className="flex-1 bg-white border border-[#c2c6d6] rounded-lg px-2.5 py-1.5 text-xs text-[#191b23] outline-none focus:border-[#0058be] transition-colors"
       />
-      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+      <input ref={fileRef} type="file" accept="image/*" className="sr-only" onChange={handleFile} />
       <button
         type="button"
         onClick={() => fileRef.current?.click()}
@@ -2975,7 +2975,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                             <span className="material-symbols-outlined text-[#727785] text-[20px]">add_a_photo</span>
                           )}
                           <input
-                            type="file" accept="image/*" className="hidden"
+                            type="file" accept="image/*" className="sr-only"
                             onChange={(e) => {
                               const file = e.target.files?.[0];
                               if (!file) return;
@@ -3733,7 +3733,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                             <input
                               type="file"
                               accept="image/*"
-                              className="hidden"
+                              className="sr-only"
                               onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
@@ -3776,7 +3776,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           <input
                             type="file"
                             accept="image/*"
-                            className="hidden"
+                            className="sr-only"
                             onChange={(e) => {
                               const file = e.target.files?.[0];
                               if (file) {
@@ -4504,7 +4504,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                     <span className="material-symbols-outlined text-[#727785] text-[20px]">add_a_photo</span>
                   )}
                   <input
-                    type="file" accept="image/*" className="hidden"
+                    type="file" accept="image/*" className="sr-only"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;

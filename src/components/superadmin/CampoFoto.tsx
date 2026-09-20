@@ -56,9 +56,9 @@ export default function CampoFoto({ value, onChange, carpeta, inputClass }: {
           className={inputClass + ' flex-1 min-w-[200px]'}
           placeholder="Pega la dirección de la foto, o una imagen (Ctrl+V), o sube un archivo →"
         />
-        <label className="px-3 py-2 rounded-lg bg-surface-container text-xs font-bold cursor-pointer hover:bg-surface-container-high whitespace-nowrap">
+        <label className="relative px-3 py-2 rounded-lg bg-surface-container text-xs font-bold cursor-pointer hover:bg-surface-container-high whitespace-nowrap focus-within:ring-2 focus-within:ring-primary">
           {subiendo ? 'Subiendo…' : 'Subir foto'}
-          <input type="file" accept="image/*" className="hidden" disabled={subiendo}
+          <input type="file" accept="image/*" className="sr-only" aria-label="Subir foto desde tu equipo" disabled={subiendo}
             onChange={(e) => { const f = e.target.files?.[0]; if (f) subir(f); e.target.value = ''; }} />
         </label>
       </div>
