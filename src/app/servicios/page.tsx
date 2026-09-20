@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
-import { fetchChamba, haceCuanto } from '@/lib/chamba';
+import { fetchChamba, haceCuanto, fechaAviso } from '@/lib/chamba';
 
 // Servicios = tablero local de trabajo, oficios y empleos. Por ahora es un DIRECTORIO curado a mano
 // (sin tabla en Supabase todavía): gente que ofrece su oficio y avisos de
@@ -157,10 +157,15 @@ export default function Servicios() {
                     <span className="bg-surface-container-low text-secondary text-[10px] font-label-md px-2 py-0.5 rounded-full border border-surface-container-highest">{e.tipo}</span>
                     <span className="bg-primary-fixed text-primary text-[10px] font-label-md px-2 py-0.5 rounded-full">{e.pago}</span>
                   </div>
-                  {haceCuanto(e.publicado) && (
-                    <span className="text-secondary/70 font-label-md text-[10px] flex items-center gap-1 mt-1.5">
-                      <span className="material-symbols-outlined text-[12px]">schedule</span>{haceCuanto(e.publicado)}
-                    </span>
+                  {(haceCuanto(e.subido) || fechaAviso(e.publicado)) && (
+                    <div className="text-secondary/70 font-label-md text-[10px] flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1.5">
+                      {haceCuanto(e.subido) && (
+                        <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[12px]">schedule</span>{haceCuanto(e.subido)}</span>
+                      )}
+                      {fechaAviso(e.publicado) && (
+                        <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[12px]">event</span>{fechaAviso(e.publicado)}</span>
+                      )}
+                    </div>
                   )}
                   {e.descripcion && <DescripcionEmpleo texto={e.descripcion} />}
                 </div>

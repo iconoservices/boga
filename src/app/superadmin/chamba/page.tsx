@@ -370,9 +370,9 @@ export default function ChambaAdmin() {
                 <input value={fichaE.link} onChange={(e) => setFichaE({ ...fichaE, link: e.target.value })} className={campo} placeholder="https://… publicación, post o formulario" /></label>
               <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Descripción y requisitos (opcional)
                 <textarea value={fichaE.descripcion} onChange={(e) => setFichaE({ ...fichaE, descripcion: e.target.value })} rows={6} className={campo} placeholder={"Funciones, requisitos, beneficios, horario…\n• Secundaria completa\n• Experiencia mínima de 6 meses"} /></label>
-              <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Fecha de publicación del aviso (opcional)
+              <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Fecha del aviso original (opcional)
                 <input type="date" value={fichaE.publicado} onChange={(e) => setFichaE({ ...fichaE, publicado: e.target.value })} className={campo} />
-                <span className="font-normal text-[11px]">Si la dejas vacía, se usa el día en que lo subes. Ponla si el aviso original es más viejo.</span></label>
+                <span className="font-normal text-[11px]">Sale en la tarjeta como «Aviso del 12 sep», junto a «Subido hace N días» (esa sale siempre). Ponla si el aviso original es más viejo.</span></label>
               <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Correo para enviar el CV (opcional)
                 <input type="email" value={fichaE.email} onChange={(e) => setFichaE({ ...fichaE, email: e.target.value })} className={campo} placeholder="rrhh@empresa.com" /></label>
               <CampoFoto value={fichaE.img} onChange={(url) => setFichaE({ ...fichaE, img: url })} carpeta="empleos" inputClass={campo} />
