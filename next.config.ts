@@ -66,6 +66,9 @@ const nextConfig: NextConfig = {
         destination: '/trabajos',
         permanent: true,
       },
+      // Otras formas de escribirla a mano.
+      { source: '/trabajo', destination: '/trabajos', permanent: true },
+      { source: '/empleos', destination: '/trabajos', permanent: true },
     ];
   },
 };
