@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { refrescarPublico } from '@/lib/refrescar';
+import { hoyLima } from '@/lib/fechaLima';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import { CIUDADES } from '@/lib/ciudades';
 import CampoFoto from '@/components/superadmin/CampoFoto';
@@ -424,7 +425,7 @@ export default function EventosAdmin() {
             return (
             <div className="flex flex-col gap-2">
               {evs.map((e) => {
-                const vencido = e.fecha && e.fecha < new Date().toISOString().slice(0, 10);
+                const vencido = e.fecha && e.fecha < hoyLima();
                 return (
                 <div key={`e-${e.id}`} className={`bg-surface-container-lowest border border-surface-container-highest rounded-xl p-3 flex flex-wrap items-center gap-3 ${vencido ? 'opacity-60' : ''}`}>
                   <span className={`w-2 h-2 rounded-full shrink-0 ${e.status === 'activo' ? 'bg-primary' : 'bg-surface-container-highest'}`} />

@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { refrescarPublico } from '@/lib/refrescar';
+import { hoyLima, hoyLimaMas } from '@/lib/fechaLima';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import { CIUDADES } from '@/lib/ciudades';
 import CampoFoto from '@/components/superadmin/CampoFoto';
@@ -193,8 +194,7 @@ export default function ChambaAdmin() {
 
   // Renovar: el aviso vuelve a durar 30 días desde hoy.
   const renovarE = async (r: Fila) => {
-    const nueva = new Date(); nueva.setDate(nueva.getDate() + 30);
-    const { error } = await supabase.from('job_listings').update({ expira_el: nueva.toISOString().slice(0, 10), status: 'activo' }).eq('id', r.id);
+    const { error } = await supabase.from('job_listings').update({ expira_el: hoyLimaMas(30), status: 'activo' }).eq('id', r.id);
     setMsg(error ? `Error: ${error.message}` : 'Empleo renovado por 30 días.');
     publicar();
   };
@@ -212,7 +212,7 @@ export default function ChambaAdmin() {
   const ofs = vista === 'empleos' ? [] : oficios.filter((r) => coincide(busqueda, r.nombre, r.oficio, r.zona, r.ciudad));
 
   const botones = 'text-xs font-bold px-3 py-1.5 rounded-lg';
-  const hoyClave = new Date().toISOString().slice(0, 10);
+  const hoyClave = hoyLima();
   // "Vence en N días" / "Vencido" a partir de expira_el (YYYY-MM-DD). Sin fecha, no vence.
   const vencimiento = (r: Fila) => {
     if (!r.expira_el) return null;

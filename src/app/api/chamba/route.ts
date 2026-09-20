@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { hoyLima } from '@/lib/fechaLima';
 
 // Chamba y oficios (/servicios): empleos + gente que ofrece su oficio, en UN
 // endpoint cacheado. La página y el inicio lo consumen en vez de pegarle a
@@ -11,7 +12,7 @@ export const revalidate = 300;
 export async function GET() {
   // Un empleo con `expira_el` se oculta solo después de esa fecha (30 días desde
   // que se publica; se renueva desde el superadmin). Sin fecha, no vence.
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = hoyLima();
 
   // `expira_el` y `link` son columnas nuevas: si todavía no se corrió el SQL, la
   // consulta falla y se repite con menos columnas para no dejar la lista vacía.

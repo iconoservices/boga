@@ -1,3 +1,5 @@
+import { fechaLima, hoyLima } from '@/lib/fechaLima';
+
 // Chamba y oficios (/servicios). La página los lee del endpoint cacheado
 // /api/chamba (no de Supabase directo). Si las tablas `job_listings` y
 // `service_providers` todavía están vacías, la página cae a los de muestra.
@@ -47,7 +49,7 @@ export async function fetchChamba(): Promise<{ empleos: Empleo[]; oficios: Ofici
         ? jobs.map((r: Record<string, unknown>) => ({
             id: String(r.id), puesto: txt(r.puesto), negocio: txt(r.negocio), tipo: txt(r.tipo),
             zona: txt(r.zona), pago: txt(r.pago), wsp: txt(r.wsp), link: txt(r.link), img: txt(r.img), descripcion: txt(r.descripcion), email: txt(r.email),
-            subido: txt(r.created_at).slice(0, 10),
+            subido: txt(r.created_at) ? fechaLima(txt(r.created_at)) : '',
             publicado: txt(r.publicado_el).slice(0, 10),
           }))
         : [],
@@ -75,8 +77,8 @@ function partes(fecha?: string): { y: number; m: number; d: number } | null {
 export function haceCuanto(fecha?: string): string {
   const f = partes(fecha);
   if (!f) return '';
-  const hoy = new Date();
-  const dias = Math.round((Date.UTC(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()) - Date.UTC(f.y, f.m - 1, f.d)) / 86400000);
+  const [hy, hm, hd] = hoyLima().split('-').map(Number);
+  const dias = Math.round((Date.UTC(hy, hm - 1, hd) - Date.UTC(f.y, f.m - 1, f.d)) / 86400000);
   if (dias <= 0) return 'Subido hoy';
   if (dias === 1) return 'Subido ayer';
   if (dias < 30) return `Subido hace ${dias} días`;

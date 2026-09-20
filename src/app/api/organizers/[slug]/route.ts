@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { hoyLima } from '@/lib/fechaLima';
 
 // Espacio /org/<slug>: el organizador + sus proximas noches (eventos activos
 // ligados por organizer_id que todavia no pasaron). Cacheado.
@@ -20,7 +21,7 @@ export async function GET(
 
   if (!org) return NextResponse.json({ organizer: null, noches: [] }, { status: 404 });
 
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = hoyLima();
   const { data: noches, error } = await supabase
     .from('events')
     .select('id,titulo,dia,mes,fecha,precio,reservable,aforo')
