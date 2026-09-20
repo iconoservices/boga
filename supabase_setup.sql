@@ -1295,3 +1295,7 @@ ALTER TABLE public.job_listings ADD COLUMN IF NOT EXISTS img TEXT;
 -- Descripción (requisitos, funciones, beneficios) y correo de contacto del empleo.
 ALTER TABLE public.job_listings ADD COLUMN IF NOT EXISTS descripcion TEXT;
 ALTER TABLE public.job_listings ADD COLUMN IF NOT EXISTS email TEXT;
+
+-- Fecha de publicación del aviso (la real, si se conoce). Si queda vacía, la
+-- tarjeta usa el día en que se subió (created_at). Alimenta "Publicado hace N días".
+ALTER TABLE public.job_listings ADD COLUMN IF NOT EXISTS publicado_el DATE;

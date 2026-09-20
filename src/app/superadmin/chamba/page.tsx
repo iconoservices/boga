@@ -24,7 +24,7 @@ type Fila = Record<string, any>;
 
 const EMPLEO_VACIO = {
   id: null as string | null,
-  puesto: '', negocio: '', tipo: 'Tiempo completo', zona: '', pago: '', wsp: '', link: '', link_orig: '', img: '', img_orig: '', descripcion: '', descripcion_orig: '', email: '', email_orig: '',
+  puesto: '', negocio: '', tipo: 'Tiempo completo', zona: '', pago: '', wsp: '', link: '', link_orig: '', img: '', img_orig: '', descripcion: '', descripcion_orig: '', email: '', email_orig: '', publicado: '', publicado_orig: '',
   ciudad: 'pucallpa', orden: 0, status: 'activo',
 };
 type FichaEmpleo = typeof EMPLEO_VACIO;
@@ -82,11 +82,17 @@ export default function ChambaAdmin() {
     const pedirEmpleos = (cols: string) => supabase.from('job_listings').select(cols)
       .order('orden', { ascending: true }).order('created_at', { ascending: false });
     // `expira_el` y `link` son columnas nuevas: si todavía no existen, se pide con menos.
-    let e: { data: any[] | null } = await pedirEmpleos(colsE + ',expira_el,link,img,descripcion,email') as any;
-    if (!e.data) e = await pedirEmpleos(colsE + ',expira_el,link,img') as any;
-    if (!e.data) e = await pedirEmpleos(colsE + ',expira_el,link') as any;
-    if (!e.data) e = await pedirEmpleos(colsE + ',expira_el') as any;
-    if (!e.data) e = await pedirEmpleos(colsE) as any;
+    // Columnas nuevas (expira_el, link, img, descripcion, email, publicado_el): se pide
+    // todo y, si falta alguna, se va probando con menos.
+    const extras = [
+      ',expira_el,link,img,descripcion,email,publicado_el', ',expira_el,link,img,descripcion,email',
+      ',expira_el,link,img', ',expira_el,link', ',expira_el', '',
+    ];
+    let e: { data: any[] | null } = { data: null };
+    for (const x of extras) {
+      e = await pedirEmpleos(colsE + ',created_at' + x) as any;
+      if (e.data) break;
+    }
     const o = await supabase.from('service_providers').select('id,nombre,oficio,zona,img,wsp,ciudad,orden,status')
       .order('orden', { ascending: true }).order('created_at', { ascending: false });
     setEmpleos(e.data ?? []);
@@ -112,7 +118,7 @@ export default function ChambaAdmin() {
   const editarE = (r: Fila) => {
     setFichaE({
       id: r.id, puesto: r.puesto ?? '', negocio: r.negocio ?? '', tipo: r.tipo ?? 'Tiempo completo', zona: r.zona ?? '',
-      pago: r.pago ?? '', wsp: r.wsp ?? '', link: r.link ?? '', link_orig: r.link ?? '', img: r.img ?? '', img_orig: r.img ?? '', descripcion: r.descripcion ?? '', descripcion_orig: r.descripcion ?? '', email: r.email ?? '', email_orig: r.email ?? '',
+      pago: r.pago ?? '', wsp: r.wsp ?? '', link: r.link ?? '', link_orig: r.link ?? '', img: r.img ?? '', img_orig: r.img ?? '', descripcion: r.descripcion ?? '', descripcion_orig: r.descripcion ?? '', email: r.email ?? '', email_orig: r.email ?? '', publicado: r.publicado_el ?? '', publicado_orig: r.publicado_el ?? '',
       ciudad: r.ciudad ?? 'pucallpa', orden: r.orden ?? 0, status: r.status ?? 'activo',
     });
     setMsg(''); setModalE(true);
@@ -138,6 +144,7 @@ export default function ChambaAdmin() {
       ...(fichaE.img || fichaE.img_orig ? { img: fichaE.img || null } : {}),
       ...(fichaE.descripcion || fichaE.descripcion_orig ? { descripcion: fichaE.descripcion.trim() || null } : {}),
       ...(fichaE.email || fichaE.email_orig ? { email: fichaE.email.trim() || null } : {}),
+      ...(fichaE.publicado || fichaE.publicado_orig ? { publicado_el: fichaE.publicado || null } : {}),
     };
     const res = fichaE.id
       ? await supabase.from('job_listings').update(payload).eq('id', fichaE.id)
@@ -363,6 +370,9 @@ export default function ChambaAdmin() {
                 <input value={fichaE.link} onChange={(e) => setFichaE({ ...fichaE, link: e.target.value })} className={campo} placeholder="https://… publicación, post o formulario" /></label>
               <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Descripción y requisitos (opcional)
                 <textarea value={fichaE.descripcion} onChange={(e) => setFichaE({ ...fichaE, descripcion: e.target.value })} rows={6} className={campo} placeholder={"Funciones, requisitos, beneficios, horario…\n• Secundaria completa\n• Experiencia mínima de 6 meses"} /></label>
+              <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Fecha de publicación del aviso (opcional)
+                <input type="date" value={fichaE.publicado} onChange={(e) => setFichaE({ ...fichaE, publicado: e.target.value })} className={campo} />
+                <span className="font-normal text-[11px]">Si la dejas vacía, se usa el día en que lo subes. Ponla si el aviso original es más viejo.</span></label>
               <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Correo para enviar el CV (opcional)
                 <input type="email" value={fichaE.email} onChange={(e) => setFichaE({ ...fichaE, email: e.target.value })} className={campo} placeholder="rrhh@empresa.com" /></label>
               <CampoFoto value={fichaE.img} onChange={(url) => setFichaE({ ...fichaE, img: url })} carpeta="empleos" inputClass={campo} />
