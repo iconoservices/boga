@@ -32,46 +32,6 @@ const ICONO_VENTA: Record<TipoVenta, string> = {
   'Chacra': 'agriculture',
 };
 
-// Seed de "En Venta" — se usa mientras `sale_listings` esté vacía.
-const VENTAS_SEED: AvisoVenta[] = [
-  {
-    id: 'v1', tipo: 'Terreno', titulo: 'Terreno 200 m² con título de propiedad',
-    zona: 'Campo Verde', precio: 45000, moneda: 'PEN', area: '200 m²',
-    extras: ['Título saneado', 'Acceso asfaltado'], wsp: '51963000000',
-    img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&q=80',
-  },
-  {
-    id: 'v2', tipo: 'Casa', titulo: 'Casa de 2 pisos — 3 dormitorios, cochera',
-    zona: 'Yarinacocha', precio: 38000, moneda: 'USD', area: '180 m²',
-    extras: ['Agua y luz', 'Cochera', 'Jardín'], wsp: '51963000000',
-    img: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&q=80',
-  },
-  {
-    id: 'v3', tipo: 'Lote', titulo: 'Lote esquinero 150 m² en urbanización nueva',
-    zona: 'Manantay', precio: 28000, moneda: 'PEN', area: '150 m²',
-    extras: ['Urbanización cerrada', 'Servicios habilitados'], wsp: '51963000000',
-    img: 'https://images.unsplash.com/photo-1625602812206-5ec545ca1231?w=600&q=80',
-  },
-  {
-    id: 'v4', tipo: 'Chacra', titulo: 'Chacra de 5 hectáreas con plantación de cacao',
-    zona: 'Irazola', precio: 120000, moneda: 'PEN', area: '5 ha',
-    extras: ['Cacao en producción', 'Casa de madera', 'Agua de pozo'], wsp: '51963000000',
-    img: 'https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=600&q=80',
-  },
-  {
-    id: 'v5', tipo: 'Terreno', titulo: 'Terreno 400 m² a 5 min de la carretera',
-    zona: 'Callería', precio: 60000, moneda: 'PEN', area: '400 m²',
-    extras: ['Título de propiedad', 'Plano catastral'], wsp: '51963000000',
-    img: 'https://images.unsplash.com/photo-1628624747186-a941c476b7ef?w=600&q=80',
-  },
-  {
-    id: 'v6', tipo: 'Casa', titulo: 'Mini-casa prefabricada lista para habitar',
-    zona: 'Centro', precio: 15000, moneda: 'USD', area: '60 m²',
-    extras: ['Amoblada', 'Baño propio'], wsp: '51963000000',
-    img: 'https://images.unsplash.com/photo-1449844908441-8829872d2607?w=600&q=80',
-  },
-];
-
 function waLink(numero: string, texto: string) {
   return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
 }
@@ -83,15 +43,16 @@ export default function Inmuebles() {
   const [filtroVta, setFiltroVta] = useState<TipoVenta | 'Todos'>('Todos');
   const [avisos, setAvisos] = useState<Aviso[]>([]);
   const [avisoAbierto, setAvisoAbierto] = useState<Aviso | null>(null);
-  const [ventas, setVentas] = useState<AvisoVenta[]>(VENTAS_SEED);
+  const [ventas, setVentas] = useState<AvisoVenta[]>([]);
+  const [cargado, setCargado] = useState(false);
   const [ventaAbierta, setVentaAbierta] = useState<AvisoVenta | null>(null);
 
   useEffect(() => {
-    fetchAlquileres().then((rows) => {
-      if (rows.length > 0) setAvisos(rows);
-    });
-    fetchVentas().then((rows) => {
-      if (rows.length > 0) setVentas(rows);
+    // Solo avisos reales (sin ejemplos): si no hay ninguno, se muestra un aviso.
+    Promise.all([fetchAlquileres(), fetchVentas()]).then(([alq, vta]) => {
+      setAvisos(alq);
+      setVentas(vta);
+      setCargado(true);
     });
   }, []);
 
@@ -189,6 +150,13 @@ export default function Inmuebles() {
 
             {/* Grilla de avisos de alquiler */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {cargado && listaAlq.length === 0 && (
+                <div className="col-span-full bg-white rounded-2xl border border-dashed border-surface-container-highest p-8 text-center">
+                  <span className="material-symbols-outlined text-secondary/40 text-[32px]">bed</span>
+                  <p className="font-headline-sm text-sm text-on-surface mt-2">Todavía no hay avisos de alquiler publicados</p>
+                  <p className="text-secondary font-body-md text-xs mt-1">Publica el tuyo gratis con el botón de arriba.</p>
+                </div>
+              )}
               {listaAlq.map((a) => (
                 <div
                   key={a.id}
@@ -270,6 +238,13 @@ export default function Inmuebles() {
 
             {/* Grilla de avisos de venta */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {cargado && listaVta.length === 0 && (
+                <div className="col-span-full bg-white rounded-2xl border border-dashed border-surface-container-highest p-8 text-center">
+                  <span className="material-symbols-outlined text-secondary/40 text-[32px]">sell</span>
+                  <p className="font-headline-sm text-sm text-on-surface mt-2">Todavía no hay avisos de venta publicados</p>
+                  <p className="text-secondary font-body-md text-xs mt-1">Publica el tuyo gratis con el botón de arriba.</p>
+                </div>
+              )}
               {listaVta.map((v) => (
                 <div
                   key={v.id}

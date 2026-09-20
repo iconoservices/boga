@@ -68,31 +68,6 @@ const GUIA_PUCALLPA = [
   { href: '/market',      icon: 'storefront',   titulo: 'Qué comprar',    sub: 'Pescado y carne fresca, abarrotes y artesanía',     color: '#D97742', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Feria_Artesanal_por_el_Mes_Patrio%2C%2C_estudiantes_observando_las_l%C3%ADneas_shipibas.jpg/500px-Feria_Artesanal_por_el_Mes_Patrio%2C%2C_estudiantes_observando_las_l%C3%ADneas_shipibas.jpg' },
 ];
 
-// Peek: Eventos / turismo → "¿Qué hacer en Pucallpa hoy?"
-const EXPERIENCES = [
-  { id: 'yarina',   title: 'Laguna de Yarinacocha',          tag: 'Medio día',    from: 'S/ 25', img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&q=80' },
-  { id: 'shipibo',  title: 'Comunidad Shipiba San Francisco', tag: '3–4 h',        from: 'S/ 40', img: 'https://images.unsplash.com/photo-1516214104703-d870798883c5?w=600&q=80' },
-  { id: 'boqueron', title: 'Boquerón del Padre Abad',         tag: 'Día completo', from: 'S/ 90', img: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=600&q=80' },
-  { id: 'jardin',   title: 'Jardín Botánico y Serpentario',   tag: '2 h',          from: 'S/ 15', img: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&q=80' },
-  { id: 'malecon',  title: 'Atardecer en el Malecón',         tag: 'Gratis',       from: 'S/ 0',  img: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=600&q=80' },
-];
-
-// Peek: Inmuebles.
-const INMUEBLES_PEEK = [
-  { id: 'al1', titulo: 'Habitación amoblada con baño propio',  zona: 'Callería',    precio: 'S/ 450', tag: 'Alquiler', img: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&q=80' },
-  { id: 'al2', titulo: 'Mini-departamento para 1–2 personas',  zona: 'Yarinacocha', precio: 'S/ 800', tag: 'Alquiler', img: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&q=80' },
-  { id: 'al3', titulo: 'Terreno 200 m² con título de propiedad', zona: 'Campo Verde', precio: 'S/ 45,000', tag: 'Venta', img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&q=80' },
-];
-
-// SEO: notas de la revista.
-const SELVA_NOTES = [
-  { id: 'tacacho',   cat: 'Huariques',    title: 'Los 3 huariques secretos para el mejor tacacho de Pucallpa', img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=80' },
-  { id: 'yarina',    cat: 'Curiosidades', title: '¿Sabías por qué la laguna de Yarinacocha se llama así?',      img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&q=80' },
-  { id: 'domingo',   cat: 'Turismo',      title: 'Qué hacer un domingo en Pucallpa con menos de S/ 50',         img: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=600&q=80' },
-  { id: 'contamana', cat: 'Itinerarios',  title: 'Ruta de fin de semana: de Pucallpa a Contamana',              img: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=600&q=80' },
-  { id: 'mitos',     cat: 'Curiosidades', title: 'Mitos de la selva que probablemente no sabías',               img: 'https://images.unsplash.com/photo-1516214104703-d870798883c5?w=600&q=80' },
-];
-
 function SectionHead({ title, href, cta = 'Ver todo' }: { title: string; href: string; cta?: string }) {
   return (
     <div className="flex items-end justify-between">
@@ -240,7 +215,7 @@ export default function HomePage() {
 
   // "Qué hacer en Pucallpa hoy" jala de las dos fuentes reales de /eventos:
   // la agenda (events) y los lugares para visitar (lugares), mezcladas en
-  // una sola tira. Si el admin todavía no cargó ninguna, cae a EXPERIENCES.
+  // una sola tira. Si el admin todavía no cargó ninguna, la sección no se muestra.
   const [eventosHome, setEventosHome] = useState<Awaited<ReturnType<typeof fetchEventos>>>([]);
   const [lugaresHome, setLugaresHome] = useState<Awaited<ReturnType<typeof fetchLugares>>>([]);
   useEffect(() => { fetchEventos().then(setEventosHome); }, []);
@@ -281,7 +256,7 @@ export default function HomePage() {
     });
   }, []);
 
-  const [inmueblesHome, setInmueblesHome] = useState(INMUEBLES_PEEK);
+  const [inmueblesHome, setInmueblesHome] = useState<{ id: string; titulo: string; zona: string; precio: string; tag: string; img: string }[]>([]);
   useEffect(() => {
     Promise.all([fetchAlquileres(), fetchVentas()]).then(([alq, vta]) => {
       const precio = (n: number, moneda: string) =>
@@ -290,12 +265,12 @@ export default function HomePage() {
         ...alq.slice(0, 4).map((a) => ({
           id: `alq-${a.id}`, titulo: a.titulo, zona: a.zona,
           precio: precio(a.precio, 'PEN'), tag: a.tipo === 'Pensión' ? 'Hotel' : a.tipo,
-          img: a.img || INMUEBLES_PEEK[0].img,
+          img: a.img || '',
         })),
         ...vta.slice(0, 2).map((v) => ({
           id: `vta-${v.id}`, titulo: v.titulo, zona: v.zona,
           precio: precio(v.precio, v.moneda), tag: 'Venta',
-          img: v.img || INMUEBLES_PEEK[2].img,
+          img: v.img || '',
         })),
       ];
       if (reales.length > 0) setInmueblesHome(reales);
@@ -386,7 +361,7 @@ export default function HomePage() {
 
   const masRevista = notasRevista.length
     ? notasRevista.slice(0, 8).map((n) => ({ key: n.slug, href: `/revista/${n.slug}`, cat: n.kicker, title: n.titulo, img: n.img }))
-    : SELVA_NOTES.map((n) => ({ key: n.id, href: '/revista', cat: n.cat, title: n.title, img: n.img }));
+    : [];
 
   const queHacer = eventosHome.length || lugaresHome.length
     ? [
@@ -401,7 +376,7 @@ export default function HomePage() {
           meta: 'Para visitar',
         })),
       ]
-    : EXPERIENCES.map((e) => ({ id: e.id, title: e.title, img: e.img, tag: e.tag, meta: `Desde ${e.from}` }));
+    : [];
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -536,6 +511,7 @@ export default function HomePage() {
         </section>
 
         {/* Qué hacer en Pucallpa hoy */}
+        {queHacer.length > 0 && (
         <section className="flex flex-col gap-4">
           <SectionHead title="Qué hacer en Pucallpa hoy" href="/eventos" cta="Ver agenda" />
           <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
@@ -555,6 +531,7 @@ export default function HomePage() {
             ))}
           </div>
         </section>
+        )}
 
         {/* Tiendas de comida — solo rubro comida/bebida, con su logo y sus productos */}
         {tiendasComida.length > 0 && (
@@ -607,6 +584,7 @@ export default function HomePage() {
         )}
 
         {/* Más de la Revista — SEO */}
+        {masRevista.length > 0 && (
         <section className="flex flex-col gap-4">
           <SectionHead title="Más de la Revista" href="/revista" cta="Ver revista" />
           <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
@@ -622,6 +600,7 @@ export default function HomePage() {
             ))}
           </div>
         </section>
+        )}
 
         {/* Trabajos y oficios — solo datos reales; sin ninguno, no se muestra */}
         {(empleosHome.length > 0 || oficiosHome.length > 0) && (
@@ -684,14 +663,15 @@ export default function HomePage() {
         </section>
         )}
 
-        {/* Dónde quedarte — Inmuebles (avisos reales; demo si aún no hay) */}
+        {/* Dónde quedarte — solo avisos reales; sin ninguno, no se muestra */}
+        {inmueblesHome.length > 0 && (
         <section className="flex flex-col gap-4">
           <SectionHead title="Dónde quedarte" href="/inmuebles" cta="Ver inmuebles" />
           <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
             {inmueblesHome.map((a) => (
               <Link href="/inmuebles" key={a.id} className="min-w-[220px] w-[220px] lg:min-w-[260px] lg:w-[260px] bg-white border border-surface-container-highest overflow-hidden shadow-sm rounded-2xl snap-start group flex flex-col">
                 <div className="relative h-32 overflow-hidden bg-surface-container-low">
-                  <img src={a.img} alt={a.titulo} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  {a.img ? <img src={a.img} alt={a.titulo} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center text-secondary/30"><span className="material-symbols-outlined text-[36px]">real_estate_agent</span></div>}
                   <span className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-label-md px-2 py-0.5 rounded-full uppercase tracking-wider">{a.tag}</span>
                   <span className="absolute bottom-2 right-2 bg-white text-primary font-price-lg text-sm px-2 py-0.5 shadow-sm">{a.precio}</span>
                 </div>
@@ -705,6 +685,7 @@ export default function HomePage() {
             ))}
           </div>
         </section>
+        )}
 
         {/* Sorteos — solo si hay alguno real abierto; mismas tarjetas de carrusel que /sorteos */}
         {sorteosHome.length > 0 && (
