@@ -27,12 +27,42 @@ const VACIA = {
 };
 type Ficha = typeof VACIA;
 
+// El estado se muestra como Activo / Desactivado (interruptor). "borrador" y "oculto"
+// cuentan como Desactivado; "sorteado" es el final y no se puede cambiar.
 const ESTADOS: Record<string, { label: string; clase: string }> = {
-  borrador: { label: 'Borrador', clase: 'bg-surface-container text-secondary' },
-  abierto: { label: 'Abierto', clase: 'bg-emerald-100 text-emerald-700' },
+  borrador: { label: 'Desactivado', clase: 'bg-surface-container text-secondary' },
+  abierto: { label: 'Activo', clase: 'bg-emerald-100 text-emerald-700' },
   sorteado: { label: 'Sorteado', clase: 'bg-amber-100 text-amber-800' },
-  oculto: { label: 'Oculto', clase: 'bg-red-100 text-red-700' },
+  oculto: { label: 'Desactivado', clase: 'bg-surface-container text-secondary' },
 };
+
+function Interruptor({ activo, onChange, disabled }: { activo: boolean; onChange: () => void; disabled?: boolean }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={activo}
+      disabled={disabled}
+      onClick={onChange}
+      className={`relative shrink-0 w-11 h-6 rounded-full transition-colors disabled:opacity-50 ${activo ? 'bg-primary' : 'bg-surface-container-highest'}`}
+    >
+      <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${activo ? 'translate-x-5' : ''}`} />
+    </button>
+  );
+}
+
+// Mensaje de WhatsApp para entregarle sus tickets a un participante.
+function mensajeTickets(rifa: Record<string, any>, nombre: string, numeros: number[]) {
+  const lista = numeros.length === 1 ? `el ticket N.º ${numeros[0]}` : `los tickets N.º ${numeros.join(', ')}`;
+  const cuando = rifa.meta_tickets
+    ? 'El sorteo se hace solo cuando se llenen todos los tickets.'
+    : rifa.cierra_el ? `El sorteo será el ${rifa.cierra_el.split('-').reverse().join('/')}.` : '';
+  return `¡Hola ${nombre.split(' ')[0]}! Ya registramos ${lista} a tu nombre en el sorteo «${rifa.titulo}»${rifa.patrocinador ? ` (patrocina ${rifa.patrocinador})` : ''}. ${cuando} ¡Mucha suerte! 🍀 — BogaHub`.replace(/\s+/g, ' ').trim();
+}
+function enlaceWhatsapp(numero: string, texto: string) {
+  return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
+}
+
 
 function coincide(q: string, ...campos: unknown[]) {
   const norm = (t: unknown) => String(t ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -59,6 +89,7 @@ export default function SorteosAdmin() {
   const [nuevo, setNuevo] = useState({ nombre: '', whatsapp: '', nota: '', cantidad: 1 });
   const [trabajando, setTrabajando] = useState(false);
   const [msgTickets, setMsgTickets] = useState('');
+  const [ultimoLote, setUltimoLote] = useState<{ nombre: string; whatsapp: string; numeros: number[] } | null>(null);
 
   const recargar = useCallback(async () => {
     setCargandoDatos(true);
@@ -150,7 +181,7 @@ export default function SorteosAdmin() {
   };
 
   const abrirTickets = async (r: Fila) => {
-    setVer(r); setMsgTickets(''); setNuevo({ nombre: '', whatsapp: '', nota: '', cantidad: 1 });
+    setVer(r); setMsgTickets(''); setUltimoLote(null); setNuevo({ nombre: '', whatsapp: '', nota: '', cantidad: 1 });
     await cargarTickets(r.id);
   };
 
@@ -165,6 +196,7 @@ export default function SorteosAdmin() {
           ? `🎉 ¡Se llenó! Sorteo hecho: ganó el ticket N.º ${r.ganador?.numero} (${r.ganador?.nombre}).`
           : `Listo: ${r.agregados} ticket(s) — N.º ${r.numeros.join(', ')}.`,
       );
+      setUltimoLote(nuevo.whatsapp.replace(/\D/g, '') ? { nombre: nuevo.nombre, whatsapp: nuevo.whatsapp.replace(/\D/g, ''), numeros: r.numeros } : null);
       setNuevo({ nombre: '', whatsapp: '', nota: '', cantidad: 1 });
       await cargarTickets(ver.id);
       const { data } = await supabase.from('raffles').select('*').eq('id', ver.id).single();
@@ -287,9 +319,12 @@ export default function SorteosAdmin() {
                             <span className="material-symbols-outlined text-[15px]">confirmation_number</span>Tickets
                           </button>
                           <button onClick={() => editar(r)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest text-on-surface">Editar</button>
-                          {r.status === 'borrador' && <button onClick={() => cambiarEstado(r, 'abierto')} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-primary/40 text-primary">Abrir sorteo</button>}
-                          {r.status === 'abierto' && <button onClick={() => cambiarEstado(r, 'oculto')} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest text-secondary">Ocultar</button>}
-                          {r.status === 'oculto' && <button onClick={() => cambiarEstado(r, 'abierto')} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest text-secondary">Mostrar</button>}
+                          {r.status !== 'sorteado' && (
+                            <label className="flex items-center gap-2 text-xs font-bold text-secondary cursor-pointer">
+                              <Interruptor activo={r.status === 'abierto'} onChange={() => cambiarEstado(r, r.status === 'abierto' ? 'oculto' : 'abierto')} />
+                              {r.status === 'abierto' ? 'Activo' : 'Desactivado'}
+                            </label>
+                          )}
                           <button onClick={() => borrar(r)} className="text-xs font-bold px-3 py-1.5 rounded-lg text-red-600 ml-auto">Borrar</button>
                         </div>
                       </div>
@@ -334,11 +369,10 @@ export default function SorteosAdmin() {
               <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Orden (menor = primero)
                 <input type="number" value={ficha.orden} onChange={(e) => setFicha({ ...ficha, orden: Number(e.target.value) })} className={campo} /></label>
               {ficha.status !== 'sorteado' && (
-                <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Estado
-                  <select value={ficha.status} onChange={(e) => setFicha({ ...ficha, status: e.target.value })} className={campo}>
-                    <option value="borrador">Borrador (no se ve en la página)</option>
-                    <option value="abierto">Abierto (se ve y acepta tickets)</option>
-                    <option value="oculto">Oculto</option></select></label>
+                <div className="sm:col-span-2 flex items-center gap-3 text-xs font-bold text-secondary">
+                  <Interruptor activo={ficha.status === 'abierto'} onChange={() => setFicha({ ...ficha, status: ficha.status === 'abierto' ? 'oculto' : 'abierto' })} />
+                  <span>{ficha.status === 'abierto' ? 'Activo: se ve en la página y acepta tickets' : 'Desactivado: no se ve en la página'}</span>
+                </div>
               )}
               <div className="sm:col-span-2 flex items-center gap-3 pt-1">
                 <button type="submit" disabled={guardando} className="bg-primary text-on-primary font-bold text-sm px-5 py-2.5 rounded-xl disabled:opacity-60">
@@ -397,6 +431,18 @@ export default function SorteosAdmin() {
 
             {msgTickets && <p className="text-xs font-bold text-primary mb-2">{msgTickets}</p>}
 
+            {ultimoLote && (
+              <a
+                href={enlaceWhatsapp(ultimoLote.whatsapp, mensajeTickets(ver, ultimoLote.nombre, ultimoLote.numeros))}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mb-3 w-fit flex items-center gap-1.5 bg-[#25D366] text-white text-xs font-bold px-3.5 py-2 rounded-full active:scale-95 transition-transform"
+              >
+                <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>chat</span>
+                Enviar sus tickets a {ultimoLote.nombre.split(' ')[0]} por WhatsApp
+              </a>
+            )}
+
             {ver.status === 'abierto' && tickets.length > 0 && (
               <button type="button" onClick={sortearAhora} disabled={trabajando} className="mb-3 text-xs font-bold px-3 py-2 rounded-lg border border-amber-400 text-amber-800 flex items-center gap-1 disabled:opacity-60">
                 <span className="material-symbols-outlined text-[16px]">casino</span>Sortear ahora{ver.meta_tickets ? ' (sin esperar a llenar la meta)' : ''}
@@ -411,6 +457,18 @@ export default function SorteosAdmin() {
                   <div key={t.id} className={`px-3 py-2 flex items-center gap-3 text-sm ${t.id === ver.ganador_ticket_id ? 'bg-amber-50' : 'bg-white'}`}>
                     <span className="w-12 shrink-0 font-bold text-primary">N.º {t.numero}</span>
                     <span className="flex-1 min-w-0 truncate">{t.nombre}{t.id === ver.ganador_ticket_id ? ' 🏆' : ''} <span className="text-secondary text-xs">{[t.whatsapp, t.nota].filter(Boolean).join(' · ')}</span></span>
+                    {t.whatsapp && (
+                      <a
+                        href={enlaceWhatsapp(t.whatsapp, mensajeTickets(ver, t.nombre, tickets.filter((x) => x.whatsapp === t.whatsapp && x.nombre === t.nombre).map((x) => x.numero)))}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Enviar tickets a ${t.nombre} por WhatsApp`}
+                        title="Enviar sus tickets por WhatsApp"
+                        className="shrink-0 w-7 h-7 rounded-full bg-[#25D366] text-white flex items-center justify-center"
+                      >
+                        <span className="material-symbols-outlined text-[15px]" style={{ fontVariationSettings: "'FILL' 1" }}>chat</span>
+                      </a>
+                    )}
                     {ver.status === 'abierto' && <button onClick={() => borrarTicket(t)} className="text-xs font-bold text-red-600 shrink-0">Borrar</button>}
                   </div>
                 ))}

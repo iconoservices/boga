@@ -37,22 +37,42 @@ async function compressImage(file: File, maxDim = 1600, quality = 0.82): Promise
 // Helper de cliente: sube un archivo a R2 vía /api/upload (la llave secreta de
 // R2 vive solo en el servidor, nunca en el bundle del navegador). Manda el
 // token de la sesión porque la ruta solo acepta usuarios logueados.
-export async function uploadFile(file: File, folder: string): Promise<string> {
+// Llama a una ruta protegida con el token de la sesión. Si el servidor dice que la
+// sesión ya no existe ("Auth session missing"), intenta renovarla UNA vez y repite;
+// si tampoco se puede, avisa con claridad que hay que volver a entrar.
+async function llamarConSesion(url: string, armar: (token: string) => RequestInit): Promise<{ res: Response; data: any }> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error('Tenés que iniciar sesión para subir imágenes');
 
-  const optimized = await compressImage(file);
+  const intentar = async (token: string) => {
+    const res = await fetch(url, armar(token));
+    const data = await res.json().catch(() => ({} as Record<string, any>));
+    return { res, data };
+  };
 
+  let r = await intentar(session.access_token);
+  const sesionPerdida = !r.res.ok && /session|sesi[oó]n|jwt|token/i.test(String(r.data?.error || ''));
+  if (sesionPerdida) {
+    const { data: renovada, error } = await supabase.auth.refreshSession();
+    if (error || !renovada.session) {
+      throw new Error('Tu sesión venció. Cierra sesión y vuelve a entrar para subir imágenes.');
+    }
+    r = await intentar(renovada.session.access_token);
+  }
+  return r;
+}
+
+export async function uploadFile(file: File, folder: string): Promise<string> {
+  const optimized = await compressImage(file);
   const formData = new FormData();
   formData.append('file', optimized);
   formData.append('folder', folder);
 
-  const res = await fetch('/api/upload', {
+  const { res, data } = await llamarConSesion('/api/upload', (token) => ({
     method: 'POST',
-    headers: { Authorization: `Bearer ${session.access_token}` },
+    headers: { Authorization: `Bearer ${token}` },
     body: formData,
-  });
-  const data = await res.json().catch(() => ({} as { error?: string; url?: string }));
+  }));
   if (!res.ok) throw new Error(data.error || `Error al subir el archivo (código ${res.status})`);
   return data.url as string;
 }
@@ -69,14 +89,11 @@ export function esImagenExterna(url?: string | null): boolean {
 
 /** Guarda en nuestro almacén (R2) una copia de una imagen externa y devuelve la nueva dirección. */
 export async function mirrorImage(url: string, folder: string): Promise<string> {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) throw new Error('Tenés que iniciar sesión para guardar imágenes');
-  const res = await fetch('/api/mirror-image', {
+  const { res, data } = await llamarConSesion('/api/mirror-image', (token) => ({
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
     body: JSON.stringify({ url, folder }),
-  });
-  const data = await res.json().catch(() => ({}));
+  }));
   if (!res.ok) throw new Error(data.error || 'No se pudo guardar la copia de la imagen');
   return data.url as string;
 }
