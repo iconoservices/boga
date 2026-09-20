@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { refrescarPublico } from '@/lib/refrescar';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import { CIUDADES } from '@/lib/ciudades';
 import { ICONO_MEDIO, type MedioViaje } from '@/lib/viajes';
@@ -71,6 +72,10 @@ export default function ViajesAdmin() {
 
   if (!esSuperadmin) return null;
 
+  // Guardar / ocultar / borrar: refresca la vista pública y recarga la lista.
+  const publicar = async () => { await refrescarPublico(['/api/viajes']); recargar(); };
+
+
   const cerrar = () => { setModal(false); setFicha(FICHA_VACIA); setMsg(''); };
 
   const editar = (r: Fila) => {
@@ -107,18 +112,18 @@ export default function ViajesAdmin() {
     setFicha(FICHA_VACIA);
     setModal(false);
     setMsg(editando ? 'Ruta actualizada.' : 'Ruta agregada.');
-    recargar();
+    publicar();
   };
 
   const toggleStatus = async (r: Fila) => {
     await supabase.from('travel_routes').update({ status: r.status === 'activo' ? 'oculto' : 'activo' }).eq('id', r.id);
-    recargar();
+    publicar();
   };
 
   const borrar = async (r: Fila) => {
     if (!confirm(`¿Borrar la ruta a "${r.destino}"? No se puede deshacer.`)) return;
     await supabase.from('travel_routes').delete().eq('id', r.id);
-    recargar();
+    publicar();
   };
 
   const campo = 'w-full bg-surface-container-low border border-surface-container-highest rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:border-primary';

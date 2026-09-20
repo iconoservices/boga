@@ -56,3 +56,27 @@ export async function uploadFile(file: File, folder: string): Promise<string> {
   if (!res.ok) throw new Error(data.error || 'Error al subir el archivo');
   return data.url as string;
 }
+
+/** true si la imagen vive en otra web (Facebook, etc.) y no en nuestro almacén. */
+export function esImagenExterna(url?: string | null): boolean {
+  if (!url || !/^https?:\/\//i.test(url)) return false;
+  try {
+    return !new URL(url).hostname.endsWith('bogahub.app');
+  } catch {
+    return false;
+  }
+}
+
+/** Guarda en nuestro almacén (R2) una copia de una imagen externa y devuelve la nueva dirección. */
+export async function mirrorImage(url: string, folder: string): Promise<string> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Tenés que iniciar sesión para guardar imágenes');
+  const res = await fetch('/api/mirror-image', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+    body: JSON.stringify({ url, folder }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'No se pudo guardar la copia de la imagen');
+  return data.url as string;
+}

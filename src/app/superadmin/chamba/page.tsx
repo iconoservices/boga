@@ -10,9 +10,11 @@ import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { refrescarPublico } from '@/lib/refrescar';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import { CIUDADES } from '@/lib/ciudades';
 import CampoFoto from '@/components/superadmin/CampoFoto';
+import { esImagenExterna, mirrorImage } from '@/lib/uploadClient';
 import SuperadminSidebarNav from '@/components/superadmin/SuperadminSidebarNav';
 
 const VERDE = '#00875A';
@@ -100,6 +102,10 @@ export default function ChambaAdmin() {
 
   if (!esSuperadmin) return null;
 
+  // Guardar / ocultar / borrar: refresca la vista pública y recarga la lista.
+  const publicar = async () => { await refrescarPublico(['/api/chamba']); recargar(); };
+
+
   const cerrarE = () => { setModalE(false); setFichaE(EMPLEO_VACIO); setMsg(''); };
   const cerrarO = () => { setModalO(false); setFichaO(OFICIO_VACIO); setMsg(''); };
 
@@ -141,7 +147,7 @@ export default function ChambaAdmin() {
     const editando = Boolean(fichaE.id);
     setFichaE(EMPLEO_VACIO); setModalE(false);
     setMsg(editando ? 'Empleo actualizado.' : 'Empleo agregado.');
-    recargar();
+    publicar();
   };
 
   const guardarO = async (ev: React.FormEvent) => {
@@ -160,25 +166,38 @@ export default function ChambaAdmin() {
     const editando = Boolean(fichaO.id);
     setFichaO(OFICIO_VACIO); setModalO(false);
     setMsg(editando ? 'Oficio actualizado.' : 'Oficio agregado.');
-    recargar();
+    publicar();
   };
 
-  const toggleE = async (r: Fila) => { await supabase.from('job_listings').update({ status: r.status === 'activo' ? 'oculto' : 'activo' }).eq('id', r.id); recargar(); };
-  const toggleO = async (r: Fila) => { await supabase.from('service_providers').update({ status: r.status === 'activo' ? 'oculto' : 'activo' }).eq('id', r.id); recargar(); };
+  const toggleE = async (r: Fila) => { await supabase.from('job_listings').update({ status: r.status === 'activo' ? 'oculto' : 'activo' }).eq('id', r.id); publicar(); };
+  const toggleO = async (r: Fila) => { await supabase.from('service_providers').update({ status: r.status === 'activo' ? 'oculto' : 'activo' }).eq('id', r.id); publicar(); };
+  // Imagen de otra web (Facebook): guarda una copia en nuestro almacén y la usa.
+  const copiarImagenE = async (r: Fila) => {
+    setMsg('Guardando copia de la imagen…');
+    try {
+      const nueva = await mirrorImage(r.img, 'empleos');
+      const { error } = await supabase.from('job_listings').update({ img: nueva }).eq('id', r.id);
+      setMsg(error ? `Error: ${error.message}` : 'Imagen guardada en BogaHub.');
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : 'No se pudo guardar la copia.');
+    }
+    publicar();
+  };
+
   // Renovar: el aviso vuelve a durar 30 días desde hoy.
   const renovarE = async (r: Fila) => {
     const nueva = new Date(); nueva.setDate(nueva.getDate() + 30);
     const { error } = await supabase.from('job_listings').update({ expira_el: nueva.toISOString().slice(0, 10), status: 'activo' }).eq('id', r.id);
     setMsg(error ? `Error: ${error.message}` : 'Empleo renovado por 30 días.');
-    recargar();
+    publicar();
   };
   const borrarE = async (r: Fila) => {
     if (!confirm(`¿Borrar el empleo "${r.puesto}"? No se puede deshacer.`)) return;
-    await supabase.from('job_listings').delete().eq('id', r.id); recargar();
+    await supabase.from('job_listings').delete().eq('id', r.id); publicar();
   };
   const borrarO = async (r: Fila) => {
     if (!confirm(`¿Borrar a "${r.nombre}"? No se puede deshacer.`)) return;
-    await supabase.from('service_providers').delete().eq('id', r.id); recargar();
+    await supabase.from('service_providers').delete().eq('id', r.id); publicar();
   };
 
   const campo = 'w-full bg-surface-container-low border border-surface-container-highest rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:border-primary';
@@ -287,6 +306,7 @@ export default function ChambaAdmin() {
                         <p className="text-xs text-secondary">{[r.tipo, r.zona, r.pago].filter(Boolean).join(' · ')}</p>
                       </div>
                       <button onClick={() => editarE(r)} className={`${botones} border border-surface-container-highest text-on-surface`}>Editar</button>
+                      {esImagenExterna(r.img) && <button onClick={() => copiarImagenE(r)} title="La imagen es de otra web y puede caducar" className={`${botones} border border-amber-400 text-amber-700`}>Guardar imagen</button>}
                       {v && <button onClick={() => renovarE(r)} className={`${botones} border border-primary/40 text-primary`}>Renovar 30 días</button>}
                       <button onClick={() => toggleE(r)} className={`${botones} border border-surface-container-highest text-secondary`}>{r.status === 'activo' ? 'Ocultar' : 'Mostrar'}</button>
                       <button onClick={() => borrarE(r)} className={`${botones} text-red-600`}>Borrar</button>

@@ -10,6 +10,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { refrescarPublico } from '@/lib/refrescar';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import { CIUDADES } from '@/lib/ciudades';
 import CampoFoto from '@/components/superadmin/CampoFoto';
@@ -136,6 +137,10 @@ export default function EventosAdmin() {
   if (cargando) return <div className="p-10 text-center text-secondary font-body-md">Verificando acceso…</div>;
   if (!esSuperadmin) return null;
 
+  // Guardar / ocultar / borrar: refresca la vista pública y recarga la lista.
+  const publicar = async () => { await refrescarPublico(['/api/eventos']); recargar(); };
+  const publicarLugares = async () => { await refrescarPublico(['/api/lugares']); recargarLugares(); };
+
   const editar = (e: EventRow) => {
     setFicha({
       id: e.id, titulo: e.titulo ?? '', categoria: e.categoria ?? 'Fiestas', descripcion: e.descripcion ?? '',
@@ -179,18 +184,18 @@ export default function EventosAdmin() {
     setFicha(FICHA_VACIA);
     setModalEvento(false);
     setMsg(ficha.id ? 'Evento actualizado.' : 'Evento agregado.');
-    recargar();
+    publicar();
   };
 
   const toggleStatus = async (e: EventRow) => {
     await supabase.from('events').update({ status: e.status === 'activo' ? 'oculto' : 'activo' }).eq('id', e.id);
-    recargar();
+    publicar();
   };
 
   const borrar = async (e: EventRow) => {
     if (!confirm(`¿Borrar el evento "${e.titulo}"? No se puede deshacer.`)) return;
     await supabase.from('events').delete().eq('id', e.id);
-    recargar();
+    publicar();
   };
 
   const editarLugar = (l: PlaceRow) => {
@@ -222,18 +227,18 @@ export default function EventosAdmin() {
     setFichaLugar(FICHA_LUGAR_VACIA);
     setModalLugar(false);
     setMsgLugar(fichaLugar.id ? 'Lugar actualizado.' : 'Lugar agregado.');
-    recargarLugares();
+    publicarLugares();
   };
 
   const toggleStatusLugar = async (l: PlaceRow) => {
     await supabase.from('places').update({ status: l.status === 'activo' ? 'oculto' : 'activo' }).eq('id', l.id);
-    recargarLugares();
+    publicarLugares();
   };
 
   const borrarLugar = async (l: PlaceRow) => {
     if (!confirm(`¿Borrar el lugar "${l.nombre}"? No se puede deshacer.`)) return;
     await supabase.from('places').delete().eq('id', l.id);
-    recargarLugares();
+    publicarLugares();
   };
 
   const campo = 'w-full bg-surface-container-low border border-surface-container-highest rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:border-primary';
