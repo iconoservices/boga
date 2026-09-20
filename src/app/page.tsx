@@ -717,12 +717,16 @@ export default function HomePage() {
               <div className="p-4 lg:p-6 flex flex-col gap-2.5 text-white">
                 {sorteoHome.patrocinador && <span className="w-fit text-[10px] font-label-md uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ backgroundColor: '#c9f24a', color: '#2a1155' }}>Patrocina {sorteoHome.patrocinador}</span>}
                 <h3 className="font-headline-lg font-extrabold text-xl lg:text-2xl leading-tight">{sorteoHome.titulo}</h3>
-                <div className="flex flex-col gap-1">
-                  <div className="h-2.5 rounded-full bg-white/15 overflow-hidden">
-                    <div className="h-full rounded-full" style={{ width: `${Math.min(100, Math.round((sorteoHome.vendidos / (sorteoHome.meta || 1)) * 100))}%`, backgroundColor: '#c9f24a' }} />
+                {sorteoHome.meta ? (
+                  <div className="flex flex-col gap-1">
+                    <div className="h-2.5 rounded-full bg-white/15 overflow-hidden">
+                      <div className="h-full rounded-full" style={{ width: `${Math.min(100, Math.round((sorteoHome.vendidos / sorteoHome.meta) * 100))}%`, backgroundColor: '#c9f24a' }} />
+                    </div>
+                    <span className="text-[11px] font-label-md text-white/75"><b className="text-white">{sorteoHome.vendidos}</b> de {sorteoHome.meta} tickets · se sortea al llenarse</span>
                   </div>
-                  <span className="text-[11px] font-label-md text-white/75"><b className="text-white">{sorteoHome.vendidos}</b> de {sorteoHome.meta} tickets · se sortea al llenarse</span>
-                </div>
+                ) : (
+                  <span className="text-[11px] font-label-md text-white/75">Se sortea el <b className="text-white">{sorteoHome.cierraEl ? sorteoHome.cierraEl.slice(8, 10) + '/' + sorteoHome.cierraEl.slice(5, 7) : 'próximamente'}</b></span>
+                )}
               </div>
             </div>
           </Link>

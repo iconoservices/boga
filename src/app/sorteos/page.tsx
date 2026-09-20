@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
 import { fetchSorteos, type Sorteo } from '@/lib/sorteos';
+import { hoyLima } from '@/lib/fechaLima';
 
 // Sorteos de BogaHub: sorteos patrocinados por negocios de Pucallpa. Cada sorteo
 // tiene una META de tickets; a medida que se van registrando, la barra se llena y
@@ -21,13 +22,35 @@ function fechaCorta(iso?: string) {
   return y && m && d ? `${d} ${MESES[m - 1]}` : '';
 }
 
+// Días que faltan hasta una fecha AAAA-MM-DD (hora de Perú). null si no hay fecha.
+function diasHasta(iso?: string): number | null {
+  if (!iso) return null;
+  const [y, m, d] = iso.slice(0, 10).split('-').map(Number);
+  if (!y || !m || !d) return null;
+  const [hy, hm, hd] = hoyLima().split('-').map(Number);
+  return Math.round((Date.UTC(y, m - 1, d) - Date.UTC(hy, hm - 1, hd)) / 86400000);
+}
+
 function waParticipar(titulo: string) {
   const texto = `Hola BogaHub, quiero participar en el sorteo «${titulo}».`;
   return `https://wa.me/${WHATSAPP_BOGAHUB}?text=${encodeURIComponent(texto)}`;
 }
 
-function Barra({ vendidos, meta, grande = false }: { vendidos: number; meta: number; grande?: boolean }) {
-  const pct = meta > 0 ? Math.min(100, Math.round((vendidos / meta) * 100)) : 0;
+function Barra({ vendidos, meta, fechaSorteo, grande = false }: { vendidos: number; meta: number | null; fechaSorteo?: string; grande?: boolean }) {
+  // Sin meta = sorteo por fecha: no hay contador de tickets, solo la cuenta regresiva.
+  if (!meta) {
+    const dias = diasHasta(fechaSorteo);
+    return (
+      <div className={`flex items-center gap-1.5 font-label-md text-white/80 ${grande ? 'text-xs' : 'text-[11px]'}`}>
+        <span className="material-symbols-outlined text-[16px]" style={{ color: LIMA }}>event</span>
+        <span>
+          Se sortea el <b className="text-white">{fechaCorta(fechaSorteo)}</b>
+          {dias !== null && (dias <= 0 ? ' · ¡hoy!' : dias === 1 ? ' · ¡mañana!' : ` · faltan ${dias} días`)}
+        </span>
+      </div>
+    );
+  }
+  const pct = Math.min(100, Math.round((vendidos / meta) * 100));
   const faltan = Math.max(0, meta - vendidos);
   return (
     <div className="flex flex-col gap-1.5">
@@ -80,7 +103,7 @@ export default function Sorteos() {
             </div>
             <div className="min-w-0">
               <h1 className="font-headline-lg font-extrabold text-lg sm:text-xl lg:text-2xl leading-tight">Sorteos</h1>
-              <p className="text-white/70 font-body-md text-xs leading-snug">Premios de negocios de Pucallpa. Se sortea solo cuando se llenan los tickets.</p>
+              <p className="text-white/70 font-body-md text-xs leading-snug">Premios de negocios de Pucallpa. Se sortea solo cuando se llenan los tickets, o en la fecha que indique cada sorteo.</p>
             </div>
           </header>
 
@@ -144,11 +167,11 @@ export default function Sorteos() {
                     <span className="w-fit text-[10px] font-label-md uppercase tracking-wider px-2 py-0.5 rounded-full text-[#2a1155]" style={{ backgroundColor: LIMA }}>Sorteo destacado</span>
                     <h2 className="font-headline-lg font-extrabold text-xl lg:text-3xl leading-tight">{destacado.titulo}</h2>
                     {destacado.descripcion && <p className="text-white/75 font-body-md text-sm leading-relaxed whitespace-pre-line line-clamp-4">{destacado.descripcion}</p>}
-                    <Barra vendidos={destacado.vendidos} meta={destacado.meta} grande />
+                    <Barra vendidos={destacado.vendidos} meta={destacado.meta} fechaSorteo={destacado.cierraEl} grande />
                     <ul className="text-white/80 font-body-md text-xs flex flex-col gap-1">
                       {destacado.comoParticipar && <li className="flex items-start gap-1.5"><span className="material-symbols-outlined text-[15px] mt-px" style={{ color: LIMA }}>confirmation_number</span>{destacado.comoParticipar}</li>}
                       {destacado.precioTicket && <li className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[15px]" style={{ color: LIMA }}>sell</span>Ticket: {destacado.precioTicket}</li>}
-                      {destacado.cierraEl && <li className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[15px]" style={{ color: LIMA }}>schedule</span>Cierra el {fechaCorta(destacado.cierraEl)} o al llenarse</li>}
+                      {destacado.cierraEl && destacado.meta && <li className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[15px]" style={{ color: LIMA }}>schedule</span>Cierra el {fechaCorta(destacado.cierraEl)} o al llenarse</li>}
                     </ul>
                     <a
                       href={waParticipar(destacado.titulo)}
@@ -179,7 +202,7 @@ export default function Sorteos() {
                         </div>
                         <div className="p-3.5 flex flex-col gap-2.5 flex-1">
                           <h3 className="font-headline-sm text-sm leading-tight line-clamp-2">{s.titulo}</h3>
-                          <Barra vendidos={s.vendidos} meta={s.meta} />
+                          <Barra vendidos={s.vendidos} meta={s.meta} fechaSorteo={s.cierraEl} />
                           {s.comoParticipar && <p className="text-white/65 font-body-md text-[11px] leading-snug line-clamp-2">{s.comoParticipar}</p>}
                           <a
                             href={waParticipar(s.titulo)}
@@ -235,7 +258,7 @@ export default function Sorteos() {
               {[
                 ['confirmation_number', 'Consigue tu ticket', 'Cada sorteo dice cómo participar: por ejemplo, un ticket por cada compra en la tienda que patrocina, o un ticket a un precio bajo. Lo ves en la tarjeta del sorteo.'],
                 ['bar_chart', 'La barra se llena', 'Cada sorteo tiene una meta de tickets. A medida que se registran, la barra avanza y todos ven cuántos faltan.'],
-                ['casino', 'Sorteo automático', 'Cuando se llega a la meta, el sorteo se hace solo, al azar, en el servidor. Nadie, ni BogaHub ni el patrocinador, puede escoger al ganador.'],
+                ['casino', 'Sorteo automático', 'Hay dos tipos: los que tienen contador de tickets, que se sortean solos al llenarse, y los que tienen fecha, que se sortean ese día. En los dos casos, nadie, ni BogaHub ni el patrocinador, puede escoger al ganador.'],
                 ['emoji_events', 'El ganador se publica', 'Verás el nombre abreviado del ganador y el número de su ticket en la pestaña Ganadores. Te contactamos por WhatsApp para entregar el premio.'],
               ].map(([icono, titulo, texto], i) => (
                 <div key={titulo} className="rounded-2xl bg-white/[0.06] border border-white/12 p-4 flex gap-3">

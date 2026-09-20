@@ -7,8 +7,9 @@ import { sortear } from '@/lib/sorteoServer';
 // usando el token de quien llama) y se ejecutan con la llave del servidor.
 //
 //  { accion: 'ticket',  raffle_id, nombre, whatsapp?, nota?, cantidad? }
-//      Registra 1..50 tickets a nombre de una persona. Si con eso se llega a la meta,
-//      el sorteo se hace SOLO, al momento.
+//      Registra 1..50 tickets a nombre de una persona. Si el sorteo tiene meta y con eso
+//      se llega a ella, el sorteo se hace SOLO, al momento. Sin meta, no hay tope ni
+//      sorteo automático: se sortea a mano con { accion: 'sortear' }.
 //  { accion: 'sortear', raffle_id }
 //      Sortea ahora (para cuando se quiera cerrar antes de llegar a la meta).
 //  { accion: 'borrar_ticket', ticket_id }
@@ -65,9 +66,11 @@ export async function POST(request: Request) {
 
     const { count } = await admin.from('raffle_tickets').select('id', { count: 'exact', head: true }).eq('raffle_id', raffleId);
     const actuales = count ?? 0;
-    const disponibles = rifa.meta_tickets - actuales;
+    // Meta vacía = sorteo sin tope de tickets: no hay límite ni sorteo automático.
+    const tieneMeta = typeof rifa.meta_tickets === 'number' && rifa.meta_tickets > 0;
+    const disponibles = tieneMeta ? rifa.meta_tickets - actuales : Infinity;
     if (disponibles <= 0) return NextResponse.json({ error: 'El sorteo ya está lleno' }, { status: 400 });
-    const n = Math.min(cantidad, disponibles); // nunca se pasa de la meta
+    const n = Math.min(cantidad, disponibles); // con meta, nunca se pasa de ella
 
     const { data: ultimo } = await admin.from('raffle_tickets').select('numero').eq('raffle_id', raffleId).order('numero', { ascending: false }).limit(1);
     const desde = (ultimo?.[0]?.numero ?? 0) + 1;
@@ -81,7 +84,7 @@ export async function POST(request: Request) {
 
     // ¿Se llenó? Entonces se sortea solo.
     let ganador: { numero: number; nombre: string } | undefined;
-    if (actuales + n >= rifa.meta_tickets) {
+    if (tieneMeta && actuales + n >= rifa.meta_tickets) {
       const r = await sortear(admin, raffleId);
       if (r.ok) ganador = { numero: r.numero, nombre: r.nombre };
     }

@@ -9,7 +9,8 @@ export type Sorteo = {
   patrocinador: string;
   comoParticipar: string;
   precioTicket: string;
-  meta: number;
+  /** Tope de tickets; null = sin límite (se sortea a mano). */
+  meta: number | null;
   vendidos: number;
   cierraEl: string;
   status: 'abierto' | 'sorteado';
@@ -34,7 +35,7 @@ export async function fetchSorteos(): Promise<Sorteo[]> {
       patrocinador: txt(r.patrocinador),
       comoParticipar: txt(r.como_participar),
       precioTicket: txt(r.precio_ticket),
-      meta: Number(r.meta_tickets) || 0,
+      meta: Number(r.meta_tickets) > 0 ? Number(r.meta_tickets) : null,
       vendidos: Number(r.vendidos) || 0,
       cierraEl: txt(r.cierra_el),
       status: r.status === 'sorteado' ? 'sorteado' : 'abierto',

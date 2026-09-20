@@ -23,7 +23,7 @@ type Fila = Record<string, any>;
 const VACIA = {
   id: null as string | null,
   titulo: '', descripcion: '', img: '', patrocinador: '', como_participar: '', precio_ticket: '',
-  meta_tickets: 100 as number | string, cierra_el: '', ciudad: 'pucallpa', orden: 0, status: 'borrador',
+  meta_tickets: 100 as number | string | null, cierra_el: '', ciudad: 'pucallpa', orden: 0, status: 'borrador',
 };
 type Ficha = typeof VACIA;
 
@@ -104,7 +104,7 @@ export default function SorteosAdmin() {
   const editar = (r: Fila) => {
     setFicha({
       id: r.id, titulo: r.titulo ?? '', descripcion: r.descripcion ?? '', img: r.img ?? '', patrocinador: r.patrocinador ?? '',
-      como_participar: r.como_participar ?? '', precio_ticket: r.precio_ticket ?? '', meta_tickets: r.meta_tickets ?? 100,
+      como_participar: r.como_participar ?? '', precio_ticket: r.precio_ticket ?? '', meta_tickets: r.meta_tickets ?? '',
       cierra_el: r.cierra_el ?? '', ciudad: r.ciudad ?? 'pucallpa', orden: r.orden ?? 0, status: r.status ?? 'borrador',
     });
     setMsg(''); setModal(true);
@@ -112,9 +112,12 @@ export default function SorteosAdmin() {
 
   const guardar = async (ev: React.FormEvent) => {
     ev.preventDefault();
-    const meta = Number(ficha.meta_tickets);
-    if (!Number.isFinite(meta) || meta < 1) { setMsg('La meta de tickets debe ser 1 o más.'); return; }
-    if (ficha.id && meta < (conteo[ficha.id] || 0)) { setMsg(`Ya hay ${conteo[ficha.id]} tickets: la meta no puede ser menor.`); return; }
+    // Meta vacía = sin límite de tickets (se sortea a mano).
+    const vacia = ficha.meta_tickets === '' || ficha.meta_tickets === null;
+    const meta = vacia ? null : Number(ficha.meta_tickets);
+    if (meta === null && !ficha.cierra_el) { setMsg('Pon una meta de tickets (se sortea al llenarse) o una fecha (se sortea ese día). Necesita al menos una.'); return; }
+    if (meta !== null && (!Number.isFinite(meta) || meta < 1)) { setMsg('La meta de tickets debe ser 1 o más, o déjala vacía si no hay límite.'); return; }
+    if (meta !== null && ficha.id && meta < (conteo[ficha.id] || 0)) { setMsg(`Ya hay ${conteo[ficha.id]} tickets: la meta no puede ser menor.`); return; }
     setGuardando(true); setMsg('');
     const payload = {
       titulo: ficha.titulo, descripcion: ficha.descripcion || null, img: ficha.img || null, patrocinador: ficha.patrocinador || null,
@@ -239,7 +242,7 @@ export default function SorteosAdmin() {
             </div>
 
             <p className="text-[11px] text-secondary mb-3 leading-relaxed">
-              Cada sorteo tiene una <b>meta de tickets</b>. Registras los tickets de cada participante y, cuando se llega a la meta, el sorteo se hace solo, al azar.
+              Cada sorteo puede tener una <b>meta de tickets</b>: registras los tickets de cada participante y, al llegar a la meta, el sorteo se hace solo, al azar. Si en cambio pones una <b>fecha</b> y no meta, el sorteo se hace ese día (sin contador a la vista). Necesita meta, fecha o las dos.
               <span className="block mt-0.5 text-amber-700 font-semibold">Ojo: en Perú las rifas y sorteos entre el público pueden requerir autorización. Confírmalo con un abogado antes de vender tickets.</span>
             </p>
 
@@ -252,7 +255,7 @@ export default function SorteosAdmin() {
                 <div className="flex flex-col gap-3">
                   {visibles.map((r) => {
                     const n = conteo[r.id] || 0;
-                    const pct = Math.min(100, Math.round((n / (r.meta_tickets || 1)) * 100));
+                    const pct = r.meta_tickets ? Math.min(100, Math.round((n / r.meta_tickets) * 100)) : 0;
                     const est = ESTADOS[r.status] ?? ESTADOS.borrador;
                     return (
                       <div key={r.id} className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-3 flex flex-col gap-2.5">
@@ -271,10 +274,14 @@ export default function SorteosAdmin() {
                             <p className="text-xs text-secondary mt-0.5">{[r.patrocinador && `Patrocina ${r.patrocinador}`, r.precio_ticket && `Ticket ${r.precio_ticket}`, r.cierra_el && `Cierra ${r.cierra_el}`].filter(Boolean).join(' · ') || 'Sin más datos'}</p>
                           </div>
                         </div>
-                        <div>
-                          <div className="h-2 rounded-full bg-surface-container overflow-hidden"><div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} /></div>
-                          <p className="text-[11px] text-secondary mt-1"><b className="text-on-surface">{n}</b> de {r.meta_tickets} tickets ({pct}%)</p>
-                        </div>
+                        {r.meta_tickets ? (
+                          <div>
+                            <div className="h-2 rounded-full bg-surface-container overflow-hidden"><div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} /></div>
+                            <p className="text-[11px] text-secondary mt-1"><b className="text-on-surface">{n}</b> de {r.meta_tickets} tickets ({pct}%)</p>
+                          </div>
+                        ) : (
+                          <p className="text-[11px] text-secondary"><b className="text-on-surface">{n}</b> tickets · se sortea el día de la fecha</p>
+                        )}
                         <div className="flex flex-wrap items-center gap-2">
                           <button onClick={() => abrirTickets(r)} className="text-xs font-bold px-3 py-1.5 rounded-lg bg-primary text-on-primary flex items-center gap-1">
                             <span className="material-symbols-outlined text-[15px]">confirmation_number</span>Tickets
@@ -309,13 +316,14 @@ export default function SorteosAdmin() {
                 <input required value={ficha.titulo} onChange={(e) => setFicha({ ...ficha, titulo: e.target.value })} className={campo} placeholder="Reloj Poedagar 613 — Marrón" /></label>
               <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Patrocinador
                 <input value={ficha.patrocinador} onChange={(e) => setFicha({ ...ficha, patrocinador: e.target.value })} className={campo} placeholder="Delva" /></label>
-              <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Meta de tickets
-                <input type="number" min={1} required value={ficha.meta_tickets} onChange={(e) => setFicha({ ...ficha, meta_tickets: e.target.value })} className={campo} placeholder="500" /></label>
+              <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Meta de tickets (opcional)
+                <input type="number" min={1} value={ficha.meta_tickets ?? ''} onChange={(e) => setFicha({ ...ficha, meta_tickets: e.target.value })} className={campo} placeholder="500 — vacío = sin límite" />
+                <span className="font-normal text-[11px]">Con meta, el sorteo se hace solo al llenarse. Sin meta, pon una fecha: se sortea ese día.</span></label>
               <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">¿Cómo se consigue un ticket?
                 <input value={ficha.como_participar} onChange={(e) => setFicha({ ...ficha, como_participar: e.target.value })} className={campo} placeholder="1 ticket por cada S/ 20 en compras en Delva" /></label>
               <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Precio del ticket (informativo)
                 <input value={ficha.precio_ticket} onChange={(e) => setFicha({ ...ficha, precio_ticket: e.target.value })} className={campo} placeholder="S/ 5, o Gratis con tus compras" /></label>
-              <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Fecha límite (opcional)
+              <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Fecha del sorteo / límite
                 <input type="date" value={ficha.cierra_el} onChange={(e) => setFicha({ ...ficha, cierra_el: e.target.value })} className={campo} /></label>
               <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Descripción (opcional)
                 <textarea value={ficha.descripcion} onChange={(e) => setFicha({ ...ficha, descripcion: e.target.value })} rows={4} className={campo} placeholder="Detalles del premio, condiciones…" /></label>
@@ -351,16 +359,18 @@ export default function SorteosAdmin() {
             <div className="flex items-start justify-between gap-3 mb-3">
               <div className="min-w-0">
                 <h2 className="font-headline-md text-lg text-on-surface truncate">{ver.titulo}</h2>
-                <p className="text-xs text-secondary"><b className="text-on-surface">{tickets.length}</b> de {ver.meta_tickets} tickets · {(ESTADOS[ver.status] ?? ESTADOS.borrador).label}</p>
+                <p className="text-xs text-secondary"><b className="text-on-surface">{tickets.length}</b>{ver.meta_tickets ? ` de ${ver.meta_tickets}` : ''} tickets{ver.meta_tickets ? '' : ' · sin límite'} · {(ESTADOS[ver.status] ?? ESTADOS.borrador).label}</p>
               </div>
               <button type="button" aria-label="Cerrar" onClick={() => setVer(null)} className="w-8 h-8 rounded-full hover:bg-surface-container flex items-center justify-center text-secondary shrink-0">
                 <span className="material-symbols-outlined text-[20px]">close</span>
               </button>
             </div>
 
-            <div className="h-2.5 rounded-full bg-surface-container overflow-hidden mb-3">
-              <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min(100, Math.round((tickets.length / (ver.meta_tickets || 1)) * 100))}%` }} />
-            </div>
+            {ver.meta_tickets ? (
+              <div className="h-2.5 rounded-full bg-surface-container overflow-hidden mb-3">
+                <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min(100, Math.round((tickets.length / ver.meta_tickets) * 100))}%` }} />
+              </div>
+            ) : null}
 
             {ver.status === 'sorteado' && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3 text-sm">
@@ -389,7 +399,7 @@ export default function SorteosAdmin() {
 
             {ver.status === 'abierto' && tickets.length > 0 && (
               <button type="button" onClick={sortearAhora} disabled={trabajando} className="mb-3 text-xs font-bold px-3 py-2 rounded-lg border border-amber-400 text-amber-800 flex items-center gap-1 disabled:opacity-60">
-                <span className="material-symbols-outlined text-[16px]">casino</span>Sortear ahora (sin esperar a llenar la meta)
+                <span className="material-symbols-outlined text-[16px]">casino</span>Sortear ahora{ver.meta_tickets ? ' (sin esperar a llenar la meta)' : ''}
               </button>
             )}
 

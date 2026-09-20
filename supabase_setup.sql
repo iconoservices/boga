@@ -1324,7 +1324,7 @@ CREATE TABLE IF NOT EXISTS public.raffles (
   patrocinador      TEXT,                          -- "Delva"
   como_participar   TEXT,                          -- "Cada S/ 20 en compras = 1 ticket"
   precio_ticket     TEXT,                          -- informativo: "S/ 5" o "Gratis con tus compras"
-  meta_tickets      INT  NOT NULL CHECK (meta_tickets > 0),
+  meta_tickets      INT  CHECK (meta_tickets IS NULL OR meta_tickets > 0),  -- NULL = sin límite de tickets
   cierra_el         DATE,                          -- fecha límite opcional
   status            TEXT NOT NULL DEFAULT 'borrador',  -- borrador | abierto | sorteado | oculto
   ganador_ticket_id UUID,
@@ -1367,3 +1367,10 @@ CREATE POLICY "raffle_tickets: solo superadmin lee"     ON public.raffle_tickets
 CREATE POLICY "raffle_tickets: solo superadmin inserta" ON public.raffle_tickets FOR INSERT WITH CHECK (public.is_superadmin());
 CREATE POLICY "raffle_tickets: solo superadmin edita"   ON public.raffle_tickets FOR UPDATE USING (public.is_superadmin());
 CREATE POLICY "raffle_tickets: solo superadmin borra"   ON public.raffle_tickets FOR DELETE USING (public.is_superadmin());
+
+-- La meta de tickets es OPCIONAL: hay sorteos con tope de tickets (se sortean solos al
+-- llenarse) y sorteos sin tope (se sortean a mano, en la fecha que se decida).
+-- Migración para quien ya creó la tabla con la meta obligatoria:
+ALTER TABLE public.raffles ALTER COLUMN meta_tickets DROP NOT NULL;
+ALTER TABLE public.raffles DROP CONSTRAINT IF EXISTS raffles_meta_tickets_check;
+ALTER TABLE public.raffles ADD CONSTRAINT raffles_meta_tickets_check CHECK (meta_tickets IS NULL OR meta_tickets > 0);
