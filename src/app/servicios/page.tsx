@@ -11,23 +11,6 @@ import { fetchChamba } from '@/lib/chamba';
 
 type Vista = 'servicios' | 'empleos';
 
-const SERVICIOS = [
-  { id: 'elec1',  nombre: 'Marco Ríos',      oficio: 'Electricista domiciliario', zona: 'Yarinacocha',   rating: '4.9', trabajos: 120, wsp: '51961000001', img: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=300&q=80' },
-  { id: 'gas1',   nombre: 'Lucía Panduro',   oficio: 'Gasfitería y destape',       zona: 'Callería',      rating: '4.8', trabajos: 86,  wsp: '51961000002', img: 'https://images.unsplash.com/photo-1580281658626-ee379f3cce93?w=300&q=80' },
-  { id: 'jard1',  nombre: 'Pedro Sangama',   oficio: 'Jardinería y poda',          zona: 'Manantay',      rating: '4.7', trabajos: 54,  wsp: '51961000003', img: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=300&q=80' },
-  { id: 'foto1',  nombre: 'Karen Vela',      oficio: 'Fotografía de eventos',      zona: 'Pucallpa centro', rating: '5.0', trabajos: 41, wsp: '51961000004', img: 'https://images.unsplash.com/photo-1554048612-b6a482bc67e5?w=300&q=80' },
-  { id: 'lim1',   nombre: 'Rosa Isuiza',     oficio: 'Limpieza de casas y oficinas', zona: 'Callería',    rating: '4.9', trabajos: 200, wsp: '51961000005', img: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=300&q=80' },
-  { id: 'carp1',  nombre: 'Julio Ramírez',   oficio: 'Carpintería a medida',       zona: 'Manantay',      rating: '4.8', trabajos: 73,  wsp: '51961000006', img: 'https://images.unsplash.com/photo-1600585152220-90363fe7e115?w=300&q=80' },
-];
-
-const EMPLEOS = [
-  { id: 'e1', puesto: 'Mozo / Moza',            negocio: 'La Anaconda Parrillas', tipo: 'Tiempo completo', zona: 'Yarinacocha',     pago: 'S/ 1200 + propinas', wsp: '51961000010' },
-  { id: 'e2', puesto: 'Repartidor con moto',    negocio: 'Boga Market',            tipo: 'Medio tiempo',    zona: 'Toda la ciudad',  pago: 'S/ 900 + delivery', wsp: '51961000011' },
-  { id: 'e3', puesto: 'Cocinero/a de línea',    negocio: 'Doña Fela',              tipo: 'Tiempo completo', zona: 'Callería',        pago: 'A convenir',        wsp: '51961000012' },
-  { id: 'e4', puesto: 'Cajero/a de tienda',     negocio: 'Minimarket El Ahorro',   tipo: 'Turno tarde',     zona: 'Manantay',        pago: 'S/ 1100',           wsp: '51961000013' },
-  { id: 'e5', puesto: 'Ayudante de mudanza (cachuelo)', negocio: 'Familia particular', tipo: 'Por día',    zona: 'Pucallpa centro', pago: 'S/ 80 el día',     wsp: '51961000014' },
-];
-
 function waLink(numero: string, texto: string) {
   return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
 }
@@ -38,13 +21,15 @@ export default function Servicios() {
   // directorio de oficios.
   const [vista, setVista] = useState<Vista>('empleos');
 
-  // Datos reales de /api/chamba; mientras las tablas estén vacías, los de muestra.
-  const [servicios, setServicios] = useState<any[]>(SERVICIOS);
-  const [empleos, setEmpleos] = useState<any[]>(EMPLEOS);
+  // Datos reales de /api/chamba (sin ejemplos: si no hay nada cargado, se avisa).
+  const [servicios, setServicios] = useState<any[]>([]);
+  const [empleos, setEmpleos] = useState<any[]>([]);
+  const [cargado, setCargado] = useState(false);
   useEffect(() => {
     fetchChamba().then(({ empleos: e, oficios: o }) => {
-      if (o.length > 0) setServicios(o);
-      if (e.length > 0) setEmpleos(e);
+      setServicios(o);
+      setEmpleos(e);
+      setCargado(true);
     });
   }, []);
 
@@ -81,6 +66,13 @@ export default function Servicios() {
         {/* Directorio de servicios */}
         {vista === 'servicios' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {cargado && servicios.length === 0 && (
+              <div className="col-span-full bg-white rounded-2xl border border-dashed border-surface-container-highest p-8 text-center">
+                <span className="material-symbols-outlined text-secondary/40 text-[32px]">construction</span>
+                <p className="font-headline-sm text-sm text-on-surface mt-2">Todavía no hay oficios publicados</p>
+                <p className="text-secondary font-body-md text-xs mt-1">Publica el tuyo gratis con el botón «Publica tu aviso gratis» de abajo.</p>
+              </div>
+            )}
             {servicios.map((s) => (
               <div key={s.id} className="bg-white rounded-2xl p-4 shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col gap-3">
                 <div className="flex items-center gap-3">
@@ -124,6 +116,13 @@ export default function Servicios() {
         {/* Avisos de empleo */}
         {vista === 'empleos' && (
           <div className="flex flex-col gap-3">
+            {cargado && empleos.length === 0 && (
+              <div className="col-span-full bg-white rounded-2xl border border-dashed border-surface-container-highest p-8 text-center">
+                <span className="material-symbols-outlined text-secondary/40 text-[32px]">work</span>
+                <p className="font-headline-sm text-sm text-on-surface mt-2">Todavía no hay avisos de empleo</p>
+                <p className="text-secondary font-body-md text-xs mt-1">Publica el tuyo gratis con el botón «Publica tu aviso gratis» de abajo.</p>
+              </div>
+            )}
             {empleos.map((e) => (
               <div key={e.id} className="bg-white rounded-2xl p-4 shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex items-center gap-4">
                 <div className="w-11 h-11 rounded-xl bg-primary-fixed flex items-center justify-center shrink-0">
@@ -137,15 +136,17 @@ export default function Servicios() {
                     <span className="bg-primary-fixed text-primary text-[10px] font-label-md px-2 py-0.5 rounded-full">{e.pago}</span>
                   </div>
                 </div>
-                <a
-                  href={waLink(e.wsp, `Hola, vi el aviso de "${e.puesto}" en ${e.negocio} por BogaHub. Me interesa postular.`)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="shrink-0 flex items-center gap-1.5 bg-primary text-white text-[12px] font-label-md px-3 py-2 rounded-full active:scale-95 transition-transform"
-                >
-                  Postular
-                  <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                </a>
+                {(e.link || e.wsp) && (
+                  <a
+                    href={e.link || waLink(e.wsp, `Hola, vi el aviso de "${e.puesto}" en ${e.negocio} por BogaHub. Me interesa postular.`)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 flex items-center gap-1.5 bg-primary text-white text-[12px] font-label-md px-3 py-2 rounded-full active:scale-95 transition-transform"
+                  >
+                    {e.link ? 'Ver aviso' : 'Postular'}
+                    <span className="material-symbols-outlined text-[16px]">{e.link ? 'open_in_new' : 'arrow_forward'}</span>
+                  </a>
+                )}
               </div>
             ))}
           </div>

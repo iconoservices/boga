@@ -75,13 +75,6 @@ const EXPERIENCES = [
   { id: 'malecon',  title: 'Atardecer en el Malecón',         tag: 'Gratis',       from: 'S/ 0',  img: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=600&q=80' },
 ];
 
-// Peek: Servicios locales.
-const SERVICIOS_PEEK = [
-  { id: 'sv1', nombre: 'Marco Ríos',    oficio: 'Electricista domiciliario', zona: 'Yarinacocha', img: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400&q=80' },
-  { id: 'sv2', nombre: 'Lucía Panduro', oficio: 'Gasfitería y destape',      zona: 'Callería',    img: 'https://images.unsplash.com/photo-1580281658626-ee379f3cce93?w=400&q=80' },
-  { id: 'sv3', nombre: 'Karen Vela',    oficio: 'Fotografía de eventos',     zona: 'Centro',      img: 'https://images.unsplash.com/photo-1554048612-b6a482bc67e5?w=400&q=80' },
-];
-
 // Peek: Inmuebles.
 const INMUEBLES_PEEK = [
   { id: 'al1', titulo: 'Habitación amoblada con baño propio',  zona: 'Callería',    precio: 'S/ 450', tag: 'Alquiler', img: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&q=80' },
@@ -267,7 +260,7 @@ export default function HomePage() {
   // "Dónde quedarte": avisos reales de /inmuebles (alquileres + ventas, vía los
   // endpoints cacheados). Mientras no haya ninguno cargado, muestra el demo.
   // "Chamba y oficios": oficios reales de /api/chamba; demo mientras no haya.
-  const [oficiosHome, setOficiosHome] = useState<{ id: string; nombre: string; oficio: string; zona: string; img: string }[]>(SERVICIOS_PEEK);
+  const [oficiosHome, setOficiosHome] = useState<{ id: string; nombre: string; oficio: string; zona: string; img: string }[]>([]);
   useEffect(() => {
     fetchChamba().then(({ oficios }) => {
       if (oficios.length > 0) setOficiosHome(oficios.slice(0, 6).map((o) => ({ id: o.id, nombre: o.nombre, oficio: o.oficio, zona: o.zona, img: o.img })));
@@ -629,7 +622,8 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Servicios y chamba */}
+        {/* Servicios y chamba — solo oficios reales; sin ninguno, no se muestra */}
+        {oficiosHome.length > 0 && (
         <section className="flex flex-col gap-4">
           <SectionHead title="Chamba y oficios" href="/servicios" cta="Ver todo" />
           <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
@@ -653,6 +647,7 @@ export default function HomePage() {
             ))}
           </div>
         </section>
+        )}
 
         {/* Dónde quedarte — Inmuebles (avisos reales; demo si aún no hay) */}
         <section className="flex flex-col gap-4">

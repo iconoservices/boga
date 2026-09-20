@@ -1284,3 +1284,7 @@ CREATE POLICY "service_providers: superadmin borra"   ON public.service_provider
 -- /superadmin/chamba). Pasada `expira_el`, /api/chamba deja de mostrarlo.
 ALTER TABLE public.job_listings ADD COLUMN IF NOT EXISTS expira_el DATE DEFAULT (CURRENT_DATE + 30);
 UPDATE public.job_listings SET expira_el = created_at::date + 30 WHERE expira_el IS NULL;
+
+-- Enlace opcional del empleo (publicación, post, formulario…). Si está, el botón
+-- "Postular" de /servicios lleva ahí en vez de a WhatsApp.
+ALTER TABLE public.job_listings ADD COLUMN IF NOT EXISTS link TEXT;

@@ -13,19 +13,17 @@ export async function GET() {
   // que se publica; se renueva desde el superadmin). Sin fecha, no vence.
   const hoy = new Date().toISOString().slice(0, 10);
 
-  const empleos = (conVencimiento: boolean) => {
-    let q = supabase
-      .from('job_listings')
-      .select('id,puesto,negocio,tipo,zona,pago,wsp,ciudad,orden')
-      .eq('status', 'activo');
-    // Si todavía no se corrió el SQL de `expira_el`, esta consulta falla y se
-    // repite sin el filtro para no dejar la lista vacía.
+  // `expira_el` y `link` son columnas nuevas: si todavía no se corrió el SQL, la
+  // consulta falla y se repite con menos columnas para no dejar la lista vacía.
+  const empleos = (cols: string, conVencimiento: boolean) => {
+    let q = supabase.from('job_listings').select(cols).eq('status', 'activo');
     if (conVencimiento) q = q.or(`expira_el.is.null,expira_el.gte.${hoy}`);
     return q.order('orden', { ascending: true }).order('created_at', { ascending: false });
   };
+  const BASE = 'id,puesto,negocio,tipo,zona,pago,wsp,ciudad,orden';
 
   const [jobsA, providers] = await Promise.all([
-    empleos(true),
+    empleos(BASE + ',link', true),
     supabase
       .from('service_providers')
       .select('id,nombre,oficio,zona,img,wsp,ciudad,orden')
@@ -33,7 +31,9 @@ export async function GET() {
       .order('orden', { ascending: true })
       .order('created_at', { ascending: false }),
   ]);
-  const jobs = jobsA.error ? await empleos(false) : jobsA;
+  let jobs = jobsA;
+  if (jobs.error) jobs = await empleos(BASE, true);       // sin `link`
+  if (jobs.error) jobs = await empleos(BASE, false);      // sin `link` ni `expira_el`
 
   if (jobs.error) console.error('[api/chamba] empleos', jobs.error.message);
   if (providers.error) console.error('[api/chamba] oficios', providers.error.message);

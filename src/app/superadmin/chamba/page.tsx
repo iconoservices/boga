@@ -22,7 +22,7 @@ type Fila = Record<string, any>;
 
 const EMPLEO_VACIO = {
   id: null as string | null,
-  puesto: '', negocio: '', tipo: 'Tiempo completo', zona: '', pago: '', wsp: '',
+  puesto: '', negocio: '', tipo: 'Tiempo completo', zona: '', pago: '', wsp: '', link: '', link_orig: '',
   ciudad: 'pucallpa', orden: 0, status: 'activo',
 };
 type FichaEmpleo = typeof EMPLEO_VACIO;
@@ -79,8 +79,9 @@ export default function ChambaAdmin() {
     const colsE = 'id,puesto,negocio,tipo,zona,pago,wsp,ciudad,orden,status';
     const pedirEmpleos = (cols: string) => supabase.from('job_listings').select(cols)
       .order('orden', { ascending: true }).order('created_at', { ascending: false });
-    // `expira_el` es una columna nueva: si todavía no existe, se pide sin ella.
-    let e: { data: any[] | null } = await pedirEmpleos(colsE + ',expira_el') as any;
+    // `expira_el` y `link` son columnas nuevas: si todavía no existen, se pide con menos.
+    let e: { data: any[] | null } = await pedirEmpleos(colsE + ',expira_el,link') as any;
+    if (!e.data) e = await pedirEmpleos(colsE + ',expira_el') as any;
     if (!e.data) e = await pedirEmpleos(colsE) as any;
     const o = await supabase.from('service_providers').select('id,nombre,oficio,zona,img,wsp,ciudad,orden,status')
       .order('orden', { ascending: true }).order('created_at', { ascending: false });
@@ -103,7 +104,8 @@ export default function ChambaAdmin() {
   const editarE = (r: Fila) => {
     setFichaE({
       id: r.id, puesto: r.puesto ?? '', negocio: r.negocio ?? '', tipo: r.tipo ?? 'Tiempo completo', zona: r.zona ?? '',
-      pago: r.pago ?? '', wsp: r.wsp ?? '', ciudad: r.ciudad ?? 'pucallpa', orden: r.orden ?? 0, status: r.status ?? 'activo',
+      pago: r.pago ?? '', wsp: r.wsp ?? '', link: r.link ?? '', link_orig: r.link ?? '',
+      ciudad: r.ciudad ?? 'pucallpa', orden: r.orden ?? 0, status: r.status ?? 'activo',
     });
     setMsg(''); setModalE(true);
   };
@@ -122,6 +124,9 @@ export default function ChambaAdmin() {
       puesto: fichaE.puesto, negocio: fichaE.negocio || null, tipo: fichaE.tipo || null, zona: fichaE.zona || null,
       pago: fichaE.pago || null, wsp: fichaE.wsp.replace(/\D/g, '') || null,
       ciudad: fichaE.ciudad, orden: Number(fichaE.orden) || 0, status: fichaE.status,
+      // Solo se manda si hay enlace (o había uno y se está borrando): así guardar sigue
+      // andando aunque la columna `link` todavía no exista.
+      ...(fichaE.link || fichaE.link_orig ? { link: fichaE.link.trim() || null } : {}),
     };
     const res = fichaE.id
       ? await supabase.from('job_listings').update(payload).eq('id', fichaE.id)
@@ -327,8 +332,11 @@ export default function ChambaAdmin() {
                 <input value={fichaE.zona} onChange={(e) => setFichaE({ ...fichaE, zona: e.target.value })} className={campo} placeholder="Yarinacocha" /></label>
               <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Pago
                 <input value={fichaE.pago} onChange={(e) => setFichaE({ ...fichaE, pago: e.target.value })} className={campo} placeholder="S/ 1200 + propinas, o A convenir" /></label>
-              <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">WhatsApp para postular (con 51)
+              <label className="flex flex-col gap-1 text-xs font-bold text-secondary">WhatsApp para postular (con 51)
                 <input value={fichaE.wsp} onChange={(e) => setFichaE({ ...fichaE, wsp: e.target.value })} className={campo} placeholder="51961000000" inputMode="numeric" /></label>
+              <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Enlace del aviso (opcional)
+                <input value={fichaE.link} onChange={(e) => setFichaE({ ...fichaE, link: e.target.value })} className={campo} placeholder="https://… publicación, post o formulario" /></label>
+              <p className="sm:col-span-2 text-[11px] text-secondary -mt-1">Si pones un enlace, el botón dice «Ver aviso» y lleva ahí. Si no, dice «Postular» y abre WhatsApp.</p>
               <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Ciudad
                 <select value={fichaE.ciudad} onChange={(e) => setFichaE({ ...fichaE, ciudad: e.target.value })} className={campo}>
                   {CIUDADES.map((c) => <option key={c.slug} value={c.slug}>{c.nombre}</option>)}</select></label>
