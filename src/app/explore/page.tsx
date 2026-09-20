@@ -6,6 +6,7 @@ import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
 
 import { fetchCatalogo } from '@/lib/catalogo';
+import { hrefTienda, esFuera } from '@/lib/tiendaUrl';
 
 export default function Explore() {
   const [activeCategory, setActiveCategory] = useState('Todas');
@@ -419,10 +420,10 @@ export default function Explore() {
               <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin pb-3 snap-x scroll-pl-container-margin lg:scroll-pl-0" style={{ scrollbarWidth: 'none' }}>
                 {storeData.map((store) => (
                   <Link
-                    href={store.externalUrl || `/${store.slug}`}
+                    href={hrefTienda(store.slug, store.externalUrl)}
                     key={store.slug}
-                    target={store.externalUrl ? '_blank' : undefined}
-                    rel={store.externalUrl ? 'noreferrer' : undefined}
+                    target={esFuera(hrefTienda(store.slug, store.externalUrl)) ? '_blank' : undefined}
+                    rel={esFuera(hrefTienda(store.slug, store.externalUrl)) ? 'noopener noreferrer' : undefined}
                     className="min-w-[280px] w-[80vw] max-w-[310px] bg-white rounded-2xl p-4 shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest snap-start flex flex-col gap-3 group"
                   >
                     <div className="flex gap-2 overflow-x-auto hide-scrollbar snap-x" style={{ scrollbarWidth: 'none' }}>
@@ -521,10 +522,10 @@ export default function Explore() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {storeData.filter(s => activeCategory === 'Todas' || s.macroCat === activeCategory).map((store) => (
                 <Link
-                  href={store.externalUrl || `/${store.slug}`}
+                  href={hrefTienda(store.slug, store.externalUrl)}
                   key={store.slug}
-                  target={store.externalUrl ? '_blank' : undefined}
-                  rel={store.externalUrl ? 'noreferrer' : undefined}
+                  target={esFuera(hrefTienda(store.slug, store.externalUrl)) ? '_blank' : undefined}
+                  rel={esFuera(hrefTienda(store.slug, store.externalUrl)) ? 'noopener noreferrer' : undefined}
                   className="bg-white rounded-2xl p-3 shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col gap-3 group hover:border-primary/20 transition-all"
                 >
                   <div className="flex gap-2">

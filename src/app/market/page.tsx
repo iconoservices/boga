@@ -9,6 +9,7 @@ import { useCart } from '@/context/CartContext';
 import { fetchCatalogo } from '@/lib/catalogo';
 import { MarketCityBanner } from '@/components/CityWaitlist';
 import { BannerOverlay, type BannerStyle } from '@/components/BannerOverlay';
+import { hrefTienda, esFuera } from '@/lib/tiendaUrl';
 
 export default function Home() {
   // Banner slider — sin banners de muestra: si superadmin no cargo ninguno
@@ -626,10 +627,10 @@ export default function Home() {
                     if (featuredStore) {
                       return (
                         <Link
-                          href={featuredStore.externalUrl || `/${featuredStore.slug}`}
+                          href={hrefTienda(featuredStore.slug, featuredStore.externalUrl)}
                           key={`store-${idx}`}
-                          target={featuredStore.externalUrl ? '_blank' : undefined}
-                          rel={featuredStore.externalUrl ? 'noreferrer' : undefined}
+                          target={esFuera(hrefTienda(featuredStore.slug, featuredStore.externalUrl)) ? '_blank' : undefined}
+                          rel={esFuera(hrefTienda(featuredStore.slug, featuredStore.externalUrl)) ? 'noopener noreferrer' : undefined}
                           className="col-span-2 bg-white rounded-2xl p-4 shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col gap-3 group"
                         >
                           <div className="flex gap-3">
@@ -666,9 +667,9 @@ export default function Home() {
                     return (
                       <Link
                         key={prod.id}
-                        href={prod.externalUrl || `/${prod.slug}`}
-                        target={prod.externalUrl ? '_blank' : undefined}
-                        rel={prod.externalUrl ? 'noreferrer' : undefined}
+                        href={hrefTienda(prod.slug, prod.externalUrl)}
+                        target={esFuera(hrefTienda(prod.slug, prod.externalUrl)) ? '_blank' : undefined}
+                        rel={esFuera(hrefTienda(prod.slug, prod.externalUrl)) ? 'noopener noreferrer' : undefined}
                         className="col-span-2 relative bg-white rounded-2xl shadow-[0_15px_15px_rgba(0,0,0,0.04)] overflow-hidden flex group min-h-[150px] border border-surface-container-highest"
                       >
                         <div className="w-[42%] relative overflow-hidden shrink-0 bg-surface-container-low">
@@ -728,9 +729,9 @@ export default function Home() {
                   return (
                     <Link
                       key={prod.id}
-                      href={prod.externalUrl || `/${prod.slug}`}
-                      target={prod.externalUrl ? '_blank' : undefined}
-                      rel={prod.externalUrl ? 'noreferrer' : undefined}
+                      href={hrefTienda(prod.slug, prod.externalUrl)}
+                      target={esFuera(hrefTienda(prod.slug, prod.externalUrl)) ? '_blank' : undefined}
+                      rel={esFuera(hrefTienda(prod.slug, prod.externalUrl)) ? 'noopener noreferrer' : undefined}
                       className="col-span-1 bg-white rounded-2xl shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest overflow-hidden group flex flex-col"
                     >
                       <div className="relative aspect-square overflow-hidden bg-surface-container-low p-4">
