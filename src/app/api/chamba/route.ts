@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { hoyLima } from '@/lib/fechaLima';
 
-// Chamba y oficios (/servicios): empleos + gente que ofrece su oficio, en UN
+// Chamba y oficios (/trabajos): empleos + gente que ofrece su oficio, en UN
 // endpoint cacheado. La página y el inicio lo consumen en vez de pegarle a
 // Supabase desde el navegador de cada visitante (misma regla de egress).
 // Solo filas activas (la RLS igual filtra, pero lo pedimos explícito).

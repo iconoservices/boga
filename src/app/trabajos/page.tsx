@@ -57,7 +57,7 @@ export default function Servicios() {
 
         {/* Encabezado */}
         <div className="flex flex-col gap-1">
-          <h1 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">Chamba y oficios</h1>
+          <h1 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">Trabajos y oficios</h1>
           <p className="font-body-md text-secondary text-xs">Trabajo y gente de confianza en Pucallpa.</p>
         </div>
 

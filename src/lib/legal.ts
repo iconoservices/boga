@@ -134,7 +134,7 @@ const terminos: DocLegal = {
       n: '1', titulo: 'Quiénes somos',
       bloques: [
         { tipo: 'p', texto: `BogaHub es una plataforma digital operada por ${E.razonSocial}, con RUC ${E.ruc} y domicilio en ${E.domicilio} ("BogaHub", "nosotros"). Podés escribirnos a ${E.email}.` },
-        { tipo: 'p', texto: `BogaHub reúne en una sola app varios servicios de ${E.ciudad}: el Market (compras y delivery), Pensión, Servicios & Chamba, Taxi Seguro, Alquileres, Eventos, Sorteos, Pandero y la Revista. En la mayoría de estos servicios BogaHub actúa como intermediario: conecta a quien ofrece un producto o servicio con quien lo busca, pero no es el vendedor, el transportista ni el prestador del servicio final, salvo que se diga expresamente.` },
+        { tipo: 'p', texto: `BogaHub reúne en una sola app varios servicios de ${E.ciudad}: el Market (compras y delivery), Pensión, Trabajos y Oficios, Taxi Seguro, Alquileres, Eventos, Sorteos, Pandero y la Revista. En la mayoría de estos servicios BogaHub actúa como intermediario: conecta a quien ofrece un producto o servicio con quien lo busca, pero no es el vendedor, el transportista ni el prestador del servicio final, salvo que se diga expresamente.` },
         { tipo: 'p', texto: 'Cada servicio tiene además un Anexo con reglas propias. Si un Anexo dice algo distinto a estos Términos Generales, para ese servicio manda el Anexo.' },
       ],
     },

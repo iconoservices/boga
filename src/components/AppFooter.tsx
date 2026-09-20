@@ -14,7 +14,7 @@ export default function AppFooter() {
     pathname.startsWith('/orders') ||
     pathname.startsWith('/profile') ||
     pathname.startsWith('/promotions') ||
-    pathname.startsWith('/servicios') ||
+    pathname.startsWith('/trabajos') ||
     pathname.startsWith('/taxi-seguro') ||
     pathname.startsWith('/inmuebles') ||
     pathname.startsWith('/viajes') ||

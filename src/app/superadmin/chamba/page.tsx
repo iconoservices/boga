@@ -233,9 +233,9 @@ export default function ChambaAdmin() {
                 <span className="material-symbols-outlined text-[18px]">arrow_back</span> Superadmin
               </Link>
               <span className="text-secondary">/</span>
-              <span className="font-headline-sm text-headline-sm text-on-surface truncate">Chamba y oficios</span>
+              <span className="font-headline-sm text-headline-sm text-on-surface truncate">Trabajos y oficios</span>
             </div>
-            <Link href="/servicios" className="text-sm text-primary shrink-0">Ver la página →</Link>
+            <Link href="/trabajos" className="text-sm text-primary shrink-0">Ver la página →</Link>
           </div>
         </header>
 
@@ -292,7 +292,7 @@ export default function ChambaAdmin() {
             {cargandoDatos ? <p className="text-secondary text-sm">Cargando…</p> :
               evs.length + ofs.length === 0 ? (
                 <p className="text-secondary text-sm">
-                  {busqueda ? 'Nada coincide con la búsqueda.' : 'Todavía no hay nada cargado. La página /servicios muestra ejemplos hasta que agregues al menos un empleo u oficio.'}
+                  {busqueda ? 'Nada coincide con la búsqueda.' : 'Todavía no hay nada cargado. La página /trabajos muestra ejemplos hasta que agregues al menos un empleo u oficio.'}
                 </p>
               ) : (
                 <div className="flex flex-col gap-2">

@@ -1,6 +1,6 @@
 import { fechaLima, hoyLima } from '@/lib/fechaLima';
 
-// Chamba y oficios (/servicios). La página los lee del endpoint cacheado
+// Chamba y oficios (/trabajos). La página los lee del endpoint cacheado
 // /api/chamba (no de Supabase directo). Si las tablas `job_listings` y
 // `service_providers` todavía están vacías, la página cae a los de muestra.
 

@@ -59,6 +59,13 @@ const nextConfig: NextConfig = {
         destination: '/inmuebles',
         permanent: true,
       },
+      // La sección de empleos y oficios se llamaba /servicios; ahora es /trabajos.
+      // Los enlaces viejos (compartidos, Google) siguen funcionando.
+      {
+        source: '/servicios',
+        destination: '/trabajos',
+        permanent: true,
+      },
     ];
   },
 };

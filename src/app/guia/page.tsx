@@ -19,7 +19,7 @@ const ACCESOS = [
   { href: '/taxi-seguro', icon: 'local_taxi',   titulo: 'Cómo moverte',   sub: 'Taxi Seguro con chofer verificado' },
   { href: '/eventos',     icon: 'map',          titulo: 'Qué hacer',      sub: 'Tours, ferias y agenda' },
   { href: '/market',      icon: 'ramen_dining', titulo: 'Dónde comer',    sub: 'Huariques y menús del día' },
-  { href: '/servicios',   icon: 'construction', titulo: 'Buscar chamba',  sub: 'Técnicos y bolsa de empleo' },
+  { href: '/trabajos',   icon: 'construction', titulo: 'Buscar trabajo',  sub: 'Técnicos y bolsa de empleo' },
   { href: '/market',      icon: 'storefront',   titulo: 'Qué comprar',    sub: 'Mercado fresco y artesanía' },
 ];
 
