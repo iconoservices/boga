@@ -41,6 +41,16 @@ export default function Servicios() {
   const [servicios, setServicios] = useState<any[]>([]);
   const [empleos, setEmpleos] = useState<any[]>([]);
   const [cargado, setCargado] = useState(false);
+  // Visor: la imagen del aviso se abre grande aquí mismo (no en otra página).
+  const [visor, setVisor] = useState<any | null>(null);
+  useEffect(() => {
+    if (!visor) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (ev: KeyboardEvent) => ev.key === 'Escape' && setVisor(null);
+    window.addEventListener('keydown', onKey);
+    return () => { document.body.style.overflow = prev; window.removeEventListener('keydown', onKey); };
+  }, [visor]);
   useEffect(() => {
     fetchChamba().then(({ empleos: e, oficios: o }) => {
       setServicios(o);
@@ -142,9 +152,17 @@ export default function Servicios() {
             {empleos.map((e) => (
               <div key={e.id} className="bg-white rounded-2xl p-4 shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex items-start gap-4">
                 {e.img ? (
-                  <a href={e.img} target="_blank" rel="noopener noreferrer" aria-label={`Ver imagen del aviso de ${e.puesto}`} className="w-16 h-16 rounded-xl overflow-hidden bg-surface-container-low shrink-0 border border-surface-container-highest">
+                  <button
+                    type="button"
+                    onClick={() => setVisor(e)}
+                    aria-label={`Ver imagen del aviso de ${e.puesto} en grande`}
+                    className="relative w-16 h-16 rounded-xl overflow-hidden bg-surface-container-low shrink-0 border border-surface-container-highest active:scale-95 transition-transform"
+                  >
                     <img src={e.img} alt={e.puesto} loading="lazy" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
-                  </a>
+                    <span className="absolute bottom-0.5 right-0.5 w-5 h-5 rounded-full bg-black/55 text-white flex items-center justify-center">
+                      <span className="material-symbols-outlined text-[13px]">zoom_in</span>
+                    </span>
+                  </button>
                 ) : (
                   <div className="w-11 h-11 rounded-xl bg-primary-fixed flex items-center justify-center shrink-0">
                     <span className="material-symbols-outlined text-primary text-[20px]">work</span>
@@ -239,6 +257,37 @@ export default function Servicios() {
         <p className="text-secondary/70 font-body-md text-[11px] text-center pt-2">
           BogaHub conecta, pero no es empleador ni responsable de los acuerdos. Verifica siempre con quién tratas.
         </p>
+
+        {/* Visor de la imagen del aviso */}
+        {visor && (
+          <div className="fixed inset-0 z-[80] bg-black/85 flex flex-col items-center justify-center p-3 sm:p-6" onClick={() => setVisor(null)} role="dialog" aria-modal="true" aria-label={`Aviso de ${visor.puesto}`}>
+            <button type="button" aria-label="Cerrar" onClick={() => setVisor(null)} className="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/15 text-white flex items-center justify-center hover:bg-white/25 active:scale-90 transition">
+              <span className="material-symbols-outlined">close</span>
+            </button>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={visor.img} alt={visor.puesto} referrerPolicy="no-referrer" onClick={(ev) => ev.stopPropagation()} className="max-w-full max-h-[76dvh] object-contain rounded-xl shadow-2xl" />
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2" onClick={(ev) => ev.stopPropagation()}>
+              <p className="w-full text-center text-white/85 font-headline-sm text-sm">{visor.puesto}{visor.negocio ? ` · ${visor.negocio}` : ''}</p>
+              {(visor.link || visor.wsp) && (
+                <a
+                  href={visor.link || waLink(visor.wsp, `Hola, vi el aviso de "${visor.puesto}" en ${visor.negocio} por BogaHub. Me interesa postular.`)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 bg-primary text-white text-[13px] font-label-md px-4 py-2 rounded-full active:scale-95 transition-transform"
+                >
+                  {visor.link ? 'Ver aviso en la web' : 'Postular por WhatsApp'}
+                  <span className="material-symbols-outlined text-[16px]">{visor.link ? 'open_in_new' : 'arrow_forward'}</span>
+                </a>
+              )}
+              {visor.email && (
+                <a href={`mailto:${visor.email}?subject=${encodeURIComponent(`Postulación: ${visor.puesto}`)}`} className="flex items-center gap-1.5 bg-white text-primary text-[13px] font-label-md px-4 py-2 rounded-full active:scale-95 transition-transform">
+                  <span className="material-symbols-outlined text-[16px]">mail</span>Enviar CV
+                </a>
+              )}
+              <a href={visor.img} target="_blank" rel="noopener noreferrer" className="text-white/70 text-[12px] font-label-md underline px-2 py-2">Abrir imagen sola</a>
+            </div>
+          </div>
+        )}
       </main>
     </>
   );
