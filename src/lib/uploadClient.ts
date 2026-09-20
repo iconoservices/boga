@@ -52,8 +52,8 @@ export async function uploadFile(file: File, folder: string): Promise<string> {
     headers: { Authorization: `Bearer ${session.access_token}` },
     body: formData,
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Error al subir el archivo');
+  const data = await res.json().catch(() => ({} as { error?: string; url?: string }));
+  if (!res.ok) throw new Error(data.error || `Error al subir el archivo (código ${res.status})`);
   return data.url as string;
 }
 

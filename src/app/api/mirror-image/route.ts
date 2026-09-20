@@ -44,9 +44,14 @@ export async function POST(request: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
   const token = (request.headers.get('authorization') || '').replace('Bearer ', '');
-  if (!token) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  if (!token) return NextResponse.json({ error: 'No autorizado: la petición no trajo la sesión (vuelve a iniciar sesión)' }, { status: 401 });
   const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
-  if (authError || !user) return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+  if (authError || !user) {
+    // Se dice la causa real: "invalid JWT / expired" = la sesión venció (volver a entrar);
+    // "Invalid API key" = la llave SUPABASE_SERVICE_ROLE_KEY de Vercel está mal o vacía.
+    console.error('[mirror-image] getUser falló:', authError?.message);
+    return NextResponse.json({ error: `No autorizado: ${authError?.message || 'sesión inválida'}` }, { status: 403 });
+  }
 
   let url = '';
   let folder = '';
