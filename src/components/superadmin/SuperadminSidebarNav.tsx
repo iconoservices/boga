@@ -24,6 +24,7 @@ export const SUBRUTAS = [
   { href: '/superadmin/notas',          icon: 'sticky_note_2',label: 'Notas internas' },
   { href: '/superadmin/choferes',       icon: 'local_taxi',   label: 'Choferes' },
   { href: '/superadmin/alquileres',     icon: 'real_estate_agent', label: 'Inmuebles' },
+  { href: '/superadmin/sorteos',        icon: 'casino', label: 'Sorteos' },
   { href: '/superadmin/viajes',         icon: 'directions_boat', label: 'Viajes y Transportes' },
   { href: '/superadmin/chamba',         icon: 'construction', label: 'Trabajos y oficios' },
   { href: '/superadmin/eventos',        icon: 'celebration',  label: 'Eventos' },

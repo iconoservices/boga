@@ -10,7 +10,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const PERMITIDAS = new Set([
   '/api/chamba', '/api/viajes', '/api/eventos', '/api/lugares',
-  '/api/inmuebles', '/api/ventas', '/api/revista', '/api/catalog',
+  '/api/inmuebles', '/api/ventas', '/api/revista', '/api/catalog', '/api/sorteos',
 ]);
 
 export async function POST(request: Request) {

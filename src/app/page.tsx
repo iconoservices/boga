@@ -11,6 +11,7 @@ import { fetchAlquileres } from '@/lib/alquileres';
 import { fetchVentas } from '@/lib/ventas';
 import { fetchViajes } from '@/lib/viajes';
 import { fetchChamba, haceCuanto } from '@/lib/chamba';
+import { fetchSorteos, type Sorteo } from '@/lib/sorteos';
 import { fetchLugares } from '@/lib/lugares';
 import { BannerOverlay, type BannerStyle } from '@/components/BannerOverlay';
 
@@ -258,6 +259,12 @@ export default function HomePage() {
       })));
       setOficiosHome(oficios.slice(0, 6).map((o) => ({ id: o.id, nombre: o.nombre, oficio: o.oficio, zona: o.zona, img: o.img })));
     });
+  }, []);
+
+  // "Sorteo": solo aparece cuando hay un sorteo REAL abierto (sin ejemplos).
+  const [sorteoHome, setSorteoHome] = useState<Sorteo | null>(null);
+  useEffect(() => {
+    fetchSorteos().then((lista) => setSorteoHome(lista.find((x) => x.status === 'abierto') ?? null));
   }, []);
 
   // "Viajes desde Pucallpa": solo rutas reales de /api/viajes; sin ninguna, la sección no se muestra.
@@ -697,6 +704,30 @@ export default function HomePage() {
             ))}
           </div>
         </section>
+
+        {/* Sorteo — solo si hay uno real abierto */}
+        {sorteoHome && (
+        <section className="flex flex-col gap-4">
+          <SectionHead title="Sorteo" href="/sorteos" cta="Ver sorteos" />
+          <Link href="/sorteos" className="group relative block overflow-hidden rounded-2xl bg-[#3a1a6e] shadow-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_1.2fr]">
+              <div className="relative aspect-[16/9] sm:aspect-auto sm:min-h-[200px] bg-gradient-to-br from-[#5b21b6] to-[#312e81]">
+                {sorteoHome.img && <img src={sorteoHome.img} alt={sorteoHome.titulo} loading="lazy" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />}
+              </div>
+              <div className="p-4 lg:p-6 flex flex-col gap-2.5 text-white">
+                {sorteoHome.patrocinador && <span className="w-fit text-[10px] font-label-md uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ backgroundColor: '#c9f24a', color: '#2a1155' }}>Patrocina {sorteoHome.patrocinador}</span>}
+                <h3 className="font-headline-lg font-extrabold text-xl lg:text-2xl leading-tight">{sorteoHome.titulo}</h3>
+                <div className="flex flex-col gap-1">
+                  <div className="h-2.5 rounded-full bg-white/15 overflow-hidden">
+                    <div className="h-full rounded-full" style={{ width: `${Math.min(100, Math.round((sorteoHome.vendidos / (sorteoHome.meta || 1)) * 100))}%`, backgroundColor: '#c9f24a' }} />
+                  </div>
+                  <span className="text-[11px] font-label-md text-white/75"><b className="text-white">{sorteoHome.vendidos}</b> de {sorteoHome.meta} tickets · se sortea al llenarse</span>
+                </div>
+              </div>
+            </div>
+          </Link>
+        </section>
+        )}
 
         {/* Viajes & Transporte — solo con rutas reales cargadas */}
         {viajesHome.length > 0 && (        <section className="flex flex-col gap-4">

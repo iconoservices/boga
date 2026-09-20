@@ -1299,3 +1299,71 @@ ALTER TABLE public.job_listings ADD COLUMN IF NOT EXISTS email TEXT;
 -- Fecha de publicación del aviso (la real, si se conoce). Si queda vacía, la
 -- tarjeta usa el día en que se subió (created_at). Alimenta "Publicado hace N días".
 ALTER TABLE public.job_listings ADD COLUMN IF NOT EXISTS publicado_el DATE;
+
+
+-- ============================================================
+-- 18. SORTEOS  (rifas patrocinadas con contador de tickets)
+-- ============================================================
+-- `raffles`: un sorteo (premio, patrocinador, meta de tickets). `raffle_tickets`:
+-- un ticket por fila. El contador es el COUNT de tickets (no se guarda aparte,
+-- así nunca se descuadra). Cuando los tickets llegan a `meta_tickets` el sorteo
+-- se hace solo (al azar, en el servidor) y queda guardado el ganador.
+--
+-- Lectura pública SOLO de sorteos abiertos o ya sorteados. Los tickets (que llevan
+-- nombre y WhatsApp) los ve solo el superadmin; la web pública consulta el conteo
+-- por /api/sorteos (con la llave del servidor) y nunca expone datos personales.
+--
+-- OJO LEGAL: en Perú las rifas y sorteos entre el público pueden requerir
+-- autorización. Confirmarlo con un abogado antes de vender tickets.
+CREATE TABLE IF NOT EXISTS public.raffles (
+  id                UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at        TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  titulo            TEXT NOT NULL,                 -- "Reloj Poedagar 613"
+  descripcion       TEXT,
+  img               TEXT,
+  patrocinador      TEXT,                          -- "Delva"
+  como_participar   TEXT,                          -- "Cada S/ 20 en compras = 1 ticket"
+  precio_ticket     TEXT,                          -- informativo: "S/ 5" o "Gratis con tus compras"
+  meta_tickets      INT  NOT NULL CHECK (meta_tickets > 0),
+  cierra_el         DATE,                          -- fecha límite opcional
+  status            TEXT NOT NULL DEFAULT 'borrador',  -- borrador | abierto | sorteado | oculto
+  ganador_ticket_id UUID,
+  sorteado_el       TIMESTAMP WITH TIME ZONE,
+  ciudad            TEXT NOT NULL DEFAULT 'pucallpa',
+  orden             INT  NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS public.raffle_tickets (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at  TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  raffle_id   UUID NOT NULL REFERENCES public.raffles(id) ON DELETE CASCADE,
+  numero      INT  NOT NULL,                       -- 1, 2, 3… dentro de cada sorteo
+  nombre      TEXT NOT NULL,
+  whatsapp    TEXT,
+  nota        TEXT,
+  UNIQUE (raffle_id, numero)
+);
+
+CREATE INDEX IF NOT EXISTS raffle_tickets_raffle_idx ON public.raffle_tickets (raffle_id);
+CREATE INDEX IF NOT EXISTS raffles_status_idx ON public.raffles (status);
+
+ALTER TABLE public.raffles        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.raffle_tickets ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "raffles: lectura pública de abiertos y sorteados" ON public.raffles;
+DROP POLICY IF EXISTS "raffles: superadmin inserta" ON public.raffles;
+DROP POLICY IF EXISTS "raffles: superadmin edita"   ON public.raffles;
+DROP POLICY IF EXISTS "raffles: superadmin borra"   ON public.raffles;
+CREATE POLICY "raffles: lectura pública de abiertos y sorteados" ON public.raffles FOR SELECT USING (status IN ('abierto','sorteado') OR public.is_superadmin());
+CREATE POLICY "raffles: superadmin inserta" ON public.raffles FOR INSERT WITH CHECK (public.is_superadmin());
+CREATE POLICY "raffles: superadmin edita"   ON public.raffles FOR UPDATE USING (public.is_superadmin());
+CREATE POLICY "raffles: superadmin borra"   ON public.raffles FOR DELETE USING (public.is_superadmin());
+
+DROP POLICY IF EXISTS "raffle_tickets: solo superadmin lee"    ON public.raffle_tickets;
+DROP POLICY IF EXISTS "raffle_tickets: solo superadmin inserta" ON public.raffle_tickets;
+DROP POLICY IF EXISTS "raffle_tickets: solo superadmin edita"   ON public.raffle_tickets;
+DROP POLICY IF EXISTS "raffle_tickets: solo superadmin borra"   ON public.raffle_tickets;
+CREATE POLICY "raffle_tickets: solo superadmin lee"     ON public.raffle_tickets FOR SELECT USING (public.is_superadmin());
+CREATE POLICY "raffle_tickets: solo superadmin inserta" ON public.raffle_tickets FOR INSERT WITH CHECK (public.is_superadmin());
+CREATE POLICY "raffle_tickets: solo superadmin edita"   ON public.raffle_tickets FOR UPDATE USING (public.is_superadmin());
+CREATE POLICY "raffle_tickets: solo superadmin borra"   ON public.raffle_tickets FOR DELETE USING (public.is_superadmin());
