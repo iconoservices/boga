@@ -171,6 +171,10 @@ export async function generateMetadata({ params }: Omit<Props, 'searchParams'>) 
     title: `${store.name} | Boga Market`,
     description: store.tagline,
     manifest: `/manifest.json?slug=${slug}`,
+    // La dirección OFICIAL de la tienda es siempre la del sitio principal (bogahub.app/<tienda>),
+    // aunque se abra desde la dirección de tiendas (tiendas.bogahub.app): así Google no las
+    // cuenta como páginas repetidas. Al ser relativa, se resuelve contra metadataBase.
+    alternates: { canonical: `/${slug}` },
     openGraph: {
       title: store.name,
       description: store.tagline,
