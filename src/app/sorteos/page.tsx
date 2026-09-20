@@ -71,7 +71,7 @@ function Barra({ vendidos, meta, fechaSorteo, grande = false }: { vendidos: numb
 function TarjetaSorteo({ s }: { s: Sorteo }) {
   return (
     <article className="snap-start shrink-0 w-[270px] lg:w-[300px] rounded-2xl bg-white/[0.06] border border-white/15 overflow-hidden flex flex-col">
-      <div className="relative aspect-[4/3] bg-gradient-to-br from-[#5b21b6] to-[#312e81]">
+      <div className="relative aspect-square bg-gradient-to-br from-[#5b21b6] to-[#312e81]">
         {s.img && <img src={s.img} alt={s.titulo} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />}
         <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
         {s.patrocinador && (
@@ -126,10 +126,10 @@ function CarruselSorteos({ items }: { items: Sorteo[] }) {
       </div>
       {items.length > 3 && (
         <>
-          <button type="button" aria-label="Anterior" onClick={() => mover(-1)} className="hidden lg:flex absolute -left-4 top-[120px] w-9 h-9 rounded-full bg-white/90 text-[#3a1a6e] items-center justify-center shadow-lg active:scale-90 transition">
+          <button type="button" aria-label="Anterior" onClick={() => mover(-1)} className="hidden lg:flex absolute -left-4 top-[135px] w-9 h-9 rounded-full bg-white/90 text-[#3a1a6e] items-center justify-center shadow-lg active:scale-90 transition">
             <span className="material-symbols-outlined">chevron_left</span>
           </button>
-          <button type="button" aria-label="Siguiente" onClick={() => mover(1)} className="hidden lg:flex absolute -right-4 top-[120px] w-9 h-9 rounded-full bg-white/90 text-[#3a1a6e] items-center justify-center shadow-lg active:scale-90 transition">
+          <button type="button" aria-label="Siguiente" onClick={() => mover(1)} className="hidden lg:flex absolute -right-4 top-[135px] w-9 h-9 rounded-full bg-white/90 text-[#3a1a6e] items-center justify-center shadow-lg active:scale-90 transition">
             <span className="material-symbols-outlined">chevron_right</span>
           </button>
         </>
