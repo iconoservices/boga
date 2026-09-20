@@ -33,80 +33,6 @@ type Ruta = {
   notas?: string;
 };
 
-const RUTAS: Ruta[] = [
-  // ── Fluviales (Rápidos) ──
-  {
-    id: 'f1', medio: 'fluvial', destino: 'Contamana',
-    via: 'Río Ucayali · Puerto Henry / La Hoyada',
-    agencia: 'Rápidos Eduardo', duracion: '~10–12 h', frecuencia: 'Diario, 5:00 AM',
-    precio: 'S/ 80–120', wsp: '51963000000', icon: 'directions_boat',
-    notas: 'Llevar agua, comida y protector solar. Chaleco incluido.',
-  },
-  {
-    id: 'f2', medio: 'fluvial', destino: 'Atalaya',
-    via: 'Río Ucayali · Puerto Henry',
-    agencia: 'Transportes Fluviales Atalaya', duracion: '~2–3 días', frecuencia: 'Semanal (lunes y jueves)',
-    precio: 'S/ 150–200', wsp: '51963000000', icon: 'directions_boat',
-    notas: 'Incluye hamaca. Comida a bordo disponible.',
-  },
-  {
-    id: 'f3', medio: 'fluvial', destino: 'Orellana / Bolognesi',
-    via: 'Río Ucayali · La Hoyada',
-    agencia: 'Rápidos Mishael', duracion: '~6–8 h', frecuencia: 'Diario, 6:00 AM',
-    precio: 'S/ 60–90', wsp: '51963000000', icon: 'directions_boat',
-  },
-  {
-    id: 'f4', medio: 'fluvial', destino: 'Iquitos',
-    via: 'Río Ucayali → Marañón → Amazonas',
-    agencia: 'Lancha Henry / Eduardo', duracion: '~5–7 días', frecuencia: 'Semanal',
-    precio: 'S/ 200–350', wsp: '51963000000', icon: 'directions_boat',
-    notas: 'Ruta larga. Recomendado llevar hamaca y provisiones.',
-  },
-
-  // ── Terrestres ──
-  {
-    id: 't1', medio: 'terrestre', destino: 'Lima',
-    via: 'Carretera Federico Basadre → Central',
-    agencia: 'Turismo Central / León de Huánuco', duracion: '~18–20 h', frecuencia: 'Diario, varias salidas',
-    precio: 'S/ 60–120', wsp: '51963000000', icon: 'directions_bus',
-    notas: 'Buses cama y semi-cama. Terminal Terrestre Pucallpa.',
-  },
-  {
-    id: 't2', medio: 'terrestre', destino: 'Huánuco',
-    via: 'Carretera Federico Basadre',
-    agencia: 'Turismo Central / Bahía', duracion: '~8–10 h', frecuencia: 'Diario',
-    precio: 'S/ 35–55', wsp: '51963000000', icon: 'directions_bus',
-  },
-  {
-    id: 't3', medio: 'terrestre', destino: 'Tingo María',
-    via: 'Carretera Federico Basadre',
-    agencia: 'Bahía Continental', duracion: '~5–6 h', frecuencia: 'Diario',
-    precio: 'S/ 25–40', wsp: '51963000000', icon: 'directions_bus',
-  },
-  {
-    id: 't4', medio: 'terrestre', destino: 'Aguaytía',
-    via: 'Carretera Federico Basadre',
-    agencia: 'Colectivos y combis', duracion: '~2–3 h', frecuencia: 'Cada 30 min',
-    precio: 'S/ 15–25', wsp: '51963000000', icon: 'directions_bus',
-    notas: 'Colectivos desde el Paradero de Aguaytía.',
-  },
-
-  // ── Aéreos ──
-  {
-    id: 'a1', medio: 'aereo', destino: 'Lima (Jorge Chávez)',
-    via: 'Aeropuerto FAP David Abensur Rengifo',
-    agencia: 'LATAM / Sky Airline / Star Perú', duracion: '~1 h 10 min', frecuencia: 'Diario, varios vuelos',
-    precio: 'S/ 120–350', wsp: '51963000000', icon: 'flight',
-    notas: 'Comprar con anticipación para mejores precios.',
-  },
-  {
-    id: 'a2', medio: 'aereo', destino: 'Iquitos',
-    via: 'Aeropuerto FAP David Abensur Rengifo',
-    agencia: 'Star Perú', duracion: '~1 h', frecuencia: '2–3 veces por semana',
-    precio: 'S/ 150–300', wsp: '51963000000', icon: 'flight',
-  },
-];
-
 function waLink(numero: string, texto: string) {
   return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
 }
@@ -115,10 +41,11 @@ export default function Viajes() {
   const { cartCount, setIsCartOpen } = useCart();
   const [filtro, setFiltro] = useState<Medio>('todos');
 
-  // Rutas reales de /api/viajes; mientras la tabla esté vacía, las de muestra.
-  const [rutas, setRutas] = useState<Ruta[]>(RUTAS);
+  // Solo rutas reales de /api/viajes (sin ejemplos: si no hay ninguna, se avisa).
+  const [rutas, setRutas] = useState<Ruta[]>([]);
+  const [cargado, setCargado] = useState(false);
   useEffect(() => {
-    fetchViajes().then((rows) => { if (rows.length > 0) setRutas(rows); });
+    fetchViajes().then((rows) => { setRutas(rows); setCargado(true); });
   }, []);
 
   const lista = filtro === 'todos' ? rutas : rutas.filter((r) => r.medio === filtro);
@@ -209,6 +136,17 @@ export default function Viajes() {
 
         {/* Grilla de rutas */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {cargado && lista.length === 0 && (
+            <div className="col-span-full bg-white rounded-2xl border border-dashed border-surface-container-highest p-8 text-center">
+              <span className="material-symbols-outlined text-secondary/40 text-[32px]">directions_boat</span>
+              <p className="font-headline-sm text-sm text-on-surface mt-2">
+                {rutas.length === 0 ? 'Todavía no hay rutas publicadas' : 'No hay rutas de este tipo por ahora'}
+              </p>
+              <p className="text-secondary font-body-md text-xs mt-1">
+                {rutas.length === 0 ? 'Muy pronto: rápidos, buses y vuelos desde Pucallpa.' : 'Prueba con otro medio de transporte.'}
+              </p>
+            </div>
+          )}
           {lista.map((r) => (
             <div key={r.id} className="bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col">
               {/* Header con ícono y destino */}

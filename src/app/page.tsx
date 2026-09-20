@@ -10,7 +10,7 @@ import { fetchEventos } from '@/lib/eventos';
 import { fetchAlquileres } from '@/lib/alquileres';
 import { fetchVentas } from '@/lib/ventas';
 import { fetchViajes } from '@/lib/viajes';
-import { fetchChamba } from '@/lib/chamba';
+import { fetchChamba, haceCuanto } from '@/lib/chamba';
 import { fetchLugares } from '@/lib/lugares';
 import { BannerOverlay, type BannerStyle } from '@/components/BannerOverlay';
 
@@ -81,20 +81,6 @@ const INMUEBLES_PEEK = [
   { id: 'al2', titulo: 'Mini-departamento para 1–2 personas',  zona: 'Yarinacocha', precio: 'S/ 800', tag: 'Alquiler', img: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&q=80' },
   { id: 'al3', titulo: 'Terreno 200 m² con título de propiedad', zona: 'Campo Verde', precio: 'S/ 45,000', tag: 'Venta', img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&q=80' },
 ];
-
-// Peek: Viajes.
-const VIAJES_PEEK = [
-  { id: 'vj1', titulo: 'Rápido a Contamana',   medio: 'Fluvial',   tiempo: '~12 h',   precio: 'S/ 80–120', icon: 'directions_boat' },
-  { id: 'vj2', titulo: 'Colectivo a Lima',     medio: 'Terrestre', tiempo: '~18 h',   precio: 'S/ 60–100', icon: 'directions_bus' },
-  { id: 'vj3', titulo: 'Vuelo a Lima',         medio: 'Aéreo',     tiempo: '~1 h 10 min', precio: 'S/ 120–350', icon: 'flight' },
-];
-
-// Peek: Sorteos.
-const SORTEO_PEEK = {
-  titulo: 'Moto lineal 0 km',
-  sub: 'Honda XR 150 · sorteo del mes',
-  img: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=1400&q=80',
-};
 
 // SEO: notas de la revista.
 const SELVA_NOTES = [
@@ -259,16 +245,23 @@ export default function HomePage() {
 
   // "Dónde quedarte": avisos reales de /inmuebles (alquileres + ventas, vía los
   // endpoints cacheados). Mientras no haya ninguno cargado, muestra el demo.
-  // "Chamba y oficios": oficios reales de /api/chamba; demo mientras no haya.
+  // "Trabajos y oficios": empleos y oficios reales de /api/chamba. Sin datos de
+  // muestra: si no hay nada cargado, la sección no se muestra.
+  type EmpleoHome = { id: string; puesto: string; negocio: string; zona: string; tipo: string; pago: string; img: string; subido: string };
+  const [empleosHome, setEmpleosHome] = useState<EmpleoHome[]>([]);
   const [oficiosHome, setOficiosHome] = useState<{ id: string; nombre: string; oficio: string; zona: string; img: string }[]>([]);
   useEffect(() => {
-    fetchChamba().then(({ oficios }) => {
-      if (oficios.length > 0) setOficiosHome(oficios.slice(0, 6).map((o) => ({ id: o.id, nombre: o.nombre, oficio: o.oficio, zona: o.zona, img: o.img })));
+    fetchChamba().then(({ empleos, oficios }) => {
+      setEmpleosHome(empleos.slice(0, 8).map((e) => ({
+        id: e.id, puesto: e.puesto, negocio: e.negocio || '', zona: e.zona || '', tipo: e.tipo || '', pago: e.pago || '',
+        img: e.img || '', subido: e.subido || '',
+      })));
+      setOficiosHome(oficios.slice(0, 6).map((o) => ({ id: o.id, nombre: o.nombre, oficio: o.oficio, zona: o.zona, img: o.img })));
     });
   }, []);
 
-  // "Viajes desde Pucallpa": rutas reales de /api/viajes; demo mientras no haya.
-  const [viajesHome, setViajesHome] = useState(VIAJES_PEEK);
+  // "Viajes desde Pucallpa": solo rutas reales de /api/viajes; sin ninguna, la sección no se muestra.
+  const [viajesHome, setViajesHome] = useState<{ id: string; titulo: string; medio: string; tiempo: string; precio: string; icon: string }[]>([]);
   useEffect(() => {
     fetchViajes().then((rows) => {
       if (rows.length === 0) return;
@@ -622,30 +615,64 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Servicios y chamba — solo oficios reales; sin ninguno, no se muestra */}
-        {oficiosHome.length > 0 && (
+        {/* Trabajos y oficios — solo datos reales; sin ninguno, no se muestra */}
+        {(empleosHome.length > 0 || oficiosHome.length > 0) && (
         <section className="flex flex-col gap-4">
           <SectionHead title="Trabajos y oficios" href="/trabajos" cta="Ver todo" />
-          <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
-            {oficiosHome.map((s) => (
-              <Link href="/trabajos" key={s.id} className="min-w-[240px] w-[240px] lg:min-w-[280px] lg:w-[280px] snap-start shrink-0 bg-white border border-surface-container-highest rounded-2xl p-3 flex items-center gap-3 shadow-sm hover:border-primary/30 hover:shadow-md transition-all">
-                <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-surface-container-low">
-                  {s.img ? (
-                    <img src={s.img} alt={s.nombre} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-secondary/40"><span className="material-symbols-outlined text-[24px]">construction</span></div>
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <span className="font-headline-sm text-sm text-on-surface leading-tight line-clamp-1">{s.nombre}</span>
-                  <span className="block font-label-md text-[11px] text-secondary line-clamp-1">{s.oficio}</span>
-                  <span className="font-label-md text-[10px] text-secondary/70 flex items-center gap-0.5 mt-0.5">
-                    <span className="material-symbols-outlined text-[12px]">location_on</span>{s.zona}
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
+
+          {empleosHome.length > 0 && (
+            <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
+              {empleosHome.map((e) => (
+                <Link
+                  href="/trabajos"
+                  key={e.id}
+                  className="group min-w-[260px] w-[260px] lg:min-w-[290px] lg:w-[290px] snap-start shrink-0 bg-white border border-surface-container-highest rounded-2xl p-3 flex flex-col gap-2.5 shadow-sm hover:border-primary/30 hover:shadow-md transition-all"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-primary-fixed flex items-center justify-center">
+                      {e.img ? (
+                        <img src={e.img} alt={e.puesto} loading="lazy" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="material-symbols-outlined text-primary text-[24px]">work</span>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-headline-sm text-sm text-on-surface leading-tight line-clamp-2">{e.puesto}</h3>
+                      <span className="block font-label-md text-[11px] text-secondary line-clamp-1 mt-0.5">{[e.negocio, e.zona].filter(Boolean).join(' · ')}</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {e.tipo && <span className="bg-surface-container-low text-secondary text-[10px] font-label-md px-2 py-0.5 rounded-full border border-surface-container-highest">{e.tipo}</span>}
+                    {e.pago && <span className="bg-primary-fixed text-primary text-[10px] font-label-md px-2 py-0.5 rounded-full">{e.pago}</span>}
+                    {haceCuanto(e.subido) && <span className="text-secondary/70 font-label-md text-[10px] ml-auto">{haceCuanto(e.subido)}</span>}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {oficiosHome.length > 0 && (
+            <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
+              {oficiosHome.map((s) => (
+                <Link href="/trabajos" key={s.id} className="min-w-[240px] w-[240px] lg:min-w-[280px] lg:w-[280px] snap-start shrink-0 bg-white border border-surface-container-highest rounded-2xl p-3 flex items-center gap-3 shadow-sm hover:border-primary/30 hover:shadow-md transition-all">
+                  <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-surface-container-low">
+                    {s.img ? (
+                      <img src={s.img} alt={s.nombre} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-secondary/40"><span className="material-symbols-outlined text-[24px]">construction</span></div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className="font-headline-sm text-sm text-on-surface leading-tight line-clamp-1">{s.nombre}</span>
+                    <span className="block font-label-md text-[11px] text-secondary line-clamp-1">{s.oficio}</span>
+                    <span className="font-label-md text-[10px] text-secondary/70 flex items-center gap-0.5 mt-0.5">
+                      <span className="material-symbols-outlined text-[12px]">location_on</span>{s.zona}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </section>
         )}
 
@@ -671,8 +698,8 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Viajes & Transporte */}
-        <section className="flex flex-col gap-4">
+        {/* Viajes & Transporte — solo con rutas reales cargadas */}
+        {viajesHome.length > 0 && (        <section className="flex flex-col gap-4">
           <SectionHead title="Viajes desde Pucallpa" href="/viajes" cta="Ver rutas" />
           <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
             {viajesHome.map((v) => (
@@ -690,20 +717,7 @@ export default function HomePage() {
             ))}
           </div>
         </section>
-
-        {/* Sorteo del mes */}
-        <section className="flex flex-col gap-4">
-          <SectionHead title="Sorteo del mes" href="/sorteos" cta="Ver sorteos" />
-          <Link href="/sorteos" className="group relative block overflow-hidden rounded-2xl aspect-[16/9] sm:aspect-[21/9] bg-[#3a1a6e] shadow-sm">
-            <img src={SORTEO_PEEK.img} alt={SORTEO_PEEK.titulo} className="absolute inset-0 w-full h-full object-cover opacity-80 transition-transform duration-700 group-hover:scale-[1.03]" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#3a1a6e]/95 via-[#3a1a6e]/50 to-transparent" />
-            <div className="absolute inset-0 flex flex-col justify-center gap-1.5 p-5 lg:p-10 max-w-[520px]">
-              <span className="w-fit text-[10px] font-label-md uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ backgroundColor: '#c9f24a', color: '#2a1155' }}>Suma tickets con tus compras</span>
-              <h3 className="font-headline-lg font-extrabold text-white text-2xl lg:text-4xl leading-[1.03]">{SORTEO_PEEK.titulo}</h3>
-              <p className="text-white/80 font-body-md text-xs lg:text-sm">{SORTEO_PEEK.sub}</p>
-            </div>
-          </Link>
-        </section>
+        )}
 
         {/* Qué es BogaHub */}
         <section className="bg-on-surface text-background rounded-2xl p-6 lg:p-10">
