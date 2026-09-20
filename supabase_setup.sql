@@ -1291,3 +1291,7 @@ ALTER TABLE public.job_listings ADD COLUMN IF NOT EXISTS link TEXT;
 
 -- Imagen opcional del empleo (el flyer del aviso). Se muestra en la tarjeta.
 ALTER TABLE public.job_listings ADD COLUMN IF NOT EXISTS img TEXT;
+
+-- Descripción (requisitos, funciones, beneficios) y correo de contacto del empleo.
+ALTER TABLE public.job_listings ADD COLUMN IF NOT EXISTS descripcion TEXT;
+ALTER TABLE public.job_listings ADD COLUMN IF NOT EXISTS email TEXT;

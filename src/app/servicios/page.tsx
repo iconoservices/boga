@@ -11,6 +11,22 @@ import { fetchChamba } from '@/lib/chamba';
 
 type Vista = 'servicios' | 'empleos';
 
+// Descripción / requisitos de un empleo: 3 líneas y "Ver más" para desplegar.
+function DescripcionEmpleo({ texto }: { texto: string }) {
+  const [abierta, setAbierta] = useState(false);
+  const larga = texto.length > 140 || texto.split('\n').length > 3;
+  return (
+    <div className="mt-2">
+      <p className={`text-secondary font-body-md text-xs leading-relaxed whitespace-pre-line ${abierta ? '' : 'line-clamp-3'}`}>{texto}</p>
+      {larga && (
+        <button type="button" onClick={() => setAbierta((v) => !v)} className="text-primary font-label-md text-[11px] mt-0.5">
+          {abierta ? 'Ver menos' : 'Ver más'}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function waLink(numero: string, texto: string) {
   return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
 }
@@ -124,7 +140,7 @@ export default function Servicios() {
               </div>
             )}
             {empleos.map((e) => (
-              <div key={e.id} className="bg-white rounded-2xl p-4 shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex items-center gap-4">
+              <div key={e.id} className="bg-white rounded-2xl p-4 shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex items-start gap-4">
                 {e.img ? (
                   <a href={e.img} target="_blank" rel="noopener noreferrer" aria-label={`Ver imagen del aviso de ${e.puesto}`} className="w-16 h-16 rounded-xl overflow-hidden bg-surface-container-low shrink-0 border border-surface-container-highest">
                     <img src={e.img} alt={e.puesto} loading="lazy" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
@@ -141,18 +157,30 @@ export default function Servicios() {
                     <span className="bg-surface-container-low text-secondary text-[10px] font-label-md px-2 py-0.5 rounded-full border border-surface-container-highest">{e.tipo}</span>
                     <span className="bg-primary-fixed text-primary text-[10px] font-label-md px-2 py-0.5 rounded-full">{e.pago}</span>
                   </div>
+                  {e.descripcion && <DescripcionEmpleo texto={e.descripcion} />}
                 </div>
-                {(e.link || e.wsp) && (
-                  <a
-                    href={e.link || waLink(e.wsp, `Hola, vi el aviso de "${e.puesto}" en ${e.negocio} por BogaHub. Me interesa postular.`)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="shrink-0 flex items-center gap-1.5 bg-primary text-white text-[12px] font-label-md px-3 py-2 rounded-full active:scale-95 transition-transform"
-                  >
-                    {e.link ? 'Ver aviso' : 'Postular'}
-                    <span className="material-symbols-outlined text-[16px]">{e.link ? 'open_in_new' : 'arrow_forward'}</span>
-                  </a>
-                )}
+                <div className="shrink-0 flex flex-col gap-1.5 items-stretch">
+                  {(e.link || e.wsp) && (
+                    <a
+                      href={e.link || waLink(e.wsp, `Hola, vi el aviso de "${e.puesto}" en ${e.negocio} por BogaHub. Me interesa postular.`)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-1.5 bg-primary text-white text-[12px] font-label-md px-3 py-2 rounded-full active:scale-95 transition-transform"
+                    >
+                      {e.link ? 'Ver aviso' : 'Postular'}
+                      <span className="material-symbols-outlined text-[16px]">{e.link ? 'open_in_new' : 'arrow_forward'}</span>
+                    </a>
+                  )}
+                  {e.email && (
+                    <a
+                      href={`mailto:${e.email}?subject=${encodeURIComponent(`Postulación: ${e.puesto}`)}`}
+                      className="flex items-center justify-center gap-1.5 bg-primary-fixed text-primary text-[12px] font-label-md px-3 py-1.5 rounded-full active:scale-95 transition-transform"
+                    >
+                      <span className="material-symbols-outlined text-[15px]">mail</span>
+                      Enviar CV
+                    </a>
+                  )}
+                </div>
               </div>
             ))}
           </div>
