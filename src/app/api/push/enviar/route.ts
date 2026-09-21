@@ -69,7 +69,7 @@ export async function POST(request: Request) {
   const pub = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY, priv = process.env.VAPID_PRIVATE_KEY;
   if (!pub || !priv) return NextResponse.json({ error: 'Faltan las claves VAPID en el servidor' }, { status: 500, headers: cors });
 
-  const body = await request.json().catch(() => null) as { store_slug?: unknown; titulo?: unknown; cuerpo?: unknown; url?: unknown } | null;
+  const body = await request.json().catch(() => null) as { store_slug?: unknown; titulo?: unknown; cuerpo?: unknown; url?: unknown; prueba_endpoint?: unknown } | null;
   const slug = typeof body?.store_slug === 'string' ? body.store_slug : '';
   const titulo = typeof body?.titulo === 'string' ? body.titulo.trim() : '';
   const cuerpo = typeof body?.cuerpo === 'string' ? body.cuerpo.trim() : '';
@@ -84,6 +84,31 @@ export async function POST(request: Request) {
   // El aviso solo puede llevar a una ruta de la misma app (nunca a otro sitio)
   let url = typeof body?.url === 'string' ? body.url.trim() : '';
   if (!url.startsWith('/') || url.startsWith('//')) url = slug === CANAL_BOGA ? '/' : `/${slug}`;
+
+  // Modo prueba: se envía SOLO al dispositivo de quien lo pide (su propia suscripción). No avisa a
+  // nadie más, no gasta cupo, no queda en el historial y no exige horario: sirve para ver cómo se ve.
+  if (typeof body?.prueba_endpoint === 'string') {
+    const { data: propia } = await supabase.from('push_subs').select('endpoint,p256dh,auth').eq('endpoint', body.prueba_endpoint).maybeSingle();
+    if (!propia) return NextResponse.json({ error: 'Este dispositivo todavía no está suscrito. Activa antes la campana en este navegador.' }, { status: 400, headers: cors });
+    webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:jnmcsky@gmail.com', pub, priv);
+    let iconoPrueba: string | undefined;
+    if (slug !== CANAL_BOGA) {
+      const { data: t } = await supabase.from('stores').select('logo_image,hero_image').eq('slug', slug).maybeSingle();
+      iconoPrueba = t?.logo_image || t?.hero_image || undefined;
+    }
+    try {
+      await webpush.sendNotification(
+        { endpoint: propia.endpoint, keys: { p256dh: propia.p256dh, auth: propia.auth } },
+        JSON.stringify({ title: titulo, body: cuerpo, url, tag: `${slug}-prueba`, icon: iconoPrueba }),
+        { TTL: 3600 },
+      );
+    } catch (e) {
+      const code = (e as { statusCode?: number })?.statusCode;
+      if (code === 404 || code === 410) await supabase.from('push_subs').delete().eq('endpoint', propia.endpoint);
+      return NextResponse.json({ error: `No se pudo entregar la prueba (${code ?? 'error'}). Activa la campana otra vez.` }, { status: 502, headers: cors });
+    }
+    return NextResponse.json({ ok: true, prueba: true }, { headers: cors });
+  }
 
   if (!dentroDeHorario()) {
     return NextResponse.json({ error: `Solo se envía entre las ${PUSH_LIMITES.horaDesde}:00 y las ${PUSH_LIMITES.horaHasta}:00 (hora de Lima).` }, { status: 409, headers: cors });

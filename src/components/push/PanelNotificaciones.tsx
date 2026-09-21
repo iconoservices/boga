@@ -45,6 +45,26 @@ export default function PanelNotificaciones({ opciones }: { opciones: OpcionCana
   }, [slug]);
   useEffect(() => { cargar(); }, [cargar]);
 
+  // Prueba: la notificación llega solo a ESTE dispositivo (no avisa a nadie, no gasta cupo)
+  const enviarPrueba = async () => {
+    setMensaje('');
+    if (!titulo.trim() || !cuerpo.trim()) { setMensaje('Escribe el título y el texto.'); return; }
+    setEnviando(true);
+    try {
+      const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : undefined;
+      const sub = reg ? await reg.pushManager.getSubscription() : null;
+      if (!sub) { setMensaje('Este navegador no tiene los avisos activados. Activa antes la campana de BogaHub (o el interruptor de tu perfil).'); setEnviando(false); return; }
+      const r = await fetch('/api/push/enviar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await token()}` },
+        body: JSON.stringify({ store_slug: slug, titulo, cuerpo, url, prueba_endpoint: sub.endpoint }),
+      });
+      const j = await r.json();
+      setMensaje(r.ok ? '✅ Prueba enviada: debería llegarte en unos segundos.' : (j.error || 'No se pudo enviar la prueba'));
+    } catch { setMensaje('No se pudo enviar la prueba'); }
+    setEnviando(false);
+  };
+
   const enviar = async () => {
     setMensaje('');
     if (!titulo.trim() || !cuerpo.trim()) { setMensaje('Escribe el título y el texto.'); return; }
@@ -121,6 +141,13 @@ export default function PanelNotificaciones({ opciones }: { opciones: OpcionCana
               className="w-full rounded-lg bg-primary text-white font-bold py-2.5 text-sm disabled:opacity-50"
             >
               {enviando ? 'Enviando…' : estado.puedeHoy ? 'Enviar a todos los seguidores' : 'Límite de campañas alcanzado'}
+            </button>
+            <button
+              onClick={enviarPrueba}
+              disabled={enviando}
+              className="w-full rounded-lg border border-primary text-primary font-bold py-2.5 text-sm disabled:opacity-50"
+            >
+              Enviarme una prueba (solo a este dispositivo)
             </button>
             {mensaje && <p className="text-sm text-on-surface">{mensaje}</p>}
           </div>
