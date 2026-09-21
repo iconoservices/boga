@@ -138,10 +138,10 @@ function PortadaCarrusel({ notas, promos, style, cargando }: { notas: NotaCard[]
           ))}
         </div>
 
-        <button onClick={(e) => { e.preventDefault(); prev(); }} aria-label="Anterior" className="flex absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/90 items-center justify-center shadow-md active:scale-90 transition-transform">
+        <button onClick={(e) => { e.preventDefault(); prev(); }} aria-label="Anterior" className="hidden sm:flex absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/90 items-center justify-center shadow-md active:scale-90 transition-transform">
           <span className="material-symbols-outlined text-[18px] sm:text-[20px] text-on-surface">chevron_left</span>
         </button>
-        <button onClick={(e) => { e.preventDefault(); next(); }} aria-label="Siguiente" className="flex absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/90 items-center justify-center shadow-md active:scale-90 transition-transform">
+        <button onClick={(e) => { e.preventDefault(); next(); }} aria-label="Siguiente" className="hidden sm:flex absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/90 items-center justify-center shadow-md active:scale-90 transition-transform">
           <span className="material-symbols-outlined text-[18px] sm:text-[20px] text-on-surface">chevron_right</span>
         </button>
         <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
