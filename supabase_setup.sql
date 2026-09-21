@@ -1374,3 +1374,6 @@ CREATE POLICY "raffle_tickets: solo superadmin borra"   ON public.raffle_tickets
 ALTER TABLE public.raffles ALTER COLUMN meta_tickets DROP NOT NULL;
 ALTER TABLE public.raffles DROP CONSTRAINT IF EXISTS raffles_meta_tickets_check;
 ALTER TABLE public.raffles ADD CONSTRAINT raffles_meta_tickets_check CHECK (meta_tickets IS NULL OR meta_tickets > 0);
+
+-- Subdominio propio por tienda (plan de pago): <slug>.bogahub.app solo funciona si esto es true.
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS subdominio_activo BOOLEAN DEFAULT false;

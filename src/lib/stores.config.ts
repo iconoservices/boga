@@ -40,6 +40,7 @@ export interface StoreConfig {
    * en vez de a la pagina-plantilla de BogaHub (/slug).
    */
   externalUrl?: string;
+  subdominioActivo?: boolean;
   /**
    * Mostrar los productos de ejemplo de la plantilla mientras la tienda esta
    * vacia. Solo aplica si no cargo productos propios (ver lib/demo.ts).
