@@ -11,7 +11,8 @@ interface ChatMessage {
   avatarColor: string;
   channel: string;
   text: string;
-  time: string;
+  /** Momento real en que se escribió (ms). Los mensajes de ejemplo no tienen: no muestran hora. */
+  at?: number;
   likes: number;
 }
 
@@ -23,7 +24,6 @@ const INITIAL_MESSAGES: ChatMessage[] = [
     avatarColor: 'bg-emerald-600',
     channel: 'general',
     text: '¡Buenas tardes gentita de Pucallpa! ¿Alguien sabe si el malecón Grau ya tiene actividad hoy?',
-    time: 'Hace 12 min',
     likes: 4,
   },
   {
@@ -33,7 +33,6 @@ const INITIAL_MESSAGES: ChatMessage[] = [
     avatarColor: 'bg-blue-600',
     channel: 'preguntas',
     text: 'Paso libre por la Federico Basadre km 60, todo despejado y sin lluvia por ahora.',
-    time: 'Hace 40 min',
     likes: 9,
   },
   {
@@ -43,7 +42,6 @@ const INITIAL_MESSAGES: ChatMessage[] = [
     avatarColor: 'bg-purple-600',
     channel: 'general',
     text: 'Qué lindo atardecer en Yarinacocha hoy día 🌅 Selva hermosa.',
-    time: 'Hace 1 hora',
     likes: 12,
   },
 ];
@@ -69,6 +67,19 @@ function shortName(raw: string) {
   const cap = (w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
   if (words.length === 1) return cap(words[0]);
   return `${cap(words[0])} ${words[words.length - 1].charAt(0).toUpperCase()}.`;
+}
+
+// Hora real del mensaje: "14:32" si es de hoy, "Ayer 14:32", o "20 sep 14:32".
+// Los mensajes de ejemplo (sin `at`) no muestran hora: una fija como "Hace 40 min" sería falsa.
+function horaDelMensaje(at?: number): string {
+  if (!at) return '';
+  const zona = 'America/Lima';
+  const dia = (t: number) => new Date(t).toLocaleDateString('en-CA', { timeZone: zona });
+  const hora = new Date(at).toLocaleTimeString('es-PE', { timeZone: zona, hour: '2-digit', minute: '2-digit', hour12: false });
+  if (dia(at) === dia(Date.now())) return hora;
+  if (dia(at) === dia(Date.now() - 86_400_000)) return `Ayer ${hora}`;
+  const fecha = new Date(at).toLocaleDateString('es-PE', { timeZone: zona, day: '2-digit', month: 'short' }).replace('.', '');
+  return `${fecha} ${hora}`;
 }
 
 export default function PlazaChatBubble() {
@@ -171,7 +182,7 @@ export default function PlazaChatBubble() {
       avatarColor: 'bg-primary',
       channel: activeChannel === 'todos' ? 'general' : activeChannel,
       text: body,
-      time: 'Ahora mismo',
+      at: Date.now(),
       likes: 0,
     };
 
@@ -364,7 +375,7 @@ export default function PlazaChatBubble() {
                           </span>
                         </div>
                         <span className="text-[10px] text-gray-500">
-                          {msg.time}
+                          {horaDelMensaje(msg.at)}
                         </span>
                       </div>
 
