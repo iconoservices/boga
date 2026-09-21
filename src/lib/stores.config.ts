@@ -41,6 +41,8 @@ export interface StoreConfig {
    */
   externalUrl?: string;
   subdominioActivo?: boolean;
+  /** Avisos push propios habilitados por el superadmin (solo se usan en la dirección propia de la tienda). */
+  pushActivo?: boolean;
   /**
    * Mostrar los productos de ejemplo de la plantilla mientras la tienda esta
    * vacia. Solo aplica si no cargo productos propios (ver lib/demo.ts).

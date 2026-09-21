@@ -139,6 +139,7 @@ async function cargarTienda(slug: string) {
         instagram: dbStore.instagram || undefined,
         tiktok: dbStore.tiktok || undefined,
         subdominioActivo: dbStore.subdominio_activo ?? undefined,
+        pushActivo: dbStore.push_activo ?? undefined,
       };
     }
   } catch (err) {
@@ -237,6 +238,7 @@ export default async function StorePage({ params, searchParams }: Props) {
         instagram: undefined,
         tiktok: undefined,
         subdominioActivo: undefined,
+        pushActivo: undefined,
       };
     } else {
       notFound();

@@ -7,6 +7,8 @@ const withPWA = withPWAInit({
   register: true,
   extendDefaultRuntimeCaching: true,
   workboxOptions: {
+    // Avisos push (public/push-sw.js): se importan dentro del service worker generado
+    importScripts: ["/push-sw.js"],
     runtimeCaching: [
       ...runtimeCaching,
       {

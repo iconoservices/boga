@@ -1,0 +1,83 @@
+// Notificaciones push del lado del navegador (BogaHub, o una tienda con su propia dirección).
+// Una suscripción es del navegador; cada persona elige de qué tiendas quiere avisos (el servidor
+// guarda "quién sigue a quién"). Requiere NEXT_PUBLIC_VAPID_PUBLIC_KEY; la privada vive solo en el servidor.
+
+const CLAVE = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+const LLAVE_LOCAL = 'boga_push_sigue';
+
+export const hayClave = () => !!CLAVE;
+
+export const pushDisponible = () =>
+  typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && !!CLAVE;
+
+export const esIOS = () => typeof navigator !== 'undefined' && /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+// En iPhone las notificaciones solo funcionan con la app instalada en la pantalla de inicio.
+export const enModoApp = () =>
+  typeof window !== 'undefined' &&
+  (!!(window.navigator as unknown as { standalone?: boolean }).standalone || window.matchMedia('(display-mode: standalone)').matches);
+
+const aBytes = (b64: string) => {
+  const pad = '='.repeat((4 - (b64.length % 4)) % 4);
+  const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from(raw, (c) => c.charCodeAt(0));
+};
+
+// Tiendas que esta persona sigue en este navegador (copia local; la verdad la guarda el servidor).
+const leerLocal = (): string[] => {
+  try { const v = JSON.parse(localStorage.getItem(LLAVE_LOCAL) || '[]'); return Array.isArray(v) ? v : []; } catch { return []; }
+};
+const guardarLocal = (l: string[]) => { try { localStorage.setItem(LLAVE_LOCAL, JSON.stringify(l)); } catch { /* sin almacenamiento */ } };
+
+// El service worker de la app lo registra next-pwa; si todavía no estuviera, se registra acá.
+async function registro() {
+  const reg = (await navigator.serviceWorker.getRegistration()) ?? (await navigator.serviceWorker.register('/sw.js'));
+  await navigator.serviceWorker.ready;
+  return reg;
+}
+
+export async function sigueTienda(slug: string): Promise<boolean> {
+  if (!pushDisponible() || Notification.permission !== 'granted') return false;
+  if (!leerLocal().includes(slug)) return false;
+  const reg = await navigator.serviceWorker.getRegistration();
+  return !!(reg && (await reg.pushManager.getSubscription()));
+}
+
+export async function seguirTienda(slug: string): Promise<'ok' | 'denegado' | 'no-soportado' | 'error'> {
+  if (!pushDisponible()) return 'no-soportado';
+  const permiso = await Notification.requestPermission();
+  if (permiso !== 'granted') return 'denegado';
+  try {
+    const reg = await registro();
+    const sub =
+      (await reg.pushManager.getSubscription()) ??
+      (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: aBytes(CLAVE!) as BufferSource }));
+    const res = await fetch('/api/push/suscribir', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subscription: sub.toJSON(), store_slug: slug }),
+    });
+    if (!res.ok) return 'error';
+    guardarLocal([...new Set([...leerLocal(), slug])]);
+    return 'ok';
+  } catch {
+    return 'error';
+  }
+}
+
+export async function dejarDeSeguir(slug: string) {
+  guardarLocal(leerLocal().filter((s) => s !== slug));
+  const reg = await navigator.serviceWorker.getRegistration();
+  const sub = reg && (await reg.pushManager.getSubscription());
+  if (!sub) return;
+  try {
+    const res = await fetch('/api/push/baja', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ endpoint: sub.endpoint, store_slug: slug }),
+    });
+    const j = await res.json().catch(() => ({}));
+    // Si ya no sigue ninguna tienda, el navegador también se da de baja
+    if (res.ok && j.quedan === 0) await sub.unsubscribe();
+  } catch { /* sin red: queda apagado en este navegador; el servidor lo limpia cuando falle un envío */ }
+}

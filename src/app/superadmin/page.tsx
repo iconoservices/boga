@@ -837,6 +837,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     tiktok: '',
     externalUrl: '',
       subdominioActivo: false,
+      pushActivo: false,
     ownerEmail: ''
   });
   // Para saber si storeForm.ownerEmail realmente cambio al guardar (y no
@@ -978,6 +979,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       tiktok: '',
       externalUrl: '',
       subdominioActivo: false,
+      pushActivo: false,
       // El correo de la solicitud: asi al guardar la tienda ya queda asignada
       // a quien la pidio, sin tener que ir despues a mano a "Usuarios".
       ownerEmail: req.email || '',
@@ -1523,6 +1525,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
               tiktok: dbStore.tiktok || undefined,
               externalUrl: dbStore.external_url || undefined,
               subdominioActivo: dbStore.subdominio_activo ?? undefined,
+              pushActivo: dbStore.push_activo ?? undefined,
               theme: (() => {
                 if (dbStore.theme && Object.keys(dbStore.theme).length > 0) return dbStore.theme;
                 const tmpl = dbStore.template as string;
@@ -1614,6 +1617,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       tiktok: '',
       externalUrl: '',
       subdominioActivo: false,
+      pushActivo: false,
       ownerEmail: ''
     });
     setOriginalOwnerEmail('');
@@ -1657,6 +1661,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       tiktok: store.tiktok || '',
       externalUrl: store.externalUrl || '',
       subdominioActivo: store.subdominioActivo ?? false,
+      pushActivo: store.pushActivo ?? false,
       // Sale del dueño actual, no de la tienda. Si lo dejan igual al guardar
       // no se reasigna nada (ver originalOwnerEmail en handleSaveStore).
       ownerEmail: profiles.find((p) => p.id === storeOwners[slug])?.email || ''
@@ -1854,6 +1859,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       tiktok: storeForm.tiktok || null,
       external_url: storeForm.externalUrl || null,
       subdominio_activo: !!storeForm.subdominioActivo,
+      push_activo: !!storeForm.pushActivo,
     };
     if (ownerUserId) upsertData.user_id = ownerUserId;
     if (logoUrl) {
@@ -1879,7 +1885,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       // Mismo problema que ya paso con `whatsapp` en el panel del cliente: si una
       // columna nueva todavia no existe en la base, reintenta sin ella en vez de
       // perder el guardado completo de la tienda.
-      const columnasOpcionales = ['whatsapp', 'zona', 'direccion', 'horario', 'rating', 'show_demo_products', 'metodos_pago', 'facebook', 'instagram', 'tiktok', 'external_url', 'subdominio_activo'];
+      const columnasOpcionales = ['whatsapp', 'zona', 'direccion', 'horario', 'rating', 'show_demo_products', 'metodos_pago', 'facebook', 'instagram', 'tiktok', 'external_url', 'subdominio_activo', 'push_activo'];
       const columnasFaltantes: string[] = [];
       let faltante = columnasOpcionales.find((col) => col in upsertData && new RegExp(col).test(error?.message || ''));
       while (error && faltante) {
@@ -1978,6 +1984,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         ...existingStoreObj,
         slug,
         subdominioActivo: !!storeForm.subdominioActivo,
+        pushActivo: !!storeForm.pushActivo,
         name: storeForm.name,
         tagline: storeForm.tagline,
         marketplaceCategory: storeForm.marketplaceCategory,
@@ -4379,6 +4386,23 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                       {subdominioCopiado ? 'Link copiado' : 'Copiar link'}
                     </button>
                   </section>
+
+                  <section className="p-4 bg-[#f0f7ff] rounded-lg border border-[#0058be]/20">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={!!storeForm.pushActivo}
+                        onChange={(e) => setStoreForm(prev => ({ ...prev, pushActivo: e.target.checked }))}
+                        className="mt-0.5 w-4 h-4 accent-[#0058be]"
+                      />
+                      <span>
+                        <span className="block text-xs font-black text-[#191b23]">Avisos push propios</span>
+                        <span className="block text-[10px] text-[#727785] font-semibold mt-0.5">
+                          Deja que esta tienda envíe notificaciones a quienes instalen su app (solo en su subdominio propio). 1 campaña por semana.
+                        </span>
+                      </span>
+                    </label>
+                  </section>
                 </div>
 
                 {/* Footer Buttons */}
@@ -4487,6 +4511,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           tiktok: '',
                           externalUrl: '',
       subdominioActivo: false,
+      pushActivo: false,
                           ownerEmail: ''
                         });
                         setOriginalOwnerEmail('');
