@@ -530,10 +530,23 @@ export default function Home() {
           <section className="flex flex-col gap-2 lg:gap-3 transition-all duration-500 px-container-margin lg:px-0">
             <div className="flex justify-between items-center px-1">
               <h2 className="font-headline-lg text-on-surface">Explorar Categorías</h2>
-              <Link href="/explore" className="flex items-center gap-0.5 text-primary font-label-md text-sm shrink-0">
-                Ver tiendas
-                <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-              </Link>
+              <div className="flex items-center gap-3 shrink-0">
+                {/* Pensión de almuerzos: destacada junto a "Ver tiendas", no es una categoría. */}
+                <Link
+                  href="/pension"
+                  className="flex items-center gap-1.5 rounded-full pl-1.5 pr-3 py-1 shadow-sm active:scale-95 transition-transform"
+                  style={{ background: '#0f3d24' }}
+                >
+                  <span className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: '#e7b84b' }}>
+                    <span className="material-symbols-outlined text-[15px]" style={{ color: '#0f3d24', fontVariationSettings: "'FILL' 1" }}>lunch_dining</span>
+                  </span>
+                  <span className="font-label-md text-[12px] font-bold" style={{ color: '#f4e7d3' }}>Pensión</span>
+                </Link>
+                <Link href="/explore" className="flex items-center gap-0.5 text-primary font-label-md text-sm">
+                  Ver tiendas
+                  <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                </Link>
+              </div>
             </div>
             <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1.5 transition-all duration-500 ease-in-out"
               style={{ scrollbarWidth: 'none' }}
@@ -565,14 +578,6 @@ export default function Home() {
                   </button>
                 );
               })}
-              {/* Pensión de almuerzos: vive dentro de Market, no como hub aparte. */}
-              <Link
-                href="/pension"
-                className="flex flex-row items-center gap-1.5 px-4 py-1.5 rounded-full shadow-sm transition-all duration-300 active:scale-95 shrink-0 group bg-white border border-surface-container-highest text-secondary"
-              >
-                <span className="material-symbols-outlined shrink-0 text-[18px] text-primary">lunch_dining</span>
-                <span className="font-label-md text-[11px] whitespace-nowrap text-secondary">Pensión</span>
-              </Link>
             </div>
           </section>
 
