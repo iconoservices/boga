@@ -1977,6 +1977,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       setStores(prev => rekey(prev, {
         ...existingStoreObj,
         slug,
+        subdominioActivo: !!storeForm.subdominioActivo,
         name: storeForm.name,
         tagline: storeForm.tagline,
         marketplaceCategory: storeForm.marketplaceCategory,
