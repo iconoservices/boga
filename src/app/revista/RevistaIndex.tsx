@@ -84,7 +84,7 @@ export default function RevistaIndex({ notas }: { notas: Nota[] }) {
 
   return (
     <>
-      <AppHeader showLocation={false} showChat={false} showCart={false} />
+      <AppHeader />
 
       <main className="w-full pb-16">
 

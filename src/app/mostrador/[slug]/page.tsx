@@ -31,7 +31,7 @@ export default async function ProductoMostradorPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-background text-on-background font-body-md overflow-x-hidden">
-      <AppHeader showLocation={false} showChat={false} showCart={false} />
+      <AppHeader />
 
       <main className="max-w-[1100px] mx-auto px-container-margin pt-4 md:pt-6 pb-16 md:pb-24">
         <Link href="/mostrador" className="inline-flex items-center gap-1 text-secondary hover:text-primary font-label-md text-label-md">

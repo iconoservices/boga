@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 export default function MostradorPage() {
   return (
     <div className="min-h-screen bg-background text-on-background font-body-md overflow-x-hidden">
-      <AppHeader showLocation={false} showChat={false} showCart={false} />
+      <AppHeader />
 
       <main className="max-w-[1200px] mx-auto px-container-margin pt-5 md:pt-8 pb-16 md:pb-24">
         <section className="text-center max-w-[620px] mx-auto mb-8 md:mb-10">

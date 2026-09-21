@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import SectionNav from '@/components/SectionNav';
 import { CitySwitcher } from '@/components/CityWaitlist';
 import BogaPushBell from '@/components/BogaPushBell';
+import { useInstalarBoga } from '@/lib/useInstalarBoga';
 
 interface AppHeaderProps {
   cartCount?: number;
@@ -28,6 +29,7 @@ export default function AppHeader({
 }: AppHeaderProps) {
   const { cartCount: contextCartCount, setIsCartOpen } = useCart();
   const { user } = useAuth();
+  const instalarApp = useInstalarBoga();
   const pathname = usePathname();
 
   const firstName = user?.user_metadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || null;
@@ -76,6 +78,18 @@ export default function AppHeader({
               </button>
             )}
 
+            {/* Instalar BogaHub como app — junto a notificaciones; desaparece una vez instalada */}
+            {instalarApp.mostrar && (
+              <button
+                onClick={instalarApp.instalar}
+                aria-label="Instalar la app"
+                title="Instalar la app"
+                className="p-2 bg-white rounded-full shadow-sm hover:shadow-md transition-all active:scale-90 flex items-center justify-center"
+              >
+                <span className="material-symbols-outlined text-primary text-[20px]">download</span>
+              </button>
+            )}
+
             {/* Notifications button */}
             <BogaPushBell
               className="p-2 bg-white rounded-full shadow-sm hover:shadow-md transition-all active:scale-90 flex items-center justify-center"
@@ -121,6 +135,17 @@ export default function AppHeader({
           {showChat && (
             <button className="w-9 h-9 hover:bg-surface-container-high transition-colors rounded-full active:scale-95 flex items-center justify-center" title="Soporte por WhatsApp">
               <span className="material-symbols-outlined text-[#25D366] text-[21px]" style={{ fontVariationSettings: "'FILL' 1" }}>chat</span>
+            </button>
+          )}
+
+          {instalarApp.mostrar && (
+            <button
+              onClick={instalarApp.instalar}
+              aria-label="Instalar la app"
+              title="Instalar la app"
+              className="w-9 h-9 hover:bg-surface-container-high transition-colors rounded-full active:scale-95 flex items-center justify-center"
+            >
+              <span className="material-symbols-outlined text-primary text-[21px]">download</span>
             </button>
           )}
 
