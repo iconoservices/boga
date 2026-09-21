@@ -13,6 +13,16 @@ import { supabase } from '@/lib/supabase';
 
 export const revalidate = 120;
 
+// Una tienda con subdominio propio activo (plan de pago) se abre en su dirección
+// <slug>.bogahub.app, FUERA de la app instalada, como si fuera una app aparte
+// (igual que Delva). Se calcula acá para que todas las pantallas lo reciban como
+// `external_url` sin tocar cada una. Un external_url propio de la tienda manda.
+const DOMINIO = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app').host;
+const conDireccionPropia = <T extends { slug: string; external_url?: string | null; subdominio_activo?: boolean | null }>(s: T) => {
+  const { subdominio_activo, ...resto } = s;
+  return { ...resto, external_url: s.external_url || (subdominio_activo ? `https://${s.slug}.${DOMINIO}` : null) };
+};
+
 // `page` distingue el carrusel de banners a devolver: 'market' (default, con
 // tiendas+productos) o 'home' (el Inicio "/", que no necesita ni tiendas ni
 // productos — pedirlos igual seria egress de mas por nada).
@@ -51,7 +61,7 @@ export async function GET(request: Request) {
   const [stores, products, banners, estilo] = await Promise.all([
     supabase
       .from('stores')
-      .select('slug,name,tagline,marketplace_category,template,hero_image,hero_alt,logo_image,theme,categories,status,external_url'),
+      .select('slug,name,tagline,marketplace_category,template,hero_image,hero_alt,logo_image,theme,categories,status,external_url,subdominio_activo'),
     supabase
       .from('products')
       .select('id,name,price,category,image,store,status'),
@@ -68,7 +78,7 @@ export async function GET(request: Request) {
 
   return NextResponse.json(
     {
-      stores: stores.data ?? [],
+      stores: (stores.data ?? []).map(conDireccionPropia),
       products: products.data ?? [],
       banners: banners.data ?? [],
       bannerStyle: estilo.data?.style || ESTILO_DEFECTO.market,
