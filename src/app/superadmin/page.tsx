@@ -680,6 +680,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   const [deletingStoreProductId, setDeletingStoreProductId] = useState<string | null>(null);
   const [editingStoreProductId, setEditingStoreProductId] = useState<string | null>(null);
   const [showStoreProductForm, setShowStoreProductForm] = useState(false);
+  const [storeProductSearch, setStoreProductSearch] = useState('');
   const [editingStoreProductImage, setEditingStoreProductImage] = useState<string | null>(null);
 
   const handleOpenStoreProducts = async (slug: string) => {
@@ -687,6 +688,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     setEditingStoreProductId(null);
     setEditingStoreProductImage(null);
     setShowStoreProductForm(false);
+    setStoreProductSearch('');
     setNewStoreProduct({ name: '', price: '', category: '', subcategory: '', desc: '' });
     setNewStoreProductFile(null);
     setStoreProductPreview(null);
@@ -4490,16 +4492,28 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
 
           <div className="p-5 flex-1 overflow-y-auto min-h-0 space-y-5">
             {/* Formulario para agregar / editar: cerrado hasta tocar el botón */}
-            {!showStoreProductForm && (
-              <button
-                type="button"
-                onClick={() => setShowStoreProductForm(true)}
-                className="w-full flex items-center justify-center gap-1.5 py-2.5 bg-[#0058be] text-white rounded-md font-bold text-xs hover:bg-[#004395] transition-colors"
-              >
-                <span className="material-symbols-outlined text-base">add</span>
-                Agregar producto
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {!showStoreProductForm && (
+                <button
+                  type="button"
+                  onClick={() => setShowStoreProductForm(true)}
+                  className="shrink-0 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#0058be] text-white rounded-md font-bold text-xs hover:bg-[#004395] transition-colors"
+                >
+                  <span className="material-symbols-outlined text-base">add</span>
+                  Agregar producto
+                </button>
+              )}
+              <div className="relative flex-1">
+                <span className="material-symbols-outlined text-[16px] text-[#727785] absolute left-2.5 top-1/2 -translate-y-1/2">search</span>
+                <input
+                  type="search"
+                  value={storeProductSearch}
+                  onChange={(e) => setStoreProductSearch(e.target.value)}
+                  placeholder="Buscar en la carta…"
+                  className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md pl-8 pr-3 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
+                />
+              </div>
+            </div>
             {showStoreProductForm && (
             <form onSubmit={handleAddStoreProduct} className="space-y-3 pb-4 border-b border-[#ecedf7]">
               <p className="text-[10px] font-black text-[#424754] uppercase tracking-widest">{editingStoreProductId ? 'Editando producto' : 'Nuevo Producto'}</p>
@@ -4609,7 +4623,10 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                 <p className="text-xs text-[#727785] italic py-4 text-center">Todavía no hay productos cargados.</p>
               ) : (
                 <div className="space-y-1.5">
-                  {storeProductsList.map((p) => (
+                  {storeProductsList.filter((p) => {
+                    const q = storeProductSearch.trim().toLowerCase();
+                    return !q || `${p.name} ${p.category || ''} ${p.subcategory || ''}`.toLowerCase().includes(q);
+                  }).map((p) => (
                     <div key={p.id} className={`flex items-center gap-3 p-2 rounded-lg border bg-[#f9f9ff] ${editingStoreProductId === p.id ? 'border-[#0058be]' : 'border-[#ecedf7]'}`}>
                       <img src={p.image} alt="" className="w-10 h-10 rounded-md object-cover shrink-0 bg-[#e6e7f2]" />
                       <div className="min-w-0 flex-1">
