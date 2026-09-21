@@ -1018,6 +1018,11 @@ function AdminDashboard({ user }: { user: User }) {
               <button onClick={() => { setPickerDraft([]); setIsStorePickerOpen(true); }} className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-xs font-bold text-gray-700 hover:bg-gray-50">
                 <span className="material-symbols-outlined text-[16px]">menu_book</span>Mis cartas
               </button>
+              {inicioDb?.push_activo ? (
+                <a href="/admin/notificaciones" className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-xs font-bold text-gray-700">
+                  <span className="material-symbols-outlined text-[16px]">notifications</span>Notificaciones
+                </a>
+              ) : null}
               <a href={inicioUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-xs font-bold text-gray-700 hover:bg-gray-50">
                 <span className="material-symbols-outlined text-[16px]">open_in_new</span>Ver enlace
               </a>
