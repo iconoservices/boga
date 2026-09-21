@@ -6,6 +6,7 @@ import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import SectionNav from '@/components/SectionNav';
 import { CitySwitcher } from '@/components/CityWaitlist';
+import BogaPushBell from '@/components/BogaPushBell';
 
 interface AppHeaderProps {
   cartCount?: number;
@@ -76,9 +77,10 @@ export default function AppHeader({
             )}
 
             {/* Notifications button */}
-            <button className="p-2 bg-white rounded-full shadow-sm hover:shadow-md transition-all active:scale-90 flex items-center justify-center">
-              <span className="material-symbols-outlined text-on-surface text-[20px]">notifications</span>
-            </button>
+            <BogaPushBell
+              className="p-2 bg-white rounded-full shadow-sm hover:shadow-md transition-all active:scale-90 flex items-center justify-center"
+              iconClass="text-on-surface text-[20px]"
+            />
 
             {/* Perfil / iniciar sesión — dentro del perfil se vuelve "Inicio" */}
             {(() => {
@@ -122,9 +124,10 @@ export default function AppHeader({
             </button>
           )}
 
-          <button className="w-9 h-9 hover:bg-surface-container-high transition-colors rounded-full active:scale-95 flex items-center justify-center" title="Notificaciones">
-            <span className="material-symbols-outlined text-secondary text-[21px]">notifications</span>
-          </button>
+          <BogaPushBell
+            className="w-9 h-9 hover:bg-surface-container-high transition-colors rounded-full active:scale-95 flex items-center justify-center"
+            iconClass="text-secondary text-[21px]"
+          />
 
           <Link href="/orders" title="Mis pedidos" className="w-9 h-9 hover:bg-surface-container-high transition-colors rounded-full active:scale-95 flex items-center justify-center">
             <span className={`material-symbols-outlined text-[21px] ${pathname.startsWith('/orders') ? 'text-primary' : 'text-secondary'}`}>receipt_long</span>
