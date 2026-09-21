@@ -139,7 +139,8 @@ export async function GET(request: NextRequest) {
     name: displayName,
     short_name: displayName.slice(0, 12),
     description: storeName ? `${storeName} en Boga Market` : (tmpl ? `Plantilla: ${tmpl.name}` : 'Tu panel de administración empresarial.'),
-    start_url: enSubdominio ? '/' : storeSlug ? `/${storeSlug}` : (tmpl ? `/preview/${tmpl.id}` : '/admin'),
+    // `?source=pwa` solo llega al abrirla desde su ícono: así la tienda sabe que está instalada
+    start_url: enSubdominio ? '/?source=pwa' : storeSlug ? `/${storeSlug}` : (tmpl ? `/preview/${tmpl.id}` : '/admin'),
     display: 'standalone',
     background_color: bgColor,
     theme_color: themeColor,

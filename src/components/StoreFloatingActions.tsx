@@ -26,7 +26,8 @@ interface StoreFloatingActionsProps {
  */
 export default function StoreFloatingActions({ store }: StoreFloatingActionsProps) {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isInstalled, setIsInstalled] = useState(false);
+  // null = todavía no se sabe: el botón no se dibuja hasta comprobarlo (evita el parpadeo)
+  const [isInstalled, setIsInstalled] = useState<boolean | null>(null);
 
   const t = store.theme;
   // Con clave fija, instalar UNA tienda escondia el boton de instalar en TODAS
@@ -53,21 +54,26 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
     //
     // En su dirección propia (<tienda>.bogahub.app) el origen es distinto al de BogaHub:
     // si se abrió desde la app de BogaHub instalada, el navegador dice "modo app" aunque
-    // ESTA tienda no esté instalada. Se considera instalada solo si: avisó `appinstalled`,
-    // o está en modo app y NO llegó desde otro origen (abierta desde su ícono, o navegando
-    // dentro de sí misma). Si llegó desde otra app, el botón sale y `instalar` invita a
-    // abrirla en el navegador.
+    // ESTA tienda no esté instalada (y `document.referrer` no sirve: los links a tiendas
+    // llevan noreferrer). Por eso ahí se considera instalada solo si está en modo app Y
+    // consta que se instaló: `appinstalled`, o el manifiesto de la tienda arranca en
+    // `/?source=pwa`, marca que solo llega al abrirla desde su propio ícono.
     const base = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app').host;
     const h = window.location.hostname;
     const enDireccionPropia = h.endsWith('.' + base) && h.split('.')[0] !== 'www';
-    const llegoDeOtroOrigen = (() => {
-      try { return !!document.referrer && new URL(document.referrer).origin !== window.location.origin; } catch { return false; }
-    })();
+    if (enDireccionPropia) {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('source') === 'pwa') {
+        localStorage.setItem(installKey, 'true');
+        params.delete('source');
+        const q = params.toString();
+        window.history.replaceState(null, '', window.location.pathname + (q ? `?${q}` : '') + window.location.hash);
+      }
+    }
     const checkInstalled = () => {
-      if (localStorage.getItem(installKey) === 'true') return true;
-      const enModoApp = (window.navigator as any).standalone || window.matchMedia('(display-mode: standalone)').matches;
-      if (enDireccionPropia) return !!enModoApp && !llegoDeOtroOrigen;
-      return !!(window.navigator as any).standalone;
+      const enModoApp = !!((window.navigator as any).standalone || window.matchMedia('(display-mode: standalone)').matches);
+      if (enDireccionPropia) return enModoApp && localStorage.getItem(installKey) === 'true';
+      return localStorage.getItem(installKey) === 'true' || !!(window.navigator as any).standalone;
     };
 
     setIsInstalled(checkInstalled());
@@ -132,7 +138,7 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
       >
         <span className="material-symbols-outlined text-[20px]">share</span>
       </button>
-      {!isInstalled && (
+      {isInstalled === false && (
         <button
           onClick={instalar}
           className="w-10 h-10 rounded-full flex items-center justify-center bg-white/40 backdrop-blur-md border border-white/50 shadow-lg active:scale-90 hover:bg-white/60 transition-all"
