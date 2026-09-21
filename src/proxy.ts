@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { RUTAS_DE_BOGAHUB } from '@/lib/rutasBoga';
 
 // Dirección aparte para las tiendas (p. ej. https://tiendas.bogahub.app), configurada con
 // NEXT_PUBLIC_TIENDAS_URL. Es el MISMO sitio: en esa dirección solo se muestran las tiendas
@@ -54,13 +55,7 @@ function tiendaDeSubdominio(host: string): string | null {
   return etiqueta;
 }
 
-// Rutas de primer nivel que son de BogaHub (no son tiendas).
-const RUTAS_DE_BOGAHUB = new Set([
-  'admin', 'apple-icon.png', 'eventos', 'explore', 'guia', 'inmuebles', 'legal', 'libro-de-reclamaciones',
-  'login', 'market', 'negocios', 'offline', 'orders', 'org', 'pandero', 'pension', 'preview', 'profile',
-  'promotions', 'reset-password', 'revista', 'sorteos', 'superadmin', 'taxi-seguro', 'trabajos', 'vende-con-boga',
-  'viajes', 'servicios', 'trabajo', 'empleos', 'alquileres', 'product',
-]);
+
 
 export async function proxy(request: NextRequest) {
   // ── Dirección propia de una tienda: <tienda>.bogahub.app ──

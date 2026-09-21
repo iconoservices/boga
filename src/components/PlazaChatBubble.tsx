@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
+import { RUTAS_DE_BOGAHUB } from '@/lib/rutasBoga';
 
 interface ChatMessage {
   id: string;
@@ -72,6 +73,13 @@ function shortName(raw: string) {
 
 export default function PlazaChatBubble() {
   const pathname = usePathname();
+  // true si se abrió desde <tienda>.bogahub.app (se lee en el cliente, tras montar)
+  // (null = todavía no se sabe: no se dibuja nada para que no parpadee)
+  const [enDireccionDeTienda, setEnDireccionDeTienda] = useState<boolean | null>(null);
+  useEffect(() => {
+    const partes = window.location.hostname.split('.');
+    setEnDireccionDeTienda(partes.length > 2 && partes[0] !== 'www' && window.location.hostname.endsWith('.bogahub.app'));
+  }, []);
   const [isOpen, setIsOpen] = useState(false);
   const [activeChannel, setActiveChannel] = useState('todos');
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
@@ -134,6 +142,12 @@ export default function PlazaChatBubble() {
   ) {
     return null;
   }
+
+  // Tampoco dentro de una tienda: ni en bogahub.app/<tienda> ni en su dirección propia
+  // (<tienda>.bogahub.app, donde la portada "/" es la tienda). El chat es de la plaza de BogaHub.
+  const primero = pathname.split('/')[1] || '';
+  const enTienda = primero !== '' && !RUTAS_DE_BOGAHUB.has(primero);
+  if (enTienda || enDireccionDeTienda !== false) return null;
 
   const filteredMessages =
     activeChannel === 'todos'
