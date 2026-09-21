@@ -1,8 +1,11 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 // Pensión BogaHub — almuerzo casero por suscripción (semana / quincena / mes).
 // Placeholder: estructura lista, contenido de muestra. Todavía no hay motor de
@@ -18,15 +21,15 @@ const NAV = ['Planes', 'Cómo funciona', 'Menú de la semana', 'Preguntas'];
 const PLANES = [
   {
     id: 'semanal', nombre: 'Semanal', almuerzos: '5 almuerzos', detalle: 'Lunes a viernes',
-    precio: 'S/ 45', nota: 'Ideal para probar', destacado: false,
+    precio: 'S/ 60', porAlmuerzo: 'S/ 12', nota: 'Ideal para probar', destacado: false,
   },
   {
     id: 'quincenal', nombre: 'Quincenal', almuerzos: '10 almuerzos', detalle: 'Dos semanas',
-    precio: 'S/ 85', nota: 'El más elegido', destacado: true,
+    precio: 'S/ 110', porAlmuerzo: 'S/ 11', nota: 'El más elegido', destacado: true,
   },
   {
     id: 'mensual', nombre: 'Mensual', almuerzos: '22 almuerzos', detalle: 'Todo el mes',
-    precio: 'S/ 180', nota: 'Mejor precio por plato', destacado: false,
+    precio: 'S/ 220', porAlmuerzo: 'S/ 10', nota: 'Mejor precio por plato', destacado: false,
   },
 ];
 
@@ -55,7 +58,54 @@ const PREGUNTAS = [
 export default function Pension() {
   const { cartCount, setIsCartOpen } = useCart();
   const [planSel, setPlanSel] = useState('quincenal');
+  const router = useRouter();
+  const { user } = useAuth();
   const [avisado, setAvisado] = useState(false);
+  const [formAbierto, setFormAbierto] = useState(false);
+  const [celular, setCelular] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState('');
+
+  const planActual = PLANES.find((pl) => pl.id === planSel) ?? PLANES[1];
+  const marcaLocal = `boga_pension_interes_${user?.id ?? 'anon'}`;
+
+  // Ya dejó su interés antes en este navegador: se muestra como "listo".
+  useEffect(() => {
+    try { if (localStorage.getItem(marcaLocal)) setAvisado(true); } catch { /* sin storage */ }
+  }, [marcaLocal]);
+
+  // "Estoy interesado": se puede dejar el interés de dos maneras: con la sesión
+  // iniciada (el celular es opcional) o sin sesión dejando el WhatsApp (obligatorio,
+  // si no, no hay cómo avisarle).
+  const estoyInteresado = () => setFormAbierto(true);
+
+  const enviarInteres = async (ev: React.FormEvent) => {
+    ev.preventDefault();
+    const digitos = celular.replace(/\D/g, '');
+    if (!user && digitos.length < 9) {
+      setError('Deja tu número de WhatsApp (9 dígitos) o inicia sesión.');
+      return;
+    }
+    setEnviando(true);
+    setError('');
+    const { error: err } = await supabase.from('city_interest').insert({
+      city: 'pucallpa',
+      region: 'Ucayali',
+      role: 'comprador',
+      email: user?.email || null,
+      whatsapp: digitos || null,
+      note: `Pensión · plan ${planActual.nombre} (${planActual.precio})${user ? ` · usuario ${user.id}` : ' · sin sesión'}`,
+      source: 'pension',
+    });
+    setEnviando(false);
+    if (err) {
+      setError('No se pudo enviar. Intenta de nuevo en un momento.');
+      return;
+    }
+    try { localStorage.setItem(marcaLocal, '1'); } catch { /* sin storage */ }
+    setAvisado(true);
+    setFormAbierto(false);
+  };
 
   return (
     <>
@@ -88,6 +138,9 @@ export default function Pension() {
           </nav>
 
           {/* Planes */}
+          <p className="font-body-md text-sm -mb-4" style={{ color: CREMA + 'cc' }}>
+            Un menú de almuerzo suelto sale <b>S/ 15</b>. Con la pensión pagas entre <b>S/ 10 y S/ 12</b> por almuerzo.
+          </p>
           <section className="grid sm:grid-cols-3 gap-4">
             {PLANES.map((p) => {
               const activo = planSel === p.id;
@@ -110,6 +163,7 @@ export default function Pension() {
                   <span className="font-headline-lg font-extrabold text-xl">{p.nombre}</span>
                   <span className="font-body-md text-sm" style={{ opacity: 0.8 }}>{p.almuerzos} · {p.detalle}</span>
                   <span className="font-price-lg text-2xl mt-1" style={{ color: activo ? VERDE : ORO }}>{p.precio}</span>
+                  <span className="font-label-md text-[11px]" style={{ opacity: 0.75 }}>{p.porAlmuerzo} por almuerzo</span>
                   {!p.destacado && <span className="font-label-md text-[11px]" style={{ opacity: 0.65 }}>{p.nota}</span>}
                 </button>
               );
@@ -166,16 +220,70 @@ export default function Pension() {
             <span className="material-symbols-outlined text-[32px]">skillet</span>
             <h2 className="font-headline-lg font-extrabold text-xl lg:text-2xl">Todavía estamos cocinando esta sección</h2>
             <p className="font-body-md text-sm max-w-[42ch]" style={{ opacity: 0.75 }}>
-              Pronto vas a poder reservar tu pensión acá mismo. Dejanos tu interés y te avisamos apenas abra.
+              Pronto vas a poder reservar tu pensión acá mismo. Elige tu plan, dejanos tu interés y te avisamos apenas abra.
             </p>
-            <button
-              onClick={() => setAvisado(true)}
-              disabled={avisado}
-              className="mt-1 font-headline-sm text-sm px-6 py-3 rounded-full active:scale-95 transition-transform disabled:opacity-70"
-              style={{ backgroundColor: VERDE, color: CREMA }}
-            >
-              {avisado ? '¡Listo! Te avisaremos 👌' : 'Avísame cuando esté'}
-            </button>
+            {avisado ? (
+              <p className="mt-1 font-headline-sm text-sm px-6 py-3 rounded-full" style={{ backgroundColor: VERDE, color: CREMA }}>
+                ¡Listo! Te avisaremos 👌
+              </p>
+            ) : formAbierto ? (
+              <form onSubmit={enviarInteres} className="mt-1 w-full max-w-[360px] flex flex-col gap-2.5 text-left">
+                <p className="font-body-md text-sm">
+                  Interés en el plan <b>{planActual.nombre}</b> ({planActual.precio}).{user ? <> Te avisamos a <b>{user.email}</b>.</> : ' Deja tu WhatsApp y te avisamos.'}
+                </p>
+                <label className="font-label-md text-[11px] uppercase tracking-wider" style={{ opacity: 0.7 }} htmlFor="pension-celular">
+                  {user ? 'Tu celular o WhatsApp (opcional)' : 'Tu WhatsApp'}
+                </label>
+                <input
+                  id="pension-celular"
+                  type="tel"
+                  inputMode="tel"
+                  value={celular}
+                  onChange={(ev) => setCelular(ev.target.value)}
+                  placeholder="Ej. 987 654 321"
+                  required={!user}
+                  className="rounded-xl px-4 py-3 text-sm outline-none border"
+                  style={{ backgroundColor: '#fff', color: VERDE, borderColor: 'rgba(15,61,36,0.25)' }}
+                />
+                {error && <p className="text-xs" style={{ color: '#b3261e' }}>{error}</p>}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFormAbierto(false)}
+                    className="font-headline-sm text-sm px-5 py-3 rounded-full border active:scale-95 transition-transform"
+                    style={{ borderColor: VERDE, color: VERDE }}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={enviando}
+                    className="flex-1 font-headline-sm text-sm px-6 py-3 rounded-full active:scale-95 transition-transform disabled:opacity-70"
+                    style={{ backgroundColor: VERDE, color: CREMA }}
+                  >
+                    {enviando ? 'Enviando…' : 'Confirmar interés'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <button
+                onClick={estoyInteresado}
+                className="mt-1 font-headline-sm text-sm px-6 py-3 rounded-full active:scale-95 transition-transform"
+                style={{ backgroundColor: VERDE, color: CREMA }}
+              >
+                Estoy interesado
+              </button>
+            )}
+            {!user && !avisado && (
+              <button
+                type="button"
+                onClick={() => router.push('/login?redirect=/pension')}
+                className="font-label-md text-[12px] underline"
+                style={{ opacity: 0.75 }}
+              >
+                ¿Ya tienes cuenta? Inicia sesión
+              </button>
+            )}
             <span className="font-label-md text-[10px] uppercase tracking-wider" style={{ opacity: 0.5 }}>Contenido de muestra</span>
           </section>
 
