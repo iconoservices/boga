@@ -50,10 +50,24 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
     // botón sí tiene que aparecer (con el aviso de abrirlo en el navegador).
     // En iOS no existe el evento `appinstalled`, así que no hay forma de saber
     // cuál app se instaló: si está en standalone se asume que es esta.
+    //
+    // En su dirección propia (<tienda>.bogahub.app) el origen es distinto al de BogaHub:
+    // si se abrió desde la app de BogaHub instalada, el navegador dice "modo app" aunque
+    // ESTA tienda no esté instalada. Se considera instalada solo si: avisó `appinstalled`,
+    // o está en modo app y NO llegó desde otro origen (abierta desde su ícono, o navegando
+    // dentro de sí misma). Si llegó desde otra app, el botón sale y `instalar` invita a
+    // abrirla en el navegador.
+    const base = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app').host;
+    const h = window.location.hostname;
+    const enDireccionPropia = h.endsWith('.' + base) && h.split('.')[0] !== 'www';
+    const llegoDeOtroOrigen = (() => {
+      try { return !!document.referrer && new URL(document.referrer).origin !== window.location.origin; } catch { return false; }
+    })();
     const checkInstalled = () => {
       if (localStorage.getItem(installKey) === 'true') return true;
-      if ((window.navigator as any).standalone) return true;
-      return false;
+      const enModoApp = (window.navigator as any).standalone || window.matchMedia('(display-mode: standalone)').matches;
+      if (enDireccionPropia) return !!enModoApp && !llegoDeOtroOrigen;
+      return !!(window.navigator as any).standalone;
     };
 
     setIsInstalled(checkInstalled());
