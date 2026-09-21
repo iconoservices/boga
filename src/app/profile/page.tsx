@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import PasswordInput from '@/components/PasswordInput';
 import PedidosPanel from '@/components/PedidosPanel';
+import AvisosBogaSwitch from '@/components/AvisosBogaSwitch';
 
 // Placeholder mientras se resuelve la sesión / mientras redirige a /login.
 // El contenido real de la página sale de la cuenta autenticada, no de esto.
@@ -30,8 +31,6 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ name: user.name, phone: user.phone, address: user.address });
   const [activeSection, setActiveSection] = useState<'perfil' | 'ajustes' | 'pedidos'>('perfil');
-  const [notifOrders, setNotifOrders] = useState(true);
-  const [notifPromos, setNotifPromos] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
 
   // Cambiar contraseña: la sesion ya esta autenticada, asi que Supabase no
@@ -288,23 +287,7 @@ export default function ProfilePage() {
             {/* Notificaciones */}
             <div className="bg-white rounded-2xl p-5 border border-surface-container-highest shadow-[0_15px_15px_rgba(0,0,0,0.04)]">
               <h3 className="font-bold text-sm text-on-surface mb-4">Notificaciones</h3>
-              {[
-                { label: 'Estado de mis pedidos', desc: 'Confirmación, en camino, entregado', value: notifOrders, onToggle: () => setNotifOrders(v => !v) },
-                { label: 'Promos de mis tiendas', desc: 'Descuentos y lanzamientos nuevos', value: notifPromos, onToggle: () => setNotifPromos(v => !v) },
-              ].map(({ label, desc, value, onToggle }) => (
-                <div key={label} className="flex justify-between items-center py-3 border-b border-surface-container-low last:border-0 last:pb-0">
-                  <div>
-                    <p className="font-bold text-xs text-on-surface">{label}</p>
-                    <p className="text-[10px] text-secondary/60 mt-0.5 leading-normal">{desc}</p>
-                  </div>
-                  <button 
-                    onClick={onToggle} 
-                    className={`w-11 h-6 rounded-full relative transition-colors ${value ? 'bg-primary' : 'bg-surface-container-high'}`}
-                  >
-                    <div className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-all shadow-sm ${value ? 'left-6' : 'left-1'}`} />
-                  </button>
-                </div>
-              ))}
+              <AvisosBogaSwitch />
             </div>
 
             {/* Apariencia */}
