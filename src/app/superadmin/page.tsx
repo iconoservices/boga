@@ -1542,7 +1542,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
 
             mergedDetails[slug] = {
               location,
-              date: new Date(dbStore.created_at || Date.now()).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
+              // Sin created_at no se inventa una fecha (antes salía "hoy" como si se hubiera creado hoy)
+              date: dbStore.created_at ? new Date(dbStore.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
               icon: 'storefront'
             };
 
@@ -1953,7 +1954,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
 
       setStoreDetails(prev => rekey(prev, {
         location: storeForm.location,
-        date: editingStore ? (prev[oldSlug || slug]?.date || 'Hoy') : new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
+        date: editingStore ? (prev[oldSlug || slug]?.date || '—') : new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
         icon: 'storefront'
       }));
 
@@ -2589,7 +2590,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                     <tbody className="divide-y divide-[#ecedf7]">
                       {filtered.map((store) => {
                         const meta = storeMeta[store.slug] || { emoji: '🏪', cat: 'Tienda' };
-                        const details = storeDetails[store.slug] || { location: '—', date: 'Hoy', icon: 'storefront' };
+                        const details = storeDetails[store.slug] || { location: '—', date: '—', icon: 'storefront' };
                         const tier = storeTiers[store.slug] || 'Basic Tier';
                         const storeOn = !!activeStores[store.slug];
                         // El dueño con fila propia en Usuarios: no lo hay si la tienda
@@ -4758,7 +4759,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     {showDiagnosticModal && diagnosticStore && (() => {
       const ds = diagnosticStore;
       const dMeta = storeMeta[ds.slug] || { emoji: '🏪', cat: 'Tienda' };
-      const dDetails = storeDetails[ds.slug] || { location: '—', date: 'Hoy', icon: 'storefront' };
+      const dDetails = storeDetails[ds.slug] || { location: '—', date: '—', icon: 'storefront' };
       const issues = [
         { ok: !!ds.name,         label: 'Nombre de tienda',     hint: 'Agrega un nombre para identificar la tienda' },
         { ok: !!ds.slug,         label: 'Slug / URL',           hint: 'Define un slug único para la URL de la tienda' },
