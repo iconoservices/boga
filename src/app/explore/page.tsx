@@ -423,7 +423,7 @@ export default function Explore() {
                     href={hrefTienda(store.slug, store.externalUrl)}
                     key={store.slug}
                     target={esFuera(hrefTienda(store.slug, store.externalUrl)) ? '_blank' : undefined}
-                    rel={esFuera(hrefTienda(store.slug, store.externalUrl)) ? 'noopener noreferrer' : undefined}
+                    rel={esFuera(hrefTienda(store.slug, store.externalUrl)) ? 'noopener' : undefined}
                     className="min-w-[280px] w-[80vw] max-w-[310px] bg-white rounded-2xl p-4 shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest snap-start flex flex-col gap-3 group"
                   >
                     <div className="flex gap-2 overflow-x-auto hide-scrollbar snap-x" style={{ scrollbarWidth: 'none' }}>
@@ -525,7 +525,7 @@ export default function Explore() {
                   href={hrefTienda(store.slug, store.externalUrl)}
                   key={store.slug}
                   target={esFuera(hrefTienda(store.slug, store.externalUrl)) ? '_blank' : undefined}
-                  rel={esFuera(hrefTienda(store.slug, store.externalUrl)) ? 'noopener noreferrer' : undefined}
+                  rel={esFuera(hrefTienda(store.slug, store.externalUrl)) ? 'noopener' : undefined}
                   className="bg-white rounded-2xl p-3 shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col gap-3 group hover:border-primary/20 transition-all"
                 >
                   <div className="flex gap-2">

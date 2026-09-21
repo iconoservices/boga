@@ -54,10 +54,11 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
     //
     // En su dirección propia (<tienda>.bogahub.app) el origen es distinto al de BogaHub:
     // si se abrió desde la app de BogaHub instalada, el navegador dice "modo app" aunque
-    // ESTA tienda no esté instalada (y `document.referrer` no sirve: los links a tiendas
-    // llevan noreferrer). Por eso ahí se considera instalada solo si está en modo app Y
-    // consta que se instaló: `appinstalled`, o el manifiesto de la tienda arranca en
-    // `/?source=pwa`, marca que solo llega al abrirla desde su propio ícono.
+    // ESTA tienda no esté instalada. Se considera instalada si está en modo app Y (consta que
+    // se instaló —`appinstalled` o el arranque en `/?source=pwa` del manifiesto— o NO llegó
+    // desde otro origen: abierta desde su ícono o navegando dentro de sí misma). Esto último
+    // cubre también las apps instaladas antes de existir la marca; por eso los links a tiendas
+    // NO llevan `noreferrer` (se perdería de dónde vienes). Fuera del modo app el botón sale siempre.
     const base = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app').host;
     const h = window.location.hostname;
     const enDireccionPropia = h.endsWith('.' + base) && h.split('.')[0] !== 'www';
@@ -70,9 +71,12 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
         window.history.replaceState(null, '', window.location.pathname + (q ? `?${q}` : '') + window.location.hash);
       }
     }
+    const llegoDeOtroOrigen = (() => {
+      try { return !!document.referrer && new URL(document.referrer).origin !== window.location.origin; } catch { return false; }
+    })();
     const checkInstalled = () => {
       const enModoApp = !!((window.navigator as any).standalone || window.matchMedia('(display-mode: standalone)').matches);
-      if (enDireccionPropia) return enModoApp && localStorage.getItem(installKey) === 'true';
+      if (enDireccionPropia) return enModoApp && (localStorage.getItem(installKey) === 'true' || !llegoDeOtroOrigen);
       return localStorage.getItem(installKey) === 'true' || !!(window.navigator as any).standalone;
     };
 

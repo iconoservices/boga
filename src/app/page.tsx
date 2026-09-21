@@ -454,7 +454,7 @@ export default function HomePage() {
                   href={hrefTienda(p.storeSlug, p.storeExternalUrl)}
                   key={p.id}
                   target={esFuera(hrefTienda(p.storeSlug, p.storeExternalUrl)) ? '_blank' : undefined}
-                  rel={esFuera(hrefTienda(p.storeSlug, p.storeExternalUrl)) ? 'noopener noreferrer' : undefined}
+                  rel={esFuera(hrefTienda(p.storeSlug, p.storeExternalUrl)) ? 'noopener' : undefined}
                   className="group bg-white border border-surface-container-highest rounded-2xl overflow-hidden shadow-sm hover:border-primary/30 hover:shadow-md transition-all min-w-[150px] w-[150px] snap-start shrink-0"
                 >
                   <div className="aspect-square bg-surface-container-low overflow-hidden">
@@ -550,7 +550,7 @@ export default function HomePage() {
                   key={t.slug}
                   href={hrefTienda(t.slug, t.externalUrl)}
                   target={esFuera(hrefTienda(t.slug, t.externalUrl)) ? '_blank' : undefined}
-                  rel={esFuera(hrefTienda(t.slug, t.externalUrl)) ? 'noopener noreferrer' : undefined}
+                  rel={esFuera(hrefTienda(t.slug, t.externalUrl)) ? 'noopener' : undefined}
                   className="group snap-start shrink-0 w-[290px] bg-white border border-surface-container-highest rounded-2xl overflow-hidden shadow-sm hover:border-primary/30 hover:shadow-md transition-all"
                 >
                   <div className="flex items-center gap-3 p-3 border-b border-surface-container-high">
