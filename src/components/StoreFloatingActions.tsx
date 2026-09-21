@@ -141,6 +141,10 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
     }
   };
 
+  // En iPhone, Chrome y Firefox tienen el botón Compartir ARRIBA (barra de direcciones); Safari y el
+  // navegador integrado de otras apps lo tienen ABAJO. La guía apunta al lado que corresponde.
+  const compartirArriba = typeof navigator !== 'undefined' && /CriOS|FxiOS/i.test(navigator.userAgent);
+
   return (
     <div className="absolute top-3 right-3 z-30 flex flex-col gap-2">
       <button
@@ -165,17 +169,23 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
       )}
       {guiaIOS && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 z-[9999] flex flex-col items-center justify-end bg-black/55 backdrop-blur-[2px] px-5"
-          style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}
+          className={`fixed inset-0 z-[9999] flex flex-col items-center ${compartirArriba ? 'justify-start' : 'justify-end'} bg-black/55 backdrop-blur-[2px] px-5`}
+          style={compartirArriba ? { paddingTop: 'max(12px, env(safe-area-inset-top))' } : { paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}
           onClick={() => setGuiaIOS(false)}
           role="dialog"
           aria-label="Cómo instalar la app"
         >
+          {compartirArriba && (
+            <div className="mb-3 flex flex-col items-center text-white animate-bounce" aria-hidden>
+              <span className="material-symbols-outlined text-[36px] leading-none">arrow_upward</span>
+              <span className="text-xs font-bold tracking-wide">Compartir está aquí arriba</span>
+            </div>
+          )}
           <div className="w-full max-w-sm rounded-3xl bg-white p-5 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <p className="text-base font-extrabold text-neutral-900">Instala {store.name}</p>
             <p className="mt-1 text-xs text-neutral-500">Agrégala a tu pantalla de inicio en 3 toques</p>
             <ol className="mt-4 space-y-2.5 text-left text-sm text-neutral-800">
-              <li className="flex items-center gap-3"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-xs font-bold text-white">1</span><span>Toca el botón <b>Compartir</b> de la barra de abajo</span></li>
+              <li className="flex items-center gap-3"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-xs font-bold text-white">1</span><span>Toca el botón <b>Compartir</b> <svg className="inline-block align-[-3px] text-blue-500" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-label="símbolo de compartir"><path d="M12 15V3" /><path d="m8 7 4-4 4 4" /><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1" /></svg> {compartirArriba ? 'de la barra de arriba, junto a la dirección' : 'de la barra de abajo'}</span></li>
               <li className="flex items-center gap-3"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-xs font-bold text-white">2</span><span>Desliza y elige <b>&quot;Agregar a Inicio&quot;</b></span></li>
               <li className="flex items-center gap-3"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-xs font-bold text-white">3</span><span>Toca <b>&quot;Agregar&quot;</b></span></li>
             </ol>
@@ -187,11 +197,12 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
               Entendido
             </button>
           </div>
-          {/* Flecha que apunta a la barra del navegador, donde está el botón Compartir */}
-          <div className="mt-3 flex flex-col items-center text-white animate-bounce" aria-hidden>
-            <span className="text-xs font-bold tracking-wide">Compartir está aquí abajo</span>
-            <span className="material-symbols-outlined text-[36px] leading-none">arrow_downward</span>
-          </div>
+          {!compartirArriba && (
+            <div className="mt-3 flex flex-col items-center text-white animate-bounce" aria-hidden>
+              <span className="text-xs font-bold tracking-wide">Compartir está aquí abajo</span>
+              <span className="material-symbols-outlined text-[36px] leading-none">arrow_downward</span>
+            </div>
+          )}
         </div>,
         document.body,
       )}
