@@ -43,7 +43,7 @@ export async function GET(request: Request) {
 
   const [seguidores, ultimas, q] = await Promise.all([
     supabase.from('push_seguidas').select('endpoint', { count: 'exact', head: true }).eq('store_slug', slug),
-    supabase.from('push_campanas').select('id,titulo,cuerpo,enviados,fallidos,creada_at').eq('store_slug', slug).order('creada_at', { ascending: false }).limit(8),
+    supabase.from('push_campanas').select('id,titulo,cuerpo,url,enviados,fallidos,creada_at').eq('store_slug', slug).order('creada_at', { ascending: false }).limit(8),
     cupo(supabase, slug),
   ]);
   const sinTope = quien.esSuperadmin && PUSH_LIMITES.superadminSinTope;

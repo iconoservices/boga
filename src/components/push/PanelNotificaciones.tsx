@@ -13,7 +13,7 @@ type Estado = {
   seguidores: number; usadasSemana: number; usadasDia: number; restantesSemana: number; puedeHoy: boolean;
   dentroDeHorario: boolean; tablasListas: boolean; sinTope: boolean;
   limites: { maxPorSemana: number; maxPorDia: number; horaDesde: number; horaHasta: number };
-  ultimas: { id: number; titulo: string; cuerpo: string; enviados: number; fallidos: number; creada_at: string }[];
+  ultimas: { id: number; titulo: string; cuerpo: string; url?: string | null; enviados: number; fallidos: number; creada_at: string }[];
 };
 
 const campo = 'w-full bg-surface-container-low border border-surface-container-highest rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:border-primary';
@@ -63,6 +63,14 @@ export default function PanelNotificaciones({ opciones }: { opciones: OpcionCana
       setMensaje(r.ok ? '✅ Prueba enviada: debería llegarte en unos segundos.' : (j.error || 'No se pudo enviar la prueba'));
     } catch { setMensaje('No se pudo enviar la prueba'); }
     setEnviando(false);
+  };
+
+  // Reutilizar una campaña anterior: copia su contenido al formulario para ajustarlo y volver a enviarlo.
+  // (Una notificación ya enviada no se puede editar: ya está en los dispositivos.)
+  const reutilizar = (c: { titulo: string; cuerpo: string; url?: string | null }) => {
+    setTitulo(c.titulo); setCuerpo(c.cuerpo); setUrl(c.url && c.url !== '/' ? c.url : '');
+    setMensaje('Campaña cargada: ajusta lo que quieras y envíala. Cuenta como una campaña nueva.');
+    document.getElementById('form-campana')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const enviar = async () => {
@@ -129,7 +137,7 @@ export default function PanelNotificaciones({ opciones }: { opciones: OpcionCana
             </div>
           </div>
 
-          <div className="rounded-xl border border-surface-container-highest bg-surface p-5 flex flex-col gap-3">
+          <div id="form-campana" className="rounded-xl border border-surface-container-highest bg-surface p-5 flex flex-col gap-3 scroll-mt-4">
             <h3 className="font-bold text-on-surface">Nueva campaña</h3>
             <input className={campo} maxLength={60} placeholder="Título (ej. 🔥 Ofertas del fin de semana)" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
             <textarea className={campo + ' min-h-[88px]'} maxLength={160} placeholder="Texto corto (máx. 160 caracteres)" value={cuerpo} onChange={(e) => setCuerpo(e.target.value)} />
@@ -159,8 +167,16 @@ export default function PanelNotificaciones({ opciones }: { opciones: OpcionCana
                 <div key={c.id} className="py-3 border-t border-surface-container-highest text-sm">
                   <b className="text-on-surface">{c.titulo}</b>
                   <div className="text-secondary">{c.cuerpo}</div>
-                  <div className="text-[11px] text-secondary mt-1">
-                    {new Date(c.creada_at).toLocaleString('es-PE', { timeZone: 'America/Lima' })} · enviada a {c.enviados}{c.fallidos ? ` · ${c.fallidos} fallaron` : ''}
+                  <div className="flex items-center justify-between gap-3 mt-1">
+                    <div className="text-[11px] text-secondary">
+                      {new Date(c.creada_at).toLocaleString('es-PE', { timeZone: 'America/Lima' })} · enviada a {c.enviados}{c.fallidos ? ` · ${c.fallidos} fallaron` : ''}
+                    </div>
+                    <button
+                      onClick={() => reutilizar(c)}
+                      className="shrink-0 flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">content_copy</span>Reutilizar
+                    </button>
                   </div>
                 </div>
               ))}
