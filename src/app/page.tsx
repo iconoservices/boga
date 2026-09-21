@@ -164,6 +164,24 @@ function PortadaCarrusel({ notas, promos, style, cargando }: { notas: NotaCard[]
 // descripción (~400px de alto); ahora es una tira horizontal compacta
 // (ícono + nombre, sin descripción) para no competir tanto con el banner.
 function PortalesPanel() {
+  // En móvil la tira se desliza sola de a un portal cada 3 s (vuelve al inicio
+  // al llegar al final). Se pausa mientras el usuario la toca y unos segundos
+  // después. En escritorio (flex-wrap, sin overflow) no hace nada.
+  const tira = React.useRef<HTMLDivElement>(null);
+  const pausaHasta = React.useRef(0);
+  useEffect(() => {
+    const id = setInterval(() => {
+      const el = tira.current;
+      if (!el || el.scrollWidth <= el.clientWidth + 4) return;
+      if (Date.now() < pausaHasta.current) return;
+      const paso = (el.firstElementChild as HTMLElement | null)?.offsetWidth ?? 64;
+      const fin = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4;
+      el.scrollTo({ left: fin ? 0 : el.scrollLeft + paso + 12, behavior: 'smooth' });
+    }, 3000);
+    return () => clearInterval(id);
+  }, []);
+  const pausar = () => { pausaHasta.current = Date.now() + 6000; };
+
   return (
     <div className="px-container-margin lg:px-0 pt-6 lg:pt-0">
       <div className="flex flex-col gap-4 lg:h-full lg:justify-center">
@@ -183,7 +201,7 @@ function PortalesPanel() {
           </span>
         </div>
 
-        <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1 snap-x lg:flex-wrap lg:overflow-visible" style={{ scrollbarWidth: 'none' }}>
+        <div ref={tira} onTouchStart={pausar} onPointerDown={pausar} onWheel={pausar} className="flex gap-3 overflow-x-auto hide-scrollbar pb-1 snap-x lg:flex-wrap lg:overflow-visible" style={{ scrollbarWidth: 'none' }}>
           {PORTALES.map((p) => (
             <Link
               key={p.href}

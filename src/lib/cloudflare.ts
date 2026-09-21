@@ -8,16 +8,24 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app';
 export async function purgeCloudflare(paths: string[]): Promise<void> {
   const token = process.env.CLOUDFLARE_API_TOKEN;
   const zone = process.env.CLOUDFLARE_ZONE_ID;
-  if (!token || !zone || paths.length === 0) return;
+  if (paths.length === 0) return;
+  if (!token || !zone) {
+    console.warn('[purgeCloudflare] faltan CLOUDFLARE_API_TOKEN o CLOUDFLARE_ZONE_ID: no se purgó nada');
+    return;
+  }
   try {
     const files = paths.map((p) => `${SITE_URL}${p}`);
-    await fetch(`https://api.cloudflare.com/client/v4/zones/${zone}/purge_cache`, {
+    const res = await fetch(`https://api.cloudflare.com/client/v4/zones/${zone}/purge_cache`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ files }),
     });
-  } catch {
+    if (!res.ok) {
+      console.error('[purgeCloudflare] Cloudflare respondió', res.status, (await res.text()).slice(0, 300));
+    }
+  } catch (err) {
     /* si falla, el cambio igual se ve cuando venza la caché */
+    console.error('[purgeCloudflare] falló la llamada a Cloudflare:', err);
   }
 }
 
