@@ -138,6 +138,7 @@ async function cargarTienda(slug: string) {
         facebook: dbStore.facebook || undefined,
         instagram: dbStore.instagram || undefined,
         tiktok: dbStore.tiktok || undefined,
+        subdominioActivo: dbStore.subdominio_activo ?? undefined,
       };
     }
   } catch (err) {
@@ -171,10 +172,16 @@ export async function generateMetadata({ params }: Omit<Props, 'searchParams'>) 
     title: `${store.name} | Boga Market`,
     description: store.tagline,
     manifest: `/manifest.json?slug=${slug}`,
-    // La dirección OFICIAL de la tienda es siempre la del sitio principal (bogahub.app/<tienda>),
+    // La dirección OFICIAL de la tienda es la del sitio principal (bogahub.app/<tienda>),
     // aunque se abra desde la dirección de tiendas (tiendas.bogahub.app): así Google no las
     // cuenta como páginas repetidas. Al ser relativa, se resuelve contra metadataBase.
-    alternates: { canonical: `/${slug}` },
+    // Excepción: una tienda con subdominio propio ACTIVO (plan de pago) es oficial en su
+    // dirección <tienda>.bogahub.app, que es la que Google debe mostrar. Si se apaga, vuelve a la ruta.
+    alternates: {
+      canonical: store.subdominioActivo
+        ? `https://${slug}.${new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app').host}`
+        : `/${slug}`,
+    },
     openGraph: {
       title: store.name,
       description: store.tagline,
@@ -229,6 +236,7 @@ export default async function StorePage({ params, searchParams }: Props) {
         facebook: undefined,
         instagram: undefined,
         tiktok: undefined,
+        subdominioActivo: undefined,
       };
     } else {
       notFound();

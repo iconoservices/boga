@@ -48,9 +48,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Cada tienda activa como URL propia e indexable (antes solo se descubrían
   // por los links internos de /market y /explore, nunca por el sitemap).
-  const { data: activeStores } = await supabase.from('stores').select('slug').eq('status', 'active');
+  const { data: activeStores } = await supabase.from('stores').select('slug,subdominio_activo').eq('status', 'active');
   const tiendas: MetadataRoute.Sitemap = (activeStores ?? []).map((s) => ({
-    url: `${SITE_URL}/${s.slug}`,
+    // Una tienda con subdominio propio activo se lista en su propia dirección (es la oficial: ver canonical)
+    url: s.subdominio_activo ? `https://${s.slug}.${new URL(SITE_URL).host}` : `${SITE_URL}/${s.slug}`,
     lastModified: now,
     changeFrequency: 'weekly',
     priority: 0.7,
