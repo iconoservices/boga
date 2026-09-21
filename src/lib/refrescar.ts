@@ -16,3 +16,19 @@ export async function refrescarPublico(paths: string[]): Promise<void> {
     /* si falla, el cambio igual se ve cuando venza la caché */
   }
 }
+
+// Igual, pero para el panel del negocio: refresca el catálogo de UNA tienda
+// (el dueño solo puede refrescar la suya).
+export async function refrescarTienda(slug: string): Promise<void> {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session || !slug) return;
+    await fetch('/api/revalidate-store', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({ slug }),
+    });
+  } catch {
+    /* si falla, el cambio igual se ve cuando venza la caché */
+  }
+}

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@supabase/supabase-js';
+import { purgeCloudflare, rutasCatalogo } from '@/lib/cloudflare';
 
 // Al guardar/borrar un banner (o cualquier otro cambio del catalogo) desde
 // superadmin, esto fuerza que /api/catalog se vuelva a pedir de una en vez de
@@ -23,5 +24,6 @@ export async function POST(request: Request) {
   }
 
   revalidatePath('/api/catalog');
+  await purgeCloudflare(rutasCatalogo());
   return NextResponse.json({ ok: true });
 }

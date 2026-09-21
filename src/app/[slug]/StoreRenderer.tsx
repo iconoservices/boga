@@ -85,6 +85,7 @@ export default function StoreRenderer({ store: initialStore }: Props) {
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
+  const template = (() => {
   switch (store.template) {
     case 'default':
       return <MenuDirectoTemplate store={store} />;
@@ -119,4 +120,19 @@ export default function StoreRenderer({ store: initialStore }: Props) {
         </div>
       );
   }
+  })();
+
+  return (
+    <>
+      {template}
+      <a
+        href="/negocios?ref=menu"
+        target="_blank"
+        rel="noopener"
+        className="block bg-white py-3 pl-4 pr-24 pb-20 text-center text-xs text-gray-500 border-t border-gray-100"
+      >
+        Menú digital creado por <strong className="text-gray-800">Boga</strong> · <span className="underline">Pide el tuyo aquí</span>
+      </a>
+    </>
+  );
 }

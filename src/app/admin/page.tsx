@@ -13,6 +13,7 @@ import type { User } from '@supabase/supabase-js';
 import { COLOR_PRESETS, getColorPreset } from '@/lib/colorPresets';
 import { extractThemeFromImageClient } from '@/lib/extractThemeClient';
 import { uploadFile } from '@/lib/uploadClient';
+import { refrescarTienda } from '@/lib/refrescar';
 import type { StoreTheme } from '@/lib/templates.config';
 import { iconForCategory } from '@/templates/shared/tokens';
 
@@ -374,6 +375,8 @@ function AdminDashboard({ user }: { user: User }) {
     if (error) {
       setDbStores(prev => prev.map((s: any) => s.slug === slug ? { ...s, status: activa ? 'inactive' : 'active' } : s));
       alert('No se pudo cambiar el estado de la carta: ' + error.message);
+    } else {
+      refrescarTienda(slug);
     }
     setTogglingActive(false);
   };
@@ -629,6 +632,7 @@ function AdminDashboard({ user }: { user: User }) {
       }
       if (error) throw error;
 
+      refrescarTienda(String(upsertData.slug));
       await fetchStores();
       setIsStoreEditorOpen(false);
     } catch (err: any) {
@@ -645,6 +649,7 @@ function AdminDashboard({ user }: { user: User }) {
     try {
       const { error } = await supabase.from('stores').delete().eq('slug', editingStoreSlug);
       if (error) throw error;
+      refrescarTienda(editingStoreSlug);
       await fetchStores();
       setIsStoreEditorOpen(false);
     } catch (err: any) {
@@ -660,6 +665,8 @@ function AdminDashboard({ user }: { user: User }) {
     try {
       const { error } = await supabase.from('products').update({ status: newStatus }).eq('id', id);
       if (error) throw error;
+      const tiendaDelProducto = products.find(p => p.id === id)?.store;
+      if (tiendaDelProducto) refrescarTienda(tiendaDelProducto);
     } catch (error) {
       console.error('Error updating status:', error);
       setProducts(prev => prev.map(p => p.id === id ? { ...p, status: currentStatus } : p));
@@ -724,6 +731,7 @@ function AdminDashboard({ user }: { user: User }) {
       }
 
       // Éxito: Limpiar formulario y recargar
+      refrescarTienda(newProduct.store);
       await fetchProducts();
       setIsModalOpen(false);
       resetForm();
@@ -756,8 +764,10 @@ function AdminDashboard({ user }: { user: User }) {
     if (window.confirm(`¿Estás seguro de que deseas eliminar "${name}"? Esta acción no se puede deshacer.`)) {
       setIsDeleting(id);
       try {
+        const tiendaDelProducto = products.find(p => p.id === id)?.store;
         const { error } = await supabase.from('products').delete().eq('id', id);
         if (error) throw error;
+        if (tiendaDelProducto) refrescarTienda(tiendaDelProducto);
         await fetchProducts();
       } catch (error: any) {
         alert('Error al eliminar: ' + error.message);

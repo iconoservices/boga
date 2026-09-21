@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@supabase/supabase-js';
+import { purgeCloudflare, rutasCatalogo } from '@/lib/cloudflare';
 
 // Al guardar, ocultar o borrar algo desde el superadmin (empleos, viajes, eventos…),
 // esto refresca de una vez la copia guardada del endpoint público, en vez de
@@ -31,5 +32,6 @@ export async function POST(request: Request) {
   try { ({ paths } = await request.json()); } catch { /* sin cuerpo */ }
   const lista = (Array.isArray(paths) ? paths : []).filter((p): p is string => typeof p === 'string' && PERMITIDAS.has(p));
   lista.forEach((p) => revalidatePath(p));
+  await purgeCloudflare(lista.flatMap((p) => (p === '/api/catalog' ? rutasCatalogo() : [p])));
   return NextResponse.json({ ok: true, refrescadas: lista });
 }
