@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import type { StoreConfig } from '@/lib/stores.config';
 
 interface StoreFloatingActionsProps {
@@ -28,6 +29,8 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   // null = todavía no se sabe: el botón no se dibuja hasta comprobarlo (evita el parpadeo)
   const [isInstalled, setIsInstalled] = useState<boolean | null>(null);
+  // Guía de instalación para iPhone (Apple no deja instalar por código: hay que indicar el botón Compartir)
+  const [guiaIOS, setGuiaIOS] = useState(false);
 
   const t = store.theme;
   // Con clave fija, instalar UNA tienda escondia el boton de instalar en TODAS
@@ -107,7 +110,7 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
       // navegador tiene su PROPIO botón de compartir (barra de abajo) con "Agregar a Inicio".
       // La hoja de `navigator.share` NO trae esa opción, así que se guía al de la barra.
       if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
-        alert('Para instalar:\n\n1. Toca el botón Compartir (📤) de la barra de abajo\n2. Desliza y toca "Agregar a Inicio"\n3. Toca "Agregar"');
+        setGuiaIOS(true);
         return;
       }
       const url = window.location.href;
@@ -123,7 +126,7 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
     const ua = navigator.userAgent.toLowerCase();
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
     if (/iphone|ipad|ipod/.test(ua) && isSafari) {
-      alert('Para instalar:\n\n1. Tocá el icono Compartir (📤) abajo\n2. Deslizá y tocá "Agregar a pantalla de inicio"\n3. Tocá "Agregar"');
+      setGuiaIOS(true);
     } else {
       alert('Para instalar:\n\n1. Abrí el menú del navegador (⋯)\n2. Buscá "Agregar a pantalla de inicio"\n3. Confirmá la instalación');
     }
@@ -159,6 +162,38 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
         >
           <span className="material-symbols-outlined text-[20px]">download</span>
         </button>
+      )}
+      {guiaIOS && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex flex-col items-center justify-end bg-black/55 backdrop-blur-[2px] px-5"
+          style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}
+          onClick={() => setGuiaIOS(false)}
+          role="dialog"
+          aria-label="Cómo instalar la app"
+        >
+          <div className="w-full max-w-sm rounded-3xl bg-white p-5 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <p className="text-base font-extrabold text-neutral-900">Instala {store.name}</p>
+            <p className="mt-1 text-xs text-neutral-500">Agrégala a tu pantalla de inicio en 3 toques</p>
+            <ol className="mt-4 space-y-2.5 text-left text-sm text-neutral-800">
+              <li className="flex items-center gap-3"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-xs font-bold text-white">1</span><span>Toca el botón <b>Compartir</b> de la barra de abajo</span></li>
+              <li className="flex items-center gap-3"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-xs font-bold text-white">2</span><span>Desliza y elige <b>&quot;Agregar a Inicio&quot;</b></span></li>
+              <li className="flex items-center gap-3"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-xs font-bold text-white">3</span><span>Toca <b>&quot;Agregar&quot;</b></span></li>
+            </ol>
+            <button
+              onClick={() => setGuiaIOS(false)}
+              className="mt-5 w-full rounded-2xl py-3 text-sm font-extrabold text-white active:scale-95 transition-transform"
+              style={{ backgroundColor: t.primary }}
+            >
+              Entendido
+            </button>
+          </div>
+          {/* Flecha que apunta a la barra del navegador, donde está el botón Compartir */}
+          <div className="mt-3 flex flex-col items-center text-white animate-bounce" aria-hidden>
+            <span className="text-xs font-bold tracking-wide">Compartir está aquí abajo</span>
+            <span className="material-symbols-outlined text-[36px] leading-none">arrow_downward</span>
+          </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
