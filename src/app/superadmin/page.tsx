@@ -682,6 +682,25 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   const [showStoreProductForm, setShowStoreProductForm] = useState(false);
   const [storeProductSearch, setStoreProductSearch] = useState('');
   const [subdominioCopiado, setSubdominioCopiado] = useState(false);
+  const [refrescandoTodo, setRefrescandoTodo] = useState(false);
+  const refrescarTodo = async () => {
+    setRefrescandoTodo(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch('/api/revalidate-todo', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session?.access_token || ''}` },
+      });
+      const j = await res.json().catch(() => ({}));
+      alert(res.ok
+        ? `Caché refrescada (${j.tiendas ?? 0} tiendas). Cloudflare: ${j.cloudflare ? 'borrada' : 'NO se pudo borrar'}.`
+        : `No se pudo refrescar: ${j.error || res.status}`);
+    } catch (err: any) {
+      alert('No se pudo refrescar: ' + err.message);
+    } finally {
+      setRefrescandoTodo(false);
+    }
+  };
   const [editingStoreProductImage, setEditingStoreProductImage] = useState<string | null>(null);
 
   const handleOpenStoreProducts = async (slug: string) => {
@@ -2100,6 +2119,15 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
             </span>
           </div>
           <div className="flex items-center gap-4">
+            <button
+              onClick={refrescarTodo}
+              disabled={refrescandoTodo}
+              title="Borra la caché de la app y de Cloudflare. Úsalo después de cambiar datos directo en Supabase."
+              className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold text-[#424754] hover:text-[#0058be] hover:bg-white/60 transition-all rounded-md disabled:opacity-50"
+            >
+              <span className={`material-symbols-outlined text-[16px] ${refrescandoTodo ? 'animate-spin' : ''}`}>sync</span>
+              {refrescandoTodo ? 'Refrescando…' : 'Refrescar todo'}
+            </button>
             <button className="p-1 text-[#424754] hover:bg-[#e1e2ec] hover:opacity-80 transition-all rounded-full flex items-center justify-center">
               <span className="material-symbols-outlined text-[18px]">notifications</span>
             </button>

@@ -31,3 +31,23 @@ export function rutasCatalogo(slug?: string): string[] {
     ...(slug ? [`/api/catalog/${encodeURIComponent(slug)}`] : []),
   ];
 }
+
+// Borra TODA la caché de la zona. Es lo único que cubre rutas con parámetro
+// (p. ej. /api/catalog/<tienda>), porque borrar por prefijo es solo de Enterprise.
+// Se usa desde el botón "Refrescar todo" del superadmin, después de tocar datos
+// directo en Supabase.
+export async function purgeTodoCloudflare(): Promise<boolean> {
+  const token = process.env.CLOUDFLARE_API_TOKEN;
+  const zone = process.env.CLOUDFLARE_ZONE_ID;
+  if (!token || !zone) return false;
+  try {
+    const r = await fetch(`https://api.cloudflare.com/client/v4/zones/${zone}/purge_cache`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ purge_everything: true }),
+    });
+    return r.ok;
+  } catch {
+    return false;
+  }
+}
