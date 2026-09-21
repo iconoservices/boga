@@ -4,8 +4,10 @@ import { supabase } from '@/lib/supabase';
 // celular suelen venir de 3000-4000px y varios MB, mucho más de lo que
 // cualquier tarjeta o banner necesita. Baja el lado mayor a 1600px y
 // recomprime a calidad ~82%, que a ese tamaño se ve indistinguible del
-// original pero pesa una fracción. PNG se mantiene PNG (logos con
-// transparencia); el resto sale en JPEG. Si algo falla o no hay ganancia,
+// original pero pesa una fracción. PNG se mantiene PNG solo si tiene
+// transparencia (logos); un PNG sin transparencia (una foto o banner guardado como PNG, que
+// pesa varios MB y no se comprime por calidad) se pasa a WebP, o a JPEG si el navegador no
+// sabe codificar WebP. El resto sale en JPEG. Si algo falla o no hay ganancia,
 // sube el archivo tal cual.
 async function compressImage(file: File, maxDim = 1600, quality = 0.82): Promise<File> {
   if (!file.type.startsWith('image/') || file.type === 'image/svg+xml') return file;
@@ -23,12 +25,28 @@ async function compressImage(file: File, maxDim = 1600, quality = 0.82): Promise
     if (!ctx) return file;
     ctx.drawImage(bitmap, 0, 0, w, h);
 
-    const outType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
-    const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, outType, quality));
+    // ¿Tiene transparencia? Si algún píxel no es opaco, es un logo/ícono y debe seguir siendo PNG.
+    const tieneTransparencia = (() => {
+      if (file.type !== 'image/png') return false;
+      const px = ctx.getImageData(0, 0, w, h).data;
+      for (let i = 3; i < px.length; i += 4) if (px[i] < 255) return true;
+      return false;
+    })();
+
+    const aBlob = (tipo: string): Promise<Blob | null> => new Promise((resolve) => canvas.toBlob(resolve, tipo, quality));
+    let blob: Blob | null;
+    if (file.type === 'image/png' && tieneTransparencia) {
+      blob = await aBlob('image/png');
+    } else if (file.type === 'image/png') {
+      blob = await aBlob('image/webp');
+      if (!blob || blob.type !== 'image/webp') blob = await aBlob('image/jpeg'); // Safari no codifica WebP
+    } else {
+      blob = await aBlob('image/jpeg');
+    }
     if (!blob || blob.size >= file.size) return file; // la version comprimida no gano nada
 
-    const newName = file.name.replace(/\.\w+$/, outType === 'image/png' ? '.png' : '.jpg');
-    return new File([blob], newName, { type: outType });
+    const ext = blob.type === 'image/png' ? '.png' : blob.type === 'image/webp' ? '.webp' : '.jpg';
+    return new File([blob], file.name.replace(/\.\w+$/, ext), { type: blob.type });
   } catch {
     return file;
   }
