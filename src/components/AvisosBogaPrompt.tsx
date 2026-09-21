@@ -10,14 +10,16 @@ import { CANAL_BOGA } from '@/lib/pushLimites';
  * propia: el permiso del navegador solo se pide si la persona toca «Activar» (pedirlo al abrir la
  * página hace que lo rechacen, y un permiso rechazado ya no se puede volver a pedir).
  *
- * Reglas para no cansar: aparece a los 12 s de uso, en una sola línea que no tapa el contenido; si la
- * cierra vuelve a los 7, 14, 30 y 60 días, y tras 5 cierres no aparece más (la campana de la cabecera
- * y el interruptor del perfil siguen disponibles).
+ * Reglas: es chica (una sola línea) y se cierra con la X. Sale como mucho una vez al día: a los 12 s de
+ * uso, y desde el momento en que se muestra no vuelve a salir hasta pasadas 24 horas (la cierren o no).
+ * Solo se deja de mostrar del todo si bloquean el permiso en el navegador. La campana de la cabecera y
+ * el interruptor del perfil siguen disponibles siempre.
  * No sale en tiendas, admin ni pantallas de sesión, ni si ya activó o bloqueó los avisos.
  */
 
 const LLAVE = 'boga_push_aviso';
-const ESPERAS_DIAS = [7, 14, 30, 60, 60];
+const ESPERA_DIAS = 1;   // como mucho una vez al día
+// Solo lo usa el rechazo del permiso del navegador ('denegado'): ahí ya no se puede volver a pedir.
 const MAX_RECHAZOS = 5;
 const ESPERA_INICIAL_MS = 12_000;
 
@@ -49,8 +51,17 @@ export default function AvisosBogaPrompt() {
       if (Notification.permission !== 'default') return;      // ya activó o ya lo bloqueó
       if (await sigueTienda(CANAL_BOGA)) return;
       const m = leer();
-      if (m.rechazos >= MAX_RECHAZOS || Date.now() < m.hasta) return;
-      timer = setTimeout(() => { if (vivo) setVisible(true); }, ESPERA_INICIAL_MS);
+      if (m.rechazos >= MAX_RECHAZOS && m.hasta === 0) return;   // bloqueó el permiso: no insistir
+      // Las versiones anteriores guardaban esperas de 7 a 60 días: quien ya la había cerrado quedaba
+      // sin verla por semanas. Se ignora cualquier espera mayor a la de ahora (un día).
+      const tope = Date.now() + ESPERA_DIAS * 86_400_000;
+      if (m.hasta <= tope && Date.now() < m.hasta) return;         // ya salió hoy
+      timer = setTimeout(() => {
+        if (!vivo) return;
+        // Se anota al mostrarla (no al cerrarla): así sale una sola vez al día aunque la ignoren.
+        guardar({ rechazos: m.rechazos, hasta: Date.now() + ESPERA_DIAS * 86_400_000 });
+        setVisible(true);
+      }, ESPERA_INICIAL_MS);
     })();
     return () => { vivo = false; if (timer) clearTimeout(timer); };
   }, [permitida]);
@@ -58,9 +69,6 @@ export default function AvisosBogaPrompt() {
   if (!visible || !permitida) return null;
 
   const ahoraNo = () => {
-    const m = leer();
-    const espera = ESPERAS_DIAS[Math.min(m.rechazos, ESPERAS_DIAS.length - 1)];
-    guardar({ rechazos: m.rechazos + 1, hasta: Date.now() + espera * 86_400_000 });
     setVisible(false);
   };
 

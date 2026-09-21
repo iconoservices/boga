@@ -17,6 +17,7 @@ const ALIAS_CIUDAD: Record<string, string> = {
   'calleria': 'pucallpa',
   'yarinacocha': 'pucallpa',
   'manantay': 'pucallpa',
+  'puerto callao': 'pucallpa',
   'coronel portillo': 'pucallpa',
   'provincia de coronel portillo': 'pucallpa',
 };
@@ -41,6 +42,33 @@ export const CIUDADES: Ciudad[] = [
   { slug: 'pisco',       nombre: 'Pisco',       region: 'Ica' },
   { slug: 'huanuco',     nombre: 'Huánuco',     region: 'Huánuco' },
 ];
+
+// Centro y radio de cada ciudad, para ubicar al usuario por COORDENADAS y no solo por el
+// nombre que devuelve el reverse-geocoding: el GPS suele dar el nombre del barrio o
+// puerto más cercano ("Puerto Callao", "San José", "Campo Verde"…), que no dice
+// "Pucallpa" y dejaba a la persona sin ciudad. El radio cubre el área urbana y los
+// distritos vecinos (Callería, Yarinacocha, Manantay, Puerto Callao, Campo Verde).
+const CENTROS: { slug: string; lat: number; lng: number; radioKm: number }[] = [
+  { slug: 'pucallpa', lat: -8.3791, lng: -74.5539, radioKm: 35 },
+];
+
+const distanciaKm = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+  const rad = (g: number) => (g * Math.PI) / 180;
+  const dLat = rad(lat2 - lat1);
+  const dLng = rad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(a));
+};
+
+/** Slug de la ciudad cuyo radio contiene estas coordenadas, o null si no cae en ninguna. */
+export function slugPorCoordenadas(lat: number, lng: number): string | null {
+  let mejor: { slug: string; d: number } | null = null;
+  for (const c of CENTROS) {
+    const d = distanciaKm(lat, lng, c.lat, c.lng);
+    if (d <= c.radioKm && (!mejor || d < mejor.d)) mejor = { slug: c.slug, d };
+  }
+  return mejor?.slug ?? null;
+}
 
 // Las únicas donde Boga Market está vivo hoy.
 export const CIUDADES_ACTIVAS: string[] = ['pucallpa'];

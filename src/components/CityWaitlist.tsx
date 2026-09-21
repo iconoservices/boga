@@ -54,11 +54,17 @@ export function useCiudad() {
       }
       return;
     }
-    setAvisoGeo(
-      r.motivo === 'permiso-denegado'
-        ? 'No diste permiso de ubicación. Elige tu ciudad de la lista.'
-        : 'No pudimos obtener tu ubicación. Elige tu ciudad de la lista.',
-    );
+    // Mensajes que dicen qué hacer (en Android el permiso queda bloqueado si se rechazó o se ignoró
+    // el aviso del navegador, y ya no vuelve a preguntar hasta que se cambie a mano).
+    const mensajes: Record<string, string> = {
+      'permiso-denegado':
+        'La ubicación está bloqueada para BogaHub. Toca el candado de la barra de direcciones → Permisos → Ubicación → Permitir, y vuelve a intentar. O elige tu ciudad de la lista.',
+      'no-disponible':
+        'Tu celular no pudo darnos la ubicación. Activa la ubicación (GPS) del teléfono y vuelve a intentar, o elige tu ciudad de la lista.',
+      timeout:
+        'La ubicación tardó demasiado. Activa el GPS del teléfono y vuelve a intentar, o elige tu ciudad de la lista.',
+    };
+    setAvisoGeo(mensajes[r.motivo] ?? 'No pudimos obtener tu ubicación. Elige tu ciudad de la lista.');
   }, [elegir]);
 
   // Primera visita (sin ciudad guardada): intenta detectar sola por GPS en vez
