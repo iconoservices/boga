@@ -40,7 +40,11 @@ export default function BottomNav() {
     };
   }, [sheetOpen]);
 
-  if (!onNavRoute) return null;
+  // Leyendo una nota de la Revista (/revista/<slug>) la barra se oculta para dejar la
+  // pantalla limpia; en la portada de la Revista (/revista) sí se ve.
+  const leyendoNota = pathname.startsWith('/revista/');
+
+  if (!onNavRoute || leyendoNota) return null;
 
   return (
     <>

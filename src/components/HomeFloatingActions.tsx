@@ -24,6 +24,8 @@ export default function HomeFloatingActions() {
   };
 
   if (!pathname || !(pathname === '/' || RUTAS.some((r) => pathname.startsWith(r)))) return null;
+  // Leyendo una nota de la Revista tampoco: pantalla limpia.
+  if (pathname.startsWith('/revista/')) return null;
 
   // Pegado a la esquina, justo debajo de la cabecera (móvil ~64 px, escritorio ~56 px + barra de secciones).
   return (
