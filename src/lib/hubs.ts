@@ -10,9 +10,9 @@ export const HUBS: Hub[] = [
   { href: '/eventos',     label: 'Agenda',      long: 'Agenda & Eventos', icon: 'celebration' },
   { href: '/inmuebles',   label: 'Inmuebles',   icon: 'real_estate_agent' },
   { href: '/sorteos',     label: 'Sorteos',     icon: 'confirmation_number' },
+  { href: '/mostrador',   label: 'Mostrador',   long: 'Mostrador · productos digitales', icon: 'apps' },
   { href: '/trabajos',    label: 'Trabajos',    long: 'Trabajos & Oficios', icon: 'construction' },
   { href: '/viajes',      label: 'Viajes',      long: 'Viajes & Transporte', icon: 'directions_boat' },
-  { href: '/pension',     label: 'Pensión',     long: 'Pensión de almuerzos', icon: 'lunch_dining' },
   { href: '/taxi-seguro', label: 'Taxi Seguro', icon: 'local_taxi' },
   { href: '/pandero',     label: 'Pandero',     long: 'Pandero · ahorro en grupo', icon: 'savings' },
   { href: '/revista',     label: 'Revista',     long: 'Yo Soy de la Selva', icon: 'menu_book' },
@@ -23,7 +23,10 @@ export const HUBS: Hub[] = [
 // Hoy vacío: el perfil vive arriba (cabecera) y "Mis pedidos" dentro del perfil.
 export const ACCOUNT_LINKS: Hub[] = [];
 
+// La Pensión de almuerzos ya no es un hub del menú: vive dentro de Market (chip en
+// /market), así que estando en /pension el ítem "Market" sigue resaltado.
 export function isHubActive(pathname: string, href: string) {
-  if (href === '/' || href === '/market') return pathname === href;
+  if (href === '/market') return pathname === href || pathname.startsWith('/pension');
+  if (href === '/') return pathname === href;
   return pathname.startsWith(href);
 }

@@ -565,6 +565,14 @@ export default function Home() {
                   </button>
                 );
               })}
+              {/* Pensión de almuerzos: vive dentro de Market, no como hub aparte. */}
+              <Link
+                href="/pension"
+                className="flex flex-row items-center gap-1.5 px-4 py-1.5 rounded-full shadow-sm transition-all duration-300 active:scale-95 shrink-0 group bg-white border border-surface-container-highest text-secondary"
+              >
+                <span className="material-symbols-outlined shrink-0 text-[18px] text-primary">lunch_dining</span>
+                <span className="font-label-md text-[11px] whitespace-nowrap text-secondary">Pensión</span>
+              </Link>
             </div>
           </section>
 

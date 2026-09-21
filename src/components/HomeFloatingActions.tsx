@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 
 // Rutas del lado consumidor de BogaHub donde salen compartir/instalar (las mismas
 // del riel lateral del layout). Fuera de estas (admin, superadmin, login…) no van.
-const RUTAS = ['/market', '/pension', '/trabajos', '/taxi-seguro', '/inmuebles', '/viajes', '/eventos', '/sorteos', '/pandero', '/revista', '/guia'];
+const RUTAS = ['/market', '/pension', '/trabajos', '/taxi-seguro', '/inmuebles', '/viajes', '/eventos', '/sorteos', '/mostrador', '/pandero', '/revista', '/guia'];
 
 export default function HomeFloatingActions() {
   const pathname = usePathname();

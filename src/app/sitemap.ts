@@ -12,6 +12,7 @@ export const revalidate = 300;
 const ROUTES: { path: string; changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency']; priority: number }[] = [
   { path: '/',              changeFrequency: 'daily',   priority: 1 },
   { path: '/market',        changeFrequency: 'daily',   priority: 0.9 },
+  { path: '/mostrador',     changeFrequency: 'monthly', priority: 0.5 },
   { path: '/pension',       changeFrequency: 'weekly',  priority: 0.6 },
   { path: '/explore',       changeFrequency: 'daily',   priority: 0.7 },
   { path: '/eventos',       changeFrequency: 'daily',   priority: 0.8 },
