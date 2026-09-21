@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
-import HomeFloatingActions from '@/components/HomeFloatingActions';
 import { useCart } from '@/context/CartContext';
 
 import { fetchCatalogo } from '@/lib/catalogo';
@@ -440,7 +439,6 @@ export default function Home() {
         onCartClick={() => setIsCartOpen(true)}
       />
 
-      <HomeFloatingActions />
 
       <div className="max-w-[1440px] mx-auto w-full">
         <MarketCityBanner />

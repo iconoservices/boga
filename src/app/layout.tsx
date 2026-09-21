@@ -69,6 +69,7 @@ import SharedUI from '@/components/SharedUI';
 import MarketTabs from '@/components/MarketTabs';
 import PlazaChatBubble from '@/components/PlazaChatBubble';
 import AvisosBogaPrompt from '@/components/AvisosBogaPrompt';
+import HomeFloatingActions from '@/components/HomeFloatingActions';
 
 export default function RootLayout({
   children,
@@ -121,6 +122,7 @@ export default function RootLayout({
                 <SharedUI />
                 <div className="boga-chrome"><PlazaChatBubble /></div>
                 <div className="boga-chrome"><AvisosBogaPrompt /></div>
+                <div className="boga-chrome"><HomeFloatingActions /></div>
               </CartProvider>
             </DemoProvider>
           </StoreSettingsProvider>

@@ -1,8 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+
+// Rutas del lado consumidor de BogaHub donde salen compartir/instalar (las mismas
+// del riel lateral del layout). Fuera de estas (admin, superadmin, login…) no van.
+const RUTAS = ['/market', '/pension', '/trabajos', '/taxi-seguro', '/inmuebles', '/viajes', '/eventos', '/sorteos', '/pandero', '/revista', '/guia'];
 
 export default function HomeFloatingActions() {
+  const pathname = usePathname();
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstalled, setIsInstalled] = useState(false);
 
@@ -72,8 +78,8 @@ export default function HomeFloatingActions() {
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
-        title: 'Boga Market',
-        text: 'Descubre tiendas y productos cerca de ti',
+        title: document.title || 'BogaHub',
+        text: 'Descubre Pucallpa en BogaHub',
         url: window.location.href,
       }).catch(() => {});
     } else {
@@ -82,8 +88,10 @@ export default function HomeFloatingActions() {
     }
   };
 
+  if (!pathname || !(pathname === '/' || RUTAS.some((r) => pathname.startsWith(r)))) return null;
+
   return (
-    <div className="fixed top-32 lg:top-24 right-3 z-50 flex flex-col gap-2">
+    <div className="fixed top-28 lg:top-20 right-3 z-50 flex flex-col gap-2">
       <button
         onClick={handleShare}
         className="w-10 h-10 rounded-full flex items-center justify-center bg-white/40 backdrop-blur-md border border-white/50 text-on-surface shadow-lg active:scale-90 hover:bg-white/60 transition-all"
