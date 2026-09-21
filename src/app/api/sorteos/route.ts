@@ -24,6 +24,9 @@ export async function GET() {
     .order('created_at', { ascending: false });
 
   if (error) console.error('[api/sorteos]', error.message);
+  // Si falla Supabase: 503 sin caché (no guardar una lista vacía) para que
+  // Cloudflare pueda servir la última copia buena (stale-if-error).
+  if (error) return NextResponse.json({ error: 'no disponible' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
   const lista = rifas ?? [];
 
   // Sorteos POR FECHA (sin meta de tickets): el día indicado se sortean solos. No hay
@@ -73,6 +76,6 @@ export async function GET() {
 
   return NextResponse.json(
     { raffles },
-    { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } },
+    { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300, stale-if-error=86400' } },
   );
 }

@@ -52,9 +52,12 @@ export async function GET() {
 
   if (jobs.error) console.error('[api/chamba] empleos', jobs.error.message);
   if (providers.error) console.error('[api/chamba] oficios', providers.error.message);
+  // Si falla Supabase: 503 sin caché (no guardar una lista vacía) para que
+  // Cloudflare pueda servir la última copia buena (stale-if-error).
+  if (jobs.error || providers.error) return NextResponse.json({ error: 'no disponible' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
 
   return NextResponse.json(
     { jobs: jobsOrdenados, providers: providers.data ?? [] },
-    { headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=900' } },
+    { headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=900, stale-if-error=86400' } },
   );
 }

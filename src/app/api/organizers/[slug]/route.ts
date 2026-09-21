@@ -31,9 +31,12 @@ export async function GET(
     .order('fecha', { ascending: true, nullsFirst: false });
 
   if (error) console.error('[api/organizers/slug]', error.message);
+  // Si falla Supabase: 503 sin caché (no guardar una lista vacía) para que
+  // Cloudflare pueda servir la última copia buena (stale-if-error).
+  if (error) return NextResponse.json({ error: 'no disponible' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
 
   return NextResponse.json(
     { organizer: org, noches: noches ?? [] },
-    { headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' } },
+    { headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600, stale-if-error=86400' } },
   );
 }

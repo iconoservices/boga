@@ -24,6 +24,6 @@ export async function GET() {
 
   return NextResponse.json(
     { notas: slim },
-    { headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=900' } },
+    { headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=900, stale-if-error=86400' } },
   );
 }
