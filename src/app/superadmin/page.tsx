@@ -1885,6 +1885,27 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         );
       }
 
+      // Subdominio propio: si el interruptor cambió, dar de alta / baja
+      // <slug>.bogahub.app en Vercel y Cloudflare. No corta el guardado si falla.
+      const antesActivo = !!editingStore?.subdominioActivo;
+      if (!!storeForm.subdominioActivo !== antesActivo) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          const res = await fetch('/api/subdominio', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` },
+            body: JSON.stringify({ slug, activo: !!storeForm.subdominioActivo }),
+          });
+          const j = await res.json().catch(() => ({}));
+          const detalle = (j.detalle || [j.error]).filter(Boolean).join('\n');
+          alert(res.ok
+            ? `Subdominio ${storeForm.subdominioActivo ? 'activado' : 'desactivado'}:\n${detalle}`
+            : `La tienda se guardó, pero el subdominio NO se pudo ${storeForm.subdominioActivo ? 'activar' : 'desactivar'}:\n${detalle}`);
+        } catch (err: any) {
+          alert('La tienda se guardó, pero falló el aviso del subdominio: ' + err.message);
+        }
+      }
+
       // Los productos se enlazan a la tienda por el texto del slug (columna
       // `store`), no por id. Si el slug cambio, hay que migrarlos o quedan
       // apuntando a un slug que ya no existe.
