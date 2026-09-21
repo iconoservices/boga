@@ -68,6 +68,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import SharedUI from '@/components/SharedUI';
 import MarketTabs from '@/components/MarketTabs';
 import PlazaChatBubble from '@/components/PlazaChatBubble';
+import AvisosBogaPrompt from '@/components/AvisosBogaPrompt';
 
 export default function RootLayout({
   children,
@@ -119,6 +120,7 @@ export default function RootLayout({
                 <div className="boga-chrome"><BottomNav /></div>
                 <SharedUI />
                 <div className="boga-chrome"><PlazaChatBubble /></div>
+                <div className="boga-chrome"><AvisosBogaPrompt /></div>
               </CartProvider>
             </DemoProvider>
           </StoreSettingsProvider>

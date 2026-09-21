@@ -43,26 +43,58 @@ export async function sigueTienda(slug: string): Promise<boolean> {
   return !!(reg && (await reg.pushManager.getSubscription()));
 }
 
-export async function seguirTienda(slug: string): Promise<'ok' | 'denegado' | 'no-soportado' | 'error'> {
-  if (!pushDisponible()) return 'no-soportado';
-  const permiso = await Notification.requestPermission();
-  if (permiso !== 'granted') return 'denegado';
+// Vuelve a confirmar en el servidor una suscripción que el navegador ya tiene (es idempotente).
+// Repara el caso "el navegador dice que sigue, pero el servidor no lo tiene" (p. ej. una falla en el
+// momento de activar). Se llama en silencio al entrar, solo si la persona ya seguía ese canal.
+export async function resincronizar(slug: string) {
   try {
-    const reg = await registro();
-    const sub =
-      (await reg.pushManager.getSubscription()) ??
-      (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: aBytes(CLAVE!) as BufferSource }));
-    const res = await fetch('/api/push/suscribir', {
+    const reg = await navigator.serviceWorker.getRegistration();
+    const sub = reg && (await reg.pushManager.getSubscription());
+    if (!sub) return;
+    await fetch('/api/push/suscribir', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ subscription: sub.toJSON(), store_slug: slug }),
     });
-    if (!res.ok) return 'error';
-    guardarLocal([...new Set([...leerLocal(), slug])]);
-    return 'ok';
-  } catch {
+  } catch { /* sin red: se intenta la próxima vez */ }
+}
+
+// Motivo de la última falla de `seguirTienda` (para mostrarlo y poder diagnosticar en el celular).
+let ultimoMotivo = '';
+export const motivoError = () => ultimoMotivo;
+const texto = (e: unknown) => (e instanceof Error ? `${e.name}: ${e.message}` : String(e)).slice(0, 140);
+
+export async function seguirTienda(slug: string): Promise<'ok' | 'denegado' | 'no-soportado' | 'error'> {
+  ultimoMotivo = '';
+  if (!pushDisponible()) { ultimoMotivo = 'este navegador no admite avisos'; return 'no-soportado'; }
+  let permiso: NotificationPermission;
+  try { permiso = await Notification.requestPermission(); } catch (e) { ultimoMotivo = `permiso: ${texto(e)}`; return 'error'; }
+  if (permiso !== 'granted') { ultimoMotivo = `permiso ${permiso}`; return 'denegado'; }
+
+  let reg: ServiceWorkerRegistration;
+  try { reg = await registro(); } catch (e) { ultimoMotivo = `service worker: ${texto(e)}`; return 'error'; }
+
+  let sub: PushSubscription;
+  try {
+    sub = (await reg.pushManager.getSubscription()) ??
+      (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: aBytes(CLAVE!) as BufferSource }));
+  } catch (e) { ultimoMotivo = `suscripción: ${texto(e)}`; return 'error'; }
+
+  let res: Response;
+  try {
+    res = await fetch('/api/push/suscribir', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subscription: sub.toJSON(), store_slug: slug }),
+    });
+  } catch (e) { ultimoMotivo = `sin conexión con el servidor: ${texto(e)}`; return 'error'; }
+  if (!res.ok) {
+    const cuerpo = await res.text().catch(() => '');
+    ultimoMotivo = `el servidor respondió ${res.status} ${cuerpo.slice(0, 100)}`;
     return 'error';
   }
+  guardarLocal([...new Set([...leerLocal(), slug])]);
+  return 'ok';
 }
 
 export async function dejarDeSeguir(slug: string) {

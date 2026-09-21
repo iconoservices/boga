@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { hayClave, pushDisponible, sigueTienda, seguirTienda, dejarDeSeguir, esIOS, enModoApp } from '@/lib/push';
+import { hayClave, pushDisponible, sigueTienda, seguirTienda, dejarDeSeguir, resincronizar, motivoError, esIOS, enModoApp } from '@/lib/push';
 import { CANAL_BOGA } from '@/lib/pushLimites';
 
 /**
@@ -20,6 +20,7 @@ export default function BogaPushBell({ className, iconClass }: { className: stri
       if (esIOS() && !enModoApp()) { if (vivo) setEstado('ios'); return; }
       if (!pushDisponible()) return;
       const sigue = await sigueTienda(CANAL_BOGA);
+      if (sigue) resincronizar(CANAL_BOGA);
       if (vivo) setEstado(sigue ? 'activo' : 'apagado');
     })();
     return () => { vivo = false; };
@@ -42,7 +43,7 @@ export default function BogaPushBell({ className, iconClass }: { className: stri
     else {
       setEstado('apagado');
       if (r === 'denegado') alert('Los avisos están bloqueados en este navegador. Puedes permitirlos en los ajustes del sitio.');
-      else if (r === 'error') alert('No se pudieron activar los avisos. Intenta de nuevo.');
+      else alert('No se pudieron activar los avisos. Motivo: ' + motivoError());
     }
   };
 

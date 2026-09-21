@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { hayClave, pushDisponible, sigueTienda, seguirTienda, dejarDeSeguir, esIOS, enModoApp } from '@/lib/push';
+import { hayClave, pushDisponible, sigueTienda, seguirTienda, dejarDeSeguir, motivoError, esIOS, enModoApp } from '@/lib/push';
 import { CANAL_BOGA } from '@/lib/pushLimites';
 
 /**
@@ -43,7 +43,7 @@ export default function AvisosBogaSwitch() {
       setEstado('apagado');
       setNota(r === 'denegado'
         ? 'Los avisos están bloqueados en este navegador. Permítelos en los ajustes del sitio y vuelve a intentar.'
-        : 'No se pudieron activar los avisos. Intenta de nuevo.');
+        : `No se pudieron activar los avisos. Motivo: ${motivoError()}`);
     }
   };
 

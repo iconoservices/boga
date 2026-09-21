@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { hayClave, pushDisponible, sigueTienda, seguirTienda, dejarDeSeguir, esIOS, enModoApp } from '@/lib/push';
+import { hayClave, pushDisponible, sigueTienda, seguirTienda, dejarDeSeguir, resincronizar, motivoError, esIOS, enModoApp } from '@/lib/push';
 
 /**
  * Campana de una tienda: recibir (o dejar de recibir) sus avisos de ofertas y novedades.
@@ -23,6 +23,7 @@ export default function StorePushBell({ slug, nombre, color }: { slug: string; n
       if (esIOS() && !enModoApp()) { if (vivo) setEstado('ios'); return; }
       if (!pushDisponible()) return;
       const sigue = await sigueTienda(slug);
+      if (sigue) resincronizar(slug);
       if (vivo) setEstado(sigue ? 'activo' : 'apagado');
     })();
     return () => { vivo = false; };
@@ -47,7 +48,7 @@ export default function StorePushBell({ slug, nombre, color }: { slug: string; n
     else {
       setEstado('apagado');
       if (r === 'denegado') alert('Los avisos están bloqueados en este navegador. Puedes permitirlos en los ajustes del sitio.');
-      else if (r === 'error') alert('No se pudieron activar los avisos. Intenta de nuevo.');
+      else alert('No se pudieron activar los avisos. Motivo: ' + motivoError());
     }
   };
 
