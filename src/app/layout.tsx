@@ -94,6 +94,12 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{
+              var host=window.location.hostname, base=${JSON.stringify(new URL(SITE_URL).host)};
+              // <tienda>.bogahub.app: dentro de la tienda no va nada del "marco" de BogaHub
+              // (barra de abajo, pie, barra lateral, chat). Ver .boga-chrome en globals.css.
+              if(host.length>base.length&&host.slice(-(base.length+1))==='.'+base&&host.split('.')[0]!=='www'){
+                document.documentElement.dataset.tienda='1';return;
+              }
               var p=window.location.pathname;
               var routes=['/market','/pension','/trabajos','/taxi-seguro','/inmuebles','/viajes','/eventos','/sorteos','/pandero','/revista','/guia'];
               var show=p==='/'||routes.some(function(r){return p.indexOf(r)===0;});
@@ -107,12 +113,12 @@ export default function RootLayout({
           <StoreSettingsProvider>
             <DemoProvider>
               <CartProvider>
-                <MarketTabs />
+                <div className="boga-chrome"><MarketTabs /></div>
                 {children}
-                <AppFooter />
-                <BottomNav />
+                <div className="boga-chrome"><AppFooter /></div>
+                <div className="boga-chrome"><BottomNav /></div>
                 <SharedUI />
-                <PlazaChatBubble />
+                <div className="boga-chrome"><PlazaChatBubble /></div>
               </CartProvider>
             </DemoProvider>
           </StoreSettingsProvider>

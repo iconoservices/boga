@@ -161,3 +161,9 @@ body { transition: padding-left 0.2s ease; }
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Dentro de <tienda>.bogahub.app no se muestra el "marco" de BogaHub (barra de abajo,
+   pie, barra lateral, chat). layout.tsx marca <html data-tienda> antes del primer paint.
+   `display: contents` hace que el contenedor no altere el layout donde sí se muestra. */
+.boga-chrome { display: contents; }
+html[data-tienda] .boga-chrome { display: none !important; }
