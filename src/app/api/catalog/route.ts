@@ -23,12 +23,16 @@ const ESTILO_DEFECTO: Record<string, string> = { market: 'center', home: 'bottom
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const page = searchParams.get('page') || 'market';
-  const cacheHeaders = { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' };
+  // stale-if-error: si Supabase falla (p. ej. 402 por egress), Cloudflare sigue
+  // sirviendo la última copia buena hasta 24 h en vez de mostrar el catálogo vacío.
+  const cacheHeaders = { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600, stale-if-error=86400' };
+  const falloSupabase = () =>
+    NextResponse.json({ error: 'catalogo no disponible' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
 
   const estiloPromise = supabase.from('banner_page_settings').select('style').eq('page', page).maybeSingle();
 
   if (page !== 'market') {
-    const [{ data: banners }, { data: estilo }] = await Promise.all([
+    const [{ data: banners, error: errBanners }, { data: estilo }] = await Promise.all([
       supabase
         .from('market_banners')
         .select('id,image,tag,title1,title2,sub,link,show_text')
@@ -37,6 +41,7 @@ export async function GET(request: Request) {
         .order('sort_order', { ascending: true }),
       estiloPromise,
     ]);
+    if (errBanners) return falloSupabase();
     return NextResponse.json(
       { stores: [], products: [], banners: banners ?? [], bannerStyle: estilo?.style || ESTILO_DEFECTO[page] || 'center' },
       { headers: cacheHeaders },
@@ -58,6 +63,8 @@ export async function GET(request: Request) {
       .order('sort_order', { ascending: true }),
     estiloPromise,
   ]);
+
+  if (stores.error || products.error) return falloSupabase();
 
   return NextResponse.json(
     {

@@ -12,13 +12,19 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('products')
     .select('id,name,description,price,category,subcategory,image,status')
     .eq('store', slug);
 
+  // Si Supabase falla, 503 sin caché: así no se guarda una tienda "sin productos"
+  // y Cloudflare puede servir la última copia buena (stale-if-error).
+  if (error) {
+    return NextResponse.json({ error: 'productos no disponibles' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
+  }
+
   return NextResponse.json(
     { products: data ?? [] },
-    { headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' } },
+    { headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600, stale-if-error=86400' } },
   );
 }
