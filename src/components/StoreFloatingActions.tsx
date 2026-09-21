@@ -103,6 +103,13 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
     // adentro (no hay chrome del navegador). Hay que sacar el link afuera.
     const yaEnStandalone = (window.navigator as any).standalone || window.matchMedia('(display-mode: standalone)').matches;
     if (yaEnStandalone) {
+      // iPhone: la tienda se abrió dentro del navegador integrado de otra app (BogaHub) y ese
+      // navegador tiene su PROPIO botón de compartir (barra de abajo) con "Agregar a Inicio".
+      // La hoja de `navigator.share` NO trae esa opción, así que se guía al de la barra.
+      if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
+        alert('Para instalar:\n\n1. Toca el botón Compartir (📤) de la barra de abajo\n2. Desliza y toca "Agregar a Inicio"\n3. Toca "Agregar"');
+        return;
+      }
       const url = window.location.href;
       navigator.clipboard?.writeText(url).catch(() => {});
       if (navigator.share) {
