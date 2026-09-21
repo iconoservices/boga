@@ -32,6 +32,9 @@ const guardarLocal = (l: string[]) => { try { localStorage.setItem(LLAVE_LOCAL, 
 // El service worker de la app lo registra next-pwa; si todavía no estuviera, se registra acá.
 async function registro() {
   const reg = (await navigator.serviceWorker.getRegistration()) ?? (await navigator.serviceWorker.register('/sw.js'));
+  // Si el navegador tenía guardado el service worker viejo (el que no lograba instalarse), se pide
+  // el nuevo YA, en vez de esperar a la próxima revisión automática.
+  await reg.update().catch(() => {});
   // `ready` no termina nunca si el service worker no logra activarse (p. ej. su instalación falla):
   // sin un tope, la suscripción se queda esperando en silencio. Con el tope, se muestra el motivo.
   await Promise.race([
