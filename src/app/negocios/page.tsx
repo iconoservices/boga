@@ -8,6 +8,7 @@
 import React from 'react';
 import Link from 'next/link';
 import NegociosPlanes from '@/components/NegociosPlanes';
+import NegociosHeroImagen from '@/components/NegociosHeroImagen';
 
 const REGISTRO = '/negocios/registro';
 
@@ -70,11 +71,7 @@ export default function NegociosPage() {
           <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 items-center">
             <div className="relative order-1 lg:order-2">
               <div className="relative rounded-[1.5rem] lg:rounded-[2rem] overflow-hidden shadow-2xl aspect-[16/10] lg:aspect-[4/3] lg:max-w-[440px] lg:ml-auto lg:rotate-2">
-                <img
-                  src="https://images.unsplash.com/photo-1600891964599-f61ba0e24092?w=900&q=80"
-                  alt="Negocio local usando BogaHub"
-                  className="w-full h-full object-cover"
-                />
+                <NegociosHeroImagen />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/0 to-transparent" />
               </div>
               <div className="hidden lg:flex absolute -bottom-6 -left-8 bg-surface-container-lowest border border-surface-container-highest rounded-2xl shadow-xl p-4 items-center gap-3 -rotate-2">

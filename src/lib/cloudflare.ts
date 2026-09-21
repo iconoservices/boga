@@ -36,6 +36,7 @@ export function rutasCatalogo(slug?: string): string[] {
     '/api/catalog',
     '/api/catalog?page=market',
     '/api/catalog?page=home',
+    '/api/catalog?page=negocios',
     ...(slug ? [`/api/catalog/${encodeURIComponent(slug)}`] : []),
   ];
 }

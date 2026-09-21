@@ -502,7 +502,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   const [isLoadingMarketBanners, setIsLoadingMarketBanners] = useState(true);
   // Que carrusel se esta editando: /market o el de Inicio "/". Misma tabla,
   // solo cambia el filtro y a que pagina se le asigna lo nuevo.
-  const [bannerPageTab, setBannerPageTab] = useState<'market' | 'home'>('market');
+  const [bannerPageTab, setBannerPageTab] = useState<'market' | 'home' | 'negocios'>('market');
   const visibleMarketBanners = React.useMemo(
     () => marketBanners.filter(b => (b.page || 'market') === bannerPageTab),
     [marketBanners, bannerPageTab]
@@ -3049,7 +3049,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
 
                 <div className="px-5 pt-3 flex items-center justify-between flex-wrap gap-2">
                   <div className="flex gap-1.5">
-                    {([['market', 'Market'], ['home', 'Inicio']] as const).map(([id, label]) => (
+                    {([['market', 'Market'], ['home', 'Inicio'], ['negocios', 'Foto de /negocios']] as const).map(([id, label]) => (
                       <button
                         key={id}
                         onClick={() => setBannerPageTab(id)}
@@ -3080,7 +3080,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                   </div>
                 </div>
                 <p className="px-5 pb-1 text-[10px] text-[#727785] font-semibold">
-                  Afecta a TODOS los banners de {bannerPageTab === 'market' ? '/market' : 'el Inicio'}, no solo al que estés editando.
+                  Afecta a TODOS los banners de {{ market: '/market', home: 'el Inicio', negocios: 'la portada de /negocios (se usa la primera foto activa)' }[bannerPageTab]}, no solo al que estés editando.
                 </p>
 
                 <div className="p-4">
@@ -3151,7 +3151,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                               onChange={(e) => setMarketBannerForm(prev => ({ ...prev, active: e.target.checked }))}
                               className="w-4 h-4 accent-[#0058be]"
                             />
-                            Visible en {bannerPageTab === 'market' ? '/market' : 'el Inicio'}
+                            Visible en {{ market: '/market', home: 'el Inicio', negocios: 'la portada de /negocios (se usa la primera foto activa)' }[bannerPageTab]}
                           </label>
                           <label className="flex items-center gap-2 text-[11px] font-bold text-[#424754] cursor-pointer" title="Desmarcá esto si tu imagen ya trae el texto dibujado — el tag/título/descripción quedan guardados pero no se dibujan encima.">
                             <input
@@ -3179,7 +3179,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                     <p className="text-xs text-[#727785] italic py-3 text-center">Cargando…</p>
                   ) : visibleMarketBanners.length === 0 ? (
                     <p className="text-xs text-[#727785] italic py-3 text-center">
-                      Sin banners cargados para {bannerPageTab === 'market' ? '/market' : 'el Inicio'} — muestra los de ejemplo por defecto.
+                      Sin banners cargados para {{ market: '/market', home: 'el Inicio', negocios: 'la portada de /negocios (se usa la primera foto activa)' }[bannerPageTab]} — muestra los de ejemplo por defecto.
                     </p>
                   ) : (
                     <div className="space-y-1.5">
