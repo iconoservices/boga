@@ -17,12 +17,24 @@ function mimeFromUrl(url: string): string {
   }
 }
 
+// En <tienda>.bogahub.app la portada "/" es la tienda, así que la ruta no trae el slug:
+// se saca del subdominio. Ahí la app se instala con su propia identidad (id/scope "/").
+const SUBDOMINIOS_RESERVADOS = new Set(['www', 'tiendas', 'fotos', 'api', 'admin', 'app', 'mail', 'cdn', 'static', 'assets']);
+function tiendaDeSubdominio(host: string): string | null {
+  const base = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app').host;
+  const h = host.replace(/:\d+$/, '');
+  if (!h.endsWith('.' + base)) return null;
+  const etiqueta = h.slice(0, -(base.length + 1));
+  return /^[a-z0-9-]+$/.test(etiqueta) && !SUBDOMINIOS_RESERVADOS.has(etiqueta) ? etiqueta : null;
+}
+
 export async function GET(request: NextRequest) {
   let tmpl = null;
   let storeName: string | null = null;
   let storeSlug: string | null = null;
 
-  const slug = request.nextUrl.searchParams.get('slug');
+  const slugDeSubdominio = tiendaDeSubdominio(request.headers.get('host') || '');
+  const slug = request.nextUrl.searchParams.get('slug') || slugDeSubdominio;
   if (slug) {
     tmpl = getTemplate(slug);
   }
@@ -116,17 +128,18 @@ export async function GET(request: NextRequest) {
 
   // Cada tienda se instala como su propia app: scope propio para que el navegador
   // no las trate como una sola PWA compartida
-  const scope = storeSlug ? `/${storeSlug}` : (tmpl ? `/preview/${tmpl.id}` : '/');
+  const enSubdominio = !!storeSlug && storeSlug === slugDeSubdominio;
+  const scope = enSubdominio ? '/' : storeSlug ? `/${storeSlug}` : (tmpl ? `/preview/${tmpl.id}` : '/');
 
   const manifest = {
     // Identidad de la app. Sin `id`, dos tiendas del mismo dominio pueden
     // terminar tratadas como la misma PWA instalada (y el acceso directo de
     // una abre la otra, o el marketplace).
-    id: storeSlug ? `/${storeSlug}` : (tmpl ? `/preview/${tmpl.id}` : '/admin'),
+    id: enSubdominio ? '/' : storeSlug ? `/${storeSlug}` : (tmpl ? `/preview/${tmpl.id}` : '/admin'),
     name: displayName,
     short_name: displayName.slice(0, 12),
     description: storeName ? `${storeName} en Boga Market` : (tmpl ? `Plantilla: ${tmpl.name}` : 'Tu panel de administración empresarial.'),
-    start_url: storeSlug ? `/${storeSlug}` : (tmpl ? `/preview/${tmpl.id}` : '/admin'),
+    start_url: enSubdominio ? '/' : storeSlug ? `/${storeSlug}` : (tmpl ? `/preview/${tmpl.id}` : '/admin'),
     display: 'standalone',
     background_color: bgColor,
     theme_color: themeColor,
