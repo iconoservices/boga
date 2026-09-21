@@ -10,7 +10,7 @@ import { CANAL_BOGA } from '@/lib/pushLimites';
  * propia: el permiso del navegador solo se pide si la persona toca «Activar» (pedirlo al abrir la
  * página hace que lo rechacen, y un permiso rechazado ya no se puede volver a pedir).
  *
- * Reglas para no cansar: aparece a los 25 s de uso, en una sola línea que no tapa el contenido; si la
+ * Reglas para no cansar: aparece a los 12 s de uso, en una sola línea que no tapa el contenido; si la
  * cierra vuelve a los 7, 14, 30 y 60 días, y tras 5 cierres no aparece más (la campana de la cabecera
  * y el interruptor del perfil siguen disponibles).
  * No sale en tiendas, admin ni pantallas de sesión, ni si ya activó o bloqueó los avisos.
@@ -19,7 +19,7 @@ import { CANAL_BOGA } from '@/lib/pushLimites';
 const LLAVE = 'boga_push_aviso';
 const ESPERAS_DIAS = [7, 14, 30, 60, 60];
 const MAX_RECHAZOS = 5;
-const ESPERA_INICIAL_MS = 25_000;
+const ESPERA_INICIAL_MS = 12_000;
 
 // Solo pantallas de BogaHub donde tiene sentido (nunca dentro de una tienda ni del panel)
 const RUTAS = new Set(['', 'market', 'explore', 'eventos', 'sorteos', 'trabajos', 'inmuebles', 'viajes', 'revista', 'guia', 'taxi-seguro', 'pension', 'pandero', 'promotions']);

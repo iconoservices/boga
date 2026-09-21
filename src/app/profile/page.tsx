@@ -31,6 +31,11 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ name: user.name, phone: user.phone, address: user.address });
   const [activeSection, setActiveSection] = useState<'perfil' | 'ajustes' | 'pedidos'>('perfil');
+  // Enlaces directos: /profile?seccion=ajustes (p. ej. desde la campana de avisos)
+  useEffect(() => {
+    const s = new URLSearchParams(window.location.search).get('seccion');
+    if (s === 'ajustes' || s === 'pedidos') setActiveSection(s);
+  }, []);
   const [darkMode, setDarkMode] = useState(false);
 
   // Cambiar contraseña: la sesion ya esta autenticada, asi que Supabase no
