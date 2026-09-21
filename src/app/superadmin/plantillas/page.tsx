@@ -80,6 +80,21 @@ const TEMPLATE_PRESENTATION: Record<string, { category?: string; description: st
     description: 'Misma ficha de negocio que Ficha Digital, con la portada integrada a la página en vez de superpuesta. Categorías en círculo, menú debajo y pedido por WhatsApp o llamada en un toque.',
     previewUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&q=80',
   },
+  terreno1: {
+    category: 'Inmuebles',
+    description: 'Estilo inmobiliaria moderna: cabecera blanca redondeada sobre la portada, buscador por zona en una tarjeta y terrenos en tarjetas limpias. Consulta por WhatsApp.',
+    previewUrl: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600&q=80',
+  },
+  terreno2: {
+    category: 'Inmuebles',
+    description: 'Estilo portal de tierras: portada a sangre con título en serif, barra de búsqueda grande y grilla de fotos con el precio bien visible. Consulta por WhatsApp.',
+    previewUrl: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&q=80',
+  },
+  veterinaria: {
+    category: 'Salud',
+    description: 'Veterinaria y pet shop: portada, ficha del local, tienda de productos y una Cartilla digital de mascota con semáforo de vacunas y botón de cita por WhatsApp.',
+    previewUrl: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&q=80',
+  },
 };
 
 // Que significa cada categoria visual: se muestra como ayuda al elegir la
@@ -90,6 +105,7 @@ const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   Gourmet: 'Restaurantes y bares de ambiente cuidado, con identidad visual fuerte propia (no genérica).',
   Negocios: 'Diseño neutro y minimalista para cualquier rubro que todavía no tiene una plantilla especializada.',
   Restaurantes: 'Comida rápida y delivery: menos pasos entre entrar y pedir, categorías de platos siempre a la vista.',
+  Inmuebles: 'Terrenos, lotes y casas en venta: buscador por zona, fotos grandes y precio visible; el contacto es por WhatsApp.',
   Salud: 'Servicios con cita previa: clínicas, salones de belleza, bienestar. Foco en horarios y reservas.',
 };
 
