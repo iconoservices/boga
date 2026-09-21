@@ -39,7 +39,7 @@ export default function NotificacionesDueno() {
           <span className="font-headline-sm text-headline-sm text-on-surface truncate">Notificaciones</span>
         </div>
       </header>
-      <main className="max-w-[720px] mx-auto px-container-margin py-8 flex flex-col gap-6">
+      <main className="max-w-[860px] mx-auto px-container-margin py-8 flex flex-col gap-6">
         <p className="text-sm text-secondary">
           Envía ofertas o novedades a quienes instalaron tu app y activaron los avisos. Puedes mandar 1 campaña por semana,
           entre las 8:00 y las 22:00.

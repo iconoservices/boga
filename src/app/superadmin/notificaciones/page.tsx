@@ -49,7 +49,7 @@ export default function NotificacionesAdmin() {
             <span className="font-headline-sm text-headline-sm text-on-surface truncate">Notificaciones</span>
           </div>
         </header>
-        <main className="max-w-[900px] mx-auto px-container-margin py-8 flex flex-col gap-6">
+        <main className="max-w-[1000px] mx-auto px-container-margin py-8 flex flex-col gap-6">
           <p className="text-sm text-secondary">
             Envía avisos a quienes activaron las notificaciones. El canal de BogaHub no tiene tope de campañas;
             las tiendas tienen 1 por semana. Los envíos son solo entre las 8:00 y las 22:00 (hora de Lima).

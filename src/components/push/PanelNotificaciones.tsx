@@ -3,6 +3,9 @@
 // Panel para enviar campañas de notificaciones. Lo usan el superadmin (/superadmin/notificaciones,
 // puede elegir cualquier tienda con avisos activados y el canal de BogaHub) y cada dueño
 // (/admin/notificaciones, solo sus tiendas). El servidor comprueba los permisos y los límites.
+//
+// Diseño: en pantallas anchas, historial a la izquierda y formulario a la derecha (fijo al bajar);
+// en el celular, el formulario queda detrás de un botón «+ Nueva campaña».
 
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -17,6 +20,7 @@ type Estado = {
 };
 
 const campo = 'w-full bg-surface-container-low border border-surface-container-highest rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:border-primary';
+const tarjeta = 'rounded-xl border border-surface-container-highest bg-surface p-5';
 
 export default function PanelNotificaciones({ opciones }: { opciones: OpcionCanal[] }) {
   const [slug, setSlug] = useState(opciones[0]?.slug ?? '');
@@ -27,6 +31,7 @@ export default function PanelNotificaciones({ opciones }: { opciones: OpcionCana
   const [url, setUrl] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [mensaje, setMensaje] = useState('');
+  const [formAbierto, setFormAbierto] = useState(false); // solo aplica en el celular
 
   // Si las opciones llegan después (carga asíncrona), se elige la primera
   useEffect(() => { if (!slug && opciones[0]) setSlug(opciones[0].slug); }, [opciones, slug]);
@@ -70,7 +75,8 @@ export default function PanelNotificaciones({ opciones }: { opciones: OpcionCana
   const reutilizar = (c: { titulo: string; cuerpo: string; url?: string | null }) => {
     setTitulo(c.titulo); setCuerpo(c.cuerpo); setUrl(c.url && c.url !== '/' ? c.url : '');
     setMensaje('Campaña cargada: ajusta lo que quieras y envíala. Cuenta como una campaña nueva.');
-    document.getElementById('form-campana')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setFormAbierto(true);
+    setTimeout(() => document.getElementById('form-campana')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
   };
 
   const enviar = async () => {
@@ -97,7 +103,7 @@ export default function PanelNotificaciones({ opciones }: { opciones: OpcionCana
 
   if (opciones.length === 0) {
     return (
-      <div className="rounded-xl border border-surface-container-highest bg-surface p-6 text-sm text-secondary">
+      <div className={`${tarjeta} text-sm text-secondary`}>
         Todavía no hay ninguna tienda con avisos activados. Se activan desde el editor de tienda del superadmin
         (casilla «Avisos push propios»).
       </div>
@@ -125,7 +131,7 @@ export default function PanelNotificaciones({ opciones }: { opciones: OpcionCana
 
       {estado && (
         <>
-          <div className="rounded-xl border border-surface-container-highest bg-surface p-5 flex flex-wrap gap-8 items-center">
+          <div className={`${tarjeta} flex flex-wrap gap-8 items-center`}>
             <div><div className="text-2xl font-extrabold text-on-surface">{estado.seguidores}</div><div className="text-xs text-secondary">seguidores</div></div>
             <div>
               <div className="text-2xl font-extrabold text-on-surface">{estado.sinTope ? '∞' : `${estado.restantesSemana}/${estado.limites.maxPorSemana}`}</div>
@@ -137,51 +143,68 @@ export default function PanelNotificaciones({ opciones }: { opciones: OpcionCana
             </div>
           </div>
 
-          <div id="form-campana" className="rounded-xl border border-surface-container-highest bg-surface p-5 flex flex-col gap-3 scroll-mt-4">
-            <h3 className="font-bold text-on-surface">Nueva campaña</h3>
-            <input className={campo} maxLength={60} placeholder="Título (ej. 🔥 Ofertas del fin de semana)" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
-            <textarea className={campo + ' min-h-[88px]'} maxLength={160} placeholder="Texto corto (máx. 160 caracteres)" value={cuerpo} onChange={(e) => setCuerpo(e.target.value)} />
-            <input className={campo} placeholder="A dónde lleva al tocarla (opcional, ej. /market). Vacío = inicio de la app" value={url} onChange={(e) => setUrl(e.target.value)} />
-            <div className="text-[11px] text-secondary">{titulo.length}/60 · {cuerpo.length}/160</div>
-            <button
-              onClick={enviar}
-              disabled={enviando || !estado.puedeHoy}
-              className="w-full rounded-lg bg-primary text-white font-bold py-2.5 text-sm disabled:opacity-50"
-            >
-              {enviando ? 'Enviando…' : estado.puedeHoy ? 'Enviar a todos los seguidores' : 'Límite de campañas alcanzado'}
-            </button>
-            <button
-              onClick={enviarPrueba}
-              disabled={enviando}
-              className="w-full rounded-lg border border-primary text-primary font-bold py-2.5 text-sm disabled:opacity-50"
-            >
-              Enviarme una prueba (solo a este dispositivo)
-            </button>
-            {mensaje && <p className="text-sm text-on-surface">{mensaje}</p>}
-          </div>
+          {/* Celular: una sola columna (formulario arriba, detrás del botón). Ancho: historial | formulario */}
+          <div className="flex flex-col gap-5 md:grid md:grid-cols-2 md:items-start">
+            {/* Formulario */}
+            <div className="order-1 md:order-2 flex flex-col gap-3 md:sticky md:top-4">
+              <button
+                onClick={() => setFormAbierto((v) => !v)}
+                className="md:hidden flex items-center justify-center gap-1.5 rounded-xl bg-primary text-white font-bold py-3 text-sm"
+              >
+                <span className="material-symbols-outlined text-[20px]">{formAbierto ? 'close' : 'add'}</span>
+                {formAbierto ? 'Cerrar' : 'Nueva campaña'}
+              </button>
 
-          {estado.ultimas.length > 0 && (
-            <div className="rounded-xl border border-surface-container-highest bg-surface p-5">
-              <h3 className="font-bold text-on-surface mb-3">Últimas campañas</h3>
-              {estado.ultimas.map((c) => (
-                <div key={c.id} className="py-3 border-t border-surface-container-highest text-sm">
-                  <b className="text-on-surface">{c.titulo}</b>
-                  <div className="text-secondary">{c.cuerpo}</div>
-                  <div className="flex items-center justify-between gap-3 mt-1">
-                    <div className="text-[11px] text-secondary">
-                      {new Date(c.creada_at).toLocaleString('es-PE', { timeZone: 'America/Lima' })} · enviada a {c.enviados}{c.fallidos ? ` · ${c.fallidos} fallaron` : ''}
-                    </div>
-                    <button
-                      onClick={() => reutilizar(c)}
-                      className="shrink-0 flex items-center gap-1 text-xs font-bold text-primary hover:underline"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">content_copy</span>Reutilizar
-                    </button>
-                  </div>
-                </div>
-              ))}
+              <div id="form-campana" className={`${formAbierto ? 'flex' : 'hidden'} md:flex ${tarjeta} flex-col gap-3 scroll-mt-4`}>
+                <h3 className="font-bold text-on-surface">Nueva campaña</h3>
+                <input className={campo} maxLength={60} placeholder="Título (ej. 🔥 Ofertas del fin de semana)" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
+                <textarea className={campo + ' min-h-[88px]'} maxLength={160} placeholder="Texto corto (máx. 160 caracteres)" value={cuerpo} onChange={(e) => setCuerpo(e.target.value)} />
+                <input className={campo} placeholder="A dónde lleva al tocarla (opcional, ej. /market). Vacío = inicio de la app" value={url} onChange={(e) => setUrl(e.target.value)} />
+                <div className="text-[11px] text-secondary">{titulo.length}/60 · {cuerpo.length}/160</div>
+                <button
+                  onClick={enviar}
+                  disabled={enviando || !estado.puedeHoy}
+                  className="w-full rounded-lg bg-primary text-white font-bold py-2.5 text-sm disabled:opacity-50"
+                >
+                  {enviando ? 'Enviando…' : estado.puedeHoy ? 'Enviar a todos los seguidores' : 'Límite de campañas alcanzado'}
+                </button>
+                <button
+                  onClick={enviarPrueba}
+                  disabled={enviando}
+                  className="w-full rounded-lg border border-primary text-primary font-bold py-2.5 text-sm disabled:opacity-50"
+                >
+                  Enviarme una prueba (solo a este dispositivo)
+                </button>
+                {mensaje && <p className="text-sm text-on-surface">{mensaje}</p>}
+              </div>
             </div>
-          )}
+
+            {/* Historial */}
+            <div className={`order-2 md:order-1 ${tarjeta}`}>
+              <h3 className="font-bold text-on-surface mb-1">Últimas campañas</h3>
+              {estado.ultimas.length === 0 ? (
+                <p className="text-sm text-secondary py-3">Todavía no enviaste ninguna campaña.</p>
+              ) : (
+                estado.ultimas.map((c) => (
+                  <div key={c.id} className="py-3 border-t border-surface-container-highest first:border-t-0 text-sm">
+                    <b className="text-on-surface">{c.titulo}</b>
+                    <div className="text-secondary">{c.cuerpo}</div>
+                    <div className="flex items-center justify-between gap-3 mt-1">
+                      <div className="text-[11px] text-secondary">
+                        {new Date(c.creada_at).toLocaleString('es-PE', { timeZone: 'America/Lima' })} · enviada a {c.enviados}{c.fallidos ? ` · ${c.fallidos} fallaron` : ''}
+                      </div>
+                      <button
+                        onClick={() => reutilizar(c)}
+                        className="shrink-0 flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">content_copy</span>Reutilizar
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </>
       )}
     </div>
