@@ -12,6 +12,9 @@ import { CANAL_BOGA } from '@/lib/pushLimites';
  */
 export default function BogaPushBell({ className, iconClass }: { className: string; iconClass: string }) {
   const [estado, setEstado] = useState<'sin-soporte' | 'apagado' | 'activo' | 'ios' | 'trabajando'>('sin-soporte');
+  // Aviso breve tras activar o desactivar (sin esto no queda claro qué pasó al tocar la campana)
+  const [aviso, setAviso] = useState('');
+  const avisar = (t: string) => { setAviso(t); setTimeout(() => setAviso(''), 2600); };
 
   useEffect(() => {
     let vivo = true;
@@ -36,11 +39,15 @@ export default function BogaPushBell({ className, iconClass }: { className: stri
     if (estado === 'activo') {
       await dejarDeSeguir(CANAL_BOGA);
       setEstado('apagado');
+      avisar('Avisos de BogaHub desactivados');
       return;
     }
+    // Activar tarda unos segundos (el navegador prepara el service worker): se avisa para que no parezca que no pasó nada
+    setAviso('Activando avisos…');
     const r = await seguirTienda(CANAL_BOGA);
-    if (r === 'ok') setEstado('activo');
+    if (r === 'ok') { setEstado('activo'); avisar('✓ Avisos de BogaHub activados'); }
     else {
+      setAviso('');
       setEstado('apagado');
       if (r === 'denegado') alert('Los avisos están bloqueados en este navegador. Puedes permitirlos en los ajustes del sitio.');
       else alert('No se pudieron activar los avisos. Motivo: ' + motivoError());
@@ -49,6 +56,7 @@ export default function BogaPushBell({ className, iconClass }: { className: stri
 
   const activo = estado === 'activo';
   return (
+    <>
     <button
       onClick={alTocar}
       className={className}
@@ -67,5 +75,11 @@ export default function BogaPushBell({ className, iconClass }: { className: stri
         notifications
       </span>
     </button>
+    {aviso && (
+      <div role="status" className="fixed z-[70] top-16 left-1/2 -translate-x-1/2 bg-neutral-900 text-white text-xs font-bold rounded-full px-4 py-2 shadow-lg">
+        {aviso}
+      </div>
+    )}
+    </>
   );
 }

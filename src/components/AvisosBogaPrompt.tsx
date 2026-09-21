@@ -10,14 +10,15 @@ import { CANAL_BOGA } from '@/lib/pushLimites';
  * propia: el permiso del navegador solo se pide si la persona toca «Activar» (pedirlo al abrir la
  * página hace que lo rechacen, y un permiso rechazado ya no se puede volver a pedir).
  *
- * Reglas para no cansar: aparece a los 25 s de uso; si dice «Ahora no» vuelve a los 7, 14 y 30 días,
- * y después de la tercera vez no aparece más (la campana y el perfil siguen disponibles).
+ * Reglas para no cansar: aparece a los 25 s de uso, en una sola línea que no tapa el contenido; si la
+ * cierra vuelve a los 7, 14, 30 y 60 días, y tras 5 cierres no aparece más (la campana de la cabecera
+ * y el interruptor del perfil siguen disponibles).
  * No sale en tiendas, admin ni pantallas de sesión, ni si ya activó o bloqueó los avisos.
  */
 
 const LLAVE = 'boga_push_aviso';
-const ESPERAS_DIAS = [7, 14, 30];
-const MAX_RECHAZOS = 3;
+const ESPERAS_DIAS = [7, 14, 30, 60, 60];
+const MAX_RECHAZOS = 5;
 const ESPERA_INICIAL_MS = 25_000;
 
 // Solo pantallas de BogaHub donde tiene sentido (nunca dentro de una tienda ni del panel)
@@ -77,35 +78,30 @@ export default function AvisosBogaPrompt() {
     <div
       role="dialog"
       aria-label="Activar avisos de BogaHub"
-      className="fixed z-[60] left-3 right-3 bottom-[92px] md:left-auto md:right-6 md:bottom-24 md:w-[340px] bg-white rounded-2xl border border-surface-container-highest shadow-[0_12px_32px_rgba(0,0,0,0.18)] p-4"
+      className="fixed z-[60] left-3 right-3 bottom-[92px] md:left-auto md:right-6 md:bottom-24 md:w-[400px] bg-white rounded-2xl border border-surface-container-highest shadow-[0_8px_24px_rgba(0,0,0,0.16)] px-3 py-2"
     >
-      <div className="flex gap-3">
-        <span className="shrink-0 w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-          <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>notifications</span>
-        </span>
-        <div className="min-w-0">
-          <p className="font-bold text-sm text-on-surface">¿Te avisamos?</p>
-          <p className="text-xs text-secondary leading-normal mt-0.5">
-            Recibe avisos de eventos, sorteos y trabajos en Pucallpa. Solo lo importante.
-          </p>
-        </div>
-      </div>
-      {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
-      <div className="flex gap-2 mt-3">
-        <button
-          onClick={ahoraNo}
-          className="flex-1 rounded-xl border border-surface-container-highest py-2 text-xs font-bold text-secondary active:scale-95 transition-transform"
-        >
-          Ahora no
-        </button>
+      <div className="flex items-center gap-2">
+        <span className="material-symbols-outlined text-primary text-[22px] shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>notifications</span>
+        <p className="flex-1 min-w-0 text-xs text-on-surface leading-snug">
+          <b>Activa los avisos</b> y entérate de eventos, sorteos y trabajos
+        </p>
         <button
           onClick={activar}
           disabled={trabajando}
-          className="flex-1 rounded-xl bg-primary text-white py-2 text-xs font-extrabold active:scale-95 transition-transform disabled:opacity-60"
+          className="shrink-0 rounded-full bg-primary text-white text-xs font-extrabold px-3.5 py-1.5 active:scale-95 transition-transform disabled:opacity-60"
         >
-          {trabajando ? 'Activando…' : 'Activar'}
+          {trabajando ? '…' : 'Activar'}
+        </button>
+        <button
+          onClick={ahoraNo}
+          aria-label="Ahora no"
+          title="Ahora no (puedes activarlos cuando quieras en tu perfil → Ajustes)"
+          className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-secondary hover:bg-surface-container-high"
+        >
+          <span className="material-symbols-outlined text-[18px]">close</span>
         </button>
       </div>
+      {error && <p className="text-[11px] text-red-600 mt-1.5 leading-normal">{error}</p>}
     </div>
   );
 }
