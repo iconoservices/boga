@@ -13,6 +13,7 @@ import { supabase } from '@/lib/supabase';
 import { COLOR_PRESETS, getColorPreset } from '@/lib/colorPresets';
 import { extractThemeFromImageClient } from '@/lib/extractThemeClient';
 import { uploadFile } from '@/lib/uploadClient';
+import { refrescarTienda } from '@/lib/refrescar';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import type { StoreTheme } from '@/lib/templates.config';
 
@@ -677,9 +678,15 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   const [storeProductPreview, setStoreProductPreview] = useState<string | null>(null);
   const [isSavingStoreProduct, setIsSavingStoreProduct] = useState(false);
   const [deletingStoreProductId, setDeletingStoreProductId] = useState<string | null>(null);
+  const [editingStoreProductId, setEditingStoreProductId] = useState<string | null>(null);
+  const [showStoreProductForm, setShowStoreProductForm] = useState(false);
+  const [editingStoreProductImage, setEditingStoreProductImage] = useState<string | null>(null);
 
   const handleOpenStoreProducts = async (slug: string) => {
     setProductsStoreSlug(slug);
+    setEditingStoreProductId(null);
+    setEditingStoreProductImage(null);
+    setShowStoreProductForm(false);
     setNewStoreProduct({ name: '', price: '', category: '', subcategory: '', desc: '' });
     setNewStoreProductFile(null);
     setStoreProductPreview(null);
@@ -690,6 +697,30 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     setStoreProductsList(data || []);
   };
 
+  const handleStartEditStoreProduct = (p: any) => {
+    setShowStoreProductForm(true);
+    setEditingStoreProductId(p.id);
+    setEditingStoreProductImage(p.image || null);
+    setNewStoreProduct({
+      name: p.name || '',
+      price: String(p.price ?? ''),
+      category: p.category || '',
+      subcategory: p.subcategory || '',
+      desc: p.description || '',
+    });
+    setNewStoreProductFile(null);
+    setStoreProductPreview(p.image || null);
+  };
+
+  const handleCancelEditStoreProduct = () => {
+    setShowStoreProductForm(false);
+    setEditingStoreProductId(null);
+    setEditingStoreProductImage(null);
+    setNewStoreProduct({ name: '', price: '', category: '', subcategory: '', desc: '' });
+    setNewStoreProductFile(null);
+    setStoreProductPreview(null);
+  };
+
   const handleAddStoreProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!productsStoreSlug) return;
@@ -697,13 +728,32 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       alert('Faltan el nombre o el precio.');
       return;
     }
-    if (!newStoreProductFile) {
+    if (!newStoreProductFile && !editingStoreProductId) {
       alert('Selecciona una foto para el producto.');
       return;
     }
     setIsSavingStoreProduct(true);
     try {
-      const imageUrl = await uploadFile(newStoreProductFile, `product-images/${productsStoreSlug}`);
+      if (editingStoreProductId) {
+        const imageUrl = newStoreProductFile
+          ? await uploadFile(newStoreProductFile, `product-images/${productsStoreSlug}`)
+          : editingStoreProductImage;
+        const cambios = {
+          name: newStoreProduct.name.trim(),
+          price: parseFloat(newStoreProduct.price) || 0,
+          category: newStoreProduct.category || null,
+          subcategory: newStoreProduct.subcategory || null,
+          image: imageUrl,
+          description: newStoreProduct.desc || null,
+        };
+        const { error } = await supabase.from('products').update(cambios).eq('id', editingStoreProductId);
+        if (error) throw error;
+        setStoreProductsList(prev => prev.map(p => p.id === editingStoreProductId ? { ...p, ...cambios } : p));
+        refrescarTienda(productsStoreSlug);
+        handleCancelEditStoreProduct();
+        return;
+      }
+      const imageUrl = await uploadFile(newStoreProductFile!, `product-images/${productsStoreSlug}`);
       const { data, error } = await supabase.from('products').insert([{
         name: newStoreProduct.name.trim(),
         store: productsStoreSlug,
@@ -717,6 +767,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       }]).select();
       if (error) throw error;
       setStoreProductsList(prev => [...(data || []), ...prev]);
+      refrescarTienda(productsStoreSlug);
       setNewStoreProduct({ name: '', price: '', category: '', subcategory: '', desc: '' });
       setNewStoreProductFile(null);
       setStoreProductPreview(null);
@@ -734,6 +785,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     setDeletingStoreProductId(null);
     if (error) { alert('No se pudo eliminar: ' + error.message); return; }
     setStoreProductsList(prev => prev.filter(p => p.id !== id));
+    if (productsStoreSlug) refrescarTienda(productsStoreSlug);
+    if (editingStoreProductId === id) handleCancelEditStoreProduct();
   };
 
   // Store modal states
@@ -4436,9 +4489,20 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
           </div>
 
           <div className="p-5 flex-1 overflow-y-auto min-h-0 space-y-5">
-            {/* Formulario para agregar */}
+            {/* Formulario para agregar / editar: cerrado hasta tocar el botón */}
+            {!showStoreProductForm && (
+              <button
+                type="button"
+                onClick={() => setShowStoreProductForm(true)}
+                className="w-full flex items-center justify-center gap-1.5 py-2.5 bg-[#0058be] text-white rounded-md font-bold text-xs hover:bg-[#004395] transition-colors"
+              >
+                <span className="material-symbols-outlined text-base">add</span>
+                Agregar producto
+              </button>
+            )}
+            {showStoreProductForm && (
             <form onSubmit={handleAddStoreProduct} className="space-y-3 pb-4 border-b border-[#ecedf7]">
-              <p className="text-[10px] font-black text-[#424754] uppercase tracking-widest">Nuevo Producto</p>
+              <p className="text-[10px] font-black text-[#424754] uppercase tracking-widest">{editingStoreProductId ? 'Editando producto' : 'Nuevo Producto'}</p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[10px] font-bold text-[#545f73] mb-1">Nombre</label>
@@ -4513,16 +4577,26 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                     }}
                   />
                 </label>
-                <p className="text-[10px] text-[#727785] font-semibold flex-1">Foto del producto (obligatoria).</p>
+                <p className="text-[10px] text-[#727785] font-semibold flex-1">{editingStoreProductId ? 'Toca la foto para cambiarla (opcional).' : 'Foto del producto (obligatoria).'}</p>
+                {(
+                  <button
+                    type="button"
+                    onClick={handleCancelEditStoreProduct}
+                    className="px-3 py-2.5 border border-[#c2c6d6] text-[#424754] rounded-md font-bold text-xs hover:bg-[#f2f3fd] transition-colors shrink-0"
+                  >
+                    {editingStoreProductId ? 'Cancelar' : 'Cerrar'}
+                  </button>
+                )}
                 <button
                   type="submit"
                   disabled={isSavingStoreProduct}
                   className="px-4 py-2.5 bg-[#0058be] text-white rounded-md font-bold text-xs hover:bg-[#004395] transition-colors disabled:opacity-50 shrink-0"
                 >
-                  {isSavingStoreProduct ? 'Guardando…' : 'Agregar'}
+                  {isSavingStoreProduct ? 'Guardando…' : editingStoreProductId ? 'Guardar' : 'Agregar'}
                 </button>
               </div>
             </form>
+            )}
 
             {/* Lista de productos ya cargados */}
             <div>
@@ -4536,7 +4610,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
               ) : (
                 <div className="space-y-1.5">
                   {storeProductsList.map((p) => (
-                    <div key={p.id} className="flex items-center gap-3 p-2 rounded-lg border border-[#ecedf7] bg-[#f9f9ff]">
+                    <div key={p.id} className={`flex items-center gap-3 p-2 rounded-lg border bg-[#f9f9ff] ${editingStoreProductId === p.id ? 'border-[#0058be]' : 'border-[#ecedf7]'}`}>
                       <img src={p.image} alt="" className="w-10 h-10 rounded-md object-cover shrink-0 bg-[#e6e7f2]" />
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-bold text-[#191b23] truncate">{p.name}</p>
@@ -4544,6 +4618,13 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           S/ {Number(p.price).toFixed(2)}{p.category ? ` · ${p.category}` : ''}
                         </p>
                       </div>
+                      <button
+                        onClick={() => handleStartEditStoreProduct(p)}
+                        className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] transition-colors p-1 hover:bg-blue-50 rounded shrink-0"
+                        title="Editar"
+                      >
+                        edit
+                      </button>
                       <button
                         onClick={() => handleDeleteStoreProduct(p.id)}
                         disabled={deletingStoreProductId === p.id}
