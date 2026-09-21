@@ -681,6 +681,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   const [editingStoreProductId, setEditingStoreProductId] = useState<string | null>(null);
   const [showStoreProductForm, setShowStoreProductForm] = useState(false);
   const [storeProductSearch, setStoreProductSearch] = useState('');
+  const [subdominioCopiado, setSubdominioCopiado] = useState(false);
   const [editingStoreProductImage, setEditingStoreProductImage] = useState<string | null>(null);
 
   const handleOpenStoreProducts = async (slug: string) => {
@@ -4328,6 +4329,20 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                         </span>
                       </span>
                     </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const url = `https://${storeForm.slug || 'tu-tienda'}.bogahub.app`;
+                        navigator.clipboard?.writeText(url).then(() => {
+                          setSubdominioCopiado(true);
+                          setTimeout(() => setSubdominioCopiado(false), 1800);
+                        });
+                      }}
+                      className="mt-3 flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#0058be]/30 text-[#0058be] rounded-md font-bold text-[11px] hover:bg-[#f2f3fd] transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">{subdominioCopiado ? 'check' : 'content_copy'}</span>
+                      {subdominioCopiado ? 'Link copiado' : 'Copiar link'}
+                    </button>
                   </section>
                 </div>
 
