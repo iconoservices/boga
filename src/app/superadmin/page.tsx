@@ -1908,7 +1908,11 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       // Subdominio propio: si el interruptor cambió, dar de alta / baja
       // <slug>.bogahub.app en Vercel y Cloudflare. No corta el guardado si falla.
       const antesActivo = !!editingStore?.subdominioActivo;
-      if (!!storeForm.subdominioActivo !== antesActivo) {
+      const cambio = !!storeForm.subdominioActivo !== antesActivo;
+      // Si está prendido se sincroniza en cada guardado (es idempotente): así una
+      // tienda que quedó "activa" sin DNS —p. ej. porque se marcó antes de que
+      // existiera el alta automática— se repara con solo guardarla de nuevo.
+      if (cambio || storeForm.subdominioActivo) {
         try {
           const { data: { session } } = await supabase.auth.getSession();
           const res = await fetch('/api/subdominio', {
@@ -1918,9 +1922,11 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
           });
           const j = await res.json().catch(() => ({}));
           const detalle = (j.detalle || [j.error]).filter(Boolean).join('\n');
-          alert(res.ok
-            ? `Subdominio ${storeForm.subdominioActivo ? 'activado' : 'desactivado'}:\n${detalle}`
-            : `La tienda se guardó, pero el subdominio NO se pudo ${storeForm.subdominioActivo ? 'activar' : 'desactivar'}:\n${detalle}`);
+          if (!res.ok) {
+            alert(`La tienda se guardó, pero el subdominio NO se pudo ${storeForm.subdominioActivo ? 'activar' : 'desactivar'}:\n${detalle}`);
+          } else if (cambio) {
+            alert(`Subdominio ${storeForm.subdominioActivo ? 'activado' : 'desactivado'}:\n${detalle}`);
+          }
         } catch (err: any) {
           alert('La tienda se guardó, pero falló el aviso del subdominio: ' + err.message);
         }
