@@ -78,6 +78,9 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
       try { return !!document.referrer && new URL(document.referrer).origin !== window.location.origin; } catch { return false; }
     })();
     const checkInstalled = () => {
+      // En iPhone no hay forma de saber si la app está instalada desde afuera de ella: el usuario
+      // puede decirlo con "Ya la tengo instalada" en la guía, y eso se respeta.
+      if (localStorage.getItem(installKey + '_manual') === 'true') return true;
       const enModoApp = !!((window.navigator as any).standalone || window.matchMedia('(display-mode: standalone)').matches);
       if (enDireccionPropia) return enModoApp && (localStorage.getItem(installKey) === 'true' || !llegoDeOtroOrigen);
       return localStorage.getItem(installKey) === 'true' || !!(window.navigator as any).standalone;
@@ -185,6 +188,16 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
               style={{ backgroundColor: t.primary }}
             >
               Entendido
+            </button>
+            <button
+              onClick={() => {
+                try { localStorage.setItem(installKey + '_manual', 'true'); } catch {}
+                setIsInstalled(true);
+                setGuiaIOS(false);
+              }}
+              className="mt-2 w-full py-2 text-xs font-semibold text-neutral-500 underline"
+            >
+              Ya la tengo instalada
             </button>
           </div>
           {/* Flecha que apunta a la barra del navegador, donde está el botón Compartir */}
