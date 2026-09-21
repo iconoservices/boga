@@ -12,6 +12,21 @@ import { fetchChamba, haceCuanto, fechaAviso } from '@/lib/chamba';
 type Vista = 'servicios' | 'empleos';
 
 // Descripción / requisitos de un empleo: 3 líneas y "Ver más" para desplegar.
+// Cuadrito de color de cada aviso en móvil: un color estable por aviso, para que la
+// lista se lea de un vistazo (como las tarjetas de las piezas de Boga).
+const COLORES_EMPLEO = ['#7C5CFC', '#2DB56B', '#F08A3C', '#1B8EBF', '#E4655A', '#D4A017'];
+const colorEmpleo = (id: string) => {
+  let h = 0;
+  for (const ch of String(id)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return COLORES_EMPLEO[h % COLORES_EMPLEO.length];
+};
+
+// "Subido hoy" -> "Hoy"; "Subido hace 3 días" -> "Hace 3 días" (en móvil sobra el "Subido").
+const haceCuantoCorto = (fecha?: string) => {
+  const t = haceCuanto(fecha).replace(/^Subido\s+/i, '');
+  return t.charAt(0).toUpperCase() + t.slice(1);
+};
+
 function DescripcionEmpleo({ texto }: { texto: string }) {
   const [abierta, setAbierta] = useState(false);
   const larga = texto.length > 140 || texto.split('\n').length > 3;
@@ -43,6 +58,8 @@ export default function Servicios() {
   const [cargado, setCargado] = useState(false);
   // Visor: la imagen del aviso se abre grande aquí mismo (no en otra página).
   const [visor, setVisor] = useState<any | null>(null);
+  // Tarjetas de empleo desplegadas en móvil (por defecto van compactas).
+  const [abiertos, setAbiertos] = useState<Record<string, boolean>>({});
   useEffect(() => {
     if (!visor) return;
     const prev = document.body.style.overflow;
@@ -69,6 +86,41 @@ export default function Servicios() {
         <div className="flex flex-col gap-1">
           <h1 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">Trabajos y oficios</h1>
           <p className="font-body-md text-secondary text-xs">Trabajo y gente de confianza en Pucallpa.</p>
+        </div>
+
+        {/* CTAs — compactos, arriba y en una sola fila. "Gana dinero" va primero y marcado
+            como Próximamente: hoy solo capta interés por WhatsApp. El sistema completo
+            (?ref=, columna referido_por, panel) está en memoria: afiliados.md. */}
+        <div className="grid grid-cols-2 gap-2.5 -mt-2">
+          <a
+            href={waLink('51961000000', 'Hola BogaHub, quiero que me avisen cuando esté listo "Gana dinero con BogaHub" (recomendar negocios y choferes con comisión).')}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Gana dinero con BogaHub (próximamente)"
+            className="rounded-xl bg-primary text-on-primary px-3 py-2.5 flex items-center gap-2.5 active:scale-[0.98] transition-transform"
+          >
+            <span className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-[18px]">payments</span>
+            </span>
+            <span className="flex flex-col min-w-0 leading-tight">
+              <span className="font-headline-sm text-[13px] truncate">Gana dinero</span>
+              <span className="text-[10px] font-bold uppercase tracking-wide text-on-primary/80">Próximamente</span>
+            </span>
+          </a>
+          <a
+            href={waLink('51961000000', 'Hola BogaHub, quiero publicar un aviso en Servicios de BogaHub (servicio / empleo).')}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-xl bg-inverse-surface text-inverse-on-surface px-3 py-2.5 flex items-center gap-2.5 active:scale-[0.98] transition-transform"
+          >
+            <span className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-inverse-primary text-[18px]">campaign</span>
+            </span>
+            <span className="flex flex-col min-w-0 leading-tight">
+              <span className="font-headline-sm text-[13px] truncate">Publica tu aviso</span>
+              <span className="text-[10px] font-bold uppercase tracking-wide text-inverse-on-surface/70">Gratis</span>
+            </span>
+          </a>
         </div>
 
         {/* Conmutador de vista */}
@@ -150,7 +202,88 @@ export default function Servicios() {
               </div>
             )}
             {empleos.map((e) => (
-              <div key={e.id} className="bg-white rounded-2xl p-4 shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex items-start gap-4">
+              <React.Fragment key={e.id}>
+              {/* ── Móvil: tarjeta compacta (cuadrito de color, puesto, zona, flecha); toca para desplegar ── */}
+              <div className="sm:hidden bg-white rounded-2xl shadow-[0_10px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest overflow-hidden">
+                <div className="flex items-center gap-3 p-3">
+                  {e.img ? (
+                    <button
+                      type="button"
+                      onClick={() => setVisor(e)}
+                      aria-label={`Ver imagen del aviso de ${e.puesto} en grande`}
+                      className="shrink-0 active:scale-95 transition-transform"
+                    >
+                      <img
+                        src={e.img}
+                        alt=""
+                        loading="lazy"
+                        referrerPolicy="no-referrer"
+                        className="w-24 h-16 rounded-lg object-cover object-top border border-surface-container-highest bg-surface-container-low"
+                      />
+                    </button>
+                  ) : (
+                    <span className="w-24 h-16 rounded-lg flex items-center justify-center shrink-0" style={{ background: colorEmpleo(e.id) }}>
+                      <span className="material-symbols-outlined text-white text-[22px]">work</span>
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setAbiertos((prev) => ({ ...prev, [e.id]: !prev[e.id] }))}
+                    aria-expanded={!!abiertos[e.id]}
+                    className="flex-1 min-w-0 flex items-center gap-2 text-left"
+                  >
+                    <span className="flex flex-col min-w-0 flex-1">
+                      <span className="font-headline-sm text-sm text-on-surface leading-tight line-clamp-1">{e.puesto}</span>
+                      <span className="text-secondary font-body-md text-xs line-clamp-1 mt-0.5">{[e.negocio, e.zona].filter(Boolean).join(' · ')}</span>
+                    </span>
+                    <span className={`material-symbols-outlined text-secondary/60 shrink-0 transition-transform duration-200 ${abiertos[e.id] ? 'rotate-90' : ''}`}>chevron_right</span>
+                  </button>
+                </div>
+
+                {abiertos[e.id] && (
+                  <div className="px-3 pb-3 pt-1 flex flex-col gap-3 border-t border-surface-container-high">
+                    {/* Todos los elementos de esta fila miden lo mismo (h-7, texto 11px) */}
+                    <div className="flex flex-wrap items-center gap-1.5 pt-2">
+                      <span className="h-7 inline-flex items-center bg-surface-container-low text-secondary text-[11px] font-label-md px-2.5 rounded-full border border-surface-container-highest">{e.tipo}</span>
+                      <span className="h-7 inline-flex items-center bg-primary-fixed text-primary text-[11px] font-label-md px-2.5 rounded-full">{e.pago}</span>
+                      {haceCuanto(e.subido) && (
+                        <span className="h-7 inline-flex items-center gap-1 bg-surface-container-low text-secondary text-[11px] font-label-md px-2.5 rounded-full border border-surface-container-highest">
+                          <span className="material-symbols-outlined text-[14px]">schedule</span>{haceCuantoCorto(e.subido)}
+                        </span>
+                      )}
+                      {/* La acción principal va al costado, en la misma fila */}
+                      {(e.link || e.wsp) && (
+                        <a
+                          href={e.link || waLink(e.wsp, `Hola, vi el aviso de "${e.puesto}" en ${e.negocio} por BogaHub. Me interesa postular.`)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="ml-auto h-7 inline-flex items-center justify-center gap-1 bg-primary text-white text-[11px] font-label-md px-3 rounded-full active:scale-95 transition-transform"
+                        >
+                          {e.link ? 'Ver aviso' : 'Postular'}
+                          <span className="material-symbols-outlined text-[14px]">{e.link ? 'open_in_new' : 'arrow_forward'}</span>
+                        </a>
+                      )}
+                    </div>
+                    {e.descripcion && <DescripcionEmpleo texto={e.descripcion} />}
+                    <div className="flex gap-2">
+                      {e.email && (
+                        <a
+                          href={`mailto:${e.email}?subject=${encodeURIComponent(`Postulación: ${e.puesto}`)}`}
+                          className="flex items-center justify-center gap-1.5 bg-primary-fixed text-primary text-[13px] font-label-md px-3.5 py-2.5 rounded-full active:scale-95 transition-transform"
+                        >
+                          <span className="material-symbols-outlined text-[15px]">mail</span>
+                          CV
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* ── Desde sm: la tarjeta completa de siempre ── */}
+              <div className="hidden sm:flex bg-white rounded-2xl p-4 shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex-row items-start gap-4">
+                {/* Cabecera: foto + título/negocio/etiquetas (en móvil ocupa todo el ancho) */}
+                <div className="flex items-start gap-3 sm:gap-4 min-w-0 sm:flex-1">
                 {e.img ? (
                   <button
                     type="button"
@@ -169,8 +302,8 @@ export default function Servicios() {
                   </div>
                 )}
                 <div className="flex flex-col min-w-0 flex-1">
-                  <span className="font-headline-sm text-sm text-on-surface leading-tight line-clamp-1">{e.puesto}</span>
-                  <span className="text-secondary font-label-md text-[11px] line-clamp-1">{e.negocio} · {e.zona}</span>
+                  <span className="font-headline-sm text-sm text-on-surface leading-tight line-clamp-2 sm:line-clamp-1">{e.puesto}</span>
+                  <span className="text-secondary font-label-md text-[11px] line-clamp-2 sm:line-clamp-1">{e.negocio} · {e.zona}</span>
                   <div className="flex flex-wrap gap-1.5 mt-1.5">
                     <span className="bg-surface-container-low text-secondary text-[10px] font-label-md px-2 py-0.5 rounded-full border border-surface-container-highest">{e.tipo}</span>
                     <span className="bg-primary-fixed text-primary text-[10px] font-label-md px-2 py-0.5 rounded-full">{e.pago}</span>
@@ -185,15 +318,21 @@ export default function Servicios() {
                       )}
                     </div>
                   )}
-                  {e.descripcion && <DescripcionEmpleo texto={e.descripcion} />}
+                  {e.descripcion && <div className="hidden sm:block"><DescripcionEmpleo texto={e.descripcion} /></div>}
                 </div>
-                <div className="shrink-0 flex flex-col gap-1.5 items-stretch">
+                </div>
+
+                {/* Descripción a todo el ancho, solo en móvil (al lado del botón no cabía) */}
+                {e.descripcion && <div className="sm:hidden"><DescripcionEmpleo texto={e.descripcion} /></div>}
+
+                {/* Botones: en móvil en una fila a todo el ancho; desde sm, columna a la derecha */}
+                <div className="flex gap-2 sm:shrink-0 sm:flex-col sm:gap-1.5 sm:items-stretch">
                   {(e.link || e.wsp) && (
                     <a
                       href={e.link || waLink(e.wsp, `Hola, vi el aviso de "${e.puesto}" en ${e.negocio} por BogaHub. Me interesa postular.`)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-1.5 bg-primary text-white text-[12px] font-label-md px-3 py-2 rounded-full active:scale-95 transition-transform"
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-primary text-white text-[13px] sm:text-[12px] font-label-md px-3 py-2.5 sm:py-2 rounded-full active:scale-95 transition-transform"
                     >
                       {e.link ? 'Ver aviso' : 'Postular'}
                       <span className="material-symbols-outlined text-[16px]">{e.link ? 'open_in_new' : 'arrow_forward'}</span>
@@ -202,7 +341,7 @@ export default function Servicios() {
                   {e.email && (
                     <a
                       href={`mailto:${e.email}?subject=${encodeURIComponent(`Postulación: ${e.puesto}`)}`}
-                      className="flex items-center justify-center gap-1.5 bg-primary-fixed text-primary text-[12px] font-label-md px-3 py-1.5 rounded-full active:scale-95 transition-transform"
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-primary-fixed text-primary text-[13px] sm:text-[12px] font-label-md px-3 py-2.5 sm:py-1.5 rounded-full active:scale-95 transition-transform"
                     >
                       <span className="material-symbols-outlined text-[15px]">mail</span>
                       Enviar CV
@@ -210,49 +349,10 @@ export default function Servicios() {
                   )}
                 </div>
               </div>
+              </React.Fragment>
             ))}
           </div>
         )}
-
-        {/* CTAs */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <a
-            href={waLink('51961000000', 'Hola BogaHub, quiero publicar un aviso en Servicios de BogaHub (servicio / empleo).')}
-            target="_blank"
-            rel="noreferrer"
-            className="relative overflow-hidden rounded-2xl bg-inverse-surface text-inverse-on-surface p-4 flex items-center gap-3 group"
-          >
-            <div className="absolute -right-8 -top-10 w-40 h-40 bg-primary/20 rounded-full blur-2xl pointer-events-none" aria-hidden="true" />
-            <div className="w-11 h-11 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-inverse-primary text-[22px]">campaign</span>
-            </div>
-            <div className="relative flex flex-col min-w-0 flex-1">
-              <span className="font-headline-sm text-sm leading-tight">Publica tu aviso gratis</span>
-              <span className="text-inverse-on-surface/70 font-body-md text-xs mt-0.5">Ofrece tu oficio o publica un puesto de trabajo</span>
-            </div>
-            <span className="material-symbols-outlined text-inverse-on-surface/60 shrink-0 group-hover:translate-x-1 transition-transform">chevron_right</span>
-          </a>
-
-          {/* Afiliados / referidos — por ahora solo capta interés por WhatsApp.
-              El sistema completo (?ref=, columna referido_por, panel) está en
-              memoria: afiliados.md. */}
-          <a
-            href={waLink('51961000000', 'Hola BogaHub, quiero ganar dinero recomendando BogaHub (negocios, choferes). ¿Cómo funciona?')}
-            target="_blank"
-            rel="noreferrer"
-            className="relative overflow-hidden rounded-2xl bg-primary text-on-primary p-4 flex items-center gap-3 group"
-          >
-            <div className="absolute -right-8 -top-10 w-40 h-40 bg-white/15 rounded-full blur-2xl pointer-events-none" aria-hidden="true" />
-            <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-[22px]">payments</span>
-            </div>
-            <div className="relative flex flex-col min-w-0 flex-1">
-              <span className="font-headline-sm text-sm leading-tight">Gana dinero con BogaHub</span>
-              <span className="text-on-primary/80 font-body-md text-xs mt-0.5">Recomienda negocios y choferes, gana comisión por cada uno</span>
-            </div>
-            <span className="material-symbols-outlined text-on-primary/70 shrink-0 group-hover:translate-x-1 transition-transform">chevron_right</span>
-          </a>
-        </div>
 
         <p className="text-secondary/70 font-body-md text-[11px] text-center pt-2">
           BogaHub conecta, pero no es empleador ni responsable de los acuerdos. Verifica siempre con quién tratas.
@@ -284,7 +384,6 @@ export default function Servicios() {
                   <span className="material-symbols-outlined text-[16px]">mail</span>Enviar CV
                 </a>
               )}
-              <a href={visor.img} target="_blank" rel="noopener noreferrer" className="text-white/70 text-[12px] font-label-md underline px-2 py-2">Abrir imagen sola</a>
             </div>
           </div>
         )}
