@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const p = getProductoMostrador(slug);
   if (!p) return { title: 'Producto no encontrado' };
-  return { title: `${p.titulo} · Mostrador`, description: p.gancho };
+  return { title: `${p.titulo} · Productos BogaHub`, description: p.gancho };
 }
 
 export default async function ProductoMostradorPage({ params }: Props) {
@@ -36,7 +36,7 @@ export default async function ProductoMostradorPage({ params }: Props) {
       <main className="max-w-[1100px] mx-auto px-container-margin pt-4 md:pt-6 pb-16 md:pb-24">
         <Link href="/mostrador" className="inline-flex items-center gap-1 text-secondary hover:text-primary font-label-md text-label-md">
           <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-          Mostrador
+          Todos los productos
         </Link>
 
         {/* Introducción */}

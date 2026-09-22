@@ -10,7 +10,7 @@ export const HUBS: Hub[] = [
   { href: '/eventos',     label: 'Agenda',      long: 'Agenda & Eventos', icon: 'celebration' },
   { href: '/inmuebles',   label: 'Inmuebles',   icon: 'real_estate_agent' },
   { href: '/sorteos',     label: 'Sorteos',     icon: 'confirmation_number' },
-  { href: '/mostrador',   label: 'Mostrador',   icon: 'shelves' },
+  { href: '/mostrador',   label: 'Productos',   icon: 'inventory_2' },
   { href: '/trabajos',    label: 'Trabajos',    long: 'Trabajos & Oficios', icon: 'construction' },
   { href: '/viajes',      label: 'Viajes',      long: 'Viajes & Transporte', icon: 'directions_boat' },
   { href: '/taxi-seguro', label: 'Taxi Seguro', icon: 'local_taxi' },

@@ -10,8 +10,8 @@ import AppHeader from '@/components/AppHeader';
 import { PRODUCTOS_MOSTRADOR, plantillasDe, portadaDe } from '@/lib/mostrador';
 
 export const metadata: Metadata = {
-  title: 'Mostrador · Productos digitales',
-  description: 'Vende tu terreno, tu carta digital, tu tienda o la app de tu veterinaria: elige el producto y mira las plantillas.',
+  title: 'Productos · BogaHub',
+  description: 'Soluciones y productos de BogaHub para tu negocio: cartas digitales QR, tiendas online, apps y páginas web.',
 };
 
 export default function MostradorPage() {
@@ -21,12 +21,12 @@ export default function MostradorPage() {
 
       <main className="max-w-[1200px] mx-auto px-container-margin pt-5 md:pt-8 pb-16 md:pb-24">
         <section className="text-center max-w-[620px] mx-auto mb-8 md:mb-10">
-          <span className="font-label-md text-label-md text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full">Nuevo</span>
+          <span className="font-label-md text-label-md text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full">Soluciones</span>
           <h1 className="font-headline-lg text-on-background text-3xl md:text-5xl font-extrabold tracking-tight leading-[1.05] mt-4">
-            El Mostrador de <span className="text-primary">BogaHub</span>
+            Productos de <span className="text-primary">BogaHub</span>
           </h1>
           <p className="text-secondary font-body-lg text-base md:text-lg mt-3">
-            Elige lo que quieres vender o mostrar, mira cómo se ve y nosotros lo armamos.
+            Elige lo que tu negocio necesita, mira cómo funciona y nosotros lo armamos.
           </p>
         </section>
 

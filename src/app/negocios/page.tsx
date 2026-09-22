@@ -41,8 +41,8 @@ export default function NegociosPage() {
             <a href="#como-funciona" className="font-label-md text-label-md text-secondary hover:text-primary transition-colors">Cómo funciona</a>
             <a href="#soluciones" className="font-label-md text-label-md text-secondary hover:text-primary transition-colors">Soluciones</a>
             <Link href="/mostrador" className="font-label-md text-label-md text-secondary hover:text-primary transition-colors flex items-center gap-1">
-              <span className="material-symbols-outlined text-[16px]">shelves</span>
-              Mostrador
+              <span className="material-symbols-outlined text-[16px]">inventory_2</span>
+              Productos
             </Link>
           </div>
           <nav className="flex items-center gap-3">
@@ -103,8 +103,8 @@ export default function NegociosPage() {
                   href="/mostrador"
                   className="bg-surface-container-lowest text-on-surface font-bold text-sm px-6 py-3.5 rounded-full border border-surface-container-highest hover:border-primary hover:text-primary transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
                 >
-                  <span className="material-symbols-outlined text-primary text-[18px]">visibility</span>
-                  <span>Ver demo</span>
+                  <span className="material-symbols-outlined text-primary text-[18px]">inventory_2</span>
+                  <span>Ver Productos</span>
                 </Link>
                 <Link
                   href="/"
