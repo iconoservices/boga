@@ -191,8 +191,8 @@ export default function EventosAdmin() {
     };
 
     let res = ficha.id
-      ? await supabase.from('events').update(payloadConColumna).eq('id', ficha.id)
-      : await supabase.from('events').insert(payloadConColumna);
+      ? await supabase.from('events').update(payloadConColumna as any).eq('id', ficha.id)
+      : await supabase.from('events').insert(payloadConColumna as any);
 
     // Si la columna link_post_original todavía no fue creada en Supabase, guardamos en la descripción como fallback
     if (res.error && res.error.message.includes('link_post_original')) {
@@ -204,8 +204,8 @@ export default function EventosAdmin() {
         descripcion: descConTag,
       };
       res = ficha.id
-        ? await supabase.from('events').update(payloadFallback).eq('id', ficha.id)
-        : await supabase.from('events').insert(payloadFallback);
+        ? await supabase.from('events').update(payloadFallback as any).eq('id', ficha.id)
+        : await supabase.from('events').insert(payloadFallback as any);
     }
 
     setGuardando(false);

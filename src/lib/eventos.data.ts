@@ -61,7 +61,8 @@ export async function getEventosActivos(): Promise<Evento[]> {
     data = resFallback.data;
   }
 
-  return (data ?? []).map((r) => {
+  const filas = (data as any[] | null) ?? [];
+  return filas.map((r: any) => {
     const directLink = (r.link_post_original as string) ?? '';
     const { desc, link } = extraerLinkPostOriginal(r.descripcion as string, directLink);
     return {
