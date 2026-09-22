@@ -154,8 +154,8 @@ export default function AppHeader({
             iconClass="text-secondary text-[21px]"
           />
 
-          <Link href="/orders" title="Mis pedidos" className="w-9 h-9 hover:bg-surface-container-high transition-colors rounded-full active:scale-95 flex items-center justify-center">
-            <span className={`material-symbols-outlined text-[21px] ${pathname.startsWith('/orders') ? 'text-primary' : 'text-secondary'}`}>receipt_long</span>
+          <Link href="/profile?seccion=favoritos" title="Mis favoritos" className="w-9 h-9 hover:bg-surface-container-high transition-colors rounded-full active:scale-95 flex items-center justify-center">
+            <span className={`material-symbols-outlined text-[21px] ${pathname.startsWith('/orders') || pathname.includes('favoritos') ? 'text-primary' : 'text-secondary'}`} style={pathname.startsWith('/orders') ? { fontVariationSettings: "'FILL' 1" } : {}}>favorite</span>
           </Link>
 
           {showCart && (

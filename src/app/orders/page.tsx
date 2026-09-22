@@ -15,7 +15,7 @@ export default function Orders() {
         onCartClick={() => setIsCartOpen(true)}
       />
 
-      <main className="max-w-[1440px] mx-auto px-container-margin w-full pt-6 pb-12">
+      <main className="max-w-[720px] mx-auto px-container-margin w-full pt-6 pb-12">
         <PedidosPanel />
       </main>
     </>

@@ -30,11 +30,13 @@ export default function ProfilePage() {
   const [user, setUser] = useState(EMPTY_USER);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ name: user.name, phone: user.phone, address: user.address });
-  const [activeSection, setActiveSection] = useState<'perfil' | 'ajustes' | 'pedidos'>('perfil');
-  // Enlaces directos: /profile?seccion=ajustes (p. ej. desde la campana de avisos)
+  const [activeSection, setActiveSection] = useState<'perfil' | 'ajustes' | 'favoritos'>('perfil');
+  // Enlaces directos: /profile?seccion=favoritos o /profile?seccion=ajustes
   useEffect(() => {
     const s = new URLSearchParams(window.location.search).get('seccion');
-    if (s === 'ajustes' || s === 'pedidos') setActiveSection(s);
+    if (s === 'ajustes' || s === 'favoritos' || s === 'pedidos') {
+      setActiveSection(s === 'pedidos' ? 'favoritos' : s as any);
+    }
   }, []);
   const [darkMode, setDarkMode] = useState(false);
 
@@ -116,8 +118,8 @@ export default function ProfilePage() {
 
   const navTabs: { key: typeof activeSection; label: string; icon: string }[] = [
     { key: 'perfil', label: 'Mi Perfil', icon: 'person' },
+    { key: 'favoritos', label: 'Favoritos', icon: 'favorite' },
     { key: 'ajustes', label: 'Ajustes', icon: 'settings' },
-    { key: 'pedidos', label: 'Pedidos', icon: 'receipt_long' },
   ];
 
   return (
@@ -283,8 +285,8 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* SECTION: Ajustes */}
-        {activeSection === 'pedidos' && <PedidosPanel />}
+        {/* SECTION: Favoritos */}
+        {activeSection === 'favoritos' && <PedidosPanel />}
 
         {activeSection === 'ajustes' && (
           <div className="flex flex-col gap-4">
