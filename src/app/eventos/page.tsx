@@ -86,6 +86,20 @@ export default function Eventos() {
 
       <main className="max-w-[1200px] mx-auto px-container-margin lg:px-6 w-full pt-4 flex flex-col gap-8 pb-14">
 
+        {/* Encabezado principal SEO */}
+        <header className="flex flex-col gap-1.5 pt-1">
+          <div className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-wider">
+            <span className="material-symbols-outlined text-[18px]">calendar_month</span>
+            Agenda & Eventos en Pucallpa
+          </div>
+          <h1 className="font-headline-lg font-black text-2xl sm:text-3xl text-on-surface tracking-tight leading-tight">
+            ¿Qué hacer en Pucallpa hoy?
+          </h1>
+          <p className="font-body-md text-xs sm:text-sm text-secondary max-w-2xl leading-relaxed">
+            Cartelera completa de conciertos, festivales, ferias gastronómicas, eventos culturales, deporte y fiestas en Pucallpa y Yarinacocha.
+          </p>
+        </header>
+
         {/* Destacado + categorías: lado a lado en escritorio (como el Market) */}
         <div className={carrusel.length > 0 ? 'flex flex-col gap-8 lg:grid lg:grid-cols-[1.6fr_1fr] lg:gap-6 lg:items-center' : 'contents'}>
 
@@ -255,7 +269,7 @@ export default function Eventos() {
                 </div>
                 <div className="p-3 flex flex-col gap-1 flex-1">
                   <span className="w-fit bg-primary-fixed text-primary text-[10px] font-label-md px-2 py-0.5 rounded-full">{e.dia} {e.mes}</span>
-                  <h4 className="font-headline-sm text-sm text-on-surface line-clamp-2 mt-0.5">{e.titulo}</h4>
+                  <h3 className="font-headline-sm text-sm text-on-surface line-clamp-2 mt-0.5">{e.titulo}</h3>
                   <span className="text-secondary font-label-md text-[11px] flex items-center gap-1 mt-auto">
                     <span className="material-symbols-outlined text-[12px]">location_on</span>{e.lugar}
                   </span>
@@ -281,7 +295,7 @@ export default function Eventos() {
                     <Foto src={e.img} alt={e.titulo} className="w-full h-full object-cover" />
                   </div>
                   <span className="font-label-md text-[10px] text-secondary uppercase tracking-wider mt-2 block">{e.dia} {e.mes} · {e.lugar.split(' ')[0]}</span>
-                  <h4 className="font-headline-sm text-[13px] text-on-surface line-clamp-2 leading-tight mt-0.5">{e.titulo}</h4>
+                  <h3 className="font-headline-sm text-[13px] text-on-surface line-clamp-2 leading-tight mt-0.5">{e.titulo}</h3>
                   <span className="font-price-lg text-primary text-[13px]">Desde {e.precio}</span>
                 </div>
               </div>
@@ -308,7 +322,7 @@ export default function Eventos() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                     <div className="absolute inset-x-0 bottom-0 p-2">
                       <span className="font-label-md text-[9px] uppercase tracking-wider text-white/70">{e.dia} {e.mes}</span>
-                      <h4 className="font-headline-sm text-white text-[12px] leading-tight line-clamp-2">{e.titulo}</h4>
+                      <h3 className="font-headline-sm text-white text-[12px] leading-tight line-clamp-2">{e.titulo}</h3>
                     </div>
                   </div>
                 </div>
@@ -325,9 +339,13 @@ export default function Eventos() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {lista.map((e) => (
-                <div key={e.id} onClick={() => setEventoAbierto(e)} className="bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col cursor-pointer active:scale-[0.98] transition-transform">
+                <article
+                  key={e.id}
+                  onClick={() => setEventoAbierto(e)}
+                  className="bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col cursor-pointer active:scale-[0.98] transition-transform"
+                >
                   <div className="relative h-36 overflow-hidden bg-surface-container-low">
-                    <Foto src={e.img} alt={e.titulo} className="w-full h-full object-cover" />
+                    <Foto src={e.img} alt={`Foto de ${e.titulo}`} className="w-full h-full object-cover" />
                     <div className="absolute top-2 left-2 bg-white rounded-lg px-2 py-1 text-center shadow-sm">
                       <span className="block font-price-lg text-primary text-sm leading-none">{e.dia}</span>
                       <span className="block font-label-md text-[9px] text-secondary uppercase">{e.mes}</span>
@@ -335,7 +353,7 @@ export default function Eventos() {
                     <span className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-label-md px-2 py-0.5 rounded-full uppercase tracking-wider">{e.cat}</span>
                   </div>
                   <div className="p-3 flex flex-col gap-1 flex-1">
-                    <h4 className="font-headline-sm text-sm text-on-surface line-clamp-1">{e.titulo}</h4>
+                    <h3 className="font-headline-sm text-sm text-on-surface line-clamp-1">{e.titulo}</h3>
                     <span className="text-secondary font-label-md text-[11px] flex items-center gap-1 line-clamp-1">
                       <span className="material-symbols-outlined text-[13px]">location_on</span>{e.lugar}
                     </span>
@@ -360,7 +378,7 @@ export default function Eventos() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </article>
               ))}
             </div>
           )}
