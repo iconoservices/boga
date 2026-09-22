@@ -45,6 +45,7 @@ type Evento = {
   id: string; titulo: string; cat: Cat; descripcion?: string; lugar: string; dia: string; mes: string;
   precio: string; organiza: string; img: string; destacado?: boolean;
   reservable?: boolean; aforo?: number | null; linkEntradas?: string;
+  linkPostOriginal?: string;
 };
 
 export default function Eventos() {
@@ -341,8 +342,22 @@ export default function Eventos() {
                     <span className="text-secondary/70 font-label-md text-[10px] uppercase tracking-wider">Organiza · {e.organiza}</span>
                     <div className="flex items-center justify-between border-t border-surface-container pt-2.5 mt-2">
                       <span className="font-price-lg text-primary text-sm">{e.precio}</span>
-                      {e.linkEntradas && <span className="bg-primary-fixed text-primary text-[10px] font-label-md px-2 py-0.5 rounded-full flex items-center gap-1"><span className="material-symbols-outlined text-[12px]">confirmation_number</span>Entradas online</span>}
-                      <span className="text-primary font-label-md text-[11px] flex items-center gap-1">Más info<span className="material-symbols-outlined text-[13px]">arrow_forward</span></span>
+                      <div className="flex items-center gap-2">
+                        {e.linkEntradas && <span className="bg-primary-fixed text-primary text-[10px] font-label-md px-2 py-0.5 rounded-full flex items-center gap-1"><span className="material-symbols-outlined text-[12px]">confirmation_number</span>Entradas online</span>}
+                        {e.linkPostOriginal && (
+                          <a
+                            href={e.linkPostOriginal}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(ev) => ev.stopPropagation()}
+                            className="bg-[#f2f3fd] hover:bg-[#e6e7f2] text-[#0058be] text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 transition-colors border border-blue-200"
+                            title="Ver publicación o post original"
+                          >
+                            <span className="material-symbols-outlined text-[12px]">open_in_new</span>Post original
+                          </a>
+                        )}
+                        <span className="text-primary font-label-md text-[11px] flex items-center gap-1">Más info<span className="material-symbols-outlined text-[13px]">arrow_forward</span></span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -419,6 +434,18 @@ export default function Eventos() {
                 >
                   <span className="material-symbols-outlined text-[18px]">confirmation_number</span>
                   Comprar entradas
+                  <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                </a>
+              )}
+              {eventoAbierto.linkPostOriginal && (
+                <a
+                  href={eventoAbierto.linkPostOriginal}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 bg-[#f2f3fd] hover:bg-[#e6e7f2] text-[#0058be] border border-[#c2c6d6] font-label-md text-sm px-5 py-3 rounded-full active:scale-95 transition-transform"
+                >
+                  <span className="material-symbols-outlined text-[18px]">share</span>
+                  Ver post original
                   <span className="material-symbols-outlined text-[16px]">open_in_new</span>
                 </a>
               )}

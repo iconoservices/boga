@@ -1017,6 +1017,10 @@ ALTER TABLE public.events ADD COLUMN IF NOT EXISTS link_entradas TEXT;
 -- UPDATE public.events SET link_entradas = 'https://fiestasbravas.novikpass.com/r/FIESBRAV'
 --   WHERE titulo ILIKE '%Lil Silvio%';
 
+-- Enlace a la publicación o post original (Facebook, Instagram, etc.). Si está,
+-- se muestra el botón "Ver post original" en la agenda pública.
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS link_post_original TEXT;
+
 CREATE TABLE IF NOT EXISTS public.tickets (
   id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   created_at  TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,

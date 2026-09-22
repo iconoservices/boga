@@ -29,9 +29,10 @@ export async function GET() {
       .order('orden', { ascending: true })
       .order('created_at', { ascending: true });
 
-  // `link_entradas` es una columna nueva: si todavía no se corrió el SQL, la
-  // consulta falla y caemos a la de siempre para no dejar la Agenda vacía.
-  let { data, error } = await consulta(',link_entradas');
+  // Intentamos pedir link_entradas y link_post_original si existen las columnas en la base;
+  // si alguna todavía no se creó en el SQL, caemos a las disponibles para no romper la Agenda.
+  let { data, error } = await consulta(',link_entradas,link_post_original');
+  if (error) ({ data, error } = await consulta(',link_entradas'));
   if (error) ({ data, error } = await consulta(''));
 
   if (error) console.error('[api/eventos]', error.message);

@@ -14,6 +14,7 @@ import { refrescarPublico } from '@/lib/refrescar';
 import { hoyLima } from '@/lib/fechaLima';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import { CIUDADES } from '@/lib/ciudades';
+import { extraerLinkPostOriginal } from '@/lib/eventos';
 import CampoFoto from '@/components/superadmin/CampoFoto';
 import SuperadminSidebarNav from '@/components/superadmin/SuperadminSidebarNav';
 
@@ -69,6 +70,7 @@ const FICHA_VACIA = {
   ciudad: 'pucallpa', orden: 0, status: 'activo',
   reservable: false, aforo: '' as string | number,
   link_entradas: '', link_orig: '',
+  link_post_original: '',
   organizer_id: '',
 };
 type Ficha = typeof FICHA_VACIA;
@@ -143,14 +145,17 @@ export default function EventosAdmin() {
   const publicarLugares = async () => { await refrescarPublico(['/api/lugares']); recargarLugares(); };
 
   const editar = (e: EventRow) => {
+    const directPostLink = e.link_post_original ?? e.link_orig ?? '';
+    const { desc, link } = extraerLinkPostOriginal(e.descripcion ?? '', directPostLink);
     setFicha({
-      id: e.id, titulo: e.titulo ?? '', categoria: e.categoria ?? 'Fiestas', descripcion: e.descripcion ?? '',
+      id: e.id, titulo: e.titulo ?? '', categoria: e.categoria ?? 'Fiestas', descripcion: desc,
       lugar: e.lugar ?? '',
       dia: e.dia ?? '', mes: e.mes ?? 'SEP', fecha: e.fecha ?? '', precio: e.precio ?? 'Libre', organiza: e.organiza ?? '',
       img: e.img ?? '', destacado: Boolean(e.destacado),
       ciudad: e.ciudad ?? 'pucallpa', orden: e.orden ?? 0, status: e.status ?? 'activo',
       reservable: Boolean(e.reservable), aforo: e.aforo ?? '',
       link_entradas: e.link_entradas ?? '', link_orig: e.link_entradas ?? '',
+      link_post_original: link,
       organizer_id: e.organizer_id ?? '',
     });
     setMsg('');
@@ -162,7 +167,10 @@ export default function EventosAdmin() {
     setGuardando(true);
     setMsg('');
 
-    const payload = {
+    const postLink = limpiarLink(ficha.link_post_original);
+    const entradasLink = limpiarLink(ficha.link_entradas);
+
+    const basePayload = {
       titulo: ficha.titulo, categoria: ficha.categoria, descripcion: ficha.descripcion || null,
       lugar: ficha.lugar || null,
       dia: ficha.dia || null, mes: ficha.mes || null, fecha: ficha.fecha || null, precio: ficha.precio || null,
@@ -173,12 +181,32 @@ export default function EventosAdmin() {
       // aunque la columna organizer_id todavía no exista en la base.
       ...(ficha.organizer_id ? { organizer_id: ficha.organizer_id } : {}),
       // Igual: solo se manda si hay enlace (o había uno y se está borrando).
-      ...(ficha.link_entradas || ficha.link_orig ? { link_entradas: limpiarLink(ficha.link_entradas) || null } : {}),
+      ...(entradasLink || ficha.link_orig ? { link_entradas: entradasLink || null } : {}),
     };
 
-    const res = ficha.id
-      ? await supabase.from('events').update(payload).eq('id', ficha.id)
-      : await supabase.from('events').insert(payload);
+    // Intentamos primero con la columna directa link_post_original
+    const payloadConColumna = {
+      ...basePayload,
+      ...(postLink ? { link_post_original: postLink } : { link_post_original: null }),
+    };
+
+    let res = ficha.id
+      ? await supabase.from('events').update(payloadConColumna).eq('id', ficha.id)
+      : await supabase.from('events').insert(payloadConColumna);
+
+    // Si la columna link_post_original todavía no fue creada en Supabase, guardamos en la descripción como fallback
+    if (res.error && res.error.message.includes('link_post_original')) {
+      const descConTag = postLink
+        ? `${ficha.descripcion ? ficha.descripcion.trim() + '\n\n' : ''}<!--post_original:${postLink}-->`
+        : (ficha.descripcion || null);
+      const payloadFallback = {
+        ...basePayload,
+        descripcion: descConTag,
+      };
+      res = ficha.id
+        ? await supabase.from('events').update(payloadFallback).eq('id', ficha.id)
+        : await supabase.from('events').insert(payloadFallback);
+    }
 
     setGuardando(false);
     if (res.error) { setMsg(`Error: ${res.error.message}`); return; }
@@ -361,6 +389,8 @@ export default function EventosAdmin() {
             )}
             <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Enlace de entradas o registro (opcional)
               <input value={ficha.link_entradas} onChange={(e) => setFicha({ ...ficha, link_entradas: e.target.value })} className={campo} placeholder="https://… (Novikpass, etc.). Muestra el botón «Comprar entradas»" /></label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Enlace a publicación o post original (Facebook, Instagram, TikTok…)
+              <input value={ficha.link_post_original} onChange={(e) => setFicha({ ...ficha, link_post_original: e.target.value })} className={campo} placeholder="https://facebook.com/... o https://instagram.com/p/... Muestra el botón «Ver post original»" /></label>
             <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Estado
               <select value={ficha.status} onChange={(e) => setFicha({ ...ficha, status: e.target.value })} className={campo}>
                 <option value="activo">Activo (visible)</option>
@@ -436,6 +466,16 @@ export default function EventosAdmin() {
                       {e.titulo} <span className="text-secondary font-normal">· {e.categoria} · {e.ciudad}</span>
                       {vencido && <span className="ml-1.5 bg-red-100 text-red-700 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full align-middle">Vencido</span>}
                       {e.reservable && <span className="ml-1.5 bg-emerald-100 text-emerald-700 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full align-middle">Reservable{e.aforo ? ` · aforo ${e.aforo}` : ''}</span>}
+                      {(e.link_post_original || extraerLinkPostOriginal(e.descripcion).link) && (
+                        <a
+                          href={e.link_post_original || extraerLinkPostOriginal(e.descripcion).link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="ml-1.5 bg-blue-50 text-[#0058be] hover:underline text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full align-middle inline-flex items-center gap-0.5 border border-blue-200"
+                        >
+                          <span className="material-symbols-outlined text-[10px]">open_in_new</span>Post
+                        </a>
+                      )}
                     </p>
                     <p className="text-xs text-secondary">{[e.lugar, `${e.dia} ${e.mes}`, e.precio].filter(Boolean).join(' · ')}{e.destacado ? ' · ⭐ destacado' : ''}</p>
                   </div>

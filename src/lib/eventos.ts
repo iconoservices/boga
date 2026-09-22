@@ -23,15 +23,39 @@ export type Evento = {
   aforo?: number | null;
   /** Enlace externo de entradas o registro (Novikpass, etc.). */
   linkEntradas?: string;
+  /** Enlace al post o publicación original (Facebook, Instagram, web del evento). */
+  linkPostOriginal?: string;
 };
+
+// Extrae el link del post original de la columna directa o del tag en la descripción (fallback).
+export function extraerLinkPostOriginal(rawDesc?: string, directLink?: string): { desc: string; link: string } {
+  if (directLink) {
+    const cleanDesc = (rawDesc ?? '')
+      .replace(/<!--\s*post_original:\s*(https?:\/\/[^\s>]+)\s*-->/gi, '')
+      .replace(/\[(?:post_original|Post original):\s*(https?:\/\/[^\s\]]+)\]/gi, '')
+      .trim();
+    return { desc: cleanDesc, link: directLink };
+  }
+  if (!rawDesc) return { desc: '', link: '' };
+  const m = rawDesc.match(/<!--\s*post_original:\s*(https?:\/\/[^\s>]+)\s*-->/i) ||
+            rawDesc.match(/\[(?:post_original|Post original):\s*(https?:\/\/[^\s\]]+)\]/i);
+  if (m) {
+    const cleanDesc = rawDesc.replace(m[0], '').trim();
+    return { desc: cleanDesc, link: m[1] };
+  }
+  return { desc: rawDesc, link: '' };
+}
 
 // Mapea una fila de la tabla `events` (snake_case) al shape que usa la UI.
 function fromRow(r: Record<string, unknown>): Evento {
+  const directLink = (r.link_post_original as string) ?? (r.link_orig as string) ?? '';
+  const { desc, link } = extraerLinkPostOriginal(r.descripcion as string, directLink);
+
   return {
     id: String(r.id),
     titulo: (r.titulo as string) ?? '',
     cat: ((r.categoria as string) ?? 'Fiestas') as CategoriaEvento,
-    descripcion: (r.descripcion as string) ?? '',
+    descripcion: desc,
     lugar: (r.lugar as string) ?? '',
     dia: (r.dia as string) ?? '',
     mes: (r.mes as string) ?? '',
@@ -43,6 +67,7 @@ function fromRow(r: Record<string, unknown>): Evento {
     reservable: Boolean(r.reservable),
     aforo: r.aforo == null ? null : Number(r.aforo),
     linkEntradas: (r.link_entradas as string) ?? '',
+    linkPostOriginal: link,
   };
 }
 
