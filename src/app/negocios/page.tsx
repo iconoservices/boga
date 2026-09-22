@@ -103,8 +103,8 @@ export default function NegociosPage() {
                   href="/mostrador"
                   className="bg-surface-container-lowest text-on-surface font-bold text-sm px-6 py-3.5 rounded-full border border-surface-container-highest hover:border-primary hover:text-primary transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
                 >
-                  <span className="material-symbols-outlined text-primary text-[18px]">inventory_2</span>
-                  <span>Ver Productos</span>
+                  <span className="material-symbols-outlined text-primary text-[18px]">visibility</span>
+                  <span>Ver demo</span>
                 </Link>
                 <Link
                   href="/"
