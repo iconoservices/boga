@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 import { fechaISO } from '@/lib/revista';
 import { getNotasPublicadas } from '@/lib/revista.data';
 import { supabase } from '@/lib/supabase';
+import { getEmpleosActivos, slugEmpleo } from '@/lib/chamba.data';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app';
 
@@ -58,5 +59,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  return [...rutasFijas, ...tiendas, ...notas];
+  // Cada aviso de empleo activo, en su propia URL (para que Google los indexe uno por uno).
+  const activos = await getEmpleosActivos();
+  const empleos: MetadataRoute.Sitemap = activos.map((e) => ({
+    url: `${SITE_URL}/trabajos/${slugEmpleo(e)}`,
+    lastModified: now,
+    changeFrequency: 'weekly',
+    priority: 0.5,
+  }));
+
+  return [...rutasFijas, ...tiendas, ...notas, ...empleos];
 }

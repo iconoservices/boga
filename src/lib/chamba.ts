@@ -1,4 +1,5 @@
 import { fechaLima, hoyLima } from '@/lib/fechaLima';
+import { slugify } from '@/lib/revista';
 
 // Chamba y oficios (/trabajos). La página los lee del endpoint cacheado
 // /api/chamba (no de Supabase directo). Si las tablas `job_listings` y
@@ -24,6 +25,8 @@ export type Empleo = {
   subido?: string;
   /** Fecha del aviso original (AAAA-MM-DD), solo si se cargó a mano. */
   publicado?: string;
+  /** Fecha de vencimiento del aviso (AAAA-MM-DD). */
+  expira_el?: string;
 };
 
 export type Oficio = {
@@ -38,6 +41,12 @@ export type Oficio = {
 };
 
 const txt = (v: unknown) => (typeof v === 'string' ? v : '');
+
+/** URL amigable y estable para la ficha de un aviso: /trabajos/<slug>. */
+export function slugEmpleo(e: Pick<Empleo, 'id' | 'puesto' | 'negocio'>): string {
+  const base = slugify(`${e.puesto} ${e.negocio || ''}`);
+  return `${base}-${e.id.slice(0, 8)}`;
+}
 
 export async function fetchChamba(): Promise<{ empleos: Empleo[]; oficios: Oficio[] }> {
   try {

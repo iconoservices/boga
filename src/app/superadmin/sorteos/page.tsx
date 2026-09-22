@@ -303,7 +303,7 @@ export default function SorteosAdmin() {
                               <span className={`mr-1.5 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full align-middle ${est.clase}`}>{est.label}</span>
                               {r.titulo}
                             </p>
-                            <p className="text-xs text-secondary mt-0.5">{[r.patrocinador && `Patrocina ${r.patrocinador}`, r.precio_ticket && `Ticket ${r.precio_ticket}`, r.cierra_el && `Cierra ${r.cierra_el}`].filter(Boolean).join(' · ') || 'Sin más datos'}</p>
+                            <p className="text-xs text-secondary mt-0.5">{[r.patrocinador && `Patrocina ${r.patrocinador}`, r.precio_ticket && `Ticket: ${String(r.precio_ticket).startsWith('S/') ? r.precio_ticket : `S/ ${r.precio_ticket}`}`, r.cierra_el && `Cierra ${r.cierra_el}`].filter(Boolean).join(' · ') || 'Sin más datos'}</p>
                           </div>
                         </div>
                         {r.meta_tickets ? (

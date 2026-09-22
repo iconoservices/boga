@@ -64,24 +64,14 @@ export default function NegociosPage() {
 
       <main>
         {/* Hero */}
-        <section className="relative max-w-[1200px] mx-auto px-container-margin pt-10 md:pt-14 pb-10 md:pb-14">
+        <section className="relative max-w-[1200px] mx-auto px-container-margin pt-0 sm:pt-10 md:pt-14 pb-10 md:pb-14">
           <div className="absolute -top-24 -right-24 w-[420px] h-[420px] bg-primary/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
           <div className="absolute top-40 -left-32 w-[320px] h-[320px] bg-tertiary/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
 
-          <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 items-center">
-            <div className="relative order-1 lg:order-2">
-              <div className="relative rounded-[1.5rem] lg:rounded-[2rem] overflow-hidden shadow-2xl aspect-[16/10] lg:aspect-[4/3] lg:max-w-[440px] lg:ml-auto lg:rotate-2">
+          <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-center">
+            <div className="relative order-1 lg:order-2 -mx-container-margin sm:mx-0">
+              <div className="relative rounded-none sm:rounded-2xl lg:rounded-3xl overflow-hidden shadow-xl sm:shadow-2xl w-full max-w-[580px] mx-auto lg:ml-auto">
                 <NegociosHeroImagen />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/0 to-transparent" />
-              </div>
-              <div className="hidden lg:flex absolute -bottom-6 -left-8 bg-surface-container-lowest border border-surface-container-highest rounded-2xl shadow-xl p-4 items-center gap-3 -rotate-2">
-                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-emerald-700 text-[20px]">trending_up</span>
-                </div>
-                <div>
-                  <p className="font-headline-sm text-headline-sm text-on-background leading-none">Tu negocio, online</p>
-                  <p className="text-secondary font-body-md text-xs mt-1">Sin depender de terceros</p>
-                </div>
               </div>
             </div>
 

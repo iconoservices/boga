@@ -15,5 +15,5 @@ export default function NegociosHeroImagen() {
       if (banners[0]?.image) setSrc(banners[0].image);
     });
   }, []);
-  return <img src={src} alt="Negocio local usando BogaHub" className="w-full h-full object-cover" />;
+  return <img src={src} alt="Negocio local usando BogaHub" className="w-full h-auto block object-contain" />;
 }

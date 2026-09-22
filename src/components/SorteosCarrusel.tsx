@@ -68,6 +68,17 @@ export function Barra({ vendidos, meta, fechaSorteo, grande = false, claro = fal
   );
 }
 
+function formatoTicket(precio?: string): string {
+  if (!precio) return '';
+  const p = precio.trim();
+  if (/^s\/?\.?\s*/i.test(p)) {
+    const num = p.replace(/^s\/?\.?\s*/i, '').trim();
+    return `Ticket: S/ ${num}`;
+  }
+  if (!isNaN(Number(p))) return `Ticket: S/ ${p}`;
+  return `Ticket: ${p}`;
+}
+
 // Tarjeta de sorteo: mismo formato que las tarjetas del inicio (tamaño fijo, foto arriba).
 function TarjetaSorteo({ s }: { s: Sorteo }) {
   return (
@@ -87,7 +98,7 @@ function TarjetaSorteo({ s }: { s: Sorteo }) {
           </span>
         )}
         <h3 className="font-headline-sm text-[13px] leading-tight line-clamp-2 mt-0.5">{s.titulo}</h3>
-        {s.precioTicket && <span className="font-price-lg text-sm" style={{ color: LIMA }}>Ticket {s.precioTicket}</span>}
+        {s.precioTicket && <span className="font-price-lg text-sm" style={{ color: LIMA }}>{formatoTicket(s.precioTicket)}</span>}
         <div className="mt-1.5"><Barra vendidos={s.vendidos} meta={s.meta} fechaSorteo={s.cierraEl} /></div>
         {s.comoParticipar && <p className="text-white/65 font-body-md text-[10px] leading-snug line-clamp-2 mt-1">{s.comoParticipar}</p>}
         <a href={waParticipar(s.titulo)} target="_blank" rel="noopener noreferrer" className="mt-auto pt-2">

@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
-import { fetchChamba, haceCuanto, fechaAviso } from '@/lib/chamba';
+import Link from 'next/link';
+import { fetchChamba, haceCuanto, fechaAviso, slugEmpleo } from '@/lib/chamba';
 
 // Servicios = tablero local de trabajo, oficios y empleos. Por ahora es un DIRECTORIO curado a mano
 // (sin tabla en Supabase todavía): gente que ofrece su oficio y avisos de
@@ -244,7 +245,7 @@ export default function Servicios() {
                     className="flex-1 min-w-0 flex items-center gap-2 text-left"
                   >
                     <span className="flex flex-col min-w-0 flex-1">
-                      <span className="font-headline-sm text-sm text-on-surface leading-tight line-clamp-1">{e.puesto}</span>
+                      <h2 className="font-headline-sm text-sm text-on-surface leading-tight line-clamp-1">{e.puesto}</h2>
                       <span className="text-secondary font-body-md text-xs line-clamp-1 mt-0.5">{[e.negocio, e.zona].filter(Boolean).join(' · ')}</span>
                     </span>
                     <span className={`material-symbols-outlined text-secondary/60 shrink-0 transition-transform duration-200 ${abiertos[e.id] ? 'rotate-90' : ''}`}>chevron_right</span>
@@ -276,6 +277,9 @@ export default function Servicios() {
                       )}
                     </div>
                     {e.descripcion && <DescripcionEmpleo texto={e.descripcion} />}
+                    <Link href={`/trabajos/${slugEmpleo(e)}`} className="self-start text-[11px] font-label-md text-primary underline">
+                      Ver ficha completa
+                    </Link>
                     <AvisoSeguridadEmpleo />
                     <div className="flex gap-2">
                       {e.email && (
@@ -314,7 +318,7 @@ export default function Servicios() {
 
                 <div className="flex flex-col min-w-0 flex-1 gap-2">
                   <div className="flex flex-col min-w-0">
-                    <span className="font-headline-sm text-base text-on-surface leading-tight line-clamp-2">{e.puesto}</span>
+                    <h2 className="font-headline-sm text-base text-on-surface leading-tight line-clamp-2">{e.puesto}</h2>
                     <span className="text-secondary font-body-md text-xs line-clamp-1 mt-0.5">{[e.negocio, e.zona].filter(Boolean).join(' · ')}</span>
                   </div>
 
@@ -357,6 +361,9 @@ export default function Servicios() {
                   </div>
 
                   {e.descripcion && <DescripcionEmpleo texto={e.descripcion} />}
+                  <Link href={`/trabajos/${slugEmpleo(e)}`} className="self-start text-[11px] font-label-md text-primary underline">
+                    Ver ficha completa
+                  </Link>
                   <AvisoSeguridadEmpleo />
                 </div>
               </div>
