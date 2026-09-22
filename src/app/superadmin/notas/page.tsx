@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useEsSuperadmin } from '@/lib/superadmin';
@@ -81,8 +82,12 @@ export default function NotasInternas() {
   return (
     <div className="min-h-screen bg-[#0f1115] text-white px-6 py-10">
       <div className="max-w-4xl mx-auto flex flex-col gap-10">
-        <div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-2xl font-bold">Notas internas · Guía de Pucallpa</h1>
+          <Link href="/superadmin/editorial" className="text-xs bg-white/10 hover:bg-white/20 text-white font-semibold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-[16px]">campaign</span>
+            Ver Matriz Editorial BogaHub →
+          </Link>
         </div>
 
         <section className="flex flex-col gap-4">

@@ -5,6 +5,7 @@
 // modelo de negocio — no la ve el comercio.
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import SuperadminSubheader from '@/components/SuperadminSubheader';
@@ -93,6 +94,24 @@ export default function ModulosPage() {
     <div className="min-h-screen bg-[#f9f9ff] text-[#191b23]">
       <SuperadminSubheader title="Módulos y Estrategia" icon="extension" />
       <main className="max-w-[900px] mx-auto px-4 py-8 flex flex-col gap-8">
+        <div className="bg-gradient-to-r from-[#0058be] to-[#1a73e8] text-white p-5 rounded-xl shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-blue-200">
+              <span className="material-symbols-outlined text-[18px]">campaign</span>
+              Estrategia y Posicionamiento
+            </div>
+            <h3 className="text-base font-bold text-white mt-1">BOGA = La Capa Digital de Pucallpa</h3>
+            <p className="text-xs text-blue-100 mt-0.5">La matriz de contenido de 6 pilares: Descubre, Encuentra, Muévete, Haz algo, Trabaja, Vive Pucallpa.</p>
+          </div>
+          <Link
+            href="/superadmin/editorial"
+            className="px-4 py-2 bg-white text-[#0058be] font-bold text-xs rounded-lg shadow hover:bg-blue-50 active:scale-95 transition-all shrink-0 flex items-center gap-1.5"
+          >
+            <span className="material-symbols-outlined text-[16px]">visibility</span>
+            Ver Matriz Editorial →
+          </Link>
+        </div>
+
         <section className="flex flex-col gap-3">
           <div className="border-b border-[#c2c6d6] pb-4">
             <h2 className="text-xl font-bold text-[#191b23]">Modelo de Negocio</h2>

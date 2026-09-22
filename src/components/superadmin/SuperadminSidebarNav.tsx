@@ -21,6 +21,7 @@ export const NAV_TABS = [
 export const SUBRUTAS = [
   { href: '/superadmin/plantillas',     icon: 'layers',       label: 'Plantillas' },
   { href: '/superadmin/revista',        icon: 'menu_book',    label: 'Revista' },
+  { href: '/superadmin/editorial',      icon: 'campaign',     label: 'Estrategia Editorial' },
   { href: '/superadmin/notas',          icon: 'sticky_note_2',label: 'Notas internas' },
   { href: '/superadmin/choferes',       icon: 'local_taxi',   label: 'Choferes' },
   { href: '/superadmin/alquileres',     icon: 'real_estate_agent', label: 'Inmuebles' },
