@@ -17,7 +17,7 @@ function AvisoSeguridadEmpleo() {
   return (
     <p className="flex items-center gap-1 text-[10px] font-label-md text-red-600/80">
       <span className="material-symbols-outlined text-[12px]">error</span>
-      Ninguna empresa seria pide dinero por adelantado.
+      BogaHub solo indexa este aviso, no es el empleador. Ninguna empresa seria te pedirá dinero por examen médico, uniforme o capacitación.
     </p>
   );
 }
