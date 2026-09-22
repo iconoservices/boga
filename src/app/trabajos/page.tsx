@@ -11,6 +11,19 @@ import { fetchChamba, haceCuanto, fechaAviso } from '@/lib/chamba';
 
 type Vista = 'servicios' | 'empleos';
 
+function AvisoSeguridadEmpleo() {
+  return (
+    <p className="flex items-start gap-1.5 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-2 text-[11px] leading-snug text-amber-900">
+      <span className="material-symbols-outlined text-amber-600 text-[15px] shrink-0 mt-0.5">warning</span>
+      <span>
+        <b>Aviso de Seguridad Boga:</b> este es un aviso público que BogaHub solo indexa, no es el
+        empleador. Ninguna empresa seria te pedirá dinero por exámenes médicos, uniformes o
+        capacitaciones. No hagas depósitos por adelantado.
+      </span>
+    </p>
+  );
+}
+
 // Descripción / requisitos de un empleo: 3 líneas y "Ver más" para desplegar.
 // Cuadrito de color de cada aviso en móvil: un color estable por aviso, para que la
 // lista se lea de un vistazo (como las tarjetas de las piezas de Boga).
@@ -91,7 +104,7 @@ export default function Servicios() {
         {/* CTAs — compactos, arriba y en una sola fila. "Gana dinero" va primero y marcado
             como Próximamente: hoy solo capta interés por WhatsApp. El sistema completo
             (?ref=, columna referido_por, panel) está en memoria: afiliados.md. */}
-        <div className="grid grid-cols-2 gap-2.5 -mt-2">
+        <div className="grid grid-cols-2 gap-2.5 -mt-2 sm:max-w-[460px]">
           <a
             href={waLink('51961000000', 'Hola BogaHub, quiero que me avisen cuando esté listo "Gana dinero con BogaHub" (recomendar negocios y choferes con comisión).')}
             target="_blank"
@@ -193,7 +206,7 @@ export default function Servicios() {
 
         {/* Avisos de empleo */}
         {vista === 'empleos' && (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:items-start">
             {cargado && empleos.length === 0 && (
               <div className="col-span-full bg-white rounded-2xl border border-dashed border-surface-container-highest p-8 text-center">
                 <span className="material-symbols-outlined text-secondary/40 text-[32px]">work</span>
@@ -265,6 +278,7 @@ export default function Servicios() {
                       )}
                     </div>
                     {e.descripcion && <DescripcionEmpleo texto={e.descripcion} />}
+                    <AvisoSeguridadEmpleo />
                     <div className="flex gap-2">
                       {e.email && (
                         <a
@@ -280,73 +294,72 @@ export default function Servicios() {
                 )}
               </div>
 
-              {/* ── Desde sm: la tarjeta completa de siempre ── */}
-              <div className="hidden sm:flex bg-white rounded-2xl p-4 shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex-row items-start gap-4">
-                {/* Cabecera: foto + título/negocio/etiquetas (en móvil ocupa todo el ancho) */}
-                <div className="flex items-start gap-3 sm:gap-4 min-w-0 sm:flex-1">
+              {/* ── Desde sm: tarjeta con foto grande y todo a la vista ── */}
+              <div className="hidden sm:flex bg-white rounded-2xl p-4 shadow-[0_10px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest items-start gap-4">
                 {e.img ? (
                   <button
                     type="button"
                     onClick={() => setVisor(e)}
                     aria-label={`Ver imagen del aviso de ${e.puesto} en grande`}
-                    className="relative w-16 h-16 rounded-xl overflow-hidden bg-surface-container-low shrink-0 border border-surface-container-highest active:scale-95 transition-transform"
+                    className="group relative w-36 h-24 rounded-xl overflow-hidden bg-surface-container-low shrink-0 border border-surface-container-highest active:scale-95 transition-transform"
                   >
-                    <img src={e.img} alt={e.puesto} loading="lazy" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
-                    <span className="absolute bottom-0.5 right-0.5 w-5 h-5 rounded-full bg-black/55 text-white flex items-center justify-center">
-                      <span className="material-symbols-outlined text-[13px]">zoom_in</span>
+                    <img src={e.img} alt={e.puesto} loading="lazy" referrerPolicy="no-referrer" className="w-full h-full object-cover object-top" />
+                    <span className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors">
+                      <span className="material-symbols-outlined text-white text-[26px] opacity-0 group-hover:opacity-100 transition-opacity">zoom_in</span>
                     </span>
                   </button>
                 ) : (
-                  <div className="w-11 h-11 rounded-xl bg-primary-fixed flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-primary text-[20px]">work</span>
+                  <div className="w-36 h-24 rounded-xl flex items-center justify-center shrink-0" style={{ background: colorEmpleo(e.id) }}>
+                    <span className="material-symbols-outlined text-white text-[30px]">work</span>
                   </div>
                 )}
-                <div className="flex flex-col min-w-0 flex-1">
-                  <span className="font-headline-sm text-sm text-on-surface leading-tight line-clamp-2 sm:line-clamp-1">{e.puesto}</span>
-                  <span className="text-secondary font-label-md text-[11px] line-clamp-2 sm:line-clamp-1">{e.negocio} · {e.zona}</span>
-                  <div className="flex flex-wrap gap-1.5 mt-1.5">
-                    <span className="bg-surface-container-low text-secondary text-[10px] font-label-md px-2 py-0.5 rounded-full border border-surface-container-highest">{e.tipo}</span>
-                    <span className="bg-primary-fixed text-primary text-[10px] font-label-md px-2 py-0.5 rounded-full">{e.pago}</span>
+
+                <div className="flex flex-col min-w-0 flex-1 gap-2">
+                  <div className="flex flex-col min-w-0">
+                    <span className="font-headline-sm text-base text-on-surface leading-tight line-clamp-2">{e.puesto}</span>
+                    <span className="text-secondary font-body-md text-xs line-clamp-1 mt-0.5">{[e.negocio, e.zona].filter(Boolean).join(' · ')}</span>
                   </div>
-                  {(haceCuanto(e.subido) || fechaAviso(e.publicado)) && (
-                    <div className="text-secondary/70 font-label-md text-[10px] flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1.5">
-                      {haceCuanto(e.subido) && (
-                        <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[12px]">schedule</span>{haceCuanto(e.subido)}</span>
-                      )}
-                      {fechaAviso(e.publicado) && (
-                        <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[12px]">event</span>{fechaAviso(e.publicado)}</span>
-                      )}
-                    </div>
-                  )}
-                  {e.descripcion && <div className="hidden sm:block"><DescripcionEmpleo texto={e.descripcion} /></div>}
-                </div>
-                </div>
 
-                {/* Descripción a todo el ancho, solo en móvil (al lado del botón no cabía) */}
-                {e.descripcion && <div className="sm:hidden"><DescripcionEmpleo texto={e.descripcion} /></div>}
+                  {/* Todos los elementos de esta fila miden lo mismo (h-7, texto 11px) */}
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="h-7 inline-flex items-center bg-surface-container-low text-secondary text-[11px] font-label-md px-2.5 rounded-full border border-surface-container-highest">{e.tipo}</span>
+                    <span className="h-7 inline-flex items-center bg-primary-fixed text-primary text-[11px] font-label-md px-2.5 rounded-full">{e.pago}</span>
+                    {haceCuanto(e.subido) && (
+                      <span className="h-7 inline-flex items-center gap-1 bg-surface-container-low text-secondary text-[11px] font-label-md px-2.5 rounded-full border border-surface-container-highest">
+                        <span className="material-symbols-outlined text-[14px]">schedule</span>{haceCuantoCorto(e.subido)}
+                      </span>
+                    )}
+                    {fechaAviso(e.publicado) && (
+                      <span className="h-7 inline-flex items-center gap-1 bg-surface-container-low text-secondary text-[11px] font-label-md px-2.5 rounded-full border border-surface-container-highest">
+                        <span className="material-symbols-outlined text-[14px]">event</span>{fechaAviso(e.publicado)}
+                      </span>
+                    )}
+                    <span className="ml-auto flex items-center gap-1.5">
+                      {e.email && (
+                        <a
+                          href={`mailto:${e.email}?subject=${encodeURIComponent(`Postulación: ${e.puesto}`)}`}
+                          className="h-7 inline-flex items-center gap-1 bg-primary-fixed text-primary text-[11px] font-label-md px-3 rounded-full active:scale-95 transition-transform"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">mail</span>
+                          Enviar CV
+                        </a>
+                      )}
+                      {(e.link || e.wsp) && (
+                        <a
+                          href={e.link || waLink(e.wsp, `Hola, vi el aviso de "${e.puesto}" en ${e.negocio} por BogaHub. Me interesa postular.`)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="h-7 inline-flex items-center justify-center gap-1 bg-primary text-white text-[11px] font-label-md px-3.5 rounded-full active:scale-95 transition-transform"
+                        >
+                          {e.link ? 'Ver aviso' : 'Postular'}
+                          <span className="material-symbols-outlined text-[14px]">{e.link ? 'open_in_new' : 'arrow_forward'}</span>
+                        </a>
+                      )}
+                    </span>
+                  </div>
 
-                {/* Botones: en móvil en una fila a todo el ancho; desde sm, columna a la derecha */}
-                <div className="flex gap-2 sm:shrink-0 sm:flex-col sm:gap-1.5 sm:items-stretch">
-                  {(e.link || e.wsp) && (
-                    <a
-                      href={e.link || waLink(e.wsp, `Hola, vi el aviso de "${e.puesto}" en ${e.negocio} por BogaHub. Me interesa postular.`)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-primary text-white text-[13px] sm:text-[12px] font-label-md px-3 py-2.5 sm:py-2 rounded-full active:scale-95 transition-transform"
-                    >
-                      {e.link ? 'Ver aviso' : 'Postular'}
-                      <span className="material-symbols-outlined text-[16px]">{e.link ? 'open_in_new' : 'arrow_forward'}</span>
-                    </a>
-                  )}
-                  {e.email && (
-                    <a
-                      href={`mailto:${e.email}?subject=${encodeURIComponent(`Postulación: ${e.puesto}`)}`}
-                      className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-primary-fixed text-primary text-[13px] sm:text-[12px] font-label-md px-3 py-2.5 sm:py-1.5 rounded-full active:scale-95 transition-transform"
-                    >
-                      <span className="material-symbols-outlined text-[15px]">mail</span>
-                      Enviar CV
-                    </a>
-                  )}
+                  {e.descripcion && <DescripcionEmpleo texto={e.descripcion} />}
+                  <AvisoSeguridadEmpleo />
                 </div>
               </div>
               </React.Fragment>

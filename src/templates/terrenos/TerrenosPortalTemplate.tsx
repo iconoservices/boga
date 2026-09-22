@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { StoreConfig } from '@/lib/stores.config';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
-import { useTerrenos, areaDe, precioTerreno } from './useTerrenos';
+import { useTerrenos, areaDe, precioTerreno, descripcionLimpia } from './useTerrenos';
 
 /**
  * Plantilla "Terreno 1": estilo inmobiliaria moderna (referencia: Los
@@ -153,14 +153,26 @@ export default function TerrenosPortalTemplate({ store }: { store: StoreConfig }
                   <h3 className="font-black text-xl uppercase tracking-wide" style={{ color: t.onSurface }}>{c.nombreDeZona(p.category) || 'Terreno'}</h3>
                   <p className="text-sm" style={{ color: t.onSurfaceVariant }}>{p.name}</p>
 
-                  {p.desc && (
+                  {descripcionLimpia(p) && (
                     <div className="w-full mt-3 rounded-2xl px-4 py-3 flex items-center justify-center gap-2 text-sm font-semibold" style={{ background: t.surfaceContainer, color: t.onSurface }}>
                       <span className="material-symbols-outlined text-[20px] shrink-0" style={{ color: t.primary }}>square_foot</span>
-                      <span className="line-clamp-2">{p.desc}</span>
+                      <span className="line-clamp-2">{descripcionLimpia(p)}</span>
                     </div>
                   )}
 
-                  <p className="mt-3 text-xl font-bold" style={{ color: t.onSurface }}>Desde {precioTerreno(p.price)}</p>
+                  {/* Ubicación: el link exacto si lo publicaron; si no, la búsqueda por zona */}
+                  <a
+                    href={c.ubicacionUrl(p)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-flex items-center gap-1 text-sm font-bold hover:underline"
+                    style={{ color: t.primary }}
+                  >
+                    <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>location_on</span>
+                    Ver ubicación
+                  </a>
+
+                  <p className="mt-2 text-xl font-bold" style={{ color: t.onSurface }}>Desde {precioTerreno(p.price)}</p>
 
                   {/* Botón: siempre visible en celular; en escritorio aparece al pasar el mouse. */}
                   <div className="w-full overflow-hidden transition-all duration-300 max-h-16 [@media(hover:hover)]:max-h-0 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:max-h-16 [@media(hover:hover)]:group-hover:opacity-100">

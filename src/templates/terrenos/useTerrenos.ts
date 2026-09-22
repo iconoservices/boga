@@ -14,6 +14,14 @@ export function areaDe(p: Producto): string | null {
   return `${m[1]} ${unidad}`;
 }
 
+// Ubicación del terreno. Si quien publica pega un link de Google Maps en la descripción, se usa
+// ese (la ubicación exacta); si no, se busca la zona en Maps (el nombre del terreno metería ruido en la búsqueda). El link no se muestra
+// dentro del texto de la descripción.
+const RE_LINK_MAPA = /https?:\/\/(?:www\.)?(?:google\.[a-z.]+\/maps|maps\.app\.goo\.gl|goo\.gl\/maps)[^\s)]*/i;
+
+/** Descripción sin el link de mapa (para mostrarla en la tarjeta). */
+export const descripcionLimpia = (p: Producto) => p.desc.replace(RE_LINK_MAPA, '').replace(/\s{2,}/g, ' ').trim();
+
 /** "S/ 45,000": sin decimales, como se publican los terrenos. */
 export const precioTerreno = (n: number) => `S/ ${Math.round(n).toLocaleString('en-US')}`;
 
@@ -40,6 +48,14 @@ export function useTerrenos(store: StoreConfig) {
 
   const nombreDeZona = (id: string) => zonas.find((z) => z.id === id)?.label ?? '';
 
+  /** Link para ver el terreno en Google Maps: el exacto si lo publicaron, o la búsqueda por zona. */
+  const ubicacionUrl = (p: Producto) => {
+    const exacto = p.desc.match(RE_LINK_MAPA)?.[0];
+    if (exacto) return exacto;
+    const consulta = `${nombreDeZona(p.category)} ${store.zona || ''}`.replace(/\s+/g, ' ').trim();
+    return `https://www.google.com/maps/search/${encodeURIComponent(consulta)}`;
+  };
+
   const consultar = (p?: Producto) => {
     const mensaje = p
       ? `Hola ${store.name}, me interesa el terreno "${p.name}" (${soles(p.price)}). ¿Sigue disponible? ¿Me das más información?`
@@ -47,5 +63,5 @@ export function useTerrenos(store: StoreConfig) {
     enviarPedidoPorWhatsApp(store, mensaje);
   };
 
-  return { ...c, busqueda, setBusqueda, zona, setZona, zonas, resultados, nombreDeZona, consultar };
+  return { ...c, busqueda, setBusqueda, zona, setZona, zonas, resultados, nombreDeZona, consultar, ubicacionUrl };
 }

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import type { StoreConfig } from '@/lib/stores.config';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import { inicialesDe } from '../shared/tokens';
-import { useTerrenos, areaDe, precioTerreno } from './useTerrenos';
+import { useTerrenos, areaDe, precioTerreno, descripcionLimpia } from './useTerrenos';
 
 const SERIF = "'Merriweather', Georgia, 'Times New Roman', serif";
 
@@ -31,9 +31,6 @@ export default function TerrenosCampoTemplate({ store }: { store: StoreConfig })
       return next;
     });
   };
-  const mapaUrl = (zona: string) =>
-    `https://www.google.com/maps/search/${encodeURIComponent(`terrenos ${zona} ${store.zona || ''}`.trim())}`;
-
   return (
     <div className="min-h-screen" style={{ background: t.background, color: t.onBackground, fontFamily: t.fontBody }}>
       <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -129,7 +126,7 @@ export default function TerrenosCampoTemplate({ store }: { store: StoreConfig })
                 <div className="relative aspect-[16/10]">
                   <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
                   <a
-                    href={mapaUrl(c.nombreDeZona(p.category))}
+                    href={c.ubicacionUrl(p)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="absolute bottom-3 left-3 rounded-full border px-3 py-1 text-xs font-bold text-white backdrop-blur-sm"
@@ -157,7 +154,7 @@ export default function TerrenosCampoTemplate({ store }: { store: StoreConfig })
                   <p className="text-sm" style={{ color: t.onSurfaceVariant }}>
                     {[c.nombreDeZona(p.category), store.zona].filter(Boolean).join(', ')}
                   </p>
-                  {p.desc && <p className="text-xs line-clamp-2 mt-0.5" style={{ color: t.onSurfaceVariant }}>{p.desc}</p>}
+                  {descripcionLimpia(p) && <p className="text-xs line-clamp-2 mt-0.5" style={{ color: t.onSurfaceVariant }}>{descripcionLimpia(p)}</p>}
 
                   {/* Pie: quién lo vende + botón, como en el portal de referencia */}
                   <div className="mt-auto pt-4 flex items-center justify-between gap-3">
