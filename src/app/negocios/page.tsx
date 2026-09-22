@@ -8,7 +8,6 @@
 import React from 'react';
 import Link from 'next/link';
 import NegociosPlanes from '@/components/NegociosPlanes';
-import NegociosHeroImagen from '@/components/NegociosHeroImagen';
 
 const REGISTRO = '/negocios/registro';
 
@@ -40,6 +39,10 @@ export default function NegociosPage() {
             <a href="#precios" className="font-label-md text-label-md text-secondary hover:text-primary transition-colors">Planes</a>
             <a href="#como-funciona" className="font-label-md text-label-md text-secondary hover:text-primary transition-colors">Cómo funciona</a>
             <a href="#soluciones" className="font-label-md text-label-md text-secondary hover:text-primary transition-colors">Soluciones</a>
+            <Link href="/mostrador" className="font-label-md text-label-md text-secondary hover:text-primary transition-colors flex items-center gap-1">
+              <span className="material-symbols-outlined text-[16px]">shelves</span>
+              Mostrador
+            </Link>
           </div>
           <nav className="flex items-center gap-3">
             <Link
@@ -68,39 +71,39 @@ export default function NegociosPage() {
           <div className="absolute -top-24 -right-24 w-[420px] h-[420px] bg-primary/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
           <div className="absolute top-40 -left-32 w-[320px] h-[320px] bg-tertiary/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
 
-          <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-center">
-            <div className="relative order-1 lg:order-2 -mx-container-margin sm:mx-0">
-              <div className="relative rounded-none sm:rounded-2xl lg:rounded-3xl overflow-hidden shadow-xl sm:shadow-2xl w-full max-w-[580px] mx-auto lg:ml-auto">
-                <NegociosHeroImagen />
-              </div>
-            </div>
-
-            <div className="flex flex-col items-start text-left gap-5 order-2 lg:order-1">
-              <span className="font-label-md text-label-md text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full">
-                Infraestructura digital para negocios locales
-              </span>
-              <h1 className="font-headline-lg text-on-background text-4xl md:text-5xl font-extrabold tracking-tight leading-[1.05]">
-                Digitaliza tu negocio con <span className="text-primary">BogaHub</span>
-              </h1>
-              <p className="text-secondary font-body-lg text-base md:text-lg max-w-[480px]">
-                Tu propio catálogo online, pedidos por WhatsApp y fidelización de clientes.
-                Y cuando Boga Market abra en tu ciudad, entras al grupo de comercios locales
-                donde te encuentra gente nueva.
-              </p>
-              <div className="flex flex-col sm:flex-row items-center gap-3 mt-1">
-                <Link
-                  href={REGISTRO}
-                  className="bg-primary text-on-primary font-bold text-sm px-7 py-3.5 rounded-full shadow-[0_8px_24px_-6px_rgba(184,19,14,0.5)] hover:opacity-90 hover:shadow-[0_10px_28px_-6px_rgba(184,19,14,0.6)] transition-all active:scale-95"
-                >
-                  Crear tu tienda
-                </Link>
-                <Link
-                  href="/"
-                  className="text-on-background font-semibold text-sm px-7 py-3.5 rounded-full border border-surface-container-highest hover:border-primary hover:text-primary transition-colors"
-                >
-                  Ver la app
-                </Link>
-              </div>
+          <div className="flex flex-col items-center text-center max-w-[760px] mx-auto gap-6 py-6 md:py-10">
+            <span className="font-label-md text-label-md text-primary bg-primary/10 border border-primary/20 px-4 py-1.5 rounded-full">
+              Infraestructura digital para negocios locales
+            </span>
+            <h1 className="font-headline-lg text-on-background text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.05]">
+              Digitaliza tu negocio con <span className="text-primary">BogaHub</span>
+            </h1>
+            <p className="text-secondary font-body-lg text-base sm:text-lg md:text-xl max-w-[620px] leading-relaxed">
+              Tu propio catálogo online, pedidos por WhatsApp y fidelización de clientes.
+              Y cuando Boga Market abra en tu ciudad, entras al grupo de comercios locales
+              donde te encuentra gente nueva.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3 mt-2">
+              <Link
+                href={REGISTRO}
+                className="bg-primary text-on-primary font-bold text-sm sm:text-base px-8 py-3.5 rounded-full shadow-[0_8px_24px_-6px_rgba(184,19,14,0.5)] hover:opacity-90 hover:shadow-[0_10px_28px_-6px_rgba(184,19,14,0.6)] transition-all active:scale-95 flex items-center gap-2"
+              >
+                <span>Crear tu tienda</span>
+                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+              </Link>
+              <Link
+                href="/mostrador"
+                className="bg-surface-container-lowest text-on-surface font-bold text-sm sm:text-base px-6 py-3.5 rounded-full border border-surface-container-highest hover:border-primary hover:text-primary transition-all active:scale-95 flex items-center gap-2 shadow-sm"
+              >
+                <span className="material-symbols-outlined text-primary text-[20px]">shelves</span>
+                <span>Ver plantillas (Mostrador)</span>
+              </Link>
+              <Link
+                href="/"
+                className="text-secondary hover:text-on-background font-semibold text-sm px-5 py-3.5 rounded-full border border-transparent hover:border-surface-container-highest transition-colors"
+              >
+                Ver la app
+              </Link>
             </div>
           </div>
         </section>
