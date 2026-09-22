@@ -491,7 +491,30 @@ export default function HomePage() {
           </section>
         )}
 
-        {/* Guía rápida — ¿Primera vez en Pucallpa? (debajo del banner) */}
+        {/* Qué hacer en Pucallpa hoy — justo después de Market */}
+        {queHacer.length > 0 && (
+        <section className="flex flex-col gap-4">
+          <SectionHead title="Qué hacer en Pucallpa hoy" href="/eventos" cta="Ver agenda" />
+          <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
+            {queHacer.map((e) => (
+              <Link href="/eventos" key={e.id} className="min-w-[220px] w-[220px] lg:min-w-[260px] lg:w-[260px] bg-white border border-surface-container-highest overflow-hidden shadow-sm rounded-2xl snap-start group flex flex-col">
+                <div className="relative h-32 overflow-hidden bg-surface-container-low">
+                  <img src={e.img} alt={e.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <span className="absolute top-2 left-2 bg-white/95 backdrop-blur-sm text-on-surface text-[10px] font-label-md px-2 py-0.5 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[12px]">schedule</span>{e.tag}
+                  </span>
+                </div>
+                <div className="p-3 flex flex-col gap-1 flex-1">
+                  <h4 className="font-headline-sm text-sm text-on-surface line-clamp-2">{e.title}</h4>
+                  <span className="text-secondary font-label-md text-[11px] mt-auto"><span className="font-price-lg text-primary text-sm">{e.meta}</span></span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+        )}
+
+        {/* Guía rápida — ¿Primera vez en Pucallpa? */}
         <section className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
             <div className="flex items-end justify-between gap-4">
@@ -530,29 +553,6 @@ export default function HomePage() {
             ))}
           </div>
         </section>
-
-        {/* Qué hacer en Pucallpa hoy */}
-        {queHacer.length > 0 && (
-        <section className="flex flex-col gap-4">
-          <SectionHead title="Qué hacer en Pucallpa hoy" href="/eventos" cta="Ver agenda" />
-          <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
-            {queHacer.map((e) => (
-              <Link href="/eventos" key={e.id} className="min-w-[220px] w-[220px] lg:min-w-[260px] lg:w-[260px] bg-white border border-surface-container-highest overflow-hidden shadow-sm rounded-2xl snap-start group flex flex-col">
-                <div className="relative h-32 overflow-hidden bg-surface-container-low">
-                  <img src={e.img} alt={e.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <span className="absolute top-2 left-2 bg-white/95 backdrop-blur-sm text-on-surface text-[10px] font-label-md px-2 py-0.5 flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[12px]">schedule</span>{e.tag}
-                  </span>
-                </div>
-                <div className="p-3 flex flex-col gap-1 flex-1">
-                  <h4 className="font-headline-sm text-sm text-on-surface line-clamp-2">{e.title}</h4>
-                  <span className="text-secondary font-label-md text-[11px] mt-auto"><span className="font-price-lg text-primary text-sm">{e.meta}</span></span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-        )}
 
         {/* Tiendas de comida — solo rubro comida/bebida, con su logo y sus productos */}
         {tiendasComida.length > 0 && (
