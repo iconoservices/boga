@@ -11,15 +11,13 @@ import { fetchChamba, haceCuanto, fechaAviso } from '@/lib/chamba';
 
 type Vista = 'servicios' | 'empleos';
 
+// Discreto a propósito: una línea de texto (sin caja ni fondo) al pie de cada aviso, no una
+// tarjeta de alerta que compita visualmente con el puesto o el botón de postular.
 function AvisoSeguridadEmpleo() {
   return (
-    <p className="flex items-start gap-1.5 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-2 text-[11px] leading-snug text-amber-900">
-      <span className="material-symbols-outlined text-amber-600 text-[15px] shrink-0 mt-0.5">warning</span>
-      <span>
-        <b>Aviso de Seguridad Boga:</b> este es un aviso público que BogaHub solo indexa, no es el
-        empleador. Ninguna empresa seria te pedirá dinero por exámenes médicos, uniformes o
-        capacitaciones. No hagas depósitos por adelantado.
-      </span>
+    <p className="flex items-center gap-1 text-[10px] font-label-md text-red-600/80">
+      <span className="material-symbols-outlined text-[12px]">error</span>
+      Ninguna empresa seria pide dinero por adelantado.
     </p>
   );
 }
