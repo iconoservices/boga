@@ -32,9 +32,12 @@ export function useCiudad() {
   const [detectando, setDetectando] = useState(false);
   const [avisoGeo, setAvisoGeo] = useState<string | null>(null);
 
+  const cerrarAviso = useCallback(() => setAvisoGeo(null), []);
+
   const elegir = useCallback((s: string) => {
     setSlug(s || null);
     guardarCiudad(s);
+    setAvisoGeo(null);
   }, []);
 
   const detectar = useCallback(async () => {
@@ -48,21 +51,20 @@ export function useCiudad() {
       } else {
         setAvisoGeo(
           r.nombreCrudo
-            ? `Detectamos "${r.nombreCrudo}", que todavía no está en la lista. Elígela a mano.`
+            ? `Detectamos "${r.nombreCrudo}". Elígela de la lista.`
             : 'No pudimos ubicar tu ciudad. Elígela de la lista.',
         );
       }
       return;
     }
-    // Mensajes que dicen qué hacer (en Android el permiso queda bloqueado si se rechazó o se ignoró
-    // el aviso del navegador, y ya no vuelve a preguntar hasta que se cambie a mano).
+    // Mensajes concisos que se adaptan a la pantalla móvil
     const mensajes: Record<string, string> = {
       'permiso-denegado':
-        'La ubicación está bloqueada para BogaHub. Toca el candado de la barra de direcciones → Permisos → Ubicación → Permitir, y vuelve a intentar. O elige tu ciudad de la lista.',
+        'Ubicación bloqueada en tu navegador. Toca el candado para permitir o elige tu ciudad en la lista.',
       'no-disponible':
-        'Tu celular no pudo darnos la ubicación. Activa la ubicación (GPS) del teléfono y vuelve a intentar, o elige tu ciudad de la lista.',
+        'GPS no disponible en este dispositivo. Elige tu ciudad en la lista.',
       timeout:
-        'La ubicación tardó demasiado. Activa el GPS del teléfono y vuelve a intentar, o elige tu ciudad de la lista.',
+        'La ubicación tardó demasiado. Elige tu ciudad en la lista.',
     };
     setAvisoGeo(mensajes[r.motivo] ?? 'No pudimos obtener tu ubicación. Elige tu ciudad de la lista.');
   }, [elegir]);
@@ -89,6 +91,7 @@ export function useCiudad() {
     listo,
     detectando,
     avisoGeo,
+    cerrarAviso,
     elegir,
     detectar,
   };
@@ -98,7 +101,7 @@ export function useCiudad() {
 // Reemplaza el "Entregar en <dirección>" hardcodeado del AppHeader. Muestra la
 // ciudad elegida y, al tocar, abre un panel con la lista + "usar mi ubicación".
 export function CitySwitcher({ variant }: { variant: 'mobile' | 'desktop' }) {
-  const { slug, ciudad, listo, detectando, avisoGeo, elegir, detectar } = useCiudad();
+  const { slug, ciudad, listo, detectando, avisoGeo, cerrarAviso, elegir, detectar } = useCiudad();
   const [abierto, setAbierto] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -121,7 +124,10 @@ export function CitySwitcher({ variant }: { variant: 'mobile' | 'desktop' }) {
     <div className="relative" ref={ref}>
       <button
         type="button"
-        onClick={() => setAbierto((v) => !v)}
+        onClick={() => {
+          setAbierto((v) => !v);
+          if (!abierto) cerrarAviso();
+        }}
         className={
           variant === 'mobile'
             ? 'flex items-center gap-2 min-w-0 flex-1 pr-2 text-left'
@@ -158,14 +164,32 @@ export function CitySwitcher({ variant }: { variant: 'mobile' | 'desktop' }) {
         )}
       </button>
 
-      {/* Si la deteccion automatica al entrar fallo (permiso denegado, ciudad
-          no reconocida, etc.), antes ese aviso quedaba enterrado dentro del
-          dropdown cerrado: el header seguia diciendo "Elige tu ciudad" sin
-          ninguna pista de que ya lo intento y por que no funciono. */}
+      {/* Aviso adaptativo si falló la detección: no desborda la pantalla y se puede cerrar */}
       {!abierto && avisoGeo && (
-        <p className="absolute left-0 top-full mt-0.5 text-[10px] text-tertiary font-body-md whitespace-nowrap z-[55]">
-          {avisoGeo}
-        </p>
+        <div className="absolute left-0 top-full mt-2 z-[70] w-[min(calc(100vw-32px),320px)] bg-white/95 backdrop-blur-md border border-surface-container-highest shadow-[0_10px_25px_rgba(0,0,0,0.12)] rounded-2xl p-2.5 flex items-start gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
+          <span
+            className="material-symbols-outlined text-[17px] text-amber-600 shrink-0 mt-0.5"
+            style={{ fontVariationSettings: "'FILL' 1" }}
+          >
+            location_off
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] text-on-surface font-body-md leading-snug whitespace-normal break-words">
+              {avisoGeo}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              cerrarAviso();
+            }}
+            aria-label="Cerrar aviso"
+            className="w-5 h-5 rounded-full hover:bg-surface-container flex items-center justify-center text-secondary/60 hover:text-secondary shrink-0"
+          >
+            <span className="material-symbols-outlined text-[14px]">close</span>
+          </button>
+        </div>
       )}
 
       {abierto && (
@@ -183,7 +207,10 @@ export function CitySwitcher({ variant }: { variant: 'mobile' | 'desktop' }) {
           </button>
 
           {avisoGeo && (
-            <p className="px-3 py-1 text-xs text-tertiary font-body-md">{avisoGeo}</p>
+            <div className="mx-2 my-1 px-2.5 py-1.5 rounded-lg bg-amber-50 border border-amber-200 flex items-start gap-1.5">
+              <span className="material-symbols-outlined text-[14px] text-amber-700 shrink-0 mt-0.5">info</span>
+              <p className="text-[11px] text-amber-900 font-body-md leading-tight whitespace-normal break-words">{avisoGeo}</p>
+            </div>
           )}
 
           <div className="my-1 border-t border-surface-container-highest" />
