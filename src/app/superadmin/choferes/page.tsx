@@ -42,6 +42,8 @@ export default function ChoferesAdmin() {
   const [msg, setMsg] = useState('');
   const [uploadingImg, setUploadingImg] = useState(false);
   const [uploadingVeh, setUploadingVeh] = useState(false);
+  const [detalle, setDetalle] = useState<DriverRow | null>(null);
+  const [fotoZoom, setFotoZoom] = useState<string | null>(null);
   const imgRef = useRef<HTMLInputElement>(null);
   const vehRef = useRef<HTMLInputElement>(null);
 
@@ -301,17 +303,27 @@ export default function ChoferesAdmin() {
             <div className="flex flex-col gap-2">
               {postulaciones.map((p) => (
                 <div key={p.id} className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-4 flex flex-wrap items-center gap-4">
-                  {/* Miniaturas de fotos si existen */}
+                  {/* Miniaturas de fotos con clic para zoom */}
                   <div className="flex items-center gap-2 shrink-0">
                     {p.foto_perfil ? (
-                      <img src={p.foto_perfil} alt="perfil" className="w-12 h-12 rounded-full object-cover border-2 border-primary/30" />
+                      <button type="button" onClick={() => setFotoZoom(p.foto_perfil)} title="Clic para ampliar foto de perfil" className="relative group cursor-pointer">
+                        <img src={p.foto_perfil} alt="perfil" className="w-12 h-12 rounded-full object-cover border-2 border-primary/40 group-hover:scale-105 transition-transform" />
+                        <span className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] transition-opacity">
+                          <span className="material-symbols-outlined text-[16px]">zoom_in</span>
+                        </span>
+                      </button>
                     ) : (
                       <div className="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-secondary text-xs font-bold">
                         <span className="material-symbols-outlined text-[20px]">person</span>
                       </div>
                     )}
                     {p.foto_vehiculo && (
-                      <img src={p.foto_vehiculo} alt="vehículo" className="w-14 h-12 rounded-lg object-cover border border-surface-container-highest" />
+                      <button type="button" onClick={() => setFotoZoom(p.foto_vehiculo)} title="Clic para ampliar foto de vehículo" className="relative group cursor-pointer">
+                        <img src={p.foto_vehiculo} alt="vehículo" className="w-14 h-12 rounded-lg object-cover border border-surface-container-highest group-hover:scale-105 transition-transform" />
+                        <span className="absolute inset-0 bg-black/40 rounded-lg opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] transition-opacity">
+                          <span className="material-symbols-outlined text-[16px]">zoom_in</span>
+                        </span>
+                      </button>
                     )}
                   </div>
 
@@ -326,8 +338,12 @@ export default function ChoferesAdmin() {
                     <p className="text-xs text-secondary mt-1">WhatsApp: <a href={`https://wa.me/${p.whatsapp?.replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="text-primary hover:underline font-bold">{p.whatsapp}</a></p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <button onClick={() => desdePostulacion(p)} className="bg-primary text-on-primary text-xs font-bold px-3.5 py-2 rounded-lg shadow-sm hover:opacity-95">Aprobar → ficha</button>
-                    <button onClick={() => rechazar(p)} className="text-xs font-bold px-3 py-2 rounded-lg border border-surface-container-highest text-secondary hover:text-red-600">Rechazar</button>
+                    <button type="button" onClick={() => setDetalle(p)} className="flex items-center gap-1 text-xs font-bold px-3 py-2 rounded-lg border border-surface-container-highest text-on-surface hover:bg-surface-container-low transition-colors">
+                      <span className="material-symbols-outlined text-[15px]">zoom_in</span>
+                      Ver detalle
+                    </button>
+                    <button onClick={() => desdePostulacion(p)} className="bg-primary text-on-primary text-xs font-bold px-3.5 py-2 rounded-lg shadow-sm hover:opacity-95 transition-opacity">Aprobar → ficha</button>
+                    <button onClick={() => rechazar(p)} className="text-xs font-bold px-3 py-2 rounded-lg border border-surface-container-highest text-secondary hover:text-red-600 transition-colors">Rechazar</button>
                   </div>
                 </div>
               ))}
@@ -362,6 +378,128 @@ export default function ChoferesAdmin() {
           )}
         </section>
       </main>
+
+      {/* Modal de Detalle completo de la Postulación */}
+      {detalle && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setDetalle(null)}>
+          <div className="bg-surface-container-lowest border border-surface-container-highest rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl p-6 flex flex-col gap-5" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between gap-3 border-b border-surface-container-highest pb-3">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Postulación Taxi Seguro</span>
+                <h3 className="font-headline-md text-xl text-on-surface">{detalle.nombre}</h3>
+                <p className="text-xs text-secondary">{detalle.tipo} · {detalle.ciudad}</p>
+              </div>
+              <button type="button" onClick={() => setDetalle(null)} className="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-secondary">
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
+
+            {/* Fotos grandes */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-surface-container-low rounded-xl p-3 text-center border border-surface-container-highest">
+                <p className="text-[11px] font-bold text-secondary mb-2">Foto de perfil</p>
+                {detalle.foto_perfil ? (
+                  <img
+                    src={detalle.foto_perfil}
+                    alt="perfil"
+                    onClick={() => setFotoZoom(detalle.foto_perfil)}
+                    className="w-full h-36 rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity border border-surface-container-highest"
+                    title="Clic para ver en pantalla completa"
+                  />
+                ) : (
+                  <div className="h-36 flex items-center justify-center text-secondary text-xs">Sin foto</div>
+                )}
+              </div>
+              <div className="bg-surface-container-low rounded-xl p-3 text-center border border-surface-container-highest">
+                <p className="text-[11px] font-bold text-secondary mb-2">Foto del vehículo</p>
+                {detalle.foto_vehiculo ? (
+                  <img
+                    src={detalle.foto_vehiculo}
+                    alt="vehículo"
+                    onClick={() => setFotoZoom(detalle.foto_vehiculo)}
+                    className="w-full h-36 rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity border border-surface-container-highest"
+                    title="Clic para ver en pantalla completa"
+                  />
+                ) : (
+                  <div className="h-36 flex items-center justify-center text-secondary text-xs">Sin foto</div>
+                )}
+              </div>
+            </div>
+
+            {/* Datos detallados */}
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="bg-surface-container-low p-2.5 rounded-lg">
+                <span className="text-[10px] text-secondary font-bold uppercase block">🪪 DNI</span>
+                <span className="font-mono font-bold text-sm text-on-surface">{detalle.dni || 'No registrado'}</span>
+              </div>
+              <div className="bg-surface-container-low p-2.5 rounded-lg">
+                <span className="text-[10px] text-secondary font-bold uppercase block">🚘 Placa</span>
+                <span className="font-mono font-bold text-sm text-on-surface">{detalle.placa || 'Sin placa'}</span>
+              </div>
+              <div className="bg-surface-container-low p-2.5 rounded-lg">
+                <span className="text-[10px] text-secondary font-bold uppercase block">📱 WhatsApp</span>
+                <a href={`https://wa.me/${detalle.whatsapp?.replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="text-primary font-bold hover:underline">
+                  {detalle.whatsapp} ↗
+                </a>
+              </div>
+              <div className="bg-surface-container-low p-2.5 rounded-lg">
+                <span className="text-[10px] text-secondary font-bold uppercase block">🕒 Horario habitual</span>
+                <span className="font-medium text-on-surface">{detalle.horario || 'No especificado'}</span>
+              </div>
+              <div className="bg-surface-container-low p-2.5 rounded-lg col-span-2">
+                <span className="text-[10px] text-secondary font-bold uppercase block">🏢 Unidad / Comité / Zona</span>
+                <span className="font-medium text-on-surface">{detalle.zona || 'Ninguno'}</span>
+              </div>
+              {detalle.mensaje && (
+                <div className="bg-surface-container-low p-2.5 rounded-lg col-span-2">
+                  <span className="text-[10px] text-secondary font-bold uppercase block">💬 Mensaje del chofer</span>
+                  <p className="font-medium text-on-surface italic mt-0.5">“{detalle.mensaje}”</p>
+                </div>
+              )}
+              {detalle.created_at && (
+                <div className="text-[10px] text-secondary col-span-2 pt-1">
+                  Enviado el: {new Date(detalle.created_at).toLocaleString('es-PE')}
+                </div>
+              )}
+            </div>
+
+            {/* Acciones del modal */}
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-surface-container-highest">
+              <button
+                type="button"
+                onClick={() => { const p = detalle; setDetalle(null); rechazar(p); }}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-red-600 border border-red-200 hover:bg-red-50"
+              >
+                Rechazar
+              </button>
+              <button
+                type="button"
+                onClick={() => { const p = detalle; setDetalle(null); desdePostulacion(p); }}
+                className="px-5 py-2 rounded-xl text-xs font-bold bg-primary text-on-primary shadow-sm hover:opacity-95"
+              >
+                Aprobar y cargar a formulario →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox para ampliar cualquier foto a pantalla completa */}
+      {fotoZoom && (
+        <div className="fixed inset-0 z-60 bg-black/80 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setFotoZoom(null)}>
+          <div className="relative max-w-3xl max-h-[85vh]">
+            <img src={fotoZoom} alt="Zoom" className="max-w-full max-h-[85vh] rounded-xl shadow-2xl object-contain" />
+            <button
+              type="button"
+              onClick={() => setFotoZoom(null)}
+              className="absolute -top-3 -right-3 w-9 h-9 rounded-full bg-white text-black shadow-lg flex items-center justify-center hover:scale-105 transition-transform"
+            >
+              <span className="material-symbols-outlined text-[20px]">close</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       </div>
     </div>
   );
