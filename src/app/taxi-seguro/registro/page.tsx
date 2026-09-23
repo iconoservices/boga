@@ -69,17 +69,29 @@ export default function RegistroChoferPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const { error: err } = await supabase.from('driver_requests').insert({
-      nombre, whatsapp, tipo: tipo || null, placa: placa || null,
-      zona: zona || null, ciudad: ciudad || null,
-      experiencia: experiencia || null, horario: horario || null,
-      mensaje: mensaje || null,
-      foto_perfil: fotoPerfil || null,
-      foto_vehiculo: fotoVehiculo || null,
-    });
-    setLoading(false);
-    if (err) { setError('No pudimos enviar tu postulación. Intenta de nuevo en unos minutos.'); return; }
-    setSent(true);
+
+    try {
+      const res = await fetch('/api/drivers/registro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre, whatsapp, tipo: tipo || null, placa: placa || null,
+          zona: zona || null, ciudad: ciudad || null,
+          experiencia: experiencia || null, horario: horario || null,
+          mensaje: mensaje || null,
+          foto_perfil: fotoPerfil || null,
+          foto_vehiculo: fotoVehiculo || null,
+        }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Error al enviar');
+      setSent(true);
+    } catch (err: any) {
+      setError(err.message || 'No pudimos enviar tu postulación. Intenta de nuevo en unos minutos.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
