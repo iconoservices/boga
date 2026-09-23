@@ -186,7 +186,7 @@ const terminos: DocLegal = {
     {
       n: '7', titulo: 'Cancelaciones, devoluciones y reclamos',
       bloques: [
-        { tipo: 'p', texto: 'Las condiciones de cancelación y devolución dependen del servicio y están en cada Anexo. Como regla general, tenés derecho a los remedios que te da el Código de Protección y Defensa del Consumidor cuando el producto o servicio no es idóneo.' },
+        { tipo: 'p', texto: 'BogaHub opera como plataforma intermediaria. Las condiciones de despacho, cambio y devolución son establecidas y asumidas por cada negocio o proveedor independiente conforme a la ley peruana. BogaHub no gestiona almacenes físicos ni despachos directos de productos de terceros.' },
         { tipo: 'p', texto: `Para cualquier reclamo, escribí primero a ${E.email} o usá el Centro de Ayuda. Si no llegamos a una solución, podés dejar tu queja en el Libro de Reclamaciones de BogaHub, que encontrás en la app y en el sitio web, y acudir a INDECOPI.` },
       ],
     },
@@ -442,7 +442,7 @@ const anexoMarket: DocLegal = {
   slug: 'market',
   titulo: 'Anexo · Boga Market, Pensión y Delivery',
   tipo: 'anexo',
-  resumen: 'Cómo funciona el Market: es una guía de tiendas de tu ciudad, le pagás al negocio directo, y BogaHub coordina la entrega.',
+  resumen: 'Cómo funciona el Market: es una plataforma y guía de tiendas de tu ciudad. Le compras y coordinas la entrega directamente con cada negocio independiente.',
   estado: 'revision-interna',
   aplicaA: 'Quien usa el Market o Pensión para comprar en negocios locales.',
   actualizado: FECHA_BORRADOR,
@@ -462,7 +462,7 @@ const anexoMarket: DocLegal = {
     {
       n: '1', titulo: 'Qué es el Market',
       bloques: [
-        { tipo: 'p', texto: 'Boga Market es una guía de tiendas, restaurantes y negocios de tu ciudad: los encontrás, ves su catálogo y armás tu pedido en un solo lugar. BogaHub no es una tienda: no te vende los productos.' },
+        { tipo: 'p', texto: 'Boga Market es una plataforma tecnológica y vitrina digital de comercios locales: exploras catálogos y conectas con tiendas independientes en un solo lugar. BogaHub es únicamente la plataforma intermediaria, no es propietario ni vendedor de los productos publicados.' },
         { tipo: 'p', texto: 'El Market funciona ciudad por ciudad. Donde BogaHub todavía no opera, podés dejar tu interés en la lista de espera.' },
       ],
     },
@@ -475,9 +475,10 @@ const anexoMarket: DocLegal = {
       ],
     },
     {
-      n: '3', titulo: 'Entrega',
+      n: '3', titulo: 'Entrega y logística',
       bloques: [
-        { tipo: 'p', texto: 'BogaHub coordina la entrega con un repartidor. Los tiempos son estimados y dependen de la distancia, el clima y la demanda. Tenés que dar una dirección correcta y estar disponible para recibir. Si no se puede entregar por causas tuyas (dirección errada, no contestás), puede cobrarse el envío igual.' },
+        { tipo: 'p', texto: 'BogaHub NO presta servicios de transporte, logística ni despacho de mercadería. Cada tienda o negocio independiente es el único y exclusivo responsable de gestionar el método de entrega, los costos de envío, los tiempos de despacho o la modalidad de recojo en tienda acordada con el comprador.' },
+        { tipo: 'p', texto: 'Cualquier tiempo o tarifa de entrega mostrada es de carácter referencial o fijada directamente por el comercio. El comprador y el comercio coordinan directamente la recepción conforme de los productos.' },
       ],
     },
     {

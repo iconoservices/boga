@@ -20,6 +20,7 @@ export default function RegistroChoferPage() {
   const [zona, setZona] = useState('');
   const [ciudad, setCiudad] = useState('');
   const [experiencia, setExperiencia] = useState('');
+  const [horario, setHorario] = useState('');
   const [mensaje, setMensaje] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -41,7 +42,8 @@ export default function RegistroChoferPage() {
     const { error: err } = await supabase.from('driver_requests').insert({
       nombre, whatsapp, tipo: tipo || null, placa: placa || null,
       zona: zona || null, ciudad: ciudad || null,
-      experiencia: experiencia || null, mensaje: mensaje || null,
+      experiencia: experiencia || null, horario: horario || null,
+      mensaje: mensaje || null,
     });
     setLoading(false);
     if (err) { setError('No pudimos enviar tu postulación. Intenta de nuevo en unos minutos.'); return; }
@@ -139,7 +141,7 @@ export default function RegistroChoferPage() {
                   </div>
                   <div style={{ flex: 1 }}>
                     <label style={label}>Placa</label>
-                    <input type="text" value={placa} onChange={(e) => setPlaca(e.target.value)} placeholder="4312-8U" style={input} onFocus={onFocus} onBlur={onBlur} />
+                    <input required type="text" value={placa} onChange={(e) => setPlaca(e.target.value)} placeholder="4312-8U" style={input} onFocus={onFocus} onBlur={onBlur} />
                   </div>
                 </div>
                 <div style={{ marginBottom: '14px' }}>
@@ -150,16 +152,16 @@ export default function RegistroChoferPage() {
                   </select>
                 </div>
                 <div style={{ marginBottom: '14px' }}>
-                  <label style={label}>Comité / zona / paradero</label>
-                  <input type="text" value={zona} onChange={(e) => setZona(e.target.value)} placeholder="Comité 14 · Yarinacocha" style={input} onFocus={onFocus} onBlur={onBlur} />
+                  <label style={label}>Unidad <span style={{ fontWeight: 400, color: '#9fb3ab' }}>(opcional — ej: Comité 14, Empresa Veloz)</span></label>
+                  <input type="text" value={zona} onChange={(e) => setZona(e.target.value)} placeholder="Comité 14, Transportes Ucayali…" style={input} onFocus={onFocus} onBlur={onBlur} />
                 </div>
                 <div style={{ marginBottom: '14px' }}>
-                  <label style={label}>Años de experiencia</label>
-                  <input type="text" value={experiencia} onChange={(e) => setExperiencia(e.target.value)} placeholder="5 años transportando familias" style={input} onFocus={onFocus} onBlur={onBlur} />
+                  <label style={label}>Horario disponible</label>
+                  <input required type="text" value={horario} onChange={(e) => setHorario(e.target.value)} placeholder="Lun–Sáb 6am–9pm · Domingos mañanas" style={input} onFocus={onFocus} onBlur={onBlur} />
                 </div>
                 <div style={{ marginBottom: '20px' }}>
-                  <label style={label}>Algo más que quieras contarnos (opcional)</label>
-                  <textarea value={mensaje} onChange={(e) => setMensaje(e.target.value)} rows={3} placeholder="Rutas que cubres, horario, referencias…" style={{ ...input, resize: 'vertical' }} onFocus={onFocus} onBlur={onBlur} />
+                  <label style={label}>Algo más que quieras contarnos <span style={{ fontWeight: 400, color: '#9fb3ab' }}>(opcional)</span></label>
+                  <textarea value={mensaje} onChange={(e) => setMensaje(e.target.value)} rows={3} placeholder="Rutas que cubres, referencias de vecinos, años de experiencia…" style={{ ...input, resize: 'vertical' }} onFocus={onFocus} onBlur={onBlur} />
                 </div>
                 {error && <p style={{ fontSize: '12px', color: '#dc2626', fontWeight: 600, marginBottom: '14px' }}>{error}</p>}
                 <button type="submit" disabled={loading} style={{
