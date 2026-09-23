@@ -69,8 +69,10 @@ export async function GET() {
         imageUrl = 'https://bogahub.app/icon.png';
       }
 
-      const inStock = p.stock === undefined || p.stock === null || p.stock > 0;
-      const availability = inStock ? 'in_stock' : 'out_of_stock';
+      // En Boga, los comercios operan por catálogo activo (no con inventario numérico estricto).
+      // Si el producto está Activo, se reporta 'in_stock' a Google a menos que explícitamente sea 'Agotado'.
+      const isAgotado = p.status === 'Agotado' || p.status === 'Sin stock' || (p.stock !== null && p.stock !== undefined && p.stock < 0);
+      const availability = isAgotado ? 'out_of_stock' : 'in_stock';
       const priceNum = typeof p.price === 'number' ? p.price : parseFloat(p.price) || 0;
       const formattedPrice = priceNum.toFixed(2);
       const desc = (p.description || p.name || 'Producto disponible en ' + storeBrand).slice(0, 5000);
