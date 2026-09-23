@@ -13,7 +13,7 @@ export async function GET() {
 
   const supabase = createClient(supabaseUrl, supabaseKey);
 
-  // 1. Obtener todas las tiendas para mapear subdominios y marcas
+  // 1. Obtener todas las tiendas para resolver URLs correctas (subdominio o ruta)
   const { data: stores } = await supabase
     .from('stores')
     .select('id, name, slug, subdominio_activo, external_url');
@@ -26,13 +26,14 @@ export async function GET() {
     });
   }
 
-  // 2. Obtener todos los productos activos
+  // 2. Obtener todos los productos activos (status != Inactivo)
   const { data: products, error } = await supabase
     .from('products')
     .select('*')
-    .eq('status', 'active');
+    .neq('status', 'Inactivo');
 
   if (error || !products) {
+    console.error('Error cargando productos para feed:', error);
     return new NextResponse('Error cargando productos', { status: 500 });
   }
 
@@ -48,9 +49,8 @@ export async function GET() {
   const xmlItems = products
     .map((p) => {
       const storeInfo = storeMap.get(p.store);
-
-      let productUrl = `https://bogahub.app/producto/${p.slug || p.id}`;
       let storeBrand = 'Boga Hub';
+      let productUrl = `https://bogahub.app/producto/${p.slug || p.id}`;
 
       if (storeInfo) {
         storeBrand = storeInfo.name || storeInfo.slug;
@@ -59,25 +59,33 @@ export async function GET() {
         } else {
           productUrl = `https://bogahub.app/${storeInfo.slug}/producto/${p.slug || p.id}`;
         }
+      } else if (p.store === 'delva') {
+        storeBrand = 'DELVA';
+        productUrl = `https://delva.bogahub.app/producto/${p.slug || p.id}`;
       }
 
-      const imageUrl = p.image || (Array.isArray(p.images) ? p.images[0] : null) || 'https://bogahub.app/icon.png';
+      let imageUrl = p.image || '';
+      if (!imageUrl || (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://'))) {
+        imageUrl = 'https://bogahub.app/icon.png';
+      }
+
       const inStock = p.stock === undefined || p.stock === null || p.stock > 0;
       const availability = inStock ? 'in_stock' : 'out_of_stock';
       const priceNum = typeof p.price === 'number' ? p.price : parseFloat(p.price) || 0;
       const formattedPrice = priceNum.toFixed(2);
+      const desc = (p.description || p.name || 'Producto disponible en ' + storeBrand).slice(0, 5000);
 
       return `    <item>
       <g:id>${escapeXml(String(p.id))}</g:id>
       <g:title>${escapeXml(p.name)}</g:title>
-      <g:description>${escapeXml(p.description || p.name)}</g:description>
+      <g:description>${escapeXml(desc)}</g:description>
       <g:link>${productUrl}</g:link>
       <g:image_link>${escapeXml(imageUrl)}</g:image_link>
       <g:brand>${escapeXml(storeBrand)}</g:brand>
       <g:condition>new</g:condition>
       <g:availability>${availability}</g:availability>
       <g:price>${formattedPrice} PEN</g:price>
-      <g:google_product_category>${escapeXml(p.category || 'Apparel & Accessories')}</g:google_product_category>
+      <g:identifier_exists>no</g:identifier_exists>
     </item>`;
     })
     .join('\n');
