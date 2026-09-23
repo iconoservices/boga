@@ -70,6 +70,7 @@ import MarketTabs from '@/components/MarketTabs';
 import PlazaChatBubble from '@/components/PlazaChatBubble';
 import AvisosBogaPrompt from '@/components/AvisosBogaPrompt';
 import HomeFloatingActions from '@/components/HomeFloatingActions';
+import MetaPixelTracker from '@/components/MetaPixelTracker';
 
 export default function RootLayout({
   children,
@@ -137,6 +138,7 @@ export default function RootLayout({
                 <div className="boga-chrome"><AppFooter /></div>
                 <div className="boga-chrome"><BottomNav /></div>
                 <SharedUI />
+                <MetaPixelTracker />
                 <div className="boga-chrome"><PlazaChatBubble /></div>
                 <div className="boga-chrome"><AvisosBogaPrompt /></div>
                 <div className="boga-chrome"><HomeFloatingActions /></div>
