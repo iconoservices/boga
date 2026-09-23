@@ -179,75 +179,106 @@ export default function ChoferesAdmin() {
           <h2 className="font-headline-md text-lg text-on-surface mb-3">
             {ficha.id ? 'Editar chofer' : 'Agregar chofer'}
           </h2>
-          <form onSubmit={guardar} className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-surface-container-lowest border border-surface-container-highest rounded-2xl p-5">
-            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Nombre
-              <input required value={ficha.nombre} onChange={(e) => setFicha({ ...ficha, nombre: e.target.value })} className={campo} /></label>
-            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Tipo
-              <select value={ficha.tipo} onChange={(e) => setFicha({ ...ficha, tipo: e.target.value })} className={campo}>
-                {TIPOS.map((t) => <option key={t}>{t}</option>)}</select></label>
-            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Comité / unidad
-              <input value={ficha.comite} onChange={(e) => setFicha({ ...ficha, comite: e.target.value })} className={campo} /></label>
-            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Experiencia
-              <input value={ficha.experiencia} onChange={(e) => setFicha({ ...ficha, experiencia: e.target.value })} className={campo} /></label>
-            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Placa
-              <input value={ficha.placa} onChange={(e) => setFicha({ ...ficha, placa: e.target.value })} className={campo} /></label>
-            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Modelo
-              <input value={ficha.modelo} onChange={(e) => setFicha({ ...ficha, modelo: e.target.value })} className={campo} /></label>
-            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Ruta habitual
-              <input value={ficha.ruta} onChange={(e) => setFicha({ ...ficha, ruta: e.target.value })} className={campo} /></label>
-            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Tarifa referencial
-              <input value={ficha.precio} onChange={(e) => setFicha({ ...ficha, precio: e.target.value })} className={campo} placeholder="S/ 4.00 – S/ 5.00" /></label>
-            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Paradero
-              <input value={ficha.paradero} onChange={(e) => setFicha({ ...ficha, paradero: e.target.value })} className={campo} /></label>
-            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">WhatsApp / tel (E.164 sin +)
-              <input value={ficha.tel} onChange={(e) => setFicha({ ...ficha, tel: e.target.value })} className={campo} placeholder="51962000001" /></label>
-            <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Foto del chofer
-              <div className="flex items-center gap-2">
-                {ficha.img && <img src={ficha.img} alt="chofer" className="w-12 h-12 rounded-lg object-cover border border-surface-container-highest shrink-0" />}
-                <button type="button" onClick={() => imgRef.current?.click()}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-surface-container-highest text-xs font-bold text-on-surface bg-surface-container-low hover:bg-surface-container disabled:opacity-50"
-                  disabled={uploadingImg}>
-                  <span className="material-symbols-outlined text-[16px]">upload</span>
-                  {uploadingImg ? 'Subiendo…' : ficha.img ? 'Cambiar foto' : 'Subir foto'}
-                </button>
-                {ficha.img && <button type="button" onClick={() => setFicha(f => ({ ...f, img: '' }))} className="text-xs text-red-500 underline">Quitar</button>}
-                <input ref={imgRef} type="file" accept="image/*" className="hidden" onChange={(e) => subirFoto(e, 'img')} />
+          <form onSubmit={guardar} className="flex flex-col gap-5">
+            {/* Bloque 1: Datos del chofer */}
+            <div className="bg-surface-container-lowest border border-surface-container-highest rounded-2xl p-5">
+              <div className="flex items-center gap-2 mb-4 pb-2 border-b border-surface-container-highest">
+                <span className="material-symbols-outlined text-primary text-[20px]">person</span>
+                <div>
+                  <h3 className="text-sm font-bold text-on-surface">Datos del chofer y vehículo</h3>
+                  <p className="text-[11px] text-secondary">Información pública que corresponde al conductor y su unidad</p>
+                </div>
               </div>
-            </label>
-            <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Foto del vehículo
-              <div className="flex items-center gap-2">
-                {ficha.veh_img && <img src={ficha.veh_img} alt="vehículo" className="w-12 h-12 rounded-lg object-cover border border-surface-container-highest shrink-0" />}
-                <button type="button" onClick={() => vehRef.current?.click()}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-surface-container-highest text-xs font-bold text-on-surface bg-surface-container-low hover:bg-surface-container disabled:opacity-50"
-                  disabled={uploadingVeh}>
-                  <span className="material-symbols-outlined text-[16px]">upload</span>
-                  {uploadingVeh ? 'Subiendo…' : ficha.veh_img ? 'Cambiar foto' : 'Subir foto'}
-                </button>
-                {ficha.veh_img && <button type="button" onClick={() => setFicha(f => ({ ...f, veh_img: '' }))} className="text-xs text-red-500 underline">Quitar</button>}
-                <input ref={vehRef} type="file" accept="image/*" className="hidden" onChange={(e) => subirFoto(e, 'veh_img')} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Nombre completo *
+                  <input required value={ficha.nombre} onChange={(e) => setFicha({ ...ficha, nombre: e.target.value })} className={campo} placeholder="Ej. Juan Pérez" /></label>
+                <label className="flex flex-col gap-1 text-xs font-bold text-secondary">WhatsApp / Teléfono (E.164 sin +) *
+                  <input required value={ficha.tel} onChange={(e) => setFicha({ ...ficha, tel: e.target.value })} className={campo} placeholder="51962000001" /></label>
+                <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Tipo de vehículo
+                  <select value={ficha.tipo} onChange={(e) => setFicha({ ...ficha, tipo: e.target.value })} className={campo}>
+                    {TIPOS.map((t) => <option key={t}>{t}</option>)}</select></label>
+                <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Placa
+                  <input value={ficha.placa} onChange={(e) => setFicha({ ...ficha, placa: e.target.value })} className={campo} placeholder="Ej. 1234-5B" /></label>
+                <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Modelo del vehículo
+                  <input value={ficha.modelo} onChange={(e) => setFicha({ ...ficha, modelo: e.target.value })} className={campo} placeholder="Ej. Mototaxi Bajaj Torito 2022" /></label>
+                <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Comité / N° de Unidad
+                  <input value={ficha.comite} onChange={(e) => setFicha({ ...ficha, comite: e.target.value })} className={campo} placeholder="Ej. Comité Los Pinos - Unidad 42" /></label>
+                <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Años de experiencia
+                  <input value={ficha.experiencia} onChange={(e) => setFicha({ ...ficha, experiencia: e.target.value })} className={campo} placeholder="Ej. 5 años" /></label>
+                <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Ciudad
+                  <select value={ficha.ciudad} onChange={(e) => setFicha({ ...ficha, ciudad: e.target.value })} className={campo}>
+                    {CIUDADES.map((c) => <option key={c.slug} value={c.slug}>{c.nombre}</option>)}</select></label>
+                <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Foto del chofer (perfil)
+                  <div className="flex items-center gap-3 pt-1">
+                    {ficha.img && <img src={ficha.img} alt="chofer" className="w-12 h-12 rounded-full object-cover border-2 border-primary/20 shrink-0" />}
+                    <button type="button" onClick={() => imgRef.current?.click()}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-surface-container-highest text-xs font-bold text-on-surface bg-surface-container-low hover:bg-surface-container disabled:opacity-50"
+                      disabled={uploadingImg}>
+                      <span className="material-symbols-outlined text-[16px]">upload</span>
+                      {uploadingImg ? 'Subiendo a R2…' : ficha.img ? 'Cambiar foto' : 'Subir foto'}
+                    </button>
+                    {ficha.img && <button type="button" onClick={() => setFicha(f => ({ ...f, img: '' }))} className="text-xs text-red-500 hover:underline">Quitar</button>}
+                    <input ref={imgRef} type="file" accept="image/*" className="hidden" onChange={(e) => subirFoto(e, 'img')} />
+                  </div>
+                </label>
+                <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Foto del vehículo
+                  <div className="flex items-center gap-3 pt-1">
+                    {ficha.veh_img && <img src={ficha.veh_img} alt="vehículo" className="w-16 h-12 rounded-lg object-cover border border-surface-container-highest shrink-0" />}
+                    <button type="button" onClick={() => vehRef.current?.click()}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-surface-container-highest text-xs font-bold text-on-surface bg-surface-container-low hover:bg-surface-container disabled:opacity-50"
+                      disabled={uploadingVeh}>
+                      <span className="material-symbols-outlined text-[16px]">upload</span>
+                      {uploadingVeh ? 'Subiendo a R2…' : ficha.veh_img ? 'Cambiar foto' : 'Subir foto'}
+                    </button>
+                    {ficha.veh_img && <button type="button" onClick={() => setFicha(f => ({ ...f, veh_img: '' }))} className="text-xs text-red-500 hover:underline">Quitar</button>}
+                    <input ref={vehRef} type="file" accept="image/*" className="hidden" onChange={(e) => subirFoto(e, 'veh_img')} />
+                  </div>
+                </label>
               </div>
-            </label>
-            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Ciudad
-              <select value={ficha.ciudad} onChange={(e) => setFicha({ ...ficha, ciudad: e.target.value })} className={campo}>
-                {CIUDADES.map((c) => <option key={c.slug} value={c.slug}>{c.nombre}</option>)}</select></label>
-            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Orden (menor = primero)
-              <input type="number" value={ficha.orden} onChange={(e) => setFicha({ ...ficha, orden: Number(e.target.value) })} className={campo} /></label>
-            <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Reseña de un vecino
-              <input value={ficha.resena} onChange={(e) => setFicha({ ...ficha, resena: e.target.value })} className={campo} /></label>
-            <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Autor de la reseña
-              <input value={ficha.resena_autor} onChange={(e) => setFicha({ ...ficha, resena_autor: e.target.value })} className={campo} placeholder="Carmen Soto, comerciante Mercado 2 (5.0 ★)" /></label>
-            <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Sellos de confianza (JSON: {'{label, icon, fuerte?}'})
-              <textarea value={ficha.sellos} onChange={(e) => setFicha({ ...ficha, sellos: e.target.value })} rows={5} className={`${campo} font-mono text-xs`} /></label>
-            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Estado
-              <select value={ficha.status} onChange={(e) => setFicha({ ...ficha, status: e.target.value })} className={campo}>
-                <option value="activo">Activo (visible)</option>
-                <option value="oculto">Oculto</option></select></label>
-            <div className="sm:col-span-2 flex items-center gap-3 pt-1">
-              <button type="submit" disabled={guardando} className="bg-primary text-on-primary font-bold text-sm px-5 py-2.5 rounded-xl disabled:opacity-60">
+            </div>
+
+            {/* Bloque 2: Solo tú / Editorial */}
+            <div className="bg-blue-50/70 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/50 rounded-2xl p-5">
+              <div className="flex items-center gap-2 mb-4 pb-2 border-b border-blue-200/60 dark:border-blue-900/40">
+                <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-[20px]">admin_panel_settings</span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-blue-900 dark:text-blue-200">Solo tú — Control Editorial & Curación</h3>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 uppercase tracking-wider">Admin</span>
+                  </div>
+                  <p className="text-[11px] text-blue-700 dark:text-blue-300">Estos campos los configuras tú para posicionar, destacar o enriquecer la ficha en la web pública</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label className="flex flex-col gap-1 text-xs font-bold text-blue-950 dark:text-blue-200">Ruta habitual / Zona
+                  <input value={ficha.ruta} onChange={(e) => setFicha({ ...ficha, ruta: e.target.value })} className={campo} placeholder="Ej. Mercado Central - Urb. Santa Rosa" /></label>
+                <label className="flex flex-col gap-1 text-xs font-bold text-blue-950 dark:text-blue-200">Tarifa referencial
+                  <input value={ficha.precio} onChange={(e) => setFicha({ ...ficha, precio: e.target.value })} className={campo} placeholder="Ej. S/ 4.00 – S/ 6.00" /></label>
+                <label className="flex flex-col gap-1 text-xs font-bold text-blue-950 dark:text-blue-200">Paradero habitual
+                  <input value={ficha.paradero} onChange={(e) => setFicha({ ...ficha, paradero: e.target.value })} className={campo} placeholder="Ej. Esquina Jr. Comercio con Grau" /></label>
+                <label className="flex flex-col gap-1 text-xs font-bold text-blue-950 dark:text-blue-200">Orden en lista (menor = sale primero)
+                  <input type="number" value={ficha.orden} onChange={(e) => setFicha({ ...ficha, orden: Number(e.target.value) })} className={campo} placeholder="0" /></label>
+                <label className="flex flex-col gap-1 text-xs font-bold text-blue-950 dark:text-blue-200 sm:col-span-2">Reseña o testimonio de recomendación
+                  <input value={ficha.resena} onChange={(e) => setFicha({ ...ficha, resena: e.target.value })} className={campo} placeholder="Ej. Siempre puntual y maneja con mucho cuidado para compras del mercado." /></label>
+                <label className="flex flex-col gap-1 text-xs font-bold text-blue-950 dark:text-blue-200 sm:col-span-2">Autor de la reseña / referencia
+                  <input value={ficha.resena_autor} onChange={(e) => setFicha({ ...ficha, resena_autor: e.target.value })} className={campo} placeholder="Ej. Carmen Soto, vecina de Bellavista (5.0 ★)" /></label>
+                <label className="flex flex-col gap-1 text-xs font-bold text-blue-950 dark:text-blue-200 sm:col-span-2">Sellos de confianza (JSON badges)
+                  <textarea value={ficha.sellos} onChange={(e) => setFicha({ ...ficha, sellos: e.target.value })} rows={4} className={`${campo} font-mono text-xs`} placeholder='[{"icon":"verified","label":"Conocido"},{"icon":"shield","label":"Brevete A-IIa","fuerte":true}]' /></label>
+                <label className="flex flex-col gap-1 text-xs font-bold text-blue-950 dark:text-blue-200">Estado de publicación
+                  <select value={ficha.status} onChange={(e) => setFicha({ ...ficha, status: e.target.value })} className={campo}>
+                    <option value="activo">✅ Activo (visible al público)</option>
+                    <option value="oculto">⛔ Oculto (no sale en la lista)</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 pt-1">
+              <button type="submit" disabled={guardando} className="bg-primary text-on-primary font-bold text-sm px-6 py-2.5 rounded-xl disabled:opacity-60 shadow-sm hover:opacity-95 transition-opacity">
                 {guardando ? 'Guardando…' : ficha.id ? 'Guardar cambios' : 'Agregar chofer'}
               </button>
               {ficha.id && (
-                <button type="button" onClick={() => { setFicha(FICHA_VACIA); setMsg(''); }} className="text-sm text-secondary underline">
+                <button type="button" onClick={() => { setFicha(FICHA_VACIA); setMsg(''); }} className="text-sm text-secondary underline hover:text-on-surface">
                   Cancelar edición
                 </button>
               )}
