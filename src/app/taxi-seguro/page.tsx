@@ -27,149 +27,6 @@ const themeVars = {
   '--color-tertiary-container': '#00C983',
 } as React.CSSProperties;
 
-// Seed: se muestra mientras la tabla `drivers` esté vacía. Apenas haya filas
-// activas en Supabase (vía /api/drivers), estas dejan de usarse.
-const CHOFERES_SEED: Chofer[] = [
-  {
-    id: 'c1',
-    nombre: 'Luz Marina Rengifo',
-    tipo: 'Mototaxi',
-    comite: 'Comité Femenino La Selva · Unidad #019',
-    experiencia: '5 años transportando familias',
-    placa: '4312-8U',
-    modelo: 'Motokar Honda CG125',
-    sellos: [
-      { label: 'DNI Validado', icon: 'badge', fuerte: true },
-      { label: 'SOAT Vigente 2025', icon: 'health_and_safety', fuerte: true },
-      { label: 'Licencia B-IIc', icon: 'directions_car' },
-      { label: 'Favorita Familias', icon: 'favorite' },
-    ],
-    ruta: 'Plaza de Armas ⇄ Open Plaza',
-    precio: 'S/ 4.00 – S/ 5.00',
-    paradero: 'Jr. Tacna c/ Jr. Sucre',
-    resena: 'Viajo siempre con mis dos hijos y Luz maneja con muchísima precaución. Súper atenta y honrada.',
-    resenaAutor: 'Carmen Soto, comerciante Mercado 2 (5.0 ★)',
-    tel: '51962000001',
-    img: 'https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?w=200&q=80',
-    vehImg: 'https://images.unsplash.com/photo-1591257670606-2f2c8e6c0d0c?w=400&q=80',
-  },
-  {
-    id: 'c2',
-    nombre: 'Segundo Vásquez Pinedo',
-    tipo: 'Mototaxi',
-    comite: 'Comité 14 · Yarinacocha · Unidad #038',
-    experiencia: '9 años de chofer en la región',
-    placa: '9841-7U',
-    modelo: 'Bajaj Torito 4T',
-    sellos: [
-      { label: 'DNI Validado', icon: 'badge', fuerte: true },
-      { label: 'SOAT Vigente 2025', icon: 'health_and_safety', fuerte: true },
-      { label: 'Licencia B-IIc', icon: 'directions_car' },
-      { label: 'Récord Limpio', icon: 'gavel' },
-    ],
-    ruta: 'Plaza de Armas ⇄ Embarcadero',
-    precio: 'S/ 5.00 – S/ 6.00',
-    paradero: 'Embarcadero Yarinacocha',
-    resena: 'Segundo maneja tranquilo sin correr por las pistas rotas. Súper respetuoso y el mototaxi siempre huele a limpio.',
-    resenaAutor: 'Fiorella R., vecina de Jr. Raymondi (5.0 ★)',
-    tel: '51962000002',
-    img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80',
-    vehImg: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=400&q=80',
-  },
-  {
-    id: 'c3',
-    nombre: 'Carlos Dávila Ruiz',
-    tipo: 'Auto',
-    comite: 'Asociación Radio Taxi Ucayali · Móvil 12',
-    experiencia: '14 años de experiencia en ruta',
-    placa: 'U1B-624',
-    modelo: 'Toyota Yaris (aire acond.)',
-    sellos: [
-      { label: 'DNI Validado', icon: 'badge', fuerte: true },
-      { label: 'SOAT Vigente 2025', icon: 'health_and_safety', fuerte: true },
-      { label: 'Licencia A-IIa', icon: 'directions_car' },
-      { label: 'Aire Acondicionado', icon: 'ac_unit' },
-    ],
-    ruta: 'Plaza de Armas ⇄ UNU / Aeropuerto',
-    precio: 'S/ 10.00 – S/ 12.00',
-    paradero: 'Frontis Univ. Nacional de Ucayali',
-    resena: 'Puntual para traslados al aeropuerto FAP David Abenzur. Aire acondicionado prendido que te salva del calor.',
-    resenaAutor: 'Ing. Marco Tello, docente UNU (4.9 ★)',
-    tel: '51962000003',
-    img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80',
-    vehImg: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&q=80',
-  },
-  {
-    id: 'c4',
-    nombre: 'Jhonatan Meléndez',
-    tipo: 'Moto',
-    comite: 'Rápido Ucayali Express · Unidad #07',
-    experiencia: '6 años en delivery y carreras express',
-    placa: '5190-7U',
-    modelo: 'Honda GL 150 (casco extra)',
-    sellos: [
-      { label: 'DNI Validado', icon: 'badge', fuerte: true },
-      { label: 'SOAT Vigente 2025', icon: 'health_and_safety', fuerte: true },
-      { label: 'Casco Pasajero', icon: 'sports_motorsports' },
-      { label: 'Despacho Rápido', icon: 'bolt' },
-    ],
-    ruta: 'Puerto El Reloj ⇄ Manantay',
-    precio: 'S/ 3.50 – S/ 4.50',
-    paradero: 'Malecón El Reloj Público',
-    resena: 'Te lleva al puerto al toque cuando sale lancha rápida. Siempre lleva casco limpio para el pasajero.',
-    resenaAutor: 'Edwin T., comerciante maderero (4.8 ★)',
-    tel: '51962000004',
-    img: 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=200&q=80',
-    vehImg: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=400&q=80',
-  },
-  {
-    id: 'c5',
-    nombre: 'Rosa Shahuano',
-    tipo: 'Auto',
-    comite: 'Taxi Seguro Manantay · Móvil 04',
-    experiencia: '8 años · escolares y adultos mayores',
-    placa: 'X1F-203',
-    modelo: 'Kia Rio sedán',
-    sellos: [
-      { label: 'DNI Validado', icon: 'badge', fuerte: true },
-      { label: 'SOAT Vigente 2025', icon: 'health_and_safety', fuerte: true },
-      { label: 'Licencia A-IIa', icon: 'directions_car' },
-      { label: 'Favorita Familias', icon: 'favorite' },
-    ],
-    ruta: 'Manantay ⇄ Hospital Regional',
-    precio: 'S/ 7.00 – S/ 9.00',
-    paradero: 'Óvalo Manantay',
-    resena: 'Llevo a mi mamá a sus controles y Rosa la espera sin apuro. De total confianza.',
-    resenaAutor: 'Lida P., vecina de Manantay (5.0 ★)',
-    tel: '51962000005',
-    img: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=80',
-    vehImg: 'https://images.unsplash.com/photo-1502877338535-766e1452684a?w=400&q=80',
-  },
-  {
-    id: 'c6',
-    nombre: 'Miguel Fasabi',
-    tipo: 'Mototaxi',
-    comite: 'Comité Centro · Unidad #052',
-    experiencia: '11 años · conoce toda la ciudad',
-    placa: 'A9-3320',
-    modelo: 'Motokar Bajaj RE',
-    sellos: [
-      { label: 'DNI Validado', icon: 'badge', fuerte: true },
-      { label: 'SOAT Vigente 2025', icon: 'health_and_safety', fuerte: true },
-      { label: 'Licencia B-IIc', icon: 'directions_car' },
-      { label: 'Récord Limpio', icon: 'gavel' },
-    ],
-    ruta: 'Centro ⇄ Mercado Nº 3',
-    precio: 'S/ 3.00 – S/ 4.00',
-    paradero: 'Jr. Ucayali c/ Jr. Tacna',
-    resena: 'Le pido que me lleve a cualquier dirección y la ubica sin renegar. Precio justo siempre.',
-    resenaAutor: 'Napoleón G., vecino del Centro (4.7 ★)',
-    tel: '51962000006',
-    img: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=200&q=80',
-    vehImg: 'https://images.unsplash.com/photo-1597762333765-8b0e2f2f3f4a?w=400&q=80',
-  },
-];
-
 const ICONO: Record<string, string> = { Mototaxi: 'electric_rickshaw', Auto: 'directions_car', Moto: 'two_wheeler' };
 
 // Planes fijos — placeholder. El directorio de choferes sigue gratis; estos
@@ -302,12 +159,13 @@ export default function TaxiSeguro() {
   const { cartCount, setIsCartOpen } = useCart();
   const [filtro, setFiltro] = useState<Filtro>('Todos');
   const [interesado, setInteresado] = useState(false);
-  const [choferes, setChoferes] = useState<Chofer[]>(CHOFERES_SEED);
+  const [choferes, setChoferes] = useState<Chofer[]>([]);
+  const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
-    fetchChoferes().then((rows) => {
-      if (rows.length > 0) setChoferes(rows);
-    });
+    fetchChoferes()
+      .then((rows) => setChoferes(rows))
+      .finally(() => setCargando(false));
   }, []);
 
   const lista = filtro === 'Todos' ? choferes : choferes.filter((c) => c.tipo === filtro);
@@ -385,11 +243,34 @@ export default function TaxiSeguro() {
         </div>
 
         {/* Directorio */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {lista.map((c) => (
-            <DriverCard key={c.id} c={c} />
-          ))}
-        </div>
+        {cargando ? (
+          <div className="p-12 text-center text-secondary text-sm">
+            Cargando choferes verificados…
+          </div>
+        ) : lista.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-surface-container-highest p-10 text-center flex flex-col items-center justify-center gap-3 shadow-sm">
+            <div className="w-14 h-14 rounded-2xl bg-surface-container-low flex items-center justify-center text-primary">
+              <span className="material-symbols-outlined text-[28px]">local_taxi</span>
+            </div>
+            <h3 className="font-headline-md text-base text-on-surface">No hay choferes activos todavía</h3>
+            <p className="text-secondary text-xs max-w-md leading-relaxed">
+              Estamos integrando conductores con DNI y documentos validados. Si manejas en la ciudad, sé de los primeros en aparecer en el padrón.
+            </p>
+            <a
+              href="/taxi-seguro/registro"
+              className="mt-2 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-on-primary text-xs font-bold shadow-sm hover:opacity-95 active:scale-95 transition-all"
+            >
+              <span className="material-symbols-outlined text-[16px]">badge</span>
+              Postularme al padrón gratis
+            </a>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {lista.map((c) => (
+              <DriverCard key={c.id} c={c} />
+            ))}
+          </div>
+        )}
 
         {/* Planes fijos — próximamente */}
         <section className="rounded-2xl border border-surface-container-highest bg-white shadow-[0_15px_15px_rgba(0,0,0,0.04)] p-5 lg:p-6 flex flex-col gap-4 mt-2">

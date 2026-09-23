@@ -334,7 +334,7 @@ export default function ChoferesAdmin() {
         <section>
           <h2 className="font-headline-md text-lg text-on-surface mb-3">Directorio ({choferes.length})</h2>
           {cargandoDatos ? <p className="text-secondary text-sm">Cargando…</p> :
-            choferes.length === 0 ? <p className="text-secondary text-sm">Todavía no hay choferes en la tabla. La página usa el seed hardcodeado hasta que agregues al menos uno.</p> : (
+            choferes.length === 0 ? <p className="text-secondary text-sm">Todavía no hay choferes en el directorio. Agrega el primero con el formulario de arriba o aprobando una postulación pendiente.</p> : (
             <div className="flex flex-col gap-2">
               {choferes.map((d) => (
                 <div key={d.id} className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-3 flex flex-wrap items-center gap-3">
