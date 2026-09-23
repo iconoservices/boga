@@ -60,10 +60,11 @@ export default async function EventosLayout({ children }: { children: React.Reac
     numberOfItems: eventos.length,
     itemListElement: eventos.map((e, i) => {
       const fechaIso = resolverFechaISO(e);
-      const precioLimpio =
-        e.precio?.toLowerCase().includes('libre') || e.precio?.toLowerCase().includes('gratis')
-          ? '0'
-          : e.precio?.replace(/[^0-9.]/g, '') || '0';
+      const rawPrice = e.precio?.toLowerCase().trim() || '';
+      const isGratis = rawPrice.includes('libre') || rawPrice.includes('gratis') || rawPrice.includes('free');
+      const numMatch = rawPrice.match(/\d+(?:[.,]\d+)?/);
+      const precioNum = isGratis ? 0 : numMatch ? parseFloat(numMatch[0].replace(',', '.')) : 0;
+      const precioFinal = isNaN(precioNum) ? '0' : String(precioNum);
 
       return {
         '@type': 'ListItem',
@@ -73,6 +74,7 @@ export default async function EventosLayout({ children }: { children: React.Reac
           name: e.titulo,
           description: e.descripcion || `${e.titulo} en ${e.lugar || 'Pucallpa'}. Categoría: ${e.cat}.`,
           startDate: fechaIso || undefined,
+          endDate: fechaIso || undefined,
           eventStatus: 'https://schema.org/EventScheduled',
           eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
           location: {
@@ -91,11 +93,16 @@ export default async function EventosLayout({ children }: { children: React.Reac
             name: e.organiza || 'Organizador Local en Pucallpa',
             url: SITE_URL,
           },
+          performer: {
+            '@type': 'PerformingGroup',
+            name: e.organiza || e.titulo || 'Elenco y Artistas Locales',
+          },
           offers: {
             '@type': 'Offer',
-            price: precioLimpio,
+            price: precioFinal,
             priceCurrency: 'PEN',
             availability: 'https://schema.org/InStock',
+            validFrom: `${new Date().getFullYear()}-01-01`,
             url: e.linkEntradas || e.linkPostOriginal || `${SITE_URL}/eventos`,
           },
         },
