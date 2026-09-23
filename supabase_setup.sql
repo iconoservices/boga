@@ -1455,5 +1455,7 @@ CREATE POLICY "driver_requests: solo superadmin lee"    ON public.driver_request
 CREATE POLICY "driver_requests: solo superadmin edita"  ON public.driver_requests FOR UPDATE  USING (public.is_superadmin());
 CREATE POLICY "driver_requests: solo superadmin borra"  ON public.driver_requests FOR DELETE  USING (public.is_superadmin());
 
--- Migración: campo horario en postulaciones de chofer
+-- Migración: campo horario y fotos en postulaciones de chofer
 ALTER TABLE public.driver_requests ADD COLUMN IF NOT EXISTS horario TEXT;
+ALTER TABLE public.driver_requests ADD COLUMN IF NOT EXISTS foto_perfil TEXT;
+ALTER TABLE public.driver_requests ADD COLUMN IF NOT EXISTS foto_vehiculo TEXT;

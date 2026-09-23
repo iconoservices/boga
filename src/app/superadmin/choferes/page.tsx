@@ -85,6 +85,8 @@ export default function ChoferesAdmin() {
       nombre: p.nombre ?? '', tipo: p.tipo || 'Mototaxi', placa: p.placa ?? '',
       comite: p.zona ?? '', experiencia: p.experiencia ?? '', tel: p.whatsapp ?? '',
       ciudad: p.ciudad || 'pucallpa',
+      img: p.foto_perfil ?? '',
+      veh_img: p.foto_vehiculo ?? '',
     });
     await supabase.from('driver_requests').update({ status: 'approved' }).eq('id', p.id);
     setPostulaciones((prev) => prev.filter((x) => x.id !== p.id));
@@ -296,15 +298,32 @@ export default function ChoferesAdmin() {
             postulaciones.length === 0 ? <p className="text-secondary text-sm">No hay postulaciones pendientes.</p> : (
             <div className="flex flex-col gap-2">
               {postulaciones.map((p) => (
-                <div key={p.id} className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-4 flex flex-wrap items-center gap-3">
+                <div key={p.id} className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-4 flex flex-wrap items-center gap-4">
+                  {/* Miniaturas de fotos si existen */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    {p.foto_perfil ? (
+                      <img src={p.foto_perfil} alt="perfil" className="w-12 h-12 rounded-full object-cover border-2 border-primary/30" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-secondary text-xs font-bold">
+                        <span className="material-symbols-outlined text-[20px]">person</span>
+                      </div>
+                    )}
+                    {p.foto_vehiculo && (
+                      <img src={p.foto_vehiculo} alt="vehículo" className="w-14 h-12 rounded-lg object-cover border border-surface-container-highest" />
+                    )}
+                  </div>
+
                   <div className="flex-1 min-w-[200px]">
                     <p className="font-bold text-sm text-on-surface">{p.nombre} · <span className="text-secondary font-normal">{p.tipo}</span></p>
                     <p className="text-xs text-secondary">{[p.zona, p.ciudad, p.placa, p.experiencia].filter(Boolean).join(' · ')}</p>
+                    {p.horario && <p className="text-xs text-primary font-medium mt-0.5">🕒 {p.horario}</p>}
                     {p.mensaje && <p className="text-xs text-secondary mt-1 italic">“{p.mensaje}”</p>}
-                    <p className="text-xs text-secondary mt-1">WhatsApp: {p.whatsapp}</p>
+                    <p className="text-xs text-secondary mt-1">WhatsApp: <a href={`https://wa.me/${p.whatsapp?.replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="text-primary hover:underline font-bold">{p.whatsapp}</a></p>
                   </div>
-                  <button onClick={() => desdePostulacion(p)} className="bg-primary text-on-primary text-xs font-bold px-3 py-1.5 rounded-lg">Aprobar → ficha</button>
-                  <button onClick={() => rechazar(p)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest text-secondary">Rechazar</button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button onClick={() => desdePostulacion(p)} className="bg-primary text-on-primary text-xs font-bold px-3.5 py-2 rounded-lg shadow-sm hover:opacity-95">Aprobar → ficha</button>
+                    <button onClick={() => rechazar(p)} className="text-xs font-bold px-3 py-2 rounded-lg border border-surface-container-highest text-secondary hover:text-red-600">Rechazar</button>
+                  </div>
                 </div>
               ))}
             </div>

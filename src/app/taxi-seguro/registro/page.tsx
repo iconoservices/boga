@@ -22,9 +22,39 @@ export default function RegistroChoferPage() {
   const [experiencia, setExperiencia] = useState('');
   const [horario, setHorario] = useState('');
   const [mensaje, setMensaje] = useState('');
+  const [fotoPerfil, setFotoPerfil] = useState('');
+  const [fotoVehiculo, setFotoVehiculo] = useState('');
+  const [subiendoPerfil, setSubiendoPerfil] = useState(false);
+  const [subiendoVehiculo, setSubiendoVehiculo] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
+
+  const subirFoto = async (e: React.ChangeEvent<HTMLInputElement>, tipo: 'perfil' | 'vehiculo') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (tipo === 'perfil') setSubiendoPerfil(true);
+    else setSubiendoVehiculo(true);
+    setError('');
+
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('tipo', tipo);
+
+    try {
+      const res = await fetch('/api/drivers/upload', { method: 'POST', body: fd });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Error al subir la imagen');
+      if (tipo === 'perfil') setFotoPerfil(json.url);
+      else setFotoVehiculo(json.url);
+    } catch (err: any) {
+      setError(err.message || 'No se pudo subir la foto.');
+    } finally {
+      if (tipo === 'perfil') setSubiendoPerfil(false);
+      else setSubiendoVehiculo(false);
+    }
+  };
 
   const input: React.CSSProperties = {
     width: '100%', boxSizing: 'border-box', padding: '11px 14px',
@@ -44,6 +74,8 @@ export default function RegistroChoferPage() {
       zona: zona || null, ciudad: ciudad || null,
       experiencia: experiencia || null, horario: horario || null,
       mensaje: mensaje || null,
+      foto_perfil: fotoPerfil || null,
+      foto_vehiculo: fotoVehiculo || null,
     });
     setLoading(false);
     if (err) { setError('No pudimos enviar tu postulación. Intenta de nuevo en unos minutos.'); return; }
@@ -159,6 +191,65 @@ export default function RegistroChoferPage() {
                   <label style={label}>Horario disponible</label>
                   <input required type="text" value={horario} onChange={(e) => setHorario(e.target.value)} placeholder="Lun–Sáb 6am–9pm · Domingos mañanas" style={input} onFocus={onFocus} onBlur={onBlur} />
                 </div>
+
+                {/* Subida de fotos opcionales */}
+                <div style={{ marginBottom: '18px', padding: '14px', backgroundColor: '#f8faf9', borderRadius: '14px', border: '1px solid #e5ece8' }}>
+                  <p style={{ fontSize: '12px', fontWeight: 700, color: '#273630', marginBottom: '4px' }}>
+                    Fotos para tu ficha <span style={{ fontWeight: 400, color: '#7a8d85' }}>(opcionales pero recomendadas)</span>
+                  </p>
+                  <p style={{ fontSize: '11px', color: '#7a8d85', marginBottom: '12px', lineHeight: 1.4 }}>
+                    Sube una foto tuya clara y una de tu vehículo para que los pasajeros te reconozcan rápido.
+                  </p>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    {/* Foto Chofer */}
+                    <div style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '12px', border: '1px solid #e1e8e4', textAlign: 'center' }}>
+                      <p style={{ fontSize: '11px', fontWeight: 700, color: '#3a4a44', marginBottom: '8px' }}>Tu foto de perfil</p>
+                      {fotoPerfil ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                          <img src={fotoPerfil} alt="Perfil" style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #00875A' }} />
+                          <button type="button" onClick={() => setFotoPerfil('')} style={{ fontSize: '10px', color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+                            Quitar
+                          </button>
+                        </div>
+                      ) : (
+                        <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '64px', backgroundColor: '#f4f6f5', borderRadius: '10px', cursor: subiendoPerfil ? 'not-allowed' : 'pointer', border: '1.5px dashed #cbd6d0' }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: '20px', color: '#6f8078' }}>
+                            {subiendoPerfil ? 'hourglass_top' : 'add_a_photo'}
+                          </span>
+                          <span style={{ fontSize: '10px', fontWeight: 600, color: '#6f8078', marginTop: '3px' }}>
+                            {subiendoPerfil ? 'Subiendo…' : 'Subir foto'}
+                          </span>
+                          <input type="file" accept="image/*" disabled={subiendoPerfil} onChange={(e) => subirFoto(e, 'perfil')} style={{ display: 'none' }} />
+                        </label>
+                      )}
+                    </div>
+
+                    {/* Foto Vehículo */}
+                    <div style={{ backgroundColor: '#fff', borderRadius: '12px', padding: '12px', border: '1px solid #e1e8e4', textAlign: 'center' }}>
+                      <p style={{ fontSize: '11px', fontWeight: 700, color: '#3a4a44', marginBottom: '8px' }}>Foto de tu vehículo</p>
+                      {fotoVehiculo ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                          <img src={fotoVehiculo} alt="Vehículo" style={{ width: '70px', height: '56px', borderRadius: '8px', objectFit: 'cover', border: '2px solid #00875A' }} />
+                          <button type="button" onClick={() => setFotoVehiculo('')} style={{ fontSize: '10px', color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+                            Quitar
+                          </button>
+                        </div>
+                      ) : (
+                        <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '64px', backgroundColor: '#f4f6f5', borderRadius: '10px', cursor: subiendoVehiculo ? 'not-allowed' : 'pointer', border: '1.5px dashed #cbd6d0' }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: '20px', color: '#6f8078' }}>
+                            {subiendoVehiculo ? 'hourglass_top' : 'directions_car'}
+                          </span>
+                          <span style={{ fontSize: '10px', fontWeight: 600, color: '#6f8078', marginTop: '3px' }}>
+                            {subiendoVehiculo ? 'Subiendo…' : 'Subir vehículo'}
+                          </span>
+                          <input type="file" accept="image/*" disabled={subiendoVehiculo} onChange={(e) => subirFoto(e, 'vehiculo')} style={{ display: 'none' }} />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
                 <div style={{ marginBottom: '20px' }}>
                   <label style={label}>Algo más que quieras contarnos <span style={{ fontWeight: 400, color: '#9fb3ab' }}>(opcional)</span></label>
                   <textarea value={mensaje} onChange={(e) => setMensaje(e.target.value)} rows={3} placeholder="Rutas que cubres, referencias de vecinos, años de experiencia…" style={{ ...input, resize: 'vertical' }} onFocus={onFocus} onBlur={onBlur} />
