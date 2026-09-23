@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const {
-      nombre, whatsapp, tipo, placa, zona,
+      nombre, dni, whatsapp, tipo, placa, zona,
       ciudad, experiencia, horario, mensaje,
       foto_perfil, foto_vehiculo,
     } = body;
@@ -26,6 +26,7 @@ export async function POST(request: Request) {
 
     const { data, error } = await supabase.from('driver_requests').insert({
       nombre,
+      dni: dni || null,
       whatsapp,
       tipo: tipo || 'Mototaxi',
       placa: placa || null,
@@ -53,6 +54,7 @@ export async function POST(request: Request) {
         '🛺 *Nueva postulación Taxi Seguro*',
         '',
         `👤 *Nombre:* ${nombre}`,
+        dni ? `🪪 *DNI:* ${dni}` : null,
         `📱 *WhatsApp:* ${whatsapp}`,
         `🚘 *Vehículo:* ${tipo || 'Mototaxi'} ${placa ? `(Placa: ${placa})` : ''}`,
         `📍 *Ciudad:* ${ciudad || 'Pucallpa'}`,

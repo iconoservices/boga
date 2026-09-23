@@ -14,6 +14,7 @@ const TIPOS = ['Mototaxi', 'Auto', 'Moto'];
 
 export default function RegistroChoferPage() {
   const [nombre, setNombre] = useState('');
+  const [dni, setDni] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [tipo, setTipo] = useState('');
   const [placa, setPlaca] = useState('');
@@ -75,7 +76,7 @@ export default function RegistroChoferPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          nombre, whatsapp, tipo: tipo || null, placa: placa || null,
+          nombre, dni, whatsapp, tipo: tipo || null, placa: placa || null,
           zona: zona || null, ciudad: ciudad || null,
           experiencia: experiencia || null, horario: horario || null,
           mensaje: mensaje || null,
@@ -171,9 +172,15 @@ export default function RegistroChoferPage() {
                   <label style={label}>Tu nombre completo</label>
                   <input type="text" required value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Luz Marina Rengifo" style={input} onFocus={onFocus} onBlur={onBlur} />
                 </div>
-                <div style={{ marginBottom: '14px' }}>
-                  <label style={label}>WhatsApp</label>
-                  <input type="tel" required value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="+51 987 654 321" style={input} onFocus={onFocus} onBlur={onBlur} />
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={label}>DNI (8 dígitos)</label>
+                    <input type="text" required maxLength={8} value={dni} onChange={(e) => setDni(e.target.value.replace(/\D/g, ''))} placeholder="72345678" style={input} onFocus={onFocus} onBlur={onBlur} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={label}>WhatsApp</label>
+                    <input type="tel" required value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="+51 987 654 321" style={input} onFocus={onFocus} onBlur={onBlur} />
+                  </div>
                 </div>
                 <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
                   <div style={{ flex: 1 }}>

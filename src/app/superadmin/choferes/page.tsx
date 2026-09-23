@@ -23,7 +23,7 @@ type DriverRow = Record<string, any>;
 
 const FICHA_VACIA = {
   id: null as string | null,
-  nombre: '', tipo: 'Mototaxi', comite: '', experiencia: '', placa: '', modelo: '',
+  nombre: '', dni: '', tipo: 'Mototaxi', comite: '', experiencia: '', placa: '', modelo: '',
   sellos: '[\n  { "label": "DNI Validado", "icon": "badge", "fuerte": true },\n  { "label": "SOAT Vigente", "icon": "health_and_safety", "fuerte": true }\n]',
   ruta: '', precio: '', paradero: '', resena: '', resena_autor: '',
   tel: '', img: '', veh_img: '', ciudad: 'pucallpa', orden: 0, status: 'activo',
@@ -67,7 +67,7 @@ export default function ChoferesAdmin() {
 
   const editar = (d: DriverRow) => {
     setFicha({
-      id: d.id, nombre: d.nombre ?? '', tipo: d.tipo ?? 'Mototaxi', comite: d.comite ?? '',
+      id: d.id, nombre: d.nombre ?? '', dni: d.dni ?? '', tipo: d.tipo ?? 'Mototaxi', comite: d.comite ?? '',
       experiencia: d.experiencia ?? '', placa: d.placa ?? '', modelo: d.modelo ?? '',
       sellos: JSON.stringify(d.sellos ?? [], null, 2),
       ruta: d.ruta ?? '', precio: d.precio ?? '', paradero: d.paradero ?? '',
@@ -82,7 +82,7 @@ export default function ChoferesAdmin() {
   const desdePostulacion = async (p: DriverRow) => {
     setFicha({
       ...FICHA_VACIA,
-      nombre: p.nombre ?? '', tipo: p.tipo || 'Mototaxi', placa: p.placa ?? '',
+      nombre: p.nombre ?? '', dni: p.dni ?? '', tipo: p.tipo || 'Mototaxi', placa: p.placa ?? '',
       comite: p.zona ?? '', experiencia: p.experiencia ?? '', tel: p.whatsapp ?? '',
       ciudad: p.ciudad || 'pucallpa',
       img: p.foto_perfil ?? '',
@@ -108,7 +108,7 @@ export default function ChoferesAdmin() {
     catch { setGuardando(false); setMsg('El campo "sellos" no es JSON válido.'); return; }
 
     const payload = {
-      nombre: ficha.nombre, tipo: ficha.tipo, comite: ficha.comite || null,
+      nombre: ficha.nombre, dni: ficha.dni || null, tipo: ficha.tipo, comite: ficha.comite || null,
       experiencia: ficha.experiencia || null, placa: ficha.placa || null, modelo: ficha.modelo || null,
       sellos, ruta: ficha.ruta || null, precio: ficha.precio || null, paradero: ficha.paradero || null,
       resena: ficha.resena || null, resena_autor: ficha.resena_autor || null, tel: ficha.tel || null,
@@ -194,6 +194,8 @@ export default function ChoferesAdmin() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Nombre completo *
                   <input required value={ficha.nombre} onChange={(e) => setFicha({ ...ficha, nombre: e.target.value })} className={campo} placeholder="Ej. Juan Pérez" /></label>
+                <label className="flex flex-col gap-1 text-xs font-bold text-secondary">DNI (8 dígitos)
+                  <input maxLength={8} value={ficha.dni} onChange={(e) => setFicha({ ...ficha, dni: e.target.value.replace(/\D/g, '') })} className={campo} placeholder="72345678" /></label>
                 <label className="flex flex-col gap-1 text-xs font-bold text-secondary">WhatsApp / Teléfono (E.164 sin +) *
                   <input required value={ficha.tel} onChange={(e) => setFicha({ ...ficha, tel: e.target.value })} className={campo} placeholder="51962000001" /></label>
                 <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Tipo de vehículo
@@ -314,7 +316,10 @@ export default function ChoferesAdmin() {
                   </div>
 
                   <div className="flex-1 min-w-[200px]">
-                    <p className="font-bold text-sm text-on-surface">{p.nombre} · <span className="text-secondary font-normal">{p.tipo}</span></p>
+                    <p className="font-bold text-sm text-on-surface">
+                      {p.nombre} · <span className="text-secondary font-normal">{p.tipo}</span>
+                      {p.dni && <span className="ml-2 text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-surface-container text-on-surface">🪪 DNI: {p.dni}</span>}
+                    </p>
                     <p className="text-xs text-secondary">{[p.zona, p.ciudad, p.placa, p.experiencia].filter(Boolean).join(' · ')}</p>
                     {p.horario && <p className="text-xs text-primary font-medium mt-0.5">🕒 {p.horario}</p>}
                     {p.mensaje && <p className="text-xs text-secondary mt-1 italic">“{p.mensaje}”</p>}
@@ -340,7 +345,10 @@ export default function ChoferesAdmin() {
                 <div key={d.id} className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-3 flex flex-wrap items-center gap-3">
                   <span className={`w-2 h-2 rounded-full shrink-0 ${d.status === 'activo' ? 'bg-primary' : 'bg-surface-container-highest'}`} />
                   <div className="flex-1 min-w-[180px]">
-                    <p className="font-bold text-sm text-on-surface">{d.nombre} <span className="text-secondary font-normal">· {d.tipo} · {d.ciudad}</span></p>
+                    <p className="font-bold text-sm text-on-surface">
+                      {d.nombre} <span className="text-secondary font-normal">· {d.tipo} · {d.ciudad}</span>
+                      {d.dni && <span className="text-[11px] font-mono text-secondary ml-2">(DNI: {d.dni})</span>}
+                    </p>
                     <p className="text-xs text-secondary">{[d.comite, d.placa, d.ruta].filter(Boolean).join(' · ')}</p>
                   </div>
                   <button onClick={() => editar(d)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest text-on-surface">Editar</button>

@@ -1459,3 +1459,7 @@ CREATE POLICY "driver_requests: solo superadmin borra"  ON public.driver_request
 ALTER TABLE public.driver_requests ADD COLUMN IF NOT EXISTS horario TEXT;
 ALTER TABLE public.driver_requests ADD COLUMN IF NOT EXISTS foto_perfil TEXT;
 ALTER TABLE public.driver_requests ADD COLUMN IF NOT EXISTS foto_vehiculo TEXT;
+
+-- Migración: campo DNI para verificación de identidad (choferes y postulaciones)
+ALTER TABLE public.driver_requests ADD COLUMN IF NOT EXISTS dni TEXT;
+ALTER TABLE public.drivers ADD COLUMN IF NOT EXISTS dni TEXT;
