@@ -307,11 +307,25 @@ function AdminDashboard({ user }: { user: User }) {
     subcategory: '',
     image: '',
     desc: '',
+    stockType: 'ilimitado' as 'ilimitado' | 'limitado',
+    stockQuantity: '',
+    status: 'Activo',
   });
 
   const resetForm = () => {
     setEditingProductId(null);
-    setNewProduct({ name: '', store: selectedStore === 'all' ? '' : selectedStore, price: '', category: '', subcategory: '', image: '', desc: '' });
+    setNewProduct({
+      name: '',
+      store: selectedStore === 'all' ? '' : selectedStore,
+      price: '',
+      category: '',
+      subcategory: '',
+      image: '',
+      desc: '',
+      stockType: 'ilimitado',
+      stockQuantity: '',
+      status: 'Activo',
+    });
     setSelectedFile(null);
     setPreviewUrl(null);
   };
@@ -699,7 +713,21 @@ function AdminDashboard({ user }: { user: User }) {
         finalImageUrl = await uploadFile(selectedFile, folder);
       }
 
-      // 2. Guardar en la base de datos
+      // 2. Calcular stock y status
+      let finalStock: number | null = null;
+      let finalStatus = newProduct.status || 'Activo';
+
+      if (newProduct.stockType === 'limitado') {
+        const parsed = parseInt(newProduct.stockQuantity, 10);
+        finalStock = isNaN(parsed) ? 0 : Math.max(0, parsed);
+        if (finalStock === 0) {
+          finalStatus = 'Agotado';
+        }
+      } else {
+        finalStock = null; // null = ilimitado / siempre disponible
+      }
+
+      // 3. Guardar en la base de datos
       if (editingProductId) {
         const { error: dbError } = await supabase.from('products').update({
           name: newProduct.name,
@@ -709,6 +737,8 @@ function AdminDashboard({ user }: { user: User }) {
           subcategory: newProduct.subcategory,
           image: finalImageUrl,
           description: newProduct.desc,
+          stock: finalStock,
+          status: finalStatus,
         }).eq('id', editingProductId);
 
         if (dbError) throw dbError;
@@ -722,8 +752,8 @@ function AdminDashboard({ user }: { user: User }) {
             subcategory: newProduct.subcategory,
             image: finalImageUrl,
             description: newProduct.desc,
-            stock: 0,
-            status: 'Activo'
+            stock: finalStock,
+            status: finalStatus,
           }
         ]);
 
@@ -746,6 +776,7 @@ function AdminDashboard({ user }: { user: User }) {
 
   const handleEdit = (product: Product) => {
     setEditingProductId(product.id);
+    const hasFixedStock = product.stock !== null && product.stock !== undefined && product.stock >= 0 && product.stock < 999;
     setNewProduct({
       name: product.name,
       store: product.store,
@@ -754,6 +785,9 @@ function AdminDashboard({ user }: { user: User }) {
       subcategory: product.subcategory || '',
       image: product.image,
       desc: product.description || '',
+      stockType: hasFixedStock ? 'limitado' : 'ilimitado',
+      stockQuantity: hasFixedStock ? product.stock.toString() : '',
+      status: product.status || 'Activo',
     });
     setPreviewUrl(product.image);
     setSelectedFile(null);
@@ -1319,6 +1353,7 @@ function AdminDashboard({ user }: { user: User }) {
                               <th className="p-3 font-bold w-1/3">Producto</th>
                               {selectedStore === 'all' && <th className="p-3 font-bold">Tienda</th>}
                               <th className="p-3 font-bold">Categoría</th>
+                              <th className="p-3 font-bold">Stock</th>
                               <th className="p-3 font-bold">Estado</th>
                               <th className="p-3 font-bold">Precio</th>
                               <th className="p-3 font-bold text-right">Acciones</th>
@@ -1357,6 +1392,24 @@ function AdminDashboard({ user }: { user: User }) {
                                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
                                     {p.category}
                                   </span>
+                                </td>
+                                <td className="p-3">
+                                  {p.stock === null || p.stock === undefined || p.stock >= 999 ? (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100/80">
+                                      <span className="material-symbols-outlined text-[13px]">all_inclusive</span>
+                                      Ilimitado
+                                    </span>
+                                  ) : p.stock > 0 ? (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100/80">
+                                      <span className="material-symbols-outlined text-[13px]">inventory_2</span>
+                                      {p.stock} unid.
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-100/80">
+                                      <span className="material-symbols-outlined text-[13px]">block</span>
+                                      0 unid.
+                                    </span>
+                                  )}
                                 </td>
                                 <td className="p-3">
                                   <label className="flex items-center cursor-pointer">
@@ -1420,9 +1473,27 @@ function AdminDashboard({ user }: { user: User }) {
                                 <span className="font-bold text-primary text-[13px] whitespace-nowrap">S/ {Number(p.price).toFixed(2)}</span>
                               </div>
                               
-                              <p className="text-[10px] text-gray-500 mt-1 uppercase font-bold tracking-wider truncate">
-                                {p.category} {p.subcategory ? `• ${p.subcategory}` : ''}
-                              </p>
+                              <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                                <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider truncate">
+                                  {p.category} {p.subcategory ? `• ${p.subcategory}` : ''}
+                                </span>
+                                <span className="text-[10px] text-gray-300">•</span>
+                                {p.stock === null || p.stock === undefined || p.stock >= 999 ? (
+                                  <span className="text-[10px] font-semibold text-emerald-600 flex items-center gap-0.5">
+                                    <span className="material-symbols-outlined text-[12px]">all_inclusive</span>
+                                    Ilimitado
+                                  </span>
+                                ) : p.stock > 0 ? (
+                                  <span className="text-[10px] font-semibold text-blue-600 flex items-center gap-0.5">
+                                    <span className="material-symbols-outlined text-[12px]">inventory_2</span>
+                                    {p.stock} unid.
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] font-semibold text-red-600 flex items-center gap-0.5">
+                                    Sin stock
+                                  </span>
+                                )}
+                              </div>
                               
                               <div className="flex justify-between items-center mt-auto">
                                 <label className="flex items-center cursor-pointer" onClick={(e) => e.stopPropagation()}>
@@ -2486,6 +2557,76 @@ function AdminDashboard({ user }: { user: User }) {
                       ))}
                     </datalist>
                   </div>
+                </div>
+
+                {/* Disponibilidad e Inventario */}
+                <div className="bg-gray-50/70 border border-gray-200/80 rounded-xl p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-[18px] text-[#b8130e]">inventory_2</span>
+                        Disponibilidad e Inventario
+                      </h4>
+                      <p className="text-xs text-gray-500 mt-0.5">Define si el producto tiene stock controlado o siempre está disponible</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setNewProduct({ ...newProduct, stockType: 'ilimitado' })}
+                      className={`p-3 rounded-lg border text-left transition-all flex items-start gap-2.5 ${
+                        newProduct.stockType === 'ilimitado'
+                          ? 'border-[#b8130e] bg-white ring-2 ring-[#b8130e]/10 shadow-sm'
+                          : 'border-gray-200 bg-white/50 hover:bg-white text-gray-600'
+                      }`}
+                    >
+                      <span className={`material-symbols-outlined text-[20px] shrink-0 mt-0.5 ${newProduct.stockType === 'ilimitado' ? 'text-[#b8130e]' : 'text-gray-400'}`}>
+                        all_inclusive
+                      </span>
+                      <div>
+                        <p className="text-xs font-bold text-gray-900">Siempre disponible</p>
+                        <p className="text-[11px] text-gray-500 leading-tight mt-0.5">Ideal para comida, menús o servicios bajo pedido</p>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setNewProduct({ ...newProduct, stockType: 'limitado', stockQuantity: newProduct.stockQuantity || '10' })}
+                      className={`p-3 rounded-lg border text-left transition-all flex items-start gap-2.5 ${
+                        newProduct.stockType === 'limitado'
+                          ? 'border-[#b8130e] bg-white ring-2 ring-[#b8130e]/10 shadow-sm'
+                          : 'border-gray-200 bg-white/50 hover:bg-white text-gray-600'
+                      }`}
+                    >
+                      <span className={`material-symbols-outlined text-[20px] shrink-0 mt-0.5 ${newProduct.stockType === 'limitado' ? 'text-[#b8130e]' : 'text-gray-400'}`}>
+                        inventory
+                      </span>
+                      <div>
+                        <p className="text-xs font-bold text-gray-900">Stock controlado</p>
+                        <p className="text-[11px] text-gray-500 leading-tight mt-0.5">Para prendas, abarrotes o unidades exactas</p>
+                      </div>
+                    </button>
+                  </div>
+
+                  {newProduct.stockType === 'limitado' && (
+                    <div className="pt-2 border-t border-gray-200/60 flex items-center justify-between gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700">Cantidad de unidades en stock</label>
+                        <p className="text-[11px] text-gray-500">Si llega a 0, se marcará automáticamente como Agotado</p>
+                      </div>
+                      <div className="w-32 shrink-0">
+                        <input
+                          type="number"
+                          min="0"
+                          value={newProduct.stockQuantity}
+                          onChange={(e) => setNewProduct({ ...newProduct, stockQuantity: e.target.value })}
+                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-center font-bold text-gray-900 focus:outline-none focus:border-[#b8130e]"
+                          placeholder="Ej: 15"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </form>
