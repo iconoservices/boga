@@ -7,10 +7,11 @@
 //     Aprobar precarga la ficha con lo que dejó el chofer.
 //   - drivers (el directorio de /taxi-seguro): crear, editar, ocultar, borrar.
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { uploadFile } from '@/lib/uploadClient';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import { CIUDADES } from '@/lib/ciudades';
 import SuperadminSidebarNav from '@/components/superadmin/SuperadminSidebarNav';
@@ -39,6 +40,10 @@ export default function ChoferesAdmin() {
   const [ficha, setFicha] = useState<Ficha>(FICHA_VACIA);
   const [guardando, setGuardando] = useState(false);
   const [msg, setMsg] = useState('');
+  const [uploadingImg, setUploadingImg] = useState(false);
+  const [uploadingVeh, setUploadingVeh] = useState(false);
+  const imgRef = useRef<HTMLInputElement>(null);
+  const vehRef = useRef<HTMLInputElement>(null);
 
   const recargar = useCallback(async () => {
     setCargandoDatos(true);
@@ -131,6 +136,21 @@ export default function ChoferesAdmin() {
     recargar();
   };
 
+  const subirFoto = async (e: React.ChangeEvent<HTMLInputElement>, campo: 'img' | 'veh_img') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const setUploading = campo === 'img' ? setUploadingImg : setUploadingVeh;
+    setUploading(true);
+    try {
+      const url = await uploadFile(file, 'drivers');
+      setFicha((f) => ({ ...f, [campo]: url }));
+    } catch (err: any) {
+      setMsg(`Error al subir foto: ${err.message}`);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const campo = 'w-full bg-surface-container-low border border-surface-container-highest rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:border-primary';
 
   return (
@@ -181,10 +201,32 @@ export default function ChoferesAdmin() {
               <input value={ficha.paradero} onChange={(e) => setFicha({ ...ficha, paradero: e.target.value })} className={campo} /></label>
             <label className="flex flex-col gap-1 text-xs font-bold text-secondary">WhatsApp / tel (E.164 sin +)
               <input value={ficha.tel} onChange={(e) => setFicha({ ...ficha, tel: e.target.value })} className={campo} placeholder="51962000001" /></label>
-            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Foto del chofer (URL)
-              <input value={ficha.img} onChange={(e) => setFicha({ ...ficha, img: e.target.value })} className={campo} /></label>
-            <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Foto del vehículo (URL)
-              <input value={ficha.veh_img} onChange={(e) => setFicha({ ...ficha, veh_img: e.target.value })} className={campo} /></label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Foto del chofer
+              <div className="flex items-center gap-2">
+                {ficha.img && <img src={ficha.img} alt="chofer" className="w-12 h-12 rounded-lg object-cover border border-surface-container-highest shrink-0" />}
+                <button type="button" onClick={() => imgRef.current?.click()}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-surface-container-highest text-xs font-bold text-on-surface bg-surface-container-low hover:bg-surface-container disabled:opacity-50"
+                  disabled={uploadingImg}>
+                  <span className="material-symbols-outlined text-[16px]">upload</span>
+                  {uploadingImg ? 'Subiendo…' : ficha.img ? 'Cambiar foto' : 'Subir foto'}
+                </button>
+                {ficha.img && <button type="button" onClick={() => setFicha(f => ({ ...f, img: '' }))} className="text-xs text-red-500 underline">Quitar</button>}
+                <input ref={imgRef} type="file" accept="image/*" className="hidden" onChange={(e) => subirFoto(e, 'img')} />
+              </div>
+            </label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Foto del vehículo
+              <div className="flex items-center gap-2">
+                {ficha.veh_img && <img src={ficha.veh_img} alt="vehículo" className="w-12 h-12 rounded-lg object-cover border border-surface-container-highest shrink-0" />}
+                <button type="button" onClick={() => vehRef.current?.click()}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-surface-container-highest text-xs font-bold text-on-surface bg-surface-container-low hover:bg-surface-container disabled:opacity-50"
+                  disabled={uploadingVeh}>
+                  <span className="material-symbols-outlined text-[16px]">upload</span>
+                  {uploadingVeh ? 'Subiendo…' : ficha.veh_img ? 'Cambiar foto' : 'Subir foto'}
+                </button>
+                {ficha.veh_img && <button type="button" onClick={() => setFicha(f => ({ ...f, veh_img: '' }))} className="text-xs text-red-500 underline">Quitar</button>}
+                <input ref={vehRef} type="file" accept="image/*" className="hidden" onChange={(e) => subirFoto(e, 'veh_img')} />
+              </div>
+            </label>
             <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Ciudad
               <select value={ficha.ciudad} onChange={(e) => setFicha({ ...ficha, ciudad: e.target.value })} className={campo}>
                 {CIUDADES.map((c) => <option key={c.slug} value={c.slug}>{c.nombre}</option>)}</select></label>
