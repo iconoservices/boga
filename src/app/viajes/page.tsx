@@ -37,6 +37,8 @@ function waLink(numero: string, texto: string) {
   return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
 }
 
+const KIWI_AFFILIATE_URL = 'https://kiwi.tpo.lv/QQudEv2V';
+
 export default function Viajes() {
   const { cartCount, setIsCartOpen } = useCart();
   const [filtro, setFiltro] = useState<Medio>('todos');
@@ -53,7 +55,7 @@ export default function Viajes() {
   const conteo = {
     fluvial: rutas.filter((r) => r.medio === 'fluvial').length,
     terrestre: rutas.filter((r) => r.medio === 'terrestre').length,
-    aereo: rutas.filter((r) => r.medio === 'aereo').length,
+    aereo: rutas.filter((r) => r.medio === 'aereo').length || 'Kiwi',
   };
 
   return (
@@ -83,6 +85,38 @@ export default function Viajes() {
               Encuentra rápidos fluviales por el río Ucayali, colectivos y buses por la Federico Basadre, y vuelos nacionales desde el aeropuerto de Pucallpa.
             </p>
           </div>
+        </div>
+
+        {/* Banner Kiwi.com Vuelos Promocional */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#003831] via-[#005a4e] to-[#01a48c] text-white p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm border border-emerald-900/20">
+          <div className="flex items-start gap-3.5">
+            <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center shrink-0 border border-white/15">
+              <span className="material-symbols-outlined text-[28px] text-emerald-300">flight_takeoff</span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <span className="bg-white/20 text-[10px] font-label-md px-2 py-0.5 rounded-full uppercase tracking-wider text-emerald-200">
+                  Vuelos Nacionales e Internacionales
+                </span>
+                <span className="text-white/60 text-xs font-semibold">vía Kiwi.com</span>
+              </div>
+              <h3 className="font-headline-sm text-base sm:text-lg font-bold leading-tight">
+                ¿Buscas vuelos baratos desde o hacia Pucallpa?
+              </h3>
+              <p className="font-body-md text-xs text-white/80 max-w-xl">
+                Compara en tiempo real pasajes aéreos a Lima, Tarapoto, Iquitos y destinos internacionales con las tarifas más bajas.
+              </p>
+            </div>
+          </div>
+          <a
+            href={KIWI_AFFILIATE_URL}
+            target="_blank"
+            rel="noopener noreferrer sponsored"
+            className="shrink-0 bg-white text-[#003831] hover:bg-emerald-50 active:scale-95 font-label-md text-xs sm:text-sm font-bold px-4 py-2.5 rounded-full flex items-center gap-2 shadow-md transition-all self-stretch md:self-auto justify-center"
+          >
+            <span>Buscar vuelos baratos</span>
+            <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+          </a>
         </div>
 
         {/* Resumen rápido */}
@@ -136,14 +170,69 @@ export default function Viajes() {
 
         {/* Grilla de rutas */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {cargado && lista.length === 0 && (
+          {/* Card Kiwi.com destacada para vuelos */}
+          {(filtro === 'todos' || filtro === 'aereo') && (
+            <div className="bg-gradient-to-b from-white to-emerald-50/40 rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border-2 border-emerald-500/30 flex flex-col group hover:border-emerald-500 transition-all">
+              <div className="px-4 py-3 bg-[#01a48c]/10 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#01a48c]/20 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-[22px] text-[#00695c]">flight</span>
+                  </div>
+                  <div>
+                    <h4 className="font-headline-sm text-sm text-on-surface leading-tight">Vuelos Pucallpa & Todo el Mundo</h4>
+                    <span className="font-label-md text-[10px] text-emerald-700 uppercase tracking-wider font-semibold">
+                      Kiwi.com · Comparador oficial
+                    </span>
+                  </div>
+                </div>
+                <span className="bg-emerald-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  Recomendado
+                </span>
+              </div>
+
+              <div className="p-3.5 flex flex-col gap-2.5 flex-1">
+                <div className="flex flex-col gap-1.5 text-[11px] text-secondary font-label-md">
+                  <span className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[13px] text-emerald-600">connecting_airports</span>
+                    Pucallpa (PCL) ⇄ Lima, Iquitos, Tarapoto y más
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[13px] text-emerald-600">verified</span>
+                    LATAM, Sky, Star Perú y aerolíneas mundiales
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[13px] text-emerald-600">savings</span>
+                    Garantía de conexión y tarifas más económicas
+                  </span>
+                </div>
+
+                <div className="flex items-end justify-between border-t border-surface-container pt-3 mt-auto">
+                  <div className="flex flex-col">
+                    <span className="font-price-lg text-emerald-700 text-base leading-none">Ofertas del día</span>
+                    <span className="text-secondary font-label-md text-[10px] mt-0.5">según fecha de viaje</span>
+                  </div>
+                  <a
+                    href={KIWI_AFFILIATE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer sponsored"
+                    className="flex items-center gap-1.5 bg-[#01a48c] hover:bg-[#008f79] text-white text-[12px] font-label-md px-3.5 py-1.5 rounded-full active:scale-95 transition-all shadow-sm font-semibold"
+                  >
+                    <span>Cotizar vuelo</span>
+                    <span className="material-symbols-outlined text-[15px]">open_in_new</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {cargado && lista.length === 0 && filtro !== 'aereo' && filtro !== 'todos' && (
             <div className="col-span-full bg-white rounded-2xl border border-dashed border-surface-container-highest p-8 text-center">
               <span className="material-symbols-outlined text-secondary/40 text-[32px]">directions_boat</span>
               <p className="font-headline-sm text-sm text-on-surface mt-2">
                 {rutas.length === 0 ? 'Todavía no hay rutas publicadas' : 'No hay rutas de este tipo por ahora'}
               </p>
               <p className="text-secondary font-body-md text-xs mt-1">
-                {rutas.length === 0 ? 'Muy pronto: rápidos, buses y vuelos desde Pucallpa.' : 'Prueba con otro medio de transporte.'}
+                {rutas.length === 0 ? 'Muy pronto: rápidos y buses desde Pucallpa.' : 'Prueba con otro medio de transporte.'}
               </p>
             </div>
           )}
