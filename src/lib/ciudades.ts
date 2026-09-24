@@ -5,7 +5,7 @@
 // suscripciones, Revista) — solo el Market muestra una lista de espera y
 // medimos la demanda por ciudad (tabla `city_interest`).
 //
-// Para "prender" una ciudad: agregá su slug a CIUDADES_ACTIVAS y listo.
+// Para "prender" una ciudad: agrega su slug a CIUDADES_ACTIVAS y listo.
 
 export type Ciudad = { slug: string; nombre: string; region: string };
 
@@ -23,7 +23,7 @@ const ALIAS_CIUDAD: Record<string, string> = {
 };
 
 // Ciudades que el selector ofrece. No es toda la lista del Perú, son las
-// plazas con las que tiene sentido empezar. Agregá las que necesites.
+// plazas con las que tiene sentido empezar. Agrega las que necesites.
 export const CIUDADES: Ciudad[] = [
   { slug: 'pucallpa',    nombre: 'Pucallpa',    region: 'Ucayali' },
   { slug: 'lima',        nombre: 'Lima',        region: 'Lima' },

@@ -443,7 +443,7 @@ export default function PlazaChatBubble() {
             <div className="p-3 bg-white dark:bg-[#1c1b1f] border-t border-gray-200 dark:border-white/10 shrink-0">
               {/* Canal donde se publica */}
               <p className="text-[10px] text-gray-500 px-1 mb-1.5">
-                Vas a publicar en <span className="font-bold text-primary">#{activeChannel === 'todos' ? 'general' : activeChannel}</span> — tocá otro canal arriba para cambiarlo.
+                Vas a publicar en <span className="font-bold text-primary">#{activeChannel === 'todos' ? 'general' : activeChannel}</span> — toca otro canal arriba para cambiarlo.
               </p>
               {/* Alias / Nombre de usuario */}
               <div className="flex items-center justify-between mb-2 text-[11px] text-gray-500 px-1">

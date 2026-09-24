@@ -263,7 +263,7 @@ export default function BannersAdmin() {
                         {editingMarketBannerId === 'new' ? 'Nuevo banner' : 'Editar banner'}
                       </p>
                       <p className="text-[10px] text-[#727785] font-semibold -mt-1.5">
-                        Si tu imagen ya tiene el texto dibujado (un flyer armado en Canva u otra herramienta), dejá el tag y los títulos vacíos — si los llenás, la web dibuja ese texto ENCIMA del de tu imagen y se pisan.
+                        Si tu imagen ya tiene el texto dibujado (un flyer armado en Canva u otra herramienta), deja el tag y los títulos vacíos — si los llenás, la web dibuja ese texto ENCIMA del de tu imagen y se pisan.
                       </p>
                       <div className="flex gap-3">
                         <label className="shrink-0 w-20 h-14 rounded-lg border-2 border-dashed border-[#c2c6d6] flex items-center justify-center cursor-pointer hover:bg-white transition-colors overflow-hidden bg-white">
@@ -326,7 +326,7 @@ export default function BannersAdmin() {
                             />
                             Visible en {{ market: '/market', home: 'el Inicio', negocios: 'la portada de /negocios (se usa la primera foto activa)' }[bannerPageTab]}
                           </label>
-                          <label className="flex items-center gap-2 text-[11px] font-bold text-[#424754] cursor-pointer" title="Desmarcá esto si tu imagen ya trae el texto dibujado — el tag/título/descripción quedan guardados pero no se dibujan encima.">
+                          <label className="flex items-center gap-2 text-[11px] font-bold text-[#424754] cursor-pointer" title="Desmarca esto si tu imagen ya trae el texto dibujado — el tag/título/descripción quedan guardados pero no se dibujan encima.">
                             <input
                               type="checkbox"
                               checked={marketBannerForm.showText}

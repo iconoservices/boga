@@ -24,7 +24,7 @@ const BUSINESS_STRATEGY = [
     category: 'Cómo Cobrar',
     icon: 'layers',
     title: 'Cobrar por "escalones de capacidad", no por ancho de banda',
-    body: 'Nunca le hables de tráfico o bandwidth, es muy técnico para el dueño. Cobrá por escalones: Plan Básico (hasta 500 usuarios registrados), Plan Pro (usuarios ilimitados + mapas de calor de dónde viven sus clientes), Plan Enterprise (varias sedes sincronizadas). Es justo para los dos: si el negocio crece a 5,000 usuarios, gasta más de tus servidores, así que le toca pasar al siguiente plan.',
+    body: 'Nunca le hables de tráfico o bandwidth, es muy técnico para el dueño. Cobra por escalones: Plan Básico (hasta 500 usuarios registrados), Plan Pro (usuarios ilimitados + mapas de calor de dónde viven sus clientes), Plan Enterprise (varias sedes sincronizadas). Es justo para los dos: si el negocio crece a 5,000 usuarios, gasta más de tus servidores, así que le toca pasar al siguiente plan.',
   },
   {
     category: 'Cómo Cobrar',
@@ -60,7 +60,7 @@ const BUSINESS_STRATEGY = [
     category: 'Cómo Escala el Negocio',
     icon: 'dns',
     title: '¿Servidores propios o SaaS? El dilema de la propiedad',
-    body: 'Vender el software e instalarlo en el servidor del cliente no conviene: te pagan una vez y si el negocio explota a 1 millón de usuarios, vos no ganás nada extra. Mejor White Label multi-tenant en tu propia infraestructura — la app lleva su logo y su nombre, pero el motor y los datos corren en tus servidores. Cobrás mensualidad Enterprise + mantenimiento, y si se quieren ir se llevan sus datos, no el código: la tecnología sigue siendo tuya.',
+    body: 'Vender el software e instalarlo en el servidor del cliente no conviene: te pagan una vez y si el negocio explota a 1 millón de usuarios, vos no ganás nada extra. Mejor White Label multi-tenant en tu propia infraestructura — la app lleva su logo y su nombre, pero el motor y los datos corren en tus servidores. Cobras mensualidad Enterprise + mantenimiento, y si se quieren ir se llevan sus datos, no el código: la tecnología sigue siendo tuya.',
   },
   {
     category: 'Cómo Escala el Negocio',
@@ -72,7 +72,7 @@ const BUSINESS_STRATEGY = [
     category: 'La Salida',
     icon: 'sell',
     title: '¿Y si quieren comprarte el software?',
-    body: 'Cuando el cliente crece, a veces pide comprar la app entera para dejar de pagar mensualidad. No vendas el código barato: pedí una cifra de 6 o 7 dígitos, o mejor — no vendas el código, dales una licencia exclusiva de por vida por un pago único (ej. $50,000) + mantenimiento mensual.',
+    body: 'Cuando el cliente crece, a veces pide comprar la app entera para dejar de pagar mensualidad. No vendas el código barato: pide una cifra de 6 o 7 dígitos, o mejor — no vendas el código, dales una licencia exclusiva de por vida por un pago único (ej. $50,000) + mantenimiento mensual.',
   },
 ] as const;
 

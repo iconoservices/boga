@@ -38,14 +38,14 @@ export default function LibroDeReclamacionesPage() {
     e.preventDefault();
     setError('');
     if (!h.con_nombre || !h.con_email || !h.detalle) {
-      setError('Completá tu nombre, tu correo y el detalle.');
+      setError('Completa tu nombre, tu correo y el detalle.');
       return;
     }
     setLoading(true);
     const { data, error: err } = await supabase.rpc('presentar_reclamacion', { p: h });
     setLoading(false);
     if (err || !data || !data[0]) {
-      setError('No pudimos registrar tu reclamo. Intentá de nuevo en unos minutos o escribí a ' + PROVEEDOR.email + '.');
+      setError('No pudimos registrar tu reclamo. Intenta de nuevo en unos minutos o escribe a ' + PROVEEDOR.email + '.');
       return;
     }
     setOk({ numero: data[0].numero, created_at: data[0].created_at });
@@ -81,8 +81,8 @@ export default function LibroDeReclamacionesPage() {
             </div>
 
             <p className="mt-4 rounded-md bg-surface-container-low p-3 font-body-md text-[13px] leading-relaxed text-on-surface/80">
-              Conforme al Código de Protección y Defensa del Consumidor, tenés un Libro de
-              Reclamaciones a tu disposición. Completá esta hoja y te responderemos en un plazo
+              Conforme al Código de Protección y Defensa del Consumidor, tienes un Libro de
+              Reclamaciones a tu disposición. Completa esta hoja y te responderemos en un plazo
               máximo de <strong>{PLAZO_RESPUESTA_DIAS_HABILES} días hábiles</strong>. Presentar un
               reclamo no impide acudir a INDECOPI.
             </p>
@@ -114,7 +114,7 @@ export default function LibroDeReclamacionesPage() {
                   </div>
                   <label className="flex items-center gap-2 sm:col-span-2">
                     <input type="checkbox" className="h-4 w-4 accent-primary" checked={h.con_menor} onChange={(e) => set('con_menor', e.target.checked)} />
-                    <span className="font-body-md text-[13px] text-on-surface/80">Soy menor de edad (completá el nombre del padre/madre o tutor)</span>
+                    <span className="font-body-md text-[13px] text-on-surface/80">Soy menor de edad (completa el nombre del padre/madre o tutor)</span>
                   </label>
                   {h.con_menor && (
                     <div className="sm:col-span-2">
@@ -169,10 +169,10 @@ export default function LibroDeReclamacionesPage() {
                   </div>
                   <div>
                     <label className={lbl}>Detalle *</label>
-                    <textarea className={field} rows={4} required value={h.detalle} onChange={(e) => set('detalle', e.target.value)} placeholder="Contanos qué pasó, cuándo y con qué pedido o comercio." />
+                    <textarea className={field} rows={4} required value={h.detalle} onChange={(e) => set('detalle', e.target.value)} placeholder="Cuéntanos qué pasó, cuándo y con qué pedido o comercio." />
                   </div>
                   <div>
-                    <label className={lbl}>Qué pedís (opcional)</label>
+                    <label className={lbl}>Qué pides (opcional)</label>
                     <textarea className={field} rows={2} value={h.pedido} onChange={(e) => set('pedido', e.target.value)} placeholder="Devolución, reenvío, disculpa…" />
                   </div>
                 </div>
@@ -221,7 +221,7 @@ function HojaEnviada({ h, enviada }: { h: HojaReclamacion; enviada: Enviada }) {
           <h1 className="font-headline-lg text-xl font-extrabold text-on-surface">Hoja de Reclamación registrada</h1>
         </div>
         <p className="mt-1 font-body-md text-[13px] leading-relaxed text-on-surface/80">
-          Tu código es <strong>{codigoHoja(enviada.numero)}</strong>. Guardá o imprimí esta hoja.
+          Tu código es <strong>{codigoHoja(enviada.numero)}</strong>. Guarda o imprime esta hoja.
           Te responderemos al correo <strong>{h.con_email}</strong> en un máximo de{' '}
           {PLAZO_RESPUESTA_DIAS_HABILES} días hábiles.
         </p>

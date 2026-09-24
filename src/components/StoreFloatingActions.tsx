@@ -117,9 +117,9 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
       const url = window.location.href;
       navigator.clipboard?.writeText(url).catch(() => {});
       if (navigator.share) {
-        navigator.share({ title: store.name, text: `Instalá la app de ${store.name}`, url }).catch(() => {});
+        navigator.share({ title: store.name, text: `Instala la app de ${store.name}`, url }).catch(() => {});
       } else {
-        alert(`Para instalar "${store.name}" como app aparte, abrí este link en tu navegador (Chrome o Safari), no desde acá adentro. Se copió el link:\n\n${url}`);
+        alert(`Para instalar "${store.name}" como app aparte, abre este link en tu navegador (Chrome o Safari), no desde acá adentro. Se copió el link:\n\n${url}`);
       }
       return;
     }
@@ -129,7 +129,7 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
     if (/iphone|ipad|ipod/.test(ua) && isSafari) {
       setGuiaIOS(true);
     } else {
-      alert('Para instalar:\n\n1. Abrí el menú del navegador (⋯)\n2. Buscá "Agregar a pantalla de inicio"\n3. Confirmá la instalación');
+      alert('Para instalar:\n\n1. Abre el menú del navegador (⋯)\n2. Busca "Agregar a pantalla de inicio"\n3. Confirma la instalación');
     }
   };
 

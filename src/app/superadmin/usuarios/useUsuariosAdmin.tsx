@@ -127,7 +127,7 @@ export function useUsuariosAdmin({ stores, authUser }: {
   // Ademas de mandar/copiar el link, si se eligio tienda le asigna el user_id
   // ya mismo: generateLink (con la service_role key, solo en /api) resuelve o
   // crea la cuenta y devuelve su id de una, sin esperar a que la persona
-  // toque el link. Antes esto quedaba pendiente ("volvé a mano despues").
+  // toque el link. Antes esto quedaba pendiente ("vuelve a mano despues").
   const asignarTiendaInvitada = async (userId: string | null | undefined) => {
     if (!userId || inviteRole !== 'store_admin' || !inviteStore) return;
     const { error } = await supabase.from('stores').update({ user_id: userId }).eq('slug', inviteStore);
@@ -195,7 +195,7 @@ export function useUsuariosAdmin({ stores, authUser }: {
       await navigator.clipboard.writeText(data.link);
       alert(linkType === 'password'
         ? 'Link copiado — al tocarlo va a poder crear su propia contraseña.'
-        : 'Link copiado — mandalo por WhatsApp o donde prefieras.');
+        : 'Link copiado — mándalo por WhatsApp o donde prefieras.');
     } catch (err: any) {
       alert('No se pudo copiar el link: ' + err.message);
     } finally {
@@ -223,7 +223,7 @@ export function useUsuariosAdmin({ stores, authUser }: {
     if (editingUser.role === 'super_admin') {
       alert(
         'El acceso de Super Admin sale de la función is_superadmin() en la base de datos, no de esta tabla.\n\n' +
-        'Para dar acceso total a otra persona hay que editar esa función en el SQL editor de Supabase — avisame y lo hago.'
+        'Para dar acceso total a otra persona hay que editar esa función en el SQL editor de Supabase — avísame y lo hago.'
       );
       return;
     }

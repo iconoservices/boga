@@ -223,7 +223,7 @@ const INITIAL_MODULES: StoreModule[] = [
     name: 'Auto-Branding con IA',
     icon: 'auto_awesome',
     price: 'S/ 59 /mes',
-    description: 'La extracción de colores de logo que hoy solo usás vos desde superadmin, self-service para el dueño: sube su logo o una foto de un plato y la tienda se retematiza sola, sin tener que pedírtelo.',
+    description: 'La extracción de colores de logo que hoy solo usas vos desde superadmin, self-service para el dueño: sube su logo o una foto de un plato y la tienda se retematiza sola, sin tener que pedírtelo.',
     active: false,
     tier: 'Basic',
     buildStatus: 'parcial',
@@ -753,7 +753,7 @@ function PaquetesContenido() {
                                       ? 'bg-[#0058be] border-[#0058be] text-white'
                                       : 'bg-[#f2f3fd] border-[#c2c6d6] text-[#424754] hover:border-[#0058be]'
                                   }`}
-                                  title={mod.active ? (on ? `Quitar de ${s.name}` : `Activar en ${s.name}`) : 'Activá el módulo primero'}
+                                  title={mod.active ? (on ? `Quitar de ${s.name}` : `Activar en ${s.name}`) : 'Activa el módulo primero'}
                                 >
                                   {storeMeta[s.slug]?.emoji || '🏪'} {s.name}
                                 </button>

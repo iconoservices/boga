@@ -32,7 +32,7 @@ export default function ResetPasswordPage() {
     if (updateError) {
       setError(
         updateError.message.includes('session')
-          ? 'El link ya venció o ya se usó. Volvé a pedir "¿La olvidaste?" desde el login.'
+          ? 'El link ya venció o ya se usó. Vuelve a pedir "¿La olvidaste?" desde el login.'
           : updateError.message
       );
       return;
@@ -46,7 +46,7 @@ export default function ResetPasswordPage() {
       <div className="w-full max-w-[400px] bg-white rounded-3xl p-8 shadow-[0_15px_15px_rgba(0,0,0,0.03)] border border-surface-container-highest">
         <h2 className="font-headline-md text-xl text-on-surface font-black">Nueva contraseña</h2>
         <p className="text-xs text-secondary mt-1 mb-6 leading-normal font-body-md">
-          Elegí una contraseña para tu cuenta.
+          Elige una contraseña para tu cuenta.
         </p>
 
         {error && (

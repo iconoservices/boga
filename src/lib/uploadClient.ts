@@ -60,7 +60,7 @@ async function compressImage(file: File, maxDim = 1600, quality = 0.82): Promise
 // si tampoco se puede, avisa con claridad que hay que volver a entrar.
 async function llamarConSesion(url: string, armar: (token: string) => RequestInit): Promise<{ res: Response; data: any }> {
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session) throw new Error('Tenés que iniciar sesión para subir imágenes');
+  if (!session) throw new Error('Tienes que iniciar sesión para subir imágenes');
 
   const intentar = async (token: string) => {
     const res = await fetch(url, armar(token));

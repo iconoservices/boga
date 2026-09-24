@@ -52,7 +52,7 @@ const PREGUNTAS = [
   { q: '¿Es legal?', a: 'El pandero (o junta) es una práctica de ahorro tradicional y legal en el Perú. La diferencia con hacerlo "a la antigua" es que acá está todo registrado, con contrato y sin que la plata dependa de una sola persona.' },
   { q: '¿Cuándo me toca?', a: 'Depende del método del grupo: por sorteo (al azar, un mes distinto para cada uno) o por remate (el que más adelanta cuotas cobra antes). Lo eligen entre todos al armar el grupo.' },
   { q: '¿Puedo adelantar mi turno?', a: 'Sí, en los grupos por remate: ofrecés adelantar cuotas y si nadie ofrece más, cobrás ese mes. Es la forma de tener la plata antes si la necesitás urgente.' },
-  { q: '¿Puedo salir antes de terminar?', a: 'Si ya cobraste, tenés que terminar de pagar tus cuotas (esa plata es de los demás). Si todavía no cobraste, podés ceder tu lugar a alguien que valide BogaHub.' },
+  { q: '¿Puedo salir antes de terminar?', a: 'Si ya cobraste, tienes que terminar de pagar tus cuotas (esa plata es de los demás). Si todavía no cobraste, puedes ceder tu lugar a alguien que valide BogaHub.' },
 ];
 
 export default function Pandero() {
@@ -77,7 +77,7 @@ export default function Pandero() {
               El <span style={{ color: ORO }}>Pandero</span> de BogaHub
             </h1>
             <p className="font-body-lg text-base lg:text-lg leading-relaxed max-w-[54ch]" style={{ color: CREMA + 'cc' }}>
-              Ahorrá en grupo y comprá lo grande sin préstamo ni intereses. El pandero de
+              Ahorra en grupo y compra lo grande sin préstamo ni intereses. El pandero de
               siempre, pero con contrato, verificación y sorteo a la vista de todos.
             </p>
           </section>
@@ -181,7 +181,7 @@ export default function Pandero() {
             <span className="material-symbols-outlined text-[32px]">savings</span>
             <h2 className="font-headline-lg font-extrabold text-xl lg:text-2xl">Todavía estamos armando los primeros grupos</h2>
             <p className="font-body-md text-sm max-w-[44ch]" style={{ opacity: 0.75 }}>
-              Pronto vas a poder entrar a un pandero desde acá. Dejanos tu interés y te avisamos
+              Pronto vas a poder entrar a un pandero desde acá. Déjanos tu interés y te avisamos
               cuando abra el primer grupo de tu zona.
             </p>
             <button

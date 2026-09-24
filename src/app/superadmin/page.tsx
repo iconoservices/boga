@@ -268,7 +268,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         subcategory: newStoreProduct.subcategory || null,
         image: imageUrl,
         description: newStoreProduct.desc || null,
-        stock: 0,
+        stock: null,
         status: 'Activo',
       }]).select();
       if (error) throw error;
@@ -751,14 +751,14 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   const handlePickLogoColor = async () => {
     const imageUrl = logoPreview || heroPreview || getTemplate(storeForm.template as string)?.heroImage;
     if (!imageUrl) {
-      alert('Subí un logo o un banner primero para poder sacar sus colores.');
+      alert('Sube un logo o un banner primero para poder sacar sus colores.');
       return;
     }
     setExtractingTheme(true);
     const extracted = await extractThemeFromImageClient(imageUrl);
     setExtractingTheme(false);
     if (!extracted) {
-      alert('No se pudieron sacar colores de esa imagen. Probá con otra.');
+      alert('No se pudieron sacar colores de esa imagen. Prueba con otra.');
       return;
     }
     setLogoTheme(extracted);
@@ -962,7 +962,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       // como si hubiese guardado. Cortar aca y avisar en vez de mentirle al admin.
       if (!writeData || writeData.length === 0) {
         throw new Error(
-          'Supabase no devolvió ninguna fila guardada. Probablemente una política de Row Level Security (RLS) de la tabla "stores" está bloqueando el guardado. Revisá las políticas de UPDATE/INSERT en el dashboard de Supabase.'
+          'Supabase no devolvió ninguna fila guardada. Probablemente una política de Row Level Security (RLS) de la tabla "stores" está bloqueando el guardado. Revisa las políticas de UPDATE/INSERT en el dashboard de Supabase.'
         );
       }
 
@@ -1489,7 +1489,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
             </>
           ) : inviteSent ? (
             avisoInvitacionEnviada(
-              `Cuando entre por primera vez, volvé acá para confirmar que le quedó asignada "${stores[assignStoreSlug]?.name || assignStoreSlug}".`,
+              `Cuando entre por primera vez, vuelve acá para confirmar que le quedó asignada "${stores[assignStoreSlug]?.name || assignStoreSlug}".`,
               () => { setAssignStoreSlug(null); setInviteSent(false); }
             )
           ) : (
@@ -1512,7 +1512,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
               {usuariosSinTienda.length > 0 && (
                 <div className="px-4 pt-4">
                   <label className="block text-[10px] font-bold text-[#424754] mb-1.5 uppercase tracking-wide">
-                    O elegí una cuenta que ya existe
+                    O elige una cuenta que ya existe
                   </label>
                   <div className="flex gap-2">
                     <select
@@ -2013,7 +2013,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                         <p className="text-[10px] text-[#727785] font-semibold mt-1">
                           {storeForm.ownerEmail.trim() && storeForm.ownerEmail.trim().toLowerCase() !== originalOwnerEmail.trim().toLowerCase()
                             ? 'Al guardar: si el correo no tiene cuenta, se crea sola. Te copiamos un link de acceso para mandarle.'
-                            : 'Si lo dejás vacío, la tienda queda sin dueño (solo vos la ves en /superadmin) hasta que se la asignes después.'}
+                            : 'Si lo dejas vacío, la tienda queda sin dueño (solo vos la ves en /superadmin) hasta que se la asignes después.'}
                         </p>
                       </div>
                     </div>
@@ -2029,7 +2029,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                       <h3 className="text-[10px] font-black text-[#424754] uppercase tracking-widest">Paleta de Colores</h3>
                     </div>
                     <p className="text-[10px] text-[#727785] font-semibold -mt-2">
-                      Elegí un color por rubro, o dejá los de la plantilla elegida en "Estructura de Página".
+                      Elige un color por rubro, o deja los de la plantilla elegida en "Estructura de Página".
                     </p>
 
                     <div className="flex flex-wrap gap-3">
@@ -2213,7 +2213,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           placeholder="https://mitienda.vercel.app"
                         />
                         <p className="text-[9px] text-[#727785] font-semibold mt-1">
-                          Para negocios que ya tienen su propia página armada. Si lo cargás, los links a esta tienda en todo el marketplace mandan ahí en vez de a la página de BogaHub.
+                          Para negocios que ya tienen su propia página armada. Si lo cargas, los links a esta tienda en todo el marketplace mandan ahí en vez de a la página de BogaHub.
                         </p>
                       </div>
 
@@ -2241,7 +2241,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                             );
                           })}
                         </div>
-                        <p className="text-[9px] text-[#727785] font-semibold mt-1">Informativo: se muestra en la ficha de la tienda (solo en las plantillas que lo soportan). Si no elegís ninguno, se muestra solo Efectivo. Ningún pago se procesa en la app.</p>
+                        <p className="text-[9px] text-[#727785] font-semibold mt-1">Informativo: se muestra en la ficha de la tienda (solo en las plantillas que lo soportan). Si no eliges ninguno, se muestra solo Efectivo. Ningún pago se procesa en la app.</p>
                       </div>
 
                       <div>
@@ -2272,7 +2272,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                       <h3 className="text-[10px] font-black text-[#424754] uppercase tracking-widest">Ficha del Local (Opcional)</h3>
                     </div>
                     <p className="text-[10px] text-[#727785] font-semibold -mt-2">
-                      Se ve en el sitio público de la tienda. Si no tiene local a la calle, dejalo vacío.
+                      Se ve en el sitio público de la tienda. Si no tiene local a la calle, déjalo vacío.
                     </p>
 
                     <div className="grid grid-cols-2 gap-3">
@@ -2331,7 +2331,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                       <h3 className="text-[10px] font-black text-[#424754] uppercase tracking-widest">Redes Sociales (Opcional)</h3>
                     </div>
                     <p className="text-[10px] text-[#727785] font-semibold -mt-2">
-                      Pegá el link completo del perfil. Si dejás uno vacío, no se muestra.
+                      Pega el link completo del perfil. Si dejas uno vacío, no se muestra.
                     </p>
 
                     <div>
@@ -2443,7 +2443,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                               image: p.image,
                               description: p.description || null,
                               store: storeForm.slug,
-                              stock: 0,
+                              stock: null,
                               status: 'Activo',
                             }))
                           ).then(({ error }) => {
@@ -2571,7 +2571,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
               )}
               <div>
                 <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">
-                  Escribí BORRAR para confirmar
+                  Escribe BORRAR para confirmar
                 </label>
                 <input
                   type="text"

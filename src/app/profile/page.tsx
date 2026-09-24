@@ -371,7 +371,7 @@ export default function ProfilePage() {
               </button>
             </div>
             <p className="text-xs text-secondary mb-5 leading-normal font-body-md">
-              Como ya iniciaste sesión, no hace falta la contraseña actual — solo elegí una nueva.
+              Como ya iniciaste sesión, no hace falta la contraseña actual — solo elige una nueva.
             </p>
 
             {passwordError && (

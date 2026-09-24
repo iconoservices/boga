@@ -81,7 +81,7 @@ export default function LegalIndex() {
         )}
 
         <p className="mt-12 font-body-md text-[12px] leading-relaxed text-secondary">
-          ¿Dudas? Escribí a {EMPRESA.email}. Para dejar un reclamo formal,{' '}
+          ¿Dudas? Escribe a {EMPRESA.email}. Para dejar un reclamo formal,{' '}
           <Link href="/libro-de-reclamaciones" className="underline hover:text-on-surface">
             Libro de Reclamaciones
           </Link>

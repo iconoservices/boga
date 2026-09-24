@@ -253,8 +253,8 @@ export default function AdminRevista() {
             <h1 className="text-2xl font-bold">Revista · Yo Soy de la Selva</h1>
             <p className="text-white/50 text-sm mt-1">
               {esSuperadmin
-                ? 'Creás, editás y publicás notas. Solo vos publicás.'
-                : 'Creás y editás notas. El superadmin las publica.'}
+                ? 'Creas, editás y publicás notas. Solo vos publicás.'
+                : 'Creas y editás notas. El superadmin las publica.'}
             </p>
           </div>
           <div className="flex gap-2">
@@ -267,7 +267,7 @@ export default function AdminRevista() {
 
         {tablaVacia && esSuperadmin && (
           <div className="rounded-xl border border-white/10 bg-white/5 p-4 flex items-center justify-between flex-wrap gap-3">
-            <p className="text-sm text-white/70">La tabla está vacía. Importá las 26 notas originales para empezar.</p>
+            <p className="text-sm text-white/70">La tabla está vacía. Importa las 26 notas originales para empezar.</p>
             <button
               onClick={async () => {
                 if (!token) return;
@@ -344,7 +344,7 @@ export default function AdminRevista() {
                 <img src={form.img} alt="" className="w-full max-h-52 object-cover rounded-md" />
               )}
               <div className="flex gap-2 items-center flex-wrap">
-                <input value={form.img} onChange={(e) => set('img', e.target.value)} className={inp + ' flex-1 min-w-[200px]'} placeholder="Pegá la URL (ej. Wikimedia) o subí un archivo →" />
+                <input value={form.img} onChange={(e) => set('img', e.target.value)} className={inp + ' flex-1 min-w-[200px]'} placeholder="Pega la URL (ej. Wikimedia) o sube un archivo →" />
                 <label className="px-3 py-2 rounded-lg bg-white/10 text-sm cursor-pointer hover:bg-white/20 whitespace-nowrap">
                   {subiendo ? 'Subiendo…' : 'Subir archivo'}
                   <input type="file" accept="image/*" className="sr-only" disabled={subiendo}
@@ -360,7 +360,7 @@ export default function AdminRevista() {
             </div>
 
             <label className="flex flex-col gap-1">
-              <span className={lbl}>Cuerpo · un párrafo por bloque, separá con una línea en blanco</span>
+              <span className={lbl}>Cuerpo · un párrafo por bloque, separa con una línea en blanco</span>
               <textarea value={form.cuerpo} onChange={(e) => set('cuerpo', e.target.value)} rows={8} className={inp} />
             </label>
 

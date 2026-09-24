@@ -46,7 +46,7 @@ const PLANES_TRANSPORTE = [
     nombre: 'Transporte Premium',
     icon: 'car_rental',
     tagline: 'Auto privado, chofer dedicado',
-    desc: 'Vehículo cerrado con aire, chofer asignado y viajes programados o a pedido. Para el aeropuerto, una reunión, o cuando querés llegar impecable.',
+    desc: 'Vehículo cerrado con aire, chofer asignado y viajes programados o a pedido. Para el aeropuerto, una reunión, o cuando quieres llegar impecable.',
     modo: 'Por viaje o por hora',
   },
 ];

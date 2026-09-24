@@ -355,7 +355,7 @@ export default function EventosAdmin() {
               <select value={ficha.mes} onChange={(e) => setFicha({ ...ficha, mes: e.target.value })} className={campo}>
                 {MESES.map((m) => <option key={m}>{m}</option>)}</select></label>
             <p className="text-[9px] text-secondary/70 font-semibold sm:col-span-2 -mt-2">
-              La fecha real oculta el evento solo después de pasar. Si la dejás vacía, no se oculta automático — lo tenés que hacer a mano con "Estado".
+              La fecha real oculta el evento solo después de pasar. Si la dejas vacía, no se oculta automático — lo tienes que hacer a mano con "Estado".
             </p>
             <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Precio
               <input value={ficha.precio} onChange={(e) => setFicha({ ...ficha, precio: e.target.value })} className={campo} placeholder="S/ 30 o Libre" /></label>

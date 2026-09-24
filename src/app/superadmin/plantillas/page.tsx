@@ -257,7 +257,7 @@ export default function PlantillasPage() {
     alert(
       'Las plantillas se crean en el código, no desde el panel.\n\n' +
       'Para agregar una:\n' +
-      '1. Creá el componente en src/templates/<id>/\n' +
+      '1. Crea el componente en src/templates/<id>/\n' +
       '2. Registralo en src/lib/templates.config.ts y en StoreRenderer\n\n' +
       'Una vez hecho eso aparece acá automáticamente.'
     );

@@ -31,6 +31,11 @@ interface Product {
   created_at: string;
 }
 
+// Un producto tiene stock ilimitado si no tiene cantidad, si es 999 o más, o si quedó en 0 sin estar Agotado
+// (la columna `stock` vale 0 por defecto en la base y antes esos productos se veían todos "Sin stock").
+const stockIlimitado = (p: { stock?: number | null; status?: string | null }) =>
+  p.stock == null || p.stock >= 999 || (p.stock === 0 && p.status !== 'Agotado');
+
 type TabId = 'inicio' | 'products' | 'orders' | 'pos' | 'metrics' | 'stores';
 
 // Orden canónico de la navegación. La sidebar de escritorio, la barra inferior
@@ -338,12 +343,18 @@ function AdminDashboard({ user }: { user: User }) {
     setPreviewUrl(null);
   };
 
-  // Cargar productos al iniciar
+  // Tiendas y pedidos al iniciar (los pedidos ya vienen filtrados por dueño desde la base).
   useEffect(() => {
-    fetchProducts();
     fetchStores();
     fetchOrders();
   }, []);
+
+  // Productos: solo los de MIS tiendas. Antes se bajaba el catálogo de TODAS las tiendas y se filtraba
+  // acá (más datos por cada dueño que abría el panel, y crece con cada tienda nueva).
+  useEffect(() => {
+    fetchProducts(myStoreSlugs);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myStoreSlugs.join(',')]);
 
   // Al abrir el editor desde una tarjeta del Inicio, saltar a esa sección.
   useEffect(() => {
@@ -354,11 +365,17 @@ function AdminDashboard({ user }: { user: User }) {
     return () => clearTimeout(t);
   }, [isStoreEditorOpen, storeEditorSection]);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (slugs: string[] = myStoreSlugs) => {
+    if (slugs.length === 0) {
+      setProducts([]);
+      if (dbStores.length > 0) setIsLoading(false);   // ya cargaron las tiendas y no hay ninguna propia
+      return;
+    }
     setIsLoading(true);
     const { data, error } = await supabase
       .from('products')
-      .select('*')
+      .select('id,name,store,price,category,subcategory,stock,status,image,description,created_at')
+      .in('store', slugs)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -552,14 +569,14 @@ function AdminDashboard({ user }: { user: User }) {
   const handlePickLogoColor = async () => {
     const imageUrl = storeLogoPreview || storeHeroPreview;
     if (!imageUrl) {
-      alert('Subí un logo o una portada primero para poder sacar sus colores.');
+      alert('Sube un logo o una portada primero para poder sacar sus colores.');
       return;
     }
     setExtractingTheme(true);
     const extracted = await extractThemeFromImageClient(imageUrl);
     setExtractingTheme(false);
     if (!extracted) {
-      alert('No se pudieron sacar colores de esa imagen. Probá con otra.');
+      alert('No se pudieron sacar colores de esa imagen. Prueba con otra.');
       return;
     }
     setLogoTheme(extracted);
@@ -790,7 +807,9 @@ function AdminDashboard({ user }: { user: User }) {
 
   const handleEdit = (product: Product) => {
     setEditingProductId(product.id);
-    const hasFixedStock = product.stock !== null && product.stock !== undefined && product.stock >= 0 && product.stock < 999;
+    // stock 0 con estado Activo = "no se cargó" (es el valor por defecto de la base), no "agotado": abrirlo a
+    // editar no debe convertirlo en stock limitado con 0 (al guardar quedaría marcado como Agotado).
+    const hasFixedStock = !stockIlimitado(product);
     setNewProduct({
       name: product.name,
       store: product.store,
@@ -1049,8 +1068,8 @@ function AdminDashboard({ user }: { user: User }) {
             <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
               <span className="material-symbols-outlined text-gray-400 text-[28px]">storefront</span>
             </div>
-            <h3 className="font-bold text-gray-900">Todavía no tenés ninguna carta</h3>
-            <p className="text-gray-500 text-sm mt-1">Reclamá la que te creó el equipo de BogaHub para empezar.</p>
+            <h3 className="font-bold text-gray-900">Todavía no tienes ninguna carta</h3>
+            <p className="text-gray-500 text-sm mt-1">Reclama la que te creó el equipo de BogaHub para empezar.</p>
             <button
               onClick={() => { setPickerDraft([]); setIsStorePickerOpen(true); }}
               className="mt-5 px-4 py-2.5 bg-[#b8130e] text-white font-bold rounded-md text-sm"
@@ -1189,7 +1208,7 @@ function AdminDashboard({ user }: { user: User }) {
                   { icon: 'storefront', titulo: 'Datos del negocio', sub: 'Información principal y redes', section: 'datos' },
                   { icon: 'schedule', titulo: 'Horarios', sub: 'Define apertura y cierre', section: 'horario' },
                   { icon: 'payments', titulo: 'Métodos de pago', sub: 'Configura opciones', section: 'pagos' },
-                  { icon: 'notifications', titulo: 'Avisos y notificaciones', sub: 'WhatsApp y correo donde recibís tus pedidos', section: 'avisos' },
+                  { icon: 'notifications', titulo: 'Avisos y notificaciones', sub: 'WhatsApp y correo donde recibes tus pedidos', section: 'avisos' },
                 ].map(c => (
                   <button key={c.section} onClick={() => openStoreEditor(inicioStore.slug, c.section)} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm text-left hover:shadow-md hover:border-gray-200 transition-all flex flex-col gap-2">
                     <span className="w-9 h-9 rounded-lg bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center">
@@ -1409,7 +1428,7 @@ function AdminDashboard({ user }: { user: User }) {
                                   </span>
                                 </td>
                                 <td className="p-3">
-                                  {p.stock === null || p.stock === undefined || p.stock >= 999 ? (
+                                  {stockIlimitado(p) ? (
                                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100/80">
                                       <span className="material-symbols-outlined text-[13px]">all_inclusive</span>
                                       Ilimitado
@@ -1493,7 +1512,7 @@ function AdminDashboard({ user }: { user: User }) {
                                   {p.category} {p.subcategory ? `• ${p.subcategory}` : ''}
                                 </span>
                                 <span className="text-[10px] text-gray-300">•</span>
-                                {p.stock === null || p.stock === undefined || p.stock >= 999 ? (
+                                {stockIlimitado(p) ? (
                                   <span className="text-[10px] font-semibold text-emerald-600 flex items-center gap-0.5">
                                     <span className="material-symbols-outlined text-[12px]">all_inclusive</span>
                                     Ilimitado
@@ -2794,7 +2813,7 @@ function AdminDashboard({ user }: { user: User }) {
               <div id="editor-categorias" className="scroll-mt-4">
                 <label className="block text-sm font-bold text-gray-700 mb-2">Categorías del Menú</label>
                 <p className="text-xs text-gray-500 mb-3">
-                  Los rubros de tu carta (ej: Bebidas, Comidas, Postres). Al agregar un producto, elegís a cuál pertenece.
+                  Los rubros de tu carta (ej: Bebidas, Comidas, Postres). Al agregar un producto, eliges a cuál pertenece.
                 </p>
                 <div className="flex flex-wrap gap-2 mb-3">
                   {storeCategories.length === 0 && (
@@ -3015,7 +3034,7 @@ function AdminDashboard({ user }: { user: User }) {
                   })}
                 </div>
                 {storeForm.metodos_pago.length === 0 && (
-                  <p className="text-xs text-gray-400 mt-2">Si no elegís ninguno, tu tienda muestra solo Efectivo.</p>
+                  <p className="text-xs text-gray-400 mt-2">Si no eliges ninguno, tu tienda muestra solo Efectivo.</p>
                 )}
               </div>
 
@@ -3024,7 +3043,7 @@ function AdminDashboard({ user }: { user: User }) {
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Ficha del local (opcional)</label>
                   <p className="text-xs text-gray-500">
-                    Si tu negocio no tiene local a la calle o no querés mostrar estos datos, dejalos vacíos: tu tienda simplemente no los muestra.
+                    Si tu negocio no tiene local a la calle o no quieres mostrar estos datos, déjalos vacíos: tu tienda simplemente no los muestra.
                   </p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -3079,7 +3098,7 @@ function AdminDashboard({ user }: { user: User }) {
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Redes sociales (opcional)</label>
                   <p className="text-xs text-gray-500">
-                    Pegá el link completo de tu perfil. Si dejás uno vacío, tu tienda simplemente no lo muestra.
+                    Pega el link completo de tu perfil. Si dejas uno vacío, tu tienda simplemente no lo muestra.
                   </p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

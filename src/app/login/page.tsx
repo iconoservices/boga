@@ -34,7 +34,7 @@ export default function LoginPage() {
       const { error: magicLinkError } = await signInWithMagicLink(email, redirectTo);
       setIsLoading(false);
       if (magicLinkError) { setError(magicLinkError); return; }
-      setConfirmMessage('Listo. Revisa tu correo y tocá el link para entrar — no hace falta contraseña.');
+      setConfirmMessage('Listo. Revisa tu correo y toca el link para entrar — no hace falta contraseña.');
       return;
     }
 
@@ -59,13 +59,13 @@ export default function LoginPage() {
   const handleForgotPassword = async () => {
     setError(null);
     setConfirmMessage(null);
-    if (!email) { setError('Escribí tu correo arriba primero.'); return; }
+    if (!email) { setError('Escribe tu correo arriba primero.'); return; }
     setIsLoading(true);
     const redirectTo = `${window.location.origin}/reset-password`;
     const { error: resetError } = await resetPassword(email, redirectTo);
     setIsLoading(false);
     if (resetError) { setError(resetError); return; }
-    setConfirmMessage('Listo. Revisa tu correo y tocá el link para poner una contraseña nueva.');
+    setConfirmMessage('Listo. Revisa tu correo y toca el link para poner una contraseña nueva.');
   };
 
   return (
@@ -131,7 +131,7 @@ export default function LoginPage() {
               </h2>
               <p className="text-xs text-secondary mt-1 mb-6 leading-normal font-body-md">
                 {useMagicLink
-                  ? 'Escribí tu correo y te mandamos un link para entrar, sin contraseña.'
+                  ? 'Escribe tu correo y te mandamos un link para entrar, sin contraseña.'
                   : isSignUp
                   ? 'Únete a BogaHub y crea tu carta, catálogo o tienda local favorita en un clic.'
                   : 'Ingresa para disfrutar, pedir o gestionar tus tiendas locales.'}

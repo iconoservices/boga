@@ -50,7 +50,7 @@ export default function SuperadminLegal() {
           </p>
           <p className="mt-1 text-[13px] leading-relaxed text-[#5c4a1a]">
             Nada se publica como "vigente" sin que lo revise un abogado peruano.
-            Completá primero los <code className="rounded bg-black/5 px-1">[[placeholders]]</code> en{' '}
+            Completa primero los <code className="rounded bg-black/5 px-1">[[placeholders]]</code> en{' '}
             <code className="rounded bg-black/5 px-1">src/lib/legal.ts</code> (empresa:{' '}
             {EMPRESA.razonSocial}, RUC, domicilio, correos).
           </p>

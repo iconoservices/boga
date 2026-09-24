@@ -37,7 +37,7 @@ const INCLUYE = [
   { icon: 'restaurant', txt: 'Entrada, segundo y refresco en cada almuerzo' },
   { icon: 'sports_motorsports', txt: 'Delivery a tu zona sin costo, al mediodía' },
   { icon: 'calendar_month', txt: 'Menú distinto cada día, casero' },
-  { icon: 'pause_circle', txt: 'Pausá o cambiá de plan cuando quieras' },
+  { icon: 'pause_circle', txt: 'Pausa o cambia de plan cuando quieras' },
 ];
 
 const MENU_SEMANA = [
@@ -50,8 +50,8 @@ const MENU_SEMANA = [
 
 const PREGUNTAS = [
   { q: '¿Cómo pago?', a: 'Por semana, quincena o mes, por adelantado. Vas a poder pagar dentro de BogaHub o por Yape/Plin.' },
-  { q: '¿Puedo elegir el menú?', a: 'El menú lo armamos nosotros y cambia cada día. Si tenés una restricción (sin picante, sin cerdo, etc.) la anotás al reservar.' },
-  { q: '¿Y si un día no voy a estar?', a: 'Avisás con un día de anticipación y ese almuerzo se corre para más adelante. No se pierde.' },
+  { q: '¿Puedo elegir el menú?', a: 'El menú lo armamos nosotros y cambia cada día. Si tienes una restricción (sin picante, sin cerdo, etc.) la anotas al reservar.' },
+  { q: '¿Y si un día no voy a estar?', a: 'Avisas con un día de anticipación y ese almuerzo se corre para más adelante. No se pierde.' },
   { q: '¿A qué zonas llega?', a: 'Al arrancar: centro de Pucallpa, Yarinacocha y Manantay. Después sumamos más.' },
 ];
 
@@ -124,7 +124,7 @@ export default function Pension() {
               Pensión <span style={{ color: ORO }}>BogaHub</span>
             </h1>
             <p className="font-body-lg text-base lg:text-lg leading-relaxed max-w-[52ch]" style={{ color: CREMA + 'cc' }}>
-              Tu almuerzo casero, todos los días. Pagás por semana, quincena o mes — nosotros
+              Tu almuerzo casero, todos los días. Pagas por semana, quincena o mes — nosotros
               te lo llevamos al mediodía.
             </p>
           </section>
@@ -220,7 +220,7 @@ export default function Pension() {
             <span className="material-symbols-outlined text-[32px]">skillet</span>
             <h2 className="font-headline-lg font-extrabold text-xl lg:text-2xl">Todavía estamos cocinando esta sección</h2>
             <p className="font-body-md text-sm max-w-[42ch]" style={{ opacity: 0.75 }}>
-              Pronto vas a poder reservar tu pensión acá mismo. Elige tu plan, dejanos tu interés y te avisamos apenas abra.
+              Pronto vas a poder reservar tu pensión acá mismo. Elige tu plan, déjanos tu interés y te avisamos apenas abra.
             </p>
             {avisado ? (
               <p className="mt-1 font-headline-sm text-sm px-6 py-3 rounded-full" style={{ backgroundColor: VERDE, color: CREMA }}>
