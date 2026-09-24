@@ -307,7 +307,6 @@ export default function TaxiSeguro() {
             >
               {interesado ? '¡Anotado! Te avisamos 👌' : 'Me interesa un plan'}
             </button>
-            <span className="font-label-md text-[10px] uppercase tracking-wider text-secondary/50">Contenido de muestra</span>
           </div>
         </section>
 

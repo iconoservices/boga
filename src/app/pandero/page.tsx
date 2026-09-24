@@ -192,7 +192,6 @@ export default function Pandero() {
             >
               {anotado ? '¡Anotado! Te avisamos 👌' : 'Quiero entrar a un pandero'}
             </button>
-            <span className="font-label-md text-[10px] uppercase tracking-wider" style={{ opacity: 0.5 }}>Contenido de muestra</span>
           </section>
 
         </div>

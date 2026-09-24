@@ -6,6 +6,7 @@ import AppHeader from '@/components/AppHeader';
 import VuelosWidget from '@/components/VuelosWidget';
 import { useCart } from '@/context/CartContext';
 import { fetchViajes } from '@/lib/viajes';
+import { fetchNotasRevista, type NotaCard } from '@/lib/revista';
 
 // Viajes & Transporte desde Pucallpa — directorio de agencias de transporte
 // fluvial (rápidos), terrestre (colectivos/buses) y aéreo (vuelos).
@@ -40,6 +41,44 @@ function waLink(numero: string, texto: string) {
 
 const KIWI_AFFILIATE_URL = 'https://kiwi.tpo.lv/QQudEv2V';
 
+// Notas de la Revista ("Yo Soy de la Selva") sobre viajar: rutas, ríos, carreteras y destinos.
+// Enlaza contenido real (y de paso refuerza los enlaces internos para Google).
+const RE_VIAJE = /viaj|lancha|contamana|boquer|carretera|puente|shanay|cordillera|r[aá]pido|pasaje|aguayt|laguna|catarata/i;
+
+function NotasDeViaje() {
+  const [notas, setNotas] = useState<NotaCard[]>([]);
+  useEffect(() => {
+    fetchNotasRevista().then((todas) => {
+      const deViaje = todas.filter((n) => n.kicker === 'Rutas' || RE_VIAJE.test(`${n.titulo} ${n.dek}`));
+      setNotas(deViaje.slice(0, 3));
+    });
+  }, []);
+  if (notas.length === 0) return null;
+  return (
+    <section className="flex flex-col gap-3">
+      <div className="flex items-baseline justify-between gap-2">
+        <h2 className="font-headline-sm text-base text-on-surface">Antes de viajar, lee</h2>
+        <Link href="/revista" className="text-primary font-label-md text-[12px]">Ver la Revista</Link>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {notas.map((n) => (
+          <Link
+            key={n.slug}
+            href={`/revista/${n.slug}`}
+            className="group flex sm:flex-col gap-3 bg-white rounded-2xl border border-surface-container-highest overflow-hidden active:scale-[0.99] transition-transform"
+          >
+            <img src={n.img} alt="" loading="lazy" className="w-28 h-24 sm:w-full sm:h-32 object-cover shrink-0" />
+            <div className="p-3 sm:pt-0 flex flex-col gap-1 min-w-0">
+              <span className="text-[10px] font-bold uppercase tracking-wide text-primary">{n.kicker}</span>
+              <span className="font-headline-sm text-[13px] leading-snug text-on-surface line-clamp-3">{n.titulo}</span>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function Viajes() {
   const { cartCount, setIsCartOpen } = useCart();
   const [filtro, setFiltro] = useState<Medio>('todos');
@@ -65,25 +104,16 @@ export default function Viajes() {
 
       <main className="max-w-[1200px] mx-auto px-container-margin lg:px-6 w-full pt-5 flex flex-col gap-6 pb-14">
 
-        {/* Encabezado */}
-        <div className="flex flex-col gap-1">
-          <h1 className="font-headline-lg text-on-surface">Viajes 🚤</h1>
-          <p className="text-secondary font-body-md text-sm">Rápidos fluviales, buses terrestres y vuelos desde Pucallpa.</p>
-        </div>
-
-        {/* Banner informativo */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0c4a6e] to-[#1B8EBF] text-white p-5 lg:p-6">
+        {/* Encabezado + banner en una sola fila (antes eran dos bloques que repetían lo mismo) */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0c4a6e] to-[#1B8EBF] text-white px-5 py-4 flex items-center gap-4">
           <div className="absolute -right-10 -top-10 w-48 h-48 bg-white/5 rounded-full blur-2xl pointer-events-none" aria-hidden="true" />
-          <div className="absolute right-4 bottom-4 opacity-10">
-            <span className="material-symbols-outlined text-[80px]">sailing</span>
-          </div>
-          <div className="relative flex flex-col gap-2 max-w-lg">
-            <span className="text-[10px] font-label-md uppercase tracking-[0.2em] text-white/60">Transporte interprovincial</span>
-            <h2 className="font-headline-sm text-lg font-bold leading-tight">
-              ¿A dónde vas? Te conectamos con los medios de transporte de la selva
-            </h2>
-            <p className="font-body-md text-xs text-white/70 leading-relaxed">
-              Encuentra rápidos fluviales por el río Ucayali, colectivos y buses por la Federico Basadre, y vuelos nacionales desde el aeropuerto de Pucallpa.
+          <span className="relative w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+            <span className="material-symbols-outlined text-[28px]">sailing</span>
+          </span>
+          <div className="relative min-w-0">
+            <h1 className="font-headline-lg text-xl lg:text-2xl font-extrabold leading-tight">Viajes desde Pucallpa</h1>
+            <p className="font-body-md text-xs sm:text-sm text-white/80 leading-snug mt-0.5">
+              Rápidos por el río Ucayali, buses por la Federico Basadre y vuelos nacionales.
             </p>
           </div>
         </div>
@@ -275,6 +305,8 @@ export default function Viajes() {
             </div>
           ))}
         </div>
+
+        <NotasDeViaje />
 
         {/* CTA para agencias */}
         <a

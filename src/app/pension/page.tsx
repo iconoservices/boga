@@ -284,7 +284,6 @@ export default function Pension() {
                 ¿Ya tienes cuenta? Inicia sesión
               </button>
             )}
-            <span className="font-label-md text-[10px] uppercase tracking-wider" style={{ opacity: 0.5 }}>Contenido de muestra</span>
           </section>
 
         </div>
