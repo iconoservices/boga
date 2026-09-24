@@ -42,6 +42,8 @@ export interface Producto {
   /** Siempre el `href` de la categoria de la tienda, para que case con los chips. */
   category: string;
   image: string;
+  /** Datos propios del rubro, sacados de columnas que ya existen (terrenos: area = subcategory). */
+  extra?: Record<string, string>;
 }
 
 export interface Categoria {

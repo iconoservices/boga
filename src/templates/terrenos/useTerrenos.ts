@@ -8,6 +8,7 @@ import { soles, type Producto } from '../shared/tokens';
 
 /** Área si el nombre o la descripción la traen ("200 m²", "1 hectárea"); si no, null. */
 export function areaDe(p: Producto): string | null {
+  if (p.extra?.area?.trim()) return p.extra.area.trim();
   const m = `${p.name} ${p.desc}`.match(/(\d[\d.,]*)\s*(m²|m2|ha\b|hect[aá]reas?)/i);
   if (!m) return null;
   const unidad = /^m/i.test(m[2]) ? 'm²' : /^h/i.test(m[2]) && m[1] === '1' ? 'hectárea' : 'hectáreas';

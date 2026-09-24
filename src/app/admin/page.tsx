@@ -62,6 +62,9 @@ const POS_PAYMENT_METHODS: { id: 'Efectivo' | 'Yape/Plin' | 'Tarjeta'; label: st
   { id: 'Tarjeta',   label: 'Tarjeta',     icon: 'credit_card', color: '#1d4ed8' },
 ];
 
+// Enlace de Google Maps dentro de la descripción de un terreno (ver templates/terrenos/useTerrenos.ts).
+const RE_MAPS = /https?:\/\/(?:www\.)?(?:google\.[a-z.]+\/maps|maps\.app\.goo\.gl|goo\.gl\/maps)[^\s)]*/i;
+
 export default function DashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -310,7 +313,11 @@ function AdminDashboard({ user }: { user: User }) {
     stockType: 'ilimitado' as 'ilimitado' | 'limitado',
     stockQuantity: '',
     status: 'Activo',
+    ubicacion: '',
   });
+
+  // Tiendas de terrenos: "Sección" pasa a ser el área, y aparece un campo para la ubicación (enlace de Maps).
+  const esTerreno = ['terreno1', 'terreno2'].includes(String((stores as any)[newProduct.store]?.template ?? ''));
 
   const resetForm = () => {
     setEditingProductId(null);
@@ -325,6 +332,7 @@ function AdminDashboard({ user }: { user: User }) {
       stockType: 'ilimitado',
       stockQuantity: '',
       status: 'Activo',
+      ubicacion: '',
     });
     setSelectedFile(null);
     setPreviewUrl(null);
@@ -727,6 +735,12 @@ function AdminDashboard({ user }: { user: User }) {
         finalStock = null; // null = ilimitado / siempre disponible
       }
 
+      // El enlace de ubicación de un terreno se guarda al final de la descripción (la plantilla lo detecta
+      // y lo usa en "Ver ubicación" sin mostrarlo como texto).
+      const descripcionFinal = esTerreno && newProduct.ubicacion.trim()
+        ? `${newProduct.desc.trim()}\n${newProduct.ubicacion.trim()}`.trim()
+        : newProduct.desc;
+
       // 3. Guardar en la base de datos
       if (editingProductId) {
         const { error: dbError } = await supabase.from('products').update({
@@ -736,7 +750,7 @@ function AdminDashboard({ user }: { user: User }) {
           category: newProduct.category,
           subcategory: newProduct.subcategory,
           image: finalImageUrl,
-          description: newProduct.desc,
+          description: descripcionFinal,
           stock: finalStock,
           status: finalStatus,
         }).eq('id', editingProductId);
@@ -751,7 +765,7 @@ function AdminDashboard({ user }: { user: User }) {
             category: newProduct.category,
             subcategory: newProduct.subcategory,
             image: finalImageUrl,
-            description: newProduct.desc,
+            description: descripcionFinal,
             stock: finalStock,
             status: finalStatus,
           }
@@ -784,10 +798,11 @@ function AdminDashboard({ user }: { user: User }) {
       category: product.category,
       subcategory: product.subcategory || '',
       image: product.image,
-      desc: product.description || '',
+      desc: (product.description || '').replace(RE_MAPS, '').trim(),
       stockType: hasFixedStock ? 'limitado' : 'ilimitado',
       stockQuantity: hasFixedStock ? product.stock.toString() : '',
       status: product.status || 'Activo',
+      ubicacion: (product.description || '').match(RE_MAPS)?.[0] ?? '',
     });
     setPreviewUrl(product.image);
     setSelectedFile(null);
@@ -2488,6 +2503,21 @@ function AdminDashboard({ user }: { user: User }) {
                   />
                 </div>
 
+                {esTerreno && (
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Ubicación (enlace de Google Maps)</label>
+                    <input
+                      value={newProduct.ubicacion}
+                      onChange={(e) => setNewProduct({ ...newProduct, ubicacion: e.target.value })}
+                      placeholder="https://maps.app.goo.gl/…"
+                      className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                    />
+                    <p className="text-xs text-gray-500 mt-1.5">
+                      Abre el terreno en Google Maps, toca Compartir y copia el enlace. Aparece como &quot;Ver ubicación&quot; en la tarjeta.
+                    </p>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">Precio (S/)</label>
@@ -2542,13 +2572,13 @@ function AdminDashboard({ user }: { user: User }) {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Sección (Ej: Entradas)</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">{esTerreno ? 'Área del terreno' : 'Sección (Ej: Entradas)'}</label>
                     <input 
                       type="text" 
                       list="existing-subcategories"
                       value={newProduct.subcategory}
                       onChange={(e) => setNewProduct({...newProduct, subcategory: e.target.value})}
-                      placeholder="Título separador..."
+                      placeholder={esTerreno ? 'Ej. 200 m² o 1 hectárea' : 'Título separador...'}
                       className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black transition-all"
                     />
                     <datalist id="existing-subcategories">

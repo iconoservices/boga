@@ -52,6 +52,7 @@ export function useCatalogo(store: StoreConfig) {
             price: Number(p.price) || 0,
             category: hrefDeCategoria(p.category),
             image: p.image || store.heroImage,
+            extra: p.subcategory ? { area: String(p.subcategory) } : undefined,
           }))
         : [];
 
