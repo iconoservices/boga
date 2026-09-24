@@ -16,6 +16,8 @@ import { uploadFile } from '@/lib/uploadClient';
 import { refrescarTienda } from '@/lib/refrescar';
 import type { StoreTheme } from '@/lib/templates.config';
 import { iconForCategory } from '@/templates/shared/tokens';
+import { moduloActivo, STOCK_BAJO, type ModuloId } from '@/lib/modulos';
+import { fechaLima, hoyLima } from '@/lib/fechaLima';
 
 interface Product {
   id: string;
@@ -129,6 +131,8 @@ function AdminDashboard({ user }: { user: User }) {
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [isCustomerDetailsOpen, setIsCustomerDetailsOpen] = useState(false);
   const [isMobileCheckoutOpen, setIsMobileCheckoutOpen] = useState(false);
+  const [isEquipoOpen, setIsEquipoOpen] = useState(false);
+  const [nuevoVendedor, setNuevoVendedor] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const storeLogoInputRef = useRef<HTMLInputElement>(null);
@@ -233,7 +237,28 @@ function AdminDashboard({ user }: { user: User }) {
   // Las pantallas que operan sobre UNA sola carta (Inicio, POS) usan esto:
   // con "Todas mis tiendas" elegido cae a la primera. Así el carrito del POS
   // no puede mezclar tiendas y el Inicio siempre muestra una carta concreta.
-  const focusedStore = selectedStore === 'all' ? (Object.keys(stores)[0] ?? '') : selectedStore;
+  // Módulos (POS, inventario) que el superadmin prendió por tienda. Ver src/lib/modulos.ts.
+  // Sin tienda elegida todavía (ej. "Nuevo producto" con "Todas mis tiendas"), vale si alguna de las mías lo tiene.
+  const tiendaTiene = (slug: string, modulo: ModuloId) => {
+    if (!slug) return visibleDbStores.length === 0 || visibleDbStores.some((s: any) => moduloActivo(s.modulos, modulo));
+    return moduloActivo(dbStores.find((s: any) => s.slug === slug)?.modulos, modulo);
+  };
+  // Una pestaña/sección se muestra si AL MENOS una de mis tiendas tiene el módulo (o si todavía no cargaron).
+  const algunaTiene = (modulo: ModuloId) =>
+    visibleDbStores.length === 0 || visibleDbStores.some((s: any) => moduloActivo(s.modulos, modulo));
+  const posOn = algunaTiene('pos');
+  const inventarioOn = algunaTiene('inventario');
+  // Pedidos y Métricas también: la tabla `orders` solo la llena el POS (los pedidos de la carta salen por WhatsApp).
+  const navTabs = NAV_TABS.filter(t => !['pos', 'orders', 'metrics'].includes(t.id) || posOn);
+
+  const focusedStore = selectedStore === 'all'
+    ? ((activeTab === 'pos' ? Object.keys(stores).find(k => tiendaTiene(k, 'pos')) : undefined) ?? Object.keys(stores)[0] ?? '')
+    : selectedStore;
+  const posDisponible = !!focusedStore && tiendaTiene(focusedStore, 'pos');
+  // Si apagan el POS mientras está abierto, volver al Inicio.
+  useEffect(() => {
+    if ((activeTab === 'pos' || activeTab === 'orders' || activeTab === 'metrics') && !posOn) setActiveTab('inicio');
+  }, [activeTab, posOn]);
 
   // Datos derivados para la pestaña Inicio (una sola carta).
   const inicioStore = stores[focusedStore];
@@ -289,7 +314,7 @@ function AdminDashboard({ user }: { user: User }) {
   const [isStoreEditorOpen, setIsStoreEditorOpen] = useState(false);
   const [editingStoreSlug, setEditingStoreSlug] = useState<string | null>(null);
   const [isStoreSaving, setIsStoreSaving] = useState(false);
-  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '', show_demo_products: true, zona: '', direccion: '', horario: '', rating: '', metodos_pago: [] as string[], facebook: '', instagram: '', tiktok: '' });
+  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '', show_demo_products: false, zona: '', direccion: '', horario: '', rating: '', metodos_pago: [] as string[], facebook: '', instagram: '', tiktok: '' });
   const [storeLogoFile, setStoreLogoFile] = useState<File | null>(null);
   const [storeHeroFile, setStoreHeroFile] = useState<File | null>(null);
   const [storeLogoPreview, setStoreLogoPreview] = useState<string | null>(null);
@@ -423,6 +448,9 @@ function AdminDashboard({ user }: { user: User }) {
   const addToCart = (product: Product) => {
     setPosCart(prev => {
       const existing = prev.find(item => item.product.id === product.id);
+      // Un producto Agotado no se vende; con inventario tampoco más unidades de las que hay.
+      if (product.status === 'Agotado') return prev;
+      if (tiendaTiene(product.store, 'inventario') && !stockIlimitado(product) && (existing?.quantity ?? 0) + 1 > product.stock) return prev;
       if (existing) {
         return prev.map(item => item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
       }
@@ -441,7 +469,7 @@ function AdminDashboard({ user }: { user: User }) {
   };
 
   const handlePosCheckout = async () => {
-    if (posCart.length === 0 || !focusedStore) return;
+    if (posCart.length === 0 || !focusedStore || !posDisponible) return;
     setIsPosSaving(true);
     const cartTotal = posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
@@ -472,6 +500,7 @@ function AdminDashboard({ user }: { user: User }) {
       console.error('Error saving POS sale:', error);
       alert('Hubo un error al registrar la venta: ' + error.message);
     } else {
+      if (tiendaTiene(focusedStore, 'inventario')) await descontarStock(posCart);
       setLastCompletedSale(data || { ...saleDetails, id: 'POS-' + Math.floor(Math.random() * 90000 + 10000), created_at: new Date().toISOString() });
       setPosCart([]);
       setPosCustomerName('');
@@ -542,7 +571,7 @@ function AdminDashboard({ user }: { user: User }) {
       tagline: dbData?.tagline || config?.tagline || '',
       marketplace_category: dbData?.marketplace_category || config?.marketplaceCategory || '',
       whatsapp: dbData?.whatsapp || '',
-      show_demo_products: dbData?.show_demo_products ?? true,
+      show_demo_products: dbData?.show_demo_products ?? false,
       zona: dbData?.zona || config?.zona || '',
       direccion: dbData?.direccion || config?.direccion || '',
       horario: dbData?.horario || config?.horario || '',
@@ -713,6 +742,134 @@ function AdminDashboard({ user }: { user: User }) {
     }
   };
 
+  // Equipo de la caja: los vendedores propios de cada negocio (columna stores.vendedores).
+  const equipo: string[] = (dbStores.find((s: any) => s.slug === focusedStore)?.vendedores as string[] | null | undefined) ?? [];
+  const guardarEquipo = async (lista: string[]) => {
+    const { error } = await supabase.from('stores').update({ vendedores: lista }).eq('slug', focusedStore);
+    if (error) { alert('No se pudo guardar el equipo: ' + error.message + '\n\nSi dice que falta la columna "vendedores", falta correr la migración (supabase_setup.sql).'); return; }
+    setDbStores(prev => prev.map((s: any) => s.slug === focusedStore ? { ...s, vendedores: lista } : s));
+  };
+  const agregarVendedor = async () => {
+    const nombre = nuevoVendedor.trim();
+    if (!nombre || equipo.some(n => n.toLowerCase() === nombre.toLowerCase()) || nombre.toLowerCase() === 'administrador') { setNuevoVendedor(''); return; }
+    await guardarEquipo([...equipo, nombre]);
+    setPosSeller(nombre);
+    setNuevoVendedor('');
+  };
+  const quitarVendedor = async (nombre: string) => {
+    await guardarEquipo(equipo.filter(n => n !== nombre));
+    if (posSeller === nombre) setPosSeller('Administrador');
+  };
+  // Al cambiar de tienda, el vendedor elegido ya no aplica.
+  useEffect(() => { setPosSeller('Administrador'); setIsEquipoOpen(false); }, [focusedStore]);
+
+  const panelEquipo = isEquipoOpen ? (
+    <div className="p-2 border-b border-[#e1e3e4]/10 bg-white flex flex-col gap-1.5">
+      <h4 className="text-[8px] font-extrabold text-gray-400 uppercase tracking-widest">Mi equipo</h4>
+      {equipo.length === 0 ? (
+        <p className="text-[10px] text-gray-500">Agrega a quienes cobran en tu local. Aparecerán como vendedor en cada boleta.</p>
+      ) : (
+        <div className="flex flex-wrap gap-1">
+          {equipo.map(n => (
+            <span key={n} className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 bg-[#ffece9]/60 border border-[#e1e3e4]/40 rounded-full text-[10px] font-semibold text-gray-700">
+              {n}
+              <button type="button" onClick={() => quitarVendedor(n)} title={`Quitar a ${n}`} className="w-4 h-4 flex items-center justify-center rounded-full hover:bg-white text-gray-400 hover:text-[#8c0009] cursor-pointer">
+                <span className="material-symbols-outlined text-[12px]">close</span>
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+      <div className="flex gap-1">
+        <input
+          type="text"
+          value={nuevoVendedor}
+          onChange={(e) => setNuevoVendedor(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); agregarVendedor(); } }}
+          placeholder="Nombre del vendedor"
+          className="flex-1 min-w-0 px-1.5 py-0.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#b8130e] h-7"
+        />
+        <button type="button" onClick={agregarVendedor} className="px-2 h-7 rounded bg-[#b8130e] text-white text-[10px] font-bold cursor-pointer">Agregar</button>
+      </div>
+    </div>
+  ) : null;
+
+  // Inventario: "Ingresar mercadería" suma unidades al stock de un producto con stock controlado.
+  // Si estaba Agotado por llegar a 0, vuelve a Activo.
+  const agregarStock = async (p: Product) => {
+    const txt = window.prompt(`¿Cuántas unidades entraron de "${p.name}"?`, '10');
+    if (txt == null) return;
+    const n = parseInt(txt, 10);
+    if (isNaN(n) || n <= 0) { alert('Escribe un número mayor a 0.'); return; }
+    const nuevoStock = Math.max(0, p.stock || 0) + n;
+    const nuevoEstado = p.status === 'Agotado' ? 'Activo' : p.status;
+    const { error } = await supabase.from('products').update({ stock: nuevoStock, status: nuevoEstado }).eq('id', p.id);
+    if (error) { alert('No se pudo ingresar la mercadería: ' + error.message); return; }
+    setProducts(prev => prev.map(x => x.id === p.id ? { ...x, stock: nuevoStock, status: nuevoEstado } : x));
+    refrescarTienda(p.store);
+  };
+
+  // Inventario: descuenta lo vendido en el POS. Va producto por producto y solo pisa el stock si nadie
+  // lo cambió mientras tanto (`.eq('stock', actual)`); si lo cambiaron, relee y reintenta una vez.
+  // Los productos ilimitados no se tocan. Al llegar a 0 el producto pasa a Agotado.
+  const descontarStock = async (items: { product: Product; quantity: number }[]) => {
+    const tocadas = new Set<string>();
+    const fallidos: string[] = [];
+    for (const { product, quantity } of items) {
+      let ok = false;
+      for (let intento = 0; intento < 2 && !ok; intento++) {
+        const { data: fila } = await supabase.from('products').select('stock,status').eq('id', product.id).maybeSingle();
+        if (!fila || stockIlimitado(fila)) { ok = true; break; }
+        const nuevo = Math.max(0, (fila.stock ?? 0) - quantity);
+        const { data: hecho } = await supabase
+          .from('products')
+          .update({ stock: nuevo, ...(nuevo === 0 ? { status: 'Agotado' } : {}) })
+          .eq('id', product.id)
+          .eq('stock', fila.stock)
+          .select('id');
+        if (hecho && hecho.length > 0) { ok = true; tocadas.add(product.store); }
+      }
+      if (!ok) fallidos.push(product.name);
+    }
+    tocadas.forEach(slug => refrescarTienda(slug));
+    await fetchProducts();
+    if (fallidos.length) alert('La venta se registró, pero no se pudo descontar el stock de: ' + fallidos.join(', ') + '. Revísalo en Productos.');
+  };
+
+  // Celda de stock de la tabla y de las tarjetas de Productos (solo con el módulo de inventario).
+  const celdaStock = (p: Product) => {
+    if (!tiendaTiene(p.store, 'inventario')) return <span className="text-xs text-gray-300">—</span>;
+    if (stockIlimitado(p)) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100/80">
+          <span className="material-symbols-outlined text-[13px]">all_inclusive</span>
+          Ilimitado
+        </span>
+      );
+    }
+    const sin = p.stock <= 0;
+    const bajo = !sin && p.stock <= STOCK_BAJO;
+    const estilo = sin
+      ? 'bg-red-50 text-red-600 border-red-100/80'
+      : bajo ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-blue-50 text-blue-700 border-blue-100/80';
+    return (
+      <span className="inline-flex items-center gap-1.5">
+        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${estilo}`}>
+          <span className="material-symbols-outlined text-[13px]">{sin ? 'block' : bajo ? 'warning' : 'inventory_2'}</span>
+          {sin ? 'Sin stock' : bajo ? `Quedan ${p.stock}` : `${p.stock} unid.`}
+        </span>
+        <button
+          type="button"
+          onClick={() => agregarStock(p)}
+          title="Ingresar mercadería"
+          className="w-6 h-6 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:text-[#b8130e] hover:border-[#b8130e]/40 transition-colors cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-[14px]">add</span>
+        </button>
+      </span>
+    );
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -742,11 +899,15 @@ function AdminDashboard({ user }: { user: User }) {
       let finalStock: number | null = null;
       let finalStatus = newProduct.status || 'Activo';
 
-      if (newProduct.stockType === 'limitado') {
+      if (newProduct.stockType === 'limitado' && tiendaTiene(newProduct.store, 'inventario')) {
         const parsed = parseInt(newProduct.stockQuantity, 10);
         finalStock = isNaN(parsed) ? 0 : Math.max(0, parsed);
         if (finalStock === 0) {
           finalStatus = 'Agotado';
+        } else if (finalStatus === 'Agotado' && editingProductId) {
+          // Si estaba Agotado porque se le acabó el stock y ahora le cargan unidades, vuelve a Activo.
+          const antes = products.find(x => x.id === editingProductId);
+          if (antes && antes.status === 'Agotado' && !(antes.stock > 0)) finalStatus = 'Activo';
         }
       } else {
         finalStock = null; // null = ilimitado / siempre disponible
@@ -768,7 +929,8 @@ function AdminDashboard({ user }: { user: User }) {
           subcategory: newProduct.subcategory,
           image: finalImageUrl,
           description: descripcionFinal,
-          stock: finalStock,
+          // Sin módulo de inventario no se toca el stock guardado (por si lo vuelven a prender).
+          ...(tiendaTiene(newProduct.store, 'inventario') ? { stock: finalStock } : {}),
           status: finalStatus,
         }).eq('id', editingProductId);
 
@@ -964,7 +1126,7 @@ function AdminDashboard({ user }: { user: User }) {
           <span className="font-extrabold text-xl tracking-tight text-gray-900">Workspace</span>
         </div>
         <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
-          {NAV_TABS.map(t => (
+          {navTabs.map(t => (
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
@@ -1018,7 +1180,7 @@ function AdminDashboard({ user }: { user: User }) {
             </h1>
             {activeTab !== 'pos' && activeTab !== 'inicio' && (
               <p className="text-gray-500 text-sm font-medium mt-1">
-                {activeTab === 'products' ? 'Administra el inventario de tus tiendas.' : activeTab === 'orders' ? 'Gestiona los pedidos de tus clientes.' : activeTab === 'stores' ? 'Administra la información de tus sucursales.' : 'Analiza el rendimiento de tu negocio.'}
+                {activeTab === 'products' ? (inventarioOn ? 'Administra el inventario de tus tiendas.' : 'Administra la carta de tus tiendas.') : activeTab === 'orders' ? 'Gestiona los pedidos de tus clientes.' : activeTab === 'stores' ? 'Administra la información de tus sucursales.' : 'Analiza el rendimiento de tu negocio.'}
               </p>
             )}
           </div>
@@ -1142,7 +1304,8 @@ function AdminDashboard({ user }: { user: User }) {
               </div>
             </div>
 
-            {/* Fila 2: resumen de pedidos */}
+            {/* Fila 2: resumen de pedidos (solo con el módulo de ventas) */}
+            {tiendaTiene(focusedStore, 'pos') && (
             <button onClick={() => setActiveTab('orders')} className="w-full bg-white border border-gray-100 rounded-xl p-3 shadow-sm text-left hover:border-gray-200 transition-colors">
               <div className="flex items-center justify-between">
                 <h4 className="font-bold text-gray-900 text-sm">Pedidos del negocio</h4>
@@ -1161,12 +1324,13 @@ function AdminDashboard({ user }: { user: User }) {
                 ))}
               </div>
             </button>
+            )}
 
             {/* Gestión — mismas secciones y mismo orden que la sidebar / barra inferior */}
             <div>
               <p className="text-[11px] font-extrabold uppercase tracking-wider text-gray-400 mb-2 px-1">Gestión</p>
               <div className="grid grid-cols-2 gap-3">
-                {NAV_TABS.filter(t => t.id !== 'inicio' && t.id !== 'stores').map(t => (
+                {navTabs.filter(t => t.id !== 'inicio' && t.id !== 'stores').map(t => (
                   <button key={t.id} onClick={() => setActiveTab(t.id)} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm text-left hover:shadow-md hover:border-gray-200 transition-all flex flex-col gap-2">
                     <span className="w-9 h-9 rounded-lg bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center">
                       <span className="material-symbols-outlined text-[20px]">{t.icon}</span>
@@ -1291,7 +1455,22 @@ function AdminDashboard({ user }: { user: User }) {
                         </div>
                       </div>
                     )}
-                    <div className="hidden lg:block flex-1 border-2 border-dashed border-gray-200 rounded-md bg-transparent"></div>
+                    {inventarioOn ? (() => {
+                      const bajos = storeFiltered.filter(p => tiendaTiene(p.store, 'inventario') && !stockIlimitado(p) && p.stock <= STOCK_BAJO).length;
+                      return (
+                        <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm flex items-center gap-3 min-w-[150px] flex-1">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${bajos ? 'bg-amber-50 text-amber-600' : 'bg-gray-50 text-gray-400'}`}>
+                            <span className="material-symbols-outlined text-[18px]">warning</span>
+                          </div>
+                          <div>
+                            <p className="text-gray-500 font-medium text-[11px] mb-0.5">Poco stock</p>
+                            <h3 className="text-xl font-extrabold text-gray-900 leading-none">{bajos}</h3>
+                          </div>
+                        </div>
+                      );
+                    })() : (
+                      <div className="hidden lg:block flex-1 border-2 border-dashed border-gray-200 rounded-md bg-transparent"></div>
+                    )}
                   </div>
 
                   {/* Products Table */}
@@ -1387,7 +1566,7 @@ function AdminDashboard({ user }: { user: User }) {
                               <th className="p-3 font-bold w-1/3">Producto</th>
                               {selectedStore === 'all' && <th className="p-3 font-bold">Tienda</th>}
                               <th className="p-3 font-bold">Categoría</th>
-                              <th className="p-3 font-bold">Stock</th>
+                              {inventarioOn && <th className="p-3 font-bold">Stock</th>}
                               <th className="p-3 font-bold">Estado</th>
                               <th className="p-3 font-bold">Precio</th>
                               <th className="p-3 font-bold text-right">Acciones</th>
@@ -1427,24 +1606,7 @@ function AdminDashboard({ user }: { user: User }) {
                                     {p.category}
                                   </span>
                                 </td>
-                                <td className="p-3">
-                                  {stockIlimitado(p) ? (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100/80">
-                                      <span className="material-symbols-outlined text-[13px]">all_inclusive</span>
-                                      Ilimitado
-                                    </span>
-                                  ) : p.stock > 0 ? (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100/80">
-                                      <span className="material-symbols-outlined text-[13px]">inventory_2</span>
-                                      {p.stock} unid.
-                                    </span>
-                                  ) : (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-100/80">
-                                      <span className="material-symbols-outlined text-[13px]">block</span>
-                                      0 unid.
-                                    </span>
-                                  )}
-                                </td>
+                                {inventarioOn && <td className="p-3">{celdaStock(p)}</td>}
                                 <td className="p-3">
                                   <label className="flex items-center cursor-pointer">
                                     <div className="relative">
@@ -1511,21 +1673,11 @@ function AdminDashboard({ user }: { user: User }) {
                                 <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider truncate">
                                   {p.category} {p.subcategory ? `• ${p.subcategory}` : ''}
                                 </span>
-                                <span className="text-[10px] text-gray-300">•</span>
-                                {stockIlimitado(p) ? (
-                                  <span className="text-[10px] font-semibold text-emerald-600 flex items-center gap-0.5">
-                                    <span className="material-symbols-outlined text-[12px]">all_inclusive</span>
-                                    Ilimitado
-                                  </span>
-                                ) : p.stock > 0 ? (
-                                  <span className="text-[10px] font-semibold text-blue-600 flex items-center gap-0.5">
-                                    <span className="material-symbols-outlined text-[12px]">inventory_2</span>
-                                    {p.stock} unid.
-                                  </span>
-                                ) : (
-                                  <span className="text-[10px] font-semibold text-red-600 flex items-center gap-0.5">
-                                    Sin stock
-                                  </span>
+                                {tiendaTiene(p.store, 'inventario') && (
+                                  <>
+                                    <span className="text-[10px] text-gray-300">•</span>
+                                    {celdaStock(p)}
+                                  </>
                                 )}
                               </div>
                               
@@ -1537,7 +1689,7 @@ function AdminDashboard({ user }: { user: User }) {
                                     <div className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform ${p.status === 'Activo' ? 'translate-x-3' : ''}`}></div>
                                   </div>
                                   <span className={`ml-1.5 text-[9px] font-extrabold ${p.status === 'Activo' ? 'text-green-700' : 'text-red-600'}`}>
-                                    {p.status === 'Activo' ? 'STOCK' : 'AGOTADO'}
+                                    {p.status === 'Activo' ? 'ACTIVO' : 'AGOTADO'}
                                   </span>
                                 </label>
                                 
@@ -1760,26 +1912,6 @@ function AdminDashboard({ user }: { user: User }) {
                 )}
               </div>
 
-              {/* Promotional Cards Area */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-2">
-                <div className="lg:col-span-2 bg-gradient-to-r from-gray-50 to-white border border-gray-100 rounded-md p-6 shadow-sm flex flex-col justify-center">
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">Automatizar Etiquetas de Envío</h3>
-                  <p className="text-sm text-gray-500 mb-4 w-full">Conecta tu proveedor preferido para generar etiquetas de envío automáticamente tan pronto como un pedido sea marcado como 'Empacado'.</p>
-                  <a href="#" className="text-[#b8130e] font-bold text-sm flex items-center gap-1 hover:underline">
-                    Ver integraciones <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                  </a>
-                </div>
-                <div className="bg-[#b8130e] rounded-md p-6 shadow-md text-white flex flex-col justify-between relative overflow-hidden">
-                  <span className="material-symbols-outlined absolute -right-4 -top-4 text-7xl opacity-10">verified_user</span>
-                  <div className="relative z-10">
-                    <h3 className="text-lg font-bold mb-2">Protección contra Fraude</h3>
-                    <p className="text-sm text-white/80 mb-4 w-full">Tu cuenta está cubierta actualmente por detección de fraude con IA para todos los pedidos.</p>
-                  </div>
-                  <button className="relative z-10 w-full py-2 bg-white/20 hover:bg-white/30 transition-colors rounded-lg font-bold text-sm backdrop-blur-sm">
-                    Ver Reporte de Seguridad
-                  </button>
-                </div>
-              </div>
             </div>
           </>
         )}
@@ -1884,38 +2016,79 @@ function AdminDashboard({ user }: { user: User }) {
           <div className="flex flex-col gap-6">
             {/* El titulo de la seccion ya lo pone el header de la pagina */}
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-white p-6 rounded-md border border-gray-100 shadow-sm">
-                <div className="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center mb-4">
-                  <span className="material-symbols-outlined">payments</span>
-                </div>
-                <p className="text-sm font-bold text-gray-500">Ventas de Hoy</p>
-                <h3 className="text-3xl font-black text-gray-900 mt-1">S/ 0.00</h3>
-              </div>
-              <div className="bg-white p-6 rounded-md border border-gray-100 shadow-sm">
-                <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
-                  <span className="material-symbols-outlined">shopping_bag</span>
-                </div>
-                <p className="text-sm font-bold text-gray-500">Pedidos Completados</p>
-                <h3 className="text-3xl font-black text-gray-900 mt-1">0</h3>
-              </div>
-              <div className="bg-white p-6 rounded-md border border-gray-100 shadow-sm">
-                <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center mb-4">
-                  <span className="material-symbols-outlined">visibility</span>
-                </div>
-                <p className="text-sm font-bold text-gray-500">Vistas del Perfil</p>
-                <h3 className="text-3xl font-black text-gray-900 mt-1">24</h3>
-              </div>
-            </div>
+            {(() => {
+              // Ventas registradas en la caja (POS), en hora de Perú. Las canceladas no cuentan.
+              const validas = visibleOrders.filter(o => o.status !== 'Cancelado');
+              const hoy = hoyLima();
+              const mes = hoy.slice(0, 7);
+              const total = (lista: any[]) => lista.reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0);
+              const deHoy = validas.filter(o => fechaLima(o.created_at) === hoy);
+              const delMes = validas.filter(o => fechaLima(o.created_at).slice(0, 7) === mes);
 
-            <div className="bg-white border border-gray-100 rounded-md overflow-hidden shadow-sm mt-4">
-              <div className="p-4 border-b border-gray-100 bg-gray-50">
-                <h3 className="font-bold text-gray-900">Productos Más Vendidos</h3>
-              </div>
-              <div className="p-8 text-center">
-                <p className="text-gray-500">Aún no hay suficientes datos para mostrar métricas. ¡Comparte tu código QR para recibir más pedidos!</p>
-              </div>
-            </div>
+              // Más vendidos del mes, por unidades.
+              const porProducto = new Map<string, { name: string; unidades: number; monto: number }>();
+              delMes.forEach(o => {
+                const items = Array.isArray(o.items) ? o.items : typeof o.items === 'string' ? (() => { try { return JSON.parse(o.items); } catch { return []; } })() : [];
+                items.forEach((it: any) => {
+                  const clave = String(it.id ?? it.name);
+                  const previo = porProducto.get(clave) ?? { name: it.name, unidades: 0, monto: 0 };
+                  previo.unidades += Number(it.quantity) || 0;
+                  previo.monto += (Number(it.price) || 0) * (Number(it.quantity) || 0);
+                  porProducto.set(clave, previo);
+                });
+              });
+              const masVendidos = Array.from(porProducto.values()).sort((a, b) => b.unidades - a.unidades).slice(0, 5);
+
+              return (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-white p-6 rounded-md border border-gray-100 shadow-sm">
+                      <div className="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center mb-4">
+                        <span className="material-symbols-outlined">payments</span>
+                      </div>
+                      <p className="text-sm font-bold text-gray-500">Ventas de Hoy</p>
+                      <h3 className="text-3xl font-black text-gray-900 mt-1">S/ {total(deHoy).toFixed(2)}</h3>
+                    </div>
+                    <div className="bg-white p-6 rounded-md border border-gray-100 shadow-sm">
+                      <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
+                        <span className="material-symbols-outlined">shopping_bag</span>
+                      </div>
+                      <p className="text-sm font-bold text-gray-500">Ventas Registradas Hoy</p>
+                      <h3 className="text-3xl font-black text-gray-900 mt-1">{deHoy.length}</h3>
+                    </div>
+                    <div className="bg-white p-6 rounded-md border border-gray-100 shadow-sm">
+                      <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center mb-4">
+                        <span className="material-symbols-outlined">calendar_month</span>
+                      </div>
+                      <p className="text-sm font-bold text-gray-500">Ventas del Mes</p>
+                      <h3 className="text-3xl font-black text-gray-900 mt-1">S/ {total(delMes).toFixed(2)}</h3>
+                    </div>
+                  </div>
+
+                  <div className="bg-white border border-gray-100 rounded-md overflow-hidden shadow-sm mt-4">
+                    <div className="p-4 border-b border-gray-100 bg-gray-50">
+                      <h3 className="font-bold text-gray-900">Productos Más Vendidos del Mes</h3>
+                    </div>
+                    {masVendidos.length === 0 ? (
+                      <div className="p-8 text-center">
+                        <p className="text-gray-500">Todavía no hay ventas este mes. Cuando cobres en la caja, aquí verás qué se vende más.</p>
+                      </div>
+                    ) : (
+                      <ul className="divide-y divide-gray-50">
+                        {masVendidos.map((m, idx) => (
+                          <li key={m.name + idx} className="flex items-center gap-3 px-4 py-3">
+                            <span className="w-6 h-6 rounded-full bg-[#b8130e]/10 text-[#b8130e] text-xs font-black flex items-center justify-center shrink-0">{idx + 1}</span>
+                            <span className="flex-1 min-w-0 truncate text-sm font-bold text-gray-900">{m.name}</span>
+                            <span className="text-xs font-semibold text-gray-500">{m.unidades} unid.</span>
+                            <span className="text-sm font-extrabold text-gray-900">S/ {m.monto.toFixed(2)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
 
             {/* Install App Card for Mobile users */}
             <div className="md:hidden bg-[#b8130e] text-white p-6 rounded-md shadow-md mt-2 flex flex-col items-center text-center">
@@ -1937,7 +2110,15 @@ function AdminDashboard({ user }: { user: User }) {
           </div>
         )}
 
-        {activeTab === 'pos' && (
+        {activeTab === 'pos' && !posDisponible && (
+          <div className="p-12 text-center flex flex-col items-center justify-center bg-white border border-gray-100 rounded-lg shadow-sm">
+            <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">lock</span>
+            <p className="text-gray-700 font-bold text-sm">Esta tienda no tiene la caja (POS) activada.</p>
+            <p className="text-gray-500 text-xs mt-1">Elige otra tienda arriba o pídenos activarla.</p>
+          </div>
+        )}
+
+        {activeTab === 'pos' && posDisponible && (
           <div className="flex flex-col lg:flex-row gap-3 w-full items-stretch lg:items-start bg-[#f8f9fa] p-2 md:p-3 min-h-[calc(100vh-100px)] rounded-lg">
             {/* Catalog Grid (Left Side) — min-w-0 para que ceda espacio al carrito
                 en vez de empujarlo fuera de la pantalla */}
@@ -2005,11 +2186,17 @@ function AdminDashboard({ user }: { user: User }) {
                     {posProducts.map(p => {
                       const cartItem = posCart.find(item => item.product.id === p.id);
                       const quantity = cartItem?.quantity || 0;
+                      const conInventario = tiendaTiene(p.store, 'inventario');
+                      const limitado = conInventario && !stockIlimitado(p);
+                      const agotado = p.status === 'Agotado' || (limitado && p.stock <= 0);
+                      const enMaximo = limitado && quantity >= p.stock;
                       return (
                         <div 
                           key={p.id} 
-                          onClick={() => addToCart(p)}
-                          className={`product-card text-left flex flex-col bg-white border rounded-md overflow-hidden hover:shadow-sm transition-all active:scale-[0.98] cursor-pointer group ${
+                          onClick={() => { if (!agotado) addToCart(p); }}
+                          className={`product-card text-left flex flex-col bg-white border rounded-md overflow-hidden transition-all group ${
+                            agotado ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-sm active:scale-[0.98] cursor-pointer'
+                          } ${
                             quantity > 0 ? 'border-[#b8130e] ring-1 ring-[#b8130e]/20' : 'border-[#e1e3e4]/30'
                           }`}
                         >
@@ -2021,9 +2208,11 @@ function AdminDashboard({ user }: { user: User }) {
                                 <span className="material-symbols-outlined text-xl">image</span>
                               </div>
                             )}
-                            <div className="absolute top-1 right-1 px-1 py-0.5 bg-white/90 backdrop-blur rounded font-bold text-[7px] text-[#b8130e]">
-                              {quantity > 0 ? `${quantity} EN CARRO` : 'EN STOCK'}
-                            </div>
+                            {(agotado || quantity > 0 || limitado) && (
+                              <div className={`absolute top-1 right-1 px-1 py-0.5 backdrop-blur rounded font-bold text-[7px] ${agotado ? 'bg-[#8c0009] text-white' : 'bg-white/90 text-[#b8130e]'}`}>
+                                {agotado ? 'AGOTADO' : enMaximo ? `${quantity} EN CARRO · MÁX.` : quantity > 0 ? `${quantity} EN CARRO` : `QUEDAN ${p.stock}`}
+                              </div>
+                            )}
                           </div>
                           <div className="p-1.5 flex-1 flex flex-col justify-between">
                             <h3 className="font-bold text-[11px] text-[#191c1d] truncate leading-tight" title={p.name}>{p.name}</h3>
@@ -2113,10 +2302,7 @@ function AdminDashboard({ user }: { user: User }) {
                     className="px-1.5 py-0.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#b8130e] cursor-pointer h-7"
                   >
                     <option value="Administrador">Admin</option>
-                    <option value="Juan">Juan</option>
-                    <option value="María">María</option>
-                    <option value="Pedro">Pedro</option>
-                    <option value="Sofía">Sofía</option>
+                    {equipo.map(n => <option key={n} value={n}>{n}</option>)}
                     <option value="Otro">Otro...</option>
                   </select>
                   {posSeller === 'Otro' && (
@@ -2128,8 +2314,12 @@ function AdminDashboard({ user }: { user: User }) {
                       className="w-24 px-1.5 py-0.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#b8130e] h-7"
                     />
                   )}
+                  <button type="button" onClick={() => setIsEquipoOpen(v => !v)} title="Mi equipo" className="w-7 h-7 shrink-0 flex items-center justify-center rounded border border-[#e1e3e4]/40 text-gray-500 hover:text-[#b8130e] cursor-pointer">
+                    <span className="material-symbols-outlined text-[15px]">group</span>
+                  </button>
                 </div>
               </div>
+              {panelEquipo}
 
               {/* Cart Items List */}
               <div className="flex-1 overflow-y-auto p-2 space-y-1.5 min-h-[90px] custom-scrollbar bg-white/20">
@@ -2319,10 +2509,7 @@ function AdminDashboard({ user }: { user: User }) {
                           className="w-full px-2.5 py-1.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#b8130e] cursor-pointer"
                         >
                           <option value="Administrador">Administrador</option>
-                          <option value="Juan">Juan</option>
-                          <option value="María">María</option>
-                          <option value="Pedro">Pedro</option>
-                          <option value="Sofía">Sofía</option>
+                          {equipo.map(n => <option key={n} value={n}>{n}</option>)}
                           <option value="Otro">Otro...</option>
                         </select>
                         {posSeller === 'Otro' && (
@@ -2335,7 +2522,12 @@ function AdminDashboard({ user }: { user: User }) {
                           />
                         )}
                       </div>
+                      <button type="button" onClick={() => setIsEquipoOpen(v => !v)} className="self-start flex items-center gap-1 text-[#b8130e] font-bold text-[10px] hover:underline cursor-pointer">
+                        <span className="material-symbols-outlined text-[14px]">group</span>
+                        {isEquipoOpen ? 'Cerrar mi equipo' : 'Mi equipo'}
+                      </button>
                     </div>
+                    {panelEquipo}
 
                     {/* Cart Items List */}
                     <div className="p-3 bg-white border-b border-[#e1e3e4]/10 space-y-3">
@@ -2608,7 +2800,8 @@ function AdminDashboard({ user }: { user: User }) {
                   </div>
                 </div>
 
-                {/* Disponibilidad e Inventario */}
+                {/* Disponibilidad e Inventario (solo con el módulo de inventario) */}
+                {tiendaTiene(newProduct.store, 'inventario') && (
                 <div className="bg-gray-50/70 border border-gray-200/80 rounded-xl p-4 space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -2677,6 +2870,7 @@ function AdminDashboard({ user }: { user: User }) {
                     </div>
                   )}
                 </div>
+                )}
               </div>
             </form>
             
@@ -3303,7 +3497,7 @@ function AdminDashboard({ user }: { user: User }) {
           barra sale recién al entrar a una sección de trabajo. */}
       {activeTab !== 'inicio' && (
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-2 py-3 flex justify-around items-center z-50 rounded-t-2xl shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
-        {NAV_TABS.filter(t => t.inBottomBar).map(t => (
+        {navTabs.filter(t => t.inBottomBar).map(t => (
           <button
             key={t.id}
             onClick={() => setActiveTab(t.id)}
@@ -3364,7 +3558,7 @@ function AdminDashboard({ user }: { user: User }) {
 
               <div className="space-y-2 border-t border-gray-100 pt-6">
                 {/* Secciones que no entran en la barra inferior, en el mismo orden */}
-                {NAV_TABS.filter(t => !t.inBottomBar).map(t => (
+                {navTabs.filter(t => !t.inBottomBar).map(t => (
                   <button
                     key={t.id}
                     onClick={() => { setActiveTab(t.id); setIsMobileMenuOpen(false); }}

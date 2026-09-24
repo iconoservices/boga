@@ -5,10 +5,11 @@
 
 import React, { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import SuperadminSubheader from '@/components/SuperadminSubheader';
 import Toggle from '@/components/superadmin/Toggle';
+import NivelesModulos from '@/components/superadmin/NivelesModulos';
+import CatalogoOrdenado from '@/components/superadmin/CatalogoOrdenado';
 
 interface StoreModule {
   id: string;
@@ -311,21 +312,6 @@ function PaquetesContenido() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Las tiendas se necesitan solo para enlazar módulos a tiendas (lista liviana).
-  const [stores, setStores] = useState<Record<string, { slug: string; name: string }>>({});
-  useEffect(() => {
-    if (!esSuperadmin) return;
-    supabase.from('stores').select('slug,name').then(({ data }) => {
-      const m: Record<string, { slug: string; name: string }> = {};
-      (data ?? []).forEach((s: any) => { m[s.slug] = { slug: s.slug, name: s.name }; });
-      setStores(m);
-    });
-  }, [esSuperadmin]);
-
-  const storeList = Object.values(stores);
-  // El emoji de cada tienda no se guarda en la base; se usa el genérico.
-  const storeMeta: Record<string, { emoji?: string }> = {};
-
   useEffect(() => {
     if (!cargando && !esSuperadmin) router.replace('/login?redirect=/superadmin/paquetes');
   }, [cargando, esSuperadmin, router]);
@@ -371,20 +357,7 @@ function PaquetesContenido() {
   // "packages", vive solo en memoria por ahora (no hay tabla en Supabase
   // todavía) — se resetea al recargar. Cuando haya que persistirlo de verdad,
   // es una tabla store_modules (store_id, module_id, active).
-  const [modules, setModules] = useState<StoreModule[]>(INITIAL_MODULES);
-  const [moduleStoreLinks, setModuleStoreLinks] = useState<Record<string, string[]>>({});
-
-  const toggleModuleActive = (id: string) => {
-    setModules(prev => prev.map(m => (m.id === id ? { ...m, active: !m.active } : m)));
-  };
-
-  const toggleModuleForStore = (moduleId: string, slug: string) => {
-    setModuleStoreLinks(prev => {
-      const current = prev[moduleId] || [];
-      const next = current.includes(slug) ? current.filter(s => s !== slug) : [...current, slug];
-      return { ...prev, [moduleId]: next };
-    });
-  };
+  const [modules] = useState<StoreModule[]>(INITIAL_MODULES);
 
   // Packages management modals state
   const [showPackageModal, setShowPackageModal] = useState(false);
@@ -498,6 +471,19 @@ function PaquetesContenido() {
                 </button>
               </div>
 
+              {/* Niveles reales: los que prenden o apagan módulos en el panel del dueño */}
+              <NivelesModulos />
+
+              {/* Catálogo ordenado por qué tan real es cada módulo */}
+              <CatalogoOrdenado modulos={modules} />
+
+              {/* Lo anterior: paquetes de muestra (Starter/Pro/Enterprise), sin efecto real */}
+              <details className="group border border-[#c2c6d6] rounded-md bg-white">
+                <summary className="cursor-pointer select-none px-4 py-3 text-xs font-bold text-[#424754] flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[16px] transition-transform group-open:rotate-90">chevron_right</span>
+                  Paquetes de muestra anteriores (Starter Kit / Pro Bundle / Enterprise) — no gatean nada
+                </summary>
+                <div className="p-4 flex flex-col gap-6 border-t border-[#c2c6d6]">
               {/* Metrics Bento Grid */}
               <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="md:col-span-2 p-5 bg-white border border-[#c2c6d6] rounded-md flex flex-col justify-between relative overflow-hidden">
@@ -683,90 +669,6 @@ function PaquetesContenido() {
                 </div>
               </section>
 
-              {/* Catálogo de módulos de expansión */}
-              <section className="flex flex-col gap-4">
-                <div className="border-b border-[#c2c6d6] pb-4">
-                  <h2 className="text-xl font-bold text-[#191b23]">Módulos de Expansión</h2>
-                  <p className="text-xs text-[#424754] mt-1">Lo que se cobra aparte cuando el negocio crece y necesita más que el catálogo básico. El porqué de cada uno está en "Módulos y Estrategia".</p>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {modules.map((mod) => {
-                    const linkedSlugs = moduleStoreLinks[mod.id] || [];
-                    return (
-                      <div key={mod.id} className="bg-white border border-[#c2c6d6] rounded-md p-4 flex flex-col gap-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="w-9 h-9 rounded-md bg-[#d5e0f8] flex items-center justify-center shrink-0">
-                              <span className="material-symbols-outlined text-[18px] text-[#0058be]">{mod.icon}</span>
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-xs font-bold text-[#191b23] truncate">{mod.name}</p>
-                              <div className="flex items-center gap-1.5 mt-0.5">
-                                <p className="text-[10px] font-bold text-[#0058be]">{mod.price}</p>
-                                <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border leading-none ${
-                                  mod.tier === 'Basic' ? 'bg-emerald-50 text-emerald-800 border-emerald-100' :
-                                  mod.tier === 'Pro' ? 'bg-amber-50 text-amber-800 border-amber-100' :
-                                  'bg-violet-50 text-violet-800 border-violet-100'
-                                }`}>
-                                  desde {mod.tier}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <Toggle on={mod.active} onChange={() => toggleModuleActive(mod.id)} />
-                        </div>
-                        <p className="text-[11px] text-[#424754] leading-relaxed">{mod.description}</p>
-
-                        <div className={`flex items-start gap-1.5 p-2 rounded-md border ${
-                          mod.buildStatus === 'parcial' ? 'bg-sky-50 border-sky-100' : 'bg-[#f9f9ff] border-[#ecedf7]'
-                        }`}>
-                          <span className={`material-symbols-outlined text-[13px] shrink-0 mt-px ${
-                            mod.buildStatus === 'parcial' ? 'text-sky-700' : 'text-[#424754]'
-                          }`}>
-                            {mod.buildStatus === 'parcial' ? 'construction' : 'draft'}
-                          </span>
-                          <p className={`text-[9px] leading-snug font-semibold ${mod.buildStatus === 'parcial' ? 'text-sky-800' : 'text-[#424754]'}`}>
-                            <span className="font-bold uppercase tracking-wider">{mod.buildStatus === 'parcial' ? 'Parcialmente construido: ' : 'Sin construir: '}</span>
-                            {mod.buildNote}
-                          </p>
-                        </div>
-
-                        <div className="pt-3 border-t border-[#ecedf7] flex flex-col gap-2">
-                          <p className="text-[9px] font-bold uppercase tracking-wider text-[#424754]">
-                            {linkedSlugs.length} de {storeList.length} tiendas con este módulo
-                          </p>
-                          <div className="flex flex-wrap gap-1.5">
-                            {storeList.length === 0 && (
-                              <span className="text-[10px] text-[#424754] italic">Todavía no hay tiendas cargadas.</span>
-                            )}
-                            {storeList.map((s) => {
-                              const on = linkedSlugs.includes(s.slug);
-                              return (
-                                <button
-                                  key={s.slug}
-                                  type="button"
-                                  onClick={() => toggleModuleForStore(mod.id, s.slug)}
-                                  disabled={!mod.active}
-                                  className={`text-[10px] font-semibold px-2 py-1 rounded-full border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
-                                    on
-                                      ? 'bg-[#0058be] border-[#0058be] text-white'
-                                      : 'bg-[#f2f3fd] border-[#c2c6d6] text-[#424754] hover:border-[#0058be]'
-                                  }`}
-                                  title={mod.active ? (on ? `Quitar de ${s.name}` : `Activar en ${s.name}`) : 'Activa el módulo primero'}
-                                >
-                                  {storeMeta[s.slug]?.emoji || '🏪'} {s.name}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-
               {/* Archive Table */}
               <section className="bg-white border border-[#c2c6d6] rounded-md overflow-hidden">
                 <div className="px-4 py-3 border-b border-[#c2c6d6] bg-[#f2f3fd] flex items-center justify-between">
@@ -805,6 +707,8 @@ function PaquetesContenido() {
                   </table>
                 </div>
               </section>
+                </div>
+              </details>
             </div>
       </main>
 

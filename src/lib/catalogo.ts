@@ -37,7 +37,8 @@ export async function fetchProductosDeTienda(slug: string): Promise<any[]> {
     const res = await fetch(`/api/catalog/${encodeURIComponent(slug)}`, { cache: 'no-store' });
     if (!res.ok) return [];
     const data = await res.json();
-    return data.products ?? [];
+    // Lo marcado Agotado (a mano, o solo por el inventario al llegar a 0) no se ofrece en la carta.
+    return ((data.products ?? []) as any[]).filter((p) => p.status !== 'Agotado');
   } catch {
     return [];
   }

@@ -18,6 +18,7 @@ import { uploadFile } from '@/lib/uploadClient';
 import { refrescarTienda } from '@/lib/refrescar';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import type { StoreTheme } from '@/lib/templates.config';
+import { MODULOS, moduloActivo, type Modulos } from '@/lib/modulos';
 
 // Correos con acceso al superadmin. A diferencia de /admin (donde cualquier
 // cuenta puede entrar y solo ve sus propias tiendas), este panel puede editar
@@ -322,6 +323,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     externalUrl: '',
       subdominioActivo: false,
       pushActivo: false,
+      modulos: { pos: false, inventario: false } as Modulos,
     ownerEmail: ''
   });
   // Para saber si storeForm.ownerEmail realmente cambio al guardar (y no
@@ -464,6 +466,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       externalUrl: '',
       subdominioActivo: false,
       pushActivo: false,
+      modulos: { pos: false, inventario: false } as Modulos,
       // El correo de la solicitud: asi al guardar la tienda ya queda asignada
       // a quien la pidio, sin tener que ir despues a mano a "Usuarios".
       ownerEmail: req.email || '',
@@ -581,6 +584,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
               externalUrl: dbStore.external_url || undefined,
               subdominioActivo: dbStore.subdominio_activo ?? undefined,
               pushActivo: dbStore.push_activo ?? undefined,
+              modulos: dbStore.modulos ?? undefined,
               theme: (() => {
                 if (dbStore.theme && Object.keys(dbStore.theme).length > 0) return dbStore.theme;
                 const tmpl = dbStore.template as string;
@@ -673,6 +677,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       externalUrl: '',
       subdominioActivo: false,
       pushActivo: false,
+      modulos: { pos: false, inventario: false } as Modulos,
       ownerEmail: ''
     });
     setOriginalOwnerEmail('');
@@ -717,6 +722,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       externalUrl: store.externalUrl || '',
       subdominioActivo: store.subdominioActivo ?? false,
       pushActivo: store.pushActivo ?? false,
+      modulos: { pos: moduloActivo(store.modulos, 'pos'), inventario: moduloActivo(store.modulos, 'inventario') } as Modulos,
       // Sale del dueño actual, no de la tienda. Si lo dejan igual al guardar
       // no se reasigna nada (ver originalOwnerEmail en handleSaveStore).
       ownerEmail: profiles.find((p) => p.id === storeOwners[slug])?.email || ''
@@ -915,6 +921,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       external_url: storeForm.externalUrl || null,
       subdominio_activo: !!storeForm.subdominioActivo,
       push_activo: !!storeForm.pushActivo,
+      modulos: { pos: !!storeForm.modulos?.pos, inventario: !!storeForm.modulos?.inventario },
     };
     if (ownerUserId) upsertData.user_id = ownerUserId;
     if (logoUrl) {
@@ -940,7 +947,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       // Mismo problema que ya paso con `whatsapp` en el panel del cliente: si una
       // columna nueva todavia no existe en la base, reintenta sin ella en vez de
       // perder el guardado completo de la tienda.
-      const columnasOpcionales = ['whatsapp', 'zona', 'direccion', 'horario', 'rating', 'show_demo_products', 'metodos_pago', 'facebook', 'instagram', 'tiktok', 'external_url', 'subdominio_activo', 'push_activo'];
+      const columnasOpcionales = ['whatsapp', 'zona', 'direccion', 'horario', 'rating', 'show_demo_products', 'metodos_pago', 'facebook', 'instagram', 'tiktok', 'external_url', 'subdominio_activo', 'push_activo', 'modulos'];
       const columnasFaltantes: string[] = [];
       let faltante = columnasOpcionales.find((col) => col in upsertData && new RegExp(col).test(error?.message || ''));
       while (error && faltante) {
@@ -1040,6 +1047,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         slug,
         subdominioActivo: !!storeForm.subdominioActivo,
         pushActivo: !!storeForm.pushActivo,
+        modulos: { pos: !!storeForm.modulos?.pos, inventario: !!storeForm.modulos?.inventario },
         name: storeForm.name,
         tagline: storeForm.tagline,
         marketplaceCategory: storeForm.marketplaceCategory,
@@ -2413,6 +2421,29 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                       </span>
                     </label>
                   </section>
+
+                  <section className="p-4 bg-[#f0f7ff] rounded-lg border border-[#0058be]/20">
+                    <span className="block text-xs font-black text-[#191b23]">Módulos del negocio</span>
+                    <span className="block text-[10px] text-[#727785] font-semibold mt-0.5 mb-3">
+                      Lo que ve el dueño en su panel. Con todo apagado queda solo la carta (nivel base).
+                    </span>
+                    <div className="flex flex-col gap-3">
+                      {MODULOS.map((m) => (
+                        <label key={m.id} className="flex items-start gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={!!storeForm.modulos?.[m.id]}
+                            onChange={(e) => setStoreForm(prev => ({ ...prev, modulos: { ...prev.modulos, [m.id]: e.target.checked } }))}
+                            className="mt-0.5 w-4 h-4 accent-[#0058be]"
+                          />
+                          <span>
+                            <span className="block text-xs font-black text-[#191b23]">{m.label}</span>
+                            <span className="block text-[10px] text-[#727785] font-semibold mt-0.5">{m.desc}</span>
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </section>
                 </div>
 
                 {/* Footer Buttons */}
@@ -2522,6 +2553,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           externalUrl: '',
       subdominioActivo: false,
       pushActivo: false,
+      modulos: { pos: false, inventario: false } as Modulos,
                           ownerEmail: ''
                         });
                         setOriginalOwnerEmail('');
@@ -2704,23 +2736,45 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                   placeholder="Ingredientes, tamaño, etc."
                 />
               </div>
-              <div className="flex items-center gap-3">
-                <label className="shrink-0 w-16 h-16 rounded-lg border-2 border-dashed border-[#c2c6d6] flex items-center justify-center cursor-pointer hover:bg-[#f2f3fd]/60 transition-colors overflow-hidden bg-[#f8fafc]">
-                  {storeProductPreview ? (
-                    <img src={storeProductPreview} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="material-symbols-outlined text-[#727785] text-[20px]">add_a_photo</span>
-                  )}
-                  <input
-                    type="file" accept="image/*" className="sr-only"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      setNewStoreProductFile(file);
-                      setStoreProductPreview(URL.createObjectURL(file));
+              {/* Foto del producto: clic, arrastrar o pegar (mismo comportamiento que el panel del dueño) */}
+              {(() => {
+                const elegirFoto = (file?: File | null) => {
+                  if (!file || !file.type.startsWith('image/')) return;
+                  setNewStoreProductFile(file);
+                  setStoreProductPreview(URL.createObjectURL(file));
+                };
+                return (
+                  <label
+                    tabIndex={0}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => { e.preventDefault(); elegirFoto(e.dataTransfer.files?.[0]); }}
+                    onPaste={(e) => {
+                      const f = Array.from(e.clipboardData.files)[0]
+                        || Array.from(e.clipboardData.items).find((it) => it.type.startsWith('image/'))?.getAsFile();
+                      elegirFoto(f);
                     }}
-                  />
-                </label>
+                    className="group relative w-full h-36 rounded-lg border-2 border-dashed border-[#c2c6d6] flex flex-col items-center justify-center gap-1 cursor-pointer hover:bg-[#f2f3fd]/60 focus:outline-none focus:border-[#0058be] transition-colors overflow-hidden bg-[#f8fafc]"
+                  >
+                    {storeProductPreview ? (
+                      <>
+                        <img src={storeProductPreview} alt="" className="w-full h-full object-cover" />
+                        <span className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-opacity">Cambiar foto</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-[#727785] text-[30px]">add_a_photo</span>
+                        <span className="text-xs font-bold text-[#424754]">Clic, arrastra o pega la foto</span>
+                        <span className="text-[10px] text-[#727785] font-semibold">Recomendado cuadrada (1:1)</span>
+                      </>
+                    )}
+                    <input
+                      type="file" accept="image/*" className="sr-only"
+                      onChange={(e) => elegirFoto(e.target.files?.[0])}
+                    />
+                  </label>
+                );
+              })()}
+              <div className="flex items-center gap-3">
                 <p className="text-[10px] text-[#727785] font-semibold flex-1">{editingStoreProductId ? 'Toca la foto para cambiarla (opcional).' : 'Foto del producto (obligatoria).'}</p>
                 {(
                   <button

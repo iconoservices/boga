@@ -43,6 +43,8 @@ export interface StoreConfig {
   subdominioActivo?: boolean;
   /** Avisos push propios habilitados por el superadmin (solo se usan en la dirección propia de la tienda). */
   pushActivo?: boolean;
+  /** Módulos prendidos por el superadmin (POS, inventario). Ver src/lib/modulos.ts. */
+  modulos?: import('./modulos').Modulos;
   /**
    * Mostrar los productos de ejemplo de la plantilla mientras la tienda esta
    * vacia. Solo aplica si no cargo productos propios (ver lib/demo.ts).

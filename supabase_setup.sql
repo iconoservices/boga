@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS public.stores (
   theme JSONB DEFAULT '{}'::jsonb,
   categories JSONB DEFAULT '[]'::jsonb,
   whatsapp TEXT,
-  show_demo_products BOOLEAN DEFAULT true,
+  show_demo_products BOOLEAN DEFAULT false,
   zona TEXT,
   direccion TEXT,
   horario TEXT,
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS public.stores (
 
 -- Migraciones para tablas que ya existían (columnas agregadas después del launch)
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS logo_image TEXT;
-ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS show_demo_products BOOLEAN DEFAULT true;
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS show_demo_products BOOLEAN DEFAULT false;
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS whatsapp TEXT;
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS zona TEXT;
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS direccion TEXT;
@@ -1463,3 +1463,42 @@ ALTER TABLE public.driver_requests ADD COLUMN IF NOT EXISTS foto_vehiculo TEXT;
 -- Migración: campo DNI para verificación de identidad (choferes y postulaciones)
 ALTER TABLE public.driver_requests ADD COLUMN IF NOT EXISTS dni TEXT;
 ALTER TABLE public.drivers ADD COLUMN IF NOT EXISTS dni TEXT;
+
+-- ============================================================
+-- MÓDULOS POR TIENDA (POS, inventario) + VENDEDORES DEL POS
+-- ============================================================
+-- `modulos` lo prende/apaga el superadmin por tienda ({"pos": true, "inventario": true}).
+-- NULL = tienda anterior a los módulos: el panel deja todo prendido.
+-- `vendedores` es el equipo que aparece en la caja POS de cada negocio.
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS modulos JSONB;
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS vendedores TEXT[];
+
+-- Las tiendas que ya existían conservan lo que tenían (POS e inventario prendidos).
+-- El superadmin puede apagarlos desde el editor de tienda.
+UPDATE public.stores SET modulos = '{"pos": true, "inventario": true}'::jsonb WHERE modulos IS NULL;
+
+-- La política UPDATE de stores deja al dueño editar su tienda: sin esto podría
+-- activarse módulos él mismo. Mismo patrón que profiles_protege_rol.
+CREATE OR REPLACE FUNCTION public.stores_protege_modulos()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.modulos IS DISTINCT FROM OLD.modulos AND NOT public.is_superadmin() THEN
+    NEW.modulos := OLD.modulos;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS stores_protege_modulos ON public.stores;
+CREATE TRIGGER stores_protege_modulos
+BEFORE UPDATE ON public.stores
+FOR EACH ROW EXECUTE FUNCTION public.stores_protege_modulos();
+
+-- ============================================================
+-- PRODUCTOS DE EJEMPLO: APAGADOS POR DEFECTO
+-- ============================================================
+-- Antes una tienda vacía mostraba los productos demo de su plantilla sola. Ahora solo salen
+-- si el superadmin o el dueño lo prende (interruptor "mostrar productos de ejemplo").
+-- Las tiendas que ya tienen productos propios no cambian: los demo nunca se muestran encima.
+ALTER TABLE public.stores ALTER COLUMN show_demo_products SET DEFAULT false;
+UPDATE public.stores SET show_demo_products = false WHERE show_demo_products IS DISTINCT FROM false;
