@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
+import VuelosWidget from '@/components/VuelosWidget';
 import { useCart } from '@/context/CartContext';
 import { fetchViajes } from '@/lib/viajes';
 
@@ -118,6 +119,9 @@ export default function Viajes() {
             <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
           </a>
         </div>
+
+        {/* Buscador de vuelos interactivo Travelpayouts */}
+        <VuelosWidget primaryColor="B8130E" />
 
         {/* Resumen rápido */}
         <div className="grid grid-cols-3 gap-3">
