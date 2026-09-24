@@ -1,4 +1,4 @@
-// Ficha de un producto del Mostrador (/mostrador/<slug>): una introducción corta
+// Ficha de un producto del Mostrador (/productos/<slug>): una introducción corta
 // (qué es, qué incluye) y debajo las plantillas disponibles, cada una con su
 // vista previa (/preview/<id>). Es una landing informativa, no un checkout.
 
@@ -7,7 +7,7 @@ import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import AppHeader from '@/components/AppHeader';
-import { PRODUCTOS_MOSTRADOR, getProductoMostrador, plantillasDe } from '@/lib/mostrador';
+import { PRODUCTOS_MOSTRADOR, getProductoMostrador, plantillasDe } from '@/lib/productos';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -34,7 +34,7 @@ export default async function ProductoMostradorPage({ params }: Props) {
       <AppHeader />
 
       <main className="max-w-[1100px] mx-auto px-container-margin pt-4 md:pt-6 pb-16 md:pb-24">
-        <Link href="/mostrador" className="inline-flex items-center gap-1 text-secondary hover:text-primary font-label-md text-label-md">
+        <Link href="/productos" className="inline-flex items-center gap-1 text-secondary hover:text-primary font-label-md text-label-md">
           <span className="material-symbols-outlined text-[18px]">arrow_back</span>
           Todos los productos
         </Link>

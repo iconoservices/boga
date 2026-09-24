@@ -1,13 +1,13 @@
 // El Mostrador de BogaHub: la vitrina de lo que armamos para un negocio (una página
 // de terrenos, la app de una veterinaria, una carta con QR…), como una app store.
-// Cada tarjeta lleva a su ficha (/mostrador/<producto>) con las plantillas que hay
+// Cada tarjeta lleva a su ficha (/productos/<producto>) con las plantillas que hay
 // y su vista previa. Es una ruta APARTE de /negocios (landing B2B de tienda + Market).
 
 import type { Metadata } from 'next';
 import React from 'react';
 import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
-import { PRODUCTOS_MOSTRADOR, plantillasDe, portadaDe } from '@/lib/mostrador';
+import { PRODUCTOS_MOSTRADOR, plantillasDe, portadaDe } from '@/lib/productos';
 
 export const metadata: Metadata = {
   title: 'Productos para tu negocio',
@@ -37,7 +37,7 @@ export default function MostradorPage() {
             return (
               <Link
                 key={p.slug}
-                href={`/mostrador/${p.slug}`}
+                href={`/productos/${p.slug}`}
                 className="group bg-surface-container-lowest border border-surface-container-highest rounded-2xl overflow-hidden flex flex-col transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:border-primary/30"
               >
                 <div className="relative aspect-[16/9] bg-primary/10 overflow-hidden">

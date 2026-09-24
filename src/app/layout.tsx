@@ -142,7 +142,7 @@ export default function RootLayout({
                 document.documentElement.dataset.tienda='1';return;
               }
               var p=window.location.pathname;
-              var routes=['/market','/pension','/trabajos','/transporte','/inmuebles','/viajes','/eventos','/sorteos','/mostrador','/pandero','/revista','/guia'];
+              var routes=['/market','/pension','/trabajos','/transporte','/inmuebles','/viajes','/eventos','/sorteos','/productos','/pandero','/revista','/guia'];
               var show=p==='/'||routes.some(function(r){return p.indexOf(r)===0;});
               if(show){document.documentElement.dataset.sidebar=localStorage.getItem('boga_sidebar_open')==='1'?'open':'rail';}
             }catch(e){}})();`,

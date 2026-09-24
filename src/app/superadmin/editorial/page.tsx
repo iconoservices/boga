@@ -46,7 +46,7 @@ const PILARES: PilarEditorial[] = [
     angulo: '“Dónde comprar X en Pucallpa”, vitrina de comercios locales, productos, moda, y departamentos o cuartos en alquiler.',
     modulos: [
       { label: '/market (Comercios)', href: '/market' },
-      { label: '/mostrador (Productos)', href: '/mostrador' },
+      { label: '/productos (Productos)', href: '/productos' },
       { label: '/inmuebles (Alquileres)', href: '/inmuebles' },
     ],
     ejemplosHooks: [
@@ -135,7 +135,7 @@ const MODULOS_SISTEMA = [
   { icon: 'calendar_month', label: 'Agenda & Eventos', path: '/eventos', desc: 'Conciertos, ferias y qué hacer hoy' },
   { icon: 'home', label: 'Inmuebles', path: '/inmuebles', desc: 'Alquiler de cuartos, casas y terrenos' },
   { icon: 'casino', label: 'Sorteos', path: '/sorteos', desc: 'Rifas patrocinadas por comercios locales' },
-  { icon: 'inventory_2', label: 'Productos', path: '/mostrador', desc: 'Catálogo de productos destacados' },
+  { icon: 'inventory_2', label: 'Productos', path: '/productos', desc: 'Catálogo de productos destacados' },
   { icon: 'engineering', label: 'Trabajos & Oficios', path: '/trabajos', desc: 'Bolsa de empleo y técnicos recomendados' },
   { icon: 'directions_boat', label: 'Viajes & Rutas', path: '/viajes', desc: 'Rápidos fluviales, lanchas y buses' },
   { icon: 'local_taxi', label: 'Taxi Seguro', path: '/transporte', desc: 'Mototaxis verificados y tarifas justas' },

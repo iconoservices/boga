@@ -20,7 +20,7 @@ export default function AppFooter() {
     pathname.startsWith('/viajes') ||
     pathname.startsWith('/eventos') ||
     pathname.startsWith('/sorteos') ||
-    pathname.startsWith('/mostrador') ||
+    pathname.startsWith('/productos') ||
     pathname.startsWith('/revista');
 
   if (!isMarketplaceRoute) return null;

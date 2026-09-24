@@ -1,8 +1,8 @@
 import { getTemplate, type TemplateConfig } from '@/lib/templates.config';
 
-// Catálogo del Mostrador: cada "producto" es algo que BogaHub arma para un
+// Catálogo de Productos: cada "producto" es algo que BogaHub arma para un
 // negocio (una página de terrenos, la app de una veterinaria, una carta con QR…).
-// Cada uno tiene una ficha introductoria (/mostrador/<slug>) donde se ven las
+// Cada uno tiene una ficha introductoria (/productos/<slug>) donde se ven las
 // plantillas disponibles con su vista previa (/preview/<id>).
 //
 // `estado: 'proximamente'` = todavía no se puede contratar completo; igual se

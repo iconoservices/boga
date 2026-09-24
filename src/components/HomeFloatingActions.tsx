@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 // Rutas del lado consumidor de BogaHub donde sale el botón de compartir (las mismas
 // del riel lateral del layout). Fuera de estas (admin, superadmin, login…) no va.
 // Instalar ya no está acá: vive en la cabecera (AppHeader), junto a notificaciones.
-const RUTAS = ['/market', '/pension', '/trabajos', '/transporte', '/inmuebles', '/viajes', '/eventos', '/sorteos', '/mostrador', '/pandero', '/revista', '/guia'];
+const RUTAS = ['/market', '/pension', '/trabajos', '/transporte', '/inmuebles', '/viajes', '/eventos', '/sorteos', '/productos', '/pandero', '/revista', '/guia'];
 
 export default function HomeFloatingActions() {
   const pathname = usePathname();

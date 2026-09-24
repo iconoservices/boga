@@ -40,7 +40,7 @@ export default function NegociosPage() {
             <a href="#precios" className="font-label-md text-label-md text-secondary hover:text-primary transition-colors">Planes</a>
             <a href="#como-funciona" className="font-label-md text-label-md text-secondary hover:text-primary transition-colors">Cómo funciona</a>
             <a href="#soluciones" className="font-label-md text-label-md text-secondary hover:text-primary transition-colors">Soluciones</a>
-            <Link href="/mostrador" className="font-label-md text-label-md text-secondary hover:text-primary transition-colors flex items-center gap-1">
+            <Link href="/productos" className="font-label-md text-label-md text-secondary hover:text-primary transition-colors flex items-center gap-1">
               <span className="material-symbols-outlined text-[16px]">inventory_2</span>
               Productos
             </Link>
@@ -100,7 +100,7 @@ export default function NegociosPage() {
                   <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                 </Link>
                 <Link
-                  href="/mostrador"
+                  href="/productos"
                   className="bg-surface-container-lowest text-on-surface font-bold text-sm px-6 py-3.5 rounded-full border border-surface-container-highest hover:border-primary hover:text-primary transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
                 >
                   <span className="material-symbols-outlined text-primary text-[18px]">visibility</span>
