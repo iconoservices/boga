@@ -68,6 +68,9 @@ const nextConfig: NextConfig = {
         destination: '/trabajos',
         permanent: true,
       },
+      // Taxi Seguro pasó a llamarse /transporte: los enlaces viejos (y el registro de choferes) siguen funcionando.
+      { source: '/taxi-seguro', destination: '/transporte', permanent: true },
+      { source: '/taxi-seguro/:path*', destination: '/transporte/:path*', permanent: true },
       // Otras formas de escribirla a mano.
       { source: '/trabajo', destination: '/trabajos', permanent: true },
       { source: '/empleos', destination: '/trabajos', permanent: true },

@@ -135,12 +135,12 @@ export default function RegistroChoferPage() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: '#f7f9f8', padding: '32px 24px 56px' }}>
         <div style={{ width: '100%', maxWidth: '440px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '22px' }}>
-            <Link href="/taxi-seguro" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+            <Link href="/transporte" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
               <img src="/logo-mark.svg" alt="" style={{ width: '30px', height: '30px' }} />
               <span style={{ fontSize: '16px', fontWeight: 800, color: '#111' }}>BogaHub</span>
               <span style={{ fontSize: '10px', fontWeight: 700, color: VERDE, backgroundColor: '#d3f1e4', padding: '2px 6px', borderRadius: '5px' }}>Taxi Seguro</span>
             </Link>
-            <Link href="/taxi-seguro" style={{ fontSize: '12px', fontWeight: 600, color: '#7a8a83', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '3px' }}>
+            <Link href="/transporte" style={{ fontSize: '12px', fontWeight: 600, color: '#7a8a83', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '3px' }}>
               <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_back</span>Volver
             </Link>
           </div>
@@ -162,7 +162,7 @@ export default function RegistroChoferPage() {
                 <p style={{ fontSize: '13px', color: '#999', fontWeight: 500, lineHeight: 1.6, marginBottom: '24px' }}>
                   Recibimos tus datos, <b>{nombre}</b>. Te escribimos por WhatsApp para pedirte tus documentos.
                 </p>
-                <Link href="/taxi-seguro" style={{ display: 'inline-block', padding: '12px 24px', backgroundColor: VERDE, color: '#fff', borderRadius: '12px', fontSize: '13px', fontWeight: 700, textDecoration: 'none' }}>
+                <Link href="/transporte" style={{ display: 'inline-block', padding: '12px 24px', backgroundColor: VERDE, color: '#fff', borderRadius: '12px', fontSize: '13px', fontWeight: 700, textDecoration: 'none' }}>
                   Volver a Taxi Seguro
                 </Link>
               </div>

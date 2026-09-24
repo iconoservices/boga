@@ -197,7 +197,7 @@ export default function TaxiSeguro() {
               Choferes verificados por la comunidad BogaHub. Los contactas directo por llamada o WhatsApp — sin tarifas ocultas ni comisiones a intermediarios.
             </p>
             <a
-              href="/taxi-seguro/registro"
+              href="/transporte/registro"
               className="inline-flex items-center gap-1.5 w-fit mt-1 font-label-md text-[12px] font-bold hover:underline"
               style={{ color: VERDE }}
             >
@@ -257,7 +257,7 @@ export default function TaxiSeguro() {
               Estamos integrando conductores con DNI y documentos validados. Si manejas en la ciudad, sé de los primeros en aparecer en el padrón.
             </p>
             <a
-              href="/taxi-seguro/registro"
+              href="/transporte/registro"
               className="mt-2 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-on-primary text-xs font-bold shadow-sm hover:opacity-95 active:scale-95 transition-all"
             >
               <span className="material-symbols-outlined text-[16px]">badge</span>

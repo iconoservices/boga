@@ -64,7 +64,7 @@ const PILARES: PilarEditorial[] = [
     badgeColor: 'bg-amber-100 text-amber-800 border-amber-200',
     angulo: 'Logística de transporte real: rutas a Contamana o Iquitos en rápido, tarifas justas de mototaxis seguros y horarios fluviales.',
     modulos: [
-      { label: '/taxi-seguro (Conductores)', href: '/taxi-seguro' },
+      { label: '/transporte (Conductores)', href: '/transporte' },
       { label: '/viajes (Fluvial y Terrestre)', href: '/viajes' },
     ],
     ejemplosHooks: [
@@ -138,7 +138,7 @@ const MODULOS_SISTEMA = [
   { icon: 'inventory_2', label: 'Productos', path: '/mostrador', desc: 'Catálogo de productos destacados' },
   { icon: 'engineering', label: 'Trabajos & Oficios', path: '/trabajos', desc: 'Bolsa de empleo y técnicos recomendados' },
   { icon: 'directions_boat', label: 'Viajes & Rutas', path: '/viajes', desc: 'Rápidos fluviales, lanchas y buses' },
-  { icon: 'local_taxi', label: 'Taxi Seguro', path: '/taxi-seguro', desc: 'Mototaxis verificados y tarifas justas' },
+  { icon: 'local_taxi', label: 'Taxi Seguro', path: '/transporte', desc: 'Mototaxis verificados y tarifas justas' },
   { icon: 'savings', label: 'Pandero', path: '/pandero', desc: 'Ahorro grupal rotativo' },
   { icon: 'menu_book', label: 'Revista Cultural', path: '/revista', desc: 'Historias "Yo Soy de la Selva"' },
   { icon: 'work', label: 'Para Negocios', path: '/negocios', desc: 'Vende y digitaliza tu local en Boga' },

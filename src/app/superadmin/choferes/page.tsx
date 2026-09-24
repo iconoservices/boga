@@ -5,7 +5,7 @@
 //
 //   - driver_requests (postulaciones del formulario público): aprobar / rechazar.
 //     Aprobar precarga la ficha con lo que dejó el chofer.
-//   - drivers (el directorio de /taxi-seguro): crear, editar, ocultar, borrar.
+//   - drivers (el directorio de /transporte): crear, editar, ocultar, borrar.
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -172,7 +172,7 @@ export default function ChoferesAdmin() {
             <span className="text-secondary">/</span>
             <span className="font-headline-sm text-headline-sm text-on-surface">Choferes · Taxi Seguro</span>
           </div>
-          <Link href="/taxi-seguro" className="text-sm text-primary">Ver la página →</Link>
+          <Link href="/transporte" className="text-sm text-primary">Ver la página →</Link>
         </div>
       </header>
 

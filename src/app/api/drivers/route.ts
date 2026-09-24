@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
-// Directorio de choferes de Taxi Seguro, en UN endpoint cacheado. /taxi-seguro
+// Directorio de choferes de Taxi Seguro, en UN endpoint cacheado. /transporte
 // lo consume en vez de pegarle a Supabase desde el navegador de cada visitante
 // (misma regla de egress que /api/catalog).
 //

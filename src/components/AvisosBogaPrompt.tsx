@@ -24,7 +24,7 @@ const MAX_RECHAZOS = 5;
 const ESPERA_INICIAL_MS = 12_000;
 
 // Solo pantallas de BogaHub donde tiene sentido (nunca dentro de una tienda ni del panel)
-const RUTAS = new Set(['', 'market', 'explore', 'eventos', 'sorteos', 'trabajos', 'inmuebles', 'viajes', 'revista', 'guia', 'taxi-seguro', 'pension', 'pandero', 'promotions']);
+const RUTAS = new Set(['', 'market', 'explore', 'eventos', 'sorteos', 'trabajos', 'inmuebles', 'viajes', 'revista', 'guia', 'transporte', 'pension', 'pandero', 'promotions']);
 
 type Memoria = { rechazos: number; hasta: number };
 const leer = (): Memoria => {
