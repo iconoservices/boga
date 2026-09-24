@@ -88,40 +88,8 @@ export default function Viajes() {
           </div>
         </div>
 
-        {/* Banner Kiwi.com Vuelos Promocional */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#003831] via-[#005a4e] to-[#01a48c] text-white p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm border border-emerald-900/20">
-          <div className="flex items-start gap-3.5">
-            <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center shrink-0 border border-white/15">
-              <span className="material-symbols-outlined text-[28px] text-emerald-300">flight_takeoff</span>
-            </div>
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <span className="bg-white/20 text-[10px] font-label-md px-2 py-0.5 rounded-full uppercase tracking-wider text-emerald-200">
-                  Vuelos Nacionales e Internacionales
-                </span>
-                <span className="text-white/60 text-xs font-semibold">vía Kiwi.com</span>
-              </div>
-              <h3 className="font-headline-sm text-base sm:text-lg font-bold leading-tight">
-                ¿Buscas vuelos baratos desde o hacia Pucallpa?
-              </h3>
-              <p className="font-body-md text-xs text-white/80 max-w-xl">
-                Compara en tiempo real pasajes aéreos a Lima, Tarapoto, Iquitos y destinos internacionales con las tarifas más bajas.
-              </p>
-            </div>
-          </div>
-          <a
-            href={KIWI_AFFILIATE_URL}
-            target="_blank"
-            rel="noopener noreferrer sponsored"
-            className="shrink-0 bg-white text-[#003831] hover:bg-emerald-50 active:scale-95 font-label-md text-xs sm:text-sm font-bold px-4 py-2.5 rounded-full flex items-center gap-2 shadow-md transition-all self-stretch md:self-auto justify-center"
-          >
-            <span>Buscar vuelos baratos</span>
-            <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-          </a>
-        </div>
-
-        {/* Buscador de vuelos interactivo Travelpayouts */}
-        <VuelosWidget primaryColor="B8130E" />
+        {/* Módulo unificado de Vuelos: Buscador en Soles (Travelpayouts) + Kiwi.com en Rojo Boga */}
+        <VuelosWidget primaryColor="B8130E" kiwiUrl={KIWI_AFFILIATE_URL} />
 
         {/* Resumen rápido */}
         <div className="grid grid-cols-3 gap-3">
