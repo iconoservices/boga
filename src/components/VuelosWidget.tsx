@@ -22,7 +22,7 @@ export default function VuelosWidget({
     const script = document.createElement('script');
     script.async = true;
     script.charset = 'utf-8';
-    script.src = `https://tpemd.com/content?currency=pen&trs=577562&shmarker=781488&from_name=pucallpa_pe&locale=es&powered_by=true&limit=4&primary_color=${primaryColor}&results_background_color=FFFFFF&form_background_color=FFFFFF&campaign_id=111&promo_id=3411`;
+    script.src = `https://tpemd.com/content?currency=pen&trs=577562&shmarker=781488&from_name=pucallpa_pe&locale=es&powered_by=true&limit=1&primary_color=${primaryColor}&results_background_color=FFFFFF&form_background_color=FFFFFF&campaign_id=111&promo_id=3411`;
 
     el.appendChild(script);
 
