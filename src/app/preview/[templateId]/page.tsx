@@ -52,6 +52,7 @@ export default async function PreviewPage({ params }: Props) {
     tagline: `Plantilla "${tmpl.name}" — /preview/${templateId}`,
     marketplaceCategory: tmpl.category,
     template: templateId,
+    demoDePlantilla: true,
   };
 
   return <StoreRenderer store={base} />;

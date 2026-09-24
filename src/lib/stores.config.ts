@@ -48,6 +48,8 @@ export interface StoreConfig {
    * vacia. Solo aplica si no cargo productos propios (ver lib/demo.ts).
    */
   showDemoProducts?: boolean;
+  /** True solo en /preview/<plantilla>: los productos salen de los de demo editables (lib/demoPlantilla.ts). */
+  demoDePlantilla?: boolean;
 }
 
 // Las tiendas viven en Supabase, no aca. Cada consumidor las carga por su lado:

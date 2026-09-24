@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { StoreConfig } from '@/lib/stores.config';
 import { fetchProductosDeTienda } from '@/lib/catalogo';
+import { demoSlug } from '@/lib/demoPlantilla';
 import { getDemoProducts } from '@/lib/templates.config';
 import { debeMostrarDemo } from '@/lib/demo';
 import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
@@ -42,7 +43,7 @@ export function useCatalogo(store: StoreConfig) {
       categorias.find((c) => c.name === nombre)?.href ?? (nombre || '').toLowerCase();
 
     const cargar = async () => {
-      const data = await fetchProductosDeTienda(store.slug);
+      const data = await fetchProductosDeTienda(store.demoDePlantilla ? demoSlug(store.slug) : store.slug);
 
       const deLaBase: Producto[] = data
         ? data.map((p) => ({
@@ -66,6 +67,7 @@ export function useCatalogo(store: StoreConfig) {
             price: p.price,
             category: hrefDeCategoria(p.category),
             image: p.image,
+            extra: p.subcategory ? { area: String(p.subcategory) } : undefined,
           }))
         : [];
 

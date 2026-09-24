@@ -439,6 +439,14 @@ export default function PlantillasPage() {
                       <span className="material-symbols-outlined text-[12px]">visibility</span>
                     </a>
 
+                    <a
+                      href={`/superadmin/plantillas/${tpl.id}`}
+                      className="p-1 text-[#545f73] hover:text-[#0058be] hover:bg-[#ecedf7] rounded transition-colors flex items-center justify-center"
+                      title="Productos de la demo (fotos, precios, textos)"
+                    >
+                      <span className="material-symbols-outlined text-[12px]">inventory_2</span>
+                    </a>
+
                     <button
                       onClick={() => handleOpenEditTemplate(tpl)}
                       className="p-1 text-[#545f73] hover:text-[#0058be] hover:bg-[#ecedf7] rounded transition-colors flex items-center justify-center"
