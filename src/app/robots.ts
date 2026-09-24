@@ -8,6 +8,8 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: '*',
       allow: '/',
       // Pantallas privadas / de gestión: no las queremos en el índice.
+      // OJO: no bloquear /api/. Las páginas (Trabajos, Viajes, Market…) cargan su lista desde ahí y Google
+      // necesita poder pedirla al renderizar; si se bloquea, ve las páginas vacías.
       disallow: ['/admin', '/superadmin', '/login', '/reset-password', '/orders', '/profile'],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,

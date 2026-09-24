@@ -3,6 +3,7 @@ import { fechaISO } from '@/lib/revista';
 import { getNotasPublicadas } from '@/lib/revista.data';
 import { supabase } from '@/lib/supabase';
 import { getEmpleosActivos, slugEmpleo } from '@/lib/chamba.data';
+import { PRODUCTOS_MOSTRADOR } from '@/lib/productos';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app';
 
@@ -69,5 +70,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.5,
   }));
 
-  return [...rutasFijas, ...tiendas, ...notas, ...empleos];
+  // Cada ficha de /productos (terrenos, carta digital, tienda…) en su propia URL.
+  const fichasProductos: MetadataRoute.Sitemap = PRODUCTOS_MOSTRADOR.map((p) => ({
+    url: `${SITE_URL}/productos/${p.slug}`,
+    lastModified: now,
+    changeFrequency: 'monthly',
+    priority: 0.4,
+  }));
+
+  return [...rutasFijas, ...tiendas, ...notas, ...empleos, ...fichasProductos];
 }

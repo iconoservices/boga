@@ -3844,7 +3844,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                     {/* Logo container box */}
                     <div className="border border-[#ecedf7] rounded-lg p-4 bg-[#f8fafc] flex flex-col items-center justify-center gap-3">
                       {logoPreview ? (
-                        <img src={logoPreview} className="w-16 h-16 rounded-lg object-cover border border-[#c2c6d6]/40 shadow-md" />
+                        <img src={logoPreview} alt="Vista previa del logo" className="w-16 h-16 rounded-lg object-cover border border-[#c2c6d6]/40 shadow-md" />
                       ) : (
                         <div className="w-16 h-16 rounded-lg bg-white border border-[#c2c6d6]/40 flex items-center justify-center text-3xl shadow-md">
                           {storeForm.emoji || '🏪'}
