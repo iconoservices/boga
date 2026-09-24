@@ -24,6 +24,7 @@ const ROUTES: { path: string; changeFrequency: MetadataRoute.Sitemap[number]['ch
   { path: '/transporte',   changeFrequency: 'weekly',  priority: 0.7 },
   { path: '/inmuebles',    changeFrequency: 'daily',   priority: 0.8 },
   { path: '/viajes',       changeFrequency: 'weekly',  priority: 0.7 },
+  { path: '/viajes/vuelos', changeFrequency: 'weekly', priority: 0.6 },
   { path: '/promotions',    changeFrequency: 'daily',   priority: 0.6 },
   { path: '/negocios',      changeFrequency: 'monthly', priority: 0.6 },
   // /vende-con-boga redirige a /negocios#registro — no va en el sitemap.

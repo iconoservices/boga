@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
-import VuelosWidget from '@/components/VuelosWidget';
+import ViajesCabecera from '@/components/ViajesCabecera';
 import { useCart } from '@/context/CartContext';
 import { fetchViajes } from '@/lib/viajes';
 import { fetchNotasRevista, type NotaCard } from '@/lib/revista';
@@ -18,7 +18,7 @@ const FILTROS: { id: Medio; label: string; icon: string }[] = [
   { id: 'todos',     label: 'Todos',      icon: 'travel_explore' },
   { id: 'fluvial',   label: 'Fluvial',    icon: 'directions_boat' },
   { id: 'terrestre', label: 'Terrestre',  icon: 'directions_bus' },
-  { id: 'aereo',     label: 'Aéreo',      icon: 'flight' },
+  { id: 'aereo',     label: 'Vuelos',     icon: 'flight' },
 ];
 
 type Ruta = {
@@ -87,6 +87,10 @@ export default function Viajes() {
   const [rutas, setRutas] = useState<Ruta[]>([]);
   const [cargado, setCargado] = useState(false);
   useEffect(() => {
+    const m = new URLSearchParams(window.location.search).get('medio');
+    if (m === 'fluvial' || m === 'terrestre') setFiltro(m);
+  }, []);
+  useEffect(() => {
     fetchViajes().then((rows) => { setRutas(rows); setCargado(true); });
   }, []);
 
@@ -104,50 +108,17 @@ export default function Viajes() {
 
       <main className="max-w-[1200px] mx-auto px-container-margin lg:px-6 w-full pt-5 flex flex-col gap-6 pb-14">
 
-        {/* Encabezado + banner en una sola fila (antes eran dos bloques que repetían lo mismo) */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0c4a6e] to-[#1B8EBF] text-white px-5 py-4 flex items-center gap-4">
-          <div className="absolute -right-10 -top-10 w-48 h-48 bg-white/5 rounded-full blur-2xl pointer-events-none" aria-hidden="true" />
-          <span className="relative w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-[28px]">sailing</span>
-          </span>
-          <div className="relative min-w-0">
-            <h1 className="font-headline-lg text-xl lg:text-2xl font-extrabold leading-tight">Viajes desde Pucallpa</h1>
-            <p className="font-body-md text-xs sm:text-sm text-white/80 leading-snug mt-0.5">
-              Rápidos por el río Ucayali, buses por la Federico Basadre y vuelos nacionales.
-            </p>
-          </div>
-        </div>
-
-        {/* Filtros por medio — arriba; el número solo sale si hay rutas (antes había tarjetas aparte con "0") */}
-        <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1" style={{ scrollbarWidth: 'none' }}>
-          {FILTROS.map((f) => (
-            <button
-              key={f.id}
-              onClick={() => setFiltro(f.id)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-label-md shrink-0 transition-all shadow-sm active:scale-95 ${
-                filtro === f.id
-                  ? 'bg-primary text-white border border-primary shadow-md'
-                  : 'bg-white border border-surface-container-highest text-secondary hover:shadow-md'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[15px]">{f.icon}</span>
-              {f.label}
-              {f.id !== 'todos' && typeof conteo[f.id as 'fluvial'|'terrestre'|'aereo'] === 'number' && (conteo[f.id as 'fluvial'|'terrestre'|'aereo'] as number) > 0 && (
-                <span className="text-[10px] font-bold opacity-70">{conteo[f.id as 'fluvial'|'terrestre'|'aereo']}</span>
-              )}
-            </button>
-          ))}
-        </div>
-
-        {/* Módulo de Vuelos: Buscador en Soles (Travelpayouts) en Rojo Boga */}
-        {/* Solo se oculta (no se desmonta): volver a montarlo recargaba el script de Kiwi y duplicaba el buscador. */}
-        <div className={filtro === 'todos' || filtro === 'aereo' ? '' : 'hidden'}>
-          <VuelosWidget primaryColor="B8130E" />
-        </div>
+        <ViajesCabecera
+          activo={filtro}
+          titulo="Viajes desde Pucallpa"
+          subtitulo="Rápidos por el río Ucayali, buses por la Federico Basadre y vuelos nacionales."
+          onSelect={setFiltro}
+          conteo={{ fluvial: conteo.fluvial, terrestre: conteo.terrestre }}
+        />
 
         {/* Grilla de rutas */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {cargado && lista.length === 0 && filtro !== 'aereo' && (
+          {cargado && lista.length === 0 && (
             <div className="col-span-full bg-white rounded-2xl border border-dashed border-surface-container-highest p-8 text-center">
               <span className="material-symbols-outlined text-secondary/40 text-[32px]">directions_boat</span>
               <p className="font-headline-sm text-sm text-on-surface mt-2">
