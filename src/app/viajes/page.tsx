@@ -129,7 +129,7 @@ export default function Viajes() {
                 <span className="material-symbols-outlined text-[26px]">flight_takeoff</span>
               </span>
               <span className="relative min-w-0 flex-1 leading-tight">
-                <span className="block font-headline-sm text-base sm:text-lg font-bold">Compra tu pasaje o cotiza tu vuelo</span>
+                <span className="block font-headline-sm text-base sm:text-lg font-bold">Compra tu pasaje o cotiza tu vuelo con Boga</span>
                 <span className="block font-body-md text-xs sm:text-sm text-white/80 mt-0.5">Compara tarifas desde Pucallpa, en soles</span>
               </span>
               <span className="relative hidden sm:inline-flex items-center gap-1 bg-white text-[#B8130E] text-sm font-label-md font-bold px-4 py-2 rounded-full group-hover:opacity-90">
