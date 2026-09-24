@@ -118,6 +118,27 @@ export default function Viajes() {
 
         {/* Grilla de rutas */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Puerta a los vuelos (el buscador vive en /viajes/vuelos) */}
+          {filtro === 'todos' && (
+            <Link
+              href="/viajes/vuelos"
+              className="col-span-full group relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#8a0d09] via-[#B8130E] to-[#d6281e] text-white p-4 sm:p-5 flex items-center gap-4 active:scale-[0.99] transition-transform"
+            >
+              <div className="absolute -right-8 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" aria-hidden="true" />
+              <span className="relative w-12 h-12 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[26px]">flight_takeoff</span>
+              </span>
+              <span className="relative min-w-0 flex-1 leading-tight">
+                <span className="block font-headline-sm text-base sm:text-lg font-bold">Compra tu pasaje o cotiza tu vuelo</span>
+                <span className="block font-body-md text-xs sm:text-sm text-white/80 mt-0.5">Compara tarifas desde Pucallpa, en soles</span>
+              </span>
+              <span className="relative hidden sm:inline-flex items-center gap-1 bg-white text-[#B8130E] text-sm font-label-md font-bold px-4 py-2 rounded-full group-hover:opacity-90">
+                Buscar vuelos
+                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+              </span>
+              <span className="relative sm:hidden material-symbols-outlined text-[22px] text-white/80">chevron_right</span>
+            </Link>
+          )}
           {cargado && lista.length === 0 && (
             <div className="col-span-full bg-white rounded-2xl border border-dashed border-surface-container-highest p-8 text-center">
               <span className="material-symbols-outlined text-secondary/40 text-[32px]">directions_boat</span>
