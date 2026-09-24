@@ -5,6 +5,7 @@ import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
 import { fetchChamba, haceCuanto, fechaAviso, slugEmpleo } from '@/lib/chamba';
+import PixelEvent from '@/components/PixelEvent';
 
 // Servicios = tablero local de trabajo, oficios y empleos. Por ahora es un DIRECTORIO curado a mano
 // (sin tabla en Supabase todavía): gente que ofrece su oficio y avisos de
@@ -379,6 +380,15 @@ export default function Servicios() {
         {/* Visor de la imagen del aviso */}
         {visor && (
           <div className="fixed inset-0 z-[80] bg-black/85 flex flex-col items-center justify-center p-3 sm:p-6" onClick={() => setVisor(null)} role="dialog" aria-modal="true" aria-label={`Aviso de ${visor.puesto}`}>
+            <PixelEvent
+              event="ViewContent"
+              data={{
+                content_name: `${visor.puesto}${visor.negocio ? ` · ${visor.negocio}` : ''}`,
+                content_category: 'Empleo',
+                content_type: 'job',
+                content_ids: [visor.id],
+              }}
+            />
             <button type="button" aria-label="Cerrar" onClick={() => setVisor(null)} className="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/15 text-white flex items-center justify-center hover:bg-white/25 active:scale-90 transition">
               <span className="material-symbols-outlined">close</span>
             </button>

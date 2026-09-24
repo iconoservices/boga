@@ -12,6 +12,7 @@ import { notFound } from 'next/navigation';
 import AppHeader from '@/components/AppHeader';
 import { getEmpleoPorSlug, getEmpleosActivos } from '@/lib/chamba.data';
 import { slugEmpleo, haceCuanto, fechaAviso } from '@/lib/chamba';
+import PixelEvent from '@/components/PixelEvent';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app';
 
@@ -140,6 +141,15 @@ export default async function EmpleoPage({ params }: Props) {
 
   return (
     <>
+      <PixelEvent
+        event="ViewContent"
+        data={{
+          content_name: `${e.puesto}${e.negocio ? ` · ${e.negocio}` : ''}`,
+          content_category: 'Empleo',
+          content_type: 'job',
+          content_ids: [slug],
+        }}
+      />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <AppHeader />
