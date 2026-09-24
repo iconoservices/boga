@@ -10,7 +10,7 @@ import AppHeader from '@/components/AppHeader';
 import { PRODUCTOS_MOSTRADOR, plantillasDe, portadaDe } from '@/lib/mostrador';
 
 export const metadata: Metadata = {
-  title: 'Productos · BogaHub',
+  title: 'Productos para tu negocio',
   description: 'Soluciones y productos de BogaHub para tu negocio: cartas digitales QR, tiendas online, apps y páginas web.',
 };
 

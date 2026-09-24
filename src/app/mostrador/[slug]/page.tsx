@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const p = getProductoMostrador(slug);
   if (!p) return { title: 'Producto no encontrado' };
-  return { title: `${p.titulo} · Productos BogaHub`, description: p.gancho };
+  return { title: `${p.titulo} · Productos`, description: p.gancho };
 }
 
 export default async function ProductoMostradorPage({ params }: Props) {
