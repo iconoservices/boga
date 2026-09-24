@@ -40,7 +40,7 @@ export default function VuelosPage() {
           subtitulo="Compara tarifas a Lima, Iquitos, Tarapoto y más desde el aeropuerto de Pucallpa (PCL), en soles."
         />
 
-        <div className="w-full max-w-[900px] mx-auto"><VuelosWidget primaryColor="B8130E" /></div>
+        <div className="w-full max-w-[900px] mx-auto"><VuelosWidget primaryColor="B8130E" destinos={4} /></div>
 
         {/* Cómo usarlo */}
         <section className="w-full max-w-[900px] mx-auto flex flex-col gap-3">

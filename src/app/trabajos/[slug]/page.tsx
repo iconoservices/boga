@@ -190,8 +190,8 @@ export default async function EmpleoPage({ params }: Props) {
 
           <p className="font-body-md text-sm text-on-surface leading-relaxed whitespace-pre-line">{descripcion}</p>
 
-          <p className="flex items-center gap-1 text-[11px] font-label-md text-red-600/80">
-            <span className="material-symbols-outlined text-[13px]">error</span>
+          <p className="flex items-center gap-1 text-[11px] font-label-md text-on-surface">
+            <span className="material-symbols-outlined text-[13px] text-red-600/80">error</span>
             BogaHub solo indexa este aviso, no es el empleador. Ninguna empresa seria te pedirá dinero por examen médico, uniforme o capacitación.
           </p>
 

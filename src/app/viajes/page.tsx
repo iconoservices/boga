@@ -116,6 +116,23 @@ export default function Viajes() {
           conteo={{ fluvial: conteo.fluvial, terrestre: conteo.terrestre }}
         />
 
+        {/* Para agencias: arriba y compacto, así lo ve quien quiere anunciarse (antes estaba al final de la página) */}
+        <a
+          href={waLink('51963000000', 'Hola BogaHub, soy agencia de transporte y quiero aparecer en la sección Viajes.')}
+          target="_blank"
+          rel="noreferrer"
+          className="rounded-xl bg-inverse-surface text-inverse-on-surface px-3 py-2.5 flex items-center gap-2.5 active:scale-[0.99] transition-transform"
+        >
+          <span className="w-9 h-9 rounded-lg bg-[#1B8EBF]/20 flex items-center justify-center shrink-0">
+            <span className="material-symbols-outlined text-[#1B8EBF] text-[20px]">add_business</span>
+          </span>
+          <span className="flex flex-col min-w-0 flex-1 leading-tight">
+            <span className="font-headline-sm text-[13px]">¿Eres agencia de transporte?</span>
+            <span className="text-[11px] text-inverse-on-surface/70 mt-0.5">Aparece aquí gratis y recibe pasajeros por WhatsApp</span>
+          </span>
+          <span className="material-symbols-outlined text-inverse-on-surface/60 shrink-0">chevron_right</span>
+        </a>
+
         {/* Grilla de rutas */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Puerta a los vuelos (el buscador vive en /viajes/vuelos) */}
@@ -219,24 +236,6 @@ export default function Viajes() {
         </div>
 
         <NotasDeViaje />
-
-        {/* CTA para agencias */}
-        <a
-          href={waLink('51963000000', 'Hola BogaHub, soy agencia de transporte y quiero aparecer en la sección Viajes.')}
-          target="_blank"
-          rel="noreferrer"
-          className="relative overflow-hidden rounded-2xl bg-inverse-surface text-inverse-on-surface p-4 flex items-center gap-3 group"
-        >
-          <div className="absolute -right-8 -top-10 w-40 h-40 bg-[#1B8EBF]/20 rounded-full blur-2xl pointer-events-none" aria-hidden="true" />
-          <div className="w-11 h-11 rounded-xl bg-[#1B8EBF]/15 flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-[#1B8EBF] text-[22px]">add_business</span>
-          </div>
-          <div className="relative flex flex-col min-w-0 flex-1">
-            <span className="font-headline-sm text-sm leading-tight">¿Eres agencia de transporte?</span>
-            <span className="text-inverse-on-surface/70 font-body-md text-xs mt-0.5">Aparece aquí gratis y recibe pasajeros por WhatsApp</span>
-          </div>
-          <span className="material-symbols-outlined text-inverse-on-surface/60 shrink-0 group-hover:translate-x-1 transition-transform">chevron_right</span>
-        </a>
 
         <p className="text-secondary/70 font-body-md text-[11px] text-center pt-2">
           Los horarios y precios son referenciales. Confirma directamente con la agencia antes de viajar. BogaHub solo conecta.

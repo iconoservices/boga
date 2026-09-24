@@ -5,11 +5,14 @@ import React, { useEffect, useRef } from 'react';
 interface VuelosWidgetProps {
   primaryColor?: string; // Sin '#', ej: 'B8130E'
   kiwiUrl?: string;
+  /** Cuántos destinos populares muestra el buscador (Kiwi acepta de 1 en adelante; 0 da error). */
+  destinos?: number;
 }
 
 export default function VuelosWidget({
   primaryColor = 'B8130E',
   kiwiUrl = 'https://kiwi.tpo.lv/QQudEv2V',
+  destinos = 4,
 }: VuelosWidgetProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -22,14 +25,14 @@ export default function VuelosWidget({
     const script = document.createElement('script');
     script.async = true;
     script.charset = 'utf-8';
-    script.src = `https://tpemd.com/content?currency=pen&trs=577562&shmarker=781488&from_name=pucallpa_pe&locale=es&powered_by=true&limit=1&primary_color=${primaryColor}&results_background_color=FFFFFF&form_background_color=FFFFFF&campaign_id=111&promo_id=3411`;
+    script.src = `https://tpemd.com/content?currency=pen&trs=577562&shmarker=781488&from_name=pucallpa_pe&locale=es&powered_by=true&limit=${destinos}&primary_color=${primaryColor}&results_background_color=FFFFFF&form_background_color=FFFFFF&campaign_id=111&promo_id=3411`;
 
     el.appendChild(script);
 
     return () => {
       if (el) el.innerHTML = '';
     };
-  }, [primaryColor]);
+  }, [primaryColor, destinos]);
 
   return (
     <div className="relative overflow-hidden rounded-2xl bg-white border border-surface-container-highest shadow-md flex flex-col">

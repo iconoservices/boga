@@ -17,8 +17,8 @@ type Vista = 'servicios' | 'empleos';
 // tarjeta de alerta que compita visualmente con el puesto o el botón de postular.
 function AvisoSeguridadEmpleo() {
   return (
-    <p className="flex items-center gap-1 text-[10px] font-label-md text-red-600/80">
-      <span className="material-symbols-outlined text-[12px]">error</span>
+    <p className="flex items-center gap-1 text-[10px] font-label-md text-on-surface">
+      <span className="material-symbols-outlined text-[12px] text-red-600/80">error</span>
       BogaHub solo indexa este aviso, no es el empleador. Ninguna empresa seria te pedirá dinero por examen médico, uniforme o capacitación.
     </p>
   );
