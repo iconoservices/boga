@@ -13,10 +13,10 @@ import { usePathname, useSearchParams } from 'next/navigation';
 
 export const NAV_TABS = [
   { id: 'tiendas',         icon: 'storefront',    label: 'Tiendas' },
-  { id: 'usuarios',        icon: 'group',         label: 'Usuarios' },
 ] as const;
 
 export const SUBRUTAS = [
+  { href: '/superadmin/usuarios',       icon: 'group',        label: 'Usuarios' },
   { href: '/superadmin/plantillas',     icon: 'layers',       label: 'Plantillas' },
   { href: '/superadmin/paquetes',       icon: 'inventory_2',  label: 'Paquetes' },
   { href: '/superadmin/banners',        icon: 'view_carousel', label: 'Banners de portada' },
