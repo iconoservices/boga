@@ -14,12 +14,12 @@ import { usePathname, useSearchParams } from 'next/navigation';
 export const NAV_TABS = [
   { id: 'tiendas',         icon: 'storefront',    label: 'Tiendas' },
   { id: 'usuarios',        icon: 'group',         label: 'Usuarios' },
-  { id: 'personalizacion', icon: 'tune',          label: 'Personalización' },
 ] as const;
 
 export const SUBRUTAS = [
   { href: '/superadmin/plantillas',     icon: 'layers',       label: 'Plantillas' },
   { href: '/superadmin/paquetes',       icon: 'inventory_2',  label: 'Paquetes' },
+  { href: '/superadmin/banners',        icon: 'view_carousel', label: 'Banners de portada' },
   { href: '/superadmin/revista',        icon: 'menu_book',    label: 'Revista' },
   { href: '/superadmin/editorial',      icon: 'campaign',     label: 'Estrategia Editorial' },
   { href: '/superadmin/notas',          icon: 'sticky_note_2',label: 'Notas internas' },
