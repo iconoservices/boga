@@ -88,8 +88,8 @@ export default function Viajes() {
           </div>
         </div>
 
-        {/* Módulo unificado de Vuelos: Buscador en Soles (Travelpayouts) + Kiwi.com en Rojo Boga */}
-        <VuelosWidget primaryColor="B8130E" kiwiUrl={KIWI_AFFILIATE_URL} />
+        {/* Módulo de Vuelos: Buscador en Soles (Travelpayouts) en Rojo Boga */}
+        <VuelosWidget primaryColor="B8130E" />
 
         {/* Resumen rápido */}
         <div className="grid grid-cols-3 gap-3">

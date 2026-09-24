@@ -52,22 +52,10 @@ export default function VuelosWidget({
               Vuelos y pasajes baratos desde Pucallpa
             </h3>
             <p className="text-white/80 font-body-md text-xs mt-0.5">
-              Compara tarifas a Lima, Iquitos, Tarapoto y conexiones mundiales con la garantía de <strong>Kiwi.com</strong>.
+              Compara tarifas a Lima, Iquitos, Tarapoto y conexiones nacionales e internacionales en tiempo real.
             </p>
           </div>
         </div>
-
-        {kiwiUrl && (
-          <a
-            href={kiwiUrl}
-            target="_blank"
-            rel="noopener noreferrer sponsored"
-            className="shrink-0 bg-white hover:bg-red-50 text-[#B8130E] font-label-md text-xs sm:text-sm font-bold px-4 py-2.5 rounded-full flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95"
-          >
-            <span>Buscar en Kiwi.com</span>
-            <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-          </a>
-        )}
       </div>
 
       {/* Contenedor del Widget Interactivo de Vuelos */}
