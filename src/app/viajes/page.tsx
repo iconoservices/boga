@@ -118,41 +118,7 @@ export default function Viajes() {
           </div>
         </div>
 
-        {/* Módulo de Vuelos: Buscador en Soles (Travelpayouts) en Rojo Boga */}
-        <VuelosWidget primaryColor="B8130E" />
-
-        {/* Resumen rápido */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white border border-surface-container-highest rounded-xl p-3 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#1B8EBF]/10 flex items-center justify-center">
-              <span className="material-symbols-outlined text-[#1B8EBF] text-[20px]">directions_boat</span>
-            </div>
-            <div>
-              <span className="font-headline-sm text-sm text-on-surface">{conteo.fluvial}</span>
-              <span className="block font-label-md text-[10px] text-secondary">Rutas fluviales</span>
-            </div>
-          </div>
-          <div className="bg-white border border-surface-container-highest rounded-xl p-3 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#E8894A]/10 flex items-center justify-center">
-              <span className="material-symbols-outlined text-[#E8894A] text-[20px]">directions_bus</span>
-            </div>
-            <div>
-              <span className="font-headline-sm text-sm text-on-surface">{conteo.terrestre}</span>
-              <span className="block font-label-md text-[10px] text-secondary">Rutas terrestres</span>
-            </div>
-          </div>
-          <div className="bg-white border border-surface-container-highest rounded-xl p-3 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#8B7FD4]/10 flex items-center justify-center">
-              <span className="material-symbols-outlined text-[#8B7FD4] text-[20px]">flight</span>
-            </div>
-            <div>
-              <span className="font-headline-sm text-sm text-on-surface">{conteo.aereo}</span>
-              <span className="block font-label-md text-[10px] text-secondary">Rutas aéreas</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Filtros por medio */}
+        {/* Filtros por medio — arriba; el número solo sale si hay rutas (antes había tarjetas aparte con "0") */}
         <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1" style={{ scrollbarWidth: 'none' }}>
           {FILTROS.map((f) => (
             <button
@@ -166,8 +132,17 @@ export default function Viajes() {
             >
               <span className="material-symbols-outlined text-[15px]">{f.icon}</span>
               {f.label}
+              {f.id !== 'todos' && typeof conteo[f.id as 'fluvial'|'terrestre'|'aereo'] === 'number' && (conteo[f.id as 'fluvial'|'terrestre'|'aereo'] as number) > 0 && (
+                <span className="text-[10px] font-bold opacity-70">{conteo[f.id as 'fluvial'|'terrestre'|'aereo']}</span>
+              )}
             </button>
           ))}
+        </div>
+
+        {/* Módulo de Vuelos: Buscador en Soles (Travelpayouts) en Rojo Boga */}
+        {/* Solo se oculta (no se desmonta): volver a montarlo recargaba el script de Kiwi y duplicaba el buscador. */}
+        <div className={filtro === 'todos' || filtro === 'aereo' ? '' : 'hidden'}>
+          <VuelosWidget primaryColor="B8130E" />
         </div>
 
         {/* Grilla de rutas */}
