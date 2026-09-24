@@ -23,6 +23,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: `${tmpl.name} | Preview`,
+    // Las demos repiten el contenido de ejemplo: que no compitan con las páginas reales en Google.
+    robots: { index: false, follow: true },
     manifest: `/manifest.json?slug=${templateId}`,
     icons: {
       icon: [

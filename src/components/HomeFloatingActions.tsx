@@ -1,11 +1,10 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { esRutaHub } from '@/lib/rutasHub';
 
-// Rutas del lado consumidor de BogaHub donde sale el botón de compartir (las mismas
-// del riel lateral del layout). Fuera de estas (admin, superadmin, login…) no va.
-// Instalar ya no está acá: vive en la cabecera (AppHeader), junto a notificaciones.
-const RUTAS = ['/market', '/pension', '/trabajos', '/transporte', '/inmuebles', '/viajes', '/eventos', '/sorteos', '/productos', '/pandero', '/revista', '/guia'];
+// El botón de compartir sale en las pantallas de BogaHub (lib/rutasHub.ts); fuera de ellas (admin,
+// superadmin, login…) no va. Instalar no está acá: vive en la cabecera (AppHeader), junto a notificaciones.
 
 export default function HomeFloatingActions() {
   const pathname = usePathname();
@@ -23,9 +22,9 @@ export default function HomeFloatingActions() {
     }
   };
 
-  if (!pathname || !(pathname === '/' || RUTAS.some((r) => pathname.startsWith(r)))) return null;
+  if (!esRutaHub(pathname)) return null;
   // Leyendo una nota de la Revista tampoco: pantalla limpia.
-  if (pathname.startsWith('/revista/')) return null;
+  if (pathname?.startsWith('/revista/')) return null;
 
   // Pegado a la esquina, justo debajo de la cabecera (móvil ~64 px, escritorio ~56 px + barra de secciones).
   return (

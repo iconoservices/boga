@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { hayClave, pushDisponible, sigueTienda, seguirTienda, motivoError, esIOS, enModoApp } from '@/lib/push';
 import { CANAL_BOGA } from '@/lib/pushLimites';
+import { RUTAS_HUB } from '@/lib/rutasHub';
 
 /**
  * Invitación amable a activar los avisos de BogaHub (eventos, sorteos, trabajos). Es una tarjeta
@@ -24,7 +25,8 @@ const MAX_RECHAZOS = 5;
 const ESPERA_INICIAL_MS = 12_000;
 
 // Solo pantallas de BogaHub donde tiene sentido (nunca dentro de una tienda ni del panel)
-const RUTAS = new Set(['', 'market', 'explore', 'eventos', 'sorteos', 'trabajos', 'inmuebles', 'viajes', 'revista', 'guia', 'transporte', 'pension', 'pandero', 'promotions']);
+// Las pantallas de BogaHub (lib/rutasHub.ts, sin la barra) + Explorar y Promociones.
+const RUTAS = new Set(['', 'explore', 'promotions', ...RUTAS_HUB.map((r) => r.slice(1))]);
 
 type Memoria = { rechazos: number; hasta: number };
 const leer = (): Memoria => {

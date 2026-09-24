@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { HUBS as TABS, isHubActive } from '@/lib/hubs';
+import { esRutaHub } from '@/lib/rutasHub';
 
 // Riel de secciones pegado al borde izquierdo (solo escritorio). Por defecto
 // SOLO íconos (56px, empuja el contenido); con el botón de arriba se expande
@@ -17,7 +18,6 @@ import { HUBS as TABS, isHubActive } from '@/lib/hubs';
 // del body (abajo) se apagaba y prendía de golpe: se veía como si la barra
 // "se cerrara y volviera a abrir" en cada cambio de pestaña.
 const LS_KEY = 'boga_sidebar_open';
-const SIDEBAR_ROUTES = ['/market', '/pension', '/trabajos', '/transporte', '/inmuebles', '/viajes', '/eventos', '/sorteos', '/productos', '/pandero', '/revista', '/guia'];
 
 export default function MarketTabs() {
   const pathname = usePathname();
@@ -28,7 +28,7 @@ export default function MarketTabs() {
   // las etiquetas de texto) a los del HTML que mandó el servidor.
   const [deskOpen, setDeskOpen] = useState(false);
   const isActive = (href: string) => isHubActive(pathname, href);
-  const showSidebar = pathname === '/' || SIDEBAR_ROUTES.some((r) => pathname.startsWith(r));
+  const showSidebar = esRutaHub(pathname);
 
   useEffect(() => {
     try {
