@@ -188,7 +188,8 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
     const lineas = carrito.map((i) => `- ${i.producto.name} (x${i.cantidad}): S/ ${(i.producto.price * i.cantidad).toFixed(2)}`).join('\n');
     enviarPedidoPorWhatsApp(
       store,
-      `*Pedido de ${store.name}*\n-------------------------\n${lineas}\n-------------------------\n*Total:* S/ ${total.toFixed(2)}`
+      `*Pedido de ${store.name}*\n-------------------------\n${lineas}\n-------------------------\n*Total:* S/ ${total.toFixed(2)}`,
+      { items: carrito.map((i) => ({ id: String(i.producto.id), quantity: i.cantidad })) },
     );
   };
 

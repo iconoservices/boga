@@ -55,11 +55,16 @@ function Tabla<T extends string>({ titulo, niveles, capacidades, incluye }: {
   );
 }
 
-function Tarjeta({ nombre, resumen, tiendas }: { nombre: string; resumen: string; tiendas: FilaTienda[] | null }) {
+function Tarjeta({ nombre, resumen, tiendas, precio }: { nombre: string; resumen: string; tiendas: FilaTienda[] | null; precio: number | null | undefined }) {
   return (
     <div className="p-4 bg-white border border-[#c2c6d6] rounded-md flex flex-col gap-2">
       <h4 className="text-sm font-bold text-[#191b23] leading-tight">{nombre}</h4>
       <p className="text-xs text-[#424754]">{resumen}</p>
+      {precio !== null && (
+        <p className="text-[11px] font-bold text-[#0058be]">
+          {precio && precio > 0 ? `+ S/ ${precio.toLocaleString('es-PE')} /mes` : 'Precio por definir'}
+        </p>
+      )}
       <div className="mt-auto pt-3 border-t border-[#ecedf7]">
         <span className="text-2xl font-bold text-[#191b23]">{tiendas ? tiendas.length : '…'}</span>
         <span className="text-xs text-[#424754] font-semibold ml-1">{tiendas?.length === 1 ? 'tienda' : 'tiendas'}</span>
@@ -77,11 +82,17 @@ export default function NivelesModulos() {
   const [tiendas, setTiendas] = useState<FilaTienda[] | null>(null);
   // Si la columna `modulos` todavía no existe en la base (migración sin correr).
   const [sinColumna, setSinColumna] = useState(false);
+  // Precios de cada paso (tabla plan_precios, se editan en /superadmin/cobros). Sin la tabla, salen "por definir".
+  const [precios, setPrecios] = useState<Record<string, number>>({});
 
   useEffect(() => {
     supabase.from('stores').select('slug,name,modulos,subdominio_activo').then(({ data, error }) => {
       if (error) { setSinColumna(true); setTiendas([]); return; }
       setTiendas((data ?? []) as FilaTienda[]);
+    });
+    supabase.from('plan_precios').select('clave,monto').then(({ data, error }) => {
+      if (error) return;
+      setPrecios(Object.fromEntries((data ?? []).map((r: { clave: string; monto: number }) => [r.clave, Number(r.monto) || 0])));
     });
   }, []);
 
@@ -97,7 +108,8 @@ export default function NivelesModulos() {
           Dos ejes que se combinan: <b>Alcance</b> (a cuánta gente llega) y <b>Operación</b> (qué controla el dueño en su local).
           Se prenden por tienda en{' '}
           <Link href="/superadmin" className="text-[#0058be] font-bold hover:underline">el editor de tienda</Link>.
-          Precios: por definir.
+          Los precios (cada paso se suma al anterior) y los pagos se manejan en{' '}
+          <Link href="/superadmin/cobros" className="text-[#0058be] font-bold hover:underline">Cobros</Link>.
         </p>
       </div>
 
@@ -111,7 +123,7 @@ export default function NivelesModulos() {
       <div className="flex flex-col gap-3">
         <p className="text-[10px] font-bold uppercase tracking-wider text-[#0058be]">Alcance · a cuánta gente llega</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {ALCANCES.map((n) => <Tarjeta key={n.id} nombre={n.nombre} resumen={n.resumen} tiendas={deAlcance(n.id)} />)}
+          {ALCANCES.map((n) => <Tarjeta key={n.id} nombre={n.nombre} resumen={n.resumen} tiendas={deAlcance(n.id)} precio={precios[`alcance:${n.id}`] ?? 0} />)}
         </div>
         <Tabla titulo="Qué gana el dueño" niveles={ALCANCES} capacidades={CAPACIDADES_ALCANCE} incluye={alcanceIncluye} />
       </div>
@@ -119,7 +131,7 @@ export default function NivelesModulos() {
       <div className="flex flex-col gap-3">
         <p className="text-[10px] font-bold uppercase tracking-wider text-[#0058be]">Operación · qué controla en su local</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {OPERACIONES.map((n) => <Tarjeta key={n.id} nombre={n.nombre} resumen={n.resumen} tiendas={deOperacion(n.id)} />)}
+          {OPERACIONES.map((n) => <Tarjeta key={n.id} nombre={n.nombre} resumen={n.resumen} tiendas={deOperacion(n.id)} precio={n.id === 'sin_caja' ? null : precios[`operacion:${n.id}`] ?? 0} />)}
         </div>
         <Tabla titulo="Qué gana el dueño" niveles={OPERACIONES.slice(1)} capacidades={CAPACIDADES_OPERACION} incluye={operacionIncluye} />
         {sinClasificar.length > 0 && (

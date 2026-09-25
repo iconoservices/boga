@@ -1,4 +1,5 @@
 import type { StoreConfig } from '@/lib/stores.config';
+import { registrarPedido, type DatosPedido } from '@/lib/pedidos';
 
 /**
  * Abre WhatsApp con el pedido dirigido al numero de la tienda.
@@ -7,7 +8,12 @@ import type { StoreConfig } from '@/lib/stores.config';
  * plantillas tenian 51999999999 hardcodeado, asi que los pedidos de todas las
  * tiendas iban a un numero de relleno y ningun comerciante los recibia.
  */
-export function enviarPedidoPorWhatsApp(store: Pick<StoreConfig, 'whatsapp' | 'name'>, mensaje: string): boolean {
+export function enviarPedidoPorWhatsApp(
+  store: Pick<StoreConfig, 'whatsapp' | 'name'> & { slug?: string },
+  mensaje: string,
+  /** Si es un pedido de carrito, también se guarda en el panel del dueño. Los mensajes de consulta o reserva no lo pasan. */
+  pedido?: DatosPedido,
+): boolean {
   const numero = (store.whatsapp || '').replace(/\D/g, '');
 
   if (!numero) {
@@ -19,6 +25,7 @@ export function enviarPedidoPorWhatsApp(store: Pick<StoreConfig, 'whatsapp' | 'n
     return false;
   }
 
+  if (pedido && store.slug) registrarPedido(store.slug, pedido);
   window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`, '_blank');
   return true;
 }

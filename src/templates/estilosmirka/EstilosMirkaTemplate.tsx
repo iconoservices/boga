@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { conMarcaBlanca } from '@/lib/modulos';
 import { StoreConfig } from '@/lib/stores.config';
 import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
@@ -120,7 +121,9 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
     const header = `*Pedido de ${store.name}*\n-------------------------\n`;
     const itemsText = cart.map(item => `- ${item.product.title} (x${item.quantity}): S/ ${(item.product.price * item.quantity).toFixed(2)}`).join('\n');
     const footer = `\n-------------------------\n*Total:* S/ ${cartTotal.toFixed(2)}`;
-    enviarPedidoPorWhatsApp(store, header + itemsText + footer);
+    enviarPedidoPorWhatsApp(store, header + itemsText + footer, {
+      items: cart.map((item) => ({ id: String(item.product.id), quantity: item.quantity })),
+    });
   };
 
   return (
@@ -679,7 +682,7 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
           )}
         </div>
         <div className="max-w-6xl mx-auto px-4 border-t border-white/5 mt-8 pt-6 text-center text-[10px]">
-          © {new Date().getFullYear()} {store.name}. Todos los derechos reservados. Powered by Boga Market.
+          © {new Date().getFullYear()} {store.name}. Todos los derechos reservados. {!conMarcaBlanca(store.modulos) && 'Powered by Boga Market.'}
         </div>
       </footer>
     </div>

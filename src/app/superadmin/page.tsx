@@ -18,7 +18,7 @@ import { uploadFile } from '@/lib/uploadClient';
 import { refrescarTienda } from '@/lib/refrescar';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import type { StoreTheme } from '@/lib/templates.config';
-import { MODULOS, moduloActivo, type Modulos } from '@/lib/modulos';
+import { MODULOS, moduloActivo, enMarketplace, conMarcaBlanca, type Modulos } from '@/lib/modulos';
 
 // Correos con acceso al superadmin. A diferencia de /admin (donde cualquier
 // cuenta puede entrar y solo ve sus propias tiendas), este panel puede editar
@@ -323,7 +323,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     externalUrl: '',
       subdominioActivo: false,
       pushActivo: false,
-      modulos: { pos: false, inventario: false, google: false } as Modulos,
+      modulos: { pos: false, inventario: false, google: false, marca_blanca: false, marketplace: true } as Modulos,
     ownerEmail: ''
   });
   // Para saber si storeForm.ownerEmail realmente cambio al guardar (y no
@@ -466,7 +466,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       externalUrl: '',
       subdominioActivo: false,
       pushActivo: false,
-      modulos: { pos: false, inventario: false, google: false } as Modulos,
+      modulos: { pos: false, inventario: false, google: false, marca_blanca: false, marketplace: true } as Modulos,
       // El correo de la solicitud: asi al guardar la tienda ya queda asignada
       // a quien la pidio, sin tener que ir despues a mano a "Usuarios".
       ownerEmail: req.email || '',
@@ -677,7 +677,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       externalUrl: '',
       subdominioActivo: false,
       pushActivo: false,
-      modulos: { pos: false, inventario: false, google: false } as Modulos,
+      modulos: { pos: false, inventario: false, google: false, marca_blanca: false, marketplace: true } as Modulos,
       ownerEmail: ''
     });
     setOriginalOwnerEmail('');
@@ -722,7 +722,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       externalUrl: store.externalUrl || '',
       subdominioActivo: store.subdominioActivo ?? false,
       pushActivo: store.pushActivo ?? false,
-      modulos: { pos: moduloActivo(store.modulos, 'pos'), inventario: moduloActivo(store.modulos, 'inventario'), google: store.modulos?.google === true } as Modulos,
+      modulos: { pos: moduloActivo(store.modulos, 'pos'), inventario: moduloActivo(store.modulos, 'inventario'), google: store.modulos?.google === true, marca_blanca: conMarcaBlanca(store.modulos), marketplace: enMarketplace(store.modulos) } as Modulos,
       // Sale del dueño actual, no de la tienda. Si lo dejan igual al guardar
       // no se reasigna nada (ver originalOwnerEmail en handleSaveStore).
       ownerEmail: profiles.find((p) => p.id === storeOwners[slug])?.email || ''
@@ -921,7 +921,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       external_url: storeForm.externalUrl || null,
       subdominio_activo: !!storeForm.subdominioActivo,
       push_activo: !!storeForm.pushActivo,
-      modulos: { pos: !!storeForm.modulos?.pos, inventario: !!storeForm.modulos?.inventario, google: !!storeForm.modulos?.google },
+      modulos: { pos: !!storeForm.modulos?.pos, inventario: !!storeForm.modulos?.inventario, google: !!storeForm.modulos?.google, marca_blanca: !!storeForm.modulos?.marca_blanca, marketplace: storeForm.modulos?.marketplace !== false },
     };
     if (ownerUserId) upsertData.user_id = ownerUserId;
     if (logoUrl) {
@@ -1047,7 +1047,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         slug,
         subdominioActivo: !!storeForm.subdominioActivo,
         pushActivo: !!storeForm.pushActivo,
-        modulos: { pos: !!storeForm.modulos?.pos, inventario: !!storeForm.modulos?.inventario, google: !!storeForm.modulos?.google },
+        modulos: { pos: !!storeForm.modulos?.pos, inventario: !!storeForm.modulos?.inventario, google: !!storeForm.modulos?.google, marca_blanca: !!storeForm.modulos?.marca_blanca, marketplace: storeForm.modulos?.marketplace !== false },
         name: storeForm.name,
         tagline: storeForm.tagline,
         marketplaceCategory: storeForm.marketplaceCategory,
@@ -2553,7 +2553,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           externalUrl: '',
       subdominioActivo: false,
       pushActivo: false,
-      modulos: { pos: false, inventario: false, google: false } as Modulos,
+      modulos: { pos: false, inventario: false, google: false, marca_blanca: false, marketplace: true } as Modulos,
                           ownerEmail: ''
                         });
                         setOriginalOwnerEmail('');

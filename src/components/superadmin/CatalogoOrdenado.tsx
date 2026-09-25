@@ -57,9 +57,9 @@ export default function CatalogoOrdenado({ modulos }: { modulos: ModuloComercial
               <div className="p-3 bg-[#fff8e1] border border-[#f5c518]/50 rounded-md flex items-start gap-2">
                 <span className="material-symbols-outlined text-[16px] text-[#5c4a00] shrink-0">key</span>
                 <p className="text-[11px] text-[#5c4a00] font-semibold leading-relaxed">
-                  <span className="font-bold">La pieza que destraba más de la mitad: guardar los pedidos de la carta.</span>{' '}
-                  Hoy el pedido sale directo por WhatsApp y no queda registrado, por eso no descuenta stock, no suma a las ventas y no se puede
-                  hacer racha, reseñas verificadas, pasarela ni repartidores. Es el siguiente paso con más retorno.
+                  <span className="font-bold">La pieza que destraba más ahora: identificar al cliente.</span>{' '}
+                  Los pedidos de la carta ya se guardan, pero las plantillas no piden el celular. Con el celular en cada pedido se pueden hacer
+                  lealtad, referidos, racha, reseñas de quien de verdad compró y marketing. Es el siguiente paso con más retorno.
                 </p>
               </div>
             )}

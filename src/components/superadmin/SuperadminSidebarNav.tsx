@@ -19,6 +19,7 @@ export const SUBRUTAS = [
   { href: '/superadmin/usuarios',       icon: 'group',        label: 'Usuarios' },
   { href: '/superadmin/plantillas',     icon: 'layers',       label: 'Plantillas' },
   { href: '/superadmin/paquetes',       icon: 'inventory_2',  label: 'Paquetes' },
+  { href: '/superadmin/cobros',         icon: 'payments',     label: 'Cobros' },
   { href: '/superadmin/banners',        icon: 'view_carousel', label: 'Banners de portada' },
   { href: '/superadmin/revista',        icon: 'menu_book',    label: 'Revista' },
   { href: '/superadmin/editorial',      icon: 'campaign',     label: 'Estrategia Editorial' },

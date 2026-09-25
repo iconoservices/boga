@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { conMarcaBlanca } from '@/lib/modulos';
 import { StoreConfig } from '@/lib/stores.config';
 import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { debeMostrarDemo } from '@/lib/demo';
@@ -110,7 +111,9 @@ export default function FloresTemplate({ store }: FloresTemplateProps) {
     const header = `*Pedido de ${store.name}*\n-------------------------\n`;
     const itemsText = cart.map((item) => `- ${item.product.name} (x${item.quantity}): S/ ${(item.product.price * item.quantity).toFixed(2)}`).join('\n');
     const footer = `\n-------------------------\n*Total:* S/ ${cartTotal.toFixed(2)}`;
-    enviarPedidoPorWhatsApp(store, header + itemsText + footer);
+    enviarPedidoPorWhatsApp(store, header + itemsText + footer, {
+      items: cart.map((item) => ({ id: String(item.product.id), quantity: item.quantity })),
+    });
   };
 
   const openDetail = (product: Product) => {
@@ -356,7 +359,7 @@ export default function FloresTemplate({ store }: FloresTemplateProps) {
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-6 border-t border-white/10 py-4 text-center text-[10px] opacity-60">
-          © {new Date().getFullYear()} {store.name}. Powered by Boga Market.
+          © {new Date().getFullYear()} {store.name}. {!conMarcaBlanca(store.modulos) && 'Powered by Boga Market.'}
         </div>
       </footer>
 

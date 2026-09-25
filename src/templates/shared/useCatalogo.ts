@@ -108,7 +108,11 @@ export function useCatalogo(store: StoreConfig) {
       : 'Recojo en tienda';
     enviarPedidoPorWhatsApp(
       store,
-      `¡Hola ${store.name}! Soy ${datos.nombre}. Quiero hacer este pedido:\n\n${lineas}\n\nTotal: ${soles(subtotal)}\n\n${entregaTexto}`
+      `¡Hola ${store.name}! Soy ${datos.nombre}. Quiero hacer este pedido:\n\n${lineas}\n\nTotal: ${soles(subtotal)}\n\n${entregaTexto}`,
+      {
+        items: cartItems.map((l) => ({ id: l.producto.id, quantity: l.qty })),
+        cliente: { nombre: datos.nombre, entrega: datos.entrega, direccion: datos.direccion },
+      },
     );
   };
 

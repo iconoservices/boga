@@ -1482,7 +1482,11 @@ UPDATE public.stores SET modulos = '{"pos": true, "inventario": true}'::jsonb WH
 CREATE OR REPLACE FUNCTION public.stores_protege_modulos()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF NEW.modulos IS DISTINCT FROM OLD.modulos AND NOT public.is_superadmin() THEN
+  -- Solo frena a usuarios de la app que no son superadmin. El editor SQL de Supabase y el
+  -- service_role no son "usuarios" (no traen sesión) y sí pueden cambiarlo.
+  IF NEW.modulos IS DISTINCT FROM OLD.modulos
+     AND NOT public.is_superadmin()
+     AND current_user NOT IN ('postgres', 'supabase_admin', 'service_role') THEN
     NEW.modulos := OLD.modulos;
   END IF;
   RETURN NEW;
@@ -1512,3 +1516,102 @@ UPDATE public.stores SET show_demo_products = false WHERE show_demo_products IS 
 UPDATE public.stores
    SET modulos = COALESCE(modulos, '{}'::jsonb) || '{"google": true}'::jsonb
  WHERE NOT (COALESCE(modulos, '{}'::jsonb) ? 'google');
+
+-- ============================================================
+-- HISTORIAL DE STOCK
+-- ============================================================
+-- Cada vez que el stock sube o baja (venta en caja, pedido de la carta, cancelación, ingreso de
+-- mercadería, ajuste a mano) queda una fila. Solo se agrega: no se edita ni se borra.
+CREATE TABLE IF NOT EXISTS public.stock_movements (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+  store TEXT NOT NULL,
+  product_id UUID,
+  product_name TEXT NOT NULL,
+  delta INTEGER NOT NULL,
+  stock_despues INTEGER NOT NULL,
+  motivo TEXT NOT NULL,
+  pedido_id UUID,
+  usuario TEXT
+);
+CREATE INDEX IF NOT EXISTS stock_movements_store_idx ON public.stock_movements (store, created_at DESC);
+CREATE INDEX IF NOT EXISTS stock_movements_pedido_idx ON public.stock_movements (pedido_id);
+ALTER TABLE public.stock_movements ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "stock_movements: dueño o superadmin ve"   ON public.stock_movements;
+DROP POLICY IF EXISTS "stock_movements: dueño o superadmin crea" ON public.stock_movements;
+CREATE POLICY "stock_movements: dueño o superadmin ve"
+ON public.stock_movements FOR SELECT
+USING (
+  public.is_superadmin()
+  OR EXISTS (SELECT 1 FROM public.stores s WHERE s.slug = stock_movements.store AND s.user_id = auth.uid())
+);
+CREATE POLICY "stock_movements: dueño o superadmin crea"
+ON public.stock_movements FOR INSERT
+WITH CHECK (
+  public.is_superadmin()
+  OR EXISTS (SELECT 1 FROM public.stores s WHERE s.slug = stock_movements.store AND s.user_id = auth.uid())
+);
+
+-- ============================================================
+-- COBROS: precios por nivel, suscripción de cada tienda y pagos recibidos
+-- ============================================================
+-- Se cobra por Yape / transferencia / efectivo: el superadmin registra cada pago y el vencimiento.
+-- (Ver /superadmin/cobros.) Los precios son públicos (el dueño ve cuánto paga); el resto, solo el
+-- superadmin y el dueño de la tienda en lo suyo.
+CREATE TABLE IF NOT EXISTS public.plan_precios (
+  clave TEXT PRIMARY KEY,
+  monto NUMERIC NOT NULL DEFAULT 0,
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.store_suscripciones (
+  store TEXT PRIMARY KEY REFERENCES public.stores(slug) ON UPDATE CASCADE ON DELETE CASCADE,
+  monto_mensual NUMERIC,
+  vence DATE,
+  notas TEXT,
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.store_pagos (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  store TEXT NOT NULL REFERENCES public.stores(slug) ON UPDATE CASCADE ON DELETE CASCADE,
+  monto NUMERIC NOT NULL,
+  metodo TEXT,
+  referencia TEXT,
+  meses INTEGER NOT NULL DEFAULT 1,
+  vence_antes DATE,
+  vence_despues DATE,
+  nota TEXT,
+  created_at TIMESTAMPTZ DEFAULT now() NOT NULL
+);
+CREATE INDEX IF NOT EXISTS store_pagos_store_idx ON public.store_pagos (store, created_at DESC);
+
+ALTER TABLE public.plan_precios         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.store_suscripciones  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.store_pagos          ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "plan_precios: lectura pública"      ON public.plan_precios;
+DROP POLICY IF EXISTS "plan_precios: superadmin escribe"   ON public.plan_precios;
+CREATE POLICY "plan_precios: lectura pública"    ON public.plan_precios FOR SELECT USING (true);
+CREATE POLICY "plan_precios: superadmin escribe" ON public.plan_precios FOR ALL USING (public.is_superadmin()) WITH CHECK (public.is_superadmin());
+
+DROP POLICY IF EXISTS "store_suscripciones: dueño o superadmin ve" ON public.store_suscripciones;
+DROP POLICY IF EXISTS "store_suscripciones: superadmin escribe"    ON public.store_suscripciones;
+CREATE POLICY "store_suscripciones: dueño o superadmin ve"
+ON public.store_suscripciones FOR SELECT
+USING (
+  public.is_superadmin()
+  OR EXISTS (SELECT 1 FROM public.stores s WHERE s.slug = store_suscripciones.store AND s.user_id = auth.uid())
+);
+CREATE POLICY "store_suscripciones: superadmin escribe" ON public.store_suscripciones FOR ALL USING (public.is_superadmin()) WITH CHECK (public.is_superadmin());
+
+DROP POLICY IF EXISTS "store_pagos: dueño o superadmin ve" ON public.store_pagos;
+DROP POLICY IF EXISTS "store_pagos: superadmin escribe"    ON public.store_pagos;
+CREATE POLICY "store_pagos: dueño o superadmin ve"
+ON public.store_pagos FOR SELECT
+USING (
+  public.is_superadmin()
+  OR EXISTS (SELECT 1 FROM public.stores s WHERE s.slug = store_pagos.store AND s.user_id = auth.uid())
+);
+CREATE POLICY "store_pagos: superadmin escribe" ON public.store_pagos FOR ALL USING (public.is_superadmin()) WITH CHECK (public.is_superadmin());

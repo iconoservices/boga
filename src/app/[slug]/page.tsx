@@ -129,6 +129,7 @@ async function cargarTienda(slug: string) {
         categories: dbStore.categories || [],
         logoImage: dbStore.logo_image || undefined,
         whatsapp: dbStore.whatsapp || undefined,
+        modulos: dbStore.modulos ?? undefined,
         // Los productos de ejemplo solo salen si alguien los prendió (por defecto apagados).
         showDemoProducts: dbStore.show_demo_products ?? false,
         zona: dbStore.zona || undefined,
@@ -229,6 +230,7 @@ export default async function StorePage({ params, searchParams }: Props) {
         categories: defaultTmpl?.categories || [],
         logoImage: undefined,
         whatsapp: undefined,
+        modulos: undefined,
         showDemoProducts: undefined,
         zona: undefined,
         direccion: undefined,

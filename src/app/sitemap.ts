@@ -61,6 +61,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
+  // Cada producto disponible, en su página propia (/<tienda>/producto/<id>).
+  const tiendaPorSlug = new Map((activeStores ?? []).map((t) => [t.slug, t]));
+  const { data: productosActivos } = await supabase
+    .from('products')
+    .select('id,store')
+    .neq('status', 'Inactivo')
+    .neq('status', 'Agotado');
+  const fichasTienda: MetadataRoute.Sitemap = (productosActivos ?? [])
+    .filter((pr) => tiendaPorSlug.has(pr.store))
+    .map((pr) => {
+      const t = tiendaPorSlug.get(pr.store)!;
+      return {
+        url: t.subdominio_activo
+          ? `https://${t.slug}.${new URL(SITE_URL).host}/${t.slug}/producto/${pr.id}`
+          : `${SITE_URL}/${t.slug}/producto/${pr.id}`,
+        lastModified: now,
+        changeFrequency: 'weekly' as const,
+        priority: 0.5,
+      };
+    });
+
   // Cada aviso de empleo activo, en su propia URL (para que Google los indexe uno por uno).
   const activos = await getEmpleosActivos();
   const empleos: MetadataRoute.Sitemap = activos.map((e) => ({
@@ -78,5 +99,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.4,
   }));
 
-  return [...rutasFijas, ...tiendas, ...notas, ...empleos, ...fichasProductos];
+  return [...rutasFijas, ...tiendas, ...fichasTienda, ...notas, ...empleos, ...fichasProductos];
 }

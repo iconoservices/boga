@@ -40,9 +40,9 @@ export const PLAN_INFO: Record<string, InfoModulo> = {
 
   // ─── A medias: falta poco ───
   'presencia-marketplace': {
-    estado: 'parcial', nivel: 'carta', esfuerzo: 'bajo',
-    bases: '/market ya lista todas las tiendas activas.',
-    falta: 'Una columna is_public por tienda y filtrarla en /api/catalog y /market para que apagarlo oculte la tienda de verdad.',
+    estado: 'existe', nivel: 'carta', esfuerzo: 'bajo',
+    bases: 'Interruptor por tienda «Aparece en el marketplace BogaHub» en el editor del superadmin: apagado, la tienda y sus productos salen de /market y /explore (siguen abiertos en su propio link).',
+    falta: 'Nada para venderlo. Viene prendido para todas las tiendas; si quieres cobrarlo, hay que apagarlo por defecto.',
   },
   'analitica-favoritos': {
     estado: 'parcial', nivel: 'carta', esfuerzo: 'medio',
@@ -59,9 +59,9 @@ export const PLAN_INFO: Record<string, InfoModulo> = {
 
   // ─── Se puede construir con lo que ya hay ───
   'marca-blanca-total': {
-    estado: 'por_construir', nivel: 'app_google', esfuerzo: 'bajo',
-    bases: 'El "Powered by Boga Market" está solo en el pie de 3 plantillas (Estilos Mirka, Flores, Sweet Kitty Nails).',
-    falta: 'Un interruptor por tienda y ocultar esa línea cuando esté prendido.',
+    estado: 'existe', nivel: 'app_google', esfuerzo: 'bajo',
+    bases: 'Interruptor por tienda «Marca blanca» en el editor del superadmin: quita el «Powered by Boga Market» del pie de las plantillas y de la página de cada producto. Tiene su propio precio en Cobros.',
+    falta: 'Nada para venderlo hoy.',
   },
   'delivery-zonas-dinamico': {
     estado: 'por_construir', nivel: 'ventas', esfuerzo: 'medio',
@@ -75,21 +75,21 @@ export const PLAN_INFO: Record<string, InfoModulo> = {
   },
   'lealtad-digital': {
     estado: 'por_construir', nivel: 'ventas', esfuerzo: 'medio',
-    bases: 'Login de clientes y el POS ya guarda nombre y teléfono opcional de cada venta.',
-    falta: 'Tabla de sellos/puntos, canje y la pantalla del cliente. Identificar al cliente en cada venta.',
-    depende: 'Nivel Ventas (POS) y cliente identificado.',
+    bases: 'Login de clientes, y el POS y la carta ya guardan cada pedido.',
+    falta: 'Tabla de sellos/puntos, canje y la pantalla del cliente. Identificar al cliente en cada pedido (hoy la carta no pide el celular).',
+    depende: 'Pedir el celular del cliente en la carta y en el POS.',
   },
   'programa-referidos': {
     estado: 'por_construir', nivel: 'ventas', esfuerzo: 'medio',
-    bases: 'Login de clientes y el patrón de códigos/comisión pensado para Afiliados (ver la idea parqueada).',
+    bases: 'Login de clientes, pedidos guardados y el patrón de códigos/comisión pensado para Afiliados (ver la idea parqueada).',
     falta: 'Códigos, atribución al primer pedido y recompensa.',
-    depende: 'Ventas registradas con cliente identificado.',
+    depende: 'Pedir el celular del cliente en la carta.',
   },
   'resenas-reales': {
     estado: 'por_construir', nivel: 'carta', esfuerzo: 'medio',
-    bases: 'El rating de cada tienda existe, pero lo carga el comercio a mano.',
-    falta: 'Tabla de reseñas, moderación y calcular el promedio solo. Pedir la reseña después del pedido exige saber que hubo compra.',
-    depende: 'Guardar los pedidos de la carta (si no, la reseña es abierta y hay que moderarla).',
+    bases: 'El rating de cada tienda existe, pero lo carga el comercio a mano. Los pedidos de la carta ya se guardan.',
+    falta: 'Tabla de reseñas, moderación y calcular el promedio solo. Para pedir la reseña a quien compró falta pedir el celular del cliente en el pedido.',
+    depende: 'Pedir el celular del cliente en la carta.',
   },
   'franquicias': {
     estado: 'por_construir', nivel: 'cadena', esfuerzo: 'medio',
@@ -99,9 +99,9 @@ export const PLAN_INFO: Record<string, InfoModulo> = {
   },
   'inventario-inteligente': {
     estado: 'por_construir', nivel: 'inventario', esfuerzo: 'medio',
-    bases: 'El inventario real ya existe: el POS descuenta stock y avisa de poco stock.',
-    falta: 'Historial de movimientos de stock y calcular a qué ritmo se vende cada producto para avisar "se acaba mañana". Hoy es por producto, no por insumo.',
-    depende: 'Nivel Inventario y unos meses de historial.',
+    bases: 'Ya existen el inventario real (el POS y la carta descuentan stock) y el historial de movimientos.',
+    falta: 'Calcular a qué ritmo se vende cada producto con ese historial y avisar «se acaba mañana». Hoy es por producto, no por insumo.',
+    depende: 'Nivel Inventario y unas semanas de historial acumulado.',
   },
   'app-nativa': {
     estado: 'por_construir', nivel: 'app_google', esfuerzo: 'medio',
@@ -125,9 +125,9 @@ export const PLAN_INFO: Record<string, InfoModulo> = {
   },
   'repartidores-propios': {
     estado: 'aparte', nivel: 'cadena', esfuerzo: 'alto',
-    bases: 'Existen la tabla de choferes de Taxi Seguro y la ubicación por GPS.',
+    bases: 'Existen la tabla de choferes de Taxi Seguro, la ubicación por GPS y el registro de pedidos de la carta.',
     falta: 'Vista del motorizado, asignar pedidos y ubicación en tiempo real para el cliente.',
-    depende: 'Guardar los pedidos de la carta (hoy no quedan registrados).',
+    depende: 'Pedidos de la carta con dirección confiable y un flujo de estados (ya hay estados).',
   },
   'marketing-automatizado': {
     estado: 'aparte', nivel: 'ventas', esfuerzo: 'alto',
@@ -143,21 +143,21 @@ export const PLAN_INFO: Record<string, InfoModulo> = {
   },
   'racha-envio-gratis': {
     estado: 'aparte', nivel: 'ventas', esfuerzo: 'alto',
-    bases: 'Ninguna directa.',
+    bases: 'Los pedidos de la carta ya se guardan (con nombre y dirección).',
     falta: 'Contar pedidos por cliente semana a semana y aplicar el envío gratis.',
-    depende: 'Guardar los pedidos de la carta, cliente identificado y delivery con costo.',
+    depende: 'Identificar al cliente (pedir su celular) y delivery con costo.',
   },
   'pasarela-pago-propia': {
     estado: 'aparte', nivel: 'ventas', esfuerzo: 'alto',
-    bases: 'Ninguna: hoy el 100% del checkout es "mándale un WhatsApp al dueño" (lib/whatsapp.ts).',
-    falta: 'Cuenta Culqi/Niubiz de cada negocio, endpoints de cobro seguros y guardar el pedido y su estado de pago.',
-    depende: 'Un tercero (comisión por transacción) y guardar los pedidos de la carta.',
+    bases: 'Los pedidos de la carta ya se guardan con estados (Pendiente, Preparando, Enviado, Entregado). El checkout sigue siendo «mándale un WhatsApp al dueño» (lib/whatsapp.ts).',
+    falta: 'Cuenta Culqi/Niubiz de cada negocio, endpoints de cobro seguros y guardar el estado de pago del pedido.',
+    depende: 'Un tercero (comisión por transacción).',
   },
   'happy-hour-automatico': {
     estado: 'aparte', nivel: 'ventas', esfuerzo: 'alto',
-    bases: 'Las ventas del POS tienen fecha y hora.',
+    bases: 'Las ventas del POS y los pedidos de la carta tienen fecha y hora.',
     falta: 'Motor de descuentos con horarios, aplicado en la carta y el POS, y detectar las horas muertas con datos.',
-    depende: 'Historial de ventas y pedidos de la carta registrados.',
+    depende: 'Semanas de historial de ventas.',
   },
   'suscripcion-vip': {
     estado: 'aparte', nivel: 'cadena', esfuerzo: 'alto',
@@ -167,9 +167,9 @@ export const PLAN_INFO: Record<string, InfoModulo> = {
   },
   'reserva-y-pide': {
     estado: 'aparte', nivel: 'ventas', esfuerzo: 'alto',
-    bases: 'Ninguna directa.',
-    falta: 'Cobro desde la app y una pantalla de cocina que reciba la orden en el momento.',
-    depende: 'Pasarela de Pago Propia y pedidos de la carta registrados.',
+    bases: 'Los pedidos de la carta ya se guardan y se pueden ver en el panel del dueño (con aviso sonoro).',
+    falta: 'Cobro desde la app y una pantalla de cocina en tiempo real.',
+    depende: 'Pasarela de Pago Propia.',
   },
 };
 
@@ -186,8 +186,8 @@ export const MODULOS_EXISTENTES_EXTRA: {
     description: 'Los productos de la tienda salen en Google (Shopping y resultados) a través del feed. Solo aparecen las tiendas que lo pagan.',
     info: {
       estado: 'existe', nivel: 'app_google', esfuerzo: 'bajo',
-      bases: 'Interruptor por tienda en el editor del superadmin; el feed /api/google-feed solo incluye las tiendas con el módulo prendido.',
-      falta: 'Una página propia por producto: hoy el link de cada producto lleva a la página de su tienda (las rutas /producto/… daban 404 y Google las rechaza). También conectar el feed en Merchant Center y el cobro.',
+      bases: 'Interruptor por tienda en el editor del superadmin; el feed /api/google-feed solo incluye las tiendas con el módulo prendido, y cada producto apunta a su página propia (/<tienda>/producto/<id>, también en el sitemap).',
+      falta: 'Conectar el feed en la cuenta de Google Merchant Center de Boga y empezar a cobrarlo.',
       depende: 'Cuenta de Google Merchant Center de Boga con el feed cargado.',
     },
   },

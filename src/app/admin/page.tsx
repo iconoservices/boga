@@ -18,6 +18,10 @@ import type { StoreTheme } from '@/lib/templates.config';
 import { iconForCategory } from '@/templates/shared/tokens';
 import { moduloActivo, STOCK_BAJO, type ModuloId } from '@/lib/modulos';
 import { fechaLima, hoyLima } from '@/lib/fechaLima';
+import { moverStock, registrarMovimientos, stockIlimitado } from '@/lib/stock';
+import PedidosTab, { type Pedido } from '@/components/admin/PedidosTab';
+import HistorialStock from '@/components/admin/HistorialStock';
+import MiPlan from '@/components/admin/MiPlan';
 
 interface Product {
   id: string;
@@ -32,11 +36,6 @@ interface Product {
   description?: string;
   created_at: string;
 }
-
-// Un producto tiene stock ilimitado si no tiene cantidad, si es 999 o más, o si quedó en 0 sin estar Agotado
-// (la columna `stock` vale 0 por defecto en la base y antes esos productos se veían todos "Sin stock").
-const stockIlimitado = (p: { stock?: number | null; status?: string | null }) =>
-  p.stock == null || p.stock >= 999 || (p.stock === 0 && p.status !== 'Agotado');
 
 type TabId = 'inicio' | 'products' | 'orders' | 'pos' | 'metrics' | 'stores';
 
@@ -105,8 +104,8 @@ function AdminDashboard({ user }: { user: User }) {
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
-  const [orderStatusFilter, setOrderStatusFilter] = useState<'all' | 'Pendiente' | 'Enviado' | 'Entregado'>('all');
-  const [orderSearch, setOrderSearch] = useState('');
+  const [pedidoOcupado, setPedidoOcupado] = useState<string | null>(null);
+  const [isHistorialOpen, setIsHistorialOpen] = useState(false);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilterCategory, setSelectedFilterCategory] = useState('all');
@@ -248,8 +247,8 @@ function AdminDashboard({ user }: { user: User }) {
     visibleDbStores.length === 0 || visibleDbStores.some((s: any) => moduloActivo(s.modulos, modulo));
   const posOn = algunaTiene('pos');
   const inventarioOn = algunaTiene('inventario');
-  // Pedidos y Métricas también: la tabla `orders` solo la llena el POS (los pedidos de la carta salen por WhatsApp).
-  const navTabs = NAV_TABS.filter(t => !['pos', 'orders', 'metrics'].includes(t.id) || posOn);
+  // Pedidos es para todos: los pedidos de la carta ahora se registran. Caja y Métricas de ventas son del módulo de ventas.
+  const navTabs = NAV_TABS.filter(t => !['pos', 'metrics'].includes(t.id) || posOn);
 
   const focusedStore = selectedStore === 'all'
     ? ((activeTab === 'pos' ? Object.keys(stores).find(k => tiendaTiene(k, 'pos')) : undefined) ?? Object.keys(stores)[0] ?? '')
@@ -257,7 +256,7 @@ function AdminDashboard({ user }: { user: User }) {
   const posDisponible = !!focusedStore && tiendaTiene(focusedStore, 'pos');
   // Si apagan el POS mientras está abierto, volver al Inicio.
   useEffect(() => {
-    if ((activeTab === 'pos' || activeTab === 'orders' || activeTab === 'metrics') && !posOn) setActiveTab('inicio');
+    if ((activeTab === 'pos' || activeTab === 'metrics') && !posOn) setActiveTab('inicio');
   }, [activeTab, posOn]);
 
   // Datos derivados para la pestaña Inicio (una sola carta).
@@ -281,36 +280,12 @@ function AdminDashboard({ user }: { user: User }) {
     return selectedStore === 'all' ? scoped : scoped.filter(o => o.store === selectedStore);
   }, [orders, managedSlugs, selectedStore]);
 
-  const filteredOrders = React.useMemo(() => {
-    const q = orderSearch.trim().toLowerCase();
-    return visibleOrders.filter(o => {
-      const matchesStatus = orderStatusFilter === 'all' || o.status === orderStatusFilter;
-      const matchesSearch = !q || o.id.toLowerCase().includes(q) || (o.customer_name || '').toLowerCase().includes(q);
-      return matchesStatus && matchesSearch;
-    });
-  }, [visibleOrders, orderStatusFilter, orderSearch]);
+  // Pedidos por atender (de todas mis tiendas): globito en el menú y aviso cuando llega uno nuevo.
+  const pedidosPendientes = React.useMemo(
+    () => (managedSlugs ? orders.filter(o => managedSlugs.includes(o.store) && o.status === 'Pendiente').length : 0),
+    [orders, managedSlugs]
+  );
 
-  // KPIs de la pestaña Pedidos: se calculan de todos los pedidos visibles
-  // (sin el filtro de estado/busqueda de la tabla), como en cualquier dashboard.
-  const ordersRevenue = React.useMemo(() => visibleOrders.reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0), [visibleOrders]);
-  const ordersActiveCount = React.useMemo(() => visibleOrders.filter(o => o.status !== 'Entregado' && o.status !== 'Cancelado').length, [visibleOrders]);
-  const ordersPendingCount = React.useMemo(() => visibleOrders.filter(o => o.status === 'Pendiente').length, [visibleOrders]);
-  const ordersCancelledCount = React.useMemo(() => visibleOrders.filter(o => o.status === 'Cancelado').length, [visibleOrders]);
-  const ordersAvgTicket = visibleOrders.length > 0 ? ordersRevenue / visibleOrders.length : 0;
-  const ordersReturnRate = visibleOrders.length > 0 ? (ordersCancelledCount / visibleOrders.length) * 100 : 0;
-
-  const orderStatusStyle = (status: string) => {
-    if (status === 'Entregado') return { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200', dot: 'bg-blue-500' };
-    if (status === 'Cancelado') return { bg: 'bg-red-50', text: 'text-red-600', border: 'border-red-200', dot: 'bg-red-500' };
-    if (status === 'Enviado' || status === 'Preparando' || status === 'Listo') return { bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-200', dot: 'bg-green-500' };
-    return { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200', dot: 'bg-orange-500' };
-  };
-
-  const formatOrderDate = (iso: string) =>
-    new Date(iso).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
-
-  const inicialesDeCliente = (nombre: string) =>
-    (nombre || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   const [isStoreEditorOpen, setIsStoreEditorOpen] = useState(false);
   const [editingStoreSlug, setEditingStoreSlug] = useState<string | null>(null);
   const [isStoreSaving, setIsStoreSaving] = useState(false);
@@ -374,6 +349,31 @@ function AdminDashboard({ user }: { user: User }) {
     fetchOrders();
   }, []);
 
+  // Los pedidos de la carta llegan solos: se vuelve a mirar cada 45 s mientras el panel está a la vista.
+  useEffect(() => {
+    const t = setInterval(() => { if (document.visibilityState === 'visible') fetchOrders(); }, 45_000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Avisa (pitido corto y número en la pestaña) cuando sube la cantidad de pedidos pendientes.
+  const pendientesAntes = useRef<number | null>(null);
+  useEffect(() => {
+    if (pendientesAntes.current !== null && pedidosPendientes > pendientesAntes.current) {
+      try {
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = 880; gain.gain.value = 0.08;
+        osc.start(); osc.stop(ctx.currentTime + 0.25);
+      } catch { /* el navegador puede bloquear el sonido: no pasa nada */ }
+    }
+    pendientesAntes.current = pedidosPendientes;
+    const base = document.title.replace(/^\(\d+\)\s*/, '');
+    document.title = pedidosPendientes > 0 ? `(${pedidosPendientes}) ${base}` : base;
+  }, [pedidosPendientes]);
+
   // Productos: solo los de MIS tiendas. Antes se bajaba el catálogo de TODAS las tiendas y se filtraba
   // acá (más datos por cada dueño que abría el panel, y crece con cada tienda nueva).
   useEffect(() => {
@@ -422,6 +422,41 @@ function AdminDashboard({ user }: { user: User }) {
     } else {
       setOrders(data || []);
     }
+  };
+
+  // Cancelar un pedido devuelve al inventario lo que ese pedido había descontado (según el historial de stock).
+  const devolverStockDePedido = async (o: Pedido) => {
+    const { data: movs, error } = await supabase
+      .from('stock_movements')
+      .select('product_id,product_name,delta,motivo')
+      .eq('pedido_id', o.id);
+    if (error || !movs) return;                                  // sin historial no se sabe qué se descontó
+    if (movs.some(m => m.motivo === 'cancelacion')) return;      // ya se devolvió
+    const ventas = movs.filter(m => String(m.motivo).startsWith('venta') && m.delta < 0);
+    if (ventas.length === 0) return;
+    await moverStock(supabase, {
+      store: o.store,
+      motivo: 'cancelacion',
+      pedidoId: o.id,
+      usuario: user.email ?? null,
+      lineas: ventas.map(m => ({ id: m.product_id, name: m.product_name, delta: -m.delta })),
+    });
+    refrescarTienda(o.store);
+    await fetchProducts();
+  };
+
+  const cambiarEstadoPedido = async (o: Pedido, estado: string) => {
+    if (o.status === estado) return;
+    setPedidoOcupado(o.id);
+    const { error } = await supabase.from('orders').update({ status: estado }).eq('id', o.id);
+    if (error) {
+      alert('No se pudo cambiar el estado del pedido: ' + error.message);
+      setPedidoOcupado(null);
+      return;
+    }
+    if (estado === 'Cancelado') await devolverStockDePedido(o);
+    await fetchOrders();
+    setPedidoOcupado(null);
   };
 
   const fetchStores = async () => {
@@ -500,7 +535,7 @@ function AdminDashboard({ user }: { user: User }) {
       console.error('Error saving POS sale:', error);
       alert('Hubo un error al registrar la venta: ' + error.message);
     } else {
-      if (tiendaTiene(focusedStore, 'inventario')) await descontarStock(posCart);
+      if (tiendaTiene(focusedStore, 'inventario')) await descontarStock(posCart, data?.id ?? null);
       setLastCompletedSale(data || { ...saleDetails, id: 'POS-' + Math.floor(Math.random() * 90000 + 10000), created_at: new Date().toISOString() });
       setPosCart([]);
       setPosCustomerName('');
@@ -801,37 +836,27 @@ function AdminDashboard({ user }: { user: User }) {
     if (txt == null) return;
     const n = parseInt(txt, 10);
     if (isNaN(n) || n <= 0) { alert('Escribe un número mayor a 0.'); return; }
-    const nuevoStock = Math.max(0, p.stock || 0) + n;
-    const nuevoEstado = p.status === 'Agotado' ? 'Activo' : p.status;
-    const { error } = await supabase.from('products').update({ stock: nuevoStock, status: nuevoEstado }).eq('id', p.id);
-    if (error) { alert('No se pudo ingresar la mercadería: ' + error.message); return; }
-    setProducts(prev => prev.map(x => x.id === p.id ? { ...x, stock: nuevoStock, status: nuevoEstado } : x));
+    const { fallidos } = await moverStock(supabase, {
+      store: p.store,
+      motivo: 'ingreso',
+      usuario: user.email ?? null,
+      lineas: [{ id: p.id, name: p.name, delta: n }],
+    });
+    if (fallidos.length) { alert('No se pudo ingresar la mercadería. Inténtalo de nuevo.'); return; }
     refrescarTienda(p.store);
+    await fetchProducts();
   };
 
-  // Inventario: descuenta lo vendido en el POS. Va producto por producto y solo pisa el stock si nadie
-  // lo cambió mientras tanto (`.eq('stock', actual)`); si lo cambiaron, relee y reintenta una vez.
-  // Los productos ilimitados no se tocan. Al llegar a 0 el producto pasa a Agotado.
-  const descontarStock = async (items: { product: Product; quantity: number }[]) => {
-    const tocadas = new Set<string>();
-    const fallidos: string[] = [];
-    for (const { product, quantity } of items) {
-      let ok = false;
-      for (let intento = 0; intento < 2 && !ok; intento++) {
-        const { data: fila } = await supabase.from('products').select('stock,status').eq('id', product.id).maybeSingle();
-        if (!fila || stockIlimitado(fila)) { ok = true; break; }
-        const nuevo = Math.max(0, (fila.stock ?? 0) - quantity);
-        const { data: hecho } = await supabase
-          .from('products')
-          .update({ stock: nuevo, ...(nuevo === 0 ? { status: 'Agotado' } : {}) })
-          .eq('id', product.id)
-          .eq('stock', fila.stock)
-          .select('id');
-        if (hecho && hecho.length > 0) { ok = true; tocadas.add(product.store); }
-      }
-      if (!ok) fallidos.push(product.name);
-    }
-    tocadas.forEach(slug => refrescarTienda(slug));
+  // Inventario: descuenta lo vendido en el POS y lo deja en el historial (ver lib/stock.ts).
+  const descontarStock = async (items: { product: Product; quantity: number }[], pedidoId?: string | null) => {
+    const { fallidos, cambiados } = await moverStock(supabase, {
+      store: focusedStore,
+      motivo: 'venta_pos',
+      pedidoId: pedidoId ?? null,
+      usuario: user.email ?? null,
+      lineas: items.map(({ product, quantity }) => ({ id: product.id, name: product.name, delta: -quantity })),
+    });
+    if (cambiados.length > 0) refrescarTienda(focusedStore);
     await fetchProducts();
     if (fallidos.length) alert('La venta se registró, pero no se pudo descontar el stock de: ' + fallidos.join(', ') + '. Revísalo en Productos.');
   };
@@ -935,6 +960,22 @@ function AdminDashboard({ user }: { user: User }) {
         }).eq('id', editingProductId);
 
         if (dbError) throw dbError;
+
+        // Con inventario, un cambio de stock hecho a mano queda como "ajuste" en el historial.
+        if (tiendaTiene(newProduct.store, 'inventario')) {
+          const antes = products.find(x => x.id === editingProductId);
+          if (antes && finalStock !== null && !stockIlimitado(antes) && finalStock !== antes.stock) {
+            await registrarMovimientos(supabase, [{
+              store: newProduct.store,
+              product_id: editingProductId,
+              product_name: newProduct.name,
+              delta: finalStock - (antes.stock || 0),
+              stock_despues: finalStock,
+              motivo: 'ajuste',
+              usuario: user.email ?? null,
+            }]);
+          }
+        }
       } else {
         const { error: dbError } = await supabase.from('products').insert([
           {
@@ -1134,6 +1175,9 @@ function AdminDashboard({ user }: { user: User }) {
             >
               <span className="material-symbols-outlined text-[20px]">{t.icon}</span>
               {t.label}
+              {t.id === 'orders' && pedidosPendientes > 0 && (
+                <span className="ml-auto min-w-[20px] h-5 px-1.5 rounded-full bg-orange-500 text-white text-[11px] font-black flex items-center justify-center">{pedidosPendientes}</span>
+              )}
             </button>
           ))}
 
@@ -1304,8 +1348,7 @@ function AdminDashboard({ user }: { user: User }) {
               </div>
             </div>
 
-            {/* Fila 2: resumen de pedidos (solo con el módulo de ventas) */}
-            {tiendaTiene(focusedStore, 'pos') && (
+            {/* Fila 2: resumen de pedidos */}
             <button onClick={() => setActiveTab('orders')} className="w-full bg-white border border-gray-100 rounded-xl p-3 shadow-sm text-left hover:border-gray-200 transition-colors">
               <div className="flex items-center justify-between">
                 <h4 className="font-bold text-gray-900 text-sm">Pedidos del negocio</h4>
@@ -1324,7 +1367,9 @@ function AdminDashboard({ user }: { user: User }) {
                 ))}
               </div>
             </button>
-            )}
+
+            {/* Tu plan: nivel, cuánto paga y hasta cuándo (solo si tiene costo o fecha de pago) */}
+            <MiPlan slug={focusedStore} modulos={inicioDb?.modulos} subdominioActivo={inicioDb?.subdominio_activo} />
 
             {/* Gestión — mismas secciones y mismo orden que la sidebar / barra inferior */}
             <div>
@@ -1495,6 +1540,15 @@ function AdminDashboard({ user }: { user: User }) {
                               <span className="material-symbols-outlined text-[14px]">picture_as_pdf</span>
                               Exportar PDF
                             </button>
+                            {inventarioOn && (
+                              <button
+                                onClick={() => setIsHistorialOpen(true)}
+                                className="px-2.5 py-1.5 text-[11px] font-bold rounded-md transition-all flex items-center justify-center gap-1 bg-white text-gray-700 hover:bg-gray-50 whitespace-nowrap active:scale-95 cursor-pointer border border-gray-200 shadow-sm"
+                              >
+                                <span className="material-symbols-outlined text-[14px]">history</span>
+                                Historial de stock
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -1719,201 +1773,13 @@ function AdminDashboard({ user }: { user: User }) {
         )}
 
         {activeTab === 'orders' && (
-          <>
-            {/* Mobile View (Stich Dash Mobile UI) */}
-            <div className="flex flex-col gap-4 w-full md:hidden">
-              <div className="relative w-full">
-                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
-                <input
-                  type="text"
-                  value={orderSearch}
-                  onChange={(e) => setOrderSearch(e.target.value)}
-                  placeholder="Buscar ID de Pedido, Cliente..."
-                  className="w-full h-12 pl-11 pr-4 bg-white border border-[#e1e3e4]/60 rounded-md focus:ring-2 focus:ring-[#b8130e] focus:border-transparent focus:outline-none transition-all text-sm font-medium text-[#191c1d]"
-                />
-              </div>
-
-              <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
-                {(['all', 'Pendiente', 'Enviado', 'Entregado'] as const).map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setOrderStatusFilter(f)}
-                    className={`px-5 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${
-                      orderStatusFilter === f ? 'bg-[#b8130e] text-white' : 'bg-[#e1e3e4] text-[#5f5e5e]'
-                    }`}
-                  >
-                    {f === 'all' ? 'Todos' : f}
-                  </button>
-                ))}
-              </div>
-
-              <h3 className="text-[11px] font-bold text-gray-400 tracking-wider uppercase mt-2">Pedidos Recientes</h3>
-
-              <div className="flex flex-col gap-3">
-                {filteredOrders.length === 0 ? (
-                  <div className="bg-white rounded-md border border-gray-100 p-8 text-center">
-                    <span className="material-symbols-outlined text-3xl text-gray-300 mb-2 block">receipt_long</span>
-                    <p className="text-gray-500 font-semibold text-sm">
-                      {visibleOrders.length === 0 ? 'Todavía no tienes pedidos.' : 'Ningún pedido coincide con este filtro.'}
-                    </p>
-                  </div>
-                ) : (
-                  filteredOrders.map((o) => {
-                    const st = orderStatusStyle(o.status);
-                    const itemCount = Array.isArray(o.items) ? o.items.length : 0;
-                    return (
-                      <div key={o.id} className="bg-white rounded-md border border-gray-100 p-4 shadow-sm flex flex-col gap-3">
-                        <div className="flex justify-between items-start">
-                          <div className="flex flex-col">
-                            <span className="text-[#b8130e] font-bold text-xs tracking-wide">#{o.id.slice(0, 8).toUpperCase()}</span>
-                            <span className="text-gray-900 font-extrabold text-base mt-1">{o.customer_name}</span>
-                          </div>
-                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border ${st.bg} ${st.text} ${st.border}`}>{o.status}</span>
-                        </div>
-                        <div className="flex justify-between items-end mt-1">
-                          <span className="text-gray-500 text-xs font-medium">{formatOrderDate(o.created_at)} • {itemCount} {itemCount === 1 ? 'Ítem' : 'Ítems'}</span>
-                          <span className="text-gray-900 font-black text-xl">S/ {Number(o.total_amount).toFixed(2)}</span>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-
-            {/* Desktop View (Stich Dash PC UI) */}
-            <div className="hidden md:flex flex-col gap-6 w-full">
-              <div className="flex items-center justify-between gap-3">
-                <div className="relative w-full max-w-xs">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">search</span>
-                  <input
-                    type="text"
-                    value={orderSearch}
-                    onChange={(e) => setOrderSearch(e.target.value)}
-                    placeholder="Buscar ID de Pedido, Cliente..."
-                    className="w-full h-10 pl-9 pr-3 bg-white border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-[#b8130e] focus:border-transparent focus:outline-none transition-all"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  {(['all', 'Pendiente', 'Enviado', 'Entregado'] as const).map((f) => (
-                    <button
-                      key={f}
-                      onClick={() => setOrderStatusFilter(f)}
-                      className={`px-5 py-2 rounded-lg text-sm font-bold transition-colors ${
-                        orderStatusFilter === f
-                          ? 'bg-[#b8130e] text-white'
-                          : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-                      }`}
-                    >
-                      {f === 'all' ? 'Todos los Pedidos' : f}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* KPI Cards */}
-              <div className="grid grid-cols-4 gap-4">
-                <div className="bg-white border border-gray-100 rounded-md p-5 shadow-sm flex flex-col justify-between">
-                  <div>
-                    <h4 className="text-[11px] font-bold text-gray-500 tracking-wider uppercase mb-1">Ingresos Totales</h4>
-                    <span className="text-3xl font-black text-gray-900">S/ {ordersRevenue.toFixed(2)}</span>
-                  </div>
-                  <div className="mt-4 flex items-center gap-1 text-gray-400 font-bold text-[13px]">
-                    <span className="material-symbols-outlined text-[16px]">receipt_long</span>
-                    {visibleOrders.length} {visibleOrders.length === 1 ? 'pedido' : 'pedidos'} en total
-                  </div>
-                </div>
-                <div className="bg-white border border-gray-100 rounded-md p-5 shadow-sm flex flex-col justify-between">
-                  <div>
-                    <h4 className="text-[11px] font-bold text-gray-500 tracking-wider uppercase mb-1">Pedidos Activos</h4>
-                    <span className="text-3xl font-black text-gray-900">{ordersActiveCount}</span>
-                  </div>
-                  <div className="mt-4 flex items-center gap-1 text-gray-500 font-bold text-[13px]">
-                    <span className="material-symbols-outlined text-[16px]">schedule</span>
-                    {ordersPendingCount} {ordersPendingCount === 1 ? 'pedido requiere' : 'pedidos requieren'} atención
-                  </div>
-                </div>
-                <div className="bg-white border border-gray-100 rounded-md p-5 shadow-sm flex flex-col justify-between">
-                  <div>
-                    <h4 className="text-[11px] font-bold text-gray-500 tracking-wider uppercase mb-1">Ticket Promedio</h4>
-                    <span className="text-3xl font-black text-gray-900">S/ {ordersAvgTicket.toFixed(2)}</span>
-                  </div>
-                  <div className="mt-4 flex items-center gap-1 text-gray-400 font-bold text-[13px]">
-                    <span className="material-symbols-outlined text-[16px]">payments</span>
-                    Por pedido
-                  </div>
-                </div>
-                <div className="bg-white border border-gray-100 rounded-md p-5 shadow-sm flex flex-col justify-between">
-                  <div>
-                    <h4 className="text-[11px] font-bold text-gray-500 tracking-wider uppercase mb-1">Tasa de Cancelación</h4>
-                    <span className="text-3xl font-black text-gray-900">{ordersReturnRate.toFixed(1)}%</span>
-                  </div>
-                  <div className="mt-4 flex items-center gap-1 text-gray-400 font-bold text-[13px]">
-                    <span className="material-symbols-outlined text-[16px]">cancel</span>
-                    {ordersCancelledCount} {ordersCancelledCount === 1 ? 'cancelado' : 'cancelados'}
-                  </div>
-                </div>
-              </div>
-
-              {/* Table */}
-              <div className="bg-white border border-gray-100 rounded-md shadow-sm overflow-hidden mt-2">
-                {filteredOrders.length === 0 ? (
-                  <div className="p-12 text-center flex flex-col items-center justify-center">
-                    <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">receipt_long</span>
-                    <p className="text-gray-500 font-bold text-sm">
-                      {visibleOrders.length === 0 ? 'Todavía no tienes pedidos.' : 'Ningún pedido coincide con este filtro.'}
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="bg-gray-50 border-b border-gray-100 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                          <th className="p-4">ID Pedido</th>
-                          <th className="p-4">Nombre del Cliente</th>
-                          <th className="p-4">Fecha</th>
-                          <th className="p-4">Ítems</th>
-                          <th className="p-4">Estado</th>
-                          <th className="p-4 text-right">Total</th>
-                        </tr>
-                      </thead>
-                      <tbody className="text-sm font-medium">
-                        {filteredOrders.map((o) => {
-                          const st = orderStatusStyle(o.status);
-                          const itemCount = Array.isArray(o.items) ? o.items.length : 0;
-                          return (
-                            <tr key={o.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
-                              <td className="p-4 text-[#b8130e] font-bold">#{o.id.slice(0, 8).toUpperCase()}</td>
-                              <td className="p-4">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-8 h-8 rounded-full bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center font-bold text-xs shrink-0">
-                                    {inicialesDeCliente(o.customer_name)}
-                                  </div>
-                                  <span className="text-gray-900">{o.customer_name}</span>
-                                </div>
-                              </td>
-                              <td className="p-4 text-gray-500">{formatOrderDate(o.created_at)}</td>
-                              <td className="p-4 text-gray-500">{itemCount} {itemCount === 1 ? 'Ítem' : 'Ítems'}</td>
-                              <td className="p-4">
-                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${st.bg} ${st.text} ${st.border}`}>
-                                  <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`}></span> {o.status}
-                                </span>
-                              </td>
-                              <td className="p-4 text-right text-gray-900 font-bold">S/ {Number(o.total_amount).toFixed(2)}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                    <div className="p-4 border-t border-gray-100 flex items-center justify-between bg-white">
-                      <span className="text-sm text-gray-500">Mostrando {filteredOrders.length} de {visibleOrders.length} pedidos</span>
-                    </div>
-                  </>
-                )}
-              </div>
-
-            </div>
-          </>
+          <PedidosTab
+            pedidos={visibleOrders as Pedido[]}
+            nombreTienda={(slug) => stores[slug]?.name || slug}
+            mostrarTienda={selectedStore === 'all' && Object.keys(stores).length > 1}
+            cambiarEstado={cambiarEstadoPedido}
+            ocupado={pedidoOcupado}
+          />
         )}
 
         {activeTab === 'stores' && (
@@ -3501,8 +3367,11 @@ function AdminDashboard({ user }: { user: User }) {
           <button
             key={t.id}
             onClick={() => setActiveTab(t.id)}
-            className={`flex flex-col items-center gap-1 w-16 py-2 rounded-[20px] transition-all ${activeTab === t.id ? 'bg-[#b8130e] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+            className={`relative flex flex-col items-center gap-1 w-16 py-2 rounded-[20px] transition-all ${activeTab === t.id ? 'bg-[#b8130e] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
           >
+            {t.id === 'orders' && pedidosPendientes > 0 && (
+              <span className="absolute top-0.5 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-orange-500 text-white text-[10px] font-black flex items-center justify-center">{pedidosPendientes}</span>
+            )}
             <span className="material-symbols-outlined text-[22px]">{t.icon}</span>
             <span className="text-[10px] font-bold">{t.id === 'pos' ? 'Vender' : t.label}</span>
           </button>
@@ -3515,6 +3384,14 @@ function AdminDashboard({ user }: { user: User }) {
           <span className="text-[10px] font-bold">Perfil</span>
         </button>
       </div>
+      )}
+
+      {isHistorialOpen && (
+        <HistorialStock
+          slugs={selectedStore === 'all' ? myStoreSlugs : [selectedStore]}
+          nombreTienda={(slug) => stores[slug]?.name || slug}
+          onClose={() => setIsHistorialOpen(false)}
+        />
       )}
 
       {/* Mobile Profile Menu Modal */}

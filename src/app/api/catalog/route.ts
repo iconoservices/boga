@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { enMarketplace } from '@/lib/modulos';
 
 // Catálogo completo del marketplace (todas las tiendas + productos), en UN
 // endpoint cacheado. /market y /explore lo consumen en vez de pegarle a
@@ -61,7 +62,7 @@ export async function GET(request: Request) {
   const [stores, products, banners, estilo] = await Promise.all([
     supabase
       .from('stores')
-      .select('slug,name,tagline,marketplace_category,template,hero_image,hero_alt,logo_image,theme,categories,status,external_url,subdominio_activo'),
+      .select('slug,name,tagline,marketplace_category,template,hero_image,hero_alt,logo_image,theme,categories,status,external_url,subdominio_activo,modulos'),
     supabase
       .from('products')
       .select('id,name,price,category,image,store,status'),
@@ -76,10 +77,15 @@ export async function GET(request: Request) {
 
   if (stores.error || products.error) return falloSupabase();
 
+  // Las tiendas que el superadmin sacó del marketplace (modulos.marketplace = false) no salen acá ni
+  // con sus productos; siguen abiertas en su propio link.
+  const visibles = (stores.data ?? []).filter((s) => enMarketplace(s.modulos));
+  const slugsVisibles = new Set(visibles.map((s) => s.slug));
+
   return NextResponse.json(
     {
-      stores: (stores.data ?? []).map(conDireccionPropia),
-      products: products.data ?? [],
+      stores: visibles.map(({ modulos: _modulos, ...s }) => conDireccionPropia(s)),
+      products: (products.data ?? []).filter((p) => slugsVisibles.has(p.store)),
       banners: banners.data ?? [],
       bannerStyle: estilo.data?.style || ESTILO_DEFECTO.market,
     },
