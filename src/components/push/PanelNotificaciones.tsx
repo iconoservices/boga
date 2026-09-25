@@ -9,20 +9,21 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { CANAL_BOGA, PUSH_PAQUETE } from '@/lib/pushLimites';
 
 export type OpcionCanal = { slug: string; nombre: string };
 
 type Estado = {
-  seguidores: number; usadasSemana: number; usadasDia: number; restantesSemana: number; puedeHoy: boolean;
+  seguidores: number; usadasMes: number; usadasDia: number; cupoMes: number; restantesMes: number; creditos: number; puedeHoy: boolean;
   dentroDeHorario: boolean; tablasListas: boolean; sinTope: boolean;
-  limites: { maxPorSemana: number; maxPorDia: number; horaDesde: number; horaHasta: number };
+  limites: { maxPorDia: number; horaDesde: number; horaHasta: number };
   ultimas: { id: number; titulo: string; cuerpo: string; url?: string | null; enviados: number; fallidos: number; creada_at: string }[];
 };
 
 const campo = 'w-full bg-surface-container-low border border-surface-container-highest rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:border-primary';
 const tarjeta = 'rounded-xl border border-surface-container-highest bg-surface p-5';
 
-export default function PanelNotificaciones({ opciones }: { opciones: OpcionCanal[] }) {
+export default function PanelNotificaciones({ opciones, superadmin = false }: { opciones: OpcionCanal[]; superadmin?: boolean }) {
   const [slug, setSlug] = useState(opciones[0]?.slug ?? '');
   const [estado, setEstado] = useState<Estado | null>(null);
   const [error, setError] = useState('');
@@ -49,6 +50,14 @@ export default function PanelNotificaciones({ opciones }: { opciones: OpcionCana
     } catch { setError('No se pudo cargar'); }
   }, [slug]);
   useEffect(() => { cargar(); }, [cargar]);
+
+  // Superadmin: suma un paquete de avisos cuando el dueño paga (Yape/Plin). Requiere la columna push_creditos.
+  const sumarPaquete = async () => {
+    if (!estado || !window.confirm(`¿Sumar ${PUSH_PAQUETE} avisos comprados a esta tienda?`)) return;
+    const { error: e } = await supabase.from('stores').update({ push_creditos: estado.creditos + PUSH_PAQUETE }).eq('slug', slug);
+    setMensaje(e ? 'No se pudo sumar (¿corriste el SQL de push_creditos en supabase_setup.sql?)' : `✅ Se sumaron ${PUSH_PAQUETE} avisos.`);
+    if (!e) cargar();
+  };
 
   // Prueba: la notificación llega solo a ESTE dispositivo (no avisa a nadie, no gasta cupo)
   const enviarPrueba = async () => {
@@ -131,12 +140,28 @@ export default function PanelNotificaciones({ opciones }: { opciones: OpcionCana
 
       {estado && (
         <>
+          {slug !== CANAL_BOGA && !estado.sinTope && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 text-amber-900 p-4 text-xs leading-relaxed">
+              Tus avisos llegan solo a quienes instalaron y siguen tu app. Si mandas demasiados, la gente puede silenciarlos:
+              úsalos con criterio. Los avisos del mes se acumulan (se renuevan el día 1) y los extra comprados no vencen.
+            </div>
+          )}
+
           <div className={`${tarjeta} flex flex-wrap gap-8 items-center`}>
             <div><div className="text-2xl font-extrabold text-on-surface">{estado.seguidores}</div><div className="text-xs text-secondary">seguidores</div></div>
             <div>
-              <div className="text-2xl font-extrabold text-on-surface">{estado.sinTope ? '∞' : `${estado.restantesSemana}/${estado.limites.maxPorSemana}`}</div>
-              <div className="text-xs text-secondary">{estado.sinTope ? 'sin tope de campañas' : 'campañas disponibles esta semana'}</div>
+              <div className="text-2xl font-extrabold text-on-surface">{estado.sinTope ? '∞' : `${estado.restantesMes}/${estado.cupoMes}`}</div>
+              <div className="text-xs text-secondary">{estado.sinTope ? 'sin tope de campañas' : 'avisos disponibles este mes'}</div>
             </div>
+            {slug !== CANAL_BOGA && (
+              <div>
+                <div className="text-2xl font-extrabold text-on-surface">{estado.creditos}</div>
+                <div className="text-xs text-secondary">avisos extra comprados (no vencen)</div>
+                {superadmin && (
+                  <button onClick={sumarPaquete} className="mt-1 text-xs font-bold text-primary hover:underline">+ Sumar paquete de {PUSH_PAQUETE}</button>
+                )}
+              </div>
+            )}
             <div className="text-xs text-secondary">
               {estado.sinTope ? '' : `Máximo ${estado.limites.maxPorDia} por día · `}se envía de {estado.limites.horaDesde}:00 a {estado.limites.horaHasta}:00 (Lima)
               {!estado.dentroDeHorario && <b className="text-amber-700"> · ahora está fuera de horario</b>}

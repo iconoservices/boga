@@ -5,12 +5,15 @@
 // marketplace, también a `city_interest`.
 //
 // `interest` se controla desde afuera (la página lo pre-selecciona con ?i=).
+// `plan` es el que eligió en /negocios: se muestra arriba del form y se guarda al inicio de `description`
+// (así lo ve el superadmin en Solicitudes sin necesitar una columna nueva).
 
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { CIUDADES, esCiudadActiva, ciudadPorSlug } from '@/lib/ciudades';
 import { detectarCiudad } from '@/lib/geo';
+import type { Plan } from '@/lib/planesNegocios';
 
 const CATEGORIES = ['Restaurantes', 'Mercado', 'Salud y Bienestar', 'Moda y Belleza', 'Moda', 'Servicios', 'Tecnología'];
 
@@ -25,10 +28,18 @@ const ACCENT = '#b8130e'; // rojo BogaHub (= --color-primary)
 export default function RegistroNegocio({
   interest,
   setInterest,
+  plan,
+  anual,
 }: {
   interest: string;
   setInterest: (v: string) => void;
+  plan?: Plan | null;
+  anual?: boolean;
 }) {
+  const precioPlan = plan ? (anual ? plan.anio : plan.mes) : null;
+  const etiquetaPlan = plan && precioPlan
+    ? `${plan.nombre} · ${precioPlan.precio}${precioPlan.periodo}${anual ? ' (anual)' : ''}`
+    : '';
   const [businessName, setBusinessName] = useState('');
   const [category, setCategory] = useState('');
   const [city, setCity] = useState('');
@@ -84,7 +95,7 @@ export default function RegistroNegocio({
       contact_name: contactName,
       whatsapp,
       email: email || null,
-      description: description || null,
+      description: [etiquetaPlan && `[Plan elegido: ${etiquetaPlan}]`, description].filter(Boolean).join(' ') || null,
     });
 
     // Sin Boga Market en su ciudad + quiere marketplace → también cuenta como
@@ -142,6 +153,20 @@ export default function RegistroNegocio({
           <p style={{ fontSize: '13px', color: '#999', fontWeight: 500, marginBottom: '24px', lineHeight: 1.5 }}>
             Cuéntanos de tu negocio y te contactamos para montarlo en BogaHub.
           </p>
+
+          {plan && (
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px',
+              padding: '10px 14px', marginBottom: '18px', borderRadius: '12px',
+              backgroundColor: '#fdecea', border: `1px solid ${ACCENT}33`,
+            }}>
+              <div style={{ minWidth: 0 }}>
+                <p style={{ fontSize: '10px', fontWeight: 700, color: ACCENT, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Plan elegido</p>
+                <p style={{ fontSize: '13px', fontWeight: 700, color: '#111' }}>{etiquetaPlan}</p>
+              </div>
+              <Link href="/negocios#precios" style={{ fontSize: '12px', fontWeight: 600, color: ACCENT, textDecoration: 'none', flexShrink: 0 }}>Cambiar</Link>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '14px' }}>

@@ -6,50 +6,9 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 
+import { MODULOS_VENTA, PLANES, POR_DEFINIR } from '@/lib/planesNegocios';
+
 const REGISTRO = '/negocios/registro';
-
-type Precio = { precio: string; periodo: string; nota: string };
-type Plan = {
-  id: string;
-  icon: string;
-  nombre: string;
-  featured: boolean;
-  body: string;
-  bullets: string[];
-  mes: Precio;
-  anio: Precio;
-};
-
-const PLANES: Plan[] = [
-  {
-    id: 'tienda',
-    icon: 'storefront',
-    nombre: 'Tu Tienda BogaHub',
-    featured: false,
-    body: 'Tu página de pedidos con tu propio link (bogahub.app/tu-negocio) para compartir en WhatsApp o Instagram. Tú vendes y cobras directo — BogaHub no toca tu plata.',
-    bullets: [
-      'Catálogo, inventario y gestión de pedidos',
-      'Pedidos directo a tu WhatsApp, sin comisión',
-      'Funciona en cualquier ciudad',
-    ],
-    mes: { precio: 'S/ 50', periodo: '/mes', nota: 'Precio promocional — fijo de por vida si entras ahora · luego S/ 80/mes' },
-    anio: { precio: 'S/ 500', periodo: '/año', nota: 'Precio promocional · 2 meses gratis (≈ S/ 42/mes)' },
-  },
-  {
-    id: 'marketplace',
-    icon: 'travel_explore',
-    nombre: 'Vende en Boga Market',
-    featured: true,
-    body: 'Todo lo de Tu Tienda BogaHub y, además, tu negocio aparece en el Market de tu ciudad, junto a otros comercios locales, frente a gente que todavía no te conoce.',
-    bullets: [
-      'Todo lo del plan Tu Tienda BogaHub',
-      'Clientes de tu ciudad te descubren',
-      'Coordinación de entrega, lo activas cuando quieras',
-    ],
-    mes: { precio: 'S/ 100', periodo: '/mes', nota: 'Solo donde BogaHub opera' },
-    anio: { precio: 'S/ 1 000', periodo: '/año', nota: '2 meses gratis · solo donde BogaHub opera' },
-  },
-];
 
 export default function NegociosPlanes() {
   const [anual, setAnual] = useState(false);
@@ -57,9 +16,9 @@ export default function NegociosPlanes() {
   return (
     <section id="precios" className="scroll-mt-24 pb-14 md:pb-16">
       <div className="text-center max-w-[560px] mx-auto mb-8">
-        <h2 className="font-headline-md text-2xl md:text-3xl font-extrabold text-on-background">Un plan fijo, sin comisión</h2>
+        <h2 className="font-headline-md text-2xl md:text-3xl font-extrabold text-on-background">Elige tu plan, suma lo que necesites</h2>
         <p className="text-secondary font-body-md text-sm md:text-base mt-2">
-          Empieza con tu tienda propia y suma el Market cuando quieras. Lo que vendes es 100% tuyo:
+          Empieza con tu tienda y crece cuando quieras. Lo que vendes es 100% tuyo:
           cobras tú, directo a tu cliente — BogaHub solo te cobra el plan.
         </p>
       </div>
@@ -91,19 +50,19 @@ export default function NegociosPlanes() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {PLANES.map((plan) => {
           const p = anual ? plan.anio : plan.mes;
           return (
             <div
               key={plan.id}
               className={`relative bg-surface-container-lowest rounded-2xl p-6 flex flex-col gap-3 ${
-                plan.featured ? 'border-[1.5px] border-primary' : 'border border-surface-container-highest'
+                plan.etiqueta ? 'border-[1.5px] border-primary' : 'border border-surface-container-highest'
               }`}
             >
-              {plan.featured && (
+              {plan.etiqueta && (
                 <span className="absolute top-4 right-4 text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md uppercase tracking-wide">
-                  Más alcance
+                  {plan.etiqueta}
                 </span>
               )}
               <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -114,7 +73,7 @@ export default function NegociosPlanes() {
                 <span className="font-headline-md text-3xl font-extrabold text-on-background">{p.precio}</span>
                 <span className="text-secondary font-body-md text-sm">{p.periodo}</span>
               </div>
-              <p className="text-primary font-label-md text-[11px] font-bold uppercase tracking-wide -mt-1">{p.nota}</p>
+              {p.nota && <p className="text-primary font-label-md text-[11px] font-bold uppercase tracking-wide -mt-1">{p.nota}</p>}
               <p className="text-secondary font-body-md text-sm leading-relaxed">{plan.body}</p>
               <ul className="flex flex-col gap-2 my-1">
                 {plan.bullets.map((b) => (
@@ -124,23 +83,69 @@ export default function NegociosPlanes() {
                   </li>
                 ))}
               </ul>
-              <Link
-                href={`${REGISTRO}?i=${plan.id}${anual ? '&plan=anual' : ''}`}
-                className={`w-full mt-auto py-3 rounded-xl font-bold text-sm text-center transition-all active:scale-95 ${
-                  plan.featured
-                    ? 'bg-primary text-on-primary hover:opacity-90'
-                    : 'border-[1.5px] border-primary text-primary hover:bg-primary/5'
-                }`}
-              >
-                Empezar
-              </Link>
+              {plan.pronto ? (
+                <span className="w-full mt-auto py-3 rounded-xl font-bold text-sm text-center border border-surface-container-highest text-secondary cursor-default">
+                  Aún no disponible
+                </span>
+              ) : (
+                <Link
+                  href={`${REGISTRO}?i=tienda&nivel=${plan.id}${anual ? '&plan=anual' : ''}`}
+                  className={`w-full mt-auto py-3 rounded-xl font-bold text-sm text-center transition-all active:scale-95 ${
+                    plan.etiqueta
+                      ? 'bg-primary text-on-primary hover:opacity-90'
+                      : 'border-[1.5px] border-primary text-primary hover:bg-primary/5'
+                  }`}
+                >
+                  Empezar
+                </Link>
+              )}
             </div>
           );
         })}
       </div>
 
-      <p className="text-secondary/80 font-body-md text-xs text-center mt-4 max-w-[560px] mx-auto">
-        Vienes con plantillas listas para tu rubro. El Market lo activas o apagas desde tu panel — no hace falta registrarte de nuevo.
+      {/* Módulos: se compran sueltos en cualquier plan; algunos ya vienen incluidos en uno. */}
+      <div className="mt-12">
+        <div className="text-center max-w-[560px] mx-auto mb-6">
+          <h3 className="font-headline-md text-xl md:text-2xl font-extrabold text-on-background">Módulos para sumar</h3>
+          <p className="text-secondary font-body-md text-sm mt-2">
+            Cada pieza se puede agregar a cualquier plan. Si tu plan ya la trae, no pagas de más.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {MODULOS_VENTA.map((g) => (
+            <div key={g.grupo} className="flex flex-col gap-3">
+              <p className="text-primary font-label-md text-[11px] font-bold uppercase tracking-wide">{g.grupo}</p>
+              {g.items.map((it) => (
+                <div key={it.id} className="bg-surface-container-lowest border border-surface-container-highest rounded-2xl p-4 flex gap-3">
+                  <div className="w-10 h-10 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-primary text-[20px]">{it.icon}</span>
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="font-headline-sm text-base text-on-background flex items-center gap-2 flex-wrap">
+                      {it.nombre}
+                      {it.pronto && (
+                        <span className="text-[10px] font-bold text-secondary bg-surface-container px-1.5 py-0.5 rounded uppercase tracking-wide">Próximamente</span>
+                      )}
+                    </h4>
+                    <p className="text-secondary font-body-md text-sm leading-relaxed mt-0.5">{it.body}</p>
+                    {it.promo && <p className="text-primary text-[11px] font-bold uppercase tracking-wide mt-1.5">{it.promo}</p>}
+                    <p className="text-on-background text-xs font-bold mt-1.5">
+                      {it.precio === POR_DEFINIR ? 'Precio por confirmar' : `${it.precio}${it.unidad ?? ' /mes'}`}
+                      {it.incluidoEn.length > 0 && (
+                        <span className="text-secondary font-semibold"> · Incluido en {it.incluidoEn.map((id) => PLANES.find((p) => p.id === id)?.nombre).join(' y ')}</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <p className="text-secondary/80 font-body-md text-xs text-center mt-6 max-w-[560px] mx-auto">
+        Vienes con plantillas listas para tu rubro. Los módulos los sumas cuando quieras desde tu panel — no hace falta registrarte de nuevo.
         ¿Quieres un diseño totalmente a medida? Lo cotizamos según lo que necesites.
       </p>
     </section>

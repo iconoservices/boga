@@ -1477,17 +1477,25 @@ ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS vendedores TEXT[];
 -- El superadmin puede apagarlos desde el editor de tienda.
 UPDATE public.stores SET modulos = '{"pos": true, "inventario": true}'::jsonb WHERE modulos IS NULL;
 
+-- Avisos push comprados (paquetes de 4 por S/ 10, no vencen). Se gastan solo cuando el cupo del mes
+-- del plan ya se usó (ver src/lib/pushLimites.ts). Los suma el superadmin al registrar el pago.
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS push_creditos INTEGER NOT NULL DEFAULT 0;
+
 -- La política UPDATE de stores deja al dueño editar su tienda: sin esto podría
--- activarse módulos él mismo. Mismo patrón que profiles_protege_rol.
+-- activarse módulos (o regalarse avisos) él mismo. Mismo patrón que profiles_protege_rol.
 CREATE OR REPLACE FUNCTION public.stores_protege_modulos()
 RETURNS TRIGGER AS $$
 BEGIN
   -- Solo frena a usuarios de la app que no son superadmin. El editor SQL de Supabase y el
   -- service_role no son "usuarios" (no traen sesión) y sí pueden cambiarlo.
-  IF NEW.modulos IS DISTINCT FROM OLD.modulos
-     AND NOT public.is_superadmin()
+  IF NOT public.is_superadmin()
      AND current_user NOT IN ('postgres', 'supabase_admin', 'service_role') THEN
-    NEW.modulos := OLD.modulos;
+    IF NEW.modulos IS DISTINCT FROM OLD.modulos THEN
+      NEW.modulos := OLD.modulos;
+    END IF;
+    IF NEW.push_creditos IS DISTINCT FROM OLD.push_creditos THEN
+      NEW.push_creditos := OLD.push_creditos;
+    END IF;
   END IF;
   RETURN NEW;
 END;

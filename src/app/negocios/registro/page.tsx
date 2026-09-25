@@ -8,16 +8,24 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import RegistroNegocio from '@/components/RegistroNegocio';
+import { PLANES, type Plan } from '@/lib/planesNegocios';
 
 const VALID = ['tienda', 'marketplace', 'ambos'];
 
 export default function RegistroNegocioPage() {
   const [interest, setInterest] = useState('');
+  // Plan elegido en los botones "Empezar" de /negocios (?nivel=carta|app|app_google&plan=anual).
+  const [plan, setPlan] = useState<Plan | null>(null);
+  const [anual, setAnual] = useState(false);
 
   useEffect(() => {
     try {
-      const i = new URLSearchParams(window.location.search).get('i');
+      const q = new URLSearchParams(window.location.search);
+      const i = q.get('i');
       if (i && VALID.includes(i)) setInterest(i);
+      const n = PLANES.find((p) => p.id === q.get('nivel'));
+      if (n && !n.pronto) setPlan(n);
+      setAnual(q.get('plan') === 'anual');
     } catch { /* noop */ }
   }, []);
 
@@ -90,7 +98,7 @@ export default function RegistroNegocioPage() {
             Creamos tu catálogo y carta digital para que tus clientes vean todo y te pidan por WhatsApp.
           </p>
 
-          <RegistroNegocio interest={interest} setInterest={setInterest} />
+          <RegistroNegocio interest={interest} setInterest={setInterest} plan={plan} anual={anual} />
 
           <p style={{ marginTop: '16px', textAlign: 'center', fontSize: '11px', color: '#bbb', fontWeight: 500 }}>
             © {new Date().getFullYear()} BogaHub. ·{' '}

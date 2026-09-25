@@ -4,6 +4,7 @@ import { StoreConfig, BOGA_DEFAULT_ICON } from '@/lib/stores.config';
 import dynamic from 'next/dynamic';
 import React, { useState, useEffect } from 'react';
 import PixelEvent from '@/components/PixelEvent';
+import AvisoTiendaMovida from '@/components/AvisoTiendaMovida';
 
 // Lazy load templates so only the needed one is downloaded
 const SunsetTemplate = dynamic(() => import('@/templates/sunset/SunsetTemplate'));
@@ -143,6 +144,7 @@ export default function StoreRenderer({ store: initialStore }: Props) {
           content_ids: [store.slug],
         }}
       />
+      <AvisoTiendaMovida nombre={store.name} />
       {template}
       <a
         href="/negocios?ref=menu"

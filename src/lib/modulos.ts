@@ -69,14 +69,19 @@ export const ALCANCES: { id: AlcanceId; nombre: string; resumen: string }[] = [
   { id: 'app_google', nombre: 'App + Google', resumen: 'Suma que sus productos salgan en Google.' },
 ];
 
-export const CAPACIDADES_ALCANCE: { texto: string; desde: AlcanceId }[] = [
+// `nuevo`: fila que se sumó para igualar lo que promete /negocios; se marca en el admin para revisarla.
+export const CAPACIDADES_ALCANCE: { texto: string; desde: AlcanceId; nuevo?: boolean }[] = [
   { texto: 'Carta digital con link y QR', desde: 'carta' },
   { texto: 'Pedidos por WhatsApp (además quedan registrados en su panel de Pedidos)', desde: 'carta' },
   { texto: 'Página propia por producto (link directo para compartir y para Google)', desde: 'carta' },
   { texto: 'Activar o marcar Agotado cada producto (el agotado no se muestra en la carta)', desde: 'carta' },
   { texto: 'Botón para instalar la carta como app (en la dirección de Boga)', desde: 'carta' },
+  { texto: 'Link propio (bogahub.app/tu-negocio) para compartir en WhatsApp o Instagram', desde: 'carta', nuevo: true },
+  { texto: 'Pedidos directo a su WhatsApp, sin comisión: el dueño cobra directo, Boga no toca la plata', desde: 'carta', nuevo: true },
+  { texto: 'Plantillas listas para su rubro', desde: 'carta', nuevo: true },
+  { texto: 'Funciona en cualquier ciudad', desde: 'carta', nuevo: true },
   { texto: 'Subdominio propio (tienda.bogahub.app) con su app instalable', desde: 'app' },
-  { texto: 'Avisos push propios a quienes instalaron su app (1 campaña por semana)', desde: 'app' },
+  { texto: 'Avisos push propios a quienes instalaron su app (2 por semana, acumulables en el mes; paquetes extra de 4)', desde: 'app' },
   { texto: 'Productos en Google (Merchant Center)', desde: 'app_google' },
 ];
 
@@ -150,7 +155,7 @@ export const conMarcaBlanca = (modulos: Modulos | null | undefined) => modulos?.
 export const PASOS_PRECIO: { clave: string; etiqueta: string; ayuda: string }[] = [
   { clave: 'alcance:carta', etiqueta: 'Carta (base)', ayuda: 'Lo que paga toda tienda por tener su carta. Puede ser 0.' },
   { clave: 'alcance:app', etiqueta: 'App', ayuda: 'Se suma al tener subdominio propio y avisos.' },
-  { clave: 'alcance:app_google', etiqueta: 'Google', ayuda: 'Se suma al activar los productos en Google.' },
+  { clave: 'alcance:app_google', etiqueta: 'Google', ayuda: 'Se suma al activar los productos en Google (suelto: no incluye el precio de App).' },
   { clave: 'operacion:ventas', etiqueta: 'Ventas (POS)', ayuda: 'Se suma al activar la caja y las ventas.' },
   { clave: 'operacion:inventario', etiqueta: 'Inventario', ayuda: 'Se suma al activar el control de stock.' },
   { clave: 'extra:marca_blanca', etiqueta: 'Marca blanca', ayuda: 'Se suma al quitar el "Powered by Boga Market".' },
@@ -160,7 +165,8 @@ export const PASOS_PRECIO: { clave: string; etiqueta: string; ayuda: string }[] 
 export function pasosDeTienda(t: { modulos?: Modulos | null; subdominio_activo?: boolean | null }): string[] {
   const pasos = ['alcance:carta'];
   const google = t.modulos?.google === true;
-  if (t.subdominio_activo || google) pasos.push('alcance:app');
+  // Cada módulo se paga por sí solo: Google no arrastra el precio de App.
+  if (t.subdominio_activo) pasos.push('alcance:app');
   if (google) pasos.push('alcance:app_google');
   const op = nivelOperacion(t.modulos);
   if (op === 'ventas' || op === 'inventario' || op === 'sin-clasificar') pasos.push('operacion:ventas');

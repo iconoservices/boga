@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import webpush from 'web-push';
 import { clienteServicio, cabecerasCors, quienEs, puedeGestionar } from '@/lib/pushServidor';
-import { PUSH_LIMITES, CANAL_BOGA, dentroDeHorario } from '@/lib/pushLimites';
+import { PUSH_LIMITES, CANAL_BOGA, dentroDeHorario, cupoMensual, inicioDeMesLima } from '@/lib/pushLimites';
 
 // Campañas de notificaciones de una tienda (o del canal 'boga' de la plataforma).
 //   GET  ?store=<slug>  → estado: seguidores, cupo restante y últimas campañas.
@@ -15,16 +15,25 @@ export async function OPTIONS(request: Request) {
 }
 
 async function cupo(supabase: NonNullable<ReturnType<typeof clienteServicio>>, slug: string) {
-  const hace7d = new Date(Date.now() - 7 * 86_400_000).toISOString();
   const hace24h = new Date(Date.now() - 86_400_000).toISOString();
+  const desdeMes = inicioDeMesLima().toISOString();
   const cuenta = (desde: string) =>
     supabase.from('push_campanas').select('id', { count: 'exact', head: true }).eq('store_slug', slug).gte('creada_at', desde);
-  const [semana, dia] = await Promise.all([cuenta(hace7d), cuenta(hace24h)]);
-  const usadasSemana = semana.count ?? 0, usadasDia = dia.count ?? 0;
+  const [mes, dia, tienda, cred] = await Promise.all([
+    cuenta(desdeMes), cuenta(hace24h),
+    supabase.from('stores').select('subdominio_activo').eq('slug', slug).maybeSingle(),
+    // Sin la columna (SQL sin correr) el saldo es 0 y todo sigue funcionando con el cupo del plan.
+    supabase.from('stores').select('push_creditos').eq('slug', slug).maybeSingle(),
+  ]);
+  const usadasMes = mes.count ?? 0, usadasDia = dia.count ?? 0;
+  const cupoMes = cupoMensual(!!tienda.data?.subdominio_activo);
+  const creditos = cred.error ? 0 : Number((cred.data as { push_creditos?: number } | null)?.push_creditos) || 0;
+  const usaCredito = usadasMes >= cupoMes;
   return {
-    usadasSemana, usadasDia,
-    restantesSemana: Math.max(0, PUSH_LIMITES.maxPorSemana - usadasSemana),
-    puedeHoy: usadasDia < PUSH_LIMITES.maxPorDia && usadasSemana < PUSH_LIMITES.maxPorSemana,
+    usadasMes, usadasDia, cupoMes, creditos,
+    restantesMes: Math.max(0, cupoMes - usadasMes),
+    usaCredito,
+    puedeHoy: usadasDia < PUSH_LIMITES.maxPorDia && (!usaCredito || creditos > 0),
   };
 }
 
@@ -50,7 +59,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     seguidores: seguidores.count ?? 0,
     ultimas: ultimas.data ?? [],
-    limites: PUSH_LIMITES,
+    limites: { maxPorDia: PUSH_LIMITES.maxPorDia, horaDesde: PUSH_LIMITES.horaDesde, horaHasta: PUSH_LIMITES.horaHasta },
     dentroDeHorario: dentroDeHorario(),
     sinTope,
     ...q,
@@ -114,15 +123,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `Solo se envía entre las ${PUSH_LIMITES.horaDesde}:00 y las ${PUSH_LIMITES.horaHasta}:00 (hora de Lima).` }, { status: 409, headers: cors });
   }
   const sinTope = quien.esSuperadmin && PUSH_LIMITES.superadminSinTope;
+  let gastaCredito = false;
+  let creditosAntes = 0;
   if (!sinTope) {
     const q = await cupo(supabase, slug);
     if (!q.puedeHoy) {
       return NextResponse.json({
         error: q.usadasDia >= PUSH_LIMITES.maxPorDia
           ? 'Ya enviaste una campaña en las últimas 24 horas.'
-          : `Llegaste al límite de ${PUSH_LIMITES.maxPorSemana} campaña${PUSH_LIMITES.maxPorSemana === 1 ? '' : 's'} por semana.`,
+          : `Usaste los ${q.cupoMes} avisos de este mes. Se renuevan el día 1, o puedes comprar un paquete de avisos extra.`,
       }, { status: 429, headers: cors });
     }
+    gastaCredito = q.usaCredito;
+    creditosAntes = q.creditos;
   }
 
   // Suscriptores: los navegadores que siguen esta tienda
@@ -167,5 +180,7 @@ export async function POST(request: Request) {
   if (muertas.length) await supabase.from('push_subs').delete().in('endpoint', muertas);
 
   await supabase.from('push_campanas').insert({ store_slug: slug, titulo, cuerpo, url, enviada_por: quien.userId, enviados, fallidos });
+  // Fuera del cupo del mes: gasta 1 aviso del saldo comprado (solo si el saldo no cambió mientras tanto)
+  if (gastaCredito) await supabase.from('stores').update({ push_creditos: creditosAntes - 1 }).eq('slug', slug).eq('push_creditos', creditosAntes);
   return NextResponse.json({ ok: true, enviados, fallidos, limpiadas: muertas.length }, { headers: cors });
 }

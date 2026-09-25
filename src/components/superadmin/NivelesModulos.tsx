@@ -9,6 +9,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { CAPACIDADES_PLAN, MODULOS_PROXIMOS, MODULOS_VENTA, PLANES, REQUISITOS_MARKET, planIncluye } from '@/lib/planesNegocios';
 import {
   ALCANCES, CAPACIDADES_ALCANCE, CAPACIDADES_OPERACION, EXTRAS, LIMITES, OPERACIONES,
   alcanceIncluye, nivelAlcance, nivelOperacion, operacionIncluye,
@@ -17,10 +18,15 @@ import {
 
 type FilaTienda = { slug: string; name: string; modulos: Modulos | null; subdominio_activo: boolean | null };
 
+// Marca lo que se sumó para igualar /negocios y hay que revisar.
+function Nuevo() {
+  return <span className="ml-2 align-middle text-[9px] font-bold uppercase tracking-wider text-[#0058be] bg-[#d8e2ff] px-1.5 py-0.5 rounded">Nuevo</span>;
+}
+
 function Tabla<T extends string>({ titulo, niveles, capacidades, incluye }: {
   titulo: string;
   niveles: { id: T; nombre: string }[];
-  capacidades: { texto: string; desde: T }[];
+  capacidades: { texto: string; desde: T; nuevo?: boolean }[];
   incluye: (nivel: T, desde: T) => boolean;
 }) {
   return (
@@ -37,7 +43,7 @@ function Tabla<T extends string>({ titulo, niveles, capacidades, incluye }: {
         <tbody>
           {capacidades.map((c) => (
             <tr key={c.texto} className="border-t border-[#ecedf7]">
-              <td className="p-3 font-semibold text-[#191b23]">{c.texto}</td>
+              <td className="p-3 font-semibold text-[#191b23]">{c.texto}{c.nuevo && <Nuevo />}</td>
               {niveles.map((n) => (
                 <td key={n.id} className="p-3 text-center">
                   {incluye(n.id, c.desde) ? (
@@ -139,6 +145,96 @@ export default function NivelesModulos() {
             {sinClasificar.length} tienda(s) sin clasificar (anteriores a los módulos, con todo prendido): {sinClasificar.map((t) => t.name).join(', ')}.
           </p>
         )}
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-[#0058be]">Lo que se vende en /negocios <Nuevo /></p>
+        <p className="text-xs text-[#424754]">
+          Los planes son paquetes de módulos (siguen el eje de Alcance: Carta → App → App + Google) y cada módulo también se vende suelto.
+          Todo sale de <code>lib/planesNegocios.ts</code>: si cambias precio o texto ahí, cambia en la landing y aquí.
+          «Por definir» es un marcador de precio.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {PLANES.map((p) => (
+            <div key={p.id} className="p-4 bg-white border border-[#c2c6d6] rounded-md flex flex-col gap-1">
+              <h4 className="text-sm font-bold text-[#191b23] leading-tight">{p.nombre}{p.pronto && <span className="ml-2 text-[9px] font-bold uppercase tracking-wider text-[#5c4a00] bg-[#fff8e1] border border-[#f5c518]/50 px-1.5 py-0.5 rounded align-middle">Aún no existe</span>}</h4>
+              <p className="text-[11px] font-bold text-[#0058be]">
+                {p.mes.precio}{p.mes.periodo}{p.anio.periodo && ` · ${p.anio.precio}${p.anio.periodo}`}
+              </p>
+              <p className="text-[10px] text-[#727785] font-semibold">{p.mes.nota}</p>
+              <p className="text-xs text-[#424754] mt-1">{p.body}</p>
+            </div>
+          ))}
+        </div>
+        <div className="bg-white border border-[#c2c6d6] rounded-md overflow-x-auto">
+          <table className="w-full text-left text-xs min-w-[520px]">
+            <thead>
+              <tr className="bg-[#f2f3fd] text-[10px] uppercase tracking-wider text-[#424754]">
+                <th className="p-3 font-bold">Qué trae el plan</th>
+                {PLANES.map((p) => <th key={p.id} className="p-3 font-bold text-center w-28">{p.nombre}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {CAPACIDADES_PLAN.map((c) => (
+                <tr key={c.texto} className="border-t border-[#ecedf7]">
+                  <td className="p-3 font-semibold text-[#191b23]">
+                    {c.texto}{c.nuevo && <Nuevo />}
+                    {c.estado === 'falta' && (
+                      <span className="ml-2 align-middle text-[9px] font-bold uppercase tracking-wider text-[#5c4a00] bg-[#fff8e1] border border-[#f5c518]/50 px-1.5 py-0.5 rounded">Aún no existe</span>
+                    )}
+                  </td>
+                  {PLANES.map((p) => (
+                    <td key={p.id} className="p-3 text-center">
+                      {planIncluye(p.id, c.desde)
+                        ? <span className="material-symbols-outlined text-[18px] text-[#16a34a]">check_circle</span>
+                        : <span className="text-[#c2c6d6]">—</span>}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="bg-white border border-[#c2c6d6] rounded-md overflow-x-auto">
+          <table className="w-full text-left text-xs min-w-[520px]">
+            <thead>
+              <tr className="bg-[#f2f3fd] text-[10px] uppercase tracking-wider text-[#424754]">
+                <th className="p-3 font-bold">Módulo (se compra suelto)</th>
+                <th className="p-3 font-bold w-36">Precio suelto</th>
+                <th className="p-3 font-bold w-48">Ya viene en</th>
+              </tr>
+            </thead>
+            <tbody>
+              {MODULOS_VENTA.flatMap((g) => g.items).map((m) => (
+                <tr key={m.id} className="border-t border-[#ecedf7]">
+                  <td className="p-3 font-semibold text-[#191b23]">
+                    {m.nombre}<Nuevo />
+                    {m.pronto && <span className="ml-2 align-middle text-[9px] font-bold uppercase tracking-wider text-[#5c4a00] bg-[#fff8e1] border border-[#f5c518]/50 px-1.5 py-0.5 rounded">Aún no existe</span>}
+                    {m.promo && <p className="text-[10px] text-[#727785] font-semibold mt-0.5">{m.promo}</p>}
+                  </td>
+                  <td className="p-3 text-[#424754]">{m.precio}{m.precio !== 'Por definir' && (m.unidad ?? ' /mes')}</td>
+                  <td className="p-3 text-[#424754]">{m.incluidoEn.length ? m.incluidoEn.map((id) => PLANES.find((p) => p.id === id)?.nombre).join(', ') : '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="p-4 bg-white border border-[#c2c6d6] rounded-md">
+          <h4 className="text-xs font-bold text-[#191b23] mb-2">Requisitos para entrar al Market (promo de lanzamiento)<Nuevo /></h4>
+          <ul className="list-disc pl-4 text-xs text-[#424754] space-y-1">
+            {REQUISITOS_MARKET.map((r) => <li key={r}>{r}</li>)}
+          </ul>
+          <p className="text-[10px] text-[#727785] font-semibold mt-2">Se revisan a mano; lo apagas por tienda con el interruptor «marketplace» del editor.</p>
+        </div>
+        <div className="p-4 bg-white border border-[#c2c6d6] rounded-md">
+          <h4 className="text-xs font-bold text-[#191b23] mb-2">Módulos por venir (aún no existen)<Nuevo /></h4>
+          <ul className="list-disc pl-4 text-xs text-[#424754] space-y-1">
+            {MODULOS_PROXIMOS.map((m) => <li key={m.nombre}><b>{m.nombre}:</b> {m.desc}</li>)}
+          </ul>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

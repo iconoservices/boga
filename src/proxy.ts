@@ -62,7 +62,7 @@ export async function proxy(request: NextRequest) {
   const tienda = tiendaDeSubdominio(request.headers.get('host') || '');
   if (tienda) {
     const { pathname, search } = request.nextUrl;
-    if (!(await subdominioActivo(tienda))) return NextResponse.redirect(`${SITIO}/${tienda}`);   // sin plan de pago
+    if (!(await subdominioActivo(tienda))) return NextResponse.redirect(`${SITIO}/${tienda}?desde=app`);   // sin plan de pago (la tienda muestra un aviso)
     const primero = pathname.split('/')[1] || '';
     const esArchivo = /\.[a-z0-9]+$/i.test(pathname);
     const esInterno = primero === 'api' || primero === '_next';

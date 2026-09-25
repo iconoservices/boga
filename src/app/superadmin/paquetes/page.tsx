@@ -474,8 +474,9 @@ function PaquetesContenido() {
               {/* Niveles reales: los que prenden o apagan módulos en el panel del dueño */}
               <NivelesModulos />
 
-              {/* Catálogo ordenado por qué tan real es cada módulo */}
-              <CatalogoOrdenado modulos={modules} />
+              {/* Catálogo: solo lo que ya funciona (o funciona a medias). Lo no construido sigue en
+                  INITIAL_MODULES pero no se muestra, para no vender lo que no existe. */}
+              <CatalogoOrdenado modulos={modules.filter((m) => m.buildStatus !== 'no_construido')} />
 
               {/* Lo anterior: paquetes de muestra (Starter/Pro/Enterprise), sin efecto real */}
               <details className="group border border-[#c2c6d6] rounded-md bg-white">

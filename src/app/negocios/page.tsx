@@ -20,8 +20,8 @@ const STEPS = [
 
 const FEATURES = [
   { icon: 'storefront',   title: 'Tu catálogo propio',           body: 'Tu propia página de pedidos para compartir donde quieras. Gestionas tus productos, pedidos y clientes sin depender de nadie.' },
-  { icon: 'extension',    title: 'Módulos que sumas al crecer',  body: 'Empieza con lo básico y agrega fidelización, facturación electrónica, inventario o notificaciones cuando lo necesites.' },
-  { icon: 'military_tech',title: 'Fidelización real',            body: 'Puntos, niveles y notificaciones automáticas para que tus clientes vuelvan — sin que tengas que acordarte de nada.' },
+  { icon: 'extension',    title: 'Módulos que sumas al crecer',  body: 'Empieza con lo básico y suma tu propia app, la caja de ventas o el inventario cuando lo necesites.' },
+  { icon: 'point_of_sale',  title: 'También en tu local',          body: 'Cobra con boleta en tu caja y deja que el stock se descuente solo con cada venta y cada pedido de la carta.' },
   { icon: 'travel_explore',title: 'Más gente de tu ciudad te encuentra', body: 'Activa el Marketplace de BogaHub cuando quieras y tus productos aparecen frente a clientes de tu zona que aún no te conocían.' },
 ];
 
@@ -87,7 +87,7 @@ export default function NegociosPage() {
                 Digitaliza tu negocio con <span className="text-primary">BogaHub</span>
               </h1>
               <p className="text-secondary font-body-lg text-base md:text-lg max-w-[480px]">
-                Tu propio catálogo online, pedidos por WhatsApp y fidelización de clientes.
+                Tu propio catálogo online y pedidos por WhatsApp, sin comisión.
                 Y cuando Boga Market abra en tu ciudad, entras al grupo de comercios locales
                 donde te encuentra gente nueva.
               </p>
