@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { pedirDatosCliente } from '@/components/pedirDatosCliente';
 import { StoreConfig } from '@/lib/stores.config';
 import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { getDemoProducts } from '@/lib/templates.config';
@@ -184,12 +185,14 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
   const total = carrito.reduce((acc, i) => acc + i.producto.price * i.cantidad, 0);
   const unidades = carrito.reduce((acc, i) => acc + i.cantidad, 0);
 
-  const enviarPorWhatsApp = () => {
+  const enviarPorWhatsApp = async () => {
+    const cliente = await pedirDatosCliente({ color: store.theme.primary });
+    if (!cliente) return;
     const lineas = carrito.map((i) => `- ${i.producto.name} (x${i.cantidad}): S/ ${(i.producto.price * i.cantidad).toFixed(2)}`).join('\n');
     enviarPedidoPorWhatsApp(
       store,
-      `*Pedido de ${store.name}*\n-------------------------\n${lineas}\n-------------------------\n*Total:* S/ ${total.toFixed(2)}`,
-      { items: carrito.map((i) => ({ id: String(i.producto.id), quantity: i.cantidad })) },
+      `*Pedido de ${store.name}*\n-------------------------\n${lineas}\n-------------------------\n*Total:* S/ ${total.toFixed(2)}\n*Cliente:* ${cliente.nombre} (${cliente.telefono})`,
+      { items: carrito.map((i) => ({ id: String(i.producto.id), quantity: i.cantidad })), cliente },
     );
   };
 

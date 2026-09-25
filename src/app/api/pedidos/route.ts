@@ -14,7 +14,8 @@ import { moverStock } from '@/lib/stock';
 
 export const dynamic = 'force-dynamic';
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// products.id es texto: casi todos son UUID, pero los de Delva son números.
+const ID_VALIDO = /^[A-Za-z0-9_-]{1,64}$/;
 const SLUG = /^[a-z0-9-]{1,80}$/;
 
 // Freno simple por IP (en memoria; sirve de defensa básica contra el spam, no es infalible).
@@ -51,7 +52,7 @@ export async function POST(request: Request) {
   for (const l of (Array.isArray(body?.items) ? body.items.slice(0, 60) : []) as { id?: unknown; quantity?: unknown }[]) {
     const id = texto(l?.id, 60);
     const q = Math.floor(Number(l?.quantity));
-    if (!UUID.test(id) || !(q >= 1)) continue;
+    if (!ID_VALIDO.test(id) || !(q >= 1)) continue;
     pedidas.set(id, Math.min(99, (pedidas.get(id) ?? 0) + Math.min(q, 99)));
   }
   if (pedidas.size === 0) return NextResponse.json({ ok: false, motivo: 'sin_productos' });
@@ -84,7 +85,7 @@ export async function POST(request: Request) {
     .insert({
       store: slug,
       customer_name: texto(cliente?.nombre, 80) || 'Cliente de la carta',
-      customer_phone: texto(cliente?.telefono, 30) || null,
+      customer_phone: texto(cliente?.telefono, 30).replace(/\D/g, '') || null,
       customer_address: entrega === 'delivery' ? (direccion || 'Delivery (sin dirección)') : 'Recojo en tienda',
       items: lineas.map(({ id, name, price, quantity }) => ({ id, name, price, quantity })),
       total_amount: lineas.reduce((s, l) => s + l.price * l.quantity, 0),

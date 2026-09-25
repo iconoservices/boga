@@ -99,7 +99,7 @@ export function useCatalogo(store: StoreConfig) {
     });
   const vaciarCarrito = () => setCart({});
 
-  const confirmarPedido = (datos: { nombre: string; entrega: 'delivery' | 'recojo'; direccion: string }) => {
+  const confirmarPedido = (datos: { nombre: string; telefono: string; entrega: 'delivery' | 'recojo'; direccion: string }) => {
     const lineas = cartItems
       .map((l) => `• ${l.qty}x ${l.producto.name} — ${soles(l.producto.price * l.qty)}`)
       .join('\n');
@@ -108,10 +108,10 @@ export function useCatalogo(store: StoreConfig) {
       : 'Recojo en tienda';
     enviarPedidoPorWhatsApp(
       store,
-      `¡Hola ${store.name}! Soy ${datos.nombre}. Quiero hacer este pedido:\n\n${lineas}\n\nTotal: ${soles(subtotal)}\n\n${entregaTexto}`,
+      `¡Hola ${store.name}! Soy ${datos.nombre} (${datos.telefono}). Quiero hacer este pedido:\n\n${lineas}\n\nTotal: ${soles(subtotal)}\n\n${entregaTexto}`,
       {
         items: cartItems.map((l) => ({ id: l.producto.id, quantity: l.qty })),
-        cliente: { nombre: datos.nombre, entrega: datos.entrega, direccion: datos.direccion },
+        cliente: { nombre: datos.nombre, telefono: datos.telefono, entrega: datos.entrega, direccion: datos.direccion },
       },
     );
   };

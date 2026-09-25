@@ -3,6 +3,15 @@ import { createClient } from '@supabase/supabase-js';
 
 export const revalidate = 3600; // Refrescar cada hora
 
+// Feed de productos para Google Merchant Center.
+//
+// Solo entran las tiendas que tienen prendido el módulo "google" (stores.modulos.google, lo prende
+// el superadmin: es un servicio de pago). Las demás, y los productos de las demos de plantilla,
+// no salen en Google.
+//
+// El link de cada producto es su página propia: /<tienda>/producto/<id> (las rutas /producto/<id> que
+// tenía antes el feed daban 404 y Google rechaza esos artículos).
+
 export async function GET() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -13,24 +22,28 @@ export async function GET() {
 
   const supabase = createClient(supabaseUrl, supabaseKey);
 
-  // 1. Obtener todas las tiendas para resolver URLs correctas (subdominio o ruta)
-  const { data: stores } = await supabase
+  // 1. Tiendas con el módulo de Google prendido (resuelve también la URL: subdominio o ruta)
+  const { data: stores, error: storesError } = await supabase
     .from('stores')
-    .select('id, name, slug, subdominio_activo, external_url');
+    .select('slug, name, subdominio_activo')
+    .eq('status', 'active')
+    .filter('modulos->>google', 'eq', 'true');
 
-  const storeMap = new Map();
-  if (stores) {
-    stores.forEach((s) => {
-      storeMap.set(s.slug, s);
-      storeMap.set(s.id, s);
-    });
+  if (storesError || !stores) {
+    console.error('Error cargando tiendas para feed:', storesError);
+    return new NextResponse('Error cargando tiendas', { status: 500 });
   }
 
-  // 2. Obtener todos los productos activos (status != Inactivo)
-  const { data: products, error } = await supabase
-    .from('products')
-    .select('*')
-    .neq('status', 'Inactivo');
+  const storeMap = new Map(stores.map((s) => [s.slug, s]));
+
+  // 2. Productos de esas tiendas que no estén inactivos
+  const { data: products, error } = storeMap.size === 0
+    ? { data: [], error: null }
+    : await supabase
+        .from('products')
+        .select('id, name, description, price, image, store, status, stock')
+        .in('store', Array.from(storeMap.keys()))
+        .neq('status', 'Inactivo');
 
   if (error || !products) {
     console.error('Error cargando productos para feed:', error);
@@ -48,21 +61,11 @@ export async function GET() {
 
   const xmlItems = products
     .map((p) => {
-      const storeInfo = storeMap.get(p.store);
-      let storeBrand = 'Boga Hub';
-      let productUrl = `https://bogahub.app/producto/${p.slug || p.id}`;
-
-      if (storeInfo) {
-        storeBrand = storeInfo.name || storeInfo.slug;
-        if (storeInfo.subdominio_activo) {
-          productUrl = `https://${storeInfo.slug}.bogahub.app/producto/${p.slug || p.id}`;
-        } else {
-          productUrl = `https://bogahub.app/${storeInfo.slug}/producto/${p.slug || p.id}`;
-        }
-      } else if (p.store === 'delva') {
-        storeBrand = 'DELVA';
-        productUrl = `https://delva.bogahub.app/producto/${p.slug || p.id}`;
-      }
+      const storeInfo = storeMap.get(p.store)!;
+      const storeBrand = storeInfo.name || storeInfo.slug;
+      const productUrl = storeInfo.subdominio_activo
+        ? `https://${storeInfo.slug}.bogahub.app/${storeInfo.slug}/producto/${p.id}`
+        : `https://bogahub.app/${storeInfo.slug}/producto/${p.id}`;
 
       let imageUrl = p.image || '';
       if (!imageUrl || (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://'))) {
@@ -81,7 +84,7 @@ export async function GET() {
       <g:id>${escapeXml(String(p.id))}</g:id>
       <g:title>${escapeXml(p.name)}</g:title>
       <g:description>${escapeXml(desc)}</g:description>
-      <g:link>${productUrl}</g:link>
+      <g:link>${escapeXml(productUrl)}</g:link>
       <g:image_link>${escapeXml(imageUrl)}</g:image_link>
       <g:brand>${escapeXml(storeBrand)}</g:brand>
       <g:condition>new</g:condition>
@@ -97,7 +100,7 @@ export async function GET() {
   <channel>
     <title>Boga Hub Marketplace - Catálogo de Productos</title>
     <link>https://bogahub.app</link>
-    <description>Catálogo unificado de tiendas y productos de Boga Hub y Delva</description>
+    <description>Catálogo de las tiendas de Boga Hub con el servicio de Google activado</description>
 ${xmlItems}
   </channel>
 </rss>`;

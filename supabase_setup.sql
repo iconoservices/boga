@@ -1526,7 +1526,7 @@ CREATE TABLE IF NOT EXISTS public.stock_movements (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
   store TEXT NOT NULL,
-  product_id UUID,
+  product_id TEXT,
   product_name TEXT NOT NULL,
   delta INTEGER NOT NULL,
   stock_despues INTEGER NOT NULL,
@@ -1615,3 +1615,6 @@ USING (
   OR EXISTS (SELECT 1 FROM public.stores s WHERE s.slug = store_pagos.store AND s.user_id = auth.uid())
 );
 CREATE POLICY "store_pagos: superadmin escribe" ON public.store_pagos FOR ALL USING (public.is_superadmin()) WITH CHECK (public.is_superadmin());
+
+-- En la base products.id es texto (UUID en casi todos, números en los de Delva): el historial también.
+ALTER TABLE public.stock_movements ALTER COLUMN product_id TYPE TEXT USING product_id::text;

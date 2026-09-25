@@ -9,12 +9,13 @@ export interface DatosPedido {
   cliente?: { nombre?: string; telefono?: string; direccion?: string; entrega?: 'delivery' | 'recojo' };
 }
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// products.id es texto (UUID o número). Los ejemplos de plantilla (demo-…) no existen en la base.
+const ID_VALIDO = /^[A-Za-z0-9_-]{1,64}$/;
 
 /** Guarda el pedido sin esperar respuesta y sin molestar al cliente si falla. */
 export function registrarPedido(slug: string, pedido: DatosPedido): void {
   try {
-    const items = pedido.items.filter((i) => UUID.test(String(i.id)) && i.quantity > 0);
+    const items = pedido.items.filter((i) => ID_VALIDO.test(String(i.id)) && !String(i.id).startsWith('demo-') && i.quantity > 0);
     if (!slug || items.length === 0) return;
     void fetch('/api/pedidos', {
       method: 'POST',

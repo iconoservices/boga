@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
+import { guardarCliente, leerCliente, normalizarCelular } from '@/lib/cliente';
 import type { StoreTheme } from '@/lib/templates.config';
 import { TXT, ICON, soles, type Producto, type Categoria } from './tokens';
 
@@ -236,7 +237,7 @@ export function CartPanel({
   onAdd: (p: Producto) => void;
   onRemove: (id: string) => void;
   onVaciar: () => void;
-  onConfirmar: (datos: { nombre: string; entrega: 'delivery' | 'recojo'; direccion: string }) => void;
+  onConfirmar: (datos: { nombre: string; telefono: string; entrega: 'delivery' | 'recojo'; direccion: string }) => void;
   onIrAlMenu: () => void;
   whatsappVisible: boolean;
 }) {
@@ -246,7 +247,20 @@ export function CartPanel({
   const [nombre, setNombre] = React.useState('');
   const [entrega, setEntrega] = React.useState<'delivery' | 'recojo'>('delivery');
   const [direccion, setDireccion] = React.useState('');
+  const [celular, setCelular] = React.useState('');
 
+  // Si ya pidió antes, se le rellenan el nombre y el celular (se leen recién en el navegador, no en el servidor).
+  React.useEffect(() => {
+    const previo = leerCliente();
+    if (previo) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setNombre((n) => n || previo.nombre);
+      setCelular((c) => c || previo.telefono);
+    }
+  }, []);
+
+  const telefono = normalizarCelular(celular);
+  const faltaCelular = !telefono;
   const faltaNombre = !nombre.trim();
   const faltaDireccion = entrega === 'delivery' && !direccion.trim();
 
@@ -351,6 +365,22 @@ export function CartPanel({
               />
             </div>
 
+            <div>
+              <label htmlFor="carrito-celular" className={`block ${TXT.micro} font-bold uppercase mb-1`} style={{ color: t.onSurfaceVariant }}>
+                Tu celular
+              </label>
+              <input
+                id="carrito-celular"
+                type="tel"
+                inputMode="numeric"
+                value={celular}
+                onChange={(e) => setCelular(e.target.value)}
+                placeholder="9XX XXX XXX (para avisarte de tu pedido)"
+                className={`w-full border rounded-xl px-3 py-2.5 ${TXT.small} font-semibold focus:outline-none`}
+                style={{ borderColor: `${t.outlineVariant}80`, background: t.surface, color: t.onSurface }}
+              />
+            </div>
+
             <div className="flex gap-2">
               {(['delivery', 'recojo'] as const).map((opcion) => (
                 <button
@@ -388,8 +418,12 @@ export function CartPanel({
           </div>
 
           <button
-            onClick={() => onConfirmar({ nombre: nombre.trim(), entrega, direccion: direccion.trim() })}
-            disabled={faltaNombre || faltaDireccion}
+            onClick={() => {
+              if (!telefono) return;
+              guardarCliente({ nombre: nombre.trim(), telefono });
+              onConfirmar({ nombre: nombre.trim(), telefono, entrega, direccion: direccion.trim() });
+            }}
+            disabled={faltaNombre || faltaCelular || faltaDireccion}
             className={`w-full py-4 rounded-full font-bold ${TXT.lead} shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 uppercase disabled:opacity-50 disabled:pointer-events-none`}
             style={{ backgroundColor: t.primary, color: t.onPrimary }}
           >

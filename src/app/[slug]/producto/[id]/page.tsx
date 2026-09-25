@@ -16,11 +16,12 @@ export const revalidate = 300;
 
 type Params = { slug: string; id: string };
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// products.id es texto: casi todos son UUID, pero los de Delva son números.
+const ID_VALIDO = /^[A-Za-z0-9_-]{1,64}$/;
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app').replace(/\/$/, '');
 
 const cargar = cache(async (slug: string, id: string) => {
-  if (!UUID.test(id)) return null;
+  if (!ID_VALIDO.test(id)) return null;
   const [{ data: tienda }, { data: producto }] = await Promise.all([
     supabase
       .from('stores')

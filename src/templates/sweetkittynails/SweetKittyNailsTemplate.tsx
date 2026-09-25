@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { pedirDatosCliente } from '@/components/pedirDatosCliente';
 import { conMarcaBlanca } from '@/lib/modulos';
 import { StoreConfig } from '@/lib/stores.config';
 import { fetchProductosDeTienda } from '@/lib/catalogo';
@@ -178,12 +179,15 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
   };
 
   // WhatsApp integrations
-  const sendCartToWhatsApp = () => {
+  const sendCartToWhatsApp = async () => {
+    const cliente = await pedirDatosCliente({ color: store.theme.primary });
+    if (!cliente) return;
     const header = `*Pedido de ${store.name}*\n-------------------------\n`;
     const itemsText = cart.map(item => `- ${item.product.title} (x${item.quantity}): S/ ${(item.product.price * item.quantity).toFixed(2)}`).join('\n');
-    const footer = `\n-------------------------\n*Total:* S/ ${cartTotal.toFixed(2)}`;
+    const footer = `\n-------------------------\n*Total:* S/ ${cartTotal.toFixed(2)}\n*Cliente:* ${cliente.nombre} (${cliente.telefono})`;
     enviarPedidoPorWhatsApp(store, header + itemsText + footer, {
       items: cart.map((item) => ({ id: String(item.product.id), quantity: item.quantity })),
+      cliente,
     });
   };
 
