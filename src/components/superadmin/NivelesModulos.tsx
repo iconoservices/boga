@@ -215,7 +215,10 @@ export default function NivelesModulos() {
                     {m.promo && <p className="text-[10px] text-[#727785] font-semibold mt-0.5">{m.promo}</p>}
                   </td>
                   <td className="p-3 text-[#424754]">{m.precio}{m.precio !== 'Por definir' && (m.unidad ?? ' /mes')}</td>
-                  <td className="p-3 text-[#424754]">{m.incluidoEn.length ? m.incluidoEn.map((id) => PLANES.find((p) => p.id === id)?.nombre).join(', ') : '—'}</td>
+                  <td className="p-3 text-[#424754]">
+                    {m.incluidoEn.length ? m.incluidoEn.map((id) => PLANES.find((p) => p.id === id)?.nombre).join(', ') : '—'}
+                    {m.gratisEnLanzamiento && <span className="block text-[10px] font-semibold text-[#0058be]">Incluido en el lanzamiento: {m.gratisEnLanzamiento.map((id) => PLANES.find((p) => p.id === id)?.nombre).join(', ')}</span>}
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -123,7 +123,7 @@ export default function NegociosPlanes() {
             <thead>
               <tr className="bg-surface-container text-[11px] uppercase tracking-wide text-secondary">
                 <th className="p-3 font-bold">Qué incluye</th>
-                {PLANES.map((p) => <th key={p.id} className="p-3 font-bold text-center w-24">{p.nombre}</th>)}
+                {PLANES.map((p) => <th key={p.id} className="p-3 font-bold text-center w-28">{p.nombre}</th>)}
               </tr>
             </thead>
             <tbody>
@@ -162,7 +162,9 @@ export default function NegociosPlanes() {
                     <td key={p.id} className="p-3 text-center">
                       {m.incluidoEn.includes(p.id)
                         ? <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>
-                        : <span className="text-[11px] font-bold text-secondary">Módulo</span>}
+                        : m.gratisEnLanzamiento?.includes(p.id)
+                          ? <span className="text-[11px] font-bold text-primary leading-tight block">Incluido en el lanzamiento</span>
+                          : <span className="text-[11px] font-bold text-secondary">Módulo</span>}
                     </td>
                   ))}
                 </tr>

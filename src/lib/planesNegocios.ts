@@ -76,6 +76,8 @@ export type ModuloVenta = {
   body: string;
   precio: string;
   promo?: string;
+  /** Planes que lo traen SIN COSTO solo por el lanzamiento (después se paga como módulo). */
+  gratisEnLanzamiento?: PlanId[];
   /** Cómo se lee el precio; por defecto '/mes'. */
   unidad?: string;
   incluidoEn: PlanId[];
@@ -86,9 +88,9 @@ export const MODULOS_VENTA: { grupo: string; items: ModuloVenta[] }[] = [
   {
     grupo: 'Llega a más gente',
     items: [
-      { id: 'app', icon: 'install_mobile', nombre: 'Tu propia app', body: 'Tu dirección propia (tunegocio.bogahub.app), instalable en el celular de tus clientes, con avisos a quienes la instalan.', precio: POR_DEFINIR, incluidoEn: ['app', 'app_google'] },
+      { id: 'app', icon: 'install_mobile', nombre: 'Tu propia app', body: 'Tu dirección propia (tunegocio.bogahub.app), instalable en el celular de tus clientes, con avisos a quienes la instalan.', precio: POR_DEFINIR, promo: 'Lanzamiento: instalar tu carta como app va incluido en Carta', gratisEnLanzamiento: ['carta'], incluidoEn: ['app', 'app_google'] },
       { id: 'google', icon: 'shopping_bag', nombre: 'Tus productos en Google', body: 'Tus productos aparecen cuando la gente los busca en Google.', precio: POR_DEFINIR, incluidoEn: ['app_google'], pronto: true },
-      { id: 'market', icon: 'travel_explore', nombre: 'Boga Market', body: 'Tu negocio aparece en el Market de tu ciudad, junto a otros comercios locales, frente a gente que todavía no te conoce. Solo donde BogaHub opera.', precio: POR_DEFINIR, promo: 'Lanzamiento: incluido sin costo si tu tienda cumple los requisitos', incluidoEn: [] },
+      { id: 'market', icon: 'travel_explore', nombre: 'Boga Market', body: 'Tu negocio aparece en el Market de tu ciudad, junto a otros comercios locales, frente a gente que todavía no te conoce. Solo donde BogaHub opera.', precio: POR_DEFINIR, promo: 'Lanzamiento: incluido sin costo si tu tienda cumple los requisitos', gratisEnLanzamiento: ['carta', 'app', 'app_google'], incluidoEn: [] },
     ],
   },
   {
@@ -122,7 +124,7 @@ export const CAPACIDADES_PLAN: { texto: string; desde: PlanId; estado: 'hecho' |
   { texto: 'Plantillas listas para tu rubro', desde: 'carta', estado: 'hecho', nuevo: true },
   { texto: 'Funciona en cualquier ciudad', desde: 'carta', estado: 'hecho', nuevo: true },
   { texto: 'Subdominio propio (tunegocio.bogahub.app)', desde: 'app', estado: 'hecho', nuevo: true },
-  { texto: 'App instalable en el celular de tus clientes', desde: 'app', estado: 'hecho', nuevo: true },
+  { texto: 'App instalable en el celular de tus clientes', desde: 'carta', estado: 'hecho', nuevo: true, valor: { carta: 'Incluido en el lanzamiento' } },
   { texto: 'Avisos a tus clientes (los que no uses se acumulan en el mes)', desde: 'app', estado: 'hecho', nuevo: true, valor: { app: '2 por semana', app_google: '2 por semana' } },
   { texto: 'Productos en Google', desde: 'app_google', estado: 'falta', nuevo: true },
 ];
