@@ -8,6 +8,8 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { CIUDADES } from '@/lib/ciudades';
+import SelectorHorario from '@/components/SelectorHorario';
+import { tieneHorario, type Horario } from '@/lib/horario';
 
 const VERDE = '#00875A';
 const TIPOS = ['Mototaxi', 'Auto', 'Moto'];
@@ -21,7 +23,7 @@ export default function RegistroChoferPage() {
   const [zona, setZona] = useState('');
   const [ciudad, setCiudad] = useState('');
   const [experiencia, setExperiencia] = useState('');
-  const [horario, setHorario] = useState('');
+  const [horario, setHorario] = useState<Horario>({});
   const [mensaje, setMensaje] = useState('');
   const [fotoPerfil, setFotoPerfil] = useState('');
   const [fotoVehiculo, setFotoVehiculo] = useState('');
@@ -68,6 +70,7 @@ export default function RegistroChoferPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!tieneHorario(horario)) { setError('Marca los días que trabajas y tu hora de inicio y fin.'); return; }
     setLoading(true);
     setError('');
 
@@ -78,7 +81,7 @@ export default function RegistroChoferPage() {
         body: JSON.stringify({
           nombre, dni, whatsapp, tipo: tipo || null, placa: placa || null,
           zona: zona || null, ciudad: ciudad || null,
-          experiencia: experiencia || null, horario: horario || null,
+          experiencia: experiencia || null, horario_semana: horario,
           mensaje: mensaje || null,
           foto_perfil: fotoPerfil || null,
           foto_vehiculo: fotoVehiculo || null,
@@ -207,8 +210,11 @@ export default function RegistroChoferPage() {
                   <input type="text" value={zona} onChange={(e) => setZona(e.target.value)} placeholder="Comité 14, Transportes Ucayali…" style={input} onFocus={onFocus} onBlur={onBlur} />
                 </div>
                 <div style={{ marginBottom: '14px' }}>
-                  <label style={label}>Horario disponible</label>
-                  <input required type="text" value={horario} onChange={(e) => setHorario(e.target.value)} placeholder="Lun–Sáb 6am–9pm · Domingos mañanas" style={input} onFocus={onFocus} onBlur={onBlur} />
+                  <label style={label}>Tu horario</label>
+                  <p style={{ fontSize: '11px', color: '#7a8d85', marginBottom: '8px', lineHeight: 1.4 }}>
+                    Con esto la lista muestra sola quién está disponible ahora. Fuera de tu horario apareces apagado, con la hora en que vuelves.
+                  </p>
+                  <SelectorHorario value={horario} onChange={setHorario} acento={VERDE} />
                 </div>
 
                 {/* Subida de fotos opcionales */}

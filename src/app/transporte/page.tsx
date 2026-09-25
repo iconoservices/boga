@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
 import { fetchChoferes, type Chofer } from '@/lib/drivers';
+import { disponibleAhora, proximaApertura, resumenHorario } from '@/lib/horario';
 
 // Taxi Seguro: por ahora es SOLO UN DIRECTORIO de choferes verificados
 // (mototaxi / auto / moto). No hay reserva ni pago dentro de la app todavía —
@@ -51,13 +52,39 @@ const PLANES_TRANSPORTE = [
   },
 ];
 
-function DriverCard({ c }: { c: Chofer }) {
+function DriverCard({ c, ahora }: { c: Chofer; ahora: Date }) {
+  // true = dentro de su horario ahora; false = fuera de horario; null = todavía no cargó horario (se ve normal).
+  const estado = disponibleAhora(c.horario, ahora);
+  const cerrado = estado === false;
+  const vuelve = cerrado ? proximaApertura(c.horario, ahora) : null;
+  const horarioTxt = resumenHorario(c.horario);
   const waText = encodeURIComponent(
     `Hola ${c.nombre.split(' ')[0]}, lo/la vi en BogaHub · Taxi Seguro. ¿Está libre para una carrera?\nOrigen: \nDestino: `
   );
 
   return (
-    <article className="bg-white rounded-2xl border border-surface-container-highest shadow-[0_15px_15px_rgba(0,0,0,0.04)] p-4 lg:p-5 flex flex-col gap-3.5 hover:shadow-lg transition-shadow">
+    <article className={`bg-white rounded-2xl border border-surface-container-highest shadow-[0_15px_15px_rgba(0,0,0,0.04)] p-4 lg:p-5 flex flex-col gap-3.5 hover:shadow-lg transition-shadow ${cerrado ? 'opacity-70 grayscale' : ''}`}>
+      {/* Disponibilidad (sale sola según el horario que puso el chofer, en hora de Pucallpa) */}
+      {estado !== null && (
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 -mb-1">
+          {estado ? (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold" style={{ backgroundColor: VERDE_SOFT, color: VERDE }}>
+              <span className="relative flex w-2 h-2">
+                <span className="absolute inline-flex w-full h-full rounded-full opacity-60 animate-ping" style={{ backgroundColor: VERDE }} />
+                <span className="relative inline-flex w-2 h-2 rounded-full" style={{ backgroundColor: VERDE }} />
+              </span>
+              Disponible ahora
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-surface-container-high text-secondary">
+              <span className="material-symbols-outlined text-[13px]">bedtime</span>
+              Fuera de horario{vuelve ? ` · vuelve ${vuelve}` : ''}
+            </span>
+          )}
+          {horarioTxt && <span className="text-[11px] text-secondary font-medium">🕒 {horarioTxt}</span>}
+        </div>
+      )}
+
       {/* Perfil + placa */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
@@ -145,10 +172,12 @@ function DriverCard({ c }: { c: Chofer }) {
           href={`https://wa.me/${c.tel}?text=${waText}`}
           target="_blank"
           rel="noreferrer"
-          className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-primary text-on-primary font-label-md text-[12px] shadow-sm hover:bg-primary-container active:scale-95 transition-all"
+          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-label-md text-[12px] shadow-sm active:scale-95 transition-all ${
+            cerrado ? 'bg-surface-container-high text-on-surface hover:bg-surface-container-highest' : 'bg-primary text-on-primary hover:bg-primary-container'
+          }`}
         >
           <span className="material-symbols-outlined text-[17px]" style={{ fontVariationSettings: "'FILL' 1" }}>chat</span>
-          Pedir por WhatsApp
+          {cerrado ? 'Dejarle mensaje' : 'Pedir por WhatsApp'}
         </a>
       </div>
     </article>
@@ -161,6 +190,13 @@ export default function TaxiSeguro() {
   const [interesado, setInteresado] = useState(false);
   const [choferes, setChoferes] = useState<Chofer[]>([]);
   const [cargando, setCargando] = useState(true);
+  const [soloDisponibles, setSoloDisponibles] = useState(false);
+  // La disponibilidad depende de la hora: se recalcula cada minuto sin recargar la página.
+  const [ahora, setAhora] = useState(() => new Date());
+  useEffect(() => {
+    const t = setInterval(() => setAhora(new Date()), 60_000);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => {
     fetchChoferes()
@@ -168,7 +204,14 @@ export default function TaxiSeguro() {
       .finally(() => setCargando(false));
   }, []);
 
-  const lista = filtro === 'Todos' ? choferes : choferes.filter((c) => c.tipo === filtro);
+  // Primero los que están disponibles ahora, luego los que no tienen horario cargado y al final los fuera de horario.
+  const rango = (c: Chofer) => { const e = disponibleAhora(c.horario, ahora); return e === true ? 0 : e === null ? 1 : 2; };
+  const disponibles = choferes.filter((c) => disponibleAhora(c.horario, ahora) === true).length;
+  const lista = (filtro === 'Todos' ? choferes : choferes.filter((c) => c.tipo === filtro))
+    .filter((c) => !soloDisponibles || disponibleAhora(c.horario, ahora) !== false)
+    .map((c, i) => ({ c, i }))
+    .sort((a, b) => rango(a.c) - rango(b.c) || a.i - b.i)
+    .map((x) => x.c);
   const cuenta = (f: Filtro) => (f === 'Todos' ? choferes.length : choferes.filter((c) => c.tipo === f).length);
 
   return (
@@ -242,6 +285,24 @@ export default function TaxiSeguro() {
           ))}
         </div>
 
+        {/* Cuántos están disponibles ahora */}
+        {!cargando && choferes.some((c) => c.horario) && (
+          <div className="flex flex-wrap items-center gap-3 -mt-2">
+            <span className="inline-flex items-center gap-1.5 text-[12px] font-label-md font-bold" style={{ color: VERDE }}>
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: VERDE }} />
+              {disponibles} {disponibles === 1 ? 'chofer disponible' : 'choferes disponibles'} ahora
+            </span>
+            <button
+              onClick={() => setSoloDisponibles((v) => !v)}
+              className={`px-3 py-1 rounded-full text-[11px] font-label-md border transition-all ${soloDisponibles ? 'text-white border-transparent' : 'bg-white text-secondary border-surface-container-highest'}`}
+              style={soloDisponibles ? { backgroundColor: VERDE } : undefined}
+            >
+              {soloDisponibles ? 'Mostrando solo disponibles' : 'Ver solo disponibles'}
+            </button>
+            <span className="text-[11px] text-secondary">Se actualiza sola según el horario de cada chofer (hora de Pucallpa).</span>
+          </div>
+        )}
+
         {/* Directorio */}
         {cargando ? (
           <div className="p-12 text-center text-secondary text-sm">
@@ -267,7 +328,7 @@ export default function TaxiSeguro() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {lista.map((c) => (
-              <DriverCard key={c.id} c={c} />
+              <DriverCard key={c.id} c={c} ahora={ahora} />
             ))}
           </div>
         )}

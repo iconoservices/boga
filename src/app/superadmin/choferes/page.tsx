@@ -15,11 +15,16 @@ import { uploadFile } from '@/lib/uploadClient';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import { CIUDADES } from '@/lib/ciudades';
 import SuperadminSidebarNav from '@/components/superadmin/SuperadminSidebarNav';
+import SelectorHorario from '@/components/SelectorHorario';
+import { disponibleAhora, normalizarHorario, resumenHorario, tieneHorario, type Horario } from '@/lib/horario';
 
 const VERDE = '#00875A';
 const TIPOS = ['Mototaxi', 'Auto', 'Moto'];
 
 type DriverRow = Record<string, any>;
+
+// El horario de una postulación o de un chofer: el armado con el selector, o el texto libre de las postulaciones viejas.
+const horarioDe = (r: DriverRow): string => resumenHorario(normalizarHorario(r.horario_semana)) || (r.horario ?? '');
 
 const FICHA_VACIA = {
   id: null as string | null,
@@ -27,6 +32,9 @@ const FICHA_VACIA = {
   sellos: '[\n  { "label": "DNI Validado", "icon": "badge", "fuerte": true },\n  { "label": "SOAT Vigente", "icon": "health_and_safety", "fuerte": true }\n]',
   ruta: '', precio: '', paradero: '', resena: '', resena_autor: '',
   tel: '', img: '', veh_img: '', ciudad: 'pucallpa', orden: 0, status: 'activo',
+  horario: {} as Horario,
+  // Lo que escribió el chofer en una postulación vieja (solo de ayuda para armar el horario; no se guarda).
+  horario_texto: '',
 };
 type Ficha = typeof FICHA_VACIA;
 
@@ -76,6 +84,7 @@ export default function ChoferesAdmin() {
       resena: d.resena ?? '', resena_autor: d.resena_autor ?? '', tel: d.tel ?? '',
       img: d.img ?? '', veh_img: d.veh_img ?? '', ciudad: d.ciudad ?? 'pucallpa',
       orden: d.orden ?? 0, status: d.status ?? 'activo',
+      horario: normalizarHorario(d.horario_semana) ?? {}, horario_texto: '',
     });
     setMsg('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -89,6 +98,8 @@ export default function ChoferesAdmin() {
       ciudad: p.ciudad || 'pucallpa',
       img: p.foto_perfil ?? '',
       veh_img: p.foto_vehiculo ?? '',
+      horario: normalizarHorario(p.horario_semana) ?? {},
+      horario_texto: normalizarHorario(p.horario_semana) ? '' : (p.horario ?? ''),
     });
     await supabase.from('driver_requests').update({ status: 'approved' }).eq('id', p.id);
     setPostulaciones((prev) => prev.filter((x) => x.id !== p.id));
@@ -116,16 +127,28 @@ export default function ChoferesAdmin() {
       resena: ficha.resena || null, resena_autor: ficha.resena_autor || null, tel: ficha.tel || null,
       img: ficha.img || null, veh_img: ficha.veh_img || null, ciudad: ficha.ciudad,
       orden: Number(ficha.orden) || 0, status: ficha.status,
+      horario_semana: tieneHorario(ficha.horario) ? ficha.horario : null,
     };
 
-    const res = ficha.id
-      ? await supabase.from('drivers').update(payload).eq('id', ficha.id)
-      : await supabase.from('drivers').insert(payload);
+    const guardarFila = (fila: Record<string, unknown>) =>
+      ficha.id ? supabase.from('drivers').update(fila).eq('id', ficha.id) : supabase.from('drivers').insert(fila);
+
+    let res = await guardarFila(payload);
+    // Si todavía no se corrió el SQL del horario, se guarda el resto de la ficha y se avisa.
+    let sinColumna = false;
+    if (res.error && /horario_semana/.test(res.error.message)) {
+      const { horario_semana: _omitido, ...sinHorario } = payload;
+      void _omitido;
+      res = await guardarFila(sinHorario);
+      sinColumna = !res.error;
+    }
 
     setGuardando(false);
     if (res.error) { setMsg(`Error: ${res.error.message}`); return; }
     setFicha(FICHA_VACIA);
-    setMsg(ficha.id ? 'Ficha actualizada.' : 'Chofer agregado.');
+    setMsg(sinColumna
+      ? 'Guardado, pero el horario NO se guardó: falta correr el SQL de «Horario semanal de los choferes» (supabase_setup.sql).'
+      : ficha.id ? 'Ficha actualizada.' : 'Chofer agregado.');
     recargar();
   };
 
@@ -214,6 +237,15 @@ export default function ChoferesAdmin() {
                 <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Ciudad
                   <select value={ficha.ciudad} onChange={(e) => setFicha({ ...ficha, ciudad: e.target.value })} className={campo}>
                     {CIUDADES.map((c) => <option key={c.slug} value={c.slug}>{c.nombre}</option>)}</select></label>
+                <div className="flex flex-col gap-2 text-xs font-bold text-secondary sm:col-span-2">
+                  Horario del chofer <span className="font-normal text-[11px]">— con esto el directorio muestra solo quién está disponible ahora</span>
+                  {ficha.horario_texto && (
+                    <p className="font-medium text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                      El chofer escribió: «{ficha.horario_texto}». Arma su horario aquí abajo.
+                    </p>
+                  )}
+                  <SelectorHorario value={ficha.horario} onChange={(h) => setFicha((f) => ({ ...f, horario: h }))} />
+                </div>
                 <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Foto del chofer (perfil)
                   <div className="flex items-center gap-3 pt-1">
                     {ficha.img && <img src={ficha.img} alt="chofer" className="w-12 h-12 rounded-full object-cover border-2 border-primary/20 shrink-0" />}
@@ -333,7 +365,7 @@ export default function ChoferesAdmin() {
                       {p.dni && <span className="ml-2 text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-surface-container text-on-surface">🪪 DNI: {p.dni}</span>}
                     </p>
                     <p className="text-xs text-secondary">{[p.zona, p.ciudad, p.placa, p.experiencia].filter(Boolean).join(' · ')}</p>
-                    {p.horario && <p className="text-xs text-primary font-medium mt-0.5">🕒 {p.horario}</p>}
+                    {horarioDe(p) && <p className="text-xs text-primary font-medium mt-0.5">🕒 {horarioDe(p)}</p>}
                     {p.mensaje && <p className="text-xs text-secondary mt-1 italic">“{p.mensaje}”</p>}
                     <p className="text-xs text-secondary mt-1">WhatsApp: <a href={`https://wa.me/${p.whatsapp?.replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="text-primary hover:underline font-bold">{p.whatsapp}</a></p>
                   </div>
@@ -366,6 +398,16 @@ export default function ChoferesAdmin() {
                       {d.dni && <span className="text-[11px] font-mono text-secondary ml-2">(DNI: {d.dni})</span>}
                     </p>
                     <p className="text-xs text-secondary">{[d.comite, d.placa, d.ruta].filter(Boolean).join(' · ')}</p>
+                    {(() => {
+                      const h = normalizarHorario(d.horario_semana);
+                      if (!h) return <p className="text-[11px] text-amber-700 font-semibold mt-0.5">Sin horario cargado (no se marca disponible ni fuera de horario)</p>;
+                      const ahora = disponibleAhora(h);
+                      return (
+                        <p className="text-[11px] font-semibold mt-0.5" style={{ color: ahora ? VERDE : '#6b7280' }}>
+                          {ahora ? '🟢 Disponible ahora' : '⚪ Fuera de horario'} · {resumenHorario(h)}
+                        </p>
+                      );
+                    })()}
                   </div>
                   <button onClick={() => editar(d)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest text-on-surface">Editar</button>
                   <button onClick={() => toggleStatus(d)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest text-secondary">
@@ -444,7 +486,7 @@ export default function ChoferesAdmin() {
               </div>
               <div className="bg-surface-container-low p-2.5 rounded-lg">
                 <span className="text-[10px] text-secondary font-bold uppercase block">🕒 Horario habitual</span>
-                <span className="font-medium text-on-surface">{detalle.horario || 'No especificado'}</span>
+                <span className="font-medium text-on-surface">{horarioDe(detalle) || 'No especificado'}</span>
               </div>
               <div className="bg-surface-container-low p-2.5 rounded-lg col-span-2">
                 <span className="text-[10px] text-secondary font-bold uppercase block">🏢 Unidad / Comité / Zona</span>

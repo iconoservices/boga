@@ -1,3 +1,5 @@
+import { normalizarHorario, type Horario } from '@/lib/horario';
+
 // Choferes de Taxi Seguro. La página los lee del endpoint cacheado
 // /api/drivers (no de Supabase directo). Si la tabla `drivers` todavía está
 // vacía, la página cae al seed hardcodeado (CHOFERES_SEED en la propia página).
@@ -19,6 +21,8 @@ export type Chofer = {
   tel: string;
   img: string;
   vehImg: string;
+  /** Horario semanal (ver lib/horario.ts). null = no cargado: no se marca ni disponible ni fuera de horario. */
+  horario: Horario | null;
 };
 
 // Mapea una fila de la tabla `drivers` (snake_case) al shape que usa la UI.
@@ -40,6 +44,7 @@ function fromRow(r: Record<string, unknown>): Chofer {
     tel: (r.tel as string) ?? '',
     img: (r.img as string) ?? '',
     vehImg: (r.veh_img as string) ?? '',
+    horario: normalizarHorario(r.horario_semana),
   };
 }
 

@@ -1618,3 +1618,11 @@ CREATE POLICY "store_pagos: superadmin escribe" ON public.store_pagos FOR ALL US
 
 -- En la base products.id es texto (UUID en casi todos, números en los de Delva): el historial también.
 ALTER TABLE public.stock_movements ALTER COLUMN product_id TYPE TEXT USING product_id::text;
+
+-- ============================================================
+-- HORARIO SEMANAL DE LOS CHOFERES (Taxi Seguro / Transporte)
+-- ============================================================
+-- {"lun":[{"desde":"06:00","hasta":"21:00"}], ...}  Ver src/lib/horario.ts.
+-- Con esto el directorio muestra solo quién está disponible ahora (hora de Perú).
+ALTER TABLE public.driver_requests ADD COLUMN IF NOT EXISTS horario_semana JSONB;
+ALTER TABLE public.drivers         ADD COLUMN IF NOT EXISTS horario_semana JSONB;

@@ -9,15 +9,20 @@ import { supabase } from '@/lib/supabase';
 
 export const revalidate = 300;
 
-export async function GET() {
-  const { data, error } = await supabase
+const COLUMNAS = 'id,nombre,tipo,comite,experiencia,placa,modelo,sellos,ruta,precio,paradero,resena,resena_autor,tel,img,veh_img,ciudad,orden';
+
+const pedir = (columnas: string) =>
+  supabase
     .from('drivers')
-    .select(
-      'id,nombre,tipo,comite,experiencia,placa,modelo,sellos,ruta,precio,paradero,resena,resena_autor,tel,img,veh_img,ciudad,orden',
-    )
+    .select(columnas)
     .eq('status', 'activo')
     .order('orden', { ascending: true })
     .order('created_at', { ascending: true });
+
+export async function GET() {
+  // `horario_semana` es una columna nueva: si todavía no se corrió el SQL, se sigue sirviendo el directorio sin horarios.
+  let { data, error } = await pedir(`${COLUMNAS},horario_semana`);
+  if (error && /horario_semana/.test(error.message)) ({ data, error } = await pedir(COLUMNAS));
 
   if (error) console.error('[api/drivers]', error.message);
   // Si falla Supabase: 503 sin caché (no guardar una lista vacía) para que
