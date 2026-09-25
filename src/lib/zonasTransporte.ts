@@ -14,6 +14,18 @@ export const ZONAS_TRANSPORTE: ZonaTransporte[] = [
   { id: 'manantay', nombre: 'Manantay', lat: -8.4, lng: -74.54 },
 ];
 
+import { distanciaKm } from '@/lib/ciudades';
+
+/** La zona más cercana a un punto (si está a menos de `maxKm`). Sirve para ponerle nombre de lugar al pedido. */
+export function zonaMasCercana(lat: number, lng: number, maxKm = 6): ZonaTransporte | null {
+  let mejor: { z: ZonaTransporte; d: number } | null = null;
+  for (const z of ZONAS_TRANSPORTE) {
+    const d = distanciaKm(lat, lng, z.lat, z.lng);
+    if (d <= maxKm && (!mejor || d < mejor.d)) mejor = { z, d };
+  }
+  return mejor?.z ?? null;
+}
+
 export const zonaPorId = (id: string | null | undefined) => ZONAS_TRANSPORTE.find((z) => z.id === id) ?? null;
 
 export const TIPOS_PEDIDO = ['Mototaxi', 'Auto', 'Moto'] as const;

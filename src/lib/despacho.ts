@@ -15,7 +15,7 @@ import webpush from 'web-push';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { disponibleAhora, normalizarHorario } from '@/lib/horario';
 import { distanciaKm } from '@/lib/ciudades';
-import { zonaPorId } from '@/lib/zonasTransporte';
+import { zonaMasCercana, zonaPorId } from '@/lib/zonasTransporte';
 
 export const EXPIRA_MIN = 10;          // un pedido sin chofer caduca a los 10 minutos
 export const GPS_FRESCO_MIN = 10;      // el GPS del chofer sirve si tiene menos de 10 minutos
@@ -49,13 +49,31 @@ export function origenDe(p: Pick<Pedido, 'origen_lat' | 'origen_lng' | 'origen_z
   return z ? { lat: z.lat, lng: z.lng } : null;
 }
 
+/** Zona del pedido: la que eligió el pasajero o, con GPS, la más cercana a su punto. */
+export function zonaDePedido(p: Pick<Pedido, 'origen_lat' | 'origen_lng' | 'origen_zona'>) {
+  if (p.origen_zona && zonaPorId(p.origen_zona)) return zonaPorId(p.origen_zona);
+  return p.origen_lat != null && p.origen_lng != null ? zonaMasCercana(p.origen_lat, p.origen_lng) : null;
+}
+
+/** Dónde está un chofer según lo que sabemos: GPS reciente, zona marcada a mano o paradero. */
+export function posicionChofer(a: {
+  lat: number | null; lng: number | null; ubicado_at: string | null;
+  zona: string | null; zona_hasta: string | null; base_lat: number | null; base_lng: number | null;
+}): { lat: number; lng: number; fuente: 'gps' | 'zona' | 'base' } | null {
+  if (a.lat != null && a.lng != null && minDesde(a.ubicado_at) <= GPS_FRESCO_MIN) return { lat: a.lat, lng: a.lng, fuente: 'gps' };
+  const z = a.zona && a.zona_hasta && new Date(a.zona_hasta).getTime() > Date.now() ? zonaPorId(a.zona) : null;
+  if (z) return { lat: z.lat, lng: z.lng, fuente: 'zona' };
+  if (a.base_lat != null && a.base_lng != null) return { lat: a.base_lat, lng: a.base_lng, fuente: 'base' };
+  return null;
+}
+
 export const haExpirado = (p: Pick<Pedido, 'inicio_busqueda_at'>) => minDesde(p.inicio_busqueda_at) > EXPIRA_MIN;
 
 /** Choferes que podrían recibir este pedido, ya ordenados del más cercano al más lejano. */
 export async function candidatosOrdenados(db: SupabaseClient, pedido: Pedido): Promise<Candidato[]> {
   const { data: acceso } = await db
     .from('driver_acceso')
-    .select('driver_id,pausado,base_lat,base_lng,lat,lng,ubicado_at,zona,zona_hasta,visto_at');
+    .select('driver_id,pausado,base_lat,base_lng,lat,lng,ubicado_at,zona,zona_hasta,zonas,visto_at');
   if (!acceso || acceso.length === 0) return [];
 
   const ids = acceso.map((a) => a.driver_id as string);
@@ -66,6 +84,7 @@ export async function candidatosOrdenados(db: SupabaseClient, pedido: Pedido): P
   const conPush = new Set((pushes ?? []).map((p) => p.driver_id as string));
   const porId = new Map((choferes ?? []).map((c) => [c.id as string, c]));
   const origen = origenDe(pedido);
+  const zonaPedido = zonaDePedido(pedido)?.id ?? null;
 
   const candidatos: Candidato[] = [];
   for (const a of acceso) {
@@ -77,19 +96,15 @@ export async function candidatosOrdenados(db: SupabaseClient, pedido: Pedido): P
     // Debe haber forma de avisarle: notificación activada, o la app abierta hace poco (la ve al refrescar).
     if (!conPush.has(a.driver_id as string) && !(minDesde(a.visto_at) <= APP_ABIERTA_MIN)) continue;
 
-    let pos: { lat: number; lng: number } | null = null;
-    let fuente: Candidato['fuente'] = 'ninguna';
-    if (a.lat != null && a.lng != null && minDesde(a.ubicado_at) <= GPS_FRESCO_MIN) { pos = { lat: a.lat, lng: a.lng }; fuente = 'gps'; }
-    else if (a.zona && a.zona_hasta && new Date(a.zona_hasta).getTime() > Date.now() && zonaPorId(a.zona)) {
-      const z = zonaPorId(a.zona)!; pos = { lat: z.lat, lng: z.lng }; fuente = 'zona';
-    } else if (a.base_lat != null && a.base_lng != null) { pos = { lat: a.base_lat, lng: a.base_lng }; fuente = 'base'; }
+    const pos = posicionChofer(a as Parameters<typeof posicionChofer>[0]);
+    const dist = origen && pos ? distanciaKm(origen.lat, origen.lng, pos.lat, pos.lng) : Infinity;
 
-    candidatos.push({
-      driverId: a.driver_id as string,
-      nombre: c.nombre as string,
-      distanciaKm: origen && pos ? distanciaKm(origen.lat, origen.lng, pos.lat, pos.lng) : Infinity,
-      fuente,
-    });
+    // "Zonas que cubro": si el chofer marcó dónde trabaja y este pedido cae fuera, no se le molesta,
+    // salvo que en este momento esté muy cerca del pasajero.
+    const cubre = (a.zonas as string[] | null) ?? [];
+    if (cubre.length > 0 && zonaPedido && !cubre.includes(zonaPedido) && !(dist <= 2.5)) continue;
+
+    candidatos.push({ driverId: a.driver_id as string, nombre: c.nombre as string, distanciaKm: dist, fuente: pos?.fuente ?? 'ninguna' });
   }
   return candidatos.sort((x, y) => x.distanciaKm - y.distanciaKm);
 }
@@ -154,6 +169,7 @@ export async function avanzarOlas(db: SupabaseClient, pedidoId: string): Promise
     if (!reservada || reservada.length === 0) return;
     const numeroOla = pedido.ola + 1;
 
+    const zonaPedido = zonaDePedido(pedido);
     const [todos, { data: yaAvisados }] = await Promise.all([
       candidatosOrdenados(db, pedido),
       db.from('ride_avisos').select('driver_id').eq('ride_id', pedidoId),
@@ -170,7 +186,8 @@ export async function avanzarOlas(db: SupabaseClient, pedidoId: string): Promise
       const cerca = Number.isFinite(c.distanciaKm);
       const km = cerca ? ` · a ${c.distanciaKm < 1 ? `${Math.max(50, Math.round(c.distanciaKm * 100) * 10)} m` : `${c.distanciaKm.toFixed(1)} km`}` : '';
       const ok = await avisarChofer(db, c.driverId, {
-        title: cerca && c.distanciaKm <= 2 ? '🛺 Pedido cerca de ti' : '🛺 Nuevo pedido de taxi',
+        // El lugar va en el título: cada chofer decide de un vistazo si le sirve.
+        title: zonaPedido ? `🛺 Pedido en ${zonaPedido.nombre.split(' / ')[0]}` : '🛺 Nuevo pedido de taxi',
         body: `${primerNombre(pedido.pasajero_nombre)}: ${pedido.origen_texto || 'ubicación en el mapa'} → ${pedido.destino_texto || 'destino'}${pedido.oferta ? ` · ofrece S/ ${pedido.oferta}` : ''}${km}`,
         url: `/transporte/chofer?pedido=${pedidoId}`,
         tag: `taxi-${pedidoId}`,

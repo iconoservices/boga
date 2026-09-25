@@ -1645,6 +1645,7 @@ CREATE TABLE IF NOT EXISTS public.driver_acceso (
   ubicado_at  TIMESTAMPTZ,
   zona        TEXT,                                -- "estoy en…" a mano
   zona_hasta  TIMESTAMPTZ,
+  zonas       TEXT[] NOT NULL DEFAULT '{}',        -- zonas donde trabaja (vacío = cualquiera)
   visto_at    TIMESTAMPTZ,                         -- última vez que abrió su app
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );

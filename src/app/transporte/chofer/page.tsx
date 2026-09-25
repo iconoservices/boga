@@ -8,11 +8,12 @@
 //   · ve los datos del pasajero de su viaje y lo termina.
 //
 // Una web no puede seguir el GPS con la pantalla apagada: por eso el "Modo turno" mantiene la pantalla
-// encendida y manda la ubicación cada 30 s. Sin eso, se usa su zona o su paradero.
+// encendida y manda la ubicación cada minuto (o antes si se movió más de 200 m). Sin eso, se usa su zona o su paradero.
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ZONAS_TRANSPORTE } from '@/lib/zonasTransporte';
 import { ubicacionActual, mensajeUbicacion, type ErrorUbicacion } from '@/lib/ubicacion';
+import { distanciaKm } from '@/lib/ciudades';
 import { suscribirChofer, esIOS, enModoApp, motivoError } from '@/lib/push';
 
 const VERDE = '#00875A';
@@ -23,7 +24,7 @@ interface PedidoAbierto { id: string; pasajero: string; origen: string | null; d
 interface Actual { id: string; pasajero: string; tel: string; origen: string | null; destino: string | null; oferta: number | null; pin: string | null }
 interface Estado {
   chofer: { nombre: string; tipo: string; placa: string | null };
-  pausado: boolean; tieneBase: boolean; zona: string | null; gpsReciente: boolean; avisosActivados: boolean;
+  pausado: boolean; tieneBase: boolean; zona: string | null; zonasCubre: string[]; gpsReciente: boolean; avisosActivados: boolean;
   pedidos: PedidoAbierto[]; actual: Actual | null;
 }
 
@@ -44,6 +45,7 @@ export default function ChoferApp() {
   const wakeLock = useRef<WakeLockSentinel | null>(null);
   const idVigilancia = useRef<number | null>(null);
   const ultimoEnvio = useRef(0);
+  const ultimoPunto = useRef<{ lat: number; lng: number } | null>(null);
 
   // El enlace trae el token; se recuerda para la próxima vez. Si abrió la app sin él, se usa el recordado.
   useEffect(() => {
@@ -83,15 +85,18 @@ export default function ChoferApp() {
     } catch { /* sin red: se reintenta */ }
   }, [token]);
 
+  // Cada consulta cuesta una ida a la base: cada 5 s solo si hay pedidos o un viaje en curso; si no, cada 20 s
+  // (los pedidos nuevos le llegan igual como notificación).
+  const hayMovimiento = !!e && (e.pedidos.length > 0 || !!e.actual);
   useEffect(() => {
     if (!token) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     consultar();
-    const t = setInterval(() => { if (document.visibilityState === 'visible') consultar(); }, 5000);
+    const t = setInterval(() => { if (document.visibilityState === 'visible') consultar(); }, hayMovimiento ? 5000 : 20_000);
     const alVolver = () => { if (document.visibilityState === 'visible') consultar(); };
     document.addEventListener('visibilitychange', alVolver);
     return () => { clearInterval(t); document.removeEventListener('visibilitychange', alVolver); };
-  }, [token, consultar]);
+  }, [token, consultar, hayMovimiento]);
 
   const accion = useCallback(async (a: string, extra: Record<string, unknown> = {}) => {
     const res = await fetch('/api/transporte/chofer', {
@@ -101,7 +106,7 @@ export default function ChoferApp() {
     return res.json().catch(() => ({}));
   }, [token]);
 
-  // ── Modo turno: pantalla encendida + ubicación cada 30 s mientras la app esté abierta ──
+  // ── Modo turno: pantalla encendida + ubicación cada minuto mientras la app esté abierta ──
   const pedirPantalla = useCallback(async () => {
     try { wakeLock.current = (await navigator.wakeLock?.request('screen')) ?? null; } catch { /* no soportado */ }
   }, []);
@@ -114,9 +119,13 @@ export default function ChoferApp() {
     if (navigator.geolocation) {
       idVigilancia.current = navigator.geolocation.watchPosition(
         (p) => {
+          // Se manda cada minuto; antes (a los 20 s) solo si se movió más de 200 m. Así gasta poca batería y pocos datos.
           const ahora = Date.now();
-          if (ahora - ultimoEnvio.current < 30_000) return;
+          const desde = ahora - ultimoEnvio.current;
+          const movio = ultimoPunto.current ? distanciaKm(ultimoPunto.current.lat, ultimoPunto.current.lng, p.coords.latitude, p.coords.longitude) * 1000 : Infinity;
+          if (desde < 20_000 || (desde < 60_000 && movio < 200)) return;
           ultimoEnvio.current = ahora;
+          ultimoPunto.current = { lat: p.coords.latitude, lng: p.coords.longitude };
           setUltimoGps(ahora);
           void accion('ubicacion', { lat: p.coords.latitude, lng: p.coords.longitude });
         },
@@ -137,6 +146,26 @@ export default function ChoferApp() {
     const r = setInterval(() => setAhora(Date.now()), 1000);
     return () => clearInterval(r);
   }, [turno]);
+
+  // Al abrir con pedidos esperando (por ejemplo desde la notificación), se toma la ubicación UNA vez, en ese
+  // momento, para mostrarle la distancia exacta a cada pedido sin que tenga el modo turno prendido.
+  const ubicacionDenegada = useRef(false);
+  const hayPedidos = !!e && e.pedidos.length > 0;
+  useEffect(() => {
+    if (!token || !hayPedidos || turno || ubicacionDenegada.current) return;
+    if (Date.now() - ultimoEnvio.current < 60_000) return;
+    let vivo = true;
+    ubicacionActual({ esperaMs: 8000 })
+      .then(async (p) => {
+        if (!vivo) return;
+        ultimoEnvio.current = Date.now();
+        ultimoPunto.current = { lat: p.lat, lng: p.lng };
+        await accion('ubicacion', { lat: p.lat, lng: p.lng });
+        consultar();
+      })
+      .catch((err) => { if (err === 'permiso-denegado') ubicacionDenegada.current = true; });
+    return () => { vivo = false; };
+  }, [token, hayPedidos, turno, accion, consultar]);
 
   const alternarTurno = () => {
     const nuevo = !turno;
@@ -275,7 +304,7 @@ export default function ChoferApp() {
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="font-extrabold">Modo turno</p>
-              <p className="text-xs text-gray-500 font-medium">Mantiene la pantalla encendida y comparte tu ubicación cada 30 s para que te lleguen los pedidos MÁS CERCANOS. Solo funciona con la app abierta.</p>
+              <p className="text-xs text-gray-500 font-medium">Mantiene la pantalla encendida y comparte tu ubicación (cada minuto, o antes si te mueves) para que te lleguen los pedidos MÁS CERCANOS. Solo funciona con la app abierta.</p>
             </div>
             <button type="button" role="switch" aria-checked={turno} aria-label="Modo turno" onClick={alternarTurno}
               className="relative w-14 h-8 rounded-full transition-colors shrink-0" style={{ background: turno ? VERDE : '#d1d5db' }}>
@@ -300,6 +329,37 @@ export default function ChoferApp() {
                 style={e.zona === z.id ? { background: VERDE } : undefined}>{z.nombre}</button>
             ))}
           </div>
+        </section>
+
+        {/* Zonas que cubro */}
+        <section className="bg-white rounded-2xl border border-black/5 p-4 flex flex-col gap-2">
+          <p className="font-extrabold">Zonas donde trabajas</p>
+          <p className="text-xs text-gray-500 font-medium">Por defecto recibes pedidos de TODAS las zonas. Quita las que no quieras: solo te avisamos de las marcadas (o de pedidos muy cerca de ti). Puedes cambiarlo cuando quieras.</p>
+          {(() => {
+            const todas = ZONAS_TRANSPORTE.map((z) => z.id);
+            // Lista vacía guardada = "todas". Aquí se muestran todas marcadas en ese caso.
+            const activas = e.zonasCubre.length > 0 ? e.zonasCubre : todas;
+            const guardar = async (nuevas: string[]) => {
+              // Si quedan todas (o ninguna) se guarda "todas" (lista vacía): nunca te quedas sin recibir avisos por error.
+              await accion('zonas', { zonas: nuevas.length === 0 || nuevas.length === todas.length ? [] : nuevas });
+              consultar();
+            };
+            return (
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => guardar([])}
+                  className={`px-3.5 py-2 rounded-full text-sm font-bold border ${activas.length === todas.length ? 'text-white border-transparent' : 'bg-white text-gray-700 border-gray-300'}`}
+                  style={activas.length === todas.length ? { background: VERDE } : undefined}>Todas las zonas</button>
+                {ZONAS_TRANSPORTE.map((z) => {
+                  const on = activas.includes(z.id);
+                  return (
+                    <button key={z.id} onClick={() => guardar(on ? activas.filter((x) => x !== z.id) : [...activas, z.id])}
+                      className={`px-3.5 py-2 rounded-full text-sm font-bold border ${on ? 'border-transparent' : 'bg-white text-gray-500 border-gray-300'}`}
+                      style={on ? { background: '#d3f1e4', color: VERDE, borderColor: VERDE } : undefined}>{on ? '✓ ' : ''}{z.nombre}</button>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </section>
 
         {/* Configuración */}

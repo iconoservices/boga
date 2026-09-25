@@ -16,6 +16,7 @@ import { useEsSuperadmin } from '@/lib/superadmin';
 import { CIUDADES } from '@/lib/ciudades';
 import SuperadminSidebarNav from '@/components/superadmin/SuperadminSidebarNav';
 import SelectorHorario from '@/components/SelectorHorario';
+import { coordenadasDeTexto } from '@/lib/ubicacion';
 import { disponibleAhora, normalizarHorario, resumenHorario, tieneHorario, type Horario } from '@/lib/horario';
 
 const VERDE = '#00875A';
@@ -59,6 +60,7 @@ export default function ChoferesAdmin() {
   const [sinTablasTaxi, setSinTablasTaxi] = useState(false);
   const [appAbierta, setAppAbierta] = useState<string | null>(null);
   const [copiado, setCopiado] = useState<string | null>(null);
+  const [pegado, setPegado] = useState('');
   const imgRef = useRef<HTMLInputElement>(null);
   const vehRef = useRef<HTMLInputElement>(null);
 
@@ -205,6 +207,18 @@ export default function ChoferesAdmin() {
     const token = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
     const { error } = await supabase.from('driver_acceso').update({ token }).eq('driver_id', d.id);
     if (error) { setMsg(`No se pudo regenerar: ${error.message}`); return; }
+    recargar();
+  };
+
+  // Guarda el paradero de un chofer desde lo que se pega (link largo de Google Maps o "lat, lng"): así los pedidos ya
+  // se ordenan por cercanía aunque él todavía no haya abierto su app.
+  const guardarParadero = async (d: DriverRow) => {
+    const c = coordenadasDeTexto(pegado);
+    if (!c) { setMsg('No encontré coordenadas. Pega el enlace LARGO de Google Maps o las coordenadas (ej. -8.3791, -74.5539). Los enlaces cortos (maps.app.goo.gl) no sirven: ábrelos y copia el enlace de la barra.'); return; }
+    const { error } = await supabase.from('driver_acceso').update({ base_lat: c.lat, base_lng: c.lng }).eq('driver_id', d.id);
+    if (error) { setMsg(`No se pudo guardar el paradero: ${error.message}`); return; }
+    setPegado('');
+    setMsg(`Paradero de ${d.nombre} guardado.`);
     recargar();
   };
 
@@ -479,6 +493,10 @@ export default function ChoferesAdmin() {
                           <button onClick={() => copiarEnlace(a)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest bg-white">{copiado === d.id ? '✓ Copiado' : 'Copiar enlace'}</button>
                           {d.tel && <a href={wa} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-lg text-white" style={{ background: VERDE }}>Enviar por WhatsApp</a>}
                           <button onClick={() => regenerarEnlace(d)} className="text-xs font-bold px-3 py-1.5 rounded-lg text-red-600">Generar enlace nuevo</button>
+                        </div>
+                        <div className="flex gap-2">
+                          <input value={pegado} onChange={(e) => setPegado(e.target.value)} placeholder="Paradero: pega el link largo de Google Maps o las coordenadas" className="flex-1 min-w-0 text-[11px] bg-white border border-surface-container-highest rounded-lg px-2.5 py-2" />
+                          <button onClick={() => guardarParadero(d)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest bg-white">Guardar paradero</button>
                         </div>
                         <p className="text-[11px] text-secondary font-medium">
                           Avisos: {celulares[d.id] ? `✓ ${celulares[d.id]} celular${celulares[d.id] === 1 ? '' : 'es'}` : '— todavía no los activó'}

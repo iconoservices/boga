@@ -41,13 +41,21 @@ export default function PedidoTaxiPage() {
     } catch { /* sin red: se reintenta en 4 s */ }
   }, [id]);
 
+  // Cada consulta cuesta una ida a la base: cada 4 s solo mientras se busca chofer; con chofer asignado, cada 10 s;
+  // cuando el viaje terminó (o se canceló, o caducó) ya no se consulta.
+  const fase = e?.estado ?? 'inicio';
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     consultar();
-    const t = setInterval(() => { if (document.visibilityState === 'visible') consultar(); }, 4000);
+    if (fase === 'completado' || fase === 'cancelado' || fase === 'expirado') return;
+    const t = setInterval(() => { if (document.visibilityState === 'visible') consultar(); }, fase === 'asignado' ? 10_000 : 4000);
+    return () => clearInterval(t);
+  }, [consultar, fase]);
+
+  useEffect(() => {
     const reloj = setInterval(() => setAhora(Date.now()), 1000);
-    return () => { clearInterval(t); clearInterval(reloj); };
-  }, [consultar]);
+    return () => clearInterval(reloj);
+  }, []);
 
   const cancelar = async () => {
     if (!window.confirm('¿Cancelar tu pedido?')) return;

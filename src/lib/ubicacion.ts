@@ -28,3 +28,26 @@ export function ubicacionActual(opts: { precisa?: boolean; esperaMs?: number } =
 
 /** Enlace de Google Maps a un punto (para mandarlo por WhatsApp). */
 export const enlaceMapa = (p: { lat: number; lng: number }) => `https://www.google.com/maps?q=${p.lat},${p.lng}`;
+
+/**
+ * Saca latitud y longitud de lo que alguien pega: "-8.3791, -74.5539", un enlace largo de Google Maps
+ * (…/@-8.37,-74.55,17z · …?q=-8.37,-74.55 · …!3d-8.37!4d-74.55). Los enlaces cortos (maps.app.goo.gl) no
+ * traen las coordenadas: hay que abrirlos y copiar el enlace largo. Devuelve null si no hay coordenadas válidas.
+ */
+export function coordenadasDeTexto(texto: string): { lat: number; lng: number } | null {
+  let t = (texto || '').trim();
+  try { t = decodeURIComponent(t); } catch { /* texto con % suelto: se usa tal cual */ }
+  const patrones = [
+    /!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/,
+    /@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/,
+    /[?&](?:q|ll|query)=(-?\d+(?:\.\d+)?)[, ]+(-?\d+(?:\.\d+)?)/,
+    /^(-?\d+(?:\.\d+)?)\s*[,;\s]\s*(-?\d+(?:\.\d+)?)$/,
+  ];
+  for (const p of patrones) {
+    const m = t.match(p);
+    if (!m) continue;
+    const lat = Number(m[1]), lng = Number(m[2]);
+    if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180) return { lat, lng };
+  }
+  return null;
+}

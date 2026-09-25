@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { avanzarOlas, haExpirado, type Pedido } from '@/lib/despacho';
+import { avanzarOlas, haExpirado, origenDe, posicionChofer, type Pedido } from '@/lib/despacho';
+import { distanciaKm } from '@/lib/ciudades';
 import { zonaPorId } from '@/lib/zonasTransporte';
 import { choferPorToken, coordenada, excedeLimite, ipDe, servicio, texto } from '@/lib/transporteServidor';
 
@@ -29,7 +30,7 @@ export async function GET(request: Request) {
 
   const [{ data: avisos }, { data: acceso }, { count: celulares }] = await Promise.all([
     db.from('ride_avisos').select('ride_id,distancia_km').eq('driver_id', yo.driverId),
-    db.from('driver_acceso').select('pausado,base_lat,base_lng,lat,lng,ubicado_at,zona,zona_hasta').eq('driver_id', yo.driverId).maybeSingle(),
+    db.from('driver_acceso').select('pausado,base_lat,base_lng,lat,lng,ubicado_at,zona,zona_hasta,zonas').eq('driver_id', yo.driverId).maybeSingle(),
     db.from('driver_push').select('endpoint', { count: 'exact', head: true }).eq('driver_id', yo.driverId),
   ]);
 
@@ -40,15 +41,22 @@ export async function GET(request: Request) {
     : { data: [] as Pedido[] };
   const pedidos = ((filas ?? []) as Pedido[])
     .filter((p) => !haExpirado(p))
-    .sort((a, b) => (distancias.get(a.id) ?? 99) - (distancias.get(b.id) ?? 99))
-    .map((p) => ({
+    .map((p) => {
+      // Distancia en vivo desde donde está el chofer AHORA (su GPS al abrir la app, su zona o su paradero);
+      // si no se sabe, la que se calculó cuando se le avisó.
+      const pos = acceso ? posicionChofer(acceso as Parameters<typeof posicionChofer>[0]) : null;
+      const origen = origenDe(p);
+      const enVivo = pos && origen ? distanciaKm(origen.lat, origen.lng, pos.lat, pos.lng) : null;
+      return { pedido: p, km: enVivo ?? distancias.get(p.id) ?? null };
+    })
+    .map(({ pedido: p, km }) => ({
       id: p.id,
       pasajero: primerNombre(p.pasajero_nombre),
       origen: p.origen_texto,
       destino: p.destino_texto,
       oferta: p.oferta,
       tipo: p.tipo,
-      distanciaKm: distancias.get(p.id) ?? null,
+      distanciaKm: km,
       haceSeg: Math.round((Date.now() - new Date(p.inicio_busqueda_at).getTime()) / 1000),
     }));
 
@@ -67,6 +75,7 @@ export async function GET(request: Request) {
     pausado: !!acceso?.pausado,
     tieneBase: acceso?.base_lat != null && acceso?.base_lng != null,
     zona: zonaVigente,
+    zonasCubre: (acceso?.zonas as string[] | null) ?? [],
     gpsReciente: !!acceso?.ubicado_at && Date.now() - new Date(acceso.ubicado_at).getTime() < 10 * 60_000,
     avisosActivados: (celulares ?? 0) > 0,
     pedidos,
@@ -127,6 +136,12 @@ export async function POST(request: Request) {
       const c = coordenada(body.lat, body.lng);
       if (!c) return NextResponse.json({ ok: false }, { status: 400 });
       await db.from('driver_acceso').update({ lat: c.lat, lng: c.lng, ubicado_at: new Date().toISOString() }).eq('driver_id', yo.driverId);
+      return NextResponse.json({ ok: true });
+    }
+    case 'zonas': {
+      // Zonas donde trabaja (vacío = cualquiera). Solo ids de zonas que existen.
+      const ids = Array.isArray(body.zonas) ? (body.zonas as unknown[]).map((x) => texto(x, 30)).filter((x) => !!zonaPorId(x)) : [];
+      await db.from('driver_acceso').update({ zonas: Array.from(new Set(ids)) }).eq('driver_id', yo.driverId);
       return NextResponse.json({ ok: true });
     }
     case 'zona': {
