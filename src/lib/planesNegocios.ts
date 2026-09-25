@@ -111,13 +111,19 @@ export const planIncluye = (plan: PlanId, desde: PlanId) => RANGO_PLAN[plan] >= 
 
 // Qué incluye cada plan, en filas comparables (para la tabla del superadmin). `nuevo` marca lo que
 // se sumó al admin para igualar la landing y hay que revisar. `estado` dice si hoy existe en el producto.
-export const CAPACIDADES_PLAN: { texto: string; desde: PlanId; estado: 'hecho' | 'falta'; nuevo?: boolean }[] = [
-  { texto: 'Link propio de la tienda (bogahub.app/tu-negocio)', desde: 'carta', estado: 'hecho', nuevo: true },
+// `valor`: en vez del check, muestra ese texto en la columna del plan (p. ej. la cantidad de avisos).
+export const CAPACIDADES_PLAN: { texto: string; desde: PlanId; estado: 'hecho' | 'falta'; nuevo?: boolean; valor?: Partial<Record<PlanId, string>> }[] = [
+  { texto: 'Link propio de la tienda (bogahub.app/tu-negocio) y código QR', desde: 'carta', estado: 'hecho', nuevo: true },
   { texto: 'Catálogo y gestión de pedidos', desde: 'carta', estado: 'hecho', nuevo: true },
-  { texto: 'Pedidos directo al WhatsApp, sin comisión', desde: 'carta', estado: 'hecho', nuevo: true },
+  { texto: 'Pedidos directo a tu WhatsApp, sin comisión', desde: 'carta', estado: 'hecho', nuevo: true },
+  { texto: 'Enlace y número de cada pedido, con comprobante en PDF', desde: 'carta', estado: 'hecho', nuevo: true },
+  { texto: 'Página propia por cada producto, para compartir', desde: 'carta', estado: 'hecho', nuevo: true },
+  { texto: 'Marca un producto como Agotado y deja de mostrarse', desde: 'carta', estado: 'hecho', nuevo: true },
+  { texto: 'Plantillas listas para tu rubro', desde: 'carta', estado: 'hecho', nuevo: true },
   { texto: 'Funciona en cualquier ciudad', desde: 'carta', estado: 'hecho', nuevo: true },
-  { texto: 'Subdominio propio, instalable como app', desde: 'app', estado: 'hecho', nuevo: true },
-  { texto: 'Avisos a los clientes que instalaron la app', desde: 'app', estado: 'hecho', nuevo: true },
+  { texto: 'Subdominio propio (tunegocio.bogahub.app)', desde: 'app', estado: 'hecho', nuevo: true },
+  { texto: 'App instalable en el celular de tus clientes', desde: 'app', estado: 'hecho', nuevo: true },
+  { texto: 'Avisos a tus clientes (los que no uses se acumulan en el mes)', desde: 'app', estado: 'hecho', nuevo: true, valor: { app: '2 por semana', app_google: '2 por semana' } },
   { texto: 'Productos en Google', desde: 'app_google', estado: 'falta', nuevo: true },
 ];
 

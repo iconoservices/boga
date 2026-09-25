@@ -6,12 +6,13 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 
-import { MODULOS_VENTA, PLANES, POR_DEFINIR } from '@/lib/planesNegocios';
+import { CAPACIDADES_PLAN, MODULOS_VENTA, PLANES, POR_DEFINIR, planIncluye } from '@/lib/planesNegocios';
 
 const REGISTRO = '/negocios/registro';
 
 export default function NegociosPlanes() {
   const [anual, setAnual] = useState(false);
+  const [detalle, setDetalle] = useState(false);
 
   return (
     <section id="precios" className="scroll-mt-24 pb-14 md:pb-16">
@@ -104,6 +105,73 @@ export default function NegociosPlanes() {
         })}
       </div>
 
+      {/* Comparación completa: mismos checks que la tabla del superadmin, sin las marcas internas. */}
+      <div className="mt-6 text-center">
+        <button
+          type="button"
+          onClick={() => setDetalle((v) => !v)}
+          aria-expanded={detalle}
+          className="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline"
+        >
+          {detalle ? 'Ocultar el detalle' : 'Ver todo lo que incluye cada plan'}
+          <span className="material-symbols-outlined text-[18px]">{detalle ? 'expand_less' : 'expand_more'}</span>
+        </button>
+      </div>
+      {detalle && (
+        <div className="mt-4 bg-surface-container-lowest border border-surface-container-highest rounded-2xl overflow-x-auto">
+          <table className="w-full text-left text-sm min-w-[420px]">
+            <thead>
+              <tr className="bg-surface-container text-[11px] uppercase tracking-wide text-secondary">
+                <th className="p-3 font-bold">Qué incluye</th>
+                {PLANES.map((p) => <th key={p.id} className="p-3 font-bold text-center w-24">{p.nombre}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {CAPACIDADES_PLAN.map((c) => (
+                <tr key={c.texto} className="border-t border-surface-container-highest">
+                  <td className="p-3 font-semibold text-on-background">
+                    {c.texto}
+                    {c.estado === 'falta' && (
+                      <span className="ml-2 text-[10px] font-bold text-secondary bg-surface-container px-1.5 py-0.5 rounded uppercase tracking-wide">Próximamente</span>
+                    )}
+                  </td>
+                  {PLANES.map((p) => (
+                    <td key={p.id} className="p-3 text-center">
+                      {!planIncluye(p.id, c.desde)
+                        ? <span className="text-secondary/40">—</span>
+                        : c.valor?.[p.id]
+                          ? <span className="text-xs font-bold text-on-background">{c.valor[p.id]}</span>
+                          : <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+              <tr className="border-t border-surface-container-highest bg-surface-container">
+                <td colSpan={PLANES.length + 1} className="p-3 text-[11px] font-bold uppercase tracking-wide text-primary">
+                  Se agrega como módulo, en cualquier plan
+                </td>
+              </tr>
+              {MODULOS_VENTA.flatMap((g) => g.items).map((m) => (
+                <tr key={m.id} className="border-t border-surface-container-highest">
+                  <td className="p-3 font-semibold text-on-background">
+                    {m.nombre}
+                    {m.pronto && <span className="ml-2 text-[10px] font-bold text-secondary bg-surface-container px-1.5 py-0.5 rounded uppercase tracking-wide">Próximamente</span>}
+                    {m.id === 'avisos' && <span className="block text-xs font-normal text-secondary">Paquete de 4 avisos por S/ 10; no vencen</span>}
+                  </td>
+                  {PLANES.map((p) => (
+                    <td key={p.id} className="p-3 text-center">
+                      {m.incluidoEn.includes(p.id)
+                        ? <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                        : <span className="text-[11px] font-bold text-secondary">Módulo</span>}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       {/* Módulos: se compran sueltos en cualquier plan; algunos ya vienen incluidos en uno. */}
       <div className="mt-12">
         <div className="text-center max-w-[560px] mx-auto mb-6">
@@ -112,33 +180,32 @@ export default function NegociosPlanes() {
             Cada pieza se puede agregar a cualquier plan. Si tu plan ya la trae, no pagas de más.
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {MODULOS_VENTA.map((g) => (
-            <div key={g.grupo} className="flex flex-col gap-3">
-              <p className="text-primary font-label-md text-[11px] font-bold uppercase tracking-wide">{g.grupo}</p>
-              {g.items.map((it) => (
-                <div key={it.id} className="bg-surface-container-lowest border border-surface-container-highest rounded-2xl p-4 flex gap-3">
-                  <div className="w-10 h-10 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-primary text-[20px]">{it.icon}</span>
-                  </div>
-                  <div className="min-w-0">
-                    <h4 className="font-headline-sm text-base text-on-background flex items-center gap-2 flex-wrap">
-                      {it.nombre}
-                      {it.pronto && (
-                        <span className="text-[10px] font-bold text-secondary bg-surface-container px-1.5 py-0.5 rounded uppercase tracking-wide">Próximamente</span>
-                      )}
-                    </h4>
-                    <p className="text-secondary font-body-md text-sm leading-relaxed mt-0.5">{it.body}</p>
-                    {it.promo && <p className="text-primary text-[11px] font-bold uppercase tracking-wide mt-1.5">{it.promo}</p>}
-                    <p className="text-on-background text-xs font-bold mt-1.5">
-                      {it.precio === POR_DEFINIR ? 'Precio por confirmar' : `${it.precio}${it.unidad ?? ' /mes'}`}
-                      {it.incluidoEn.length > 0 && (
-                        <span className="text-secondary font-semibold"> · Incluido en {it.incluidoEn.map((id) => PLANES.find((p) => p.id === id)?.nombre).join(' y ')}</span>
-                      )}
-                    </p>
-                  </div>
+        {/* Cuadrícula pareja: el grupo va como etiqueta en cada tarjeta (así no quedan columnas desiguales). */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {MODULOS_VENTA.flatMap((g) => g.items.map((it) => ({ ...it, grupo: g.grupo }))).map((it) => (
+            <div key={it.id} className="bg-surface-container-lowest border border-surface-container-highest rounded-2xl p-5 flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-2">
+                <div className="w-10 h-10 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-primary text-[20px]">{it.icon}</span>
                 </div>
-              ))}
+                <span className="text-[10px] font-bold text-primary uppercase tracking-wide text-right">{it.grupo}</span>
+              </div>
+              <h4 className="font-headline-sm text-base text-on-background flex items-center gap-2 flex-wrap">
+                {it.nombre}
+                {it.pronto && (
+                  <span className="text-[10px] font-bold text-secondary bg-surface-container px-1.5 py-0.5 rounded uppercase tracking-wide">Próximamente</span>
+                )}
+              </h4>
+              <p className="text-secondary font-body-md text-sm leading-relaxed">{it.body}</p>
+              <div className="mt-auto pt-2">
+                {it.promo && <p className="text-primary text-[11px] font-bold uppercase tracking-wide mb-1">{it.promo}</p>}
+                <p className="text-on-background text-xs font-bold">
+                  {it.precio === POR_DEFINIR ? 'Precio por confirmar' : `${it.precio}${it.unidad ?? ' /mes'}`}
+                  {it.incluidoEn.length > 0 && (
+                    <span className="text-secondary font-semibold"> · Incluido en {it.incluidoEn.map((id) => PLANES.find((p) => p.id === id)?.nombre).join(' y ')}</span>
+                  )}
+                </p>
+              </div>
             </div>
           ))}
         </div>

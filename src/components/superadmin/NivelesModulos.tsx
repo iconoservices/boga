@@ -185,9 +185,11 @@ export default function NivelesModulos() {
                   </td>
                   {PLANES.map((p) => (
                     <td key={p.id} className="p-3 text-center">
-                      {planIncluye(p.id, c.desde)
-                        ? <span className="material-symbols-outlined text-[18px] text-[#16a34a]">check_circle</span>
-                        : <span className="text-[#c2c6d6]">—</span>}
+                      {!planIncluye(p.id, c.desde)
+                        ? <span className="text-[#c2c6d6]">—</span>
+                        : c.valor?.[p.id]
+                          ? <span className="text-[11px] font-bold text-[#191b23]">{c.valor[p.id]}</span>
+                          : <span className="material-symbols-outlined text-[18px] text-[#16a34a]">check_circle</span>}
                     </td>
                   ))}
                 </tr>
