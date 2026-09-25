@@ -1502,3 +1502,13 @@ FOR EACH ROW EXECUTE FUNCTION public.stores_protege_modulos();
 -- Las tiendas que ya tienen productos propios no cambian: los demo nunca se muestran encima.
 ALTER TABLE public.stores ALTER COLUMN show_demo_products SET DEFAULT false;
 UPDATE public.stores SET show_demo_products = false WHERE show_demo_products IS DISTINCT FROM false;
+
+-- ============================================================
+-- MÓDULO GOOGLE (feed de Merchant Center): solo salen las tiendas que lo tengan prendido
+-- ============================================================
+-- Antes /api/google-feed incluía todas las tiendas. Para no cortar de golpe a las que ya estaban,
+-- las actuales conservan su lugar; el superadmin apaga ahí a las que no paguen. Las tiendas nuevas
+-- arrancan sin Google.
+UPDATE public.stores
+   SET modulos = COALESCE(modulos, '{}'::jsonb) || '{"google": true}'::jsonb
+ WHERE NOT (COALESCE(modulos, '{}'::jsonb) ? 'google');

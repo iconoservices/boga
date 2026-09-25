@@ -5,7 +5,7 @@
 // Revisado el 24 sep 2026 — si se construye algo, actualizar acá y en la memoria del proyecto.
 
 export type EstadoModulo = 'existe' | 'parcial' | 'por_construir' | 'aparte';
-export type NivelModulo = 'carta' | 'ventas' | 'inventario' | 'cadena' | 'extra';
+export type NivelModulo = 'carta' | 'app' | 'app_google' | 'ventas' | 'inventario' | 'cadena' | 'extra';
 export type Esfuerzo = 'bajo' | 'medio' | 'alto';
 
 export interface InfoModulo {
@@ -21,9 +21,11 @@ export interface InfoModulo {
 }
 
 export const NIVEL_NOMBRE: Record<NivelModulo, string> = {
-  carta: 'Nivel Carta',
-  ventas: 'Nivel Ventas',
-  inventario: 'Nivel Inventario',
+  carta: 'Alcance: Carta',
+  app: 'Alcance: App',
+  app_google: 'Alcance: App + Google',
+  ventas: 'Operación: Ventas',
+  inventario: 'Operación: Inventario',
   cadena: 'Nivel superior (varias sedes)',
   extra: 'Extra aparte',
 };
@@ -49,7 +51,7 @@ export const PLAN_INFO: Record<string, InfoModulo> = {
     depende: 'Que el cliente tenga cuenta (login).',
   },
   'sitio-web-propio': {
-    estado: 'parcial', nivel: 'extra', esfuerzo: 'medio',
+    estado: 'parcial', nivel: 'app', esfuerzo: 'medio',
     bases: 'El subdominio propio (tienda.bogahub.app) ya se activa por tienda desde el superadmin.',
     falta: 'Dominio propio del cliente (por la API de Vercel, parqueado) y una ficha SEO dedicada.',
     depende: 'Que el cliente compre su dominio.',
@@ -57,7 +59,7 @@ export const PLAN_INFO: Record<string, InfoModulo> = {
 
   // ─── Se puede construir con lo que ya hay ───
   'marca-blanca-total': {
-    estado: 'por_construir', nivel: 'extra', esfuerzo: 'bajo',
+    estado: 'por_construir', nivel: 'app_google', esfuerzo: 'bajo',
     bases: 'El "Powered by Boga Market" está solo en el pie de 3 plantillas (Estilos Mirka, Flores, Sweet Kitty Nails).',
     falta: 'Un interruptor por tienda y ocultar esa línea cuando esté prendido.',
   },
@@ -102,7 +104,7 @@ export const PLAN_INFO: Record<string, InfoModulo> = {
     depende: 'Nivel Inventario y unos meses de historial.',
   },
   'app-nativa': {
-    estado: 'por_construir', nivel: 'extra', esfuerzo: 'medio',
+    estado: 'por_construir', nivel: 'app_google', esfuerzo: 'medio',
     bases: 'La app instalable (PWA) ya existe y funciona.',
     falta: 'Empaquetarla (Capacitor/TWA), cuenta de Google Play (pago único) y de App Store (pago anual), ícono y ficha por negocio, y mantenerla al día.',
     depende: 'Cuentas de las tiendas de apps y mantenimiento continuo.',
@@ -134,7 +136,7 @@ export const PLAN_INFO: Record<string, InfoModulo> = {
     depende: 'Un proveedor de mensajes y clientes identificados.',
   },
   'notificaciones-inteligentes': {
-    estado: 'aparte', nivel: 'extra', esfuerzo: 'alto',
+    estado: 'aparte', nivel: 'app_google', esfuerzo: 'alto',
     bases: 'Los avisos push por campaña ya existen.',
     falta: 'Avisar "estás cerca" exige seguir la ubicación en segundo plano, y una web instalable (PWA) no puede hacerlo. Solo es posible con app nativa. Lo que sí se puede: avisos segmentados por tema.',
     depende: 'App Nativa.',
@@ -177,13 +179,26 @@ export const MODULOS_EXISTENTES_EXTRA: {
   id: string; name: string; icon: string; price: string; description: string; info: InfoModulo;
 }[] = [
   {
+    id: 'google-merchant',
+    name: 'Productos en Google (Merchant Center)',
+    icon: 'shopping_bag',
+    price: 'Por definir',
+    description: 'Los productos de la tienda salen en Google (Shopping y resultados) a través del feed. Solo aparecen las tiendas que lo pagan.',
+    info: {
+      estado: 'existe', nivel: 'app_google', esfuerzo: 'bajo',
+      bases: 'Interruptor por tienda en el editor del superadmin; el feed /api/google-feed solo incluye las tiendas con el módulo prendido.',
+      falta: 'Una página propia por producto: hoy el link de cada producto lleva a la página de su tienda (las rutas /producto/… daban 404 y Google las rechaza). También conectar el feed en Merchant Center y el cobro.',
+      depende: 'Cuenta de Google Merchant Center de Boga con el feed cargado.',
+    },
+  },
+  {
     id: 'subdominio-propio',
     name: 'Subdominio propio',
     icon: 'dns',
     price: 'Por definir (idea: S/ 30-50 /mes)',
     description: 'La tienda responde en su propia dirección (tienda.bogahub.app) en vez de bogahub.app/tienda.',
     info: {
-      estado: 'existe', nivel: 'extra', esfuerzo: 'bajo',
+      estado: 'existe', nivel: 'app', esfuerzo: 'bajo',
       bases: 'Interruptor por tienda en el editor del superadmin: crea el dominio en Vercel y el CNAME en Cloudflare.',
       falta: 'Cobro y suscripción (hoy se prende a mano).',
     },
@@ -195,7 +210,7 @@ export const MODULOS_EXISTENTES_EXTRA: {
     price: 'Por definir',
     description: 'La tienda envía notificaciones a quienes instalaron su app (solo en su subdominio propio).',
     info: {
-      estado: 'existe', nivel: 'extra', esfuerzo: 'bajo',
+      estado: 'existe', nivel: 'app', esfuerzo: 'bajo',
       bases: 'Interruptor por tienda; límite de 1 campaña por semana y 1 por día, de 8 a 22 h (hora de Lima).',
       falta: 'Cupos por plan, cobro, y una lista de avisos dentro de la app.',
     },

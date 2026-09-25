@@ -323,7 +323,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     externalUrl: '',
       subdominioActivo: false,
       pushActivo: false,
-      modulos: { pos: false, inventario: false } as Modulos,
+      modulos: { pos: false, inventario: false, google: false } as Modulos,
     ownerEmail: ''
   });
   // Para saber si storeForm.ownerEmail realmente cambio al guardar (y no
@@ -466,7 +466,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       externalUrl: '',
       subdominioActivo: false,
       pushActivo: false,
-      modulos: { pos: false, inventario: false } as Modulos,
+      modulos: { pos: false, inventario: false, google: false } as Modulos,
       // El correo de la solicitud: asi al guardar la tienda ya queda asignada
       // a quien la pidio, sin tener que ir despues a mano a "Usuarios".
       ownerEmail: req.email || '',
@@ -677,7 +677,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       externalUrl: '',
       subdominioActivo: false,
       pushActivo: false,
-      modulos: { pos: false, inventario: false } as Modulos,
+      modulos: { pos: false, inventario: false, google: false } as Modulos,
       ownerEmail: ''
     });
     setOriginalOwnerEmail('');
@@ -722,7 +722,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       externalUrl: store.externalUrl || '',
       subdominioActivo: store.subdominioActivo ?? false,
       pushActivo: store.pushActivo ?? false,
-      modulos: { pos: moduloActivo(store.modulos, 'pos'), inventario: moduloActivo(store.modulos, 'inventario') } as Modulos,
+      modulos: { pos: moduloActivo(store.modulos, 'pos'), inventario: moduloActivo(store.modulos, 'inventario'), google: store.modulos?.google === true } as Modulos,
       // Sale del dueño actual, no de la tienda. Si lo dejan igual al guardar
       // no se reasigna nada (ver originalOwnerEmail en handleSaveStore).
       ownerEmail: profiles.find((p) => p.id === storeOwners[slug])?.email || ''
@@ -921,7 +921,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       external_url: storeForm.externalUrl || null,
       subdominio_activo: !!storeForm.subdominioActivo,
       push_activo: !!storeForm.pushActivo,
-      modulos: { pos: !!storeForm.modulos?.pos, inventario: !!storeForm.modulos?.inventario },
+      modulos: { pos: !!storeForm.modulos?.pos, inventario: !!storeForm.modulos?.inventario, google: !!storeForm.modulos?.google },
     };
     if (ownerUserId) upsertData.user_id = ownerUserId;
     if (logoUrl) {
@@ -1047,7 +1047,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         slug,
         subdominioActivo: !!storeForm.subdominioActivo,
         pushActivo: !!storeForm.pushActivo,
-        modulos: { pos: !!storeForm.modulos?.pos, inventario: !!storeForm.modulos?.inventario },
+        modulos: { pos: !!storeForm.modulos?.pos, inventario: !!storeForm.modulos?.inventario, google: !!storeForm.modulos?.google },
         name: storeForm.name,
         tagline: storeForm.tagline,
         marketplaceCategory: storeForm.marketplaceCategory,
@@ -2553,7 +2553,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           externalUrl: '',
       subdominioActivo: false,
       pushActivo: false,
-      modulos: { pos: false, inventario: false } as Modulos,
+      modulos: { pos: false, inventario: false, google: false } as Modulos,
                           ownerEmail: ''
                         });
                         setOriginalOwnerEmail('');

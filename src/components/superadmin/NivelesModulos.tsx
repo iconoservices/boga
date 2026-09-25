@@ -1,38 +1,102 @@
 'use client';
 
-// Comparativa de los niveles que se le venden al comercio (Carta / +Ventas / +Inventario).
-// Lo que gatea de verdad el panel del dueño: cada nivel es un conjunto de módulos que se
-// prende por tienda desde el editor de tienda del superadmin. La definición vive en
-// src/lib/modulos.ts (un solo lugar).
+// Comparativa de los niveles que se le venden al comercio, en dos ejes que se combinan:
+//  · Alcance: Carta → App → App + Google
+//  · Operación: Sin caja → Ventas → Ventas + Inventario
+// Lo que gatea de verdad el panel del dueño: se prende por tienda desde el editor de tienda del
+// superadmin. La definición vive en src/lib/modulos.ts (un solo lugar).
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { CAPACIDADES, EXTRAS, LIMITES, NIVELES, nivelDeTienda, nivelIncluye, type Modulos, type NivelId } from '@/lib/modulos';
+import {
+  ALCANCES, CAPACIDADES_ALCANCE, CAPACIDADES_OPERACION, EXTRAS, LIMITES, OPERACIONES,
+  alcanceIncluye, nivelAlcance, nivelOperacion, operacionIncluye,
+  type AlcanceId, type Modulos, type OperacionId,
+} from '@/lib/modulos';
 
-type TiendaNivel = { slug: string; name: string; nivel: NivelId | 'sin-clasificar' };
+type FilaTienda = { slug: string; name: string; modulos: Modulos | null; subdominio_activo: boolean | null };
+
+function Tabla<T extends string>({ titulo, niveles, capacidades, incluye }: {
+  titulo: string;
+  niveles: { id: T; nombre: string }[];
+  capacidades: { texto: string; desde: T }[];
+  incluye: (nivel: T, desde: T) => boolean;
+}) {
+  return (
+    <div className="bg-white border border-[#c2c6d6] rounded-md overflow-x-auto">
+      <table className="w-full text-left text-xs min-w-[520px]">
+        <thead>
+          <tr className="bg-[#f2f3fd] text-[10px] uppercase tracking-wider text-[#424754]">
+            <th className="p-3 font-bold">{titulo}</th>
+            {niveles.map((n) => (
+              <th key={n.id} className="p-3 font-bold text-center w-28">{n.nombre}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {capacidades.map((c) => (
+            <tr key={c.texto} className="border-t border-[#ecedf7]">
+              <td className="p-3 font-semibold text-[#191b23]">{c.texto}</td>
+              {niveles.map((n) => (
+                <td key={n.id} className="p-3 text-center">
+                  {incluye(n.id, c.desde) ? (
+                    <span className="material-symbols-outlined text-[18px] text-[#16a34a]">check_circle</span>
+                  ) : (
+                    <span className="text-[#c2c6d6]">—</span>
+                  )}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function Tarjeta({ nombre, resumen, tiendas }: { nombre: string; resumen: string; tiendas: FilaTienda[] | null }) {
+  return (
+    <div className="p-4 bg-white border border-[#c2c6d6] rounded-md flex flex-col gap-2">
+      <h4 className="text-sm font-bold text-[#191b23] leading-tight">{nombre}</h4>
+      <p className="text-xs text-[#424754]">{resumen}</p>
+      <div className="mt-auto pt-3 border-t border-[#ecedf7]">
+        <span className="text-2xl font-bold text-[#191b23]">{tiendas ? tiendas.length : '…'}</span>
+        <span className="text-xs text-[#424754] font-semibold ml-1">{tiendas?.length === 1 ? 'tienda' : 'tiendas'}</span>
+        {tiendas && tiendas.length > 0 && (
+          <p className="text-[10px] text-[#727785] font-semibold mt-1 truncate" title={tiendas.map((t) => t.name).join(', ')}>
+            {tiendas.map((t) => t.name).join(', ')}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function NivelesModulos() {
-  const [tiendas, setTiendas] = useState<TiendaNivel[] | null>(null);
+  const [tiendas, setTiendas] = useState<FilaTienda[] | null>(null);
   // Si la columna `modulos` todavía no existe en la base (migración sin correr).
   const [sinColumna, setSinColumna] = useState(false);
 
   useEffect(() => {
-    supabase.from('stores').select('slug,name,modulos').then(({ data, error }) => {
+    supabase.from('stores').select('slug,name,modulos,subdominio_activo').then(({ data, error }) => {
       if (error) { setSinColumna(true); setTiendas([]); return; }
-      setTiendas((data ?? []).map((s: { slug: string; name: string; modulos: Modulos | null }) => ({ slug: s.slug, name: s.name, nivel: nivelDeTienda(s.modulos) })));
+      setTiendas((data ?? []) as FilaTienda[]);
     });
   }, []);
 
-  const deNivel = (id: NivelId | 'sin-clasificar') => (tiendas ?? []).filter((t) => t.nivel === id);
+  const deAlcance = (id: AlcanceId) => (tiendas ? tiendas.filter((t) => nivelAlcance(t) === id) : null);
+  const deOperacion = (id: OperacionId) => (tiendas ? tiendas.filter((t) => nivelOperacion(t.modulos) === id) : null);
+  const sinClasificar = (tiendas ?? []).filter((t) => nivelOperacion(t.modulos) === 'sin-clasificar');
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="flex flex-col gap-5">
       <div>
-        <h3 className="text-sm font-bold text-[#191b23]">Niveles por módulos</h3>
+        <h3 className="text-sm font-bold text-[#191b23]">Niveles</h3>
         <p className="text-xs text-[#424754] mt-1">
-          Lo que se vende y lo que el dueño ve en su panel. Se prende por tienda en{' '}
-          <Link href="/superadmin" className="text-[#0058be] font-bold hover:underline">el editor de tienda</Link> → «Módulos del negocio».
+          Dos ejes que se combinan: <b>Alcance</b> (a cuánta gente llega) y <b>Operación</b> (qué controla el dueño en su local).
+          Se prenden por tienda en{' '}
+          <Link href="/superadmin" className="text-[#0058be] font-bold hover:underline">el editor de tienda</Link>.
           Precios: por definir.
         </p>
       </div>
@@ -44,67 +108,30 @@ export default function NivelesModulos() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {NIVELES.map((n) => {
-          const propias = deNivel(n.id);
-          return (
-            <div key={n.id} className="p-4 bg-white border border-[#c2c6d6] rounded-md flex flex-col gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#0058be]">Nivel</span>
-              <h4 className="text-sm font-bold text-[#191b23] leading-tight">{n.nombre}</h4>
-              <p className="text-xs text-[#424754]">{n.resumen}</p>
-              <div className="mt-auto pt-3 border-t border-[#ecedf7]">
-                <span className="text-2xl font-bold text-[#191b23]">{tiendas ? propias.length : '…'}</span>
-                <span className="text-xs text-[#424754] font-semibold ml-1">{propias.length === 1 ? 'tienda' : 'tiendas'}</span>
-                {propias.length > 0 && (
-                  <p className="text-[10px] text-[#727785] font-semibold mt-1 truncate" title={propias.map((t) => t.name).join(', ')}>
-                    {propias.map((t) => t.name).join(', ')}
-                  </p>
-                )}
-              </div>
-            </div>
-          );
-        })}
+      <div className="flex flex-col gap-3">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-[#0058be]">Alcance · a cuánta gente llega</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {ALCANCES.map((n) => <Tarjeta key={n.id} nombre={n.nombre} resumen={n.resumen} tiendas={deAlcance(n.id)} />)}
+        </div>
+        <Tabla titulo="Qué gana el dueño" niveles={ALCANCES} capacidades={CAPACIDADES_ALCANCE} incluye={alcanceIncluye} />
       </div>
 
-      {deNivel('sin-clasificar').length > 0 && (
-        <p className="text-[11px] text-[#727785] font-semibold">
-          {deNivel('sin-clasificar').length} tienda(s) sin clasificar (anteriores a los módulos, con todo prendido):{' '}
-          {deNivel('sin-clasificar').map((t) => t.name).join(', ')}.
-        </p>
-      )}
-
-      <div className="bg-white border border-[#c2c6d6] rounded-md overflow-x-auto">
-        <table className="w-full text-left text-xs min-w-[560px]">
-          <thead>
-            <tr className="bg-[#f2f3fd] text-[10px] uppercase tracking-wider text-[#424754]">
-              <th className="p-3 font-bold">Qué puede hacer el dueño</th>
-              {NIVELES.map((n) => (
-                <th key={n.id} className="p-3 font-bold text-center w-28">{n.nombre}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {CAPACIDADES.map((c) => (
-              <tr key={c.texto} className="border-t border-[#ecedf7]">
-                <td className="p-3 font-semibold text-[#191b23]">{c.texto}</td>
-                {NIVELES.map((n) => (
-                  <td key={n.id} className="p-3 text-center">
-                    {nivelIncluye(n.id, c.desde) ? (
-                      <span className="material-symbols-outlined text-[18px] text-[#16a34a]">check_circle</span>
-                    ) : (
-                      <span className="text-[#c2c6d6]">—</span>
-                    )}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="flex flex-col gap-3">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-[#0058be]">Operación · qué controla en su local</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {OPERACIONES.map((n) => <Tarjeta key={n.id} nombre={n.nombre} resumen={n.resumen} tiendas={deOperacion(n.id)} />)}
+        </div>
+        <Tabla titulo="Qué gana el dueño" niveles={OPERACIONES.slice(1)} capacidades={CAPACIDADES_OPERACION} incluye={operacionIncluye} />
+        {sinClasificar.length > 0 && (
+          <p className="text-[11px] text-[#727785] font-semibold">
+            {sinClasificar.length} tienda(s) sin clasificar (anteriores a los módulos, con todo prendido): {sinClasificar.map((t) => t.name).join(', ')}.
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="p-4 bg-white border border-[#c2c6d6] rounded-md">
-          <h4 className="text-xs font-bold text-[#191b23] mb-2">Extras (se suman a cualquier nivel)</h4>
+          <h4 className="text-xs font-bold text-[#191b23] mb-2">Aparte de los niveles</h4>
           <ul className="list-disc pl-4 text-xs text-[#424754] space-y-1">
             {EXTRAS.map((e) => <li key={e}>{e}</li>)}
           </ul>
