@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 
 const primerNombre = (n: string) => n.trim().split(/\s+/)[0] || 'Pasajero';
 const pin = (p: Pick<Pedido, 'origen_lat' | 'origen_lng'>) =>
-  p.origen_lat != null && p.origen_lng != null ? `https://www.google.com/maps?q=${p.origen_lat},${p.origen_lng}` : null;
+  p.origen_lat != null && p.origen_lng != null ? `https://www.google.com/maps/dir/?api=1&destination=${p.origen_lat},${p.origen_lng}` : null;
 
 export async function GET(request: Request) {
   const db = servicio();

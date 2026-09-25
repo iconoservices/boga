@@ -6,7 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ZONAS_TRANSPORTE, TIPOS_PEDIDO, CLAVE_PEDIDO_TAXI } from '@/lib/zonasTransporte';
+import { ZONAS_TRANSPORTE, TIPOS_PEDIDO, CLAVE_PEDIDO_TAXI, zonaMasCercana } from '@/lib/zonasTransporte';
 import { ubicacionActual, mensajeUbicacion, type ErrorUbicacion, type Punto } from '@/lib/ubicacion';
 import { guardarCliente, leerCliente, normalizarCelular } from '@/lib/cliente';
 
@@ -43,6 +43,17 @@ export default function PedirTaxiPage() {
     catch (e) { setErrUbic(mensajeUbicacion(e as ErrorUbicacion)); }
     finally { setUbicando(false); }
   };
+
+  // Si ya le dio permiso de ubicación a Boga antes, se detecta sola al abrir (sin volver a preguntar).
+  // Si nunca dio permiso, no se le lanza el aviso del navegador de golpe: toca el botón cuando quiera.
+  useEffect(() => {
+    let vivo = true;
+    navigator.permissions?.query({ name: 'geolocation' as PermissionName })
+      .then((r) => { if (vivo && r.state === 'granted') void usarUbicacion(); })
+      .catch(() => {});
+    return () => { vivo = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const pedir = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,7 +108,7 @@ export default function PedirTaxiPage() {
           <h2 className="text-sm font-extrabold uppercase tracking-wide text-gray-500">¿Dónde estás?</h2>
           {punto ? (
             <div className="flex items-center justify-between gap-3 rounded-xl px-3.5 py-3" style={{ background: '#d3f1e4' }}>
-              <span className="text-sm font-bold" style={{ color: VERDE }}>✓ Ubicación lista <span className="font-medium">(±{punto.precisionM} m)</span></span>
+              <span className="text-sm font-bold" style={{ color: VERDE }}>✓ Te ubicamos{zonaMasCercana(punto.lat, punto.lng) ? ` cerca de ${zonaMasCercana(punto.lat, punto.lng)!.nombre.split(' / ')[0]}` : ''} <span className="font-medium">(±{punto.precisionM} m)</span></span>
               <button type="button" onClick={() => setPunto(null)} className="text-xs font-bold text-gray-600 underline">Quitar</button>
             </div>
           ) : (

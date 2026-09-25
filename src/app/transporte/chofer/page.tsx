@@ -264,7 +264,7 @@ export default function ChoferApp() {
               <a href={`https://wa.me/${tel}?text=${encodeURIComponent(`Hola ${e.actual.pasajero.split(' ')[0]}, soy tu chofer de BogaHub Taxi Seguro. Voy en camino.`)}`}
                 target="_blank" rel="noreferrer" className="py-3 rounded-xl text-white text-center font-extrabold" style={{ background: VERDE }}>💬 WhatsApp</a>
             </div>
-            {e.actual.pin && <a href={e.actual.pin} target="_blank" rel="noreferrer" className="py-3 rounded-xl border border-gray-300 text-center font-bold">📍 Abrir ubicación en Google Maps</a>}
+            {e.actual.pin && <a href={e.actual.pin} target="_blank" rel="noreferrer" className="py-3 rounded-xl border border-gray-300 text-center font-bold">🧭 Cómo llegar (Google Maps)</a>}
             <div className="grid grid-cols-2 gap-2">
               <button onClick={async () => { await accion('completar', { pedido_id: e.actual!.id }); consultar(); }} className="py-3 rounded-xl text-white font-extrabold" style={{ background: VERDE }}>✓ Terminé el viaje</button>
               <button onClick={async () => { if (window.confirm('¿No puedes hacer este viaje? Se lo ofreceremos a otro chofer.')) { await accion('liberar', { pedido_id: e.actual!.id }); consultar(); } }}
