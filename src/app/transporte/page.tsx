@@ -265,6 +265,13 @@ export default function TaxiSeguro() {
               ¿Manejas mototaxi, auto o moto? Postúlate al padrón
               <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
             </a>
+            <a
+              href="/transporte/chofer"
+              className="inline-flex items-center gap-1.5 w-fit font-label-md text-[12px] font-bold hover:underline text-secondary"
+            >
+              <span className="material-symbols-outlined text-[16px]">key</span>
+              ¿Ya eres chofer del padrón? Abre tu app
+            </a>
           </div>
           <div className="grid grid-cols-3 gap-3 bg-white rounded-2xl border border-surface-container-highest shadow-[0_15px_15px_rgba(0,0,0,0.04)] p-4 lg:w-[360px] shrink-0">
             {[

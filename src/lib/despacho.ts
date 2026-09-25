@@ -35,7 +35,7 @@ export interface Pedido {
 }
 
 interface Candidato {
-  driverId: string; nombre: string;
+  driverId: string; nombre: string; token: string;
   distanciaKm: number;                       // Infinity si no se sabe dónde está
   fuente: 'gps' | 'zona' | 'base' | 'ninguna';
 }
@@ -73,7 +73,7 @@ export const haExpirado = (p: Pick<Pedido, 'inicio_busqueda_at'>) => minDesde(p.
 export async function candidatosOrdenados(db: SupabaseClient, pedido: Pedido): Promise<Candidato[]> {
   const { data: acceso } = await db
     .from('driver_acceso')
-    .select('driver_id,pausado,base_lat,base_lng,lat,lng,ubicado_at,zona,zona_hasta,zonas,visto_at');
+    .select('driver_id,token,pausado,base_lat,base_lng,lat,lng,ubicado_at,zona,zona_hasta,zonas,visto_at');
   if (!acceso || acceso.length === 0) return [];
 
   const ids = acceso.map((a) => a.driver_id as string);
@@ -104,7 +104,7 @@ export async function candidatosOrdenados(db: SupabaseClient, pedido: Pedido): P
     const cubre = (a.zonas as string[] | null) ?? [];
     if (cubre.length > 0 && zonaPedido && !cubre.includes(zonaPedido) && !(dist <= 2.5)) continue;
 
-    candidatos.push({ driverId: a.driver_id as string, nombre: c.nombre as string, distanciaKm: dist, fuente: pos?.fuente ?? 'ninguna' });
+    candidatos.push({ driverId: a.driver_id as string, nombre: c.nombre as string, token: a.token as string, distanciaKm: dist, fuente: pos?.fuente ?? 'ninguna' });
   }
   return candidatos.sort((x, y) => x.distanciaKm - y.distanciaKm);
 }
@@ -140,6 +140,24 @@ export async function avisarChofer(db: SupabaseClient, driverId: string, carga: 
   }));
   if (muertas.length) await db.from('push_subs').delete().in('endpoint', muertas);
   return alguno;
+}
+
+/**
+ * Cuando un chofer acepta el viaje (o el pasajero lo cancela), a los demás choferes a quienes se les había avisado se
+ * les reemplaza la notificación del pedido por "ya no está disponible", que se cierra sola. Así no se quedan con un
+ * aviso viejo en la pantalla ni pierden tiempo tocándolo.
+ */
+export async function avisarCierre(db: SupabaseClient, pedidoId: string, motivo: 'tomado' | 'cancelado', excepto?: string): Promise<void> {
+  const { data } = await db.from('ride_avisos').select('driver_id').eq('ride_id', pedidoId);
+  const ids = (data ?? []).map((a) => a.driver_id as string).filter((id) => id !== excepto);
+  await Promise.all(ids.map((id) => avisarChofer(db, id, {
+    title: motivo === 'tomado' ? 'Otro chofer ya tomó este viaje' : 'El pasajero canceló el pedido',
+    body: 'Sigue atento: te avisaremos del próximo.',
+    url: '/transporte/chofer',
+    tag: `taxi-${pedidoId}`,
+    requireInteraction: false,
+    cerrarEnSeg: 6,
+  })));
 }
 
 const primerNombre = (n: string) => n.trim().split(/\s+/)[0] || 'Pasajero';
@@ -193,6 +211,10 @@ export async function avanzarOlas(db: SupabaseClient, pedidoId: string): Promise
         tag: `taxi-${pedidoId}`,
         requireInteraction: true,
         vibrate: [250, 120, 250, 120, 400],
+        // Botón "Aceptar" dentro de la notificación (Android y computadora). El token va cifrado dentro del aviso:
+        // solo el celular de ese chofer puede leerlo.
+        actions: [{ action: 'aceptar', title: '✓ Aceptar viaje' }],
+        aceptar: { t: c.token, id: pedidoId },
       });
       await db.from('ride_avisos').upsert(
         { ride_id: pedidoId, driver_id: c.driverId, ola: numeroOla, distancia_km: cerca ? Number(c.distanciaKm.toFixed(2)) : null, fuente: c.fuente, push_ok: ok },

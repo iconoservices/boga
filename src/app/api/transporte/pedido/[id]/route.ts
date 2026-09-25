@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { avanzarOlas, haExpirado, OLAS } from '@/lib/despacho';
+import { avanzarOlas, avisarCierre, haExpirado, OLAS } from '@/lib/despacho';
 import { choferPublico, excedeLimite, ipDe, servicio, UUID, type ChoferAutenticado } from '@/lib/transporteServidor';
 
 // Estado de un pedido de taxi, para la página del pasajero (que lo consulta cada pocos segundos).
@@ -61,5 +61,7 @@ export async function POST(request: Request, { params }: Ctx) {
 
   const { data } = await db.from('ride_requests').update({ estado: 'cancelado', terminado_at: new Date().toISOString() })
     .eq('id', id).in('estado', ['buscando', 'asignado']).select('id');
-  return NextResponse.json({ ok: !!data && data.length > 0 });
+  const ok = !!data && data.length > 0;
+  if (ok) await avisarCierre(db, id, 'cancelado');   // a los choferes avisados (incluido el que lo había aceptado)
+  return NextResponse.json({ ok });
 }

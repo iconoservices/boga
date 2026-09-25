@@ -149,7 +149,7 @@ export default function ChoferesAdmin() {
     };
 
     const guardarFila = (fila: Record<string, unknown>) =>
-      ficha.id ? supabase.from('drivers').update(fila).eq('id', ficha.id) : supabase.from('drivers').insert(fila);
+      ficha.id ? supabase.from('drivers').update(fila).eq('id', ficha.id).select('id') : supabase.from('drivers').insert(fila).select('id');
 
     let res = await guardarFila(payload);
     // Si todavía no se corrió el SQL del horario, se guarda el resto de la ficha y se avisa.
@@ -164,10 +164,21 @@ export default function ChoferesAdmin() {
     setGuardando(false);
     if (res.error) { setMsg(`Error: ${res.error.message}`); return; }
     setFicha(FICHA_VACIA);
+
+    // Un chofer nuevo sale con su enlace listo: se crea su acceso y se abre su panel para mandárselo por WhatsApp.
+    const nuevoId = !ficha.id ? (res.data?.[0] as { id?: string } | undefined)?.id : undefined;
+    let conEnlace = false;
+    if (nuevoId) {
+      const { error: errAcceso } = await supabase.from('driver_acceso').insert({ driver_id: nuevoId });
+      conEnlace = !errAcceso;
+    }
+    await recargar();
+    if (nuevoId && conEnlace) setAppAbierta(nuevoId);
+
     setMsg(sinColumna
       ? 'Guardado, pero el horario NO se guardó: falta correr el SQL de «Horario semanal de los choferes» (supabase_setup.sql).'
-      : ficha.id ? 'Ficha actualizada.' : 'Chofer agregado.');
-    recargar();
+      : ficha.id ? 'Ficha actualizada.'
+      : conEnlace ? 'Chofer agregado. Su enlace de la app está listo abajo (en el Directorio): mándaselo por WhatsApp.' : 'Chofer agregado.');
   };
 
   const toggleStatus = async (d: DriverRow) => {

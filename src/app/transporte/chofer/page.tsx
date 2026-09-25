@@ -12,6 +12,7 @@
 // paradero guardado.
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { ZONAS_TRANSPORTE } from '@/lib/zonasTransporte';
 import { ubicacionActual, mensajeUbicacion, type ErrorUbicacion } from '@/lib/ubicacion';
 import { suscribirChofer, esIOS, enModoApp, motivoError } from '@/lib/push';
@@ -73,6 +74,17 @@ export default function ChoferApp() {
         } catch { /* el navegador puede bloquear el sonido */ }
       }
       cantidadAntes.current = nuevo.pedidos.length;
+      // Limpia de la bandeja de notificaciones los avisos de pedidos que ya no están disponibles.
+      navigator.serviceWorker?.getRegistration().then((reg) => reg?.getNotifications().then((lista) => {
+        const vigentes = new Set(nuevo.pedidos.map((x) => `taxi-${x.id}`));
+        lista.forEach((n) => { if (n.tag.startsWith('taxi-') && !vigentes.has(n.tag)) n.close(); });
+      })).catch(() => {});
+      // Abrió el aviso de un pedido que ya no está en su lista: lo tomó otro chofer, o se canceló o caducó.
+      const buscado = new URLSearchParams(window.location.search).get('pedido');
+      if (buscado && !nuevo.actual && !nuevo.pedidos.some((x) => x.id === buscado) && !avisoViejoMostrado.current) {
+        avisoViejoMostrado.current = true;
+        setMsg('Ese pedido ya no está disponible: lo tomó otro chofer, o el pasajero lo canceló. Sigue atento al próximo.');
+      }
       document.title = nuevo.pedidos.length > 0 ? `(${nuevo.pedidos.length}) Taxi · Pedido nuevo` : 'Taxi · App del chofer';
       setE(nuevo);
     } catch { /* sin red: se reintenta */ }
@@ -102,6 +114,7 @@ export default function ChoferApp() {
   // Al abrir con pedidos esperando (por ejemplo desde la notificación), se toma la ubicación UNA vez, en ese
   // momento, para mostrarle la distancia exacta a cada pedido. Gasta casi nada de batería (una sola lectura).
   const ubicacionDenegada = useRef(false);
+  const avisoViejoMostrado = useRef(false);
   const hayPedidos = !!e && e.pedidos.length > 0;
   useEffect(() => {
     if (!token || !hayPedidos || ubicacionDenegada.current) return;
@@ -168,7 +181,9 @@ export default function ChoferApp() {
         <div className="max-w-sm">
           <p className="text-4xl mb-3">🔒</p>
           <h1 className="text-xl font-extrabold mb-2">Necesitas tu enlace de chofer</h1>
-          <p className="text-sm text-gray-600 font-medium">Pídele a BogaHub que te envíe tu enlace privado por WhatsApp y ábrelo desde este celular. Es personal: no lo compartas.</p>
+          <p className="text-sm text-gray-600 font-medium">Tu enlace privado es tu llave: con él entras a tu app, sin usuario ni contraseña. BogaHub te lo envía por WhatsApp cuando te aprueban en el padrón. Ábrelo desde este celular y quedará guardado. Es personal: no lo compartas.</p>
+          <p className="text-sm text-gray-600 font-medium mt-3">¿Todavía no estás en el padrón?</p>
+          <Link href="/transporte/registro" className="inline-block mt-2 px-5 py-3 rounded-xl text-white font-bold" style={{ background: VERDE }}>Postularme como chofer</Link>
         </div>
       </div>
     );

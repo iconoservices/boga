@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { avanzarOlas, haExpirado, origenDe, posicionChofer, type Pedido } from '@/lib/despacho';
+import { avanzarOlas, avisarCierre, haExpirado, origenDe, posicionChofer, type Pedido } from '@/lib/despacho';
 import { distanciaKm } from '@/lib/ciudades';
 import { zonaPorId } from '@/lib/zonasTransporte';
 import { choferPorToken, coordenada, excedeLimite, ipDe, servicio, texto } from '@/lib/transporteServidor';
@@ -109,6 +109,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: false, motivo: p?.estado === 'buscando' ? 'error' : p?.estado === 'expirado' || p?.estado === 'cancelado' ? 'cerrado' : 'tomado' });
       }
       const p = tomado[0] as Pedido;
+      await avisarCierre(db, id, 'tomado', yo.driverId);   // a los demás se les cierra el aviso
       return NextResponse.json({ ok: true, actual: { id: p.id, pasajero: p.pasajero_nombre, tel: p.pasajero_tel, origen: p.origen_texto, destino: p.destino_texto, oferta: p.oferta, pin: pin(p) } });
     }
     case 'completar': {
