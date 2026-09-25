@@ -247,8 +247,36 @@ export default function ProductosDemoPlantilla() {
               <textarea rows={3} value={ficha.desc} onChange={(e) => setFicha({ ...ficha, desc: e.target.value })} className={campo} />
             </label>
             <div className="flex flex-col gap-1 text-xs font-bold text-secondary">Foto
-              {vistaPrevia && <img src={vistaPrevia} alt="" className="w-full h-36 rounded-lg object-cover bg-surface-container-low" />}
-              <input type="file" accept="image/*" onChange={(e) => setArchivo(e.target.files?.[0] ?? null)} className="text-xs font-normal" />
+              {/* Zona de foto: clic, arrastrar o pegar */}
+              <label
+                tabIndex={0}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const f = e.dataTransfer.files?.[0];
+                  if (f && f.type.startsWith('image/')) setArchivo(f);
+                }}
+                onPaste={(e) => {
+                  const f = Array.from(e.clipboardData.files)[0]
+                    || Array.from(e.clipboardData.items).find((it) => it.type.startsWith('image/'))?.getAsFile();
+                  if (f) setArchivo(f);
+                }}
+                className="group relative w-full h-44 rounded-lg border-2 border-dashed border-surface-container-highest bg-surface-container-low flex flex-col items-center justify-center gap-1 cursor-pointer overflow-hidden hover:bg-surface-container focus:outline-none focus:border-primary transition-colors"
+              >
+                {vistaPrevia ? (
+                  <>
+                    <img src={vistaPrevia} alt="" className="w-full h-full object-cover" />
+                    <span className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-opacity">Cambiar foto</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-[32px] text-secondary">add_a_photo</span>
+                    <span className="text-xs font-bold text-secondary">Clic, arrastra o pega la foto</span>
+                    <span className="text-[10px] font-normal text-secondary/70">Recomendado cuadrada (1:1)</span>
+                  </>
+                )}
+                <input type="file" accept="image/*" onChange={(e) => setArchivo(e.target.files?.[0] ?? null)} className="sr-only" />
+              </label>
             </div>
 
             {msg && <p className="text-xs font-semibold text-red-600">{msg}</p>}
