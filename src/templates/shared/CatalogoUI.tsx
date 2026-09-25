@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { guardarCliente, leerCliente, normalizarCelular } from '@/lib/cliente';
 import type { StoreTheme } from '@/lib/templates.config';
 import { TXT, ICON, soles, type Producto, type Categoria } from './tokens';
-import { AddButton, CartBadge } from './AddFeedback';
+import { AddButton, CartBadge, EVENTO_VER_PEDIDO } from './AddFeedback';
 
 /* ════════════════════════════════════════════
    CHIPS DE CATEGORIA
@@ -144,13 +144,25 @@ export function ProductModal({
 }) {
   const [agregado, setAgregado] = React.useState(false);
   const cierre = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const contenedor = React.useRef<HTMLDivElement>(null);
 
-  // Al cambiar de producto (o cerrar) se limpia el estado del boton.
+  // Al cambiar de producto (por ejemplo tocando un sugerido) se limpia el boton y
+  // se vuelve arriba: el modal conserva el scroll y si no, el nuevo producto
+  // aparecia con la pantalla ya en la zona de sugeridos.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setAgregado(false);
+    contenedor.current?.scrollTo({ top: 0 });
     return () => { if (cierre.current) clearTimeout(cierre.current); };
   }, [producto]);
+
+  // "Ver" del aviso "Agregado": el modal tapa la pantalla, asi que se cierra
+  // para que el cliente vea el pedido.
+  useEffect(() => {
+    if (!producto) return;
+    window.addEventListener(EVENTO_VER_PEDIDO, onClose);
+    return () => window.removeEventListener(EVENTO_VER_PEDIDO, onClose);
+  }, [producto, onClose]);
 
   // Bloquea el scroll del fondo y cierra con Escape.
   useEffect(() => {
@@ -173,6 +185,7 @@ export function ProductModal({
 
   return (
     <div
+      ref={contenedor}
       className="fixed inset-0 z-[100] overflow-y-auto"
       style={{ background: t.surface }}
       role="dialog"
@@ -216,12 +229,12 @@ export function ProductModal({
           <span className="font-black text-xl" style={{ color: t.primary }}>{soles(producto.price)}</span>
           <button
             onClick={() => {
-              if (agregado) return;
+              // El modal se queda abierto: abajo hay sugeridos y el cliente
+              // puede seguir agregando o mirando mas platos sin salir de aca.
               onAdd(producto);
               setAgregado(true);
-              // Se deja ver el "Agregado" un momento antes de cerrar; si no, el
-              // modal desaparecia al instante y parecia que no habia pasado nada.
-              cierre.current = setTimeout(onClose, 700);
+              if (cierre.current) clearTimeout(cierre.current);
+              cierre.current = setTimeout(() => setAgregado(false), 1200);
             }}
             className={`px-6 py-2.5 rounded-full font-bold ${TXT.body} flex items-center gap-1.5 transition-[background-color,transform] active:scale-95 ${agregado ? 'add-btn-pop' : ''}`}
             style={{ background: agregado ? '#16a34a' : t.primary, color: agregado ? '#fff' : t.onPrimary }}

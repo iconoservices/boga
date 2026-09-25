@@ -15,6 +15,8 @@ import { TXT, ICON } from './tokens';
  */
 
 const EVENTO = 'boga:agregado';
+/** Lo dispara el "Ver" del aviso; el modal de producto lo escucha para cerrarse. */
+export const EVENTO_VER_PEDIDO = 'boga:ver-pedido';
 
 /** Lo dispara useCatalogo.addToCart; lo escucha AddedToast. */
 export function avisarAgregado(nombre: string) {
@@ -95,15 +97,24 @@ export function AddedToast({
   t: StoreTheme;
   onVerPedido: () => void;
 }) {
-  const [aviso, setAviso] = useState<{ nombre: string; id: number } | null>(null);
+  const [aviso, setAviso] = useState<{ nombre: string; id: number; n: number } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const onAgregado = (e: Event) => {
       const nombre = (e as CustomEvent<{ nombre: string }>).detail?.nombre ?? '';
-      setAviso({ nombre, id: Date.now() });
+      // n cuenta lo agregado en esta racha: con el modal abierto se suman varios.
+      setAviso((a) => ({ nombre, id: Date.now(), n: (a?.n ?? 0) + 1 }));
+      programarCierre();
+    };
+    // Con el modal de producto abierto el aviso no se esconde: el cliente sigue
+    // viendo lo que fue agregando. Se va solo un rato despues de cerrar el modal.
+    const programarCierre = () => {
       if (timer.current) clearTimeout(timer.current);
-      timer.current = setTimeout(() => setAviso(null), 2200);
+      timer.current = setTimeout(() => {
+        if (document.querySelector('[role="dialog"]')) programarCierre();
+        else setAviso(null);
+      }, 2200);
     };
     window.addEventListener(EVENTO, onAgregado);
     return () => {
@@ -131,11 +142,17 @@ export function AddedToast({
         <span className={`material-symbols-outlined ${ICON.sm}`}>check</span>
       </span>
       <div className="min-w-0 flex-1">
-        <p className={`${TXT.micro} font-semibold opacity-70 leading-none mb-0.5`}>Agregado al pedido</p>
+        <p className={`${TXT.micro} font-semibold opacity-70 leading-none mb-0.5`}>
+          {aviso.n > 1 ? `Agregado al pedido · ${aviso.n} agregados` : 'Agregado al pedido'}
+        </p>
         <p className={`${TXT.small} font-bold truncate`}>{aviso.nombre}</p>
       </div>
       <button
-        onClick={() => { setAviso(null); onVerPedido(); }}
+        onClick={() => {
+          setAviso(null);
+          window.dispatchEvent(new Event(EVENTO_VER_PEDIDO));
+          onVerPedido();
+        }}
         className={`${TXT.small} font-black uppercase shrink-0 px-3 py-1.5 rounded-full active:scale-95 transition-transform`}
         style={{ background: t.primary, color: t.onPrimary }}
       >
