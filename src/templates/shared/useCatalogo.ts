@@ -8,6 +8,7 @@ import { getDemoProducts } from '@/lib/templates.config';
 import { debeMostrarDemo } from '@/lib/demo';
 import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
 import { soles, iconForCategory, type Producto, type Categoria } from './tokens';
+import { avisarAgregado } from './AddFeedback';
 
 /**
  * El motor de las plantillas de comida: catalogo, categorias y carrito.
@@ -88,7 +89,10 @@ export function useCatalogo(store: StoreConfig) {
   const cartCount = cartItems.reduce((n, l) => n + l.qty, 0);
   const subtotal = cartItems.reduce((n, l) => n + l.producto.price * l.qty, 0);
 
-  const addToCart = (p: Producto) => setCart((c) => ({ ...c, [p.id]: (c[p.id] ?? 0) + 1 }));
+  const addToCart = (p: Producto) => {
+    setCart((c) => ({ ...c, [p.id]: (c[p.id] ?? 0) + 1 }));
+    avisarAgregado(p.name);
+  };
   const removeFromCart = (id: string) =>
     setCart((c) => {
       const qty = (c[id] ?? 0) - 1;

@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { guardarCliente, leerCliente, normalizarCelular } from '@/lib/cliente';
 import type { StoreTheme } from '@/lib/templates.config';
 import { TXT, ICON, soles, type Producto, type Categoria } from './tokens';
+import { AddButton, CartBadge } from './AddFeedback';
 
 /* ════════════════════════════════════════════
    CHIPS DE CATEGORIA
@@ -116,14 +117,7 @@ export function ProductGrid({
               <span className={`font-extrabold ${TXT.lead}`} style={{ color: t.primary }}>
                 {soles(product.price)}
               </span>
-              <button
-                onClick={(e) => { e.stopPropagation(); onAdd(product); }}
-                className="w-7 h-7 rounded-full flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all"
-                style={{ background: t.primary, color: t.onPrimary }}
-                aria-label={`Agregar ${product.name} al pedido`}
-              >
-                <span className={`material-symbols-outlined ${ICON.sm}`}>add</span>
-              </button>
+              <AddButton t={t} nombre={product.name} onAdd={() => onAdd(product)} />
             </div>
           </div>
         </div>
@@ -148,6 +142,16 @@ export function ProductModal({
   /** Para poder tocar un sugerido y que el modal cambie al producto elegido. */
   onSelect?: (p: Producto) => void;
 }) {
+  const [agregado, setAgregado] = React.useState(false);
+  const cierre = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Al cambiar de producto (o cerrar) se limpia el estado del boton.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setAgregado(false);
+    return () => { if (cierre.current) clearTimeout(cierre.current); };
+  }, [producto]);
+
   // Bloquea el scroll del fondo y cierra con Escape.
   useEffect(() => {
     if (!producto) return;
@@ -211,12 +215,19 @@ export function ProductModal({
         <div className="w-full max-w-2xl flex items-center justify-between gap-4 px-1">
           <span className="font-black text-xl" style={{ color: t.primary }}>{soles(producto.price)}</span>
           <button
-            onClick={() => { onAdd(producto); onClose(); }}
-            className={`px-6 py-2.5 rounded-full font-bold ${TXT.body} flex items-center gap-1.5 transition-transform active:scale-95`}
-            style={{ background: t.primary, color: t.onPrimary }}
+            onClick={() => {
+              if (agregado) return;
+              onAdd(producto);
+              setAgregado(true);
+              // Se deja ver el "Agregado" un momento antes de cerrar; si no, el
+              // modal desaparecia al instante y parecia que no habia pasado nada.
+              cierre.current = setTimeout(onClose, 700);
+            }}
+            className={`px-6 py-2.5 rounded-full font-bold ${TXT.body} flex items-center gap-1.5 transition-[background-color,transform] active:scale-95 ${agregado ? 'add-btn-pop' : ''}`}
+            style={{ background: agregado ? '#16a34a' : t.primary, color: agregado ? '#fff' : t.onPrimary }}
           >
-            <span className={`material-symbols-outlined ${ICON.sm}`}>add</span>
-            Agregar
+            <span className={`material-symbols-outlined ${ICON.sm}`}>{agregado ? 'check' : 'add'}</span>
+            {agregado ? 'Agregado' : 'Agregar'}
           </button>
         </div>
       </div>
@@ -263,6 +274,14 @@ export function CartPanel({
   const faltaCelular = !telefono;
   const faltaNombre = !nombre.trim();
   const faltaDireccion = entrega === 'delivery' && !direccion.trim();
+  const [celularTocado, setCelularTocado] = React.useState(false);
+  // El error solo sale si ya escribió algo (o salió del campo): no se le grita a quien recién llega.
+  const celularInvalido = faltaCelular && (celularTocado || celular.trim().length >= 9);
+  const faltantes = [
+    faltaNombre && 'tu nombre',
+    faltaCelular && 'un celular válido',
+    faltaDireccion && 'la dirección de entrega',
+  ].filter(Boolean) as string[];
 
   return (
     <div className="animate-fade-in px-5 py-8 max-w-[600px] mx-auto text-center space-y-6">
@@ -375,10 +394,24 @@ export function CartPanel({
                 inputMode="numeric"
                 value={celular}
                 onChange={(e) => setCelular(e.target.value)}
-                placeholder="9XX XXX XXX (para avisarte de tu pedido)"
+                onBlur={() => setCelularTocado(true)}
+                aria-invalid={celularInvalido}
+                aria-describedby="carrito-celular-ayuda"
+                placeholder="9XX XXX XXX"
                 className={`w-full border rounded-xl px-3 py-2.5 ${TXT.small} font-semibold focus:outline-none`}
-                style={{ borderColor: `${t.outlineVariant}80`, background: t.surface, color: t.onSurface }}
+                style={{ borderColor: celularInvalido ? '#dc2626' : `${t.outlineVariant}80`, background: t.surface, color: t.onSurface }}
               />
+              {/* Antes el boton quedaba apagado sin decir por que: quien ponia un
+                  numero que no era un celular no sabia que era eso lo que fallaba. */}
+              <p
+                id="carrito-celular-ayuda"
+                className={`${TXT.micro} mt-1 text-left`}
+                style={{ color: celularInvalido ? '#dc2626' : t.onSurfaceVariant }}
+              >
+                {celularInvalido
+                  ? 'Ese número no es válido. Escribe un celular peruano real: 9 dígitos que empiecen con 9 (ej. 987 654 321).'
+                  : 'Pon un número de celular real: te avisamos de tu pedido por WhatsApp a este número.'}
+              </p>
             </div>
 
             <div className="flex gap-2">
@@ -417,6 +450,11 @@ export function CartPanel({
             )}
           </div>
 
+          {faltantes.length > 0 && (
+            <p className={`${TXT.small} font-semibold text-center`} style={{ color: t.onSurfaceVariant }}>
+              Para confirmar falta: {faltantes.join(', ')}.
+            </p>
+          )}
           <button
             onClick={() => {
               if (!telefono) return;
@@ -616,7 +654,7 @@ export function BottomNav({
         return (
           <button
             key={item.id}
-            onClick={() => onSelect(item.id)}
+            onClick={() => { onSelect(item.id); window.scrollTo({ top: 0 }); }}
             className="flex flex-col items-center justify-center gap-0.5 transition-all relative flex-1"
             style={{
               color: isActive ? t.primary : t.onSurfaceVariant,
@@ -631,13 +669,8 @@ export function BottomNav({
               {item.icon}
             </span>
             <span className="text-[10px] font-bold uppercase tracking-tighter">{item.label}</span>
-            {item.id === 'pedidos' && cartCount > 0 && (
-              <span
-                className="absolute top-0.5 right-[15%] w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center"
-                style={{ background: t.primary, color: t.onPrimary }}
-              >
-                {cartCount}
-              </span>
+            {item.id === 'pedidos' && (
+              <CartBadge t={t} count={cartCount} className="absolute top-0.5 right-[15%] min-w-4 h-4 px-1 text-[9px]" />
             )}
           </button>
         );

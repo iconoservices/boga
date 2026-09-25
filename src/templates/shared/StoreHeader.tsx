@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import type { StoreConfig } from '@/lib/stores.config';
 import { TXT, ICON, inicialesDe } from './tokens';
+import { CartBadge, AddedToast } from './AddFeedback';
 
 interface Tab {
   id: string;
@@ -29,6 +30,11 @@ export default function StoreHeader({
   onCta: () => void;
 }) {
   const t = store.theme;
+  // Al cambiar de pestaña se sube al inicio: si no, quien tocaba Pedidos desde el
+  // fondo del menu llegaba al carrito con el scroll abajo y no veia los items ni el formulario.
+  const alInicio = () => window.scrollTo({ top: 0 });
+  const seleccionar = (id: string) => { onSelect(id); alInicio(); };
+  const irAlCarrito = () => { onCarrito(); alInicio(); };
   const [isScrolled, setIsScrolled] = useState(false);
   const iniciales = inicialesDe(store.name);
 
@@ -74,7 +80,7 @@ export default function StoreHeader({
             {tabs.map((item) => (
               <button
                 key={item.id}
-                onClick={() => onSelect(item.id)}
+                onClick={() => seleccionar(item.id)}
                 className={`font-bold ${TXT.body} uppercase tracking-wide transition-all relative`}
                 style={{
                   color: active === item.id ? t.primary : t.onSurfaceVariant,
@@ -98,7 +104,7 @@ export default function StoreHeader({
               {ctaLabel}
             </button>
             <button
-              onClick={onCarrito}
+              onClick={irAlCarrito}
               className="relative w-10 h-10 rounded-full flex items-center justify-center transition-all"
               style={{ background: `${t.primary}15`, color: t.primary }}
               aria-label={`Ver pedido (${cartCount})`}
@@ -106,14 +112,7 @@ export default function StoreHeader({
               <span className={`material-symbols-outlined ${ICON.md}`} style={{ fontVariationSettings: "'FILL' 1" }}>
                 shopping_cart
               </span>
-              {cartCount > 0 && (
-                <span
-                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-[9px] font-black flex items-center justify-center"
-                  style={{ background: t.primary, color: t.onPrimary }}
-                >
-                  {cartCount}
-                </span>
-              )}
+              <CartBadge t={t} count={cartCount} className="absolute -top-1 -right-1 min-w-4 h-4 px-1 text-[9px]" />
             </button>
           </div>
         </div>
@@ -136,6 +135,9 @@ export default function StoreHeader({
           </div>
         </div>
       </header>
+
+      {/* En Pedidos el aviso sobra: ya se ve el carrito. */}
+      {active !== 'pedidos' && <AddedToast t={t} onVerPedido={irAlCarrito} />}
     </>
   );
 }
