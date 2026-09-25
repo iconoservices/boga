@@ -1724,3 +1724,19 @@ CREATE POLICY "ride_avisos: superadmin"   ON public.ride_avisos   FOR SELECT USI
 -- estado. Sin esta columna el pedido se guarda igual, pero sin código (el enlace no encuentra nada).
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS codigo TEXT;
 CREATE UNIQUE INDEX IF NOT EXISTS orders_codigo_idx ON public.orders (codigo) WHERE codigo IS NOT NULL;
+
+-- ============================================================
+-- AJUSTES SUELTOS DEL SITIO (site_settings)
+-- ============================================================
+-- Pares clave/valor que edita el superadmin. Hoy: 'whatsapp_asesor' (el número del botón flotante
+-- «¿Dudas? Habla con un asesor» de /negocios). Lectura pública (lo sirve /api/contacto), escribe solo el superadmin.
+CREATE TABLE IF NOT EXISTS public.site_settings (
+  clave TEXT PRIMARY KEY,
+  valor TEXT,
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "site_settings: lectura pública"    ON public.site_settings;
+DROP POLICY IF EXISTS "site_settings: superadmin escribe" ON public.site_settings;
+CREATE POLICY "site_settings: lectura pública"    ON public.site_settings FOR SELECT USING (true);
+CREATE POLICY "site_settings: superadmin escribe" ON public.site_settings FOR ALL USING (public.is_superadmin()) WITH CHECK (public.is_superadmin());

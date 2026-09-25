@@ -81,7 +81,7 @@ export const CAPACIDADES_ALCANCE: { texto: string; desde: AlcanceId; nuevo?: boo
   { texto: 'Plantillas listas para su rubro', desde: 'carta', nuevo: true },
   { texto: 'Funciona en cualquier ciudad', desde: 'carta', nuevo: true },
   { texto: 'Subdominio propio (tienda.bogahub.app) con su app instalable', desde: 'app' },
-  { texto: 'Avisos push propios a quienes instalaron su app (2 por semana, acumulables en el mes; paquetes extra de 4)', desde: 'app' },
+  { texto: 'Notificaciones push propias a quienes instalaron su app (2 por semana, acumulables en el mes; paquetes extra de 4)', desde: 'app' },
   { texto: 'Productos en Google (Merchant Center)', desde: 'app_google' },
 ];
 

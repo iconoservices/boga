@@ -1,7 +1,7 @@
 'use client';
 
 // Notificaciones del dueño de una tienda: enviar una campaña a quienes instalaron su app y
-// activaron los avisos. Solo aparecen las tiendas suyas a las que BogaHub les activó los avisos.
+// activaron las notificaciones. Solo aparecen las tiendas suyas a las que BogaHub les activó las notificaciones.
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -41,8 +41,8 @@ export default function NotificacionesDueno() {
       </header>
       <main className="max-w-[860px] mx-auto px-container-margin py-8 flex flex-col gap-6">
         <p className="text-sm text-secondary">
-          Envía ofertas o novedades a quienes instalaron tu app y activaron los avisos. Puedes mandar 1 campaña por semana,
-          entre las 8:00 y las 22:00.
+          Envía ofertas o novedades a quienes instalaron tu app y activaron las notificaciones. Tienes 2 por semana, que se acumulan durante el mes,
+          y las mandas entre las 8:00 y las 22:00. Si necesitas más, puedes comprar paquetes de 4.
         </p>
         {opciones === null ? <p className="text-sm text-secondary">Cargando…</p> : <PanelNotificaciones opciones={opciones} />}
       </main>

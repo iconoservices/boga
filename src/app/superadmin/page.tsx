@@ -2422,9 +2422,9 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                         className="mt-0.5 w-4 h-4 accent-[#0058be]"
                       />
                       <span>
-                        <span className="block text-xs font-black text-[#191b23]">Avisos push propios</span>
+                        <span className="block text-xs font-black text-[#191b23]">Notificaciones push propias</span>
                         <span className="block text-[10px] text-[#727785] font-semibold mt-0.5">
-                          Deja que esta tienda envíe notificaciones a quienes instalen su app (solo en su subdominio propio). 1 campaña por semana.
+                          Deja que esta tienda envíe notificaciones a quienes instalen su app (solo en su subdominio propio). Cupo: 2 por semana, acumulables en el mes.
                         </span>
                       </span>
                     </label>

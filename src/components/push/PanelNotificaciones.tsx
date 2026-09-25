@@ -1,7 +1,7 @@
 'use client';
 
 // Panel para enviar campañas de notificaciones. Lo usan el superadmin (/superadmin/notificaciones,
-// puede elegir cualquier tienda con avisos activados y el canal de BogaHub) y cada dueño
+// puede elegir cualquier tienda con notificaciones activadas y el canal de BogaHub) y cada dueño
 // (/admin/notificaciones, solo sus tiendas). El servidor comprueba los permisos y los límites.
 //
 // Diseño: en pantallas anchas, historial a la izquierda y formulario a la derecha (fijo al bajar);
@@ -51,11 +51,11 @@ export default function PanelNotificaciones({ opciones, superadmin = false }: { 
   }, [slug]);
   useEffect(() => { cargar(); }, [cargar]);
 
-  // Superadmin: suma un paquete de avisos cuando el dueño paga (Yape/Plin). Requiere la columna push_creditos.
+  // Superadmin: suma un paquete de notificaciones cuando el dueño paga (Yape/Plin). Requiere la columna push_creditos.
   const sumarPaquete = async () => {
-    if (!estado || !window.confirm(`¿Sumar ${PUSH_PAQUETE} avisos comprados a esta tienda?`)) return;
+    if (!estado || !window.confirm(`¿Sumar ${PUSH_PAQUETE} notificaciones compradas a esta tienda?`)) return;
     const { error: e } = await supabase.from('stores').update({ push_creditos: estado.creditos + PUSH_PAQUETE }).eq('slug', slug);
-    setMensaje(e ? 'No se pudo sumar (¿corriste el SQL de push_creditos en supabase_setup.sql?)' : `✅ Se sumaron ${PUSH_PAQUETE} avisos.`);
+    setMensaje(e ? 'No se pudo sumar (¿corriste el SQL de push_creditos en supabase_setup.sql?)' : `✅ Se sumaron ${PUSH_PAQUETE} notificaciones.`);
     if (!e) cargar();
   };
 
@@ -67,7 +67,7 @@ export default function PanelNotificaciones({ opciones, superadmin = false }: { 
     try {
       const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : undefined;
       const sub = reg ? await reg.pushManager.getSubscription() : null;
-      if (!sub) { setMensaje('Este navegador no tiene los avisos activados. Activa antes la campana de BogaHub (o el interruptor de tu perfil).'); setEnviando(false); return; }
+      if (!sub) { setMensaje('Este navegador no tiene las notificaciones activadas. Activa antes la campana de BogaHub (o el interruptor de tu perfil).'); setEnviando(false); return; }
       const r = await fetch('/api/push/enviar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await token()}` },
@@ -113,8 +113,8 @@ export default function PanelNotificaciones({ opciones, superadmin = false }: { 
   if (opciones.length === 0) {
     return (
       <div className={`${tarjeta} text-sm text-secondary`}>
-        Todavía no hay ninguna tienda con avisos activados. Se activan desde el editor de tienda del superadmin
-        (casilla «Avisos push propios»).
+        Todavía no hay ninguna tienda con notificaciones activadas. Se activan desde el editor de tienda del superadmin
+        (casilla «Notificaciones push propias»).
       </div>
     );
   }
@@ -142,8 +142,8 @@ export default function PanelNotificaciones({ opciones, superadmin = false }: { 
         <>
           {slug !== CANAL_BOGA && !estado.sinTope && (
             <div className="rounded-xl border border-amber-200 bg-amber-50 text-amber-900 p-4 text-xs leading-relaxed">
-              Tus avisos llegan solo a quienes instalaron y siguen tu app. Si mandas demasiados, la gente puede silenciarlos:
-              úsalos con criterio. Los avisos del mes se acumulan (se renuevan el día 1) y los extra comprados no vencen.
+              Tus notificaciones llegan solo a quienes instalaron y siguen tu app. Si mandas demasiadas, la gente puede silenciarlas:
+              úsalas con criterio. Las notificaciones del mes se acumulan (se renuevan el día 1) y las extra compradas no vencen.
             </div>
           )}
 
@@ -151,12 +151,12 @@ export default function PanelNotificaciones({ opciones, superadmin = false }: { 
             <div><div className="text-2xl font-extrabold text-on-surface">{estado.seguidores}</div><div className="text-xs text-secondary">seguidores</div></div>
             <div>
               <div className="text-2xl font-extrabold text-on-surface">{estado.sinTope ? '∞' : `${estado.restantesMes}/${estado.cupoMes}`}</div>
-              <div className="text-xs text-secondary">{estado.sinTope ? 'sin tope de campañas' : 'avisos disponibles este mes'}</div>
+              <div className="text-xs text-secondary">{estado.sinTope ? 'sin tope de campañas' : 'notificaciones disponibles este mes'}</div>
             </div>
             {slug !== CANAL_BOGA && (
               <div>
                 <div className="text-2xl font-extrabold text-on-surface">{estado.creditos}</div>
-                <div className="text-xs text-secondary">avisos extra comprados (no vencen)</div>
+                <div className="text-xs text-secondary">notificaciones extra compradas (no vencen)</div>
                 {superadmin && (
                   <button onClick={sumarPaquete} className="mt-1 text-xs font-bold text-primary hover:underline">+ Sumar paquete de {PUSH_PAQUETE}</button>
                 )}

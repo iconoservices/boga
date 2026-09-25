@@ -1,8 +1,8 @@
 'use client';
 
 // Notificaciones — subruta propia del superadmin (mismo marco y guard que /superadmin/sorteos).
-// Desde acá se envían los avisos del canal de BogaHub (los que reciben quienes activan los avisos
-// de la plataforma) y los de cualquier tienda con avisos push activados.
+// Desde acá se envían las notificaciones del canal de BogaHub (las que reciben quienes activan las de
+// la plataforma) y las de cualquier tienda con notificaciones push activadas.
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -26,7 +26,7 @@ export default function NotificacionesAdmin() {
     if (!esSuperadmin) return;
     supabase.from('stores').select('slug,name').eq('push_activo', true).order('name').then(({ data }) => {
       setOpciones([
-        { slug: CANAL_BOGA, nombre: 'BogaHub (avisos de la plataforma)' },
+        { slug: CANAL_BOGA, nombre: 'BogaHub (notificaciones de la plataforma)' },
         ...((data ?? []) as { slug: string; name: string }[]).map((t) => ({ slug: t.slug, nombre: t.name })),
       ]);
     });
@@ -51,8 +51,8 @@ export default function NotificacionesAdmin() {
         </header>
         <main className="max-w-[1000px] mx-auto px-container-margin py-8 flex flex-col gap-6">
           <p className="text-sm text-secondary">
-            Envía avisos a quienes activaron las notificaciones. El canal de BogaHub no tiene tope de campañas;
-            las tiendas con subdominio tienen 2 por semana acumulables en el mes (8), y pueden comprar paquetes de 4 avisos extra. Los envíos son solo entre las 8:00 y las 22:00 (hora de Lima).
+            Envía notificaciones a quienes las activaron. El canal de BogaHub no tiene tope de campañas;
+            las tiendas con subdominio tienen 2 por semana acumulables en el mes (8), y pueden comprar paquetes de 4 notificaciones extra. Los envíos son solo entre las 8:00 y las 22:00 (hora de Lima).
           </p>
           {opciones === null ? <p className="text-sm text-secondary">Cargando…</p> : <PanelNotificaciones opciones={opciones} superadmin />}
         </main>

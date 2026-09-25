@@ -9,6 +9,7 @@ import { useEsSuperadmin } from '@/lib/superadmin';
 import SuperadminSubheader from '@/components/SuperadminSubheader';
 import Toggle from '@/components/superadmin/Toggle';
 import NivelesModulos from '@/components/superadmin/NivelesModulos';
+import ContactoBoga from '@/components/superadmin/ContactoBoga';
 import CatalogoOrdenado from '@/components/superadmin/CatalogoOrdenado';
 
 interface StoreModule {
@@ -470,6 +471,9 @@ function PaquetesContenido() {
                   Crear Nuevo Paquete
                 </button>
               </div>
+
+              {/* Contacto de Boga: el WhatsApp del asesor que usa el botón flotante de /negocios */}
+              <ContactoBoga />
 
               {/* Niveles reales: los que prenden o apagan módulos en el panel del dueño */}
               <NivelesModulos />

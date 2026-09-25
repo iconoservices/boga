@@ -131,7 +131,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         error: q.usadasDia >= PUSH_LIMITES.maxPorDia
           ? 'Ya enviaste una campaña en las últimas 24 horas.'
-          : `Usaste los ${q.cupoMes} avisos de este mes. Se renuevan el día 1, o puedes comprar un paquete de avisos extra.`,
+          : `Usaste las ${q.cupoMes} notificaciones de este mes. Se renuevan el día 1, o puedes comprar un paquete de notificaciones extra.`,
       }, { status: 429, headers: cors });
     }
     gastaCredito = q.usaCredito;

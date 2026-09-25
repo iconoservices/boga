@@ -205,7 +205,7 @@ export const MODULOS_EXISTENTES_EXTRA: {
   },
   {
     id: 'avisos-push',
-    name: 'Avisos push propios',
+    name: 'Notificaciones push propias',
     icon: 'notifications_active',
     price: 'Por definir',
     description: 'La tienda envía notificaciones a quienes instalaron su app (solo en su subdominio propio).',

@@ -156,7 +156,7 @@ export default function NegociosPlanes() {
                   <td className="p-3 font-semibold text-on-background">
                     {m.nombre}
                     {m.pronto && <span className="ml-2 text-[10px] font-bold text-secondary bg-surface-container px-1.5 py-0.5 rounded uppercase tracking-wide">Próximamente</span>}
-                    {m.id === 'avisos' && <span className="block text-xs font-normal text-secondary">Paquete de 4 avisos por S/ 10; no vencen</span>}
+                    {m.id === 'avisos' && <span className="block text-xs font-normal text-secondary">Paquete de 4 por S/ 10; no vencen</span>}
                   </td>
                   {PLANES.map((p) => (
                     <td key={p.id} className="p-3 text-center">

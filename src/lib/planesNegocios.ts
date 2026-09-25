@@ -47,7 +47,7 @@ export const PLANES: Plan[] = [
     bullets: [
       'Todo lo del plan Carta',
       'Subdominio propio, instalable como app',
-      'Avisos a tus clientes: 2 por semana, acumulables',
+      'Notificaciones push al celular de tus clientes (2 por semana)',
     ],
     mes: { precio: 'S/ 100', periodo: '/mes', nota: 'Precio promocional de lanzamiento' },
     anio: { precio: 'S/ 1 000', periodo: '/año', nota: 'Precio promocional · 2 meses gratis (≈ S/ 83/mes)' },
@@ -96,7 +96,7 @@ export const MODULOS_VENTA: { grupo: string; items: ModuloVenta[] }[] = [
   {
     grupo: 'Comunícate con tus clientes',
     items: [
-      { id: 'avisos', icon: 'notifications_active', nombre: 'Avisos extra', body: 'Paquete de 4 avisos a tus clientes por encima de los de tu plan. No vencen y los usas cuando quieras.', precio: 'S/ 10', unidad: ' por paquete de 4', incluidoEn: [] },
+      { id: 'avisos', icon: 'notifications_active', nombre: 'Notificaciones extra', body: 'Paquete de 4 notificaciones push al celular de tus clientes, por encima de las de tu plan. No vencen y las usas cuando quieras.', precio: 'S/ 10', unidad: ' por paquete de 4', incluidoEn: [] },
     ],
   },
   {
@@ -125,7 +125,7 @@ export const CAPACIDADES_PLAN: { texto: string; desde: PlanId; estado: 'hecho' |
   { texto: 'Funciona en cualquier ciudad', desde: 'carta', estado: 'hecho', nuevo: true },
   { texto: 'Subdominio propio (tunegocio.bogahub.app)', desde: 'app', estado: 'hecho', nuevo: true },
   { texto: 'App instalable en el celular de tus clientes', desde: 'carta', estado: 'hecho', nuevo: true, valor: { carta: 'Incluido en el lanzamiento' } },
-  { texto: 'Avisos a tus clientes (los que no uses se acumulan en el mes)', desde: 'app', estado: 'hecho', nuevo: true, valor: { app: '2 por semana', app_google: '2 por semana' } },
+  { texto: 'Notificaciones push al celular de tus clientes (las que no uses se acumulan en el mes)', desde: 'app', estado: 'hecho', nuevo: true, valor: { app: '2 por semana', app_google: '2 por semana' } },
   { texto: 'Productos en Google', desde: 'app_google', estado: 'falta', nuevo: true },
 ];
 

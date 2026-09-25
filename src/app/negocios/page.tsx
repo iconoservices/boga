@@ -8,6 +8,8 @@
 import React from 'react';
 import Link from 'next/link';
 import NegociosPlanes from '@/components/NegociosPlanes';
+import WhatsAppAsesor from '@/components/WhatsAppAsesor';
+import { PLANES } from '@/lib/planesNegocios';
 import NegociosHeroImagen from '@/components/NegociosHeroImagen';
 
 const REGISTRO = '/negocios/registro';
@@ -91,6 +93,11 @@ export default function NegociosPage() {
                 Y cuando Boga Market abra en tu ciudad, entras al grupo de comercios locales
                 donde te encuentra gente nueva.
               </p>
+              {/* Ancla de precio: que el dueño sepa de entrada que no es caro. Sale de PLANES, no se escribe a mano. */}
+              <p className="text-on-background font-body-md text-sm -mb-1">
+                <span className="font-extrabold">Planes desde {PLANES[0].mes.precio} al mes</span>
+                <span className="text-secondary"> · sin comisión por tus ventas · prueba la demo sin costo</span>
+              </p>
               <div className="flex flex-wrap items-center gap-3 mt-1">
                 <Link
                   href={REGISTRO}
@@ -158,6 +165,8 @@ export default function NegociosPage() {
           <div className="pb-16 md:pb-24" />
         </div>
       </main>
+
+      <WhatsAppAsesor />
 
       <footer className="w-full px-container-margin py-8 text-center border-t border-surface-container-highest">
         <p className="text-secondary font-body-md text-xs">© {new Date().getFullYear()} BogaHub. Todos los derechos reservados.</p>
