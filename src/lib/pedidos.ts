@@ -12,15 +12,23 @@ export interface DatosPedido {
 // products.id es texto (UUID o número). Los ejemplos de plantilla (demo-…) no existen en la base.
 const ID_VALIDO = /^[A-Za-z0-9_-]{1,64}$/;
 
+// Código corto de cada pedido (sin letras que se confunden). Va en el enlace /pedido/<código> y en el PDF.
+const ALFABETO = 'abcdefghjkmnpqrstuvwxyz23456789';
+export function generarCodigoPedido(largo = 8): string {
+  const b = new Uint8Array(largo);
+  crypto.getRandomValues(b);
+  return Array.from(b, (n) => ALFABETO[n % ALFABETO.length]).join('');
+}
+
 /** Guarda el pedido sin esperar respuesta y sin molestar al cliente si falla. */
-export function registrarPedido(slug: string, pedido: DatosPedido): void {
+export function registrarPedido(slug: string, pedido: DatosPedido, codigo?: string): void {
   try {
     const items = pedido.items.filter((i) => ID_VALIDO.test(String(i.id)) && !String(i.id).startsWith('demo-') && i.quantity > 0);
     if (!slug || items.length === 0) return;
     void fetch('/api/pedidos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ store: slug, items, cliente: pedido.cliente }),
+      body: JSON.stringify({ store: slug, items, cliente: pedido.cliente, codigo }),
       keepalive: true,   // sigue viajando aunque la pestaña se vaya a WhatsApp
     }).catch(() => {});
   } catch { /* nunca debe romper el pedido */ }

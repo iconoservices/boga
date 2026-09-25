@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import React, { useState, useEffect } from 'react';
 import PixelEvent from '@/components/PixelEvent';
 import AvisoTiendaMovida from '@/components/AvisoTiendaMovida';
+import PedidoEnviadoSheet from '@/components/PedidoEnviadoSheet';
 
 // Lazy load templates so only the needed one is downloaded
 const SunsetTemplate = dynamic(() => import('@/templates/sunset/SunsetTemplate'));
@@ -145,6 +146,7 @@ export default function StoreRenderer({ store: initialStore }: Props) {
         }}
       />
       <AvisoTiendaMovida nombre={store.name} />
+      <PedidoEnviadoSheet />
       {template}
       <a
         href="/negocios?ref=menu"

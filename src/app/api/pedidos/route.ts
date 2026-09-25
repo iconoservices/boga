@@ -41,7 +41,7 @@ export async function POST(request: Request) {
   const ip = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'desconocida';
   if (excedeLimite(ip)) return NextResponse.json({ ok: false, motivo: 'limite' }, { status: 429 });
 
-  let body: { store?: unknown; items?: unknown; cliente?: Record<string, unknown> } | null;
+  let body: { store?: unknown; items?: unknown; cliente?: Record<string, unknown>; codigo?: unknown } | null;
   try { body = await request.json(); } catch { return NextResponse.json({ ok: false, motivo: 'json' }, { status: 400 }); }
 
   const slug = texto(body?.store, 80);
@@ -80,9 +80,11 @@ export async function POST(request: Request) {
   const entrega = cliente?.entrega === 'delivery' ? 'delivery' : 'recojo';
   const direccion = texto(cliente?.direccion, 200);
 
-  const { data: pedido, error } = await db
-    .from('orders')
-    .insert({
+  // Código corto que el cliente ya lleva en su enlace /pedido/<código> (solo letras minúsculas y números).
+  const codigoCrudo = texto(body?.codigo, 12);
+  const codigo = /^[a-z0-9]{6,12}$/.test(codigoCrudo) ? codigoCrudo : null;
+
+  const fila = {
       store: slug,
       customer_name: texto(cliente?.nombre, 80) || 'Cliente de la carta',
       customer_phone: texto(cliente?.telefono, 30).replace(/\D/g, '') || null,
@@ -91,9 +93,11 @@ export async function POST(request: Request) {
       total_amount: lineas.reduce((s, l) => s + l.price * l.quantity, 0),
       status: 'Pendiente',
       order_source: 'Carta',
-    })
-    .select('id')
-    .single();
+  };
+  const guardar = (f: Record<string, unknown>) => db.from('orders').insert(f).select('id').single();
+  let { data: pedido, error } = await guardar(codigo ? { ...fila, codigo } : fila);
+  // Si la columna `codigo` todavía no existe (SQL sin correr), el pedido se guarda igual, sin código.
+  if (error && codigo) ({ data: pedido, error } = await guardar(fila));
 
   if (error || !pedido) {
     console.error('Error guardando el pedido de la carta:', error?.message);

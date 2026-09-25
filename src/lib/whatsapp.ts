@@ -1,5 +1,5 @@
 import type { StoreConfig } from '@/lib/stores.config';
-import { registrarPedido, type DatosPedido } from '@/lib/pedidos';
+import { registrarPedido, generarCodigoPedido, type DatosPedido } from '@/lib/pedidos';
 
 /**
  * Abre WhatsApp con el pedido dirigido al numero de la tienda.
@@ -25,8 +25,22 @@ export function enviarPedidoPorWhatsApp(
     return false;
   }
 
-  if (pedido && store.slug) registrarPedido(store.slug, pedido);
-  window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`, '_blank');
+  // Pedido de carrito: se le da un código, se guarda con él y el mensaje lleva el enlace al detalle (/pedido/<código>).
+  let codigo: string | undefined;
+  let texto = mensaje;
+  if (pedido && store.slug) {
+    codigo = generarCodigoPedido();
+    registrarPedido(store.slug, pedido, codigo);
+    const sitio = /localhost/.test(window.location.hostname)
+      ? window.location.origin
+      : (process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app').replace(/\/$/, '');
+    texto = `${mensaje}
+
+Mira el detalle de mi pedido (N° ${codigo.toUpperCase()}): ${sitio}/pedido/${codigo}`;
+  }
+  window.open(`https://wa.me/${numero}?text=${encodeURIComponent(texto)}`, '_blank');
+  // Solo los pedidos de carrito: PedidoEnviadoSheet ofrece el comprobante en PDF para guardarlo o compartirlo luego.
+  if (pedido) window.dispatchEvent(new CustomEvent('boga:pedido-enviado', { detail: { tienda: store.name, mensaje, codigo } }));
   return true;
 }
 

@@ -1715,3 +1715,12 @@ CREATE POLICY "driver_acceso: superadmin" ON public.driver_acceso FOR ALL USING 
 CREATE POLICY "driver_push: superadmin"   ON public.driver_push   FOR SELECT USING (public.is_superadmin());
 CREATE POLICY "ride_requests: superadmin" ON public.ride_requests FOR SELECT USING (public.is_superadmin());
 CREATE POLICY "ride_avisos: superadmin"   ON public.ride_avisos   FOR SELECT USING (public.is_superadmin());
+
+-- ============================================================
+-- CÓDIGO POR PEDIDO DE LA CARTA
+-- ============================================================
+-- Cada pedido de la carta lleva un código corto (8 caracteres al azar) que va en el enlace
+-- /pedido/<código> del mensaje de WhatsApp: el cliente ve su pedido y el dueño lo abre y cambia el
+-- estado. Sin esta columna el pedido se guarda igual, pero sin código (el enlace no encuentra nada).
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS codigo TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS orders_codigo_idx ON public.orders (codigo) WHERE codigo IS NOT NULL;

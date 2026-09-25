@@ -19,6 +19,8 @@ export interface Pedido {
   seller_name?: string | null;
   order_source?: string | null;
   created_at: string;
+  /** Código corto del pedido de la carta (el del enlace /pedido/<código>). */
+  codigo?: string | null;
 }
 
 const ESTADOS = ['Pendiente', 'Preparando', 'Enviado', 'Entregado', 'Cancelado'] as const;
@@ -162,7 +164,7 @@ export default function PedidosTab({
                   onClick={() => setAbierto(abierta ? null : o.id)}
                   className="w-full text-left p-4 flex flex-wrap items-center gap-x-4 gap-y-2 hover:bg-gray-50/60 transition-colors"
                 >
-                  <span className="text-[#b8130e] font-bold text-xs w-20 shrink-0">#{o.id.slice(0, 8).toUpperCase()}</span>
+                  <span className="text-[#b8130e] font-bold text-xs w-20 shrink-0">#{(o.codigo || o.id.slice(0, 8)).toUpperCase()}</span>
                   <span className="flex-1 min-w-[140px]">
                     <span className="block text-gray-900 font-extrabold text-sm">{o.customer_name || 'Cliente'}</span>
                     <span className="block text-gray-500 text-xs font-medium">
@@ -215,6 +217,12 @@ export default function PedidosTab({
                         </p>
                       </div>
                     </div>
+
+                    {o.codigo && (
+                      <a href={`/pedido/${o.codigo}`} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-[#b8130e] hover:underline self-start">
+                        Ver la página del pedido (la que recibió el cliente)
+                      </a>
+                    )}
 
                     {o.status === 'Cancelado' ? (
                       <p className="text-xs font-semibold text-red-600">Pedido cancelado. Si llevaba stock, ya se devolvió al inventario.</p>
