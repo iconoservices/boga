@@ -3,12 +3,34 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
+import { leerMisPedidos, type PedidoLocal } from '@/lib/pedidos';
+
+type Vivo = { estado: string; total: number };
+const colorEstado = (e: string) =>
+  e === 'Entregado' ? 'bg-blue-50 text-blue-700 border-blue-200'
+  : e === 'Cancelado' ? 'bg-red-50 text-red-700 border-red-200'
+  : e === 'Pendiente' ? 'bg-orange-50 text-orange-700 border-orange-200'
+  : 'bg-green-50 text-green-700 border-green-200';
 
 // Panel de Favoritos (Me gusta). Se muestra en la pestaña "Favoritos" del perfil
 // y en /orders. Los favoritos viven en localStorage ('boga_favorites').
 export default function PedidosPanel() {
   const [favorites, setFavorites] = useState<any[]>([]);
   const { addToCart } = useCart();
+  // Pedidos de la carta hechos desde este dispositivo, con su estado al día
+  const [misPedidos, setMisPedidos] = useState<PedidoLocal[]>([]);
+  const [vivo, setVivo] = useState<Record<string, Vivo>>({});
+
+  useEffect(() => {
+    const lista = leerMisPedidos().slice(0, 10);
+    setMisPedidos(lista);
+    lista.forEach((p) => {
+      fetch(`/api/pedido/${encodeURIComponent(p.codigo)}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => { if (d) setVivo((v) => ({ ...v, [p.codigo]: { estado: d.estado, total: d.total } })); })
+        .catch(() => {});
+    });
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem('boga_favorites');
@@ -27,6 +49,34 @@ export default function PedidosPanel() {
 
   return (
     <div className="flex flex-col gap-5">
+      {misPedidos.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <h2 className="font-headline-lg text-on-surface text-xl sm:text-2xl font-extrabold">Mis pedidos</h2>
+          <p className="text-secondary font-body-md text-xs sm:text-sm -mt-1">Los pedidos que hiciste desde este celular.</p>
+          <p className="text-[11px] text-secondary bg-surface-container-low border border-surface-container-highest rounded-xl px-3 py-2 leading-relaxed">
+            Cada pedido es <b>directo con la tienda</b>: ella lo prepara, lo cobra y lo entrega o lo deja listo para recoger.
+            BogaHub solo te conecta con ella. Para cualquier duda del pedido, escríbele a la tienda por WhatsApp.
+          </p>
+          {misPedidos.map((p) => {
+            const v = vivo[p.codigo];
+            return (
+              <Link key={p.codigo} href={`/pedido/${p.codigo}`}
+                className="bg-white rounded-2xl p-4 flex items-center gap-3 border border-surface-container-highest hover:border-primary/40 transition-colors">
+                <div className="min-w-0 flex-1">
+                  <p className="font-headline-sm text-sm text-on-surface font-bold truncate">{p.tienda}</p>
+                  <p className="text-[11px] text-secondary">
+                    N° {p.codigo.toUpperCase()} · {new Date(p.fecha).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' })}
+                    {v ? ` · S/ ${v.total.toFixed(2)}` : ''}
+                  </p>
+                </div>
+                {v && <span className={`text-[10px] font-bold px-2 py-1 rounded-full border ${colorEstado(v.estado)}`}>{v.estado}</span>}
+                <span className="material-symbols-outlined text-secondary text-[18px]">chevron_right</span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+
       {/* Título de la sección */}
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">

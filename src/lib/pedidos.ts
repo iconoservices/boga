@@ -33,3 +33,22 @@ export function registrarPedido(slug: string, pedido: DatosPedido, codigo?: stri
     }).catch(() => {});
   } catch { /* nunca debe romper el pedido */ }
 }
+
+// Historial de pedidos del cliente en ESTE dispositivo (sin cuenta): guarda el código de cada pedido para
+// listarlos en "Mis pedidos" del perfil. El estado se lee en vivo de /api/pedido/<código>.
+export type PedidoLocal = { codigo: string; tienda: string; slug: string; fecha: string };
+const CLAVE_MIS_PEDIDOS = 'boga_mis_pedidos';
+
+export function leerMisPedidos(): PedidoLocal[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(CLAVE_MIS_PEDIDOS) || '[]');
+    return Array.isArray(v) ? v : [];
+  } catch { return []; }
+}
+
+export function guardarMiPedido(p: Omit<PedidoLocal, 'fecha'>): void {
+  try {
+    const lista = [{ ...p, fecha: new Date().toISOString() }, ...leerMisPedidos()].slice(0, 30);
+    localStorage.setItem(CLAVE_MIS_PEDIDOS, JSON.stringify(lista));
+  } catch { /* sin storage: el pedido igual salió */ }
+}

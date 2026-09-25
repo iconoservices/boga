@@ -119,6 +119,11 @@ export default function PedidoPage({ params }: { params: Promise<{ codigo: strin
               </p>
             </div>
 
+            <p className="text-[11px] text-secondary leading-relaxed">
+              Este pedido es directo con <b>{p.tienda.nombre}</b>: la tienda lo prepara, lo cobra y lo entrega o lo deja listo para recoger.
+              BogaHub solo te conecta con ella.
+            </p>
+
             {p.propietario && p.cliente && (
               <div className="bg-surface-container-lowest border border-primary/30 rounded-2xl p-4 text-sm">
                 <p className="text-[10px] font-bold uppercase tracking-wide text-primary mb-1">Solo tú ves esto · datos del cliente</p>

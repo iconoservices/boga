@@ -1,5 +1,5 @@
 import type { StoreConfig } from '@/lib/stores.config';
-import { registrarPedido, generarCodigoPedido, type DatosPedido } from '@/lib/pedidos';
+import { registrarPedido, generarCodigoPedido, guardarMiPedido, type DatosPedido } from '@/lib/pedidos';
 
 /**
  * Abre WhatsApp con el pedido dirigido al numero de la tienda.
@@ -31,6 +31,7 @@ export function enviarPedidoPorWhatsApp(
   if (pedido && store.slug) {
     codigo = generarCodigoPedido();
     registrarPedido(store.slug, pedido, codigo);
+    guardarMiPedido({ codigo, tienda: store.name, slug: store.slug });
     const sitio = /localhost/.test(window.location.hostname)
       ? window.location.origin
       : (process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app').replace(/\/$/, '');
