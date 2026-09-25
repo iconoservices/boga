@@ -23,7 +23,8 @@ export default function SharedUI() {
     pathname.startsWith('/superadmin') ||
     pathname.startsWith('/vende-con-boga') ||
     pathname.startsWith('/negocios') ||
-    pathname.startsWith('/transporte/registro')
+    pathname.startsWith('/transporte/registro') ||
+    /^\/transporte\/(chofer|pedir|pedido)/.test(pathname)
   ) {
     return null;
   }

@@ -11,6 +11,9 @@ self.addEventListener('push', (event) => {
       icon: d.icon || '/notif-icon-192.png',
       badge: '/badge-96.png',
       tag: d.tag || 'bogahub',
+      // Los pedidos de taxi piden atención: se quedan en pantalla hasta que el chofer los toque y vibran.
+      requireInteraction: d.requireInteraction === true,
+      vibrate: Array.isArray(d.vibrate) ? d.vibrate : undefined,
       data: { url: d.url || '/' },
     }),
   );

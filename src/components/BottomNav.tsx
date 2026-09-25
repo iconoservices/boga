@@ -44,7 +44,10 @@ export default function BottomNav() {
   // pantalla limpia; en la portada de la Revista (/revista) sí se ve.
   const leyendoNota = pathname.startsWith('/revista/');
 
-  if (!onNavRoute || leyendoNota) return null;
+  // El pedido de taxi y la app del chofer son pantallas de uso: sin la barra inferior.
+  const enPantallaDeTaxi = /^\/transporte\/(chofer|pedir|pedido)/.test(pathname);
+
+  if (!onNavRoute || leyendoNota || enPantallaDeTaxi) return null;
 
   return (
     <>

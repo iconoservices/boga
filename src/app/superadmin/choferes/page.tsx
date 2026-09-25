@@ -52,17 +52,33 @@ export default function ChoferesAdmin() {
   const [uploadingVeh, setUploadingVeh] = useState(false);
   const [detalle, setDetalle] = useState<DriverRow | null>(null);
   const [fotoZoom, setFotoZoom] = useState<string | null>(null);
+  // Taxi en vivo: enlace privado de cada chofer, sus celulares con avisos y los pedidos recientes.
+  const [accesos, setAccesos] = useState<Record<string, DriverRow>>({});
+  const [celulares, setCelulares] = useState<Record<string, number>>({});
+  const [pedidos, setPedidos] = useState<DriverRow[]>([]);
+  const [sinTablasTaxi, setSinTablasTaxi] = useState(false);
+  const [appAbierta, setAppAbierta] = useState<string | null>(null);
+  const [copiado, setCopiado] = useState<string | null>(null);
   const imgRef = useRef<HTMLInputElement>(null);
   const vehRef = useRef<HTMLInputElement>(null);
 
   const recargar = useCallback(async () => {
     setCargandoDatos(true);
-    const [req, drv] = await Promise.all([
+    const [req, drv, acc, pus, ped] = await Promise.all([
       supabase.from('driver_requests').select('*').eq('status', 'pending').order('created_at', { ascending: false }),
       supabase.from('drivers').select('*').order('orden', { ascending: true }).order('created_at', { ascending: true }),
+      supabase.from('driver_acceso').select('*'),
+      supabase.from('driver_push').select('driver_id'),
+      supabase.from('ride_requests').select('*').order('created_at', { ascending: false }).limit(15),
     ]);
     setPostulaciones(req.data ?? []);
     setChoferes(drv.data ?? []);
+    setSinTablasTaxi(!!(acc.error || pus.error || ped.error));
+    setAccesos(Object.fromEntries((acc.data ?? []).map((a: DriverRow) => [a.driver_id, a])));
+    const porChofer: Record<string, number> = {};
+    (pus.data ?? []).forEach((r: DriverRow) => { porChofer[r.driver_id] = (porChofer[r.driver_id] ?? 0) + 1; });
+    setCelulares(porChofer);
+    setPedidos(ped.data ?? []);
     setCargandoDatos(false);
   }, []);
 
@@ -160,6 +176,35 @@ export default function ChoferesAdmin() {
   const borrar = async (d: DriverRow) => {
     if (!confirm(`¿Borrar a "${d.nombre}" del directorio? No se puede deshacer.`)) return;
     await supabase.from('drivers').delete().eq('id', d.id);
+    recargar();
+  };
+
+  // Crea (si no existe) el acceso privado de un chofer y abre su panel con el enlace.
+  const abrirApp = async (d: DriverRow) => {
+    if (appAbierta === d.id) { setAppAbierta(null); return; }
+    if (!accesos[d.id]) {
+      const { error } = await supabase.from('driver_acceso').insert({ driver_id: d.id });
+      if (error) { setMsg(`No se pudo crear el acceso: ${error.message}`); return; }
+      await recargar();
+    }
+    setAppAbierta(d.id);
+  };
+
+  const enlaceDe = (a: DriverRow) => `${window.location.origin}/transporte/chofer?t=${a.token}`;
+
+  const copiarEnlace = async (a: DriverRow) => {
+    try { await navigator.clipboard.writeText(enlaceDe(a)); setCopiado(a.driver_id); setTimeout(() => setCopiado(null), 1800); }
+    catch { setMsg('No se pudo copiar. Selecciona el enlace y cópialo a mano.'); }
+  };
+
+  // Un enlace nuevo deja sin efecto el anterior (por si se lo pasaron a otra persona o perdió el celular).
+  const regenerarEnlace = async (d: DriverRow) => {
+    if (!confirm(`¿Generar un enlace nuevo para ${d.nombre}? El anterior dejará de funcionar y tendrá que abrir el nuevo.`)) return;
+    const bytes = new Uint8Array(32);
+    crypto.getRandomValues(bytes);
+    const token = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+    const { error } = await supabase.from('driver_acceso').update({ token }).eq('driver_id', d.id);
+    if (error) { setMsg(`No se pudo regenerar: ${error.message}`); return; }
     recargar();
   };
 
@@ -409,13 +454,75 @@ export default function ChoferesAdmin() {
                       );
                     })()}
                   </div>
+                  <button onClick={() => abrirApp(d)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest" style={{ color: VERDE }}>
+                    {accesos[d.id] ? (celulares[d.id] ? '📲 App ✓' : '📲 App') : '📲 Dar app'}
+                  </button>
                   <button onClick={() => editar(d)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest text-on-surface">Editar</button>
                   <button onClick={() => toggleStatus(d)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest text-secondary">
                     {d.status === 'activo' ? 'Ocultar' : 'Mostrar'}
                   </button>
                   <button onClick={() => borrar(d)} className="text-xs font-bold px-3 py-1.5 rounded-lg text-red-600">Borrar</button>
+
+                  {appAbierta === d.id && accesos[d.id] && (() => {
+                    const a = accesos[d.id];
+                    const hace = (iso: string | null) => {
+                      if (!iso) return 'nunca';
+                      const m = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
+                      return m < 1 ? 'hace un momento' : m < 60 ? `hace ${m} min` : m < 1440 ? `hace ${Math.round(m / 60)} h` : `hace ${Math.round(m / 1440)} d`;
+                    };
+                    const wa = `https://wa.me/${(d.tel || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${String(d.nombre).split(' ')[0]}, este es tu enlace PERSONAL de la app de choferes de BogaHub Taxi Seguro. Ábrelo desde tu celular, toca "Activar avisos" y así te llegan los pedidos de pasajeros cerca de ti. No lo compartas:\n\n${enlaceDe(a)}`)}`;
+                    return (
+                      <div className="basis-full mt-2 rounded-xl border border-surface-container-highest bg-surface-container-low p-3 flex flex-col gap-2">
+                        <p className="text-[11px] font-bold text-secondary uppercase tracking-wider">App del chofer · enlace privado</p>
+                        <input readOnly value={enlaceDe(a)} onFocus={(e) => e.currentTarget.select()} className="w-full text-[11px] font-mono bg-white border border-surface-container-highest rounded-lg px-2.5 py-2" />
+                        <div className="flex flex-wrap gap-2">
+                          <button onClick={() => copiarEnlace(a)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest bg-white">{copiado === d.id ? '✓ Copiado' : 'Copiar enlace'}</button>
+                          {d.tel && <a href={wa} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-lg text-white" style={{ background: VERDE }}>Enviar por WhatsApp</a>}
+                          <button onClick={() => regenerarEnlace(d)} className="text-xs font-bold px-3 py-1.5 rounded-lg text-red-600">Generar enlace nuevo</button>
+                        </div>
+                        <p className="text-[11px] text-secondary font-medium">
+                          Avisos: {celulares[d.id] ? `✓ ${celulares[d.id]} celular${celulares[d.id] === 1 ? '' : 'es'}` : '— todavía no los activó'}
+                          {' · '}Paradero: {a.base_lat != null ? '✓ guardado' : '— sin guardar'}
+                          {' · '}Vio la app: {hace(a.visto_at)}
+                          {' · '}Última ubicación: {hace(a.ubicado_at)}
+                          {a.pausado ? ' · ⏸ En pausa' : ''}
+                        </p>
+                      </div>
+                    );
+                  })()}
                 </div>
               ))}
+            </div>
+          )}
+        </section>
+
+        {/* Pedidos de taxi recientes */}
+        <section>
+          <h2 className="font-headline-md text-lg text-on-surface mb-3">Pedidos de taxi recientes</h2>
+          {sinTablasTaxi && (
+            <p className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3">
+              Falta correr el SQL de «Taxi en vivo» de supabase_setup.sql para activar los pedidos y las apps de los choferes.
+            </p>
+          )}
+          {pedidos.length === 0 ? (
+            <p className="text-secondary text-sm">Todavía no hay pedidos.</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {pedidos.map((r) => {
+                const chofer = choferes.find((c) => c.id === r.driver_id);
+                const color = r.estado === 'asignado' || r.estado === 'completado' ? VERDE : r.estado === 'buscando' ? '#b45309' : '#6b7280';
+                return (
+                  <div key={r.id} className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-3 flex flex-wrap items-center gap-3">
+                    <span className="text-[11px] font-extrabold uppercase px-2 py-1 rounded-full border" style={{ color, borderColor: color }}>{r.estado}</span>
+                    <div className="flex-1 min-w-[200px]">
+                      <p className="text-sm font-bold text-on-surface">{r.pasajero_nombre} <span className="text-secondary font-normal">· {r.pasajero_tel}</span></p>
+                      <p className="text-xs text-secondary">{r.origen_texto || 'ubicación en el mapa'} → {r.destino_texto}{r.oferta ? ` · ofrece S/ ${r.oferta}` : ''}{r.tipo ? ` · ${r.tipo}` : ''}</p>
+                      {chofer && <p className="text-xs font-semibold" style={{ color: VERDE }}>Chofer: {chofer.nombre}</p>}
+                    </div>
+                    <span className="text-[11px] text-secondary font-medium">{new Date(r.created_at).toLocaleString('es-PE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                );
+              })}
             </div>
           )}
         </section>

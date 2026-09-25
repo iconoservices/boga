@@ -121,3 +121,33 @@ export async function dejarDeSeguir(slug: string) {
     if (res.ok && j.quedan === 0) await sub.unsubscribe();
   } catch { /* sin red: queda apagado en este navegador; el servidor lo limpia cuando falle un envío */ }
 }
+
+// ── Choferes de taxi ──
+// Un chofer recibe los pedidos de taxi como notificación. Se suscribe con su enlace privado (token); el
+// servidor guarda a qué chofer pertenece este celular (ver /api/transporte/chofer).
+export async function suscribirChofer(token: string): Promise<'ok' | 'denegado' | 'no-soportado' | 'error'> {
+  ultimoMotivo = '';
+  if (!pushDisponible()) { ultimoMotivo = 'este navegador no admite avisos'; return 'no-soportado'; }
+  let permiso: NotificationPermission;
+  try { permiso = await Notification.requestPermission(); } catch (e) { ultimoMotivo = `permiso: ${texto(e)}`; return 'error'; }
+  if (permiso !== 'granted') { ultimoMotivo = `permiso ${permiso}`; return 'denegado'; }
+
+  let reg: ServiceWorkerRegistration;
+  try { reg = await registro(); } catch (e) { ultimoMotivo = `service worker: ${texto(e)}`; return 'error'; }
+
+  let sub: PushSubscription;
+  try {
+    sub = (await reg.pushManager.getSubscription()) ??
+      (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: aBytes(CLAVE!) as BufferSource }));
+  } catch (e) { ultimoMotivo = `suscripción: ${texto(e)}`; return 'error'; }
+
+  try {
+    const res = await fetch('/api/transporte/chofer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ t: token, accion: 'suscribir', subscription: sub.toJSON() }),
+    });
+    if (!res.ok) { ultimoMotivo = `el servidor respondió ${res.status}`; return 'error'; }
+  } catch (e) { ultimoMotivo = `sin conexión con el servidor: ${texto(e)}`; return 'error'; }
+  return 'ok';
+}

@@ -52,7 +52,7 @@ const CENTROS: { slug: string; lat: number; lng: number; radioKm: number }[] = [
   { slug: 'pucallpa', lat: -8.3791, lng: -74.5539, radioKm: 35 },
 ];
 
-const distanciaKm = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+export const distanciaKm = (lat1: number, lng1: number, lat2: number, lng2: number) => {
   const rad = (g: number) => (g * Math.PI) / 180;
   const dLat = rad(lat2 - lat1);
   const dLng = rad(lng2 - lng1);

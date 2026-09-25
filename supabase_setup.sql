@@ -1626,3 +1626,83 @@ ALTER TABLE public.stock_movements ALTER COLUMN product_id TYPE TEXT USING produ
 -- Con esto el directorio muestra solo quién está disponible ahora (hora de Perú).
 ALTER TABLE public.driver_requests ADD COLUMN IF NOT EXISTS horario_semana JSONB;
 ALTER TABLE public.drivers         ADD COLUMN IF NOT EXISTS horario_semana JSONB;
+
+-- ============================================================
+-- TAXI EN VIVO: pedidos, acceso privado del chofer y avisos por olas
+-- ============================================================
+-- Todo esto lo lee y escribe SOLO el servidor (llave de servicio) desde /api/transporte/*; el superadmin
+-- puede ver y armar accesos desde su panel. Nada de esto es público.
+
+-- Acceso privado de cada chofer a su app (sin contraseña: un enlace secreto) + dónde está.
+CREATE TABLE IF NOT EXISTS public.driver_acceso (
+  driver_id   UUID PRIMARY KEY REFERENCES public.drivers(id) ON DELETE CASCADE,
+  token       TEXT NOT NULL UNIQUE DEFAULT (replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', '')),
+  pausado     BOOLEAN NOT NULL DEFAULT false,      -- "no recibir pedidos por ahora"
+  base_lat    DOUBLE PRECISION,                    -- su paradero (lo guarda él desde su app)
+  base_lng    DOUBLE PRECISION,
+  lat         DOUBLE PRECISION,                    -- último GPS (solo mientras tiene la app abierta)
+  lng         DOUBLE PRECISION,
+  ubicado_at  TIMESTAMPTZ,
+  zona        TEXT,                                -- "estoy en…" a mano
+  zona_hasta  TIMESTAMPTZ,
+  visto_at    TIMESTAMPTZ,                         -- última vez que abrió su app
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Los celulares del chofer que aceptaron recibir avisos (la suscripción vive en push_subs).
+CREATE TABLE IF NOT EXISTS public.driver_push (
+  driver_id  UUID NOT NULL REFERENCES public.drivers(id) ON DELETE CASCADE,
+  endpoint   TEXT NOT NULL REFERENCES public.push_subs(endpoint) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (driver_id, endpoint)
+);
+
+-- Pedidos de taxi. Estados: buscando · asignado · completado · cancelado · expirado.
+CREATE TABLE IF NOT EXISTS public.ride_requests (
+  id                   UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
+  ciudad               TEXT NOT NULL DEFAULT 'pucallpa',
+  tipo                 TEXT,                       -- Mototaxi | Auto | Moto | NULL = cualquiera
+  pasajero_nombre      TEXT NOT NULL,
+  pasajero_tel         TEXT NOT NULL,
+  origen_texto         TEXT,
+  origen_lat           DOUBLE PRECISION,
+  origen_lng           DOUBLE PRECISION,
+  origen_zona          TEXT,
+  destino_texto        TEXT,
+  oferta               NUMERIC,                    -- el precio que propone el pasajero (opcional)
+  estado               TEXT NOT NULL DEFAULT 'buscando',
+  driver_id            UUID REFERENCES public.drivers(id) ON DELETE SET NULL,
+  asignado_at          TIMESTAMPTZ,
+  terminado_at         TIMESTAMPTZ,
+  ola                  INTEGER NOT NULL DEFAULT 0, -- cuántas olas de avisos ya salieron
+  inicio_busqueda_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS ride_requests_estado_idx ON public.ride_requests (estado, created_at DESC);
+CREATE INDEX IF NOT EXISTS ride_requests_tel_idx    ON public.ride_requests (pasajero_tel, created_at DESC);
+
+-- A qué choferes se les avisó de cada pedido (y a qué distancia estaban).
+CREATE TABLE IF NOT EXISTS public.ride_avisos (
+  ride_id      UUID NOT NULL REFERENCES public.ride_requests(id) ON DELETE CASCADE,
+  driver_id    UUID NOT NULL REFERENCES public.drivers(id) ON DELETE CASCADE,
+  ola          INTEGER NOT NULL,
+  distancia_km NUMERIC,
+  fuente       TEXT,                               -- de dónde salió su posición: gps · zona · base · ninguna
+  push_ok      BOOLEAN,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (ride_id, driver_id)
+);
+
+ALTER TABLE public.driver_acceso  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.driver_push    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.ride_requests  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.ride_avisos    ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "driver_acceso: superadmin"  ON public.driver_acceso;
+DROP POLICY IF EXISTS "driver_push: superadmin"    ON public.driver_push;
+DROP POLICY IF EXISTS "ride_requests: superadmin"  ON public.ride_requests;
+DROP POLICY IF EXISTS "ride_avisos: superadmin"    ON public.ride_avisos;
+CREATE POLICY "driver_acceso: superadmin" ON public.driver_acceso FOR ALL USING (public.is_superadmin()) WITH CHECK (public.is_superadmin());
+CREATE POLICY "driver_push: superadmin"   ON public.driver_push   FOR SELECT USING (public.is_superadmin());
+CREATE POLICY "ride_requests: superadmin" ON public.ride_requests FOR SELECT USING (public.is_superadmin());
+CREATE POLICY "ride_avisos: superadmin"   ON public.ride_avisos   FOR SELECT USING (public.is_superadmin());

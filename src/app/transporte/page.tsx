@@ -5,6 +5,7 @@ import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
 import { fetchChoferes, type Chofer } from '@/lib/drivers';
 import { disponibleAhora, proximaApertura, resumenHorario } from '@/lib/horario';
+import { ubicacionActual, enlaceMapa } from '@/lib/ubicacion';
 
 // Taxi Seguro: por ahora es SOLO UN DIRECTORIO de choferes verificados
 // (mototaxi / auto / moto). No hay reserva ni pago dentro de la app todavía —
@@ -58,9 +59,17 @@ function DriverCard({ c, ahora }: { c: Chofer; ahora: Date }) {
   const cerrado = estado === false;
   const vuelve = cerrado ? proximaApertura(c.horario, ahora) : null;
   const horarioTxt = resumenHorario(c.horario);
-  const waText = encodeURIComponent(
-    `Hola ${c.nombre.split(' ')[0]}, lo/la vi en BogaHub · Taxi Seguro. ¿Está libre para una carrera?\nOrigen: \nDestino: `
-  );
+  // Abre WhatsApp con el pin de Google Maps de donde está el pasajero. Si no da permiso de ubicación o tarda,
+  // el mensaje sale igual, sin pin (nunca se queda trabado).
+  const pedirConUbicacion = async () => {
+    let pin = '';
+    try {
+      const p = await ubicacionActual({ esperaMs: 6000 });
+      pin = `\nMi ubicación: ${enlaceMapa(p)}`;
+    } catch { /* sin ubicación: se pide igual */ }
+    const texto = `Hola ${c.nombre.split(' ')[0]}, te vi en BogaHub · Taxi Seguro. ¿Estás libre para una carrera?${pin}\nDestino: `;
+    window.open(`https://wa.me/${c.tel}?text=${encodeURIComponent(texto)}`, '_blank');
+  };
 
   return (
     <article className={`bg-white rounded-2xl border border-surface-container-highest shadow-[0_15px_15px_rgba(0,0,0,0.04)] p-4 lg:p-5 flex flex-col gap-3.5 hover:shadow-lg transition-shadow ${cerrado ? 'opacity-70 grayscale' : ''}`}>
@@ -168,17 +177,16 @@ function DriverCard({ c, ahora }: { c: Chofer; ahora: Date }) {
           <span className="material-symbols-outlined text-[17px]">call</span>
           Llamar directo
         </a>
-        <a
-          href={`https://wa.me/${c.tel}?text=${waText}`}
-          target="_blank"
-          rel="noreferrer"
+        <button
+          type="button"
+          onClick={pedirConUbicacion}
           className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-label-md text-[12px] shadow-sm active:scale-95 transition-all ${
             cerrado ? 'bg-surface-container-high text-on-surface hover:bg-surface-container-highest' : 'bg-primary text-on-primary hover:bg-primary-container'
           }`}
         >
-          <span className="material-symbols-outlined text-[17px]" style={{ fontVariationSettings: "'FILL' 1" }}>chat</span>
-          {cerrado ? 'Dejarle mensaje' : 'Pedir por WhatsApp'}
-        </a>
+          <span className="material-symbols-outlined text-[17px]" style={{ fontVariationSettings: "'FILL' 1" }}>{cerrado ? 'chat' : 'my_location'}</span>
+          {cerrado ? 'Dejarle mensaje' : 'Pedir con mi ubicación'}
+        </button>
       </div>
     </article>
   );
@@ -239,6 +247,15 @@ export default function TaxiSeguro() {
             <p className="text-secondary font-body-md text-sm">
               Choferes verificados por la comunidad BogaHub. Los contactas directo por llamada o WhatsApp — sin tarifas ocultas ni comisiones a intermediarios.
             </p>
+            <a
+              href="/transporte/pedir"
+              className="inline-flex items-center gap-2 w-fit mt-2 px-5 py-3 rounded-2xl text-white font-label-md text-[14px] font-extrabold shadow-md active:scale-95 transition-transform"
+              style={{ backgroundColor: VERDE }}
+            >
+              <span className="material-symbols-outlined text-[20px]">local_taxi</span>
+              Pedir un taxi ahora
+              <span className="text-[11px] font-bold opacity-80">· avisamos a los choferes más cercanos</span>
+            </a>
             <a
               href="/transporte/registro"
               className="inline-flex items-center gap-1.5 w-fit mt-1 font-label-md text-[12px] font-bold hover:underline"
