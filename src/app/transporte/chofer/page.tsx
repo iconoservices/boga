@@ -13,6 +13,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 import { ZONAS_TRANSPORTE } from '@/lib/zonasTransporte';
 import { ubicacionActual, mensajeUbicacion, type ErrorUbicacion } from '@/lib/ubicacion';
 import { suscribirChofer, esIOS, enModoApp, motivoError } from '@/lib/push';
@@ -23,6 +24,7 @@ const CLAVE_TOKEN = 'boga_chofer_token';
 interface PedidoAbierto { id: string; pasajero: string; origen: string | null; destino: string | null; oferta: number | null; tipo: string | null; distanciaKm: number | null; haceSeg: number }
 interface Actual { id: string; pasajero: string; tel: string; origen: string | null; destino: string | null; oferta: number | null; pin: string | null }
 interface Estado {
+  soloLectura?: boolean;
   chofer: { nombre: string; tipo: string; placa: string | null };
   pausado: boolean; tieneBase: boolean; zona: string | null; zonasCubre: string[]; gpsReciente: boolean; avisosActivados: boolean;
   pedidos: PedidoAbierto[]; actual: Actual | null;
@@ -45,11 +47,15 @@ export default function ChoferApp() {
   // El enlace trae el token; se recuerda para la próxima vez. Si abrió la app sin él, se usa el recordado.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    let t = params.get('t');
-    try {
-      if (t) localStorage.setItem(CLAVE_TOKEN, t);
-      else t = localStorage.getItem(CLAVE_TOKEN);
-    } catch { /* sin almacenamiento */ }
+    // ?ver=<id del chofer>: vista de solo lectura del superadmin (no guarda ni usa ningún enlace de chofer).
+    const ver = params.get('ver');
+    let t = ver ? `ver:${ver}` : params.get('t');
+    if (!ver) {
+      try {
+        if (t) localStorage.setItem(CLAVE_TOKEN, t);
+        else t = localStorage.getItem(CLAVE_TOKEN);
+      } catch { /* sin almacenamiento */ }
+    }
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setResaltado(params.get('pedido'));
     setToken(t);
@@ -59,7 +65,15 @@ export default function ChoferApp() {
   const consultar = useCallback(async () => {
     if (!token) return;
     try {
-      const res = await fetch(`/api/transporte/chofer?t=${encodeURIComponent(token)}`, { cache: 'no-store' });
+      const esVer = token.startsWith('ver:');
+      const headers: Record<string, string> = {};
+      if (esVer) {
+        const { data } = await supabase.auth.getSession();
+        if (!data.session) { setInvalido(true); return; }
+        headers.Authorization = `Bearer ${data.session.access_token}`;
+      }
+      const url = esVer ? `/api/transporte/chofer?ver=${encodeURIComponent(token.slice(4))}` : `/api/transporte/chofer?t=${encodeURIComponent(token)}`;
+      const res = await fetch(url, { cache: 'no-store', headers });
       if (res.status === 401) { setInvalido(true); return; }
       if (!res.ok) return;
       const nuevo = (await res.json()) as Estado;
@@ -104,6 +118,7 @@ export default function ChoferApp() {
   }, [token, consultar, hayMovimiento]);
 
   const accion = useCallback(async (a: string, extra: Record<string, unknown> = {}) => {
+    if (token?.startsWith('ver:')) { setMsg('Vista del superadmin: es solo lectura, aquí no se puede hacer nada.'); return {} as Record<string, unknown>; }
     const res = await fetch('/api/transporte/chofer', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ t: token, accion: a, ...extra }),
@@ -117,7 +132,7 @@ export default function ChoferApp() {
   const avisoViejoMostrado = useRef(false);
   const hayPedidos = !!e && e.pedidos.length > 0;
   useEffect(() => {
-    if (!token || !hayPedidos || ubicacionDenegada.current) return;
+    if (!token || token.startsWith('ver:') || !hayPedidos || ubicacionDenegada.current) return;
     if (Date.now() - ultimoEnvio.current < 60_000) return;
     let vivo = true;
     ubicacionActual({ esperaMs: 8000 })
@@ -198,6 +213,11 @@ export default function ChoferApp() {
 
   return (
     <div className="min-h-screen bg-[#f7f9f8] text-gray-900 pb-16">
+      {e.soloLectura && (
+        <div className="bg-blue-600 text-white text-sm font-bold px-4 py-2.5 text-center">
+          👁 Vista del superadmin, solo lectura: así ve la app {e.chofer.nombre.split(' ')[0]}. No se puede aceptar ni cambiar nada.
+        </div>
+      )}
       <header className="text-white" style={{ background: VERDE }}>
         <div className="max-w-xl mx-auto px-4 py-4">
           <p className="text-xs font-bold opacity-80 uppercase tracking-wider">Taxi Seguro · App del chofer</p>

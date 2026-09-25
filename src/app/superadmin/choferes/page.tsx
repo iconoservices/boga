@@ -503,6 +503,7 @@ export default function ChoferesAdmin() {
                         <div className="flex flex-wrap gap-2">
                           <button onClick={() => copiarEnlace(a)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest bg-white">{copiado === d.id ? '✓ Copiado' : 'Copiar enlace'}</button>
                           {d.tel && <a href={wa} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-lg text-white" style={{ background: VERDE }}>Enviar por WhatsApp</a>}
+                          <a href={`/transporte/chofer?ver=${d.id}`} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-lg border border-blue-200 text-blue-700 bg-blue-50">👁 Ver como el chofer</a>
                           <button onClick={() => regenerarEnlace(d)} className="text-xs font-bold px-3 py-1.5 rounded-lg text-red-600">Generar enlace nuevo</button>
                         </div>
                         <div className="flex gap-2">
@@ -548,6 +549,7 @@ export default function ChoferesAdmin() {
                       <p className="text-xs text-secondary">{r.origen_texto || 'ubicación en el mapa'} → {r.destino_texto}{r.oferta ? ` · ofrece S/ ${r.oferta}` : ''}{r.tipo ? ` · ${r.tipo}` : ''}</p>
                       {chofer && <p className="text-xs font-semibold" style={{ color: VERDE }}>Chofer: {chofer.nombre}</p>}
                     </div>
+                    <a href={`/transporte/pedido/${r.id}`} target="_blank" rel="noreferrer" className="text-[11px] font-bold text-blue-700 underline">👁 Ver como pasajero</a>
                     <span className="text-[11px] text-secondary font-medium">{new Date(r.created_at).toLocaleString('es-PE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                 );

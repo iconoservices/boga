@@ -53,6 +53,24 @@ export async function choferPorToken(db: SupabaseClient, token: unknown): Promis
   return { driverId: a.driver_id as string, chofer: c as ChoferAutenticado['chofer'], acceso: a as ChoferAutenticado['acceso'] };
 }
 
+/** Un chofer por su id (para la vista de solo lectura del superadmin; NO sirve para entrar como él). */
+export async function choferPorId(db: SupabaseClient, driverId: string): Promise<ChoferAutenticado | null> {
+  if (!UUID.test(driverId)) return null;
+  const { data: a } = await db
+    .from('driver_acceso')
+    .select('driver_id,pausado,base_lat,base_lng,lat,lng,ubicado_at,zona,zona_hasta')
+    .eq('driver_id', driverId)
+    .maybeSingle();
+  if (!a) return null;
+  const { data: c } = await db
+    .from('drivers')
+    .select('id,nombre,tipo,placa,modelo,tel,img,veh_img,comite,ciudad,status')
+    .eq('id', driverId)
+    .maybeSingle();
+  if (!c) return null;
+  return { driverId, chofer: c as ChoferAutenticado['chofer'], acceso: a as ChoferAutenticado['acceso'] };
+}
+
 /** Lo que el pasajero puede ver del chofer que aceptó su pedido. */
 export const choferPublico = (c: ChoferAutenticado['chofer']) => ({
   nombre: c.nombre, tipo: c.tipo, placa: c.placa, modelo: c.modelo, tel: c.tel, img: c.img, vehImg: c.veh_img, comite: c.comite,

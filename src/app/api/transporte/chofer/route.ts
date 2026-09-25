@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { avanzarOlas, avisarCierre, haExpirado, origenDe, posicionChofer, type Pedido } from '@/lib/despacho';
 import { distanciaKm } from '@/lib/ciudades';
 import { zonaPorId } from '@/lib/zonasTransporte';
-import { choferPorToken, coordenada, excedeLimite, ipDe, servicio, texto } from '@/lib/transporteServidor';
+import { choferPorId, choferPorToken, coordenada, excedeLimite, ipDe, servicio, texto } from '@/lib/transporteServidor';
+import { quienEs } from '@/lib/pushServidor';
 
 // La app privada del chofer (se entra con su enlace secreto, sin contraseña).
 //   GET  ?t=<token>  → sus datos, los pedidos que le avisaron y su viaje en curso. Al consultarlo salen las olas que tocan.
@@ -19,14 +20,29 @@ export async function GET(request: Request) {
   const db = servicio();
   if (!db) return NextResponse.json({ error: 'Servicio no configurado' }, { status: 503 });
   if (excedeLimite(`chofer:${ipDe(request)}`, 200, 60_000)) return NextResponse.json({ error: 'Demasiadas consultas' }, { status: 429 });
-  const yo = await choferPorToken(db, new URL(request.url).searchParams.get('t'));
+  const url = new URL(request.url);
+  const ver = url.searchParams.get('ver');
+  // Vista de solo lectura del superadmin: ve la app de un chofer sin su enlace. No lo marca como "visto", no hace
+  // salir olas de avisos y la app no le deja tocar nada.
+  let soloLectura = false;
+  let yo;
+  if (ver) {
+    const quien = await quienEs(request);
+    if (!quien?.esSuperadmin) return NextResponse.json({ error: 'Solo el superadmin puede ver la app de un chofer.' }, { status: 401 });
+    yo = await choferPorId(db, ver);
+    soloLectura = true;
+  } else {
+    yo = await choferPorToken(db, url.searchParams.get('t'));
+  }
   if (!yo) return NextResponse.json({ error: 'Enlace inválido. Pídele a Boga tu enlace de chofer.' }, { status: 401 });
 
-  await db.from('driver_acceso').update({ visto_at: new Date().toISOString() }).eq('driver_id', yo.driverId);
+  if (!soloLectura) {
+    await db.from('driver_acceso').update({ visto_at: new Date().toISOString() }).eq('driver_id', yo.driverId);
 
-  // Refrescar la app del chofer también hace salir las olas de los pedidos que están buscando.
-  const { data: buscando } = await db.from('ride_requests').select('id').eq('estado', 'buscando').eq('ciudad', yo.chofer.ciudad);
-  for (const b of buscando ?? []) await avanzarOlas(db, b.id as string);
+    // Refrescar la app del chofer también hace salir las olas de los pedidos que están buscando.
+    const { data: buscando } = await db.from('ride_requests').select('id').eq('estado', 'buscando').eq('ciudad', yo.chofer.ciudad);
+    for (const b of buscando ?? []) await avanzarOlas(db, b.id as string);
+  }
 
   const [{ data: avisos }, { data: acceso }, { count: celulares }] = await Promise.all([
     db.from('ride_avisos').select('ride_id,distancia_km').eq('driver_id', yo.driverId),
@@ -71,6 +87,7 @@ export async function GET(request: Request) {
 
   const zonaVigente = acceso?.zona && acceso.zona_hasta && new Date(acceso.zona_hasta).getTime() > Date.now() ? acceso.zona : null;
   return NextResponse.json({
+    soloLectura,
     chofer: { nombre: yo.chofer.nombre, tipo: yo.chofer.tipo, placa: yo.chofer.placa },
     pausado: !!acceso?.pausado,
     tieneBase: acceso?.base_lat != null && acceso?.base_lng != null,

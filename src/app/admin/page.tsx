@@ -14,6 +14,7 @@ import { COLOR_PRESETS, getColorPreset } from '@/lib/colorPresets';
 import { extractThemeFromImageClient } from '@/lib/extractThemeClient';
 import { uploadFile } from '@/lib/uploadClient';
 import { refrescarTienda } from '@/lib/refrescar';
+import { useEsSuperadmin } from '@/lib/superadmin';
 import type { StoreTheme } from '@/lib/templates.config';
 import { iconForCategory } from '@/templates/shared/tokens';
 import { moduloActivo, STOCK_BAJO, type ModuloId } from '@/lib/modulos';
@@ -92,6 +93,15 @@ export default function DashboardPage() {
 
 function AdminDashboard({ user }: { user: User }) {
   const { signOut } = useAuth();
+  // "Ver como su dueño": el superadmin abre /admin?como=<tienda> y ve el panel exacto de esa tienda. Solo con la sesión
+  // de superadmin (para cualquier otra persona el parámetro no hace nada).
+  const { esSuperadmin } = useEsSuperadmin();
+  const [comoSlug, setComoSlug] = useState<string | null>(null);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setComoSlug(new URLSearchParams(window.location.search).get('como'));
+  }, []);
+  const viendoComo = esSuperadmin && comoSlug ? comoSlug : null;
   const router = useRouter();
   // El QR y los links a las tiendas apuntan al dominio real donde corre la app
   // (antes estaba escrito 'https://boga.com' fijo, que no es el dominio en uso).
@@ -148,8 +158,10 @@ function AdminDashboard({ user }: { user: User }) {
   const [claiming, setClaiming] = useState(false);
 
   const myStoreSlugs = React.useMemo(
-    () => dbStores.filter((s: any) => s.user_id === user.id).map((s: any) => s.slug),
-    [dbStores, user.id]
+    () => viendoComo
+      ? dbStores.filter((s: any) => s.slug === viendoComo).map((s: any) => s.slug)
+      : dbStores.filter((s: any) => s.user_id === user.id).map((s: any) => s.slug),
+    [dbStores, user.id, viendoComo]
   );
   const unclaimedStores = React.useMemo(
     () => dbStores.filter((s: any) => !s.user_id),
@@ -159,12 +171,12 @@ function AdminDashboard({ user }: { user: User }) {
 
   // Si todavia no tiene ninguna tienda propia, ofrecer reclamar una sin dueño.
   useEffect(() => {
-    if (myStoreSlugs.length === 0 && dbStores.length > 0 && !isStorePickerOpen) {
+    if (myStoreSlugs.length === 0 && dbStores.length > 0 && !isStorePickerOpen && !comoSlug) {
       setPickerDraft([]);
       setIsStorePickerOpen(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [myStoreSlugs.length, dbStores.length]);
+  }, [myStoreSlugs.length, dbStores.length, comoSlug]);
 
   const claimStores = async (slugs: string[]) => {
     if (slugs.length === 0) return;
@@ -1214,6 +1226,16 @@ function AdminDashboard({ user }: { user: User }) {
       {/* Main Content */}
       {/* min-w-0: sin esto el flex item no baja de su ancho de contenido y desborda la pagina */}
       <main className={`flex-1 min-w-0 px-3 py-4 md:p-6 w-full pb-28 md:pb-6 md:h-screen md:overflow-y-auto ${activeTab === 'pos' ? 'max-w-none md:px-6' : 'max-w-7xl mx-auto'}`}>
+        {viendoComo && (
+          <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-900">
+            <span className="material-symbols-outlined text-[18px]">visibility</span>
+            <span>
+              Modo superadmin: estás viendo el panel de <b>{dbStores.find((s: any) => s.slug === viendoComo)?.name || viendoComo}</b> tal como lo ve su dueño.
+              Lo que cambies aquí se guarda de verdad.
+            </span>
+            <Link href="/superadmin" className="ml-auto underline font-bold">Volver al superadmin</Link>
+          </div>
+        )}
         <header className={`hidden md:flex flex-col md:flex-row md:items-center justify-between gap-4 ${activeTab === 'pos' ? 'mb-2' : 'mb-6'}`}>
           <div>
             <h1 className={`${activeTab === 'pos' ? 'text-lg font-black' : 'text-2xl font-extrabold'} text-gray-900 tracking-tight`}>
