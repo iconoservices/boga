@@ -1745,3 +1745,29 @@ ALTER TABLE public.store_izipay ENABLE ROW LEVEL SECURITY;   -- sin políticas a
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS pago_estado TEXT;
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS pago_ref TEXT;          -- id de la transacción en Izipay
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS pago_at TIMESTAMPTZ;    -- cuándo se confirmó el pago
+
+-- ============================================================
+-- LOYVERSE: la ficha de acceso sale de stores.modulos (que es PÚBLICO) a una tabla PRIVADA
+-- ============================================================
+-- `stores.modulos` se puede leer con la clave pública del navegador: dejar ahí el token de Loyverse lo exponía.
+-- Ahora vive en `store_loyverse` (RLS sin políticas: solo el servidor con la llave de servicio), cifrado con PAGOS_ENC_KEY.
+-- `token_plain` solo sirve para migrar lo que ya estaba en modulos: el servidor lo cifra la primera vez que lo lee.
+CREATE TABLE IF NOT EXISTS public.store_loyverse (
+  store       TEXT PRIMARY KEY,
+  token_enc   TEXT,
+  token_plain TEXT,
+  merchant_id TEXT,
+  updated_at  TIMESTAMPTZ DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS store_loyverse_merchant_idx ON public.store_loyverse (merchant_id) WHERE merchant_id IS NOT NULL;
+ALTER TABLE public.store_loyverse ENABLE ROW LEVEL SECURITY;   -- sin políticas a propósito
+
+-- Migración: copia lo que ya estaba en stores.modulos y lo BORRA de ahí (deja de ser público).
+INSERT INTO public.store_loyverse (store, token_plain, merchant_id)
+SELECT slug, modulos->>'loyverse_token', modulos->>'loyverse_merchant_id'
+FROM public.stores
+WHERE modulos ? 'loyverse_token'
+ON CONFLICT (store) DO NOTHING;
+UPDATE public.stores
+SET modulos = modulos - 'loyverse_token' - 'loyverse_merchant_id'
+WHERE modulos ? 'loyverse_token' OR modulos ? 'loyverse_merchant_id';

@@ -6,8 +6,7 @@
 
 export type ModuloId = 'pos' | 'inventario' | 'google' | 'marca_blanca' | 'marketplace' | 'loyverse' | 'dominio_propio' | 'pasarela_pago';
 export type Modulos = Partial<Record<ModuloId, boolean>> & {
-  loyverse_token?: string;
-  loyverse_merchant_id?: string;
+  // (La ficha de Loyverse y su merchant_id ya NO viven aquí: `stores.modulos` es público. Ver lib/loyverseServidor.ts.)
   loyverse_last_sync?: string;
   loyverse_auto_sync?: boolean;
   dominio_propio_url?: string;
@@ -283,7 +282,7 @@ export function pasosDeTienda(t: { modulos?: Modulos | null; subdominio_activo?:
   if (op === 'inventario' || op === 'sin-clasificar') pasos.push('operacion:inventario');
   if (conMarcaBlanca(t.modulos)) pasos.push('extra:marca_blanca');
   if (moduloActivo(t.modulos, 'dominio_propio') || !!t.modulos?.dominio_propio_url) pasos.push('extra:dominio_propio');
-  if (moduloActivo(t.modulos, 'loyverse') || !!t.modulos?.loyverse_token) pasos.push('extra:loyverse');
+  if (moduloActivo(t.modulos, 'loyverse')) pasos.push('extra:loyverse');
   if (moduloActivo(t.modulos, 'pasarela_pago')) pasos.push('extra:pasarela_pago');
   return pasos;
 }

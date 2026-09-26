@@ -8,7 +8,6 @@ interface StoreInfo {
   name: string;
   modulos?: {
     loyverse?: boolean;
-    loyverse_token?: string;
     loyverse_last_sync?: string;
     [key: string]: any;
   } | null;
@@ -39,7 +38,9 @@ export default function LoyverseSyncModal({
   // Buscar info de la tienda seleccionada
   const activeStore = allStores.find((s) => s.slug === activeStoreSlug) || store;
 
-  const [token, setToken] = useState<string>(activeStore.modulos?.loyverse_token || '');
+  // La ficha ya NO llega al navegador (vive cifrada en el servidor): aquí solo se escribe una nueva y se sabe si hay una guardada.
+  const [token, setToken] = useState<string>('');
+  const [conectado, setConectado] = useState<boolean>(!!activeStore.modulos?.loyverse);
   const [showToken, setShowToken] = useState(false);
   const [syncStock, setSyncStock] = useState(true);
   const [updatePrices, setUpdatePrices] = useState(true);
@@ -53,11 +54,24 @@ export default function LoyverseSyncModal({
   // Cuando cambia de tienda en el desplegable, cargar su token correspondiente
   useEffect(() => {
     const s = allStores.find((st) => st.slug === activeStoreSlug) || store;
-    setToken(s.modulos?.loyverse_token || '');
+    setToken('');
+    setConectado(!!s.modulos?.loyverse);
     setErrorMsg(null);
     setSuccessMsg(null);
     setStats(null);
   }, [activeStoreSlug, allStores, store]);
+
+  // ¿Esta tienda ya tiene una ficha guardada? (lo confirma el servidor; la ficha no se devuelve)
+  useEffect(() => {
+    let vivo = true;
+    (async () => {
+      const jwt = (await supabase.auth.getSession()).data.session?.access_token;
+      if (!jwt) return;
+      const r = await fetch(`/api/loyverse/config?store=${encodeURIComponent(activeStoreSlug)}`, { headers: { Authorization: `Bearer ${jwt}` }, cache: 'no-store' }).catch(() => null);
+      if (r?.ok && vivo) setConectado((await r.json()).conectado === true);
+    })();
+    return () => { vivo = false; };
+  }, [activeStoreSlug]);
 
   const lastSyncDate = activeStore.modulos?.loyverse_last_sync
     ? new Date(activeStore.modulos.loyverse_last_sync).toLocaleString('es-PE', {
@@ -80,23 +94,18 @@ export default function LoyverseSyncModal({
     setSuccessMsg(null);
 
     try {
-      const modulosActuales = activeStore.modulos || {};
-      const { error } = await supabase
-        .from('stores')
-        .update({
-          modulos: {
-            ...modulosActuales,
-            loyverse: true,
-            loyverse_token: token.trim(),
-          },
-        })
-        .eq('slug', activeStore.slug);
-
-      if (error) throw error;
-      setSuccessMsg('¡Token guardado exitosamente para ' + activeStore.name + '!');
-      if (activeStore.modulos) {
-        activeStore.modulos.loyverse_token = token.trim();
-      }
+      const jwt = (await supabase.auth.getSession()).data.session?.access_token ?? '';
+      const r = await fetch('/api/loyverse/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jwt}` },
+        body: JSON.stringify({ store: activeStore.slug, token: token.trim() }),
+      });
+      const d = await r.json().catch(() => ({} as { error?: string }));
+      if (!r.ok) throw new Error(d.error || 'No se pudo guardar');
+      setSuccessMsg('¡Token guardado exitosamente para ' + activeStore.name + '! Por seguridad ya no se muestra.');
+      if (activeStore.modulos) activeStore.modulos.loyverse = true;
+      setConectado(true);
+      setToken('');
     } catch (err: any) {
       setErrorMsg('Error al guardar el token: ' + (err.message || 'Intenta de nuevo'));
     } finally {
@@ -106,7 +115,7 @@ export default function LoyverseSyncModal({
 
   const handleSyncNow = async () => {
     const currentToken = token.trim();
-    if (!currentToken) {
+    if (!currentToken && !conectado) {
       setErrorMsg('Debes ingresar tu Token de Acceso de Loyverse antes de sincronizar.');
       return;
     }
@@ -117,12 +126,13 @@ export default function LoyverseSyncModal({
     setStats(null);
 
     try {
+      const jwt = (await supabase.auth.getSession()).data.session?.access_token ?? '';
       const res = await fetch('/api/loyverse/sync', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jwt}` },
         body: JSON.stringify({
           storeSlug: activeStore.slug,
-          token: currentToken,
+          token: currentToken || undefined,
           syncStock,
           updatePrices,
         }),
@@ -142,6 +152,7 @@ export default function LoyverseSyncModal({
         message: data.message,
       });
       setSuccessMsg(data.message || 'Sincronización completada.');
+      if (currentToken) { setConectado(true); setToken(''); }
       if (onSyncComplete) onSyncComplete();
     } catch (err: any) {
       setErrorMsg(err.message || 'Error de conexión.');
@@ -284,7 +295,7 @@ export default function LoyverseSyncModal({
                 data-lpignore="true"
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
-                placeholder="Pega aquí la ficha de acceso (ej. 914fceda139345c1aa314c563bb43e0b)"
+                placeholder={conectado ? 'Ficha guardada ✓ (por seguridad no se muestra). Pega otra solo si quieres cambiarla' : 'Pega aquí la ficha de acceso (ej. 914fceda139345c1aa314c563bb43e0b)'}
                 className={`w-full h-11 px-3.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono text-gray-800 focus:outline-none focus:border-[#b8130e] focus:bg-white transition-colors ${
                   !showToken && token ? 'tracking-wider' : ''
                 }`}
@@ -347,7 +358,7 @@ export default function LoyverseSyncModal({
           <button
             type="button"
             onClick={handleSyncNow}
-            disabled={isSyncing || !token.trim()}
+            disabled={isSyncing || (!token.trim() && !conectado)}
             className="flex items-center gap-2 px-5 py-2.5 bg-[#b8130e] text-white text-xs font-bold rounded-xl shadow-md shadow-[#b8130e]/20 hover:shadow-lg hover:shadow-[#b8130e]/30 transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
           >
             <span className={`material-symbols-outlined text-[18px] ${isSyncing ? 'animate-spin' : ''}`}>

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { asegurarWebhooksLoyverse } from '@/lib/loyverse';
+import { quienEs } from '@/lib/pushServidor';
+import { leerCredencialesLoyverse, guardarCredencialesLoyverse } from '@/lib/loyverseServidor';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,13 +40,18 @@ interface LoyverseInventoryLevel {
 
 export async function POST(request: Request) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  // Solo con llave de servicio (antes caía a la clave pública): la ficha de Loyverse vive en una tabla privada.
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !serviceKey) {
     return NextResponse.json({ ok: false, error: 'Configuración de base de datos no disponible.' }, { status: 500 });
   }
 
   const supabase = createClient(supabaseUrl, serviceKey);
+
+  // Antes esta ruta no pedía sesión: cualquiera podía lanzar la sincronización sobre cualquier tienda.
+  const quien = await quienEs(request);
+  if (!quien) return NextResponse.json({ ok: false, error: 'Inicia sesión para sincronizar.' }, { status: 401 });
 
   let body: {
     storeSlug: string;
@@ -68,15 +75,19 @@ export async function POST(request: Request) {
   // 1. Obtener la tienda y verificar token
   const { data: store, error: storeError } = await supabase
     .from('stores')
-    .select('slug, name, modulos')
+    .select('slug, name, modulos, user_id')
     .eq('slug', storeSlug)
     .maybeSingle();
 
   if (storeError || !store) {
     return NextResponse.json({ ok: false, error: 'Tienda no encontrada.' }, { status: 404 });
   }
+  if (!quien.esSuperadmin && store.user_id !== quien.userId) {
+    return NextResponse.json({ ok: false, error: 'Esta tienda no es tuya.' }, { status: 403 });
+  }
 
-  const loyverseToken = body.token?.trim() || store.modulos?.loyverse_token;
+  const tokenNuevo = body.token?.trim() || '';
+  const loyverseToken = tokenNuevo || (await leerCredencialesLoyverse(supabase, storeSlug))?.token;
 
   if (!loyverseToken) {
     return NextResponse.json({
@@ -309,11 +320,12 @@ export async function POST(request: Request) {
     const whResult = await asegurarWebhooksLoyverse(loyverseToken, siteUrl);
 
     // 10. Actualizar metadatos de la tienda (última sincronización, webhooks y token)
+    // La ficha y el merchant_id van a la tabla privada; en stores.modulos (público) solo quedan datos sin secretos.
+    await guardarCredencialesLoyverse(supabase, storeSlug, { token: tokenNuevo || undefined, merchantId: whResult.merchantId || undefined });
+    const { loyverse_token: _t, loyverse_merchant_id: _m, ...modulosSinSecretos } = (store.modulos || {}) as Record<string, unknown>;
     const modulosActualizados = {
-      ...(store.modulos || {}),
+      ...modulosSinSecretos,
       loyverse: true,
-      loyverse_token: loyverseToken,
-      loyverse_merchant_id: whResult.merchantId || store.modulos?.loyverse_merchant_id,
       loyverse_webhooks_active: whResult.ok,
       loyverse_last_sync: new Date().toISOString(),
     };

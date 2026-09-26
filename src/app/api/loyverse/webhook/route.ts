@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { leerCredencialesLoyverse, tiendasConMerchantId } from '@/lib/loyverseServidor';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +14,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !serviceKey) {
     return NextResponse.json({ ok: false, error: 'Base de datos no configurada.' }, { status: 500 });
@@ -35,25 +36,18 @@ export async function POST(request: Request) {
   const merchantId = payload?.merchant_id || payload?.data?.merchant_id;
   const eventType = payload?.type || payload?.event;
 
-  // Buscar tiendas que tengan configurado Loyverse
-  const { data: stores, error: storesErr } = await supabase
-    .from('stores')
-    .select('slug, name, modulos')
-    .not('modulos', 'is', null);
-
-  if (storesErr || !stores || stores.length === 0) {
-    return NextResponse.json({ ok: true, message: 'No hay tiendas activas con Loyverse.' });
+  // Sin merchant_id no se sabe de qué tienda es el aviso: se ignora (antes se aplicaba a TODAS las tiendas con Loyverse,
+  // así que cualquiera podía disparar sincronizaciones en cadena). El merchant_id solo lo conoce la tienda y Loyverse.
+  if (!merchantId || typeof merchantId !== 'string') {
+    return NextResponse.json({ ok: true, message: 'Aviso sin merchant_id: ignorado.' });
   }
 
-  // Filtrar tiendas que coincidan con el merchant_id o que tengan token activo
-  const matchingStores = stores.filter((s) => {
-    const mod = s.modulos || {};
-    if (!mod.loyverse || !mod.loyverse_token) return false;
-    if (merchantId && mod.loyverse_merchant_id) {
-      return mod.loyverse_merchant_id === merchantId;
-    }
-    return true;
-  });
+  const slugs = await tiendasConMerchantId(supabase, merchantId);
+  if (slugs.length === 0) {
+    return NextResponse.json({ ok: true, message: 'Ninguna tienda coincide con el webhook.' });
+  }
+  const { data: filas } = await supabase.from('stores').select('slug, name, modulos').in('slug', slugs);
+  const matchingStores = (filas ?? []).filter((s) => (s.modulos as { loyverse?: boolean } | null)?.loyverse);
 
   if (matchingStores.length === 0) {
     return NextResponse.json({ ok: true, message: 'Ninguna tienda coincide con el webhook.' });
@@ -61,7 +55,7 @@ export async function POST(request: Request) {
 
   // Ejecutar sincronización en segundo plano para cada tienda afectada
   for (const st of matchingStores) {
-    const token = st.modulos?.loyverse_token;
+    const token = (await leerCredencialesLoyverse(supabase, st.slug as string))?.token;
     if (!token) continue;
 
     try {

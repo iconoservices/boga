@@ -4,6 +4,7 @@ import { moduloActivo } from '@/lib/modulos';
 import { moverStock } from '@/lib/stock';
 import { COLS_OFERTA, aplicarOferta } from '@/lib/ofertas';
 import { descontarStockEnLoyverse } from '@/lib/loyverse';
+import { leerCredencialesLoyverse } from '@/lib/loyverseServidor';
 
 // Guarda el pedido de la carta en la base ANTES de que el cliente abra WhatsApp.
 //
@@ -119,9 +120,10 @@ export async function POST(request: Request) {
     });
 
     // Si tiene integración Loyverse POS activa, descontar también en Loyverse en segundo plano
-    if (tienda.modulos?.loyverse && tienda.modulos?.loyverse_token) {
+    const credLoyverse = tienda.modulos?.loyverse ? await leerCredencialesLoyverse(db, slug) : null;
+    if (credLoyverse) {
       descontarStockEnLoyverse({
-        token: tienda.modulos.loyverse_token,
+        token: credLoyverse.token,
         itemsVendidos: lineas.map((l) => ({ id: l.id, name: l.name, quantity: l.quantity })),
         productosDb: ((productos ?? []) as any[]).map((p) => ({
           id: p.id,

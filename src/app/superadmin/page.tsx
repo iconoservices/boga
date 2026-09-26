@@ -2493,8 +2493,6 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                                 ...(prev.modulos || {}),
                                 ...p.modulos,
                                 dominio_propio_url: prev.modulos?.dominio_propio_url,
-                                loyverse_token: prev.modulos?.loyverse_token,
-                                loyverse_merchant_id: prev.modulos?.loyverse_merchant_id,
                               },
                             }));
                           }}
