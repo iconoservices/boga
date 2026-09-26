@@ -69,6 +69,7 @@ import SharedUI from '@/components/SharedUI';
 import MarketTabs from '@/components/MarketTabs';
 import PlazaChatBubble from '@/components/PlazaChatBubble';
 import AvisosBogaPrompt from '@/components/AvisosBogaPrompt';
+import InstalarBogaPrompt from '@/components/InstalarBogaPrompt';
 import HomeFloatingActions from '@/components/HomeFloatingActions';
 import { RUTAS_HUB } from '@/lib/rutasHub';
 import MetaPixelTracker from '@/components/MetaPixelTracker';
@@ -174,6 +175,7 @@ export default function RootLayout({
                 <SharedUI />
                 <MetaPixelTracker />
                 <div className="boga-chrome"><PlazaChatBubble /></div>
+                <div className="boga-chrome"><InstalarBogaPrompt /></div>
                 <div className="boga-chrome"><AvisosBogaPrompt /></div>
                 <div className="boga-chrome"><HomeFloatingActions /></div>
               </CartProvider>

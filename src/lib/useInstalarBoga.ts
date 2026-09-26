@@ -66,12 +66,24 @@ function instalar() {
   const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
   if (/iphone|ipad|ipod/.test(ua) && isSafari) {
     alert('Para instalar:\n\n1. Toca el icono Compartir (📤) abajo\n2. Desliza y toca "Agregar a pantalla de inicio"\n3. Toca "Agregar"');
+  } else if (navegadorIPhone() === 'chrome') {
+    alert('Para instalar:\n\n1. Toca el icono Compartir (📤) arriba, junto a la dirección\n2. Desliza y toca "Agregar a pantalla de inicio"\n3. Toca "Agregar"');
   } else {
     alert('Para instalar:\n\n1. Abre el menú del navegador (⋯)\n2. Busca "Agregar a pantalla de inicio"\n3. Confirma la instalación');
   }
 }
 
-/** `mostrar` es false una vez instalada (o mientras no se sabe, para no parpadear). */
+/** En iPhone no hay instalación con un toque y los pasos cambian según el navegador: Safari (Compartir abajo) o
+ *  Chrome/Edge (Compartir arriba, junto a la dirección). Otros navegadores del iPhone no pueden agregarla. */
+export function navegadorIPhone(): 'safari' | 'chrome' | null {
+  if (typeof navigator === 'undefined' || !/iphone|ipad|ipod/i.test(navigator.userAgent)) return null;
+  if (/crios|edgios/i.test(navigator.userAgent)) return 'chrome';
+  if (/fxios|opios|gsa/i.test(navigator.userAgent)) return null;
+  return /safari/i.test(navigator.userAgent) ? 'safari' : null;
+}
+
+/** `mostrar` es false una vez instalada (o mientras no se sabe, para no parpadear).
+ *  `puede` es true si hay instalación real disponible: el aviso del navegador (Chrome/Android) o Safari de iPhone. */
 export function useInstalarBoga() {
   const [, forzar] = useState(0);
   const [listo, setListo] = useState(false);
@@ -81,5 +93,5 @@ export function useInstalarBoga() {
     setListo(true);
     return () => { oyentes.delete(f); };
   }, []);
-  return { mostrar: listo && !estado.instalada, instalar };
+  return { mostrar: listo && !estado.instalada, puede: listo && (!!estado.prompt || navegadorIPhone() !== null), instalar };
 }

@@ -60,6 +60,7 @@ export default function AvisosBogaPrompt() {
       if (m.hasta <= tope && Date.now() < m.hasta) return;         // ya salió hoy
       timer = setTimeout(() => {
         if (!vivo) return;
+        if (document.documentElement.dataset.instalarBoga) return;   // la tarjeta de instalar está abierta: hoy no
         // Se anota al mostrarla (no al cerrarla): así sale una sola vez al día aunque la ignoren.
         guardar({ rechazos: m.rechazos, hasta: Date.now() + ESPERA_DIAS * 86_400_000 });
         setVisible(true);
