@@ -332,7 +332,7 @@ function ExploreContenido() {
           {activeCategory === 'Todas' ? (
             /* "Todas" va aparte y primero (es «todo junto»); debajo, dos familias: Market (se compra) y Servicios. */
             /* Fila de atajos: Todo se queda aquí; Comprar lleva a Tiendas, Servicios a su pestaña y Pensión a /pension. */
-            <div className="grid grid-cols-4 gap-2 transition-all duration-500 lg:grid-cols-2 lg:grid-rows-2 lg:gap-3 lg:flex-1">
+            <div className="grid grid-cols-5 gap-2 transition-all duration-500 lg:grid-cols-3 lg:grid-rows-2 lg:gap-3 lg:flex-1">
               <div
                 aria-current="page"
                 className="flex flex-col items-center justify-center gap-1 py-2 px-1.5 rounded-xl shadow-md bg-primary text-white border border-primary"
@@ -342,6 +342,7 @@ function ExploreContenido() {
               </div>
               {([
                 { href: '/market', nombre: 'Comprar', icon: 'shopping_bag' },
+                { href: '/promotions', nombre: 'Promos', icon: 'loyalty' },
                 { href: '/explore?vista=servicios', nombre: 'Servicios', icon: 'handyman' },
               ] as const).map((g) => (
                 <Link
@@ -356,7 +357,7 @@ function ExploreContenido() {
               {/* Pensión de almuerzos: destacada, no es una categoría. */}
               <Link
                 href="/pension"
-                className="flex flex-col items-center justify-center gap-1 py-2 px-1.5 rounded-xl shadow-sm active:scale-95 transition-transform"
+                className="flex flex-col items-center justify-center gap-1 py-2 px-1.5 rounded-xl shadow-sm active:scale-95 transition-transform lg:col-span-2"
                 style={{ background: '#0f3d24' }}
               >
                 <span className="material-symbols-outlined text-xl lg:text-4xl" style={{ color: '#e7b84b', fontVariationSettings: "'FILL' 1" }}>lunch_dining</span>
