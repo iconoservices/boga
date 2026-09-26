@@ -206,7 +206,13 @@ export default function PedidosTab({
                             )}
                           </p>
                         )}
-                        {o.customer_address && <p className="text-gray-600 font-medium">{o.customer_address}</p>}
+                        {o.customer_address && (
+                          <p className="text-gray-600 font-medium break-words">
+                            {o.customer_address.split(/(https?:\/\/[^\s]+)/g).map((t, i) => /^https?:\/\//.test(t)
+                              ? <a key={i} href={t} target="_blank" rel="noopener noreferrer" className="text-[#b8130e] font-bold underline">Abrir en el mapa</a>
+                              : <span key={i}>{t}</span>)}
+                          </p>
+                        )}
                         {o.seller_name && <p className="text-gray-500 text-xs mt-1">Vendedor: {o.seller_name}</p>}
                         {o.payment_method && <p className="text-gray-500 text-xs">Pago: {o.payment_method}</p>}
                       </div>

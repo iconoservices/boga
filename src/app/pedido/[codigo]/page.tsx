@@ -319,7 +319,13 @@ export default function PedidoPage({ params }: { params: Promise<{ codigo: strin
                     {wa(p.cliente.telefono) && <a href={wa(p.cliente.telefono)} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">WhatsApp</a>}
                   </p>
                 )}
-                {p.cliente.direccion && <p className="text-secondary">{p.cliente.direccion}</p>}
+                {p.cliente.direccion && (
+                  <p className="text-secondary break-words">
+                    {p.cliente.direccion.split(/(https?:\/\/[^\s]+)/g).map((t, i) => /^https?:\/\//.test(t)
+                      ? <a key={i} href={t} target="_blank" rel="noopener noreferrer" className="text-primary font-bold underline">Abrir en el mapa</a>
+                      : <span key={i}>{t}</span>)}
+                  </p>
+                )}
 
                 <p className="text-[10px] font-bold uppercase tracking-wide text-secondary mt-3 mb-1.5">Estado del pedido</p>
                 <div className="flex flex-wrap gap-2">

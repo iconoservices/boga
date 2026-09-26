@@ -277,6 +277,10 @@ export function CartPanel({
   onPagarOnline?: (datos: { nombre: string; telefono: string; entrega: 'delivery' | 'recojo'; direccion: string }) => Promise<void> | void;
 }) {
   const [pagando, setPagando] = React.useState(false);
+  // «Usar mi ubicación»: en Pucallpa muchas direcciones son «jirón tal, frente al colegio»; con el punto del GPS el repartidor llega.
+  // Se agrega a la dirección un enlace de Google Maps (la tienda lo abre con un toque). Solo se envía a la tienda, al confirmar.
+  const [ubicando, setUbicando] = React.useState(false);
+  const [ubicMsg, setUbicMsg] = React.useState('');
   // Antes el pedido se mandaba por WhatsApp con solo los items y el total: el
   // dueño tenia que volver a preguntar quien pedia y si era delivery o recojo.
   // Pedirlo aca hace que el primer mensaje ya venga completo.
@@ -296,6 +300,29 @@ export function CartPanel({
   }, []);
 
   const telefono = normalizarCelular(celular);
+  const usarUbicacion = () => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) { setUbicMsg('Tu navegador no permite ubicarte. Escribe tu dirección.'); return; }
+    setUbicando(true);
+    setUbicMsg('');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const enlace = `https://maps.google.com/?q=${pos.coords.latitude.toFixed(6)},${pos.coords.longitude.toFixed(6)}`;
+        // Si ya había una ubicación agregada antes, se reemplaza (no se acumulan enlaces).
+        setDireccion((d) => {
+          const base = d.replace(/\s*·?\s*📍\s*https:\/\/maps\.google\.com\/\?q=\S+/g, '').trim();
+          return (base ? `${base} · ` : '') + `📍 ${enlace}`;
+        });
+        setUbicMsg(`Ubicación agregada (precisión aproximada: ${Math.round(pos.coords.accuracy)} m). Suma una referencia: color de la casa, frente a qué queda.`);
+        setUbicando(false);
+      },
+      (err) => {
+        setUbicMsg(err.code === 1 ? 'No diste permiso de ubicación. Actívalo en tu navegador o escribe tu dirección.' : 'No pudimos obtener tu ubicación. Escribe tu dirección.');
+        setUbicando(false);
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
+    );
+  };
+
   const faltaCelular = !telefono;
   const faltaNombre = !nombre.trim();
   const faltaDireccion = entrega === 'delivery' && !direccion.trim();
@@ -471,6 +498,17 @@ export function CartPanel({
                   className={`w-full border rounded-xl px-3 py-2.5 ${TXT.small} font-semibold focus:outline-none`}
                   style={{ borderColor: `${t.outlineVariant}80`, background: t.surface, color: t.onSurface }}
                 />
+                <button
+                  type="button"
+                  onClick={usarUbicacion}
+                  disabled={ubicando}
+                  className={`mt-2 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 ${TXT.small} font-bold active:scale-95 transition-all disabled:opacity-60`}
+                  style={{ borderColor: `${t.primary}66`, color: t.primary, background: `${t.primary}0d` }}
+                >
+                  <span className={`material-symbols-outlined ${ICON.md}`}>my_location</span>
+                  {ubicando ? 'Ubicándote…' : 'Usar mi ubicación'}
+                </button>
+                {ubicMsg && <p className={`${TXT.micro} mt-1.5 leading-snug`} style={{ color: t.onSurfaceVariant }}>{ubicMsg}</p>}
               </div>
             )}
           </div>
