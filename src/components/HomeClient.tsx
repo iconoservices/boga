@@ -211,36 +211,36 @@ function PortalesPanel() {
   const pausar = () => { pausaHasta.current = Date.now() + 6000; };
 
   return (
-    <div className="px-container-margin lg:px-0 pt-6 lg:pt-0">
-      <div className="flex flex-col gap-4 lg:h-full lg:justify-center">
+    <div className="px-container-margin lg:px-0 pt-6 lg:pt-0 lg:relative lg:min-h-0">
+      <div className="panel-portales flex flex-col gap-4 lg:absolute lg:inset-0 lg:gap-3 lg:justify-between">
         <div className="flex items-end justify-between gap-4">
           <div className="min-w-0">
             <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-xl lg:whitespace-nowrap leading-tight">
               Todo Pucallpa en una sola app
             </h2>
-            <p className="font-body-md text-secondary text-xs mt-1 max-w-[52ch]">
+            <p className="panel-portales-sub font-body-md text-secondary text-xs mt-1 max-w-[52ch]">
               <span className="lg:hidden">Transporte, servicios y agenda de la ciudad.</span>
               <span className="hidden lg:inline">Transporte verificado, servicios de confianza y la agenda de la ciudad, en tiempo real.</span>
             </p>
           </div>
-          <span className="hidden sm:flex lg:hidden 2xl:flex items-center gap-1.5 font-label-md text-[10px] text-secondary shrink-0">
+          <span className="panel-portales-sinc hidden sm:flex lg:hidden 2xl:flex items-center gap-1.5 font-label-md text-[10px] text-secondary shrink-0">
             <span className="w-1.5 h-1.5 rounded-full bg-[#0F8A55] animate-pulse" />
             Sincronizado
           </span>
         </div>
 
-        <div ref={tira} onTouchStart={pausar} onPointerDown={pausar} onWheel={pausar} className="flex gap-3 overflow-x-auto hide-scrollbar pb-1 snap-x lg:grid lg:grid-cols-3 lg:gap-3 lg:overflow-visible" style={{ scrollbarWidth: 'none' }}>
+        <div ref={tira} onTouchStart={pausar} onPointerDown={pausar} onWheel={pausar} className="flex gap-3 overflow-x-auto hide-scrollbar pb-1 snap-x lg:grid lg:grid-cols-3 lg:grid-rows-3 lg:gap-2.5 lg:overflow-visible lg:flex-1 lg:min-h-0 lg:pb-0" style={{ scrollbarWidth: 'none' }}>
           {PORTALES.map((p) => (
             <Link
               key={p.href}
               href={p.href}
-              className="group flex flex-col items-center gap-1.5 shrink-0 w-16 snap-start lg:w-auto lg:gap-2 lg:py-3.5 lg:bg-white lg:border lg:border-surface-container-highest lg:rounded-2xl lg:shadow-sm lg:hover:shadow-md lg:hover:border-primary/30 lg:transition-all"
+              className="group flex flex-col items-center gap-1.5 shrink-0 w-16 snap-start lg:w-auto lg:h-full lg:min-h-0 lg:justify-center lg:gap-[clamp(2px,1.2cqh,8px)] lg:py-0 lg:bg-white lg:border lg:border-surface-container-highest lg:rounded-2xl lg:shadow-sm lg:hover:shadow-md lg:hover:border-primary/30 lg:transition-all"
             >
               <span
-                className="w-12 h-12 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform"
+                className="w-12 h-12 lg:w-[clamp(26px,8.5cqh,54px)] lg:h-[clamp(26px,8.5cqh,54px)] rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform"
                 style={{ backgroundColor: p.color }}
               >
-                <span className="material-symbols-outlined text-white text-[22px] lg:text-[26px]" style={{ fontVariationSettings: "'FILL' 1" }}>{p.icon}</span>
+                <span className="material-symbols-outlined text-white text-[22px] lg:text-[length:clamp(15px,4.8cqh,30px)]" style={{ fontVariationSettings: "'FILL' 1" }}>{p.icon}</span>
               </span>
               <span className="font-label-md text-[10px] lg:text-xs lg:font-semibold text-on-surface text-center leading-tight line-clamp-1 w-full">{p.label}</span>
             </Link>

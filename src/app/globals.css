@@ -199,3 +199,16 @@ html[data-tienda] .boga-chrome { display: none !important; }
 @media (prefers-reduced-motion: reduce) {
   .cart-badge-bump, .add-btn-pop, .add-plus-float, .add-toast { animation: none; }
 }
+
+/* Panel «Todo Pucallpa en una sola app» junto al banner del Inicio (solo escritorio). Su altura es la del banner
+   (que cambia con el ancho: menú lateral abierto o cerrado, ventana más chica), así que es un contenedor de tamaño:
+   los íconos se escalan con cqh y, si ya no cabe, se oculta primero el subtítulo y luego el indicador. */
+@media (min-width: 1024px) {
+  .panel-portales { container-type: size; container-name: portales; }
+}
+@container portales (max-height: 430px) {
+  .panel-portales-sub { display: none; }
+}
+@container portales (max-height: 340px) {
+  .panel-portales-sinc { display: none !important; }
+}
