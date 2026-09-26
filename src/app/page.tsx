@@ -7,6 +7,9 @@ import { cargarHome } from '@/lib/homeData';
 // (los endpoints /api/revalidate* también refrescan "/").
 export const revalidate = 300;
 
+// La dirección oficial del Inicio (antes no declaraba canonical y las variantes con ?utm_… podían contarse como páginas distintas).
+export const metadata = { alternates: { canonical: '/' } };
+
 export default async function HomePage() {
   const inicial = await cargarHome();
   return <HomeClient inicial={inicial} />;

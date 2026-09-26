@@ -16,6 +16,7 @@ import { CarruselSorteos } from '@/components/SorteosCarrusel';
 import { fetchLugares } from '@/lib/lugares';
 import { BannerOverlay, type BannerStyle } from '@/components/BannerOverlay';
 import { hrefTienda, esFuera } from '@/lib/tiendaUrl';
+import { MARCA, REDES } from '@/lib/marca';
 import {
   armarCatalogoHome, armarChamba, armarInmuebles, armarNotas, armarPromos, armarQueHacer, armarViajes,
   type HomeData, type HomeSlide, type NotaHome,
@@ -312,15 +313,22 @@ export default function HomeClient({ inicial }: { inicial: HomeData }) {
     '@graph': [
       {
         '@type': 'Organization',
-        name: 'BogaHub',
+        '@id': `${SITE_URL}#organizacion`,
+        name: MARCA.nombre,
+        alternateName: [...MARCA.alias],
         url: SITE_URL,
         logo: `${SITE_URL}/icon.png`,
-        sameAs: [] as string[],
+        description: MARCA.descripcion,
+        areaServed: { '@type': 'City', name: MARCA.ciudad },
+        ...(REDES.length ? { sameAs: REDES } : {}),
       },
       {
         '@type': 'WebSite',
+        '@id': `${SITE_URL}#sitio`,
         name: 'BogaHub · Todo Pucallpa en una app',
         url: SITE_URL,
+        inLanguage: 'es-PE',
+        publisher: { '@id': `${SITE_URL}#organizacion` },
         potentialAction: {
           '@type': 'SearchAction',
           target: `${SITE_URL}/market?q={search_term_string}`,

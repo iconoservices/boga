@@ -3,6 +3,7 @@ import type { StoreTheme } from '@/lib/templates.config';
 import { BOGA_DEFAULT_ICON } from '@/lib/stores.config';
 import { notFound } from 'next/navigation';
 import StoreRenderer from './StoreRenderer';
+import GeoTienda from '@/components/GeoTienda';
 import { supabase } from '@/lib/supabase';
 import { Vibrant } from 'node-vibrant/node';
 import { unstable_cache } from 'next/cache';
@@ -175,8 +176,8 @@ export async function generateMetadata({ params }: Omit<Props, 'searchParams'>) 
   const iconUrl = store.logoImage || store.iconImage || store.heroImage || BOGA_DEFAULT_ICON;
   
   return {
-    title: `${store.name} | Boga Market`,
-    description: store.tagline,
+    title: `${store.name} en Pucallpa`,
+    description: store.tagline || `${store.name} en Pucallpa${store.marketplaceCategory && store.marketplaceCategory !== 'General' ? `: ${store.marketplaceCategory}` : ''}. Carta, precios y pedidos por WhatsApp en BogaHub.`,
     manifest: `/manifest.json?slug=${slug}`,
     // La dirección OFICIAL de la tienda es la del sitio principal (bogahub.app/<tienda>),
     // aunque se abra desde la dirección de tiendas (tiendas.bogahub.app): así Google no las
@@ -254,5 +255,11 @@ export default async function StorePage({ params, searchParams }: Props) {
     }
   }
   
-  return <StoreRenderer store={store} />;
+  // Datos de negocio local y carta en el HTML (para buscadores e IAs que no ejecutan JavaScript). No en la vista previa.
+  return (
+    <>
+      <StoreRenderer store={store} />
+      {preview !== 'true' && <GeoTienda store={store} />}
+    </>
+  );
 }

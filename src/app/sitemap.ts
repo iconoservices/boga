@@ -31,11 +31,8 @@ const ROUTES: { path: string; changeFrequency: MetadataRoute.Sitemap[number]['ch
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const now = new Date();
-
   const rutasFijas: MetadataRoute.Sitemap = ROUTES.map((r) => ({
     url: `${SITE_URL}${r.path}`,
-    lastModified: now,
     changeFrequency: r.changeFrequency,
     priority: r.priority,
   }));
@@ -55,7 +52,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const tiendas: MetadataRoute.Sitemap = (activeStores ?? []).map((s) => ({
     // Una tienda con subdominio propio activo se lista en su propia dirección (es la oficial: ver canonical)
     url: s.subdominio_activo ? `https://${s.slug}.${new URL(SITE_URL).host}` : `${SITE_URL}/${s.slug}`,
-    lastModified: now,
     changeFrequency: 'weekly',
     priority: 0.7,
   }));
@@ -75,7 +71,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         url: t.subdominio_activo
           ? `https://${t.slug}.${new URL(SITE_URL).host}/${t.slug}/producto/${pr.id}`
           : `${SITE_URL}/${t.slug}/producto/${pr.id}`,
-        lastModified: now,
         changeFrequency: 'weekly' as const,
         priority: 0.5,
       };
@@ -85,7 +80,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const activos = await getEmpleosActivos();
   const empleos: MetadataRoute.Sitemap = activos.map((e) => ({
     url: `${SITE_URL}/trabajos/${slugEmpleo(e)}`,
-    lastModified: now,
     changeFrequency: 'weekly',
     priority: 0.5,
   }));
@@ -93,7 +87,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Cada ficha de /productos (terrenos, carta digital, tienda…) en su propia URL.
   const fichasProductos: MetadataRoute.Sitemap = PRODUCTOS_MOSTRADOR.map((p) => ({
     url: `${SITE_URL}/productos/${p.slug}`,
-    lastModified: now,
     changeFrequency: 'monthly',
     priority: 0.4,
   }));
