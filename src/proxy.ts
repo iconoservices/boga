@@ -57,7 +57,54 @@ function tiendaDeSubdominio(host: string): string | null {
 
 
 
+// Mapeo en memoria de dominios propios (ej. "mitienda.pe" -> "delva")
+let dominiosMap: Map<string, string> | null = null;
+let dominiosHasta = 0;
+async function tiendaDeDominioPropio(host: string): Promise<string | null> {
+  const h = host.replace(/:\d+$/, '').replace(/^www\./, '').toLowerCase();
+  if (!h || h === DOMINIO_BASE || (TIENDAS_HOST && h === TIENDAS_HOST) || h === 'localhost' || h.endsWith('.vercel.app')) {
+    return null;
+  }
+
+  if (!dominiosMap || Date.now() > dominiosHasta) {
+    try {
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      const r = await fetch(`${url}/rest/v1/stores?select=slug,modulos`, {
+        headers: { apikey: key!, Authorization: `Bearer ${key}` },
+        cache: 'no-store',
+      });
+      if (r.ok) {
+        const filas: { slug: string; modulos?: any }[] = await r.json();
+        const mapa = new Map<string, string>();
+        for (const f of filas) {
+          const dom = f.modulos?.dominio_propio_url || (typeof f.modulos?.dominio_propio === 'string' ? f.modulos?.dominio_propio : null);
+          if (dom && typeof dom === 'string') {
+            const limpio = dom.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '').replace(/:\d+$/, '').replace(/^www\./, '').toLowerCase();
+            if (limpio) mapa.set(limpio, f.slug);
+          }
+        }
+        dominiosMap = mapa;
+      }
+    } catch { /* usa mapa anterior */ }
+    dominiosHasta = Date.now() + 60_000;
+  }
+  return dominiosMap?.get(h) || null;
+}
+
 export async function proxy(request: NextRequest) {
+  // ── 0. Dominio propio del cliente (ej. delva.pe, mitienda.com) ──
+  const tiendaDominio = await tiendaDeDominioPropio(request.headers.get('host') || '');
+  if (tiendaDominio) {
+    const { pathname, search } = request.nextUrl;
+    const primero = pathname.split('/')[1] || '';
+    const esArchivo = /\.[a-z0-9]+$/i.test(pathname);
+    const esInterno = primero === 'api' || primero === '_next';
+    if (pathname === '/') return NextResponse.rewrite(new URL(`/${tiendaDominio}${search}`, request.url));
+    if (esArchivo || esInterno || primero === tiendaDominio) return NextResponse.next();
+    return NextResponse.rewrite(new URL(`/${tiendaDominio}${pathname}${search}`, request.url));
+  }
+
   // ── Dirección propia de una tienda: <tienda>.bogahub.app ──
   const tienda = tiendaDeSubdominio(request.headers.get('host') || '');
   if (tienda) {

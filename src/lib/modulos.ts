@@ -4,11 +4,15 @@
 // el editor de tienda del superadmin (los interruptores) y la página de Paquetes
 // (la tabla de niveles). Si se agrega un módulo, se agrega acá y en NIVELES.
 
-export type ModuloId = 'pos' | 'inventario' | 'google' | 'marca_blanca' | 'marketplace' | 'loyverse';
+export type ModuloId = 'pos' | 'inventario' | 'google' | 'marca_blanca' | 'marketplace' | 'loyverse' | 'dominio_propio' | 'pasarela_pago';
 export type Modulos = Partial<Record<ModuloId, boolean>> & {
   loyverse_token?: string;
+  loyverse_merchant_id?: string;
   loyverse_last_sync?: string;
   loyverse_auto_sync?: boolean;
+  dominio_propio_url?: string;
+  pasarela_provider?: 'mercadopago' | 'culqi' | 'niubiz';
+  pasarela_public_key?: string;
 };
 
 export const MODULOS: { id: ModuloId; label: string; icon: string; desc: string }[] = [
@@ -47,6 +51,18 @@ export const MODULOS: { id: ModuloId; label: string; icon: string; desc: string 
     label: 'Integración Loyverse POS',
     icon: 'sync_alt',
     desc: 'Sincroniza catálogo, precios y stock automáticamente con el sistema de punto de venta Loyverse.',
+  },
+  {
+    id: 'dominio_propio',
+    label: 'Dominio propio personalizado (.com / .pe)',
+    icon: 'language',
+    desc: 'Permite conectar un dominio propio del cliente (ej. mitienda.pe) para abrir directo sin ver la marca Boga.',
+  },
+  {
+    id: 'pasarela_pago',
+    label: 'Pasarela de pago online propia (Culqi / Mercado Pago)',
+    icon: 'credit_card',
+    desc: 'Permite al comercio cobrar con tarjeta online y recibir el dinero directo en su cuenta bancaria.',
   },
 ];
 

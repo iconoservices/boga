@@ -921,7 +921,14 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       external_url: storeForm.externalUrl || null,
       subdominio_activo: !!storeForm.subdominioActivo,
       push_activo: !!storeForm.pushActivo,
-      modulos: { pos: !!storeForm.modulos?.pos, inventario: !!storeForm.modulos?.inventario, google: !!storeForm.modulos?.google, marca_blanca: !!storeForm.modulos?.marca_blanca, marketplace: storeForm.modulos?.marketplace !== false },
+      modulos: {
+        ...(storeForm.modulos || {}),
+        pos: !!storeForm.modulos?.pos,
+        inventario: !!storeForm.modulos?.inventario,
+        google: !!storeForm.modulos?.google,
+        marca_blanca: !!storeForm.modulos?.marca_blanca,
+        marketplace: storeForm.modulos?.marketplace !== false,
+      },
     };
     if (ownerUserId) upsertData.user_id = ownerUserId;
     if (logoUrl) {
@@ -2411,6 +2418,34 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                       <span className="material-symbols-outlined text-[14px]">{subdominioCopiado ? 'check' : 'content_copy'}</span>
                       {subdominioCopiado ? 'Link copiado' : 'Copiar link'}
                     </button>
+                  </section>
+
+                  <section className="p-4 bg-[#f0f7ff] rounded-lg border border-[#0058be]/20 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[18px] text-[#0058be]">language</span>
+                      <span className="block text-xs font-black text-[#191b23]">Dominio propio personalizado (.com / .pe)</span>
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-[#0058be] bg-[#d8e2ff] px-1.5 py-0.5 rounded">Módulo Pro</span>
+                    </div>
+                    <span className="block text-[10px] text-[#727785] font-semibold">
+                      Si el cliente compró su propio dominio (ej. <strong>delva.pe</strong> o <strong>mitienda.com</strong>), escríbelo aquí. Solo debe apuntar un CNAME en su registrador a <strong>bogahub.app</strong>.
+                    </span>
+                    <input
+                      type="text"
+                      value={storeForm.modulos?.dominio_propio_url || ''}
+                      onChange={(e) => {
+                        const val = e.target.value.trim().toLowerCase();
+                        setStoreForm(prev => ({
+                          ...prev,
+                          modulos: {
+                            ...(prev.modulos || {}),
+                            dominio_propio: !!val,
+                            dominio_propio_url: val,
+                          }
+                        }));
+                      }}
+                      placeholder="ej: mitienda.pe o tienda.delva.com"
+                      className="w-full h-9 px-3 bg-white border border-gray-300 rounded-md text-xs font-mono text-gray-800 focus:outline-none focus:border-[#0058be]"
+                    />
                   </section>
 
                   <section className="p-4 bg-[#f0f7ff] rounded-lg border border-[#0058be]/20">
