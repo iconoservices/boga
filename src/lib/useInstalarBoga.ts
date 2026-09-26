@@ -68,6 +68,9 @@ function instalar() {
     alert('Para instalar:\n\n1. Toca el icono Compartir (📤) abajo\n2. Desliza y toca "Agregar a pantalla de inicio"\n3. Toca "Agregar"');
   } else if (navegadorIPhone() === 'chrome') {
     alert('Para instalar:\n\n1. Toca el icono Compartir (📤) arriba, junto a la dirección\n2. Desliza y toca "Agregar a pantalla de inicio"\n3. Toca "Agregar"');
+  } else if (!/android|iphone|ipad|ipod|mobile/.test(ua)) {
+    // Escritorio: nada de «pantalla de inicio». Chrome y Edge la instalan desde la barra de direcciones o el menú.
+    alert('Para instalar BogaHub en tu computadora:\n\n1. Busca el ícono de instalar (⊕) al final de la barra de direcciones,\n   o abre el menú del navegador (⋯)\n2. Elige "Instalar BogaHub"\n\nSi tu navegador no lo ofrece, usa Chrome o Edge.');
   } else {
     alert('Para instalar:\n\n1. Abre el menú del navegador (⋯)\n2. Busca "Agregar a pantalla de inicio"\n3. Confirma la instalación');
   }

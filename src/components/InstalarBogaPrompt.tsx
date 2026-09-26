@@ -22,6 +22,9 @@ const ESPERA_DIAS = 3;
 const ESPERA_INICIAL_MS = 3_000;
 const RUTAS = new Set(['', 'explore', 'promotions', ...RUTAS_HUB.map((r) => r.slice(1))]);
 
+// Solo cambia el texto: en laptop (Chrome/Edge) y en Android se instala directo con el botón; solo el iPhone lleva pasos.
+const esMovil = () => typeof navigator !== 'undefined' && /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
+
 const enModoApp = () =>
   typeof window !== 'undefined' &&
   (!!(window.navigator as unknown as { standalone?: boolean }).standalone || window.matchMedia('(display-mode: standalone)').matches);
@@ -59,17 +62,25 @@ export default function InstalarBogaPrompt() {
   // En iPhone no hay instalación con un toque: los pasos se muestran de una vez y no hay botón «Agregar».
   const navIPhone = navegadorIPhone();
   const enIPhone = navIPhone !== null;
+  const enCelular = esMovil();
   const cerrar = () => setVisible(false);
   const agregar = () => { instalar(); cerrar(); };
 
+  // iPhone: tarjeta centrada con los pasos (no hay instalación con un toque). Android y laptop: hoja compacta pegada
+  // abajo (en laptop, tarjeta al centro) con título a la izquierda y los dos botones, que instala directo.
   return (
-    <div className="fixed inset-0 z-[70] flex items-end md:items-center justify-center p-3 pb-[92px] md:pb-3 bg-black/45" onClick={cerrar}>
+    <div
+      className={`fixed inset-0 z-[70] flex justify-center bg-black/45 ${enIPhone ? 'items-end md:items-center p-3 pb-[92px] md:pb-3' : 'items-end md:items-center md:p-3'}`}
+      onClick={cerrar}
+    >
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Agregar BogaHub a tu pantalla principal"
+        aria-label="Instalar BogaHub"
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-[440px] bg-[#fff6f4] border border-primary/15 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.28)] px-5 pt-6 pb-5 text-center"
+        className={`relative w-full bg-[#fff6f4] border border-primary/15 shadow-[0_12px_40px_rgba(0,0,0,0.28)] ${
+          enIPhone ? 'max-w-[440px] rounded-3xl px-5 pt-6 pb-5 text-center' : 'max-w-none md:max-w-[520px] rounded-t-3xl md:rounded-3xl px-5 pt-5 pb-5 text-left'
+        }`}
       >
         <button
           onClick={cerrar}
@@ -79,10 +90,14 @@ export default function InstalarBogaPrompt() {
           <span className="material-symbols-outlined text-[20px]">close</span>
         </button>
 
-        <img src="/icon-192.png" alt="" className="w-14 h-14 rounded-2xl mx-auto shadow-sm border border-primary/10" />
-        <h2 className="font-headline-sm text-xl font-extrabold text-on-surface leading-tight mt-3 px-4">Agrega BogaHub a tu pantalla principal</h2>
+        {enIPhone && <img src="/icon-192.png" alt="" className="w-14 h-14 rounded-2xl mx-auto shadow-sm border border-primary/10" />}
+        <h2 className={`font-headline-sm font-extrabold text-on-surface leading-tight ${enIPhone ? 'text-xl mt-3 px-4' : 'text-lg pr-8'}`}>
+          {enCelular ? 'Agregar BogaHub a tu pantalla principal' : 'Instalar BogaHub en tu computadora'}
+        </h2>
         <p className="text-sm text-secondary mt-2 leading-relaxed">
-          Ábrela como una app, sin buscarla en el navegador: tiendas, taxi seguro, agenda y sorteos de Pucallpa a un toque.
+          {enCelular
+            ? 'Accede más rápido a tiendas, pedidos, taxi y la agenda de Pucallpa instalando BogaHub en tu dispositivo.'
+            : 'Ábrela como una app en su propia ventana, sin buscarla en el navegador: tiendas, taxi seguro, agenda y sorteos de Pucallpa.'}
         </p>
 
         {enIPhone && (
@@ -95,19 +110,19 @@ export default function InstalarBogaPrompt() {
           </ol>
         )}
 
-        <div className="flex gap-2 mt-5">
+        <div className={`flex gap-2 mt-5 ${enIPhone ? '' : 'justify-end'}`}>
           {enIPhone ? (
             <button onClick={cerrar} className="w-full rounded-full border-2 border-primary/50 ring-4 ring-primary/10 bg-white text-on-surface font-bold text-base px-5 py-3 active:scale-95 transition-transform">
               Ahora no
             </button>
           ) : (
             <>
-              <button onClick={cerrar} className="rounded-full border-2 border-primary/50 ring-4 ring-primary/10 bg-white text-on-surface font-bold text-sm px-5 py-3 whitespace-nowrap shrink-0 active:scale-95 transition-transform">
+              <button onClick={cerrar} className="rounded-full border-2 border-primary/50 ring-4 ring-primary/10 bg-white text-on-surface font-bold text-sm px-4 py-2.5 whitespace-nowrap shrink-0 active:scale-95 transition-transform">
                 Ahora no
               </button>
-              <button onClick={agregar} className="rounded-full bg-primary text-on-primary font-bold text-sm px-4 py-3 flex flex-1 items-center justify-center gap-1.5 active:scale-95 transition-transform">
+              <button onClick={agregar} className="rounded-full bg-primary text-on-primary font-bold text-[13px] sm:text-sm px-3.5 sm:px-5 py-2.5 flex flex-1 sm:flex-none items-center justify-center gap-1.5 active:scale-95 transition-transform">
                 <span className="material-symbols-outlined text-[18px]">download</span>
-                Agregar a pantalla principal
+                {enCelular ? 'Agregar a pantalla principal' : 'Instalar BogaHub'}
               </button>
             </>
           )}
