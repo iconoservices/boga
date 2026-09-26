@@ -9,7 +9,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { CAPACIDADES_PLAN, MODULOS_PROXIMOS, MODULOS_VENTA, PLANES, REQUISITOS_MARKET, planIncluye } from '@/lib/planesNegocios';
+import { CAPACIDADES_PLAN, ESCALERA_PRODUCTOS, MODULOS_PROXIMOS, MODULOS_VENTA, PLANES, REQUISITOS_MARKET, planIncluye } from '@/lib/planesNegocios';
 import {
   ALCANCES, CAPACIDADES_ALCANCE, CAPACIDADES_OPERACION, EXTRAS, LIMITES, OPERACIONES,
   alcanceIncluye, nivelAlcance, nivelOperacion, operacionIncluye,
@@ -224,6 +224,49 @@ export default function NivelesModulos() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Escalera de Planes por Cantidad de Productos */}
+      <div className="bg-white border border-[#c2c6d6] rounded-md p-4 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-[20px] text-[#0058be]">bar_chart</span>
+            <h4 className="text-xs font-bold text-[#191b23]">
+              La Escalera de Planes por Cantidad de Productos
+            </h4>
+            <Nuevo />
+          </div>
+          <span className="text-[10px] font-bold text-[#16a34a] bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 w-fit">
+            <span className="material-symbols-outlined text-[12px]">sync_alt</span>
+            Sincronizable vía Loyverse POS
+          </span>
+        </div>
+
+        <div className="bg-white border border-[#ecedf7] rounded-md overflow-x-auto">
+          <table className="w-full text-left text-xs min-w-[560px]">
+            <thead>
+              <tr className="bg-[#f2f3fd] text-[10px] uppercase tracking-wider text-[#424754]">
+                <th className="p-3 font-bold">Plan</th>
+                <th className="p-3 font-bold">Límite de Productos</th>
+                <th className="p-3 font-bold">Precio Mensual</th>
+                <th className="p-3 font-bold">¿Para quién es?</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ESCALERA_PRODUCTOS.map((ep, idx) => (
+                <tr key={ep.plan} className={`border-t border-[#ecedf7] ${idx === 1 ? 'bg-[#f9f9ff]' : ''}`}>
+                  <td className="p-3 font-bold text-[#191b23]">{ep.plan}</td>
+                  <td className="p-3 font-bold text-[#0058be]">{ep.limite}</td>
+                  <td className="p-3 font-bold text-[#16a34a]">{ep.precio}</td>
+                  <td className="p-3 text-[#424754]">{ep.publico}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-[11px] text-[#424754] bg-[#f2f3fd] p-3 rounded border border-[#c2c6d6]/40 leading-relaxed">
+          ⚡ <strong>Estrategia Comercial con Loyverse:</strong> Un minimarket, pet shop o ferretería que tiene más de 1,000 productos no puede cargarlos a mano, pero con el módulo de Loyverse POS los sincroniza en un minuto. Eso te permite venderles directamente el <strong>Plan Supermercado / Pro (S/ 180 a S/ 200 / mes)</strong> de forma natural.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

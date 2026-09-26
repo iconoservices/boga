@@ -111,10 +111,39 @@ export const MODULOS_VENTA: { grupo: string; items: ModuloVenta[] }[] = [
 const RANGO_PLAN: Record<PlanId, number> = { carta: 0, app: 1, app_google: 2 };
 export const planIncluye = (plan: PlanId, desde: PlanId) => RANGO_PLAN[plan] >= RANGO_PLAN[desde];
 
+export interface EscaleraPlan {
+  plan: string;
+  limite: string;
+  precio: string;
+  publico: string;
+}
+
+export const ESCALERA_PRODUCTOS: EscaleraPlan[] = [
+  {
+    plan: '1. Plan Carta',
+    limite: 'Hasta 100 productos',
+    precio: 'S/ 50 / mes',
+    publico: 'Pollerías, restaurantes, huariques, cafeterías (casi ningún menú pasa de 60 platos).',
+  },
+  {
+    plan: '2. Plan App / Tienda',
+    limite: 'De 100 a 1,000 productos',
+    precio: 'S/ 100 / mes',
+    publico: 'Tiendas de ropa, zapaterías, licorerías, pet shops, bodegas medianas.',
+  },
+  {
+    plan: '3. Plan Supermercado / Pro',
+    limite: 'De 1,000 a 5,000 productos',
+    precio: 'S/ 180 a S/ 200 / mes',
+    publico: 'Minimarkets grandes, ferreterías, distribuidoras mayoristas y farmacias.',
+  },
+];
+
 // Qué incluye cada plan, en filas comparables (para la tabla del superadmin). `nuevo` marca lo que
 // se sumó al admin para igualar la landing y hay que revisar. `estado` dice si hoy existe en el producto.
 // `valor`: en vez del check, muestra ese texto en la columna del plan (p. ej. la cantidad de avisos).
 export const CAPACIDADES_PLAN: { texto: string; desde: PlanId; estado: 'hecho' | 'falta'; nuevo?: boolean; valor?: Partial<Record<PlanId, string>> }[] = [
+  { texto: 'Límite de productos en el catálogo', desde: 'carta', estado: 'hecho', nuevo: true, valor: { carta: 'Hasta 100 productos', app: 'Hasta 1 000 productos', app_google: 'Hasta 5 000 productos (Pro)' } },
   { texto: 'Link propio de la tienda (bogahub.app/tu-negocio) y código QR', desde: 'carta', estado: 'hecho', nuevo: true },
   { texto: 'Catálogo y gestión de pedidos', desde: 'carta', estado: 'hecho', nuevo: true },
   { texto: 'Pedidos directo a tu WhatsApp, sin comisión', desde: 'carta', estado: 'hecho', nuevo: true },
