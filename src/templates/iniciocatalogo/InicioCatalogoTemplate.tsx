@@ -221,6 +221,8 @@ export default function InicioCatalogoTemplate({ store }: Props) {
             onRemove={c.removeFromCart}
             onVaciar={c.vaciarCarrito}
             onConfirmar={c.confirmarPedido}
+            pagoOnline={c.cobraOnline}
+            onPagarOnline={c.pagarOnline}
             onIrAlMenu={() => navToMenu()}
             whatsappVisible={c.whatsappVisible}
           />

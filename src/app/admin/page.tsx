@@ -24,6 +24,7 @@ import PedidosTab, { type Pedido } from '@/components/admin/PedidosTab';
 import HistorialStock from '@/components/admin/HistorialStock';
 import LoyverseSyncModal from '@/components/admin/LoyverseSyncModal';
 import MiPlan from '@/components/admin/MiPlan';
+import CobroOnline from '@/components/admin/CobroOnline';
 import { COLS_OFERTA, precioOfertaVigente, porcentajeOferta } from '@/lib/ofertas';
 
 interface Product {
@@ -3193,7 +3194,7 @@ function AdminDashboard({ user }: { user: User }) {
               <div id="editor-pagos" className="scroll-mt-4">
                 <label className="block text-sm font-bold text-gray-700 mb-1">Métodos de Pago que Aceptas</label>
                 <p className="text-xs text-gray-500 mb-3">
-                  Se muestran en tu tienda como referencia. Ningún pago se procesa en la app: se coordina por WhatsApp.
+                  Se muestran en tu tienda como referencia. El pago se coordina por WhatsApp{dbStores.find((s: any) => s.slug === editingStoreSlug)?.modulos?.pasarela_pago === true ? ', salvo el cobro online de más abajo' : ''}.
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                   {PAYMENT_METHODS.map((m) => {
@@ -3231,6 +3232,13 @@ function AdminDashboard({ user }: { user: User }) {
                   <p className="text-xs text-gray-400 mt-2">Si no eliges ninguno, tu tienda muestra solo Efectivo.</p>
                 )}
               </div>
+
+              {/* Cobro online (Izipay): solo con el módulo «pasarela_pago» prendido por el superadmin */}
+              {editingStoreSlug && dbStores.find((s: any) => s.slug === editingStoreSlug)?.modulos?.pasarela_pago === true && (
+                <div id="editor-cobro" className="scroll-mt-4">
+                  <CobroOnline slug={editingStoreSlug} />
+                </div>
+              )}
 
               {/* Ficha del local: todo opcional, para negocios sin sede fisica (puro delivery) */}
               <div id="editor-horario" className="space-y-4 pt-2 border-t border-gray-100 scroll-mt-4">

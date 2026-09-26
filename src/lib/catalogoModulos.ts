@@ -150,8 +150,8 @@ export const PLAN_INFO: Record<string, InfoModulo> = {
   'pasarela-pago-propia': {
     estado: 'aparte', nivel: 'ventas', esfuerzo: 'alto',
     bases: 'Los pedidos de la carta ya se guardan con estados (Pendiente, Preparando, Enviado, Entregado). El checkout sigue siendo «mándale un WhatsApp al dueño» (lib/whatsapp.ts).',
-    falta: 'Cuenta Culqi/Niubiz de cada negocio, endpoints de cobro seguros y guardar el estado de pago del pedido.',
-    depende: 'Un tercero (comisión por transacción).',
+    falta: 'Ya construido con Izipay (cobro directo a la cuenta de cada negocio, pedido «Pagado»). Falta probarlo con una cuenta real y sumarlo a las plantillas con carrito propio.',
+    depende: 'Un tercero (Izipay cobra su comisión al negocio).',
   },
   'happy-hour-automatico': {
     estado: 'aparte', nivel: 'ventas', esfuerzo: 'alto',

@@ -104,6 +104,46 @@ export function useCatalogo(store: StoreConfig) {
     });
   const vaciarCarrito = () => setCart({});
 
+  // Cobro online (tarjeta / Yape por Izipay): solo si la tienda lo tiene activo (módulo + claves), y no con productos de muestra.
+  const [cobraOnline, setCobraOnline] = useState(false);
+  useEffect(() => {
+    if (store.demoDePlantilla) return;
+    let vivo = true;
+    fetch(`/api/pagos/estado?store=${encodeURIComponent(store.slug)}`)
+      .then((r) => r.json())
+      .then((d) => { if (vivo) setCobraOnline(d?.activo === true); })
+      .catch(() => { /* sin cobro online: queda el pedido por WhatsApp */ });
+    return () => { vivo = false; };
+  }, [store.slug, store.demoDePlantilla]);
+
+  const pagarOnline = async (datos: { nombre: string; telefono: string; entrega: 'delivery' | 'recojo'; direccion: string }) => {
+    if (cartItems.some((l) => l.producto.id.startsWith('demo-'))) {
+      alert('Esos productos son de muestra: no se pueden pagar.');
+      return;
+    }
+    try {
+      const r = await fetch('/api/pagos/crear', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          store: store.slug,
+          items: cartItems.map((l) => ({ id: l.producto.id, quantity: l.qty })),
+          cliente: { nombre: datos.nombre, telefono: datos.telefono, entrega: datos.entrega, direccion: datos.direccion },
+        }),
+      });
+      const d = await r.json().catch(() => ({} as { ok?: boolean; codigo?: string; motivo?: string; producto?: string }));
+      if (d.ok && d.codigo) { window.location.href = `/pagar/${d.codigo}`; return; }
+      alert(
+        d.motivo === 'agotado' ? `«${d.producto}» está agotado. Quítalo del carrito para continuar.`
+        : d.motivo === 'stock' ? `No hay stock suficiente de «${d.producto}».`
+        : d.motivo === 'limite' ? 'Demasiados intentos seguidos. Espera unos minutos.'
+        : 'No se pudo abrir el pago. Intenta de nuevo o confirma tu pedido por WhatsApp.'
+      );
+    } catch {
+      alert('No se pudo abrir el pago. Revisa tu conexión e intenta de nuevo.');
+    }
+  };
+
   const confirmarPedido = (datos: { nombre: string; telefono: string; entrega: 'delivery' | 'recojo'; direccion: string }) => {
     const lineas = cartItems
       .map((l) => `• ${l.qty}x ${l.producto.name} — ${soles(l.producto.price * l.qty)}`)
@@ -167,6 +207,8 @@ export function useCatalogo(store: StoreConfig) {
     removeFromCart,
     vaciarCarrito,
     confirmarPedido,
+    cobraOnline,
+    pagarOnline,
     whatsappVisible,
     telefonoVisible,
   };

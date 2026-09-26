@@ -15,6 +15,7 @@ type Pedido = {
   items: { name: string; price: number; quantity: number }[];
   total: number;
   estado: string;
+  pago?: 'pendiente' | 'pagado' | 'fallido' | null;
   creado: string;
   entrega: string;
   propietario: boolean;
@@ -102,6 +103,20 @@ export default function PedidoPage({ params }: { params: Promise<{ codigo: strin
               <h1 className="font-headline-md text-2xl font-extrabold mt-0.5">{p.tienda.nombre}</h1>
               <p className="text-secondary text-xs mt-0.5">{new Date(p.creado).toLocaleString('es-PE', { dateStyle: 'medium', timeStyle: 'short' })} · {p.entrega}</p>
             </div>
+
+            {/* Cobro online (tarjeta / Yape): pagado, o falta pagar */}
+            {p.pago === 'pagado' && (
+              <div className="flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-3.5 py-2.5 text-sm font-bold text-green-800">
+                <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                Pagado con tarjeta / Yape
+              </div>
+            )}
+            {(p.pago === 'pendiente' || p.pago === 'fallido') && p.estado !== 'Cancelado' && (
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-orange-200 bg-orange-50 px-3.5 py-2.5">
+                <span className="text-sm font-bold text-orange-800">{p.pago === 'fallido' ? 'El pago no se completó' : 'Falta pagar este pedido'}</span>
+                <Link href={`/pagar/${p.codigo}`} className="rounded-full bg-primary px-4 py-1.5 text-xs font-extrabold text-on-primary">Pagar ahora</Link>
+              </div>
+            )}
 
             <span className={`self-start inline-flex px-3 py-1 rounded-full text-xs font-bold border ${color(p.estado)}`}>{p.estado}</span>
 

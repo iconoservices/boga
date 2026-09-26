@@ -21,6 +21,8 @@ export interface Pedido {
   created_at: string;
   /** Código corto del pedido de la carta (el del enlace /pedido/<código>). */
   codigo?: string | null;
+  /** Cobro online (Izipay): null = sin pago online; 'pendiente' | 'pagado' | 'fallido'. */
+  pago_estado?: 'pendiente' | 'pagado' | 'fallido' | null;
 }
 
 const ESTADOS = ['Pendiente', 'Preparando', 'Enviado', 'Entregado', 'Cancelado'] as const;
@@ -175,6 +177,12 @@ export default function PedidosTab({
                   <span className={`text-[10px] font-bold px-2 py-1 rounded-full border ${esCarta ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-gray-50 text-gray-500 border-gray-200'}`}>
                     {esCarta ? 'Carta' : o.order_source || 'POS'}
                   </span>
+                  {o.pago_estado && (
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-extrabold border ${o.pago_estado === 'pagado' ? 'bg-green-50 text-green-700 border-green-200' : o.pago_estado === 'fallido' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                      <span className="material-symbols-outlined text-[13px]">{o.pago_estado === 'pagado' ? 'verified' : 'schedule'}</span>
+                      {o.pago_estado === 'pagado' ? 'Pagado' : o.pago_estado === 'fallido' ? 'Pago fallido' : 'Sin pagar'}
+                    </span>
+                  )}
                   <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${st.bg} ${st.text} ${st.border}`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} /> {o.status}
                   </span>

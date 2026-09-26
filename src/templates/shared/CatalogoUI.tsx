@@ -261,7 +261,7 @@ export function ProductModal({
    ════════════════════════════════════════════ */
 
 export function CartPanel({
-  t, cartItems, subtotal, onAdd, onRemove, onVaciar, onConfirmar, onIrAlMenu, whatsappVisible,
+  t, cartItems, subtotal, onAdd, onRemove, onVaciar, onConfirmar, onIrAlMenu, whatsappVisible, pagoOnline, onPagarOnline,
 }: {
   t: StoreTheme;
   cartItems: { producto: Producto; qty: number }[];
@@ -272,7 +272,11 @@ export function CartPanel({
   onConfirmar: (datos: { nombre: string; telefono: string; entrega: 'delivery' | 'recojo'; direccion: string }) => void;
   onIrAlMenu: () => void;
   whatsappVisible: boolean;
+  /** La tienda cobra con tarjeta / Yape (Izipay): se ofrece pagar online además de confirmar por WhatsApp. */
+  pagoOnline?: boolean;
+  onPagarOnline?: (datos: { nombre: string; telefono: string; entrega: 'delivery' | 'recojo'; direccion: string }) => Promise<void> | void;
 }) {
+  const [pagando, setPagando] = React.useState(false);
   // Antes el pedido se mandaba por WhatsApp con solo los items y el total: el
   // dueño tenia que volver a preguntar quien pedia y si era delivery o recojo.
   // Pedirlo aca hace que el primer mensaje ya venga completo.
@@ -475,6 +479,22 @@ export function CartPanel({
             <p className={`${TXT.small} font-semibold text-center`} style={{ color: t.onSurfaceVariant }}>
               Para confirmar falta: {faltantes.join(', ')}.
             </p>
+          )}
+          {pagoOnline && onPagarOnline && (
+            <button
+              onClick={async () => {
+                if (!telefono || pagando) return;
+                guardarCliente({ nombre: nombre.trim(), telefono });
+                setPagando(true);
+                try { await onPagarOnline({ nombre: nombre.trim(), telefono, entrega, direccion: direccion.trim() }); } finally { setPagando(false); }
+              }}
+              disabled={faltaNombre || faltaCelular || faltaDireccion || pagando}
+              className={`w-full py-4 rounded-full font-bold ${TXT.lead} shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 uppercase disabled:opacity-50`}
+              style={{ backgroundColor: t.primary, color: t.onPrimary }}
+            >
+              <span className={`material-symbols-outlined ${ICON.md}`}>credit_card</span>
+              {pagando ? 'Abriendo pago…' : 'Pagar con tarjeta o Yape'}
+            </button>
           )}
           <button
             onClick={() => {

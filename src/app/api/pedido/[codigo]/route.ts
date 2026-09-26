@@ -19,16 +19,15 @@ type Params = { params: Promise<{ codigo: string }> };
 async function cargar(codigo: string, request: Request) {
   const db = clienteServicio();
   if (!db || !CODIGO.test(codigo)) return null;
-  const { data: o } = await db
-    .from('orders')
-    .select('id,store,customer_name,customer_phone,customer_address,items,total_amount,status,created_at,codigo')
-    .eq('codigo', codigo)
-    .maybeSingle();
+  const COLUMNAS = 'id,store,customer_name,customer_phone,customer_address,items,total_amount,status,created_at,codigo';
+  // `pago_estado` es una columna nueva: si todavía no se corrió el SQL de cobros online, el pedido se lee igual, sin ese dato.
+  let { data: o } = await db.from('orders').select(`${COLUMNAS},pago_estado`).eq('codigo', codigo).maybeSingle();
+  if (!o) ({ data: o } = await db.from('orders').select(COLUMNAS).eq('codigo', codigo).maybeSingle());
   if (!o) return null;
   const { data: t } = await db.from('stores').select('name,user_id').eq('slug', o.store).maybeSingle();
   const quien = await quienEs(request);
   const propietario = !!quien && (quien.esSuperadmin || (!!t && t.user_id === quien.userId));
-  return { db, o, tienda: t, propietario };
+  return { db, o: o as typeof o & { pago_estado?: string | null }, tienda: t, propietario };
 }
 
 export async function GET(request: Request, { params }: Params) {
@@ -45,6 +44,7 @@ export async function GET(request: Request, { params }: Params) {
     items: items.map((i) => ({ name: i.name, price: Number(i.price) || 0, quantity: Number(i.quantity) || 1 })),
     total: Number(o.total_amount) || 0,
     estado: o.status,
+    pago: o.pago_estado ?? null,   // null = sin pago online; 'pendiente' | 'pagado' | 'fallido'
     creado: o.created_at,
     entrega: recojo ? 'Recojo en tienda' : 'Delivery',
     propietario,

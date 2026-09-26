@@ -1761,3 +1761,27 @@ ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS mostrar_ubicacion BOOLEAN NOT
 -- `price_anterior` el normal, así toda la app (tienda, carrito, pedido, /promotions) usa el mismo precio.
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS precio_oferta NUMERIC;
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS oferta_hasta DATE;
+
+-- ============================================================
+-- COBRO ONLINE CON TARJETA / YAPE (Izipay)
+-- ============================================================
+-- Cada comercio conecta SU cuenta Izipay: el dinero va directo a él, Boga no lo toca. Las claves se guardan CIFRADAS
+-- (AES-256-GCM con PAGOS_ENC_KEY, ver src/lib/pagosCrypto.ts) en una tabla sin ninguna política de acceso: solo el
+-- servidor (llave de servicio) la lee y la escribe. NUNCA van en `stores` (esa tabla es de lectura pública).
+-- El superadmin prende el módulo «pasarela_pago» por tienda; el dueño pone sus claves en su panel.
+CREATE TABLE IF NOT EXISTS public.store_pagos (
+  store        TEXT PRIMARY KEY,
+  provider     TEXT NOT NULL DEFAULT 'izipay',
+  activo       BOOLEAN NOT NULL DEFAULT false,
+  username     TEXT,          -- código de comercio / usuario de la API
+  public_key   TEXT,          -- clave pública (es pública por diseño; va en la página de pago)
+  password_enc TEXT,          -- clave de API (cifrada)
+  hmac_enc     TEXT,          -- clave HMAC-SHA-256 para validar el resultado (cifrada)
+  updated_at   TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE public.store_pagos ENABLE ROW LEVEL SECURITY;   -- sin políticas a propósito: nadie entra desde el navegador
+
+-- Estado del pago de cada pedido: NULL = sin pago online (WhatsApp/efectivo); 'pendiente' | 'pagado' | 'fallido'.
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS pago_estado TEXT;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS pago_ref TEXT;          -- id de la transacción en Izipay
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS pago_at TIMESTAMPTZ;    -- cuándo se confirmó el pago
