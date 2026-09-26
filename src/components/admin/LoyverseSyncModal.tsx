@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
 interface StoreInfo {
@@ -24,14 +24,22 @@ interface SyncStats {
 
 export default function LoyverseSyncModal({
   store,
+  allStores = [],
   onClose,
   onSyncComplete,
 }: {
   store: StoreInfo;
+  allStores?: StoreInfo[];
   onClose: () => void;
   onSyncComplete?: () => void;
 }) {
-  const [token, setToken] = useState<string>(store.modulos?.loyverse_token || '');
+  // Tienda actualmente seleccionada en el modal
+  const [activeStoreSlug, setActiveStoreSlug] = useState<string>(store.slug);
+  
+  // Buscar info de la tienda seleccionada
+  const activeStore = allStores.find((s) => s.slug === activeStoreSlug) || store;
+
+  const [token, setToken] = useState<string>(activeStore.modulos?.loyverse_token || '');
   const [showToken, setShowToken] = useState(false);
   const [syncStock, setSyncStock] = useState(true);
   const [updatePrices, setUpdatePrices] = useState(true);
@@ -42,8 +50,17 @@ export default function LoyverseSyncModal({
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [stats, setStats] = useState<SyncStats | null>(null);
 
-  const lastSyncDate = store.modulos?.loyverse_last_sync
-    ? new Date(store.modulos.loyverse_last_sync).toLocaleString('es-PE', {
+  // Cuando cambia de tienda en el desplegable, cargar su token correspondiente
+  useEffect(() => {
+    const s = allStores.find((st) => st.slug === activeStoreSlug) || store;
+    setToken(s.modulos?.loyverse_token || '');
+    setErrorMsg(null);
+    setSuccessMsg(null);
+    setStats(null);
+  }, [activeStoreSlug, allStores, store]);
+
+  const lastSyncDate = activeStore.modulos?.loyverse_last_sync
+    ? new Date(activeStore.modulos.loyverse_last_sync).toLocaleString('es-PE', {
         day: '2-digit',
         month: 'short',
         year: 'numeric',
@@ -63,7 +80,7 @@ export default function LoyverseSyncModal({
     setSuccessMsg(null);
 
     try {
-      const modulosActuales = store.modulos || {};
+      const modulosActuales = activeStore.modulos || {};
       const { error } = await supabase
         .from('stores')
         .update({
@@ -73,10 +90,13 @@ export default function LoyverseSyncModal({
             loyverse_token: token.trim(),
           },
         })
-        .eq('slug', store.slug);
+        .eq('slug', activeStore.slug);
 
       if (error) throw error;
-      setSuccessMsg('¡Token guardado exitosamente!');
+      setSuccessMsg('¡Token guardado exitosamente para ' + activeStore.name + '!');
+      if (activeStore.modulos) {
+        activeStore.modulos.loyverse_token = token.trim();
+      }
     } catch (err: any) {
       setErrorMsg('Error al guardar el token: ' + (err.message || 'Intenta de nuevo'));
     } finally {
@@ -87,7 +107,7 @@ export default function LoyverseSyncModal({
   const handleSyncNow = async () => {
     const currentToken = token.trim();
     if (!currentToken) {
-      setErrorMsg('Debes ingresar y guardar tu Token de Acceso de Loyverse antes de sincronizar.');
+      setErrorMsg('Debes ingresar tu Token de Acceso de Loyverse antes de sincronizar.');
       return;
     }
 
@@ -101,7 +121,7 @@ export default function LoyverseSyncModal({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          storeSlug: store.slug,
+          storeSlug: activeStore.slug,
           token: currentToken,
           syncStock,
           updatePrices,
@@ -142,7 +162,7 @@ export default function LoyverseSyncModal({
         {/* Cabecera */}
         <div className="p-5 border-b border-gray-100 flex items-center justify-between gap-3 bg-gradient-to-r from-red-50/50 via-white to-white">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center font-bold shadow-inner">
+            <div className="w-11 h-11 rounded-xl bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center font-bold shadow-inner shrink-0">
               <span className="material-symbols-outlined text-[24px]">sync_alt</span>
             </div>
             <div>
@@ -153,14 +173,14 @@ export default function LoyverseSyncModal({
                 </span>
               </div>
               <p className="text-xs text-gray-500 font-medium">
-                Sincroniza tus productos y stock de <strong className="text-gray-700">{store.name}</strong> con tu caja física.
+                Sincroniza tus productos y stock físico directamente a Boga Market.
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
             aria-label="Cerrar"
-            className="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-800 flex items-center justify-center transition-colors"
+            className="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-800 flex items-center justify-center transition-colors shrink-0"
           >
             <span className="material-symbols-outlined text-[20px]">close</span>
           </button>
@@ -168,6 +188,31 @@ export default function LoyverseSyncModal({
 
         {/* Contenido */}
         <div className="p-5 overflow-y-auto flex-1 space-y-5">
+          {/* Selector de tienda (si administra más de una tienda) */}
+          {allStores.length > 1 && (
+            <div className="bg-gray-50 border border-gray-200/80 p-3.5 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                  Tienda destino en Boga
+                </label>
+                <p className="text-xs text-gray-600 font-medium">
+                  Elige a qué tienda aplicar la sincronización:
+                </p>
+              </div>
+              <select
+                value={activeStoreSlug}
+                onChange={(e) => setActiveStoreSlug(e.target.value)}
+                className="h-10 px-3 bg-white border border-gray-300 rounded-lg text-xs font-bold text-gray-900 focus:outline-none focus:border-[#b8130e]"
+              >
+                {allStores.map((st) => (
+                  <option key={st.slug} value={st.slug}>
+                    {st.name} ({st.slug})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* Alertas */}
           {errorMsg && (
             <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl text-xs font-semibold text-red-700 flex items-start gap-2.5">
@@ -179,7 +224,7 @@ export default function LoyverseSyncModal({
           {successMsg && (
             <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-semibold text-emerald-800 flex items-start gap-2.5">
               <span className="material-symbols-outlined text-[18px] shrink-0 text-emerald-600">check_circle</span>
-              <div>
+              <div className="w-full">
                 <p>{successMsg}</p>
                 {stats && (
                   <div className="mt-2 grid grid-cols-3 gap-2 text-center pt-2 border-t border-emerald-200/60">
@@ -205,35 +250,46 @@ export default function LoyverseSyncModal({
           <div className="p-3.5 bg-amber-50/70 border border-amber-200/80 rounded-xl text-xs text-amber-900 leading-relaxed">
             <div className="flex items-center gap-1.5 font-bold mb-1 text-amber-950">
               <span className="material-symbols-outlined text-[16px] text-amber-700">lightbulb</span>
-              ¿Cómo obtener tu Token de Loyverse?
+              ¿Dónde está tu Ficha / Token en Loyverse?
             </div>
             <ol className="list-decimal pl-4 space-y-0.5 text-[11px] text-amber-800">
-              <li>Inicia sesión en <a href="https://loyverse.com" target="_blank" rel="noreferrer" className="underline font-bold text-amber-950">loyverse.com</a> con tu cuenta.</li>
-              <li>En el menú lateral izquierdo ve a <strong>Configuración ➔ Tokens de acceso</strong>.</li>
-              <li>Haz clic en <strong>Añadir token de acceso</strong> (nombre: <em>Boga Market</em>) y cópialo.</li>
+              <li>Inicia sesión en <a href="https://loyverse.com" target="_blank" rel="noreferrer" className="underline font-bold text-amber-950">loyverse.com</a> desde tu computadora.</li>
+              <li>En el menú de la izquierda haz clic en la <strong>Pieza de Puzzle 🧩 (Integraciones)</strong>.</li>
+              <li>Selecciona <strong>Fichas de acceso</strong> ➔ <strong>Añadir ficha de acceso</strong> y copia el código.</li>
             </ol>
           </div>
 
-          {/* Campo de Token */}
+          {/* Campo de Token sin autofill de contraseña */}
           <div>
-            <label className="block text-xs font-bold text-gray-800 mb-1.5">
-              Token de Acceso de Loyverse (Bearer API Token)
-            </label>
-            <div className="relative flex items-center">
-              <input
-                type={showToken ? 'text' : 'password'}
-                value={token}
-                onChange={(e) => setToken(e.target.value)}
-                placeholder="Pega aquí tu token (ej. b3a49f809e2...)"
-                className="w-full h-11 pl-3.5 pr-20 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono text-gray-800 focus:outline-none focus:border-[#b8130e] focus:bg-white transition-colors"
-              />
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-bold text-gray-800">
+                Ficha / Token de Acceso para <span className="text-[#b8130e]">{activeStore.name}</span>
+              </label>
               <button
                 type="button"
                 onClick={() => setShowToken(!showToken)}
-                className="absolute right-2 px-2.5 py-1 text-[11px] font-bold text-gray-500 hover:text-gray-800 transition-colors"
+                className="text-[11px] font-bold text-gray-500 hover:text-gray-800 transition-colors"
               >
-                {showToken ? 'Ocultar' : 'Ver'}
+                {showToken ? 'Ocultar código' : 'Ver código'}
               </button>
+            </div>
+            <div className="relative flex items-center">
+              <input
+                type="text"
+                name="loyverse_token_no_autofill"
+                autoComplete="one-time-code"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                data-lpignore="true"
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                placeholder="Pega aquí la ficha de acceso (ej. 914fceda139345c1aa314c563bb43e0b)"
+                className={`w-full h-11 px-3.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono text-gray-800 focus:outline-none focus:border-[#b8130e] focus:bg-white transition-colors ${
+                  !showToken && token ? 'tracking-wider' : ''
+                }`}
+                style={!showToken && token ? ({ WebkitTextSecurity: 'disc' } as any) : undefined}
+              />
             </div>
             <div className="flex items-center justify-between mt-1.5">
               <span className="text-[11px] text-gray-400">
@@ -243,7 +299,7 @@ export default function LoyverseSyncModal({
                 type="button"
                 onClick={handleSaveToken}
                 disabled={isSavingToken || !token.trim()}
-                className="text-xs font-bold text-[#b8130e] hover:underline disabled:opacity-50"
+                className="text-xs font-bold text-[#b8130e] hover:underline disabled:opacity-50 cursor-pointer"
               >
                 {isSavingToken ? 'Guardando...' : 'Guardar token'}
               </button>
@@ -284,7 +340,7 @@ export default function LoyverseSyncModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-bold text-gray-600 hover:text-gray-900 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors"
+            className="px-4 py-2 text-xs font-bold text-gray-600 hover:text-gray-900 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer"
           >
             Cerrar
           </button>

@@ -3591,6 +3591,11 @@ function AdminDashboard({ user }: { user: User }) {
       {isLoyverseOpen && (
         <LoyverseSyncModal
           store={stores[selectedStore !== 'all' ? selectedStore : (focusedStore || myStoreSlugs[0])] || { slug: selectedStore !== 'all' ? selectedStore : (focusedStore || myStoreSlugs[0] || ''), name: 'Mi Tienda' }}
+          allStores={myStoreSlugs.map((slug) => ({
+            slug,
+            name: stores[slug]?.name || slug,
+            modulos: stores[slug]?.modulos || {},
+          }))}
           onClose={() => setIsLoyverseOpen(false)}
           onSyncComplete={async () => {
             await fetchProducts();
