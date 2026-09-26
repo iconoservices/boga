@@ -67,10 +67,7 @@ export default function Home() {
           // plantilla (ej. una hamburguesa) como si fuera su logo.
           logo: s.logoImage || '',
           externalUrl: s.externalUrl,
-          products: [
-            { name: 'Producto Destacado', price: 'S/ 25.00', img: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400' },
-            { name: 'Oferta Especial', price: 'S/ 15.00', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400' },
-          ]
+          products: [] // sin productos de muestra: se llenan con los de la base
         }))
       );
 
