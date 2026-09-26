@@ -16,6 +16,7 @@ const pedir = (columnas: string) =>
     .from('drivers')
     .select(columnas)
     .eq('status', 'activo')
+    .neq('tipo', 'Repartidor')   // los repartidores propios de las tiendas no son del directorio
     .order('orden', { ascending: true })
     .order('created_at', { ascending: true });
 

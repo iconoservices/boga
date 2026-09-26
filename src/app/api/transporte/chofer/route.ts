@@ -8,6 +8,7 @@ import { quienEs } from '@/lib/pushServidor';
 // La app privada del chofer (se entra con su enlace secreto, sin contraseña).
 //   GET  ?t=<token>  → sus datos, los pedidos que le avisaron y su viaje en curso. Al consultarlo salen las olas que tocan.
 //   POST {t, accion} → aceptar · completar · liberar · pausa · ubicacion · zona · base · suscribir · baja
+//                      · entrega (delivery de la carta: paso salir | llegue | entregado, ver `orders.repartidor_id`)
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -40,8 +41,11 @@ export async function GET(request: Request) {
     await db.from('driver_acceso').update({ visto_at: new Date().toISOString() }).eq('driver_id', yo.driverId);
 
     // Refrescar la app del chofer también hace salir las olas de los pedidos que están buscando.
-    const { data: buscando } = await db.from('ride_requests').select('id').eq('estado', 'buscando').eq('ciudad', yo.chofer.ciudad);
-    for (const b of buscando ?? []) await avanzarOlas(db, b.id as string);
+    // (Un repartidor de tienda no participa en los taxis: solo lleva pedidos de la carta.)
+    if (yo.chofer.tipo !== 'Repartidor') {
+      const { data: buscando } = await db.from('ride_requests').select('id').eq('estado', 'buscando').eq('ciudad', yo.chofer.ciudad);
+      for (const b of buscando ?? []) await avanzarOlas(db, b.id as string);
+    }
   }
 
   const [{ data: avisos }, { data: acceso }, { count: celulares }] = await Promise.all([
@@ -85,6 +89,29 @@ export async function GET(request: Request) {
       }
     : null;
 
+  // Sus entregas de la carta (pedidos con delivery que la tienda le asignó). Sin las columnas nuevas (SQL sin
+  // correr) la consulta falla y simplemente no hay entregas.
+  const { data: filasEntrega } = await db.from('orders')
+    .select('codigo,store,customer_name,customer_phone,customer_address,items,total_amount,status,llego_at,created_at')
+    .eq('repartidor_id', yo.driverId).in('status', ['Pendiente', 'Preparando', 'Enviado']).order('created_at');
+  const slugs = Array.from(new Set((filasEntrega ?? []).map((f) => f.store as string)));
+  const { data: tiendas } = slugs.length ? await db.from('stores').select('slug,name').in('slug', slugs) : { data: [] };
+  const nombreTienda = new Map((tiendas ?? []).map((t) => [t.slug as string, t.name as string]));
+  const entregas = (filasEntrega ?? []).map((f) => {
+    const items = (Array.isArray(f.items) ? f.items : []) as { name: string; quantity: number }[];
+    return {
+      codigo: f.codigo as string,
+      tienda: nombreTienda.get(f.store as string) ?? (f.store as string),
+      cliente: (f.customer_name as string) || 'Cliente',
+      tel: (f.customer_phone as string | null) ?? '',
+      direccion: (f.customer_address as string | null) ?? '',
+      items: items.map((i) => `${Number(i.quantity) || 1}× ${i.name}`),
+      total: Number(f.total_amount) || 0,
+      estado: f.status as string,
+      llego: !!f.llego_at,
+    };
+  });
+
   const zonaVigente = acceso?.zona && acceso.zona_hasta && new Date(acceso.zona_hasta).getTime() > Date.now() ? acceso.zona : null;
   return NextResponse.json({
     soloLectura,
@@ -97,6 +124,8 @@ export async function GET(request: Request) {
     avisosActivados: (celulares ?? 0) > 0,
     pedidos,
     actual,
+    soloEntregas: yo.chofer.tipo === 'Repartidor',
+    entregas,
   }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
@@ -145,6 +174,25 @@ export async function POST(request: Request) {
         await avanzarOlas(db, id);
       }
       return NextResponse.json({ ok: !!data && data.length > 0 });
+    }
+    case 'entrega': {
+      // Los tres pasos del delivery: salir (→ «Enviado», el cliente ve la moto), llegué (→ suena el aviso en el
+      // celular del cliente) y entregado. Solo sobre pedidos que la tienda le asignó a este repartidor.
+      const codigo = texto(body.codigo, 12);
+      const paso = texto(body.paso, 12);
+      const { data: o } = await db.from('orders').select('id,status').eq('codigo', codigo).eq('repartidor_id', yo.driverId).maybeSingle();
+      if (!o) return NextResponse.json({ ok: false, motivo: 'no_tuyo' }, { status: 403 });
+      if (o.status === 'Entregado' || o.status === 'Cancelado') return NextResponse.json({ ok: false, motivo: 'cerrado' });
+      if (paso === 'salir') {
+        await db.from('orders').update({ status: 'Enviado' }).eq('id', o.id);
+        await db.from('orders').update({ llego_at: null }).eq('id', o.id);
+      } else if (paso === 'llegue') {
+        if (o.status !== 'Enviado') return NextResponse.json({ ok: false, motivo: 'no_salio' });
+        await db.from('orders').update({ llego_at: new Date().toISOString() }).eq('id', o.id);
+      } else if (paso === 'entregado') {
+        await db.from('orders').update({ status: 'Entregado' }).eq('id', o.id);
+      } else return NextResponse.json({ error: 'Paso inválido' }, { status: 400 });
+      return NextResponse.json({ ok: true });
     }
     case 'pausa': {
       await db.from('driver_acceso').update({ pausado: body.pausado === true }).eq('driver_id', yo.driverId);

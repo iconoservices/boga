@@ -90,6 +90,7 @@ export async function candidatosOrdenados(db: SupabaseClient, pedido: Pedido): P
   for (const a of acceso) {
     const c = porId.get(a.driver_id as string);
     if (!c || c.status !== 'activo' || c.ciudad !== pedido.ciudad) continue;
+    if (c.tipo === 'Repartidor') continue;   // los repartidores de una tienda solo llevan pedidos de la carta, no taxis
     if (pedido.tipo && c.tipo !== pedido.tipo) continue;
     if (a.pausado) continue;
     if (disponibleAhora(normalizarHorario(c.horario_semana)) === false) continue;

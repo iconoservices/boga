@@ -1763,6 +1763,25 @@ ALTER TABLE public.products ADD COLUMN IF NOT EXISTS precio_oferta NUMERIC;
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS oferta_hasta DATE;
 
 -- ============================================================
+-- DELIVERY CON REPARTIDOR (misma app del chofer: /transporte/chofer)
+-- ============================================================
+-- Un repartidor propio de una tienda es una fila de `drivers` con tipo 'Repartidor' y `store_slug` = su tienda.
+-- Entra con el mismo enlace secreto que los choferes (driver_acceso) pero NO sale en el directorio ni recibe
+-- pedidos de taxi. El dueño lo crea y se lo asigna a un pedido desde /pedido/<código>.
+-- `orders.repartidor_id` = quién lleva el pedido; `llego_at` = el repartidor tocó «Ya llegué».
+-- La posición en vivo sale de driver_acceso.lat/lng (la manda su app solo mientras el pedido va «Enviado»).
+ALTER TABLE public.drivers ADD COLUMN IF NOT EXISTS store_slug TEXT;
+CREATE INDEX IF NOT EXISTS drivers_store_idx ON public.drivers (store_slug) WHERE store_slug IS NOT NULL;
+ALTER TABLE public.orders  ADD COLUMN IF NOT EXISTS repartidor_id UUID REFERENCES public.drivers(id) ON DELETE SET NULL;
+ALTER TABLE public.orders  ADD COLUMN IF NOT EXISTS llego_at TIMESTAMPTZ;
+CREATE INDEX IF NOT EXISTS orders_repartidor_idx ON public.orders (repartidor_id) WHERE repartidor_id IS NOT NULL;
+
+-- Los repartidores propios no son públicos (nombre y teléfono solo los ve su tienda, por la API).
+DROP POLICY IF EXISTS "drivers: lectura pública de activos" ON public.drivers;
+CREATE POLICY "drivers: lectura pública de activos" ON public.drivers FOR SELECT
+  USING ((status = 'activo' AND COALESCE(tipo, '') <> 'Repartidor') OR public.is_superadmin());
+
+-- ============================================================
 -- COBRO ONLINE CON TARJETA / YAPE (Izipay)
 -- ============================================================
 -- Cada comercio conecta SU cuenta Izipay: el dinero va directo a él, Boga no lo toca. Las claves se guardan CIFRADAS
