@@ -34,6 +34,28 @@ const NO_CODE_YET = 'Todavía no tiene código — es puro catálogo comercial p
 
 const INITIAL_MODULES: StoreModule[] = [
   {
+    id: 'dominio-propio',
+    name: 'Dominio Propio Personalizado (.com / .pe)',
+    icon: 'language',
+    price: 'S/ 49 /mes',
+    description: 'La tienda abre con su propia dirección web (ej. mitienda.pe o tunegocio.com) con certificado de seguridad SSL incluido. El cliente lo compra en su registrador y Boga lo conecta.',
+    active: true,
+    tier: 'Pro',
+    buildStatus: 'parcial',
+    buildNote: 'Construido y activo: proxy de Next.js resuelve dominios propios en memoria y reescribe transparentemente a la tienda.',
+  },
+  {
+    id: 'loyverse-pos',
+    name: 'Integración Loyverse POS',
+    icon: 'sync_alt',
+    price: 'S/ 49 /mes',
+    description: 'Sincronización bidireccional automática de catálogo, precios y stock con el punto de venta Loyverse mediante webhooks en tiempo real.',
+    active: true,
+    tier: 'Pro',
+    buildStatus: 'parcial',
+    buildNote: 'Construido y funcionando: endpoint /api/loyverse/sync, webhooks /api/loyverse/webhook y descuento automático en ventas de Boga.',
+  },
+  {
     id: 'franquicias',
     name: 'Módulo de Franquicias',
     icon: 'account_tree',

@@ -89,6 +89,7 @@ export const MODULOS_VENTA: { grupo: string; items: ModuloVenta[] }[] = [
     grupo: 'Llega a más gente',
     items: [
       { id: 'app', icon: 'install_mobile', nombre: 'Tu propia app', body: 'Tu dirección propia (tunegocio.bogahub.app), instalable en el celular de tus clientes, con avisos a quienes la instalan.', precio: POR_DEFINIR, promo: 'Lanzamiento: instalar tu carta como app va incluido en Carta', gratisEnLanzamiento: ['carta'], incluidoEn: ['app', 'app_google'] },
+      { id: 'dominio_propio', icon: 'language', nombre: 'Dominio propio (.com / .pe)', body: 'Tu tienda abre directamente con tu propio dominio web (ej. mitienda.pe) sin ver la marca Boga. El cliente lo compra en su registrador y Boga lo conecta.', precio: 'S/ 49', unidad: ' /mes', incluidoEn: ['app_google'] },
       { id: 'google', icon: 'shopping_bag', nombre: 'Tus productos en Google', body: 'Tus productos aparecen cuando la gente los busca en Google.', precio: POR_DEFINIR, incluidoEn: ['app_google'], pronto: true },
       { id: 'market', icon: 'travel_explore', nombre: 'Boga Market', body: 'Tu negocio aparece en el Market de tu ciudad, junto a otros comercios locales, frente a gente que todavía no te conoce. Solo donde BogaHub opera.', precio: POR_DEFINIR, promo: 'Lanzamiento: incluido sin costo si tu tienda cumple los requisitos', gratisEnLanzamiento: ['carta', 'app', 'app_google'], incluidoEn: [] },
     ],
@@ -102,6 +103,7 @@ export const MODULOS_VENTA: { grupo: string; items: ModuloVenta[] }[] = [
   {
     grupo: 'Controla tu local',
     items: [
+      { id: 'loyverse', icon: 'sync_alt', nombre: 'Integración Loyverse POS', body: 'Sincronización automática de productos, precios y stock en tiempo real con tu caja física Loyverse.', precio: 'S/ 49', unidad: ' /mes', incluidoEn: ['app_google'] },
       { id: 'caja', icon: 'point_of_sale', nombre: 'Caja de ventas', body: 'Cobra en tu local con boleta por PDF o WhatsApp, vendedores propios y las ventas del día y del mes.', precio: POR_DEFINIR, incluidoEn: [] },
       { id: 'inventario', icon: 'inventory_2', nombre: 'Inventario', body: 'El stock se descuenta solo con cada venta y cada pedido; te avisa cuando queda poco. Va sobre la caja de ventas.', precio: POR_DEFINIR, incluidoEn: [] },
     ],
