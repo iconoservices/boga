@@ -28,6 +28,15 @@ function Barra() {
           <Link
             key={p.id}
             href={p.href}
+            onClick={(e) => {
+              // Explorar y Servicios son la MISMA página (/explore) con distinto ?vista. En producción el router de Next
+              // no navegaba de /explore?vista=servicios a /explore (el clic en Explorar no hacía nada), así que dentro
+              // de /explore se cambia la URL directamente; Next la sincroniza con useSearchParams.
+              if (p.href.startsWith('/explore') && pathname.startsWith('/explore') && !e.metaKey && !e.ctrlKey && !e.shiftKey && e.button === 0) {
+                e.preventDefault();
+                window.history.pushState(null, '', p.href);
+              }
+            }}
             aria-current={activa === p.id ? 'page' : undefined}
             className={`flex flex-1 sm:flex-none items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-1.5 rounded-full text-[13px] sm:text-sm font-bold transition-colors whitespace-nowrap ${
               activa === p.id ? 'bg-primary text-on-primary shadow-sm' : 'text-secondary hover:text-on-background'
