@@ -75,6 +75,25 @@ const GUIA_PUCALLPA = [
   { href: '/explore',      icon: 'storefront',   titulo: 'Qué comprar',    sub: 'Pescado y carne fresca, abarrotes y artesanía',     color: '#D97742', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Feria_Artesanal_por_el_Mes_Patrio%2C%2C_estudiantes_observando_las_l%C3%ADneas_shipibas.jpg/500px-Feria_Artesanal_por_el_Mes_Patrio%2C%2C_estudiantes_observando_las_l%C3%ADneas_shipibas.jpg' },
 ];
 
+// Atajo a la pestaña Negocios (/negocios), que explica qué gana el negocio y desde ahí llega al formulario de alta.
+function RegistraNegocio() {
+  return (
+    <Link
+      href="/negocios"
+      className="group flex items-center gap-2.5 bg-white border border-primary/20 rounded-xl px-3 py-2 lg:px-4 lg:py-3 shadow-sm hover:border-primary/40 hover:shadow-md active:scale-[0.99] transition-all"
+    >
+      <span className="w-8 h-8 lg:w-11 lg:h-11 rounded-full bg-primary-fixed flex items-center justify-center shrink-0">
+        <span className="material-symbols-outlined text-primary text-[18px] lg:text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>storefront</span>
+      </span>
+      <span className="min-w-0 flex-1 leading-tight">
+        <span className="block font-headline-sm text-sm lg:text-base font-bold text-on-surface">Registra tu negocio</span>
+        <span className="block font-body-md text-[11px] lg:text-xs text-secondary mt-0.5 truncate">Crea tu tienda y vende por WhatsApp</span>
+      </span>
+      <span className="material-symbols-outlined text-secondary/50 text-[20px] shrink-0 group-hover:translate-x-0.5 transition-transform">chevron_right</span>
+    </Link>
+  );
+}
+
 function SectionHead({ title, href, cta = 'Ver todo' }: { title: string; href: string; cta?: string }) {
   return (
     <div className="flex items-end justify-between">
@@ -210,22 +229,26 @@ function PortalesPanel() {
           </span>
         </div>
 
-        <div ref={tira} onTouchStart={pausar} onPointerDown={pausar} onWheel={pausar} className="flex gap-3 overflow-x-auto hide-scrollbar pb-1 snap-x lg:flex-wrap lg:overflow-visible" style={{ scrollbarWidth: 'none' }}>
+        <div ref={tira} onTouchStart={pausar} onPointerDown={pausar} onWheel={pausar} className="flex gap-3 overflow-x-auto hide-scrollbar pb-1 snap-x lg:grid lg:grid-cols-3 lg:gap-3 lg:overflow-visible" style={{ scrollbarWidth: 'none' }}>
           {PORTALES.map((p) => (
             <Link
               key={p.href}
               href={p.href}
-              className="group flex flex-col items-center gap-1.5 shrink-0 w-16 snap-start"
+              className="group flex flex-col items-center gap-1.5 shrink-0 w-16 snap-start lg:w-auto lg:gap-1.5 lg:py-2 lg:bg-white lg:border lg:border-surface-container-highest lg:rounded-2xl lg:shadow-sm lg:hover:shadow-md lg:hover:border-primary/30 lg:transition-all"
             >
               <span
-                className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform"
+                className="w-12 h-12 lg:w-10 lg:h-10 rounded-xl lg:rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform"
                 style={{ backgroundColor: p.color }}
               >
-                <span className="material-symbols-outlined text-white text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>{p.icon}</span>
+                <span className="material-symbols-outlined text-white text-[22px] lg:text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>{p.icon}</span>
               </span>
-              <span className="font-label-md text-[10px] text-on-surface text-center leading-tight line-clamp-1 w-full">{p.label}</span>
+              <span className="font-label-md text-[10px] lg:text-xs lg:font-semibold text-on-surface text-center leading-tight line-clamp-1 w-full">{p.label}</span>
             </Link>
           ))}
+        </div>
+
+        <div className="hidden lg:block">
+          <RegistraNegocio />
         </div>
       </div>
     </div>
@@ -342,20 +365,10 @@ export default function HomeClient({ inicial }: { inicial: HomeData }) {
 
       <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-9 lg:gap-12 pt-3 pb-9 lg:pt-8 lg:pb-12 px-container-margin lg:px-8">
 
-        {/* Registra tu negocio — lleva a la pestaña Negocios (/negocios), que explica qué gana el negocio y desde ahí llega al formulario de alta */}
-        <Link
-          href="/negocios"
-          className="group mt-1 lg:mt-0 lg:max-w-[440px] flex items-center gap-2.5 bg-white border border-primary/20 rounded-xl px-3 py-2 shadow-sm hover:border-primary/40 hover:shadow-md active:scale-[0.99] transition-all"
-        >
-          <span className="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-primary text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>storefront</span>
-          </span>
-          <span className="min-w-0 flex-1 leading-tight">
-            <span className="block font-headline-sm text-sm font-bold text-on-surface">Registra tu negocio</span>
-            <span className="block font-body-md text-[11px] text-secondary mt-0.5 truncate">Crea tu tienda y vende por WhatsApp</span>
-          </span>
-          <span className="material-symbols-outlined text-secondary/50 text-[20px] shrink-0 group-hover:translate-x-0.5 transition-transform">chevron_right</span>
-        </Link>
+        {/* Registra tu negocio — en celular, bajo los portales; en escritorio va en el panel, al costado del banner */}
+        <div className="lg:hidden mt-1">
+          <RegistraNegocio />
+        </div>
 
         {/* Lo que se pide en Market — productos reales de todas las categorías, justo
             debajo de la tira de portales */}
