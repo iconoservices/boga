@@ -140,7 +140,7 @@ export default function RegistroNegocio({
           <p style={{ fontSize: '13px', color: '#999', fontWeight: 500, lineHeight: 1.6, marginBottom: '24px' }}>
             Recibimos los datos de <b>{businessName}</b>. Te contactaremos por WhatsApp para coordinar los siguientes pasos.
           </p>
-          <Link href="/market" style={{
+          <Link href="/explore" style={{
             display: 'inline-block', padding: '12px 24px', backgroundColor: '#111', color: '#fff',
             borderRadius: '12px', fontSize: '13px', fontWeight: 700, textDecoration: 'none',
           }}>

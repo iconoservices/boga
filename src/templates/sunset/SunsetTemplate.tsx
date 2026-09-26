@@ -313,7 +313,7 @@ export default function SunsetTemplate({ store }: SunsetTemplateProps) {
           </span>
         </button>
         <Link
-          href="/market"
+          href="/explore"
           className="flex items-center gap-1.5 transition-opacity hover:opacity-100 opacity-60 bg-white/5 px-3 py-1.5 rounded-full"
           style={{ fontFamily: t.fontLabel, color: t.onSurface, border: `1px solid ${t.outlineVariant}33` }}
         >

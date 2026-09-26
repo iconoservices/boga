@@ -1219,7 +1219,7 @@ function AdminDashboard({ user }: { user: User }) {
         </nav>
         <div className="p-4 border-t border-gray-100 space-y-1">
           <p className="px-4 text-[11px] text-gray-400 font-semibold truncate">{user.email}</p>
-          <Link href="/market" className="flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-gray-900 font-semibold transition-colors">
+          <Link href="/explore" className="flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-gray-900 font-semibold transition-colors">
             <span className="material-symbols-outlined text-[20px]">arrow_back</span>
             Volver a BogaHub
           </Link>
@@ -3538,7 +3538,7 @@ function AdminDashboard({ user }: { user: User }) {
                   </button>
                 ))}
 
-                <Link href="/market" className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-md font-semibold transition-colors">
+                <Link href="/explore" className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-md font-semibold transition-colors">
                   <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                   Volver a BogaHub
                 </Link>

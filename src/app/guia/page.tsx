@@ -18,9 +18,9 @@ const ACCESOS = [
   { href: '/inmuebles',   icon: 'real_estate_agent', titulo: 'Dónde quedarte', sub: 'Cuartos, casas, terrenos y más' },
   { href: '/transporte', icon: 'local_taxi',   titulo: 'Cómo moverte',   sub: 'Taxi Seguro con chofer verificado' },
   { href: '/eventos',     icon: 'map',          titulo: 'Qué hacer',      sub: 'Tours, ferias y agenda' },
-  { href: '/market',      icon: 'ramen_dining', titulo: 'Dónde comer',    sub: 'Huariques y menús del día' },
+  { href: '/explore',      icon: 'ramen_dining', titulo: 'Dónde comer',    sub: 'Huariques y menús del día' },
   { href: '/trabajos',   icon: 'construction', titulo: 'Buscar trabajo',  sub: 'Técnicos y bolsa de empleo' },
-  { href: '/market',      icon: 'storefront',   titulo: 'Qué comprar',    sub: 'Mercado fresco y artesanía' },
+  { href: '/explore',      icon: 'storefront',   titulo: 'Qué comprar',    sub: 'Mercado fresco y artesanía' },
 ];
 
 // Fotos reales de Wikimedia Commons (uso libre), no de bancos de stock —

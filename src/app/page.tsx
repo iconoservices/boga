@@ -21,7 +21,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app';
 
 // "/" = el Inicio del lado consumidor. Es el índice vivo de BogaHub: un vistazo a
 // cada hub + contenido editorial fresco (SEO). Nada se resuelve acá, solo se
-// descubre; cada bloque termina en "Ver todo". Buscador = /market, B2B = /negocios.
+// descubre; cada bloque termina en "Ver todo". Buscador = /explore, B2B = /negocios.
 // Data de muestra hasta que cada hub exponga sus destacados reales.
 
 // Portada rotativa — un solo banner que va cambiando entre notas REALES de la
@@ -65,9 +65,9 @@ const GUIA_PUCALLPA = [
   { href: '/inmuebles',   icon: 'real_estate_agent', titulo: 'Dónde quedarte', sub: 'Alquiler y venta de cuartos, casas y terrenos', color: '#8B7FD4', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/La_catedral_de_Pucallpa_2022.jpg/500px-La_catedral_de_Pucallpa_2022.jpg' },
   { href: '/transporte', icon: 'local_taxi',   titulo: 'Cómo moverte',   sub: 'Mototaxi, auto o moto con chofer verificado',       color: '#E4655A', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Jir%C3%B3n_Sucre_Pucallpa.jpg/500px-Jir%C3%B3n_Sucre_Pucallpa.jpg' },
   { href: '/eventos',     icon: 'map',          titulo: 'Qué hacer',      sub: 'Yarinacocha, Boquerón, ferias y agenda cultural',   color: '#EBB05C', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Laguna_de_Yarinacocha_desde_un_bote_01.jpg/500px-Laguna_de_Yarinacocha_desde_un_bote_01.jpg' },
-  { href: '/market',      icon: 'ramen_dining', titulo: 'Dónde comer',    sub: 'Huariques, menús del día y cocina de la selva',     color: '#E8894A', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Tacacho_con_cecina.jpg/500px-Tacacho_con_cecina.jpg' },
+  { href: '/explore',      icon: 'ramen_dining', titulo: 'Dónde comer',    sub: 'Huariques, menús del día y cocina de la selva',     color: '#E8894A', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Tacacho_con_cecina.jpg/500px-Tacacho_con_cecina.jpg' },
   { href: '/trabajos',   icon: 'construction', titulo: 'Buscar trabajo',  sub: 'Técnicos de confianza y bolsa de empleo local',     color: '#3E9B5F', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Textiler%C3%ADa_shipiba_en_pucalla.jpg/500px-Textiler%C3%ADa_shipiba_en_pucalla.jpg' },
-  { href: '/market',      icon: 'storefront',   titulo: 'Qué comprar',    sub: 'Pescado y carne fresca, abarrotes y artesanía',     color: '#D97742', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Feria_Artesanal_por_el_Mes_Patrio%2C%2C_estudiantes_observando_las_l%C3%ADneas_shipibas.jpg/500px-Feria_Artesanal_por_el_Mes_Patrio%2C%2C_estudiantes_observando_las_l%C3%ADneas_shipibas.jpg' },
+  { href: '/explore',      icon: 'storefront',   titulo: 'Qué comprar',    sub: 'Pescado y carne fresca, abarrotes y artesanía',     color: '#D97742', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Feria_Artesanal_por_el_Mes_Patrio%2C%2C_estudiantes_observando_las_l%C3%ADneas_shipibas.jpg/500px-Feria_Artesanal_por_el_Mes_Patrio%2C%2C_estudiantes_observando_las_l%C3%ADneas_shipibas.jpg' },
 ];
 
 function SectionHead({ title, href, cta = 'Ver todo' }: { title: string; href: string; cta?: string }) {
@@ -315,7 +315,7 @@ export default function HomePage() {
         return {
           kicker: conTexto ? (b.tag || 'Promo') : '',
           title: conTexto ? [b.title1, b.title2].filter(Boolean).join(' ') : '',
-          href: b.link || '/market',
+          href: b.link || '/explore',
           img: b.image,
           pura: !conTexto,
         };
@@ -465,7 +465,7 @@ export default function HomePage() {
           <section className="flex flex-col gap-4">
             <div className="flex items-end justify-between gap-4">
               <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">Lo que se pide en Market</h2>
-              <Link href="/market" className="group shrink-0 font-label-md text-[12px] text-primary flex items-center gap-0.5 whitespace-nowrap">
+              <Link href="/explore" className="group shrink-0 font-label-md text-[12px] text-primary flex items-center gap-0.5 whitespace-nowrap">
                 Ver todo
                 <span className="material-symbols-outlined text-[14px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
               </Link>
@@ -583,7 +583,7 @@ export default function HomePage() {
           <section className="flex flex-col gap-4">
             <div className="flex items-end justify-between gap-4">
               <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">Tiendas de comida</h2>
-              <Link href="/market" className="group shrink-0 font-label-md text-[12px] text-primary flex items-center gap-0.5 whitespace-nowrap">
+              <Link href="/explore" className="group shrink-0 font-label-md text-[12px] text-primary flex items-center gap-0.5 whitespace-nowrap">
                 Ver todas
                 <span className="material-symbols-outlined text-[14px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
               </Link>

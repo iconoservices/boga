@@ -109,7 +109,7 @@ export default function PedidosPanel() {
             Explora las tiendas y dale &quot;me gusta&quot; a los productos para encontrarlos rápido aquí.
           </p>
           <Link 
-            href="/market" 
+            href="/explore" 
             className="mt-6 px-6 py-2.5 bg-primary text-white font-bold rounded-full hover:bg-primary-container transition-all text-sm shadow-md active:scale-95 flex items-center gap-1.5"
           >
             <span className="material-symbols-outlined text-[18px]">storefront</span>

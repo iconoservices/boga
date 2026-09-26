@@ -25,7 +25,7 @@ export default function AvisoTiendaMovida({ nombre }: { nombre: string }) {
           <p className="text-sm font-extrabold text-gray-900 leading-tight">{nombre} ahora está en BogaHub</p>
           <p className="text-xs text-gray-500 mt-0.5">Su app propia ya no está disponible, pero puedes seguir pidiendo aquí y descubrir más tiendas de tu ciudad.</p>
           <div className="flex flex-wrap gap-2 mt-2">
-            <Link href="/market" className="text-xs font-bold text-white px-3 py-1.5 rounded-full" style={{ backgroundColor: '#b8130e' }}>
+            <Link href="/explore" className="text-xs font-bold text-white px-3 py-1.5 rounded-full" style={{ backgroundColor: '#b8130e' }}>
               Ver otras tiendas
             </Link>
             {mostrar && (

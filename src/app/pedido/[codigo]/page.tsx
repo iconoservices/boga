@@ -91,7 +91,7 @@ export default function PedidoPage({ params }: { params: Promise<{ codigo: strin
           <div className="text-center py-12">
             <p className="font-headline-sm text-headline-sm">No encontramos este pedido</p>
             <p className="text-secondary text-sm mt-1">Revisa que el enlace esté completo.</p>
-            <Link href="/market" className="inline-block mt-4 text-sm font-bold text-primary">Ir al Market</Link>
+            <Link href="/explore" className="inline-block mt-4 text-sm font-bold text-primary">Ir al Market</Link>
           </div>
         )}
 

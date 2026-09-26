@@ -148,7 +148,9 @@ function ExploreContenido() {
               price: `S/ ${p.price.toFixed(2)}`,
               badge: 'Nuevo',
               img: p.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80',
-              status: p.status || 'Activo'
+              status: p.status || 'Activo',
+              store: storeDef?.name || p.store,
+              logo: storeDef?.logoImage || ''
             });
           }
         });
@@ -259,7 +261,7 @@ function ExploreContenido() {
     ? Object.values(subCategories).flat()
     : subCategories[activeCategory] || [];
 
-  type SectionType = { id: string, title: string, link?: string, products: { name: string, price: string, original?: string, badge?: string, img: string, status?: string }[] };
+  type SectionType = { id: string, title: string, link?: string, products: { name: string, price: string, original?: string, badge?: string, img: string, status?: string, store?: string, logo?: string }[] };
   // Sin productos de muestra: cada sección se llena con lo que hay en la base y la que queda vacía no se muestra.
   const [sections, setSections] = useState<SectionType[]>([
     { id: 'Combos & Promos', title: 'Promos & Combos 🏷️', link: '/promotions', products: [] },
@@ -506,9 +508,19 @@ function ExploreContenido() {
                 <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin pb-3 snap-x scroll-pl-container-margin lg:scroll-pl-0" style={{ scrollbarWidth: 'none' }}>
                   {section.products.slice(0, 4).map((p, idx) => (
                     <div key={idx} className="min-w-[160px] w-[160px] bg-white rounded-2xl shadow-[0_15px_15px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col border border-surface-container-highest snap-start">
-                      <div className="relative h-28 bg-surface-container-low">
+                      <div className="relative aspect-square overflow-hidden bg-surface-container-low">
                         <img className={`w-full h-full object-cover ${p.status === 'Agotado' ? 'grayscale opacity-60' : ''}`} src={p.img} alt={p.name} />
                         <div className="absolute top-2 left-2 bg-[#dc3225] text-white text-[10px] font-black px-2 py-0.5 rounded-lg">{p.badge}</div>
+                        {p.store && (
+                          <div className="absolute bottom-2 left-2 bg-white/95 backdrop-blur-sm shadow-sm rounded-lg px-2 py-1 flex items-center gap-1 border border-surface-container-highest">
+                            {p.logo ? (
+                              <img loading="lazy" decoding="async" alt={p.store} className="w-3.5 h-3.5 rounded-full object-cover" src={p.logo} />
+                            ) : (
+                              <span className="w-3.5 h-3.5 rounded-full bg-surface-container-highest flex items-center justify-center text-[7px] font-bold text-secondary shrink-0">{p.store.charAt(0)}</span>
+                            )}
+                            <span className="text-[9px] font-label-md text-on-surface uppercase truncate max-w-[65px]">{p.store}</span>
+                          </div>
+                        )}
                         {p.status === 'Agotado' && (
                           <div className="absolute inset-0 bg-white/40 flex items-center justify-center backdrop-blur-[1px]">
                             <span className="bg-black/85 text-white text-[10px] font-black px-2 py-0.5 rounded-full tracking-wider uppercase shadow-md">Agotado</span>
@@ -617,6 +629,16 @@ function ExploreContenido() {
                   <div className="relative aspect-square overflow-hidden bg-surface-container-low p-4">
                     <img className={`w-full h-full object-contain ${p.status === 'Agotado' ? 'grayscale opacity-60' : ''}`} src={p.img} alt={p.name} />
                     <div className="absolute top-2 left-2 bg-[#dc3225] text-white text-[10px] font-black px-2 py-0.5 rounded-lg">{p.badge}</div>
+                    {p.store && (
+                      <div className="absolute bottom-2 left-2 bg-white/95 backdrop-blur-sm shadow-sm rounded-lg px-2 py-1 flex items-center gap-1 border border-surface-container-highest">
+                        {p.logo ? (
+                          <img loading="lazy" decoding="async" alt={p.store} className="w-3.5 h-3.5 rounded-full object-cover" src={p.logo} />
+                        ) : (
+                          <span className="w-3.5 h-3.5 rounded-full bg-surface-container-highest flex items-center justify-center text-[7px] font-bold text-secondary shrink-0">{p.store.charAt(0)}</span>
+                        )}
+                        <span className="text-[9px] font-label-md text-on-surface uppercase truncate max-w-[65px]">{p.store}</span>
+                      </div>
+                    )}
                     {p.status === 'Agotado' && (
                       <div className="absolute inset-0 bg-white/40 flex items-center justify-center backdrop-blur-[1px]">
                         <span className="bg-black/85 text-white text-[10px] font-black px-2 py-0.5 rounded-full tracking-wider uppercase shadow-md">Agotado</span>

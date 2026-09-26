@@ -513,10 +513,6 @@ export default function Home() {
                           </div>
                           <div>
                             <h4 className="font-headline-sm text-sm text-on-surface mt-2 line-clamp-1">{prod.title}</h4>
-                            <div className="flex items-center gap-1 mt-1">
-                              <span className="material-symbols-outlined text-tertiary text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                              <span className="text-[11px] font-label-md text-secondary">{prod.rating} <span className="opacity-60">{prod.reviews}</span></span>
-                            </div>
                           </div>
                           <div className="flex items-center justify-between mt-3">
                             <span className="font-price-lg text-primary text-base">{prod.price}</span>
@@ -579,12 +575,7 @@ export default function Home() {
                       </div>
                       <div className="p-3 flex flex-col flex-1 justify-between">
                         <div>
-                          <span className="text-[10px] font-label-md text-secondary uppercase tracking-tighter mb-1 block">{prod.store}</span>
                           <h4 className="font-headline-sm text-sm text-on-surface line-clamp-1">{prod.title}</h4>
-                          <div className="flex items-center gap-1 mt-1">
-                            <span className="material-symbols-outlined text-tertiary text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                            <span className="font-label-md text-[11px] text-on-surface">{prod.rating} <span className="opacity-60">{prod.reviews}</span></span>
-                          </div>
                         </div>
                         <div className="flex justify-between items-center pt-2 mt-auto">
                           <span className="font-price-lg text-primary text-base">{prod.price}</span>
