@@ -23,8 +23,6 @@ export default function Explore() {
 
 function ExploreContenido() {
   const [activeCategory, setActiveCategory] = useState('Todas');
-  // Cuál de los cuadritos de arriba está abierto (Market o Servicios muestran sus categorías debajo).
-  const [grupoAbierto, setGrupoAbierto] = useState<'todas' | 'market' | 'servicios'>('todas');
   const [viewMode, setViewMode] = useState<'products' | 'stores'>('products');
   // La barra de arriba (Explorar | Tiendas | Servicios) manda: ?vista=servicios muestra Servicios; sin ?vista se ve el feed de siempre (Explorar).
   const vista = useSearchParams().get('vista');
@@ -259,23 +257,8 @@ function ExploreContenido() {
     ],
   };
 
-  // Los rubros de servicios (todavía sin negocios): cada círculo lleva a la pestaña Servicios.
-  const rubrosServicios: { name: string; icon: string; href?: string }[] = [
-    { name: 'Abogados', icon: 'gavel' },
-    { name: 'Salud', icon: 'medical_services' },
-    { name: 'Gimnasios', icon: 'fitness_center' },
-    { name: 'Belleza', icon: 'spa' },
-    { name: 'Educación', icon: 'school' },
-    { name: 'Técnicos', icon: 'engineering' },
-  ].map((r) => ({ ...r, href: '/explore?vista=servicios' }));
-
-  // Los círculos de abajo siguen al cuadrito abierto: Comprar → subcategorías de productos, Servicios → rubros.
   const currentSubCategories: { name: string; icon: string; href?: string }[] = activeCategory === 'Todas'
-    ? (grupoAbierto === 'servicios'
-        ? rubrosServicios
-        : grupoAbierto === 'market'
-          ? Object.entries(subCategories).filter(([k]) => k !== 'Salud' && k !== 'Servicios').flatMap(([, v]) => v)
-          : Object.values(subCategories).flat())
+    ? Object.values(subCategories).flat()
     : subCategories[activeCategory] || [];
 
   type SectionType = { id: string, title: string, link?: string, products: { name: string, price: string, original?: string, badge?: string, img: string, status?: string }[] };
@@ -384,63 +367,37 @@ function ExploreContenido() {
           
           {activeCategory === 'Todas' ? (
             /* "Todas" va aparte y primero (es «todo junto»); debajo, dos familias: Market (se compra) y Servicios. */
-            <div className="flex flex-col gap-2 transition-all duration-500">
-              <div className="grid grid-cols-4 gap-2">
-                {([
-                  { id: 'todas', nombre: 'Todo', icon: 'grid_view' },
-                  { id: 'market', nombre: 'Comprar', icon: 'shopping_bag' },
-                  { id: 'servicios', nombre: 'Servicios', icon: 'handyman' },
-                ] as const).map((g) => {
-                  const activo = grupoAbierto === g.id;
-                  return (
-                    <button
-                      key={g.id}
-                      type="button"
-                      aria-pressed={activo}
-                      onClick={() => { setGrupoAbierto(g.id); setShowAllSubCategories(false); }}
-                      className={`flex flex-col items-center justify-center gap-1 py-2 px-1.5 rounded-xl shadow-sm active:scale-95 transition-all ${
-                        activo ? 'bg-primary text-white border border-primary shadow-md' : 'bg-white border border-surface-container-highest text-secondary'
-                      }`}
-                    >
-                      <span className={`material-symbols-outlined text-xl ${activo ? 'text-white' : 'text-primary'}`}>{g.icon}</span>
-                      <span className={`font-label-md text-[10px] leading-tight ${activo ? 'text-white' : 'text-secondary'}`}>{g.nombre}</span>
-                    </button>
-                  );
-                })}
-                {/* Pensión de almuerzos: destacada, no es una categoría. */}
-                <Link
-                  href="/pension"
-                  className="flex flex-col items-center justify-center gap-1 py-2 px-1.5 rounded-xl shadow-sm active:scale-95 transition-transform"
-                  style={{ background: '#0f3d24' }}
-                >
-                  <span className="material-symbols-outlined text-xl" style={{ color: '#e7b84b', fontVariationSettings: "'FILL' 1" }}>lunch_dining</span>
-                  <span className="font-label-md text-[10px] leading-tight font-bold" style={{ color: '#f4e7d3' }}>Pensión</span>
-                </Link>
+            /* Fila de atajos: Todo se queda aquí; Comprar lleva a Tiendas, Servicios a su pestaña y Pensión a /pension. */
+            <div className="grid grid-cols-4 gap-2 transition-all duration-500">
+              <div
+                aria-current="page"
+                className="flex flex-col items-center justify-center gap-1 py-2 px-1.5 rounded-xl shadow-md bg-primary text-white border border-primary"
+              >
+                <span className="material-symbols-outlined text-xl text-white">grid_view</span>
+                <span className="font-label-md text-[10px] leading-tight text-white">Todo</span>
               </div>
-
-              {grupoAbierto !== 'todas' && (
-                <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-1" style={{ scrollbarWidth: 'none' }}>
-                  {macroCategories
-                    .filter((c) => (grupoAbierto === 'market'
-                      ? ['Combos & Promos', 'Comida', 'Bebidas', 'Mercado', 'Moda']
-                      : ['Salud', 'Servicios']).includes(c.id))
-                    .map((cat) => (
-                      <button
-                        key={cat.id}
-                        onClick={() => { setActiveCategory(cat.id); setShowAllSubCategories(false); }}
-                        className="flex items-center gap-1.5 px-4 py-1.5 rounded-full shadow-sm active:scale-95 transition-all shrink-0 bg-white border border-surface-container-highest text-secondary"
-                      >
-                        <span className="material-symbols-outlined text-[18px] text-primary">{cat.icon}</span>
-                        <span className="font-label-md text-[11px] whitespace-nowrap">{cat.name}</span>
-                      </button>
-                    ))}
-                  {grupoAbierto === 'servicios' && (
-                    <Link href="/explore?vista=servicios" className="shrink-0 px-2 text-[12px] font-bold text-primary whitespace-nowrap">
-                      Ver todos los servicios →
-                    </Link>
-                  )}
-                </div>
-              )}
+              {([
+                { href: '/market', nombre: 'Comprar', icon: 'shopping_bag' },
+                { href: '/explore?vista=servicios', nombre: 'Servicios', icon: 'handyman' },
+              ] as const).map((g) => (
+                <Link
+                  key={g.nombre}
+                  href={g.href}
+                  className="flex flex-col items-center justify-center gap-1 py-2 px-1.5 rounded-xl shadow-sm active:scale-95 transition-all bg-white border border-surface-container-highest text-secondary"
+                >
+                  <span className="material-symbols-outlined text-xl text-primary">{g.icon}</span>
+                  <span className="font-label-md text-[10px] leading-tight text-secondary">{g.nombre}</span>
+                </Link>
+              ))}
+              {/* Pensión de almuerzos: destacada, no es una categoría. */}
+              <Link
+                href="/pension"
+                className="flex flex-col items-center justify-center gap-1 py-2 px-1.5 rounded-xl shadow-sm active:scale-95 transition-transform"
+                style={{ background: '#0f3d24' }}
+              >
+                <span className="material-symbols-outlined text-xl" style={{ color: '#e7b84b', fontVariationSettings: "'FILL' 1" }}>lunch_dining</span>
+                <span className="font-label-md text-[10px] leading-tight font-bold" style={{ color: '#f4e7d3' }}>Pensión</span>
+              </Link>
             </div>
           ) : (
           <div className={`
@@ -492,7 +449,8 @@ function ExploreContenido() {
         </section>
 
         {/* Specific Sub-Categories (Filtered) */}
-        {viewMode === 'products' && (
+        {/* Los círculos de subcategorías solo salen cuando hay una categoría elegida; con «Todo» estorban (viven en Tiendas). */}
+        {viewMode === 'products' && activeCategory !== 'Todas' && (
           <section className="hide-scrollbar overflow-x-auto flex gap-4 items-start">
             <div 
               className={`py-1 ${showAllSubCategories ? 'flex flex-wrap gap-x-3 gap-y-2.5 justify-start w-full' : 'flex gap-3.5 items-center'}`} 
