@@ -11,7 +11,7 @@ export type Modulos = Partial<Record<ModuloId, boolean>> & {
   loyverse_last_sync?: string;
   loyverse_auto_sync?: boolean;
   dominio_propio_url?: string;
-  pasarela_provider?: 'mercadopago' | 'culqi' | 'niubiz';
+  pasarela_provider?: 'izipay' | 'mercadopago' | 'culqi' | 'niubiz';
   pasarela_public_key?: string;
 };
 
@@ -60,9 +60,9 @@ export const MODULOS: { id: ModuloId; label: string; icon: string; desc: string 
   },
   {
     id: 'pasarela_pago',
-    label: 'Pasarela de pago online propia (Culqi / Mercado Pago)',
+    label: 'Cobro online con tarjeta / Yape (Izipay)',
     icon: 'credit_card',
-    desc: 'Permite al comercio cobrar con tarjeta online y recibir el dinero directo en su cuenta bancaria.',
+    desc: 'El comercio conecta su cuenta Izipay (sus 4 claves, en su panel) y sus clientes pagan con tarjeta o Yape en la carta; el dinero va directo a su cuenta y el pedido pasa a «Pagado».',
   },
 ];
 
@@ -185,6 +185,90 @@ export const PASOS_PRECIO: { clave: string; etiqueta: string; ayuda: string }[] 
   { clave: 'operacion:ventas', etiqueta: 'Ventas (POS)', ayuda: 'Se suma al activar la caja y las ventas.' },
   { clave: 'operacion:inventario', etiqueta: 'Inventario', ayuda: 'Se suma al activar el control de stock.' },
   { clave: 'extra:marca_blanca', etiqueta: 'Marca blanca', ayuda: 'Se suma al quitar el "Powered by Boga Market".' },
+  { clave: 'extra:dominio_propio', etiqueta: 'Dominio propio', ayuda: 'Se suma al conectar un dominio propio personalizado (.com / .pe).' },
+  { clave: 'extra:loyverse', etiqueta: 'Loyverse POS', ayuda: 'Se suma al sincronizar con el punto de venta Loyverse.' },
+  { clave: 'extra:pasarela_pago', etiqueta: 'Pasarela propia', ayuda: 'Se suma al habilitar pasarela de pago online para la tienda.' },
+];
+
+/** Presets de planes para configurar tiendas en 1 clic desde superadmin */
+export interface PlanPreset {
+  id: 'carta' | 'app' | 'supermercado' | 'franquicia';
+  nombre: string;
+  badge: string;
+  precio: string;
+  subdominio_activo: boolean;
+  modulos: Partial<Record<ModuloId, boolean>>;
+}
+
+export const PLANES_PRESETS: PlanPreset[] = [
+  {
+    id: 'carta',
+    nombre: 'Plan Carta',
+    badge: 'Huariques & Menús',
+    precio: 'S/ 50 /mes',
+    subdominio_activo: false,
+    modulos: {
+      pos: false,
+      inventario: false,
+      google: false,
+      marca_blanca: false,
+      marketplace: true,
+      loyverse: false,
+      dominio_propio: false,
+      pasarela_pago: false,
+    },
+  },
+  {
+    id: 'app',
+    nombre: 'Plan App / Tienda',
+    badge: 'Más Popular',
+    precio: 'S/ 100 /mes',
+    subdominio_activo: true,
+    modulos: {
+      pos: false,
+      inventario: false,
+      google: false,
+      marca_blanca: false,
+      marketplace: true,
+      loyverse: false,
+      dominio_propio: false,
+      pasarela_pago: false,
+    },
+  },
+  {
+    id: 'supermercado',
+    nombre: 'Plan Supermercado / Pro',
+    badge: 'Alta Capacidad',
+    precio: 'S/ 199 /mes',
+    subdominio_activo: true,
+    modulos: {
+      pos: true,
+      inventario: true,
+      google: false,
+      marca_blanca: false,
+      marketplace: true,
+      loyverse: true,
+      dominio_propio: true,
+      pasarela_pago: false,
+    },
+  },
+  {
+    id: 'franquicia',
+    nombre: 'Plan Multi-Sede / Franquicia',
+    badge: 'Empresarial',
+    precio: 'S/ 399 /mes',
+    subdominio_activo: true,
+    modulos: {
+      pos: true,
+      inventario: true,
+      google: true,
+      marca_blanca: true,
+      marketplace: true,
+      loyverse: true,
+      dominio_propio: true,
+      pasarela_pago: true,
+    },
+  },
 ];
 
 /** Los pasos de precio que alcanzó una tienda según lo que tiene prendido. */
@@ -198,6 +282,9 @@ export function pasosDeTienda(t: { modulos?: Modulos | null; subdominio_activo?:
   if (op === 'ventas' || op === 'inventario' || op === 'sin-clasificar') pasos.push('operacion:ventas');
   if (op === 'inventario' || op === 'sin-clasificar') pasos.push('operacion:inventario');
   if (conMarcaBlanca(t.modulos)) pasos.push('extra:marca_blanca');
+  if (moduloActivo(t.modulos, 'dominio_propio') || !!t.modulos?.dominio_propio_url) pasos.push('extra:dominio_propio');
+  if (moduloActivo(t.modulos, 'loyverse') || !!t.modulos?.loyverse_token) pasos.push('extra:loyverse');
+  if (moduloActivo(t.modulos, 'pasarela_pago')) pasos.push('extra:pasarela_pago');
   return pasos;
 }
 

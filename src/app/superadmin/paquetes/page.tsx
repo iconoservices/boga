@@ -181,11 +181,11 @@ const INITIAL_MODULES: StoreModule[] = [
     name: 'Pasarela de Pago Propia',
     icon: 'credit_card',
     price: 'S/ 0.30 /transacción',
-    description: 'Checkout con tarjeta dentro de la misma app (Culqi/Niubiz) en vez de derivar todo a WhatsApp para coordinar el pago. Se cobra por transacción procesada, no por mes.',
+    description: 'Checkout con tarjeta o Yape dentro de la misma app (Izipay) en vez de derivar todo a WhatsApp para coordinar el pago. El comercio conecta su propia cuenta Izipay: el dinero va directo a él.',
     active: false,
     tier: 'Pro',
-    buildStatus: 'no_construido',
-    buildNote: 'Hoy el 100% del checkout de cualquier tienda es "mandale un WhatsApp al dueño" (ver lib/whatsapp.ts) — cero pagos reales todavía.',
+    buildStatus: 'parcial',
+    buildNote: 'Construido: carrito con «Pagar con tarjeta o Yape» (plantillas con el carrito compartido), página de pago, confirmación firmada e IPN, pedido «Pagado» y claves cifradas. Falta probarlo con una cuenta Izipay real y sumarlo a las plantillas con carrito propio (Mirka, Amazonia, Mercado…). Se activa por tienda con el módulo «Cobro online (Izipay)».',
   },
   {
     id: 'reservas-citas',
@@ -339,41 +339,50 @@ function PaquetesContenido() {
     if (!cargando && !esSuperadmin) router.replace('/login?redirect=/superadmin/paquetes');
   }, [cargando, esSuperadmin, router]);
 
-  // Paquetes state
+  // Paquetes state: los 4 paquetes oficiales de Boga Market para Perú
   const [packages, setPackages] = useState<Package[]>([
     {
-      id: 'starter',
-      name: 'Starter Kit',
-      badge: 'Entry Level',
-      features: ['5 Users', 'Basic Analytics', 'Email Support'],
-      price: 49,
+      id: 'carta',
+      name: 'Plan Carta',
+      badge: 'Huariques & Menús',
+      features: ['Hasta 100 productos', 'Catálogo QR', 'Pedidos WhatsApp sin comisión', 'PWA Instalable', 'Comprobante PDF'],
+      price: 50,
       active: true,
-      bannerUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDKn9iOD2YOzoyu_3J71aa9z9RyJ3IfQV78LugrlEPkQNFCgDy-MnaS0g7s3nKXYulJhuJeY0JF69gjJo7xEerprAOkByz4HFKxNTw_bspTl4JL6BQ4NRADjhJe8LR4PTruCAcwipMaBqTM9YmKnPEVeXyhnJcd3DsN9GEFomdnMWqU21ild6RpWmeDmL57autUZD8geIwztAIFGBmaW_waD29_A3h1spjp4cS45g4cb1Si57yQ8Ht5IXYVEvO5_pZBFMSKneY35g'
+      bannerUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500&auto=format&fit=crop&q=60'
     },
     {
-      id: 'pro',
-      name: 'Pro Bundle',
-      badge: 'Most Popular',
-      features: ['25 Users', 'Advanced Reporting', 'Priority Support', 'API Access'],
-      price: 129,
+      id: 'app',
+      name: 'Plan App / Tienda',
+      badge: 'Más Popular',
+      features: ['Hasta 1,000 productos', 'Subdominio propio (.bogahub.app)', 'Notificaciones Push (2/sem)', 'Instalable en celular', 'Soporte prioritario'],
+      price: 100,
       active: true,
       isPopular: true,
-      bannerUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAJ2Tu5eDKXgk1KbjBnNPspanHcYa6ep8ccDfoNrrYyUrX6GzTo8v35ey1bbR3UStCZFtFh53gmpz9yvzVB5xpflklrFPrbFexSnq_a-MIQk1Z9oIrB3CYFrmDHH11xmODufijFp4Z2UpBKojIZioNCNG-Av-RwP9HS-Z56MbJYA9C-D9xqYPMPnhz3aIL2sjiSJIcaTRV3ndkmxPnaisatJhyqcHaxpQpqtaYZVZBe7ZULQRWIZ0D81mzPVvLLNLKUi7K8euR9pQ'
+      bannerUrl: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=500&auto=format&fit=crop&q=60'
     },
     {
-      id: 'enterprise',
-      name: 'Enterprise',
-      badge: 'Scale',
-      features: ['Unlimited Users', 'Custom Dashboards', 'Dedicated Manager', 'SLA Guarantee'],
-      price: 599,
+      id: 'supermercado',
+      name: 'Plan Supermercado / Pro',
+      badge: 'Alta Capacidad',
+      features: ['Hasta 5,000 productos', 'Sincronización Loyverse POS en vivo', 'Soporte Dominio Propio (.pe / .com)', 'Inventario masivo en tiempo real', 'Alertas de stock bajo'],
+      price: 199,
       active: true,
-      bannerUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB9g-m183JnnrY_f0N5rXywD-xM13gkYKvVFKXrodlMe2Wl-cVJBt_FnbbOL6au82hjOYtmUSwIqKmxiEaV72Jc7jTvkYft1B57f1TDvU_1OaE4Vy6PL_ONz-APy0X1nepCQyhOsvc14BSmsgTB_W2VfezRBB-vXsIAI-SH5_4QCnyEV-4745oJKr5t8PWBcfvo1Hee7Q0dZHZe2e1wAGtUK1DoXwU3nnH9W3H_dMaXPzOjv7OKBH-CMZvQShSxIQeORMn2gqKR3w'
+      bannerUrl: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=500&auto=format&fit=crop&q=60'
+    },
+    {
+      id: 'franquicia',
+      name: 'Plan Multi-Sede / Franquicia',
+      badge: 'Empresarial',
+      features: ['Múltiples sucursales', 'Métricas consolidadas por sede', 'Acceso gerentes y cajeros', 'Marca blanca incluida', 'Soporte VIP 24/7'],
+      price: 399,
+      active: true,
+      bannerUrl: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=500&auto=format&fit=crop&q=60'
     }
   ]);
-  // Fijos: nada los modifica, solo se listan.
+  // Histórico de paquetes de lanzamiento
   const archivedPackages = [
-    { id: 'archive-1', name: 'Legacy Basic (v1)', price: 29, usersCount: '1,240', active: false },
-    { id: 'archive-2', name: 'Early Adopter Special', price: 15, usersCount: '450', active: true },
+    { id: 'archive-1', name: 'Promo Piloto Huánuco', price: 29, usersCount: '18 tiendas', active: false },
+    { id: 'archive-2', name: 'Early Adopter Bodegas', price: 15, usersCount: '6 tiendas', active: true },
   ];
 
   // Módulos de expansión + qué tiendas los tienen activos. Igual que
@@ -504,22 +513,32 @@ function PaquetesContenido() {
                   INITIAL_MODULES pero no se muestra, para no vender lo que no existe. */}
               <CatalogoOrdenado modulos={modules.filter((m) => m.buildStatus !== 'no_construido')} />
 
-              {/* Lo anterior: paquetes de muestra (Starter/Pro/Enterprise), sin efecto real */}
-              <details className="group border border-[#c2c6d6] rounded-md bg-white">
-                <summary className="cursor-pointer select-none px-4 py-3 text-xs font-bold text-[#424754] flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[16px] transition-transform group-open:rotate-90">chevron_right</span>
-                  Paquetes de muestra anteriores (Starter Kit / Pro Bundle / Enterprise) — no gatean nada
-                </summary>
-                <div className="p-4 flex flex-col gap-6 border-t border-[#c2c6d6]">
+              {/* Paquetes Comerciales Oficiales de Boga Market */}
+              <div className="border border-[#c2c6d6] rounded-md bg-white p-5 flex flex-col gap-6 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#c2c6d6] pb-3">
+                  <div>
+                    <h3 className="text-sm font-black text-[#191b23] flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[20px] text-[#0058be]">package_2</span>
+                      Paquetes Comerciales Oficiales Boga Market (Perú)
+                    </h3>
+                    <p className="text-xs text-[#424754] mt-0.5">
+                      Planes mensuales en Soles (S/) adaptados al comercio local y escalonados por volumen de catálogo.
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-bold text-[#0058be] bg-[#d8e2ff] px-2.5 py-1 rounded-full w-fit">
+                    Moneda: Soles (PEN)
+                  </span>
+                </div>
+
               {/* Metrics Bento Grid */}
               <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="md:col-span-2 p-5 bg-white border border-[#c2c6d6] rounded-md flex flex-col justify-between relative overflow-hidden">
+                <div className="md:col-span-2 p-5 bg-[#f8f9ff] border border-[#c2c6d6] rounded-md flex flex-col justify-between relative overflow-hidden">
                   <div className="z-10">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-[#424754]">Total de Paquetes</span>
                     <div className="text-2xl font-bold mt-1 text-[#191b23]">{packages.length}</div>
                     <div className="flex items-center gap-1 text-[#0058be] text-[10px] font-semibold mt-2">
                       <span className="material-symbols-outlined text-[14px]">trending_up</span>
-                      <span>+1 este mes</span>
+                      <span>4 niveles escalonados</span>
                     </div>
                   </div>
                   <div className="absolute right-[-20px] bottom-[-20px] opacity-[0.03] pointer-events-none">
@@ -551,17 +570,17 @@ function PaquetesContenido() {
               {/* Package Grid */}
               <section className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-[#191b23]">Tiers Publicados</h3>
+                  <h3 className="text-sm font-bold text-[#191b23]">Tiers Publicados en Boga</h3>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {packages.map((pkg) => {
                     const isPopular = pkg.isPopular;
                     return (
                       <div 
                         key={pkg.id} 
                         className={`group bg-white border rounded-md overflow-hidden transition-all duration-200 flex flex-col hover:translate-y-[-2px] hover:shadow-md ${
-                          isPopular ? 'border-[#0058be] ring-1 ring-[#0058be]' : 'border-[#c2c6d6]'
+                          isPopular ? 'border-[#0058be] ring-2 ring-[#0058be]' : 'border-[#c2c6d6]'
                         }`}
                       >
                         {/* Header banner */}
@@ -600,7 +619,7 @@ function PaquetesContenido() {
 
                           <div className="flex items-center justify-between mt-auto pt-2">
                             <div>
-                              <span className="text-xl font-extrabold text-[#191b23]">${pkg.price}</span>
+                              <span className="text-xl font-extrabold text-[#191b23]">S/ {pkg.price}</span>
                               <span className="text-[10px] text-[#424754] font-medium">/mes</span>
                             </div>
                             <div className="flex items-center gap-2">
@@ -637,15 +656,12 @@ function PaquetesContenido() {
                 </div>
               </section>
 
-              {/* Qué incluye cada plan: cruza los paquetes de arriba con el catálogo de
-                  módulos pagos de "Módulos y Estrategia" (modules.tier los ordena). Los
-                  ids 'starter'/'pro'/'enterprise' son los 3 paquetes de fábrica — si se
-                  borran o renombran, cae al nombre genérico Basic/Pro/Enterprise. */}
+              {/* Qué incluye cada plan: cruza los paquetes de arriba con el catálogo de módulos pagos */}
               <section className="flex flex-col gap-4">
                 <div>
                   <h3 className="text-sm font-bold text-[#191b23]">¿Qué Incluye Cada Plan?</h3>
                   <p className="text-xs text-[#424754] mt-1">
-                    Cruce entre estos paquetes y el catálogo de módulos pagos (pestaña "Módulos y Estrategia"). Sugerencia editorial: todavía no gatea nada automáticamente.
+                    Cruce entre estos paquetes y el catálogo de módulos de expansión para tiendas en Boga Market.
                   </p>
                 </div>
 
@@ -653,13 +669,13 @@ function PaquetesContenido() {
                   <span className="material-symbols-outlined text-[16px] text-[#0058be] shrink-0">check_circle</span>
                   <p className="text-[10px] text-[#424754] leading-relaxed">
                     <span className="font-bold text-[#191b23]">Incluido siempre, en cualquier plan: </span>
-                    App Instalable (PWA), Catálogo de Productos, Categorías Estructuradas, Botón de WhatsApp, Estilos y Branding — el detalle está en el Glosario de Reglas, dentro de Mapa de Apps.
+                    App Instalable (PWA), Catálogo de Productos, Categorías Estructuradas, Botón de WhatsApp sin comisión, Estilos y Branding.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {(['Basic', 'Pro', 'Enterprise'] as const).map((tier) => {
-                    const packageIdByTier: Record<'Basic' | 'Pro' | 'Enterprise', string> = { Basic: 'starter', Pro: 'pro', Enterprise: 'enterprise' };
+                    const packageIdByTier: Record<'Basic' | 'Pro' | 'Enterprise', string> = { Basic: 'carta', Pro: 'app', Enterprise: 'supermercado' };
                     const linkedPackage = packages.find(p => p.id === packageIdByTier[tier]);
                     const tierMods = modules.filter(m => m.tier === tier);
                     const cumulativeCount = modules.filter(m =>
@@ -673,7 +689,7 @@ function PaquetesContenido() {
                           tier === 'Basic' ? 'bg-emerald-50' : tier === 'Pro' ? 'bg-amber-50' : 'bg-violet-50'
                         }`}>
                           <p className="text-xs font-bold text-[#191b23]">{linkedPackage?.name || tier}</p>
-                          {linkedPackage && <p className="text-[9px] text-[#424754] font-semibold">${linkedPackage.price}/mes · {cumulativeCount} módulos disponibles</p>}
+                          {linkedPackage && <p className="text-[9px] text-[#424754] font-semibold">S/ {linkedPackage.price}/mes · {cumulativeCount} módulos disponibles</p>}
                           {!linkedPackage && <p className="text-[9px] text-[#424754] font-semibold">{cumulativeCount} módulos disponibles</p>}
                         </div>
                         <div className="p-3 flex flex-col gap-2">
@@ -699,7 +715,7 @@ function PaquetesContenido() {
               {/* Archive Table */}
               <section className="bg-white border border-[#c2c6d6] rounded-md overflow-hidden">
                 <div className="px-4 py-3 border-b border-[#c2c6d6] bg-[#f2f3fd] flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#191b23]">Archivo e Historial de Paquetes</span>
+                  <span className="text-xs font-bold text-[#191b23]">Archivo e Historial de Paquetes Promocionales</span>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
@@ -707,7 +723,7 @@ function PaquetesContenido() {
                       <tr className="text-[10px] font-bold uppercase tracking-wider text-[#424754] border-b border-[#c2c6d6]">
                         <th className="px-4 py-2 font-semibold">Nombre del Paquete</th>
                         <th className="px-4 py-2 font-semibold">Precio Base</th>
-                        <th className="px-4 py-2 font-semibold">Usuarios Registrados</th>
+                        <th className="px-4 py-2 font-semibold">Tiendas Registradas</th>
                         <th className="px-4 py-2 font-semibold">Estado</th>
                         <th className="px-4 py-2 font-semibold text-right">Acción</th>
                       </tr>
@@ -716,7 +732,7 @@ function PaquetesContenido() {
                       {archivedPackages.map((archive) => (
                         <tr key={archive.id} className="hover:bg-[#f9f9ff] transition-colors text-xs">
                           <td className="px-4 py-3 font-semibold text-[#191b23]">{archive.name}</td>
-                          <td className="px-4 py-3 text-[#424754]">${archive.price}.00</td>
+                          <td className="px-4 py-3 text-[#424754]">S/ {archive.price}.00</td>
                           <td className="px-4 py-3 text-[#424754]">{archive.usersCount}</td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold ${
@@ -734,8 +750,7 @@ function PaquetesContenido() {
                   </table>
                 </div>
               </section>
-                </div>
-              </details>
+              </div>
             </div>
       </main>
 

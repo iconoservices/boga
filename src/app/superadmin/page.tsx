@@ -18,7 +18,7 @@ import { uploadFile } from '@/lib/uploadClient';
 import { refrescarTienda } from '@/lib/refrescar';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import type { StoreTheme } from '@/lib/templates.config';
-import { MODULOS, moduloActivo, enMarketplace, conMarcaBlanca, type Modulos } from '@/lib/modulos';
+import { MODULOS, moduloActivo, enMarketplace, conMarcaBlanca, PLANES_PRESETS, type PlanPreset, type Modulos } from '@/lib/modulos';
 
 // Correos con acceso al superadmin. A diferencia de /admin (donde cualquier
 // cuenta puede entrar y solo ve sus propias tiendas), este panel puede editar
@@ -2463,6 +2463,55 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                         </span>
                       </span>
                     </label>
+                  </section>
+
+                  {/* Selector rápido de Planes Comerciales */}
+                  <section className="p-4 bg-gradient-to-br from-[#f0f7ff] to-[#e6efff] rounded-lg border border-[#0058be]/30 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-[18px] text-[#0058be]">auto_fix_high</span>
+                        <span className="text-xs font-black text-[#191b23]">Aplicar Plan Comercial en 1 Clic</span>
+                      </div>
+                      <span className="text-[10px] text-[#0058be] font-bold bg-[#d8e2ff] px-2 py-0.5 rounded-full">
+                        Atajo Superadmin
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-[#545f73] font-medium leading-relaxed">
+                      Configura al instante los módulos y subdominio según el paquete contratado por la tienda. Luego puedes personalizar módulos adicionales abajo si lo deseas:
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                      {PLANES_PRESETS.map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => {
+                            setStoreForm(prev => ({
+                              ...prev,
+                              subdominio_activo: p.subdominio_activo,
+                              pushActivo: p.subdominio_activo,
+                              modulos: {
+                                ...(prev.modulos || {}),
+                                ...p.modulos,
+                                dominio_propio_url: prev.modulos?.dominio_propio_url,
+                                loyverse_token: prev.modulos?.loyverse_token,
+                                loyverse_merchant_id: prev.modulos?.loyverse_merchant_id,
+                              },
+                            }));
+                          }}
+                          className="flex flex-col items-center justify-center p-2.5 bg-white border border-[#c2c6d6] hover:border-[#0058be] hover:bg-[#f0f7ff] rounded-md transition-all text-center group shadow-sm active:scale-95"
+                        >
+                          <span className="text-[11px] font-black text-[#191b23] group-hover:text-[#0058be] leading-tight">
+                            {p.nombre}
+                          </span>
+                          <span className="text-[10px] font-extrabold text-[#16a34a] mt-0.5">
+                            {p.precio}
+                          </span>
+                          <span className="text-[9px] text-[#727785] font-semibold mt-0.5">
+                            {p.badge}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
                   </section>
 
                   <section className="p-4 bg-[#f0f7ff] rounded-lg border border-[#0058be]/20">
