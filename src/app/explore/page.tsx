@@ -282,17 +282,20 @@ function ExploreContenido() {
 
       <MarketSecciones />
 
-      {seccion === 'productos' && <MarketBannerSlider />}
+      {seccion === 'productos' && activeCategory !== 'Todas' && <MarketBannerSlider />}
 
       {seccion === 'servicios' ? (
         <main className="max-w-[1440px] mx-auto px-container-margin w-full pt-6 pb-12">
           <ServiciosContenido />
         </main>
       ) : (
-      <main className="max-w-[1440px] mx-auto px-container-margin w-full pt-6 flex flex-col gap-6 lg:gap-12 pb-12">
-        
+      <main className={`max-w-[1440px] mx-auto px-container-margin w-full pt-6 flex flex-col gap-6 lg:gap-12 pb-12 ${activeCategory === 'Todas' ? 'lg:grid lg:grid-cols-2 lg:gap-x-6 lg:gap-y-12 lg:*:col-span-2' : ''}`}>
+
+        {/* Escritorio: el banner ocupa la mitad izquierda y los 4 botones la derecha. En celular va arriba, a todo el ancho. */}
+        {activeCategory === 'Todas' && <MarketBannerSlider embebido />}
+
         {/* Adaptive Macro-Categories Selector */}
-        <section className="flex flex-col gap-2 transition-all duration-500">
+        <section className="flex flex-col gap-2 transition-all duration-500 lg:min-w-0 lg:[[data-banner]+&]:col-span-1">
           <div className="flex justify-between items-center px-1">
             <h2 className="font-headline-sm text-sm text-on-surface">Categorías Principales</h2>
             <div className="flex items-center gap-3 shrink-0">
@@ -329,13 +332,13 @@ function ExploreContenido() {
           {activeCategory === 'Todas' ? (
             /* "Todas" va aparte y primero (es «todo junto»); debajo, dos familias: Market (se compra) y Servicios. */
             /* Fila de atajos: Todo se queda aquí; Comprar lleva a Tiendas, Servicios a su pestaña y Pensión a /pension. */
-            <div className="grid grid-cols-4 gap-2 transition-all duration-500">
+            <div className="grid grid-cols-4 gap-2 transition-all duration-500 lg:grid-cols-2 lg:grid-rows-2 lg:gap-3 lg:flex-1">
               <div
                 aria-current="page"
                 className="flex flex-col items-center justify-center gap-1 py-2 px-1.5 rounded-xl shadow-md bg-primary text-white border border-primary"
               >
-                <span className="material-symbols-outlined text-xl text-white">grid_view</span>
-                <span className="font-label-md text-[10px] leading-tight text-white">Todo</span>
+                <span className="material-symbols-outlined text-xl lg:text-4xl text-white">grid_view</span>
+                <span className="font-label-md text-[10px] lg:text-sm leading-tight text-white">Todo</span>
               </div>
               {([
                 { href: '/market', nombre: 'Comprar', icon: 'shopping_bag' },
@@ -346,8 +349,8 @@ function ExploreContenido() {
                   href={g.href}
                   className="flex flex-col items-center justify-center gap-1 py-2 px-1.5 rounded-xl shadow-sm active:scale-95 transition-all bg-white border border-surface-container-highest text-secondary"
                 >
-                  <span className="material-symbols-outlined text-xl text-primary">{g.icon}</span>
-                  <span className="font-label-md text-[10px] leading-tight text-secondary">{g.nombre}</span>
+                  <span className="material-symbols-outlined text-xl lg:text-4xl text-primary">{g.icon}</span>
+                  <span className="font-label-md text-[10px] lg:text-sm leading-tight text-secondary">{g.nombre}</span>
                 </Link>
               ))}
               {/* Pensión de almuerzos: destacada, no es una categoría. */}
@@ -356,8 +359,8 @@ function ExploreContenido() {
                 className="flex flex-col items-center justify-center gap-1 py-2 px-1.5 rounded-xl shadow-sm active:scale-95 transition-transform"
                 style={{ background: '#0f3d24' }}
               >
-                <span className="material-symbols-outlined text-xl" style={{ color: '#e7b84b', fontVariationSettings: "'FILL' 1" }}>lunch_dining</span>
-                <span className="font-label-md text-[10px] leading-tight font-bold" style={{ color: '#f4e7d3' }}>Pensión</span>
+                <span className="material-symbols-outlined text-xl lg:text-4xl" style={{ color: '#e7b84b', fontVariationSettings: "'FILL' 1" }}>lunch_dining</span>
+                <span className="font-label-md text-[10px] lg:text-sm leading-tight font-bold" style={{ color: '#f4e7d3' }}>Pensión</span>
               </Link>
             </div>
           ) : (

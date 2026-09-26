@@ -10,7 +10,7 @@ import { BannerOverlay, type BannerStyle } from '@/components/BannerOverlay';
 
 type Banner = { id: string; img: string; tag: string | null; title1: string | null; title2: string | null; sub: string | null; link: string | null; pura: boolean };
 
-export default function MarketBannerSlider() {
+export default function MarketBannerSlider({ embebido = false }: { embebido?: boolean }) {
   const sliderRef = useRef<HTMLDivElement>(null);
   const [bannerIdx, setBannerIdx] = useState(0);
   const bannerIdxRef = useRef(0);
@@ -109,7 +109,7 @@ export default function MarketBannerSlider() {
   if (banners.length === 0) return null;
 
   return (
-    <div className="max-w-[1440px] mx-auto w-full lg:px-6 mt-4">
+    <div data-banner className={embebido ? 'w-full min-w-0 lg:[&[data-banner]]:col-span-1' : 'max-w-[1440px] mx-auto w-full lg:px-6 mt-4'}>
       <section className="w-screen mx-[calc(50%-50vw)] px-container-margin lg:w-auto lg:mx-0 lg:px-0">
         {/* Scroll-snap slider — clientWidth based, no clone tricks */}
         <div className="relative rounded-xl overflow-hidden">
