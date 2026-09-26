@@ -693,6 +693,7 @@ DROP POLICY IF EXISTS "drivers: superadmin borra"           ON public.drivers;
 DROP POLICY IF EXISTS "driver_requests: cualquiera se postula"    ON public.driver_requests;
 DROP POLICY IF EXISTS "driver_requests: solo superadmin lee"      ON public.driver_requests;
 DROP POLICY IF EXISTS "driver_requests: solo superadmin gestiona" ON public.driver_requests;
+DROP POLICY IF EXISTS "driver_requests: solo superadmin borra"    ON public.driver_requests;
 
 CREATE POLICY "drivers: lectura pública de activos"
 ON public.drivers FOR SELECT
@@ -715,6 +716,9 @@ ON public.driver_requests FOR SELECT USING (public.is_superadmin());
 
 CREATE POLICY "driver_requests: solo superadmin gestiona"
 ON public.driver_requests FOR UPDATE USING (public.is_superadmin());
+
+CREATE POLICY "driver_requests: solo superadmin borra"
+ON public.driver_requests FOR DELETE USING (public.is_superadmin());
 
 -- ============================================================
 -- 13. LIBRO DE RECLAMACIONES  (D.S. 011-2011-PCM)
@@ -1383,77 +1387,13 @@ ALTER TABLE public.raffles ADD CONSTRAINT raffles_meta_tickets_check CHECK (meta
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS subdominio_activo BOOLEAN DEFAULT false;
 
 -- ============================================================
--- TAXI SEGURO — drivers + driver_requests
+-- TAXI SEGURO — migraciones y limpieza
 -- ============================================================
--- drivers          → directorio de choferes verificados que aparece en /taxi-seguro.
---                    Solo el superadmin puede crear/editar/borrar. Lectura pública
---                    para los que tienen status = 'activo'.
--- driver_requests  → postulaciones enviadas desde el formulario público /taxi-seguro#postular.
---                    Cualquier visitante puede insertar. Solo el superadmin puede leer,
---                    editar (aprobar/rechazar) y borrar.
-
-CREATE TABLE IF NOT EXISTS public.drivers (
-  id           UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  created_at   TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-  nombre       TEXT NOT NULL,
-  tipo         TEXT NOT NULL DEFAULT 'Mototaxi',   -- Mototaxi | Auto | Moto
-  comite       TEXT,                                -- comité o unidad
-  experiencia  TEXT,                                -- "3 años", "desde 2020", etc.
-  placa        TEXT,
-  modelo       TEXT,                                -- "Honda Wave 110", etc.
-  sellos       JSONB DEFAULT '[]'::jsonb,           -- [{label, icon, fuerte?}]
-  ruta         TEXT,                                -- ruta habitual
-  precio       TEXT,                                -- tarifa referencial "S/ 4 – S/ 5"
-  paradero     TEXT,
-  resena       TEXT,                                -- reseña de un vecino
-  resena_autor TEXT,
-  tel          TEXT,                                -- E.164 sin +, p.ej. 51962000001
-  img          TEXT,                                -- URL foto del chofer
-  veh_img      TEXT,                                -- URL foto del vehículo
-  ciudad       TEXT NOT NULL DEFAULT 'pucallpa',
-  orden        INT  NOT NULL DEFAULT 0,
-  status       TEXT NOT NULL DEFAULT 'activo'       -- activo | oculto
-);
-
-CREATE INDEX IF NOT EXISTS drivers_ciudad_idx ON public.drivers (ciudad);
-CREATE INDEX IF NOT EXISTS drivers_status_idx ON public.drivers (status);
-
-CREATE TABLE IF NOT EXISTS public.driver_requests (
-  id           UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  created_at   TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-  nombre       TEXT NOT NULL,
-  tipo         TEXT NOT NULL DEFAULT 'Mototaxi',
-  zona         TEXT,
-  placa        TEXT,
-  experiencia  TEXT,
-  whatsapp     TEXT,
-  mensaje      TEXT,
-  ciudad       TEXT NOT NULL DEFAULT 'pucallpa',
-  status       TEXT NOT NULL DEFAULT 'pending'      -- pending | approved | rejected
-);
-
-ALTER TABLE public.drivers         ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.driver_requests ENABLE ROW LEVEL SECURITY;
-
--- Políticas para drivers
-DROP POLICY IF EXISTS "drivers: lectura pública de activos" ON public.drivers;
-DROP POLICY IF EXISTS "drivers: superadmin inserta"         ON public.drivers;
-DROP POLICY IF EXISTS "drivers: superadmin edita"           ON public.drivers;
-DROP POLICY IF EXISTS "drivers: superadmin borra"           ON public.drivers;
-CREATE POLICY "drivers: lectura pública de activos" ON public.drivers FOR SELECT USING (status = 'activo' OR public.is_superadmin());
-CREATE POLICY "drivers: superadmin inserta"         ON public.drivers FOR INSERT WITH CHECK (public.is_superadmin());
-CREATE POLICY "drivers: superadmin edita"           ON public.drivers FOR UPDATE  USING (public.is_superadmin());
-CREATE POLICY "drivers: superadmin borra"           ON public.drivers FOR DELETE  USING (public.is_superadmin());
-
--- Políticas para driver_requests
-DROP POLICY IF EXISTS "driver_requests: insert público"         ON public.driver_requests;
-DROP POLICY IF EXISTS "driver_requests: solo superadmin lee"    ON public.driver_requests;
-DROP POLICY IF EXISTS "driver_requests: solo superadmin edita"  ON public.driver_requests;
-DROP POLICY IF EXISTS "driver_requests: solo superadmin borra"  ON public.driver_requests;
-CREATE POLICY "driver_requests: insert público"         ON public.driver_requests FOR INSERT WITH CHECK (true);
-CREATE POLICY "driver_requests: solo superadmin lee"    ON public.driver_requests FOR SELECT USING (public.is_superadmin());
-CREATE POLICY "driver_requests: solo superadmin edita"  ON public.driver_requests FOR UPDATE  USING (public.is_superadmin());
-CREATE POLICY "driver_requests: solo superadmin borra"  ON public.driver_requests FOR DELETE  USING (public.is_superadmin());
+-- Las tablas `drivers` y `driver_requests`, sus índices y sus políticas se definen UNA sola vez, más arriba.
+-- Antes había aquí una segunda copia con detalles distintos (el CREATE TABLE IF NOT EXISTS de esa copia nunca
+-- hacía nada) y con dos políticas de más que repetían otras con distinto nombre; se quitan de las bases que ya las tenían:
+DROP POLICY IF EXISTS "driver_requests: insert público"        ON public.driver_requests;   -- = «cualquiera se postula»
+DROP POLICY IF EXISTS "driver_requests: solo superadmin edita" ON public.driver_requests;   -- = «solo superadmin gestiona»
 
 -- Migración: campo horario y fotos en postulaciones de chofer
 ALTER TABLE public.driver_requests ADD COLUMN IF NOT EXISTS horario TEXT;
