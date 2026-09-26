@@ -4,8 +4,12 @@
 // el editor de tienda del superadmin (los interruptores) y la página de Paquetes
 // (la tabla de niveles). Si se agrega un módulo, se agrega acá y en NIVELES.
 
-export type ModuloId = 'pos' | 'inventario' | 'google' | 'marca_blanca' | 'marketplace';
-export type Modulos = Partial<Record<ModuloId, boolean>>;
+export type ModuloId = 'pos' | 'inventario' | 'google' | 'marca_blanca' | 'marketplace' | 'loyverse';
+export type Modulos = Partial<Record<ModuloId, boolean>> & {
+  loyverse_token?: string;
+  loyverse_last_sync?: string;
+  loyverse_auto_sync?: boolean;
+};
 
 export const MODULOS: { id: ModuloId; label: string; icon: string; desc: string }[] = [
   {
@@ -37,6 +41,12 @@ export const MODULOS: { id: ModuloId; label: string; icon: string; desc: string 
     label: 'Aparece en el marketplace BogaHub',
     icon: 'storefront',
     desc: 'La tienda y sus productos salen en /market y /explore. Apagado, solo se llega a ella por su propio link. (Prendido por defecto.)',
+  },
+  {
+    id: 'loyverse',
+    label: 'Integración Loyverse POS',
+    icon: 'sync_alt',
+    desc: 'Sincroniza catálogo, precios y stock automáticamente con el sistema de punto de venta Loyverse.',
   },
 ];
 

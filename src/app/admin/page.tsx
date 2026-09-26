@@ -22,6 +22,7 @@ import { fechaLima, hoyLima } from '@/lib/fechaLima';
 import { moverStock, registrarMovimientos, stockIlimitado } from '@/lib/stock';
 import PedidosTab, { type Pedido } from '@/components/admin/PedidosTab';
 import HistorialStock from '@/components/admin/HistorialStock';
+import LoyverseSyncModal from '@/components/admin/LoyverseSyncModal';
 import MiPlan from '@/components/admin/MiPlan';
 import { COLS_OFERTA, precioOfertaVigente, porcentajeOferta } from '@/lib/ofertas';
 
@@ -120,6 +121,7 @@ function AdminDashboard({ user }: { user: User }) {
   const [orders, setOrders] = useState<any[]>([]);
   const [pedidoOcupado, setPedidoOcupado] = useState<string | null>(null);
   const [isHistorialOpen, setIsHistorialOpen] = useState(false);
+  const [isLoyverseOpen, setIsLoyverseOpen] = useState(false);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilterCategory, setSelectedFilterCategory] = useState('all');
@@ -236,7 +238,8 @@ function AdminDashboard({ user }: { user: User }) {
             fontHeadline: "'Inter', sans-serif",
             fontBody: "'Inter', sans-serif",
             fontLabel: "'Inter', sans-serif",
-          }
+          },
+          modulos: s.modulos || {},
         };
       }
     });
@@ -1317,13 +1320,23 @@ function AdminDashboard({ user }: { user: User }) {
                 Limpiar Carrito
               </button>
             ) : activeTab === 'products' ? (
-              <button
-                onClick={() => { resetForm(); setIsModalOpen(true); }}
-                className="flex items-center justify-center gap-2 bg-[#b8130e] text-white px-5 py-2.5 rounded-md font-bold shadow-lg shadow-[#b8130e]/20 hover:shadow-[#b8130e]/30 transition-all hover:-translate-y-0.5 active:translate-y-0 w-full md:w-auto"
-              >
-                <span className="material-symbols-outlined text-[18px]">add</span>
-                Nuevo Producto
-              </button>
+              <div className="flex items-center gap-2 w-full md:w-auto">
+                <button
+                  onClick={() => setIsLoyverseOpen(true)}
+                  className="flex items-center justify-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 px-3.5 py-2.5 rounded-md font-bold hover:bg-emerald-100 transition-all text-sm w-full md:w-auto cursor-pointer shadow-sm"
+                  title="Sincronizar con punto de venta Loyverse POS"
+                >
+                  <span className="material-symbols-outlined text-[18px] text-emerald-600">sync_alt</span>
+                  Loyverse POS
+                </button>
+                <button
+                  onClick={() => { resetForm(); setIsModalOpen(true); }}
+                  className="flex items-center justify-center gap-2 bg-[#b8130e] text-white px-5 py-2.5 rounded-md font-bold shadow-lg shadow-[#b8130e]/20 hover:shadow-[#b8130e]/30 transition-all hover:-translate-y-0.5 active:translate-y-0 w-full md:w-auto"
+                >
+                  <span className="material-symbols-outlined text-[18px]">add</span>
+                  Nuevo Producto
+                </button>
+              </div>
             ) : null}
           </div>
         </header>
@@ -1608,6 +1621,14 @@ function AdminDashboard({ user }: { user: User }) {
                                 Historial de stock
                               </button>
                             )}
+                            <button
+                              onClick={() => setIsLoyverseOpen(true)}
+                              className="px-2.5 py-1.5 text-[11px] font-bold rounded-md transition-all flex items-center justify-center gap-1 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 whitespace-nowrap active:scale-95 cursor-pointer border border-emerald-200 shadow-sm"
+                              title="Sincronizar catálogo con Loyverse POS"
+                            >
+                              <span className="material-symbols-outlined text-[14px] text-emerald-600">sync_alt</span>
+                              Loyverse POS
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -3564,6 +3585,21 @@ function AdminDashboard({ user }: { user: User }) {
           slugs={selectedStore === 'all' ? myStoreSlugs : [selectedStore]}
           nombreTienda={(slug) => stores[slug]?.name || slug}
           onClose={() => setIsHistorialOpen(false)}
+        />
+      )}
+
+      {isLoyverseOpen && (
+        <LoyverseSyncModal
+          store={stores[selectedStore !== 'all' ? selectedStore : (focusedStore || myStoreSlugs[0])] || { slug: selectedStore !== 'all' ? selectedStore : (focusedStore || myStoreSlugs[0] || ''), name: 'Mi Tienda' }}
+          onClose={() => setIsLoyverseOpen(false)}
+          onSyncComplete={async () => {
+            await fetchProducts();
+            if (selectedStore !== 'all') {
+              refrescarTienda(selectedStore);
+            } else {
+              myStoreSlugs.forEach((s) => refrescarTienda(s));
+            }
+          }}
         />
       )}
 
