@@ -35,12 +35,16 @@ function fromRow(r: Record<string, unknown>): AvisoVenta {
   };
 }
 
+export function parseVentas(json: unknown): AvisoVenta[] {
+  const listings = (json as { listings?: unknown } | null)?.listings;
+  return Array.isArray(listings) ? listings.map(fromRow) : [];
+}
+
 export async function fetchVentas(): Promise<AvisoVenta[]> {
   try {
     const res = await fetch('/api/ventas', { cache: 'no-store' });
     if (!res.ok) return [];
-    const { listings } = await res.json();
-    return Array.isArray(listings) ? listings.map(fromRow) : [];
+    return parseVentas(await res.json());
   } catch {
     return [];
   }

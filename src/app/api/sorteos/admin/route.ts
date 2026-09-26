@@ -32,7 +32,7 @@ export async function POST(request: Request) {
   let body: Record<string, any> = {};
   try { body = await request.json(); } catch { return NextResponse.json({ error: 'Cuerpo inválido' }, { status: 400 }); }
 
-  const refrescar = () => { try { revalidatePath('/api/sorteos'); } catch { /* sin caché que refrescar */ } };
+  const refrescar = () => { try { revalidatePath('/api/sorteos'); revalidatePath('/'); } catch { /* sin caché que refrescar */ } };
 
   // ---- sortear ahora
   if (body.accion === 'sortear') {

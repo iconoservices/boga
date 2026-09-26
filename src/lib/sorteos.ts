@@ -21,27 +21,31 @@ export type Sorteo = {
 
 const txt = (v: unknown) => (typeof v === 'string' ? v : '');
 
+export function parseSorteos(json: unknown): Sorteo[] {
+  const raffles = (json as { raffles?: unknown } | null)?.raffles;
+  if (!Array.isArray(raffles)) return [];
+  return raffles.map((r: Record<string, any>) => ({
+    id: String(r.id),
+    titulo: txt(r.titulo),
+    descripcion: txt(r.descripcion),
+    img: txt(r.img),
+    patrocinador: txt(r.patrocinador),
+    comoParticipar: txt(r.como_participar),
+    precioTicket: txt(r.precio_ticket),
+    meta: Number(r.meta_tickets) > 0 ? Number(r.meta_tickets) : null,
+    vendidos: Number(r.vendidos) || 0,
+    cierraEl: txt(r.cierra_el),
+    status: r.status === 'sorteado' ? 'sorteado' : 'abierto',
+    ganador: r.ganador ? { nombre: txt(r.ganador.nombre), numero: Number(r.ganador.numero) || 0 } : undefined,
+    sorteadoEl: txt(r.sorteado_el),
+  }));
+}
+
 export async function fetchSorteos(): Promise<Sorteo[]> {
   try {
     const res = await fetch('/api/sorteos', { cache: 'no-store' });
     if (!res.ok) return [];
-    const { raffles } = await res.json();
-    if (!Array.isArray(raffles)) return [];
-    return raffles.map((r: Record<string, any>) => ({
-      id: String(r.id),
-      titulo: txt(r.titulo),
-      descripcion: txt(r.descripcion),
-      img: txt(r.img),
-      patrocinador: txt(r.patrocinador),
-      comoParticipar: txt(r.como_participar),
-      precioTicket: txt(r.precio_ticket),
-      meta: Number(r.meta_tickets) > 0 ? Number(r.meta_tickets) : null,
-      vendidos: Number(r.vendidos) || 0,
-      cierraEl: txt(r.cierra_el),
-      status: r.status === 'sorteado' ? 'sorteado' : 'abierto',
-      ganador: r.ganador ? { nombre: txt(r.ganador.nombre), numero: Number(r.ganador.numero) || 0 } : undefined,
-      sorteadoEl: txt(r.sorteado_el),
-    }));
+    return parseSorteos(await res.json());
   } catch {
     return [];
   }

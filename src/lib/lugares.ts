@@ -19,12 +19,16 @@ function fromRow(r: Record<string, unknown>): Lugar {
   };
 }
 
+export function parseLugares(json: unknown): Lugar[] {
+  const places = (json as { places?: unknown } | null)?.places;
+  return Array.isArray(places) ? places.map(fromRow) : [];
+}
+
 export async function fetchLugares(): Promise<Lugar[]> {
   try {
     const res = await fetch('/api/lugares', { cache: 'no-store' });
     if (!res.ok) return [];
-    const { places } = await res.json();
-    return Array.isArray(places) ? places.map(fromRow) : [];
+    return parseLugares(await res.json());
   } catch {
     return [];
   }

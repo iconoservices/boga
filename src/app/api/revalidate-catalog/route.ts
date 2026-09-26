@@ -24,6 +24,7 @@ export async function POST(request: Request) {
   }
 
   revalidatePath('/api/catalog');
+  revalidatePath('/'); // el Inicio se genera en el servidor con el catálogo
   await purgeCloudflare(rutasCatalogo());
   return NextResponse.json({ ok: true });
 }

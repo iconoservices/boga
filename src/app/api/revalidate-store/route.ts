@@ -33,6 +33,7 @@ export async function POST(request: Request) {
   }
 
   rutasCatalogo(slug).forEach((p) => { if (!p.includes('?')) revalidatePath(p); });
+  revalidatePath('/'); // el Inicio se genera en el servidor con el catálogo
   revalidateTag('stores', { expire: 0 });
   await purgeCloudflare(rutasCatalogo(slug));
   return NextResponse.json({ ok: true });

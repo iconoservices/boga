@@ -41,12 +41,16 @@ function fromRow(r: Record<string, unknown>): RutaViaje {
   };
 }
 
+export function parseViajes(json: unknown): RutaViaje[] {
+  const routes = (json as { routes?: unknown } | null)?.routes;
+  return Array.isArray(routes) ? routes.map(fromRow) : [];
+}
+
 export async function fetchViajes(): Promise<RutaViaje[]> {
   try {
     const res = await fetch('/api/viajes', { cache: 'no-store' });
     if (!res.ok) return [];
-    const { routes } = await res.json();
-    return Array.isArray(routes) ? routes.map(fromRow) : [];
+    return parseViajes(await res.json());
   } catch {
     return [];
   }

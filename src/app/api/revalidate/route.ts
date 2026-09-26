@@ -32,6 +32,7 @@ export async function POST(request: Request) {
   try { ({ paths } = await request.json()); } catch { /* sin cuerpo */ }
   const lista = (Array.isArray(paths) ? paths : []).filter((p): p is string => typeof p === 'string' && PERMITIDAS.has(p));
   lista.forEach((p) => revalidatePath(p));
+  if (lista.length) revalidatePath('/'); // el Inicio se genera en el servidor con estos mismos datos
   await purgeCloudflare(lista.flatMap((p) => (p === '/api/catalog' ? rutasCatalogo() : [p])));
   return NextResponse.json({ ok: true, refrescadas: lista });
 }

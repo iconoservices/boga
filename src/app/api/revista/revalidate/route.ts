@@ -21,6 +21,7 @@ export async function POST(request: Request) {
   }
 
   revalidatePath('/revista', 'layout');
+  revalidatePath('/'); // el Inicio muestra las notas de la Revista
   revalidatePath('/sitemap.xml');
   return NextResponse.json({ ok: true });
 }

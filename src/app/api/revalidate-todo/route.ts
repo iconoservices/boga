@@ -33,6 +33,7 @@ export async function POST(request: Request) {
   const slugs = (tiendas ?? []).map((t: { slug: string }) => t.slug);
 
   ENDPOINTS.forEach((p) => revalidatePath(p));
+  revalidatePath('/'); // el Inicio se genera en el servidor con estos mismos datos
   slugs.forEach((s) => revalidatePath(`/api/catalog/${s}`));
   revalidateTag('stores', { expire: 0 });
   const cloudflare = await purgeTodoCloudflare();

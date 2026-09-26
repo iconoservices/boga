@@ -38,12 +38,16 @@ function fromRow(r: Record<string, unknown>): Aviso {
   };
 }
 
+export function parseAlquileres(json: unknown): Aviso[] {
+  const listings = (json as { listings?: unknown } | null)?.listings;
+  return Array.isArray(listings) ? listings.map(fromRow) : [];
+}
+
 export async function fetchAlquileres(): Promise<Aviso[]> {
   try {
     const res = await fetch('/api/inmuebles', { cache: 'no-store' });
     if (!res.ok) return [];
-    const { listings } = await res.json();
-    return Array.isArray(listings) ? listings.map(fromRow) : [];
+    return parseAlquileres(await res.json());
   } catch {
     return [];
   }

@@ -464,12 +464,16 @@ export type NotaCard = {
 
 /** Lee las notas publicadas desde el endpoint cacheado. Para componentes
  *  cliente (la portada). Devuelve [] si falla — el que llama pone su fallback. */
+export function parseNotasRevista(json: unknown): NotaCard[] {
+  const notas = (json as { notas?: unknown } | null)?.notas;
+  return Array.isArray(notas) ? (notas as NotaCard[]) : [];
+}
+
 export async function fetchNotasRevista(): Promise<NotaCard[]> {
   try {
     const res = await fetch('/api/revista');
     if (!res.ok) return [];
-    const { notas } = await res.json();
-    return Array.isArray(notas) ? (notas as NotaCard[]) : [];
+    return parseNotasRevista(await res.json());
   } catch {
     return [];
   }

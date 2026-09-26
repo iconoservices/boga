@@ -48,27 +48,31 @@ export function slugEmpleo(e: Pick<Empleo, 'id' | 'puesto' | 'negocio'>): string
   return `${base}-${e.id.slice(0, 8)}`;
 }
 
+export function parseChamba(json: unknown): { empleos: Empleo[]; oficios: Oficio[] } {
+  const { jobs, providers } = (json ?? {}) as { jobs?: unknown; providers?: unknown };
+  return {
+    empleos: Array.isArray(jobs)
+      ? jobs.map((r: Record<string, unknown>) => ({
+          id: String(r.id), puesto: txt(r.puesto), negocio: txt(r.negocio), tipo: txt(r.tipo),
+          zona: txt(r.zona), pago: txt(r.pago), wsp: txt(r.wsp), link: txt(r.link), img: txt(r.img), descripcion: txt(r.descripcion), email: txt(r.email),
+          subido: txt(r.created_at) ? fechaLima(txt(r.created_at)) : '',
+          publicado: txt(r.publicado_el).slice(0, 10),
+        }))
+      : [],
+    oficios: Array.isArray(providers)
+      ? providers.map((r: Record<string, unknown>) => ({
+          id: String(r.id), nombre: txt(r.nombre), oficio: txt(r.oficio), zona: txt(r.zona),
+          img: txt(r.img), wsp: txt(r.wsp),
+        }))
+      : [],
+  };
+}
+
 export async function fetchChamba(): Promise<{ empleos: Empleo[]; oficios: Oficio[] }> {
   try {
     const res = await fetch('/api/chamba', { cache: 'no-store' });
     if (!res.ok) return { empleos: [], oficios: [] };
-    const { jobs, providers } = await res.json();
-    return {
-      empleos: Array.isArray(jobs)
-        ? jobs.map((r: Record<string, unknown>) => ({
-            id: String(r.id), puesto: txt(r.puesto), negocio: txt(r.negocio), tipo: txt(r.tipo),
-            zona: txt(r.zona), pago: txt(r.pago), wsp: txt(r.wsp), link: txt(r.link), img: txt(r.img), descripcion: txt(r.descripcion), email: txt(r.email),
-            subido: txt(r.created_at) ? fechaLima(txt(r.created_at)) : '',
-            publicado: txt(r.publicado_el).slice(0, 10),
-          }))
-        : [],
-      oficios: Array.isArray(providers)
-        ? providers.map((r: Record<string, unknown>) => ({
-            id: String(r.id), nombre: txt(r.nombre), oficio: txt(r.oficio), zona: txt(r.zona),
-            img: txt(r.img), wsp: txt(r.wsp),
-          }))
-        : [],
-    };
+    return parseChamba(await res.json());
   } catch {
     return { empleos: [], oficios: [] };
   }

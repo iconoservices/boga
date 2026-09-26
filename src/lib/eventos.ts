@@ -88,15 +88,19 @@ function claveFecha(e: Evento): string {
   return esteAnio >= hoyClave ? esteAnio : armar(hoy.getFullYear() + 1);
 }
 
+export function parseEventos(json: unknown): Evento[] {
+  const events = (json as { events?: unknown } | null)?.events;
+  if (!Array.isArray(events)) return [];
+  // Del más próximo al más lejano. Array.sort es estable: a igual fecha se
+  // respeta el orden manual que ya trae el endpoint.
+  return events.map(fromRow).sort((a, b) => claveFecha(a).localeCompare(claveFecha(b)));
+}
+
 export async function fetchEventos(): Promise<Evento[]> {
   try {
     const res = await fetch('/api/eventos', { cache: 'no-store' });
     if (!res.ok) return [];
-    const { events } = await res.json();
-    if (!Array.isArray(events)) return [];
-    // Del más próximo al más lejano. Array.sort es estable: a igual fecha se
-    // respeta el orden manual que ya trae el endpoint.
-    return events.map(fromRow).sort((a, b) => claveFecha(a).localeCompare(claveFecha(b)));
+    return parseEventos(await res.json());
   } catch {
     return [];
   }
