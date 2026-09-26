@@ -7,7 +7,7 @@ export type Hub = { href: string; label: string; long?: string; icon: string; ap
 // Explorar y "Tiendas y servicios" son pestañas DENTRO del Market (components/MarketSecciones.tsx), no ítems del menú.
 export const HUBS: Hub[] = [
   { href: '/',            label: 'Inicio',      icon: 'home' },
-  { href: '/market',      label: 'Market',      icon: 'storefront' },
+  { href: '/explore',     label: 'Market',      icon: 'storefront' },
   { href: '/eventos',     label: 'Agenda',      long: 'Agenda & Eventos', icon: 'celebration' },
   { href: '/inmuebles',   label: 'Inmuebles',   icon: 'real_estate_agent' },
   { href: '/sorteos',     label: 'Sorteos',     icon: 'confirmation_number' },
@@ -27,7 +27,7 @@ export const ACCOUNT_LINKS: Hub[] = [];
 // /market), así que estando en /pension el ítem "Market" sigue resaltado.
 export function isHubActive(pathname: string, href: string) {
   // Market también queda resaltado en sus pestañas internas (Tiendas, Servicios) y en la Pensión.
-  if (href === '/market') return pathname === href || pathname.startsWith('/pension') || pathname.startsWith('/explore');
+  if (href === '/explore') return pathname.startsWith('/explore') || pathname.startsWith('/market') || pathname.startsWith('/pension');
   if (href === '/') return pathname === href;
   return pathname.startsWith(href);
 }

@@ -43,6 +43,11 @@ export interface StoreConfig {
   subdominioActivo?: boolean;
   /** Avisos push propios habilitados por el superadmin (solo se usan en la dirección propia de la tienda). */
   pushActivo?: boolean;
+  /** Punto GPS del local (privado salvo que `mostrarUbicacion` esté prendido). */
+  latitud?: number;
+  longitud?: number;
+  /** Si es true, la tienda muestra el botón «Cómo llegar». */
+  mostrarUbicacion?: boolean;
   /** Módulos prendidos por el superadmin (POS, inventario). Ver src/lib/modulos.ts. */
   modulos?: import('./modulos').Modulos;
   /**

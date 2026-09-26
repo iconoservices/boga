@@ -29,8 +29,8 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app';
 // muestra hasta que cada hub exponga sus destacados; las de Revista ya son reales.
 type Slide = { kicker: string; title: string; href: string; img: string; portrait?: string; pura?: boolean };
 
-// Construye la lista de slides con datos REALES: las 2 notas más recientes de la
-// Revista intercaladas con las promos que cargó el superadmin. Sin demos: si no
+// Construye la lista de slides con datos REALES: las promos que cargó el superadmin (la primera
+// abre el carrusel) intercaladas con las 2 notas más recientes de la Revista. Sin demos: si no
 // hay nada, la lista queda vacía y el banner no se muestra.
 function armarSlides(notas: NotaCard[], promos: Slide[]): Slide[] {
   const rev: Slide[] = notas.slice(0, 2).map((n) => ({
@@ -39,14 +39,15 @@ function armarSlides(notas: NotaCard[], promos: Slide[]): Slide[] {
     href: `/revista/${n.slug}`,
     img: n.img,
   }));
-  return [rev[0], promos[0], promos[1], rev[1], ...promos.slice(2)].filter(Boolean) as Slide[];
+  // El primer banner que cargó el superadmin va de primero; después se intercalan las notas de la Revista.
+  return [promos[0], rev[0], promos[1], rev[1], ...promos.slice(2)].filter(Boolean) as Slide[];
 }
 
 // Los 8 Portales de BogaHub — el lanzador de la ciudad. Un ícono por hub, cada
 // uno con su color. El "sub" está escrito como lo que BogaHub te resuelve, no
 // como una categoría: "cómo te ayudamos", en lenguaje cercano.
 const PORTALES = [
-  { href: '/market',      label: 'Market',      icon: 'storefront',          sub: 'Te traemos pescado, carne y tienda', color: '#E8894A' },
+  { href: '/explore',     label: 'Market',      icon: 'storefront',          sub: 'Te traemos pescado, carne y tienda', color: '#E8894A' },
   { href: '/trabajos',   label: 'Trabajos',    icon: 'construction',        sub: 'Te conseguimos técnico o trabajo',   color: '#3E9B5F' },
   { href: '/transporte', label: 'Taxi Seguro', icon: 'local_taxi',          sub: 'Te llevamos con chofer verificado',  color: '#E4655A' },
   { href: '/inmuebles',   label: 'Inmuebles',   icon: 'real_estate_agent',   sub: 'Te encontramos dónde vivir o invertir', color: '#8B7FD4' },
@@ -389,7 +390,8 @@ export default function HomePage() {
         ...eventosHome.slice(0, 4).map((e) => ({
           id: e.id, title: e.titulo, img: e.img,
           tag: [e.dia, e.mes].filter(Boolean).join(' ') || 'Evento',
-          meta: e.precio ? `Desde ${e.precio}` : 'Ver evento',
+          // el precio ya viene escrito como «Desde S/30» en la base: no se le antepone otro «Desde»
+          meta: e.precio ? (/^desde/i.test(e.precio.trim()) ? e.precio.trim() : `Desde ${e.precio}`) : 'Ver evento',
         })),
         ...lugaresHome.slice(0, 4).map((l) => ({
           id: l.id, title: l.nombre, img: l.img,
@@ -518,8 +520,10 @@ export default function HomePage() {
           <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
             {queHacer.map((e) => (
               <Link href="/eventos" key={e.id} className="min-w-[220px] w-[220px] lg:min-w-[260px] lg:w-[260px] bg-white border border-surface-container-highest overflow-hidden shadow-sm rounded-2xl snap-start group flex flex-col">
-                <div className="relative h-32 overflow-hidden bg-surface-container-low">
-                  <img src={e.img} alt={e.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <div className="relative h-32 overflow-hidden bg-surface-container-low flex items-center justify-center">
+                  {/* Si la foto no carga (p. ej. un enlace de Facebook que caducó) se ve este ícono, no el texto roto */}
+                  <span className="material-symbols-outlined text-[40px] text-secondary/40" aria-hidden>event</span>
+                  <img src={e.img} alt="" onError={(ev) => { ev.currentTarget.style.display = 'none'; }} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <span className="absolute top-2 left-2 bg-white/95 backdrop-blur-sm text-on-surface text-[10px] font-label-md px-2 py-0.5 flex items-center gap-1">
                     <span className="material-symbols-outlined text-[12px]">schedule</span>{e.tag}
                   </span>

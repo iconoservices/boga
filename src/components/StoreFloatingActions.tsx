@@ -6,7 +6,7 @@ import StorePushBell from '@/components/StorePushBell';
 import type { StoreConfig } from '@/lib/stores.config';
 
 interface StoreFloatingActionsProps {
-  store: Pick<StoreConfig, 'slug' | 'name' | 'tagline' | 'theme' | 'pushActivo'>;
+  store: Pick<StoreConfig, 'slug' | 'name' | 'tagline' | 'theme' | 'pushActivo' | 'latitud' | 'longitud' | 'mostrarUbicacion'>;
 }
 
 /**
@@ -158,6 +158,19 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
         <span className="material-symbols-outlined text-[20px]">share</span>
       </button>
       {store.pushActivo && <StorePushBell slug={store.slug} nombre={store.name} color={t.primary} />}
+      {store.mostrarUbicacion && store.latitud != null && store.longitud != null && (
+        <a
+          href={`https://www.google.com/maps/dir/?api=1&destination=${store.latitud},${store.longitud}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-10 h-10 rounded-full flex items-center justify-center bg-white/40 backdrop-blur-md border border-white/50 shadow-lg active:scale-90 hover:bg-white/60 transition-all"
+          style={{ color: t.primary }}
+          aria-label="Cómo llegar"
+          title="Cómo llegar"
+        >
+          <span className="material-symbols-outlined text-[20px]">directions</span>
+        </a>
+      )}
       {isInstalled === false && (
         <button
           onClick={instalar}

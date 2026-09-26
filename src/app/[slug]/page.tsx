@@ -142,6 +142,9 @@ async function cargarTienda(slug: string) {
         tiktok: dbStore.tiktok || undefined,
         subdominioActivo: dbStore.subdominio_activo ?? undefined,
         pushActivo: dbStore.push_activo ?? undefined,
+        latitud: typeof dbStore.latitud === 'number' ? dbStore.latitud : undefined,
+        longitud: typeof dbStore.longitud === 'number' ? dbStore.longitud : undefined,
+        mostrarUbicacion: dbStore.mostrar_ubicacion === true,
       };
     }
   } catch (err) {
@@ -242,6 +245,9 @@ export default async function StorePage({ params, searchParams }: Props) {
         tiktok: undefined,
         subdominioActivo: undefined,
         pushActivo: undefined,
+        latitud: undefined,
+        longitud: undefined,
+        mostrarUbicacion: false,
       };
     } else {
       notFound();

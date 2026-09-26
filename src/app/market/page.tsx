@@ -348,11 +348,11 @@ export default function Home() {
         <MarketCityBanner />
       </div>
 
-      <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-4 lg:gap-6 mt-4 lg:mt-5 pb-12">
+      <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-4 lg:gap-6 mt-1 lg:mt-2 pb-12">
         {/* Explorar Categorías y productos (el banner ahora vive en Explorar: components/MarketBannerSlider.tsx) */}
         <div className="lg:px-6">
         {/* Categorías + subcategorías — la otra mitad, junto al banner en escritorio */}
-        <div className="flex flex-col gap-4 lg:gap-4 mt-4 lg:mt-0">
+        <div className="flex flex-col gap-4 lg:gap-4 mt-1 lg:mt-0">
           {/* Adaptive Macro-Categories Selector */}
           <section className="flex flex-col gap-2 lg:gap-3 transition-all duration-500 px-container-margin lg:px-0">
             <div className="flex justify-between items-center px-1">
@@ -391,7 +391,8 @@ export default function Home() {
             </div>
           </section>
 
-          {/* Specific Sub-Categories (Filtered) */}
+          {/* Specific Sub-Categories (Filtered): solo salen cuando eligen una categoría; con «Todas» estorban. */}
+          {activeCategory !== 'Todas' && (
           <section className="hide-scrollbar overflow-x-auto flex gap-4 items-start w-full px-container-margin lg:px-0">
             <div
               className={`py-1 ${showAllSubCategories ? 'flex flex-wrap gap-x-3 gap-y-2.5 justify-start w-full' : 'flex gap-3 items-center'}`}
@@ -423,6 +424,7 @@ export default function Home() {
               ))}
             </div>
           </section>
+          )}
         </div>
         </div>
         {/* fin del bloque banner + categorías + subcategorías */}

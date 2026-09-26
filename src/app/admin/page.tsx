@@ -301,7 +301,7 @@ function AdminDashboard({ user }: { user: User }) {
   const [isStoreEditorOpen, setIsStoreEditorOpen] = useState(false);
   const [editingStoreSlug, setEditingStoreSlug] = useState<string | null>(null);
   const [isStoreSaving, setIsStoreSaving] = useState(false);
-  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '', show_demo_products: false, zona: '', direccion: '', horario: '', rating: '', metodos_pago: [] as string[], facebook: '', instagram: '', tiktok: '' });
+  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '', show_demo_products: false, zona: '', direccion: '', horario: '', rating: '', metodos_pago: [] as string[], facebook: '', instagram: '', tiktok: '', latitud: null as number | null, longitud: null as number | null, mostrar_ubicacion: false });
   const [storeLogoFile, setStoreLogoFile] = useState<File | null>(null);
   const [storeHeroFile, setStoreHeroFile] = useState<File | null>(null);
   const [storeLogoPreview, setStoreLogoPreview] = useState<string | null>(null);
@@ -627,6 +627,9 @@ function AdminDashboard({ user }: { user: User }) {
       facebook: dbData?.facebook || config?.facebook || '',
       instagram: dbData?.instagram || config?.instagram || '',
       tiktok: dbData?.tiktok || config?.tiktok || '',
+      latitud: typeof dbData?.latitud === 'number' ? dbData.latitud : null,
+      longitud: typeof dbData?.longitud === 'number' ? dbData.longitud : null,
+      mostrar_ubicacion: dbData?.mostrar_ubicacion === true,
     });
     setStoreHeroPreview(dbData?.hero_image || config?.heroImage || null);
     setStoreLogoPreview(dbData?.logo_image || config?.logoImage || null);
@@ -703,6 +706,13 @@ function AdminDashboard({ user }: { user: User }) {
         categories: storeCategories,
         status: 'active',
       };
+      // Ubicación: solo se manda si la tienda tiene o tuvo una (así, sin correr el SQL, guardar la tienda no avisa nada).
+      const tuvoUbicacion = typeof dbStores.find((x: any) => x.slug === editingStoreSlug)?.latitud === 'number';
+      if (storeForm.latitud != null || tuvoUbicacion) {
+        upsertData.latitud = storeForm.latitud;
+        upsertData.longitud = storeForm.longitud;
+        upsertData.mostrar_ubicacion = storeForm.latitud != null && storeForm.longitud != null && storeForm.mostrar_ubicacion;
+      }
       if (heroUrl) upsertData.hero_image = heroUrl;
       if (logoUrl) upsertData.logo_image = logoUrl;
 
@@ -730,7 +740,7 @@ function AdminDashboard({ user }: { user: User }) {
       // en vez de perder todo el guardado. Paso exactamente esto con `whatsapp`:
       // el panel quedo sin poder guardar NADA de ninguna tienda hasta correr la
       // migracion. Columnas opcionales porque llegaron despues del lanzamiento.
-      const columnasOpcionales = ['show_demo_products', 'zona', 'direccion', 'horario', 'rating', 'metodos_pago', 'categories', 'facebook', 'instagram', 'tiktok'];
+      const columnasOpcionales = ['show_demo_products', 'zona', 'direccion', 'horario', 'rating', 'metodos_pago', 'categories', 'facebook', 'instagram', 'tiktok', 'latitud', 'longitud', 'mostrar_ubicacion'];
       const columnasFaltantes: string[] = [];
       let faltante = columnasOpcionales.find((col) => col in upsertData && new RegExp(col).test(error?.message || ''));
       while (error && faltante) {
@@ -3159,6 +3169,66 @@ function AdminDashboard({ user }: { user: User }) {
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
                     placeholder="Ej: Av. Larco 123, Miraflores, Lima"
                   />
+                </div>
+                <div className="rounded-md border border-gray-200 bg-gray-50 p-4 space-y-3">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Ubicación de tu local (opcional)</label>
+                    <p className="text-xs text-gray-500">
+                      Estando en tu local, toca el botón y se guarda el punto exacto. Es <b>privada</b>: solo sirve para calcular distancias.
+                      Si prendes el interruptor de abajo, tus clientes verán un botón «Cómo llegar».
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!navigator.geolocation) { alert('Este dispositivo no permite ubicarte.'); return; }
+                        navigator.geolocation.getCurrentPosition(
+                          (pos) => setStoreForm(prev => ({ ...prev, latitud: Number(pos.coords.latitude.toFixed(6)), longitud: Number(pos.coords.longitude.toFixed(6)) })),
+                          () => alert('No pudimos ubicarte. Activa el permiso de ubicación del navegador e inténtalo de nuevo.'),
+                          { enableHighAccuracy: true, timeout: 15000 },
+                        );
+                      }}
+                      className="px-4 py-2.5 bg-black text-white rounded-md text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-transform"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">my_location</span>
+                      {storeForm.latitud != null ? 'Actualizar con mi ubicación actual' : 'Ubicar mi tienda'}
+                    </button>
+                    {storeForm.latitud != null && storeForm.longitud != null && (
+                      <>
+                        <a
+                          href={`https://www.google.com/maps?q=${storeForm.latitud},${storeForm.longitud}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-bold text-blue-600 underline underline-offset-2"
+                        >
+                          Ver en el mapa
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => setStoreForm(prev => ({ ...prev, latitud: null, longitud: null, mostrar_ubicacion: false }))}
+                          className="text-xs font-bold text-red-600"
+                        >
+                          Quitar
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  {storeForm.latitud != null && storeForm.longitud != null ? (
+                    <p className="text-[11px] text-gray-500">Guardado: {storeForm.latitud}, {storeForm.longitud} (se aplica al guardar la tienda)</p>
+                  ) : (
+                    <p className="text-[11px] text-gray-400">Todavía no ubicaste tu tienda.</p>
+                  )}
+                  <label className={`flex items-start gap-2 text-xs ${storeForm.latitud == null ? 'opacity-50' : ''}`}>
+                    <input
+                      type="checkbox"
+                      disabled={storeForm.latitud == null}
+                      checked={storeForm.mostrar_ubicacion}
+                      onChange={e => setStoreForm(prev => ({ ...prev, mostrar_ubicacion: e.target.checked }))}
+                      className="mt-0.5"
+                    />
+                    <span><b>Mostrar «Cómo llegar»</b> a mis clientes (abre Google Maps con la ruta a tu local). Déjalo apagado si atiendes desde tu casa.</span>
+                  </label>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1.5">Calificación (0 a 5, opcional)</label>

@@ -1740,3 +1740,13 @@ DROP POLICY IF EXISTS "site_settings: lectura pública"    ON public.site_settin
 DROP POLICY IF EXISTS "site_settings: superadmin escribe" ON public.site_settings;
 CREATE POLICY "site_settings: lectura pública"    ON public.site_settings FOR SELECT USING (true);
 CREATE POLICY "site_settings: superadmin escribe" ON public.site_settings FOR ALL USING (public.is_superadmin()) WITH CHECK (public.is_superadmin());
+
+-- ============================================================
+-- UBICACIÓN DE LA TIENDA
+-- ============================================================
+-- El dueño guarda el punto GPS de su local con el botón «Ubicar mi tienda» (panel → Ficha del local).
+-- `mostrar_ubicacion` (apagado por defecto) decide si los clientes ven el botón «Cómo llegar».
+-- Sin eso, la ubicación es privada: solo sirve para calcular distancias (delivery a futuro).
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS latitud DOUBLE PRECISION;
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS longitud DOUBLE PRECISION;
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS mostrar_ubicacion BOOLEAN NOT NULL DEFAULT false;
