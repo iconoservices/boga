@@ -1246,7 +1246,7 @@ function AdminDashboard({ user }: { user: User }) {
         </nav>
         <div className="p-4 border-t border-gray-100 space-y-1">
           <p className="px-4 text-[11px] text-gray-400 font-semibold truncate">{user.email}</p>
-          <Link href="/explore" className="flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-gray-900 font-semibold transition-colors">
+          <Link href="/" className="flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-gray-900 font-semibold transition-colors">
             <span className="material-symbols-outlined text-[20px]">arrow_back</span>
             Volver a BogaHub
           </Link>
@@ -3553,8 +3553,8 @@ function AdminDashboard({ user }: { user: User }) {
           onClick={() => setIsMobileMenuOpen(true)}
           className="flex flex-col items-center gap-1 w-16 py-2 transition-all text-gray-500 hover:bg-gray-50 rounded-[20px]"
         >
-          <div className="w-6 h-6 rounded-full bg-[#b8130e] text-white flex items-center justify-center font-bold text-xs mb-[2px]">B</div>
-          <span className="text-[10px] font-bold">Perfil</span>
+          <span className="material-symbols-outlined text-[22px]">apps</span>
+          <span className="text-[10px] font-bold">Más</span>
         </button>
       </div>
       )}
@@ -3619,7 +3619,36 @@ function AdminDashboard({ user }: { user: User }) {
                   </button>
                 ))}
 
-                <Link href="/explore" className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-md font-semibold transition-colors">
+                {inicioStore && (
+                  <>
+                    <button
+                      onClick={() => { setPickerDraft([]); setIsStorePickerOpen(true); setIsMobileMenuOpen(false); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-md font-semibold transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">menu_book</span>
+                      Mis cartas
+                    </button>
+                    {inicioDb?.push_activo && (
+                      <a href="/admin/notificaciones" className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-md font-semibold transition-colors">
+                        <span className="material-symbols-outlined text-[20px]">notifications</span>
+                        Notificaciones
+                      </a>
+                    )}
+                    <a href={inicioUrl} target="_blank" rel="noopener noreferrer" className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-md font-semibold transition-colors">
+                      <span className="material-symbols-outlined text-[20px]">open_in_new</span>
+                      Ver enlace de mi carta
+                    </a>
+                    <button
+                      onClick={() => { openStoreEditor(inicioStore.slug, 'datos'); setIsMobileMenuOpen(false); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-md font-semibold transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">edit</span>
+                      Editar perfil
+                    </button>
+                  </>
+                )}
+
+                <Link href="/" className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-md font-semibold transition-colors">
                   <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                   Volver a BogaHub
                 </Link>
