@@ -1787,8 +1787,9 @@ CREATE POLICY "drivers: lectura pública de activos" ON public.drivers FOR SELEC
 -- Cada comercio conecta SU cuenta Izipay: el dinero va directo a él, Boga no lo toca. Las claves se guardan CIFRADAS
 -- (AES-256-GCM con PAGOS_ENC_KEY, ver src/lib/pagosCrypto.ts) en una tabla sin ninguna política de acceso: solo el
 -- servidor (llave de servicio) la lee y la escribe. NUNCA van en `stores` (esa tabla es de lectura pública).
+-- (No se llama store_pagos: ese nombre ya es de los cobros de planes de Boga a las tiendas, /superadmin/cobros.)
 -- El superadmin prende el módulo «pasarela_pago» por tienda; el dueño pone sus claves en su panel.
-CREATE TABLE IF NOT EXISTS public.store_pagos (
+CREATE TABLE IF NOT EXISTS public.store_izipay (
   store        TEXT PRIMARY KEY,
   provider     TEXT NOT NULL DEFAULT 'izipay',
   activo       BOOLEAN NOT NULL DEFAULT false,
@@ -1798,7 +1799,7 @@ CREATE TABLE IF NOT EXISTS public.store_pagos (
   hmac_enc     TEXT,          -- clave HMAC-SHA-256 para validar el resultado (cifrada)
   updated_at   TIMESTAMPTZ DEFAULT now()
 );
-ALTER TABLE public.store_pagos ENABLE ROW LEVEL SECURITY;   -- sin políticas a propósito: nadie entra desde el navegador
+ALTER TABLE public.store_izipay ENABLE ROW LEVEL SECURITY;   -- sin políticas a propósito: nadie entra desde el navegador
 
 -- Estado del pago de cada pedido: NULL = sin pago online (WhatsApp/efectivo); 'pendiente' | 'pagado' | 'fallido'.
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS pago_estado TEXT;

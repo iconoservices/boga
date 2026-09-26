@@ -30,7 +30,7 @@ export async function GET(request: Request) {
   const a = await autorizar(request, slug);
   if ('error' in a) return a.error;
 
-  const { data: fila } = await a.db.from('store_pagos').select('activo,username,public_key,password_enc,hmac_enc').eq('store', slug).maybeSingle();
+  const { data: fila } = await a.db.from('store_izipay').select('activo,username,public_key,password_enc,hmac_enc').eq('store', slug).maybeSingle();
   const cfg = fila ? await cargarConfigPagos(a.db, slug) : null;
   return NextResponse.json({
     modulo: a.modulo,
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
   const password = limpio(b.password, 200);
   const hmac = limpio(b.hmac, 200);
 
-  const { data: actual } = await a.db.from('store_pagos').select('username,public_key,password_enc,hmac_enc,activo').eq('store', slug).maybeSingle();
+  const { data: actual } = await a.db.from('store_izipay').select('username,public_key,password_enc,hmac_enc,activo').eq('store', slug).maybeSingle();
 
   const cambios: Record<string, unknown> = { store: slug, provider: 'izipay', updated_at: new Date().toISOString() };
   if (username) cambios.username = username;
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Para activar el cobro faltan claves: usuario, clave, clave pública y clave HMAC-SHA-256.' }, { status: 400, headers: SIN_CACHE });
   }
 
-  const { error } = await a.db.from('store_pagos').upsert(cambios, { onConflict: 'store' });
+  const { error } = await a.db.from('store_izipay').upsert(cambios, { onConflict: 'store' });
   if (error) {
     console.error('[pagos/config]', error.message);
     return NextResponse.json({ error: 'No se pudo guardar. ¿Se corrió el SQL de cobros online?' }, { status: 500, headers: SIN_CACHE });

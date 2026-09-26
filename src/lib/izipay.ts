@@ -27,7 +27,7 @@ export const modoDeClave = (password: string): 'prueba' | 'produccion' | 'descon
 
 /** Lee y descifra las claves de una tienda (solo servidor). null si no hay o no se pueden leer. */
 export async function cargarConfigPagos(db: SupabaseClient, slug: string): Promise<ConfigPagos | null> {
-  const { data } = await db.from('store_pagos').select('activo,username,public_key,password_enc,hmac_enc').eq('store', slug).maybeSingle();
+  const { data } = await db.from('store_izipay').select('activo,username,public_key,password_enc,hmac_enc').eq('store', slug).maybeSingle();
   if (!data || !data.username || !data.public_key || !data.password_enc || !data.hmac_enc) return null;
   try {
     return {
@@ -44,7 +44,7 @@ export async function cargarConfigPagos(db: SupabaseClient, slug: string): Promi
 export async function tiendaCobraOnline(db: SupabaseClient, slug: string): Promise<boolean> {
   const { data: t } = await db.from('stores').select('status,modulos').eq('slug', slug).maybeSingle();
   if (!t || t.status !== 'active' || (t.modulos as { pasarela_pago?: boolean } | null)?.pasarela_pago !== true) return false;
-  const { data: p } = await db.from('store_pagos').select('activo,username,public_key,password_enc,hmac_enc').eq('store', slug).maybeSingle();
+  const { data: p } = await db.from('store_izipay').select('activo,username,public_key,password_enc,hmac_enc').eq('store', slug).maybeSingle();
   return !!p && p.activo === true && !!p.username && !!p.public_key && !!p.password_enc && !!p.hmac_enc;
 }
 
