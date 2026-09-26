@@ -31,6 +31,7 @@ interface Entrega { codigo: string; tienda: string; cliente: string; tel: string
 interface Estado {
   soloLectura?: boolean;
   soloEntregas?: boolean; entregas: Entrega[];
+  repartidorDe?: { tipo: 'tienda' | 'boga'; tienda?: string } | null;
   chofer: { nombre: string; tipo: string; placa: string | null };
   pausado: boolean; tieneBase: boolean; zona: string | null; zonasCubre: string[]; gpsReciente: boolean; avisosActivados: boolean;
   pedidos: PedidoAbierto[]; actual: Actual | null;
@@ -280,6 +281,11 @@ export default function ChoferApp() {
           <p className="text-xs font-bold opacity-80 uppercase tracking-wider">{e.soloEntregas ? 'BogaHub · App del repartidor' : 'Taxi Seguro · App del chofer'}</p>
           <h1 className="text-xl font-extrabold">Hola, {e.chofer.nombre.split(' ')[0]}</h1>
           <p className="text-xs opacity-80 font-medium">{[e.soloEntregas ? 'Repartidor' : e.chofer.tipo, e.chofer.placa].filter(Boolean).join(' · ')}</p>
+          {e.repartidorDe && (
+            <span className="inline-block mt-2 text-[11px] font-extrabold px-2.5 py-1 rounded-full bg-white/20 border border-white/40">
+              {e.repartidorDe.tipo === 'boga' ? '🛡 Repartidor BogaHub' : `🏪 Repartidor de ${e.repartidorDe.tienda}`}
+            </span>
+          )}
         </div>
       </header>
 

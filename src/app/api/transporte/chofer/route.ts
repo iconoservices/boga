@@ -112,6 +112,16 @@ export async function GET(request: Request) {
     };
   });
 
+  // De quién es: repartidor propio de una tienda (solo lleva los pedidos de ella) o repartidor de BogaHub
+  // (lo agrega el superadmin y lo puede asignar cualquier tienda).
+  let repartidorDe: { tipo: 'tienda' | 'boga'; tienda?: string } | null = null;
+  if (yo.chofer.tipo === 'Repartidor') {
+    if (yo.chofer.store_slug) {
+      const { data: t } = await db.from('stores').select('name').eq('slug', yo.chofer.store_slug).maybeSingle();
+      repartidorDe = { tipo: 'tienda', tienda: (t?.name as string | undefined) ?? yo.chofer.store_slug };
+    } else repartidorDe = { tipo: 'boga' };
+  }
+
   const zonaVigente = acceso?.zona && acceso.zona_hasta && new Date(acceso.zona_hasta).getTime() > Date.now() ? acceso.zona : null;
   return NextResponse.json({
     soloLectura,
@@ -125,6 +135,7 @@ export async function GET(request: Request) {
     pedidos,
     actual,
     soloEntregas: yo.chofer.tipo === 'Repartidor',
+    repartidorDe,
     entregas,
   }, { headers: { 'Cache-Control': 'no-store' } });
 }

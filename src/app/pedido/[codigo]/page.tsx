@@ -27,13 +27,14 @@ type Pedido = {
   creado: string;
   entrega: string;
   llego: boolean;
-  repartidor: { nombre: string; placa: string | null; tel: string | null } | null;
+  repartidor: { nombre: string; placa: string | null; tel: string | null; de: 'tienda' | 'boga' } | null;
   posicion: { lat: number; lng: number; haceSeg: number } | null;
   propietario: boolean;
   repartidorId?: string | null;
   cliente?: { nombre: string | null; telefono: string | null; direccion: string | null };
 };
 
+type RepartidorBoga = { id: string; nombre: string; placa: string | null };
 type Repartidor = { id: string; nombre: string; tel: string | null; placa: string | null; token: string | null; visto: string | null };
 
 const ESTADOS = ['Pendiente', 'Preparando', 'Enviado', 'Entregado', 'Cancelado'];
@@ -87,6 +88,7 @@ export default function PedidoPage({ params }: { params: Promise<{ codigo: strin
   const [ocupado, setOcupado] = useState(false);
   const [aviso, setAviso] = useState('');
   const [repartidores, setRepartidores] = useState<Repartidor[]>([]);
+  const [deBoga, setDeBoga] = useState<RepartidorBoga[]>([]);
   const [elegido, setElegido] = useState('');
   const [nuevo, setNuevo] = useState({ nombre: '', tel: '' });
   const llegoAntes = useRef<boolean | null>(null);
@@ -147,7 +149,11 @@ export default function PedidoPage({ params }: { params: Promise<{ codigo: strin
   const cargarRepartidores = useCallback(async () => {
     if (!tiendaSlug) return;
     const r = await fetch(`/api/repartidores?store=${encodeURIComponent(tiendaSlug)}`, { headers: { Authorization: `Bearer ${await conToken()}` }, cache: 'no-store' });
-    if (r.ok) setRepartidores(((await r.json()) as { repartidores: Repartidor[] }).repartidores ?? []);
+    if (r.ok) {
+      const d = (await r.json()) as { repartidores: Repartidor[]; boga?: RepartidorBoga[] };
+      setRepartidores(d.repartidores ?? []);
+      setDeBoga(d.boga ?? []);
+    }
   }, [tiendaSlug]);
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { if (gestionaRepartidor) cargarRepartidores(); }, [gestionaRepartidor, cargarRepartidores]);
@@ -277,7 +283,7 @@ export default function PedidoPage({ params }: { params: Promise<{ codigo: strin
             {p.repartidor && p.estado !== 'Cancelado' && p.estado !== 'Entregado' && (
               <div className="bg-surface-container-lowest border border-surface-container-highest rounded-2xl p-4 flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-secondary">Tu repartidor</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-secondary">Tu repartidor · {p.repartidor.de === 'boga' ? '🛡 BogaHub' : `🏪 ${p.tienda.nombre}`}</p>
                   <p className="font-extrabold">{p.repartidor.nombre}{p.repartidor.placa ? <span className="text-secondary font-semibold text-xs"> · {p.repartidor.placa}</span> : null}</p>
                 </div>
                 {p.repartidor.tel && <a href={`tel:+${p.repartidor.tel.replace(/\D/g, '')}`} className="text-sm font-bold text-white bg-primary px-4 py-2.5 rounded-full">📞 Llamar</a>}
@@ -330,18 +336,19 @@ export default function PedidoPage({ params }: { params: Promise<{ codigo: strin
                     <p className="text-[10px] font-bold uppercase tracking-wide text-secondary mb-1.5">Repartidor</p>
                     {p.repartidorId ? (
                       <div className="flex items-center justify-between gap-2">
-                        <p className="font-bold">🛵 {repAsignado?.nombre ?? p.repartidor?.nombre ?? 'Asignado'}</p>
+                        <p className="font-bold">🛵 {repAsignado?.nombre ?? p.repartidor?.nombre ?? 'Asignado'}{p.repartidor?.de === 'boga' && <span className="ml-2 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200 align-middle">🛡 BogaHub</span>}</p>
                         {p.estado !== 'Entregado' && p.estado !== 'Cancelado' && (
                           <button type="button" disabled={ocupado} onClick={() => asignar(null)} className="text-xs font-bold text-red-600 border border-red-200 rounded-full px-3 py-1.5">Quitar</button>
                         )}
                       </div>
                     ) : p.estado === 'Entregado' || p.estado === 'Cancelado' ? (
                       <p className="text-secondary text-xs">Sin repartidor.</p>
-                    ) : repartidores.length > 0 ? (
+                    ) : repartidores.length > 0 || deBoga.length > 0 ? (
                       <div className="flex gap-2">
                         <select value={elegido} onChange={(e) => setElegido(e.target.value)} className="flex-1 min-w-0 rounded-xl border border-surface-container-highest bg-white px-3 py-2 text-sm">
                           <option value="">Elige quién lo lleva…</option>
-                          {repartidores.map((r) => <option key={r.id} value={r.id}>{r.nombre}</option>)}
+                          {repartidores.length > 0 && <optgroup label="🏪 Mis repartidores">{repartidores.map((r) => <option key={r.id} value={r.id}>{r.nombre}</option>)}</optgroup>}
+                          {deBoga.length > 0 && <optgroup label="🛡 Repartidores BogaHub">{deBoga.map((r) => <option key={r.id} value={r.id}>{r.nombre}</option>)}</optgroup>}
                         </select>
                         <button type="button" disabled={ocupado || !elegido} onClick={() => asignar(elegido)} className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold disabled:opacity-50">Asignar</button>
                       </div>

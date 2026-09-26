@@ -5,7 +5,8 @@ import { excedeLimite, ipDe, texto, UUID } from '@/lib/transporteServidor';
 // Los repartidores propios de una tienda. Cada uno es una fila de `drivers` (tipo 'Repartidor', store_slug = la
 // tienda) con su enlace secreto en `driver_acceso`: entra a la MISMA app del chofer (/transporte/chofer) y ahí ve
 // solo sus entregas. Solo el dueño de la tienda (o el superadmin) los ve y los maneja.
-//   GET    ?store=<slug>   → sus repartidores (con el enlace para pasárselo)
+//   GET    ?store=<slug>   → sus repartidores (con el enlace para pasárselo) y, aparte, los repartidores de BogaHub
+//                            (sin tienda: los agrega el superadmin y cualquier tienda puede asignarlos a un pedido)
 //   POST   {store, nombre, tel, placa?}  → crea uno
 //   DELETE ?id=<uuid>      → lo quita (sus pedidos quedan sin repartidor)
 
@@ -39,7 +40,9 @@ export async function GET(request: Request) {
   const ids = (filas ?? []).map((f) => f.id as string);
   const { data: accesos } = ids.length ? await a.db.from('driver_acceso').select('driver_id,token,visto_at').in('driver_id', ids) : { data: [] };
   const porId = new Map((accesos ?? []).map((x) => [x.driver_id as string, x]));
+  const { data: deBoga } = await a.db.from('drivers').select('id,nombre,placa').eq('tipo', 'Repartidor').is('store_slug', null).eq('status', 'activo').order('nombre');
   return NextResponse.json({
+    boga: (deBoga ?? []).map((b) => ({ id: b.id as string, nombre: b.nombre as string, placa: (b.placa as string | null) ?? null })),
     repartidores: (filas ?? []).map((f) => ({
       id: f.id, nombre: f.nombre, tel: f.tel, placa: f.placa,
       token: (porId.get(f.id as string)?.token as string | undefined) ?? null,

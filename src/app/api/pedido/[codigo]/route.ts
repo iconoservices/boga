@@ -49,15 +49,15 @@ export async function GET(request: Request, { params }: Params) {
   const recojo = o.customer_address === 'Recojo en tienda';
 
   // Seguimiento de la entrega: el repartidor y, solo mientras el pedido va en camino, su posición.
-  let repartidor: { nombre: string; placa: string | null; tel: string | null } | null = null;
+  let repartidor: { nombre: string; placa: string | null; tel: string | null; de: 'tienda' | 'boga' } | null = null;
   let posicion: { lat: number; lng: number; haceSeg: number } | null = null;
   if (!recojo && o.repartidor_id) {
     const enCamino = o.status === 'Enviado';
     const [{ data: d }, { data: a }] = await Promise.all([
-      db.from('drivers').select('nombre,placa,tel').eq('id', o.repartidor_id).maybeSingle(),
+      db.from('drivers').select('nombre,placa,tel,store_slug').eq('id', o.repartidor_id).maybeSingle(),
       enCamino ? db.from('driver_acceso').select('lat,lng,ubicado_at').eq('driver_id', o.repartidor_id).maybeSingle() : Promise.resolve({ data: null }),
     ]);
-    if (d) repartidor = { nombre: primerNombre(d.nombre as string), placa: (d.placa as string | null) ?? null, tel: enCamino ? (d.tel as string | null) ?? null : null };
+    if (d) repartidor = { nombre: primerNombre(d.nombre as string), placa: (d.placa as string | null) ?? null, tel: enCamino ? (d.tel as string | null) ?? null : null, de: d.store_slug ? 'tienda' : 'boga' };
     if (a?.lat != null && a?.lng != null && a.ubicado_at) {
       const haceSeg = Math.round((Date.now() - new Date(a.ubicado_at as string).getTime()) / 1000);
       if (haceSeg <= POSICION_FRESCA_MIN * 60) posicion = { lat: a.lat as number, lng: a.lng as number, haceSeg };
@@ -102,8 +102,11 @@ export async function PATCH(request: Request, { params }: Params) {
       return NextResponse.json({ ok: true, repartidor: null }, { headers: SIN_CACHE });
     }
     if (typeof id !== 'string' || !UUID.test(id)) return NextResponse.json({ error: 'Repartidor no válido' }, { status: 400, headers: SIN_CACHE });
-    const { data: d } = await db.from('drivers').select('id,nombre,tipo,store_slug').eq('id', id).maybeSingle();
-    if (!d || d.tipo !== 'Repartidor' || d.store_slug !== o.store) return NextResponse.json({ error: 'Ese repartidor no es de tu tienda' }, { status: 400, headers: SIN_CACHE });
+    const { data: d } = await db.from('drivers').select('id,nombre,tipo,store_slug,status').eq('id', id).maybeSingle();
+    // Puede ser uno propio de la tienda, o uno de BogaHub (sin tienda, lo agrega el superadmin).
+    const esPropio = !!d && d.store_slug === o.store;
+    const esDeBoga = !!d && !d.store_slug && d.status === 'activo';
+    if (!d || d.tipo !== 'Repartidor' || (!esPropio && !esDeBoga)) return NextResponse.json({ error: 'Ese repartidor no está disponible para tu tienda' }, { status: 400, headers: SIN_CACHE });
     const { error } = await db.from('orders').update({ repartidor_id: id, llego_at: null }).eq('id', o.id);
     if (error) return NextResponse.json({ error: 'No se pudo asignar (¿ya corriste el SQL de delivery?)' }, { status: 500, headers: SIN_CACHE });
     // Le llega el aviso a su celular (si activó los avisos); igual lo ve al abrir su app.

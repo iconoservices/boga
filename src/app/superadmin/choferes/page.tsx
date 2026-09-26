@@ -20,7 +20,9 @@ import { coordenadasDeTexto } from '@/lib/ubicacion';
 import { disponibleAhora, normalizarHorario, resumenHorario, tieneHorario, type Horario } from '@/lib/horario';
 
 const VERDE = '#00875A';
-const TIPOS = ['Mototaxi', 'Auto', 'Moto'];
+// «Repartidor» = delivery: sin tienda es de BogaHub (cualquier tienda lo puede asignar a un pedido); los propios de una
+// tienda los crea el dueño desde /pedido/<código> y salen aquí con el nombre de su tienda.
+const TIPOS = ['Mototaxi', 'Auto', 'Moto', 'Repartidor'];
 
 type DriverRow = Record<string, any>;
 
@@ -453,13 +455,17 @@ export default function ChoferesAdmin() {
           )}
         </section>
 
-        {/* Directorio */}
-        <section>
-          <h2 className="font-headline-md text-lg text-on-surface mb-3">Directorio ({choferes.length})</h2>
+        {/* Directorio de taxis y, aparte, los repartidores (de tiendas y de BogaHub) */}
+        {[
+          { titulo: 'Directorio', vacio: 'Todavía no hay choferes en el directorio. Agrega el primero con el formulario de arriba o aprobando una postulación pendiente.', lista: choferes.filter((c) => c.tipo !== 'Repartidor') },
+          { titulo: 'Repartidores', vacio: 'Todavía no hay repartidores. Los de BogaHub los agregas arriba con el tipo «Repartidor»; los de cada tienda los crea su dueño desde el pedido.', lista: choferes.filter((c) => c.tipo === 'Repartidor') },
+        ].map((grupo) => (
+        <section key={grupo.titulo}>
+          <h2 className="font-headline-md text-lg text-on-surface mb-3">{grupo.titulo} ({grupo.lista.length})</h2>
           {cargandoDatos ? <p className="text-secondary text-sm">Cargando…</p> :
-            choferes.length === 0 ? <p className="text-secondary text-sm">Todavía no hay choferes en el directorio. Agrega el primero con el formulario de arriba o aprobando una postulación pendiente.</p> : (
+            grupo.lista.length === 0 ? <p className="text-secondary text-sm">{grupo.vacio}</p> : (
             <div className="flex flex-col gap-2">
-              {choferes.map((d) => (
+              {grupo.lista.map((d) => (
                 <div key={d.id} className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-3 flex flex-wrap items-center gap-3">
                   <span className={`w-2 h-2 rounded-full shrink-0 ${d.status === 'activo' ? 'bg-primary' : 'bg-surface-container-highest'}`} />
                   <div className="flex-1 min-w-[180px]">
@@ -467,8 +473,13 @@ export default function ChoferesAdmin() {
                       {d.nombre} <span className="text-secondary font-normal">· {d.tipo} · {d.ciudad}</span>
                       {d.dni && <span className="text-[11px] font-mono text-secondary ml-2">(DNI: {d.dni})</span>}
                     </p>
+                    {d.tipo === 'Repartidor' && (
+                      <span className={`inline-block text-[11px] font-extrabold px-2 py-0.5 rounded-full border mb-0.5 ${d.store_slug ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
+                        {d.store_slug ? `🏪 Repartidor de la tienda «${d.store_slug}»` : '🛡 Repartidor BogaHub'}
+                      </span>
+                    )}
                     <p className="text-xs text-secondary">{[d.comite, d.placa, d.ruta].filter(Boolean).join(' · ')}</p>
-                    {(() => {
+                    {d.tipo !== 'Repartidor' && (() => {
                       const h = normalizarHorario(d.horario_semana);
                       if (!h) return <p className="text-[11px] text-amber-700 font-semibold mt-0.5">Sin horario cargado (no se marca disponible ni fuera de horario)</p>;
                       const ahora = disponibleAhora(h);
@@ -495,7 +506,7 @@ export default function ChoferesAdmin() {
                       const m = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
                       return m < 1 ? 'hace un momento' : m < 60 ? `hace ${m} min` : m < 1440 ? `hace ${Math.round(m / 60)} h` : `hace ${Math.round(m / 1440)} d`;
                     };
-                    const wa = `https://wa.me/${(d.tel || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${String(d.nombre).split(' ')[0]}, este es tu enlace PERSONAL de la app de choferes de BogaHub Taxi Seguro. Ábrelo desde tu celular, toca "Activar avisos" y así te llegan los pedidos de pasajeros cerca de ti. No lo compartas:\n\n${enlaceDe(a)}`)}`;
+                    const wa = `https://wa.me/${(d.tel || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${String(d.nombre).split(' ')[0]}, este es tu enlace PERSONAL de la app de ${d.tipo === 'Repartidor' ? 'repartidores de BogaHub. Ábrelo desde tu celular, toca "Activar avisos" y así te llegan los pedidos que te asignen para entregar.' : 'choferes de BogaHub Taxi Seguro. Ábrelo desde tu celular, toca "Activar avisos" y así te llegan los pedidos de pasajeros cerca de ti.'} No lo compartas:\n\n${enlaceDe(a)}`)}`;
                     return (
                       <div className="basis-full mt-2 rounded-xl border border-surface-container-highest bg-surface-container-low p-3 flex flex-col gap-2">
                         <p className="text-[11px] font-bold text-secondary uppercase tracking-wider">App del chofer · enlace privado</p>
@@ -525,6 +536,7 @@ export default function ChoferesAdmin() {
             </div>
           )}
         </section>
+        ))}
 
         {/* Pedidos de taxi recientes */}
         <section>

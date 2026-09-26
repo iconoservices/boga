@@ -31,7 +31,7 @@ export const ipDe = (request: Request) => (request.headers.get('x-forwarded-for'
 
 export interface ChoferAutenticado {
   driverId: string;
-  chofer: { id: string; nombre: string; tipo: string; placa: string | null; modelo: string | null; tel: string | null; img: string | null; veh_img: string | null; comite: string | null; ciudad: string };
+  chofer: { id: string; nombre: string; tipo: string; placa: string | null; modelo: string | null; tel: string | null; img: string | null; veh_img: string | null; comite: string | null; ciudad: string; store_slug: string | null };
   acceso: { pausado: boolean; base_lat: number | null; base_lng: number | null; lat: number | null; lng: number | null; ubicado_at: string | null; zona: string | null; zona_hasta: string | null };
 }
 
@@ -46,7 +46,7 @@ export async function choferPorToken(db: SupabaseClient, token: unknown): Promis
   if (!a) return null;
   const { data: c } = await db
     .from('drivers')
-    .select('id,nombre,tipo,placa,modelo,tel,img,veh_img,comite,ciudad,status')
+    .select('id,nombre,tipo,placa,modelo,tel,img,veh_img,comite,ciudad,status,store_slug')
     .eq('id', a.driver_id)
     .maybeSingle();
   if (!c || c.status !== 'activo') return null;
@@ -64,7 +64,7 @@ export async function choferPorId(db: SupabaseClient, driverId: string): Promise
   if (!a) return null;
   const { data: c } = await db
     .from('drivers')
-    .select('id,nombre,tipo,placa,modelo,tel,img,veh_img,comite,ciudad,status')
+    .select('id,nombre,tipo,placa,modelo,tel,img,veh_img,comite,ciudad,status,store_slug')
     .eq('id', driverId)
     .maybeSingle();
   if (!c) return null;
