@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { asegurarWebhooksLoyverse } from '@/lib/loyverse';
 
 export const dynamic = 'force-dynamic';
 
@@ -263,6 +264,7 @@ export async function POST(request: Request) {
             updateData.description = item.description;
           }
 
+          updateData.sku = `loy:${v.variant_id}`;
           if (Object.keys(updateData).length > 0) {
             toUpdate.push({ id: existing.id, data: updateData });
             actualizados++;
@@ -278,6 +280,7 @@ export async function POST(request: Request) {
             status: statusFinal,
             image: '', // Preservamos o dejamos listo para subir foto en Boga
             description: item.description || '',
+            sku: `loy:${v.variant_id}`,
           });
           creados++;
         }
@@ -301,11 +304,17 @@ export async function POST(request: Request) {
       await supabase.from('products').update(itemUp.data).eq('id', itemUp.id);
     }
 
-    // 9. Actualizar metadatos de la tienda (última sincronización y token si vino en body)
+    // 9. Auto-asegurar Webhooks en Loyverse para sincronización en tiempo real
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bogamarket.com';
+    const whResult = await asegurarWebhooksLoyverse(loyverseToken, siteUrl);
+
+    // 10. Actualizar metadatos de la tienda (última sincronización, webhooks y token)
     const modulosActualizados = {
       ...(store.modulos || {}),
       loyverse: true,
       loyverse_token: loyverseToken,
+      loyverse_merchant_id: whResult.merchantId || store.modulos?.loyverse_merchant_id,
+      loyverse_webhooks_active: whResult.ok,
       loyverse_last_sync: new Date().toISOString(),
     };
 
@@ -321,6 +330,7 @@ export async function POST(request: Request) {
       creados,
       actualizados,
       categoriasSincronizadas: categoriesMap.size,
+      webhooksActivos: whResult.ok,
     });
   } catch (err: any) {
     console.error('[Loyverse Sync] Error general:', err);

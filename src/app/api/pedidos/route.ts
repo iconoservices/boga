@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { moduloActivo } from '@/lib/modulos';
 import { moverStock } from '@/lib/stock';
 import { COLS_OFERTA, aplicarOferta } from '@/lib/ofertas';
+import { descontarStockEnLoyverse } from '@/lib/loyverse';
 
 // Guarda el pedido de la carta en la base ANTES de que el cliente abra WhatsApp.
 //
@@ -116,6 +117,20 @@ export async function POST(request: Request) {
       pedidoId: pedido.id,
       lineas: lineas.map((l) => ({ id: l.id, name: l.name, delta: -l.quantity })),
     });
+
+    // Si tiene integración Loyverse POS activa, descontar también en Loyverse en segundo plano
+    if (tienda.modulos?.loyverse && tienda.modulos?.loyverse_token) {
+      descontarStockEnLoyverse({
+        token: tienda.modulos.loyverse_token,
+        itemsVendidos: lineas.map((l) => ({ id: l.id, name: l.name, quantity: l.quantity })),
+        productosDb: ((productos ?? []) as any[]).map((p) => ({
+          id: p.id,
+          name: p.name,
+          sku: p.sku,
+          stock: p.stock ?? 0,
+        })),
+      }).catch((err) => console.error('[Loyverse Order Sync Error]:', err));
+    }
   }
 
   return NextResponse.json({ ok: true, id: pedido.id });
