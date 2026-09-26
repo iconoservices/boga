@@ -114,7 +114,7 @@ function PortadaCarrusel({ notas, promos, style, cargando }: { notas: NotaHome[]
   if (cargando) {
     return (
       <div className="w-screen mx-[calc(50%-50vw)] lg:w-full lg:mx-0">
-        <div className="bg-surface-container-low animate-pulse aspect-[16/10] sm:aspect-[2/1] lg:aspect-auto lg:h-[380px] lg:rounded-2xl" aria-hidden="true" />
+        <div className="bg-surface-container-low animate-pulse aspect-video lg:rounded-2xl" aria-hidden="true" />
       </div>
     );
   }
@@ -122,7 +122,7 @@ function PortadaCarrusel({ notas, promos, style, cargando }: { notas: NotaHome[]
 
   return (
     <div className="w-screen mx-[calc(50%-50vw)] lg:w-full lg:mx-0">
-      <div className="relative overflow-hidden lg:rounded-2xl bg-surface-container-low shadow-sm aspect-[16/10] sm:aspect-[2/1] lg:aspect-auto lg:h-[380px]">
+      <div className="relative overflow-hidden lg:rounded-2xl bg-surface-container-low shadow-sm aspect-video">
         <div className="flex h-full transition-transform duration-500 ease-out" style={{ transform: `translateX(-${i * 100}%)` }}>
           {slides.map((s, idx) => (
             // La primera imagen es lo más grande de la pantalla (LCP): se pide primero y con prioridad; el resto espera.
@@ -333,7 +333,7 @@ export default function HomeClient({ inicial }: { inicial: HomeData }) {
       </div>
 
       {/* Portada rotativa + panel "Los 8 Portales de BogaHub" (lado a lado en escritorio) */}
-      <div className="max-w-[1440px] mx-auto w-full lg:px-8 pt-4 lg:pt-6">
+      <div className="max-w-[1440px] mx-auto w-full lg:px-8 pt-0 lg:pt-6">
         <div className="lg:grid lg:grid-cols-[1.7fr_1fr] lg:gap-5 lg:items-stretch">
           <PortadaCarrusel notas={notasRevista} promos={promoBanners} style={bannerStyle} cargando={pendientes.includes('revista') || pendientes.includes('promos')} />
           <PortalesPanel />
@@ -341,6 +341,21 @@ export default function HomeClient({ inicial }: { inicial: HomeData }) {
       </div>
 
       <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-9 lg:gap-12 pt-3 pb-9 lg:pt-8 lg:pb-12 px-container-margin lg:px-8">
+
+        {/* Registra tu negocio — lleva a la pestaña Negocios (/negocios), que explica qué gana el negocio y desde ahí llega al formulario de alta */}
+        <Link
+          href="/negocios"
+          className="group mt-1 lg:mt-0 lg:max-w-[440px] flex items-center gap-2.5 bg-white border border-primary/20 rounded-xl px-3 py-2 shadow-sm hover:border-primary/40 hover:shadow-md active:scale-[0.99] transition-all"
+        >
+          <span className="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center shrink-0">
+            <span className="material-symbols-outlined text-primary text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>storefront</span>
+          </span>
+          <span className="min-w-0 flex-1 leading-tight">
+            <span className="block font-headline-sm text-sm font-bold text-on-surface">Registra tu negocio</span>
+            <span className="block font-body-md text-[11px] text-secondary mt-0.5 truncate">Crea tu tienda y vende por WhatsApp</span>
+          </span>
+          <span className="material-symbols-outlined text-secondary/50 text-[20px] shrink-0 group-hover:translate-x-0.5 transition-transform">chevron_right</span>
+        </Link>
 
         {/* Lo que se pide en Market — productos reales de todas las categorías, justo
             debajo de la tira de portales */}
