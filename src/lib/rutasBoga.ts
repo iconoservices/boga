@@ -6,5 +6,5 @@ export const RUTAS_DE_BOGAHUB = new Set([
   'admin', 'apple-icon.png', 'eventos', 'explore', 'guia', 'inmuebles', 'legal', 'libro-de-reclamaciones',
   'login', 'market', 'mostrador', 'productos', 'negocios', 'offline', 'orders', 'org', 'pension', 'preview', 'profile',
   'promotions', 'reset-password', 'revista', 'sorteos', 'superadmin', 'taxi-seguro', 'transporte', 'trabajos', 'vende-con-boga',
-  'viajes', 'servicios', 'trabajo', 'empleos', 'alquileres', 'product', 'pedido',
+  'viajes', 'servicios', 'trabajo', 'empleos', 'alquileres', 'product', 'pedido', 'pagar',
 ]);

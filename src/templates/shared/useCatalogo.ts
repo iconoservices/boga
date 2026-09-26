@@ -132,7 +132,14 @@ export function useCatalogo(store: StoreConfig) {
         }),
       });
       const d = await r.json().catch(() => ({} as { ok?: boolean; codigo?: string; motivo?: string; producto?: string }));
-      if (d.ok && d.codigo) { window.location.href = `/pagar/${d.codigo}`; return; }
+      if (d.ok && d.codigo) {
+        // El pago corre en el sitio principal (Izipay vuelve ahí). En una tienda con dominio propio (mitienda.pe), /pagar no existe.
+        const sitio = (process.env.NEXT_PUBLIC_SITE_URL || '').replace(/\/$/, '');
+        const h = window.location.hostname;
+        const principal = !sitio || h === new URL(sitio).hostname || h === 'localhost' || h === '127.0.0.1' || h.endsWith('.vercel.app');
+        window.location.href = `${principal ? '' : sitio}/pagar/${d.codigo}`;
+        return;
+      }
       alert(
         d.motivo === 'agotado' ? `«${d.producto}» está agotado. Quítalo del carrito para continuar.`
         : d.motivo === 'stock' ? `No hay stock suficiente de «${d.producto}».`

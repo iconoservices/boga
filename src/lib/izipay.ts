@@ -14,6 +14,15 @@ import { moverStock } from '@/lib/stock';
 //   4. Se valida la firma HMAC-SHA-256 y el pedido pasa a «Pagado»
 // El mismo endpoint sirve para pruebas y producción: el modo lo da el tipo de clave (testpassword_… / prodpassword_…).
 
+/** Dirección pública para redirigir y para que Izipay vuelva: el sitio principal; en local o en una vista previa de Vercel, ese mismo host. */
+export function origenPublico(request: Request): string {
+  const sitio = (process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app').replace(/\/$/, '');
+  try {
+    const o = new URL(request.url).origin;
+    return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(o) || /\.vercel\.app$/.test(new URL(o).hostname) ? o : sitio;
+  } catch { return sitio; }
+}
+
 export const URL_CREAR_PAGO = 'https://api.micuentaweb.pe/api-payment/V4/Charge/CreatePayment';
 export const URL_LIBRERIA_JS = 'https://static.micuentaweb.pe/static/js/krypton-client/V4.0/stable/kr-payment-form.min.js';
 export const URL_TEMA_CSS = 'https://static.micuentaweb.pe/static/js/krypton-client/V4.0/ext/classic.css';

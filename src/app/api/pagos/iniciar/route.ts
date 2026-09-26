@@ -1,5 +1,5 @@
 import { clienteServicio } from '@/lib/pushServidor';
-import { cargarConfigPagos, crearFormToken, URL_LIBRERIA_JS, URL_TEMA_CSS, URL_TEMA_JS } from '@/lib/izipay';
+import { cargarConfigPagos, crearFormToken, origenPublico, URL_LIBRERIA_JS, URL_TEMA_CSS, URL_TEMA_JS } from '@/lib/izipay';
 
 // Recibe el formulario de /pagar/<código> (código + correo del cliente), pide el formToken a Izipay con las claves de la
 // tienda y responde una página con el formulario de pago oficial de Izipay incrustado (tarjeta / Yape).
@@ -12,7 +12,6 @@ export const dynamic = 'force-dynamic';
 
 const CODIGO = /^[a-z0-9]{6,12}$/;
 const CORREO = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/;
-const SITIO = (process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app').replace(/\/$/, '');
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
 const HEADERS = { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'Referrer-Policy': 'same-origin' };
@@ -46,7 +45,8 @@ export async function POST(request: Request) {
 
   const { data: o } = await db.from('orders').select('store,total_amount,customer_name,customer_phone,pago_estado,items').eq('codigo', codigo).maybeSingle();
   if (!o || !o.pago_estado) return error('No encontramos ese pedido.');
-  if (o.pago_estado === 'pagado') return Response.redirect(`${SITIO}/pedido/${codigo}`, 303);
+  const origen = origenPublico(request);
+  if (o.pago_estado === 'pagado') return Response.redirect(`${origen}/pedido/${codigo}`, 303);
 
   const cfg = await cargarConfigPagos(db, o.store as string);
   if (!cfg || !cfg.activo) return error('Esta tienda no tiene el cobro online disponible ahora. Escríbele por WhatsApp.');
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
 
   // Tal cual el ejemplo oficial de Izipay: la librería con la clave pública y la URL de retorno como atributos del <script>.
   const head = `
-<script type="text/javascript" src="${URL_LIBRERIA_JS}" kr-public-key="${esc(cfg.cred.publicKey)}" kr-post-url-success="${SITIO}/api/pagos/retorno" kr-language="es-ES"></script>
+<script type="text/javascript" src="${URL_LIBRERIA_JS}" kr-public-key="${esc(cfg.cred.publicKey)}" kr-post-url-success="${origen}/api/pagos/retorno" kr-language="es-ES"></script>
 <link rel="stylesheet" href="${URL_TEMA_CSS}">
 <script type="text/javascript" src="${URL_TEMA_JS}"></script>`;
 
