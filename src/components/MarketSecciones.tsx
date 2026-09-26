@@ -23,17 +23,17 @@ function Barra() {
 
   return (
     <nav aria-label="Secciones del Market" className="max-w-[1440px] mx-auto w-full px-container-margin lg:px-6 pt-3">
-      <div className="inline-flex items-center gap-1 p-1 rounded-full bg-surface-container border border-surface-container-highest">
+      <div className="flex w-full sm:inline-flex sm:w-auto items-center gap-1 p-1 rounded-full bg-surface-container border border-surface-container-highest">
         {PESTANAS.map((p) => (
           <Link
             key={p.id}
             href={p.href}
             aria-current={activa === p.id ? 'page' : undefined}
-            className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${
+            className={`flex flex-1 sm:flex-none items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-1.5 rounded-full text-[13px] sm:text-sm font-bold transition-colors whitespace-nowrap ${
               activa === p.id ? 'bg-primary text-on-primary shadow-sm' : 'text-secondary hover:text-on-background'
             }`}
           >
-            <span className="material-symbols-outlined text-[18px]">{p.icon}</span>
+            <span className="material-symbols-outlined text-[16px] sm:text-[18px]">{p.icon}</span>
             {p.label}
           </Link>
         ))}
