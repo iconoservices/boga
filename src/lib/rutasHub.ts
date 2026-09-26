@@ -4,7 +4,7 @@
 // que acordarse de tocar todas. Si agregas un hub, súmalo acá (y en lib/hubs.ts y lib/rutasBoga.ts).
 
 export const RUTAS_HUB = [
-  '/market', '/pension', '/trabajos', '/transporte', '/inmuebles', '/viajes',
+  '/explore', '/promotions', '/market', '/pension', '/trabajos', '/transporte', '/inmuebles', '/viajes',
   '/eventos', '/sorteos', '/productos', '/revista', '/guia',
 ] as const;
 
