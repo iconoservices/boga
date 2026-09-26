@@ -8,6 +8,9 @@ import { conMarcaBlanca } from '@/lib/modulos';
 import PedirProducto from './PedirProducto';
 
 // Página propia de un producto: /<tienda>/producto/<id>.
+// También abre con el `slug` de texto del producto (p. ej. /delva/producto/reloj-poedagar-613---marrn): así
+// funcionan los enlaces viejos que salían del feed de Delva y Google no encuentra un 404. El canonical
+// siempre apunta a la dirección con el id.
 //
 // Existe para que Google (feed de Merchant Center) y las redes tengan un link directo a cada producto.
 // Es una página simple, con los colores de la tienda; la carta completa sigue siendo /<tienda>.
@@ -22,19 +25,27 @@ const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app').rep
 
 const cargar = cache(async (slug: string, id: string) => {
   if (!ID_VALIDO.test(id)) return null;
-  const [{ data: tienda }, { data: producto }] = await Promise.all([
+  const columnas = 'id,name,description,price,image,category,status,store';
+  const [{ data: tienda }, { data: porId }] = await Promise.all([
     supabase
       .from('stores')
       .select('slug,name,tagline,template,theme,logo_image,hero_image,whatsapp,status,subdominio_activo,modulos')
       .eq('slug', slug)
       .maybeSingle(),
-    supabase
-      .from('products')
-      .select('id,name,description,price,image,category,status,store')
-      .eq('id', id)
-      .eq('store', slug)
-      .maybeSingle(),
+    supabase.from('products').select(columnas).eq('id', id).eq('store', slug).maybeSingle(),
   ]);
+  // Sin producto con ese id, se prueba con el slug de texto (la columna solo la usan las tiendas migradas de Delva).
+  let producto = porId;
+  if (!producto) {
+    producto = (await supabase.from('products').select(columnas).eq('slug', id).eq('store', slug).limit(1).maybeSingle()).data;
+  }
+  if (!producto) {
+    // Enlaces con los guiones cambiados (Google a veces los junta o los separa): se busca por las mismas palabras, en orden.
+    const partes = id.split(/[-_]+/).filter(Boolean);
+    if (partes.length >= 2) {
+      producto = (await supabase.from('products').select(columnas).ilike('slug', partes.join('%')).eq('store', slug).limit(1).maybeSingle()).data;
+    }
+  }
   if (!tienda || tienda.status !== 'active' || !producto || producto.status === 'Inactivo') return null;
   return { tienda, producto };
 });
@@ -53,7 +64,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   return {
     title: `${producto.name} | ${tienda.name}`,
     description: descripcion,
-    alternates: { canonical: urlOficial(tienda, id) },
+    alternates: { canonical: urlOficial(tienda, producto.id) },
     openGraph: { title: producto.name, description: descripcion, images: producto.image ? [{ url: producto.image }] : undefined },
     twitter: { card: 'summary_large_image', title: producto.name, description: descripcion, images: producto.image ? [producto.image] : undefined },
   };
@@ -82,7 +93,7 @@ export default async function ProductoPage({ params }: { params: Promise<Params>
     brand: { '@type': 'Brand', name: tienda.name },
     offers: {
       '@type': 'Offer',
-      url: urlOficial(tienda, id),
+      url: urlOficial(tienda, producto.id),
       priceCurrency: 'PEN',
       price: precio.toFixed(2),
       availability: agotado ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
@@ -139,6 +150,16 @@ export default async function ProductoPage({ params }: { params: Promise<Params>
             color={color}
           />
         )}
+
+        {/* Envíos y cambios: visible en la página del producto (Google Merchant Center lo pide y el cliente lo agradece). */}
+        <section className="rounded-2xl bg-white border border-black/5 p-4 text-sm leading-relaxed">
+          <h2 className="font-extrabold text-sm mb-1.5">Envíos, pagos y cambios</h2>
+          <ul className="flex flex-col gap-1 opacity-80 list-disc pl-4">
+            <li>Haces el pedido por WhatsApp y coordinas el pago y la entrega directamente con {tienda.name}.</li>
+            <li>Los cambios y devoluciones también se coordinan directo con la tienda: cada tienda define su política, consúltala antes de comprar.</li>
+            <li>BogaHub solo te conecta con la tienda: no cobra ni entrega el pedido.</li>
+          </ul>
+        </section>
 
         <Link href={`/${tienda.slug}`} className="text-center text-sm font-bold underline underline-offset-4 opacity-70">
           Ver todos los productos de {tienda.name}

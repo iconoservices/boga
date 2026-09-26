@@ -68,6 +68,9 @@ const nextConfig: NextConfig = {
         destination: '/trabajos',
         permanent: true,
       },
+      // Pandero se quitó de BogaHub; Servicios vive dentro de «Tiendas y servicios» del Market (temporales: pueden volver).
+      { source: '/pandero', destination: '/market', permanent: false },
+      { source: '/servicios-locales', destination: '/explore?vista=servicios', permanent: false },
       // Taxi Seguro pasó a llamarse /transporte: los enlaces viejos (y el registro de choferes) siguen funcionando.
       { source: '/taxi-seguro', destination: '/transporte', permanent: true },
       { source: '/taxi-seguro/:path*', destination: '/transporte/:path*', permanent: true },

@@ -98,6 +98,18 @@ export default function RootLayout({
             alt=""
           />
         </noscript>
+        {/* Google Analytics (GA4) de BogaHub. Solo se carga si NEXT_PUBLIC_GA_ID está puesto en Vercel
+            (ej. G-XXXXXXXXXX); sin la variable no hace nada. Delva es otro proyecto y no lo usa. */}
+        {process.env.NEXT_PUBLIC_GA_ID && (
+          <>
+            <script async src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`} />
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${process.env.NEXT_PUBLIC_GA_ID}');`,
+              }}
+            />
+          </>
+        )}
         {/* Travelpayouts / Emerald affiliate tracking script */}
         <script
           {...{

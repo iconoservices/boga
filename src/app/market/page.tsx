@@ -7,20 +7,10 @@ import { useCart } from '@/context/CartContext';
 
 import { fetchCatalogo } from '@/lib/catalogo';
 import { MarketCityBanner } from '@/components/CityWaitlist';
-import { BannerOverlay, type BannerStyle } from '@/components/BannerOverlay';
+import MarketSecciones from '@/components/MarketSecciones';
 import { hrefTienda, esFuera } from '@/lib/tiendaUrl';
 
 export default function Home() {
-  // Banner slider — sin banners de muestra: si superadmin no cargo ninguno
-  // activo para /market, la seccion simplemente no se muestra (ver el
-  // "banners.length > 0 &&" mas abajo) en vez de mostrar fotos demo.
-  const sliderRef = useRef<HTMLDivElement>(null);
-  const [bannerIdx, setBannerIdx] = useState(0);
-  const bannerIdxRef = useRef(0);
-  const [banners, setBanners] = useState<{ id: string; img: string; tag: string | null; title1: string | null; title2: string | null; sub: string | null; link: string | null; pura: boolean }[]>([]);
-  const [bannerStyle, setBannerStyle] = useState<BannerStyle>('center');
-  const bannerCount = banners.length;
-
   const [activeCategory, setActiveCategory] = useState('Todas');
   const [showAllSubCategories, setShowAllSubCategories] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
@@ -43,25 +33,7 @@ export default function Home() {
   useEffect(() => {
     const fetchRealData = async () => {
       // 1. Fetch dynamic stores
-      const { stores: dbStoresData, products: dbProductsData, banners: dbBannersData, bannerStyle: dbBannerStyle } = await fetchCatalogo();
-
-      setBannerStyle(dbBannerStyle);
-      if (dbBannersData && dbBannersData.length > 0) {
-        setBanners(dbBannersData.map((b: any) => {
-          const conTexto = b.show_text !== false && (b.tag || b.title1 || b.title2 || b.sub);
-          return {
-            id: b.id, img: b.image, link: b.link,
-            // Sin texto (imagen ya armada, ej. un flyer de Canva): no se le
-            // pisa nada encima, y la imagen se ve completa (object-contain)
-            // en vez de recortada a la fuerza al ratio del banner.
-            tag: conTexto ? b.tag : null,
-            title1: conTexto ? b.title1 : null,
-            title2: conTexto ? b.title2 : null,
-            sub: conTexto ? b.sub : null,
-            pura: !conTexto,
-          };
-        }));
-      }
+      const { stores: dbStoresData, products: dbProductsData } = await fetchCatalogo();
 
       const allStores: Record<string, any> = {};
       if (dbStoresData) {
@@ -201,73 +173,6 @@ export default function Home() {
     };
     fetchRealData();
   }, []);
-
-  // Scroll-based banner navigation
-  const scrollToBanner = useCallback((idx: number, smooth = true) => {
-    const slider = sliderRef.current;
-    if (!slider) return;
-    const w = slider.clientWidth;
-    slider.scrollTo({ left: idx * w, behavior: smooth ? 'smooth' : 'instant' as ScrollBehavior });
-    bannerIdxRef.current = idx;
-    setBannerIdx(idx);
-  }, []);
-
-  // Auto-advance every 4s
-  useEffect(() => {
-    if (bannerCount === 0) return;
-    const id = setInterval(() => {
-      const next = (bannerIdxRef.current + 1) % bannerCount;
-      scrollToBanner(next);
-    }, 4000);
-    return () => clearInterval(id);
-  }, [scrollToBanner, bannerCount]);
-
-  // Swipe support
-  useEffect(() => {
-    const slider = sliderRef.current;
-    if (!slider) return;
-    let startX = 0;
-    const onTouchStart = (e: TouchEvent) => { startX = e.touches[0].clientX; };
-    const onTouchEnd   = (e: TouchEvent) => {
-      const diff = startX - e.changedTouches[0].clientX;
-      if (Math.abs(diff) > 40) {
-        const next = Math.max(0, Math.min(bannerCount - 1, bannerIdxRef.current + (diff > 0 ? 1 : -1)));
-        scrollToBanner(next);
-      }
-    };
-    slider.addEventListener('touchstart', onTouchStart, { passive: true });
-    slider.addEventListener('touchend',   onTouchEnd,   { passive: true });
-    return () => {
-      slider.removeEventListener('touchstart', onTouchStart);
-      slider.removeEventListener('touchend',   onTouchEnd);
-    };
-  }, [scrollToBanner, bannerCount]);
-
-  // Track scroll position to update active dot
-  useEffect(() => {
-    const slider = sliderRef.current;
-    if (!slider) return;
-    let ticking = false;
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        const w = slider.clientWidth;
-        if (w === 0) { ticking = false; return; }
-        const idx = Math.round(slider.scrollLeft / w);
-        if (idx !== bannerIdxRef.current) {
-          bannerIdxRef.current = idx;
-          setBannerIdx(idx);
-        }
-        ticking = false;
-      });
-    };
-    slider.addEventListener('scroll', onScroll, { passive: true });
-    return () => slider.removeEventListener('scroll', onScroll);
-  }, []);
-
-
-
 
   useEffect(() => {
     const saved = localStorage.getItem('boga_favorites');
@@ -440,113 +345,21 @@ export default function Home() {
       />
 
 
+      <MarketSecciones />
+
       <div className="max-w-[1440px] mx-auto w-full">
         <MarketCityBanner />
       </div>
 
       <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-4 lg:gap-6 mt-4 lg:mt-5 pb-12">
-        {/* Banner + Explorar Categorías — lado a lado (mitad y mitad) en escritorio */}
-        <div className="lg:grid lg:grid-cols-2 lg:gap-6 lg:items-center lg:px-6">
-        {/* Banners Section — no se muestra nada si no hay banners activos
-            (antes mostraba 3 fotos de stock como relleno) */}
-        {banners.length > 0 && (
-        <section className="w-screen mx-[calc(50%-50vw)] px-container-margin lg:w-auto lg:mx-0 lg:px-0">
-          {/* Scroll-snap slider — clientWidth based, no clone tricks */}
-          <div className="relative rounded-xl overflow-hidden">
-          <div
-            ref={sliderRef}
-            className="flex overflow-x-auto hide-scrollbar"
-            style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
-          >
-            {banners.map((b: any) => {
-              // Ancla nativa (no Link de Next) a proposito: el destino puede
-              // ser una ruta interna o una url externa, cargada libremente
-              // desde superadmin.
-              const Slide = (b.link ? 'a' : 'div') as any;
-              const slideProps = b.link ? { href: b.link } : {};
-              return (
-                <Slide
-                  key={b.id}
-                  {...slideProps}
-                  className="relative aspect-[16/9] sm:aspect-[21/9] lg:aspect-auto lg:h-[300px] overflow-hidden shadow-sm shrink-0 group w-full block"
-                  style={{ scrollSnapAlign: 'start', flex: '0 0 100%' }}
-                >
-                  {b.pura ? (
-                    <>
-                      {/* Imagen ya armada (flyer de Canva, etc.): se ve completa,
-                          sin recortar al ratio del banner. El fondo borroso rellena
-                          los espacios en vez de dejar barras negras feas. */}
-                      <img alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110 opacity-60" src={b.img} />
-                      <img alt="" className="absolute inset-0 w-full h-full object-contain" src={b.img} />
-                    </>
-                  ) : (
-                    <img alt="" className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" src={b.img} />
-                  )}
-                  <BannerOverlay style={bannerStyle} tag={b.tag} title1={b.title1} title2={b.title2} sub={b.sub} />
-                </Slide>
-              );
-            })}
-          </div>
-
-          {/* Flechas para cambiar de banner — cluster abajo a la derecha, fuera
-              del texto (que va alineado a la izquierda y centrado vertical). */}
-          <div className="absolute bottom-3 right-3 flex gap-1.5 z-20">
-            <button
-              type="button"
-              aria-label="Banner anterior"
-              onClick={() => scrollToBanner((bannerIdxRef.current - 1 + bannerCount) % bannerCount)}
-              className="flex w-8 h-8 rounded-full bg-white/90 items-center justify-center shadow-md active:scale-90 transition-transform"
-            >
-              <span className="material-symbols-outlined text-[18px] text-on-surface">chevron_left</span>
-            </button>
-            <button
-              type="button"
-              aria-label="Banner siguiente"
-              onClick={() => scrollToBanner((bannerIdxRef.current + 1) % bannerCount)}
-              className="flex w-8 h-8 rounded-full bg-white/90 items-center justify-center shadow-md active:scale-90 transition-transform"
-            >
-              <span className="material-symbols-outlined text-[18px] text-on-surface">chevron_right</span>
-            </button>
-          </div>
-          </div>
-
-          <div className="flex justify-center gap-1.5 mt-1.5">
-            {banners.map((_: any, i: number) => (
-              <button
-                key={i}
-                onClick={() => scrollToBanner(i)}
-                className={`rounded-full transition-all duration-300 ${
-                  bannerIdx === i ? 'w-4 h-1.5 bg-primary' : 'w-1.5 h-1.5 bg-surface-container-highest'
-                }`}
-              />
-            ))}
-          </div>
-        </section>
-        )}
-
+        {/* Explorar Categorías y productos (el banner ahora vive en Explorar: components/MarketBannerSlider.tsx) */}
+        <div className="lg:px-6">
         {/* Categorías + subcategorías — la otra mitad, junto al banner en escritorio */}
         <div className="flex flex-col gap-4 lg:gap-4 mt-4 lg:mt-0">
           {/* Adaptive Macro-Categories Selector */}
           <section className="flex flex-col gap-2 lg:gap-3 transition-all duration-500 px-container-margin lg:px-0">
             <div className="flex justify-between items-center px-1">
               <h2 className="font-headline-lg text-on-surface">Explorar Categorías</h2>
-              <div className="flex items-center gap-3 shrink-0">
-                {/* Pensión de almuerzos: destacada junto a "Ver tiendas", no es una categoría. */}
-                <Link
-                  href="/pension"
-                  className="flex items-center gap-1.5 rounded-full pl-1.5 pr-3 py-1 shadow-sm active:scale-95 transition-transform"
-                  style={{ background: '#0f3d24' }}
-                >
-                  <span className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: '#e7b84b' }}>
-                    <span className="material-symbols-outlined text-[15px]" style={{ color: '#0f3d24', fontVariationSettings: "'FILL' 1" }}>lunch_dining</span>
-                  </span>
-                  <span className="font-label-md text-[12px] font-bold" style={{ color: '#f4e7d3' }}>Pensión</span>
-                </Link>
-                <Link href="/explore" className="flex items-center gap-0.5 text-primary font-label-md text-sm">
-                  Ver tiendas
-                  <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-                </Link>
-              </div>
             </div>
             <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1.5 transition-all duration-500 ease-in-out"
               style={{ scrollbarWidth: 'none' }}

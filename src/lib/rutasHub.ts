@@ -5,7 +5,7 @@
 
 export const RUTAS_HUB = [
   '/market', '/pension', '/trabajos', '/transporte', '/inmuebles', '/viajes',
-  '/eventos', '/sorteos', '/productos', '/pandero', '/revista', '/guia',
+  '/eventos', '/sorteos', '/productos', '/revista', '/guia',
 ] as const;
 
 /** ¿Esta ruta es el Inicio o un hub de BogaHub? */

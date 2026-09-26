@@ -1,16 +1,34 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
 
 import { fetchCatalogo } from '@/lib/catalogo';
 import { hrefTienda, esFuera } from '@/lib/tiendaUrl';
+import MarketSecciones from '@/components/MarketSecciones';
+import MarketBannerSlider from '@/components/MarketBannerSlider';
+import ServiciosContenido from '@/components/ServiciosContenido';
 
+// useSearchParams exige un Suspense a su alrededor al compilar.
 export default function Explore() {
+  return (
+    <Suspense fallback={null}>
+      <ExploreContenido />
+    </Suspense>
+  );
+}
+
+function ExploreContenido() {
   const [activeCategory, setActiveCategory] = useState('Todas');
+  // Cuál de los cuadritos de arriba está abierto (Market o Servicios muestran sus categorías debajo).
+  const [grupoAbierto, setGrupoAbierto] = useState<'todas' | 'market' | 'servicios'>('todas');
   const [viewMode, setViewMode] = useState<'products' | 'stores'>('products');
+  // La barra de arriba (Explorar | Tiendas | Servicios) manda: ?vista=servicios muestra Servicios; sin ?vista se ve el feed de siempre (Explorar).
+  const vista = useSearchParams().get('vista');
+  const seccion: 'productos' | 'servicios' = vista === 'servicios' ? 'servicios' : 'productos';
   const [showAllSubCategories, setShowAllSubCategories] = useState(false);
   
   const { addToCart, cartCount, setIsCartOpen } = useCart();
@@ -19,6 +37,7 @@ export default function Explore() {
 
   type StoreDataType = { name: string, slug: string, category: string, macroCat: string, time: string, delivery: string, logo: string, externalUrl?: string, products: { name: string, price: string, img: string, status?: string }[] };
   const [storeData, setStoreData] = useState<StoreDataType[]>([]);
+
 
   useEffect(() => {
     const fetchRealData = async () => {
@@ -240,8 +259,23 @@ export default function Explore() {
     ],
   };
 
-  const currentSubCategories = activeCategory === 'Todas' 
-    ? Object.values(subCategories).flat() 
+  // Los rubros de servicios (todavía sin negocios): cada círculo lleva a la pestaña Servicios.
+  const rubrosServicios: { name: string; icon: string; href?: string }[] = [
+    { name: 'Abogados', icon: 'gavel' },
+    { name: 'Salud', icon: 'medical_services' },
+    { name: 'Gimnasios', icon: 'fitness_center' },
+    { name: 'Belleza', icon: 'spa' },
+    { name: 'Educación', icon: 'school' },
+    { name: 'Técnicos', icon: 'engineering' },
+  ].map((r) => ({ ...r, href: '/explore?vista=servicios' }));
+
+  // Los círculos de abajo siguen al cuadrito abierto: Comprar → subcategorías de productos, Servicios → rubros.
+  const currentSubCategories: { name: string; icon: string; href?: string }[] = activeCategory === 'Todas'
+    ? (grupoAbierto === 'servicios'
+        ? rubrosServicios
+        : grupoAbierto === 'market'
+          ? Object.entries(subCategories).filter(([k]) => k !== 'Salud' && k !== 'Servicios').flatMap(([, v]) => v)
+          : Object.values(subCategories).flat())
     : subCategories[activeCategory] || [];
 
   type SectionType = { id: string, title: string, link?: string, products: { name: string, price: string, original?: string, badge?: string, img: string, status?: string }[] };
@@ -302,12 +336,34 @@ export default function Explore() {
         onCartClick={() => setIsCartOpen(true)}
       />
 
+      <MarketSecciones />
+
+      {seccion === 'productos' && <MarketBannerSlider />}
+
+      {seccion === 'servicios' ? (
+        <main className="max-w-[1440px] mx-auto px-container-margin w-full pt-6 pb-12">
+          <ServiciosContenido />
+        </main>
+      ) : (
       <main className="max-w-[1440px] mx-auto px-container-margin w-full pt-6 flex flex-col gap-6 lg:gap-12 pb-12">
         
         {/* Adaptive Macro-Categories Selector */}
         <section className="flex flex-col gap-2 transition-all duration-500">
           <div className="flex justify-between items-center px-1">
             <h2 className="font-headline-sm text-sm text-on-surface">Categorías Principales</h2>
+            <div className="flex items-center gap-3 shrink-0">
+                {activeCategory !== 'Todas' && (
+                <Link
+                  href="/pension"
+                  className="flex items-center gap-1.5 rounded-full pl-1.5 pr-3 py-1 shadow-sm active:scale-95 transition-transform"
+                  style={{ background: '#0f3d24' }}
+                >
+                  <span className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: '#e7b84b' }}>
+                    <span className="material-symbols-outlined text-[15px]" style={{ color: '#0f3d24', fontVariationSettings: "'FILL' 1" }}>lunch_dining</span>
+                  </span>
+                  <span className="font-label-md text-[12px] font-bold" style={{ color: '#f4e7d3' }}>Pensión</span>
+                </Link>
+                )}
             {viewMode === 'stores' ? (
               <button 
                 onClick={() => { setViewMode('products'); setActiveCategory('Todas'); }}
@@ -323,8 +379,70 @@ export default function Explore() {
                 Restablecer
               </button>
             ) : null}
+            </div>
           </div>
           
+          {activeCategory === 'Todas' ? (
+            /* "Todas" va aparte y primero (es «todo junto»); debajo, dos familias: Market (se compra) y Servicios. */
+            <div className="flex flex-col gap-2 transition-all duration-500">
+              <div className="grid grid-cols-4 gap-2">
+                {([
+                  { id: 'todas', nombre: 'Todo', icon: 'grid_view' },
+                  { id: 'market', nombre: 'Comprar', icon: 'shopping_bag' },
+                  { id: 'servicios', nombre: 'Servicios', icon: 'handyman' },
+                ] as const).map((g) => {
+                  const activo = grupoAbierto === g.id;
+                  return (
+                    <button
+                      key={g.id}
+                      type="button"
+                      aria-pressed={activo}
+                      onClick={() => { setGrupoAbierto(g.id); setShowAllSubCategories(false); }}
+                      className={`flex flex-col items-center justify-center gap-1 py-2 px-1.5 rounded-xl shadow-sm active:scale-95 transition-all ${
+                        activo ? 'bg-primary text-white border border-primary shadow-md' : 'bg-white border border-surface-container-highest text-secondary'
+                      }`}
+                    >
+                      <span className={`material-symbols-outlined text-xl ${activo ? 'text-white' : 'text-primary'}`}>{g.icon}</span>
+                      <span className={`font-label-md text-[10px] leading-tight ${activo ? 'text-white' : 'text-secondary'}`}>{g.nombre}</span>
+                    </button>
+                  );
+                })}
+                {/* Pensión de almuerzos: destacada, no es una categoría. */}
+                <Link
+                  href="/pension"
+                  className="flex flex-col items-center justify-center gap-1 py-2 px-1.5 rounded-xl shadow-sm active:scale-95 transition-transform"
+                  style={{ background: '#0f3d24' }}
+                >
+                  <span className="material-symbols-outlined text-xl" style={{ color: '#e7b84b', fontVariationSettings: "'FILL' 1" }}>lunch_dining</span>
+                  <span className="font-label-md text-[10px] leading-tight font-bold" style={{ color: '#f4e7d3' }}>Pensión</span>
+                </Link>
+              </div>
+
+              {grupoAbierto !== 'todas' && (
+                <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-1" style={{ scrollbarWidth: 'none' }}>
+                  {macroCategories
+                    .filter((c) => (grupoAbierto === 'market'
+                      ? ['Combos & Promos', 'Comida', 'Bebidas', 'Mercado', 'Moda']
+                      : ['Salud', 'Servicios']).includes(c.id))
+                    .map((cat) => (
+                      <button
+                        key={cat.id}
+                        onClick={() => { setActiveCategory(cat.id); setShowAllSubCategories(false); }}
+                        className="flex items-center gap-1.5 px-4 py-1.5 rounded-full shadow-sm active:scale-95 transition-all shrink-0 bg-white border border-surface-container-highest text-secondary"
+                      >
+                        <span className="material-symbols-outlined text-[18px] text-primary">{cat.icon}</span>
+                        <span className="font-label-md text-[11px] whitespace-nowrap">{cat.name}</span>
+                      </button>
+                    ))}
+                  {grupoAbierto === 'servicios' && (
+                    <Link href="/explore?vista=servicios" className="shrink-0 px-2 text-[12px] font-bold text-primary whitespace-nowrap">
+                      Ver todos los servicios →
+                    </Link>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
           <div className={`
             transition-all duration-500 ease-in-out
             ${activeCategory === 'Todas' 
@@ -370,6 +488,7 @@ export default function Explore() {
               );
             })}
           </div>
+          )}
         </section>
 
         {/* Specific Sub-Categories (Filtered) */}
@@ -393,16 +512,19 @@ export default function Explore() {
                 </span>
               </div>
 
-              {currentSubCategories.map((sub, index) => (
-                <div key={index} className="flex flex-col items-center gap-1 shrink-0 group cursor-pointer active:scale-90 transition-transform">
+              {currentSubCategories.map((sub, index) => {
+                const Item: any = sub.href ? Link : 'div';
+                return (
+                <Item key={index} {...(sub.href ? { href: sub.href } : {})} className="flex flex-col items-center gap-1 shrink-0 group cursor-pointer active:scale-90 transition-transform">
                   <div className="w-14 h-14 rounded-full bg-white border border-surface-container-highest flex items-center justify-center text-on-surface shadow-sm group-hover:border-primary group-hover:shadow-md transition-all">
                     <span className="material-symbols-outlined text-[22px]">
                       {sub.icon}
                     </span>
                   </div>
                   <span className="text-secondary font-label-md text-[10px] text-center leading-tight mt-0.5">{sub.name}</span>
-                </div>
-              ))}
+                </Item>
+                );
+              })}
             </div>
           </section>
         )}
@@ -621,6 +743,7 @@ export default function Explore() {
           </section>
         )}
       </main>
+      )}
     </>
   );
 }

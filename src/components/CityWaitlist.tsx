@@ -40,7 +40,9 @@ export function useCiudad() {
     setAvisoGeo(null);
   }, []);
 
-  const detectar = useCallback(async () => {
+  // `silencioso`: si es true no muestra el globo de error. Hoy el intento automático de la primera visita SÍ lo muestra
+  // (se dejó el globo y se quitó la tarjeta «Elige tu ciudad» del Market para que no salgan los dos avisos).
+  const detectarConAviso = useCallback(async (silencioso: boolean) => {
     setDetectando(true);
     setAvisoGeo(null);
     const r = await detectarCiudad();
@@ -48,7 +50,7 @@ export function useCiudad() {
     if (r.ok) {
       if (r.slug) {
         elegir(r.slug);
-      } else {
+      } else if (!silencioso) {
         setAvisoGeo(
           r.nombreCrudo
             ? `Detectamos "${r.nombreCrudo}". Elígela de la lista.`
@@ -66,8 +68,10 @@ export function useCiudad() {
       timeout:
         'La ubicación tardó demasiado. Elige tu ciudad en la lista.',
     };
-    setAvisoGeo(mensajes[r.motivo] ?? 'No pudimos obtener tu ubicación. Elige tu ciudad de la lista.');
+    if (!silencioso) setAvisoGeo(mensajes[r.motivo] ?? 'No pudimos obtener tu ubicación. Elige tu ciudad de la lista.');
   }, [elegir]);
+
+  const detectar = useCallback(() => detectarConAviso(false), [detectarConAviso]);
 
   // Primera visita (sin ciudad guardada): intenta detectar sola por GPS en vez
   // de obligar a elegir a mano. Si el navegador niega el permiso o falla, el
@@ -76,7 +80,7 @@ export function useCiudad() {
     const guardada = leerCiudadGuardada();
     setSlug(guardada);
     setListo(true);
-    if (!guardada) detectar();
+    if (!guardada) detectarConAviso(false);
 
     const onCambio = (e: Event) => setSlug((e as CustomEvent<string>).detail || null);
     window.addEventListener('boga:ciudad', onCambio);
@@ -104,6 +108,13 @@ export function CitySwitcher({ variant }: { variant: 'mobile' | 'desktop' }) {
   const { slug, ciudad, listo, detectando, avisoGeo, cerrarAviso, elegir, detectar } = useCiudad();
   const [abierto, setAbierto] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+
+  // El globo se quita solo a los 6 s: si se queda, tapa las pestañas del Market (Explorar, Tiendas, Servicios).
+  useEffect(() => {
+    if (!avisoGeo) return;
+    const t = setTimeout(cerrarAviso, 6000);
+    return () => clearTimeout(t);
+  }, [avisoGeo, cerrarAviso]);
 
   useEffect(() => {
     if (!abierto) return;
@@ -322,7 +333,7 @@ function WaitlistForm({
 // ── Banner del Market ───────────────────────────────────────────────────────
 // Arriba de /market. Reacciona a la ciudad elegida en el header:
 //   • ciudad activa       → no renderiza nada
-//   • sin ciudad elegida  → invita a elegirla arriba
+//   • sin ciudad elegida  → no renderiza nada (ya avisa el globo de ubicación del header)
 //   • ciudad no activa    → lista de espera (el catálogo se sigue viendo)
 export function MarketCityBanner({
   role = 'comprador',
@@ -335,6 +346,8 @@ export function MarketCityBanner({
   const [cerrado, setCerrado] = useState(false);
 
   if (!listo || activa || cerrado) return null;
+  // Sin ciudad elegida: el globo del header ya lo pide; la tarjeta repetía el mismo aviso.
+  if (!slug || !ciudad) return null;
 
   return (
     <div className="mx-container-margin lg:mx-6 mt-4 rounded-2xl border border-surface-container-highest bg-surface-container-lowest overflow-hidden">

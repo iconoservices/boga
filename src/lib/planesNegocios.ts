@@ -141,5 +141,7 @@ export const REQUISITOS_MARKET: string[] = [
 // Módulos pensados pero NO construidos: se venderían aparte y los prende solo el superadmin.
 export const MODULOS_PROXIMOS: { nombre: string; desc: string }[] = [
   { nombre: 'Destacado en el Market', desc: 'Sale primero o con sello en /market. Es lo que justifica cobrar el Market después de la promo.' },
+  { nombre: 'Agenda de clases y horarios', desc: 'Para gimnasios, academias y salones: mostrar el horario de clases por día y que el cliente reserve un cupo. Hoy solo existe el horario de atención del local como texto.' },
+  { nombre: 'Notificaciones por rubro', desc: 'Avisos segmentados a quienes siguen un rubro (por ejemplo, gimnasios o restaurantes) para que las tiendas lleguen a más gente que le interesa su categoría.' },
   { nombre: 'Coordinación de entrega', desc: 'Boga junta pedidos de varias tiendas y los reparte con choferes acreditados (Taxi Seguro). Lo activa solo el superadmin, por ahora.' },
 ];

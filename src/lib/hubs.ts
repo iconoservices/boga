@@ -4,6 +4,7 @@
 // y aparece en todas — y en el mismo orden.
 export type Hub = { href: string; label: string; long?: string; icon: string; apart?: boolean };
 
+// Explorar y "Tiendas y servicios" son pestañas DENTRO del Market (components/MarketSecciones.tsx), no ítems del menú.
 export const HUBS: Hub[] = [
   { href: '/',            label: 'Inicio',      icon: 'home' },
   { href: '/market',      label: 'Market',      icon: 'storefront' },
@@ -14,7 +15,6 @@ export const HUBS: Hub[] = [
   { href: '/trabajos',    label: 'Trabajos',    long: 'Trabajos & Oficios', icon: 'construction' },
   { href: '/viajes',      label: 'Viajes',      long: 'Viajes & Transporte', icon: 'directions_boat' },
   { href: '/transporte', label: 'Taxi Seguro', icon: 'local_taxi' },
-  { href: '/pandero',     label: 'Pandero',     long: 'Pandero · ahorro en grupo', icon: 'savings' },
   { href: '/revista',     label: 'Revista',     long: 'Yo Soy de la Selva', icon: 'menu_book' },
   { href: '/negocios',    label: 'Negocios',    long: 'Para Negocios', icon: 'work', apart: true },
 ];
@@ -26,7 +26,8 @@ export const ACCOUNT_LINKS: Hub[] = [];
 // La Pensión de almuerzos ya no es un hub del menú: vive dentro de Market (chip en
 // /market), así que estando en /pension el ítem "Market" sigue resaltado.
 export function isHubActive(pathname: string, href: string) {
-  if (href === '/market') return pathname === href || pathname.startsWith('/pension');
+  // Market también queda resaltado en sus pestañas internas (Tiendas, Servicios) y en la Pensión.
+  if (href === '/market') return pathname === href || pathname.startsWith('/pension') || pathname.startsWith('/explore');
   if (href === '/') return pathname === href;
   return pathname.startsWith(href);
 }

@@ -118,6 +118,8 @@ export default function RegistroNegocio({
       setErrorMsg('No pudimos enviar tu solicitud. Intenta de nuevo en unos minutos.');
       return;
     }
+    // Conversión para Google Analytics / Ads: un negocio pidió registrarse (solo si GA está activo).
+    (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.('event', 'generate_lead', { tipo: 'negocio', plan: plan?.id ?? 'sin_plan' });
     setIsSent(true);
   };
 
