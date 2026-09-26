@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { enMarketplace } from '@/lib/modulos';
+import { COLS_OFERTA, aplicarOferta } from '@/lib/ofertas';
 
 // Catálogo completo del marketplace (todas las tiendas + productos), en UN
 // endpoint cacheado. /market y /explore lo consumen en vez de pegarle a
@@ -30,6 +31,15 @@ const conDireccionPropia = <T extends { slug: string; external_url?: string | nu
 // Sin fila en banner_page_settings para una pagina, cae al estilo que esa
 // pagina ya tenia hardcodeado antes de que esto fuera editable.
 const ESTILO_DEFECTO: Record<string, string> = { market: 'center', home: 'bottom' };
+
+// Productos con su precio de oferta (ver lib/ofertas.ts). Si las columnas todavía no existen en la base
+// (SQL de ofertas sin correr), pide las de siempre para que el catálogo no quede vacío.
+async function productosConOferta() {
+  const base = 'id,name,price,category,image,store,status';
+  const r = await supabase.from('products').select(`${base},${COLS_OFERTA}`);
+  if (!r.error) return r;
+  return supabase.from('products').select(base);
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -63,9 +73,7 @@ export async function GET(request: Request) {
     supabase
       .from('stores')
       .select('slug,name,tagline,marketplace_category,template,hero_image,hero_alt,logo_image,theme,categories,status,external_url,subdominio_activo,modulos'),
-    supabase
-      .from('products')
-      .select('id,name,price,category,image,store,status'),
+    productosConOferta(),
     supabase
       .from('market_banners')
       .select('id,image,tag,title1,title2,sub,link,show_text')
@@ -85,7 +93,7 @@ export async function GET(request: Request) {
   return NextResponse.json(
     {
       stores: visibles.map(({ modulos: _modulos, ...s }) => conDireccionPropia(s)),
-      products: (products.data ?? []).filter((p) => slugsVisibles.has(p.store)),
+      products: ((products.data ?? []) as any[]).filter((p) => slugsVisibles.has(p.store)).map(aplicarOferta),
       banners: banners.data ?? [],
       bannerStyle: estilo.data?.style || ESTILO_DEFECTO.market,
     },

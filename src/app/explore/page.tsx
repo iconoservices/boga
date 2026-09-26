@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
@@ -22,6 +22,7 @@ export default function Explore() {
 }
 
 function ExploreContenido() {
+  const router = useRouter();
   const [activeCategory, setActiveCategory] = useState('Todas');
   const [viewMode, setViewMode] = useState<'products' | 'stores'>('products');
   // La barra de arriba (Explorar | Tiendas | Servicios) manda: ?vista=servicios muestra Servicios; sin ?vista se ve el feed de siempre (Explorar).
@@ -33,7 +34,7 @@ function ExploreContenido() {
   const [addedItems, setAddedItems] = useState<Record<string, boolean>>({});
   const [activeSort, setActiveSort] = useState('Populares');
 
-  type StoreDataType = { name: string, slug: string, category: string, macroCat: string, time: string, delivery: string, logo: string, externalUrl?: string, products: { name: string, price: string, img: string, status?: string }[] };
+  type StoreDataType = { name: string, slug: string, category: string, macroCat: string, time: string, delivery: string, logo: string, externalUrl?: string, products: { name: string, price: string, original?: string, img: string, status?: string }[] };
   const [storeData, setStoreData] = useState<StoreDataType[]>([]);
 
 
@@ -95,6 +96,7 @@ function ExploreContenido() {
           return {
             title: p.name,
             price: `S/ ${p.price.toFixed(2)}`,
+            original: p.price_anterior > 0 ? `S/ ${Number(p.price_anterior).toFixed(2)}` : undefined,
             slug: p.store,
             image: p.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80',
             status: p.status || 'Activo',
@@ -106,7 +108,7 @@ function ExploreContenido() {
           return {
             ...s,
             products: sProducts.length > 0 
-              ? sProducts.map(p => ({ name: p.title, price: p.price, img: p.image, status: p.status })) 
+              ? sProducts.map(p => ({ name: p.title, price: p.price, original: p.original, img: p.image, status: p.status })) 
               : s.products
           };
         }));
@@ -146,6 +148,7 @@ function ExploreContenido() {
             newSectionsProducts[macroCat].push({
               name: p.name,
               price: `S/ ${p.price.toFixed(2)}`,
+              original: p.price_anterior > 0 ? `S/ ${Number(p.price_anterior).toFixed(2)}` : undefined,
               badge: 'Nuevo',
               img: p.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80',
               status: p.status || 'Activo',
@@ -372,6 +375,8 @@ function ExploreContenido() {
                 <button 
                   key={cat.id}
                   onClick={() => {
+                    // Promos no es un filtro: entra a su propia página (/promotions)
+                    if (cat.id === 'Combos & Promos') { router.push('/promotions'); return; }
                     setActiveCategory(cat.id);
                     setShowAllSubCategories(false);
                   }}
@@ -471,7 +476,7 @@ function ExploreContenido() {
                             <img src={p.img} className="w-full h-full object-cover" alt={p.name} />
                           </div>
                           <span className="font-label-md text-[9px] text-secondary uppercase leading-tight line-clamp-1 mt-0.5">{p.name}</span>
-                          <span className="font-price-lg text-primary text-xs">{p.price}</span>
+                          <span className="font-price-lg text-primary text-xs">{p.price}{p.original && <span className="ml-1 text-[9px] font-normal text-secondary line-through">{p.original}</span>}</span>
                         </div>
                       ))}
                     </div>
@@ -532,7 +537,7 @@ function ExploreContenido() {
                           <h4 className={`font-headline-sm text-sm line-clamp-1 ${p.status === 'Agotado' ? 'text-secondary/50' : 'text-on-surface'}`}>{p.name}</h4>
                         </div>
                         <div className="flex justify-between items-center mt-2">
-                          <span className={`font-price-lg text-primary text-sm ${p.status === 'Agotado' ? 'text-secondary/50' : ''}`}>{p.price}</span>
+                          <span className={`font-price-lg text-primary text-sm ${p.status === 'Agotado' ? 'text-secondary/50' : ''}`}>{p.price}{p.original && <span className="ml-1.5 text-[11px] font-normal text-secondary line-through">{p.original}</span>}</span>
                           <button 
                             disabled={p.status === 'Agotado'}
                             onClick={() => handleAddToCartWithAnim(p)}

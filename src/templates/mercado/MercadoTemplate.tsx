@@ -15,6 +15,8 @@ interface MercadoTemplateProps {
 }
 
 interface Producto {
+  /** Precio normal si el producto está en oferta (`price` ya es el de oferta). */
+  priceAnterior?: number;
   id: string;
   name: string;
   price: number;
@@ -54,6 +56,7 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
             id: String(p.id),
             name: p.name,
             price: Number(p.price) || 0,
+            priceAnterior: Number(p.price_anterior) > 0 ? Number(p.price_anterior) : undefined,
             category: (p.category || 'General').toLowerCase(),
             image: p.image || store.heroImage,
             description: p.description || '',
@@ -390,7 +393,7 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
                       <h4 className="font-bold text-sm line-clamp-2 mt-0.5" style={{ fontFamily: t.fontHeadline }}>{p.name}</h4>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="font-black text-base" style={{ color: t.primary }}>S/ {p.price.toFixed(2)}</span>
+                      <span className="font-black text-base" style={{ color: t.primary }}>S/ {p.price.toFixed(2)}{p.priceAnterior && <span className="ml-1.5 text-xs font-medium line-through" style={{ color: t.onSurfaceVariant }}>S/ {p.priceAnterior.toFixed(2)}</span>}</span>
                       <button
                         onClick={() => agregar(p)}
                         aria-label={`Agregar ${p.name} al carrito`}

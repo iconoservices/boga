@@ -39,8 +39,8 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
             id: p.id,
             title: p.name,
             price: p.price,
-            originalPrice: p.price,
-            hasOffer: false,
+            originalPrice: p.price_anterior > 0 ? Number(p.price_anterior) : p.price,
+            hasOffer: p.price_anterior > 0,
             category: p.category ? p.category.toLowerCase() : 'vestidos',
             image: p.image || 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&q=80',
             description: p.description || 'Prenda exclusiva de Estilos Mirka.'

@@ -1750,3 +1750,14 @@ CREATE POLICY "site_settings: superadmin escribe" ON public.site_settings FOR AL
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS latitud DOUBLE PRECISION;
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS longitud DOUBLE PRECISION;
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS mostrar_ubicacion BOOLEAN NOT NULL DEFAULT false;
+
+-- ============================================================
+-- OFERTAS EN PRODUCTOS
+-- ============================================================
+-- El dueño marca un producto en oferta desde su panel (Productos → editar → «Precio en oferta»).
+-- `price` sigue siendo el precio normal; `precio_oferta` es el precio rebajado (debe ser menor) y
+-- `oferta_hasta` (opcional) es el último día de la oferta, en hora de Perú: pasada esa fecha el producto
+-- vuelve solo a su precio normal. Los endpoints públicos mandan como `price` el precio vigente y como
+-- `price_anterior` el normal, así toda la app (tienda, carrito, pedido, /promotions) usa el mismo precio.
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS precio_oferta NUMERIC;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS oferta_hasta DATE;

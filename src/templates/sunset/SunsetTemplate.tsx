@@ -101,6 +101,7 @@ export default function SunsetTemplate({ store }: SunsetTemplateProps) {
             name: p.name,
             desc: p.description || '',
             price: `S/ ${p.price.toFixed(2)}`,
+            oldPrice: p.price_anterior > 0 ? `S/ ${Number(p.price_anterior).toFixed(2)}` : undefined,
             category: categoryObj ? categoryObj.href : p.category.toLowerCase(),
             subcategory: p.subcategory || '',
             featured: false,
@@ -484,6 +485,7 @@ export default function SunsetTemplate({ store }: SunsetTemplateProps) {
                       style={{ fontFamily: t.fontLabel, color: t.primary }}
                     >
                       {item.price}
+                      {(item as any).oldPrice && <span className="ml-2 text-xs font-normal line-through opacity-60">{(item as any).oldPrice}</span>}
                     </span>
                   </div>
                 ))}
@@ -600,6 +602,7 @@ export default function SunsetTemplate({ store }: SunsetTemplateProps) {
               </span>
               <span className="text-4xl md:text-5xl font-bold tracking-tighter block" style={{ fontFamily: t.fontLabel, color: t.primary }}>
                 {selectedProduct.price}
+                {(selectedProduct as any).oldPrice && <span className="ml-3 text-lg font-normal line-through opacity-60">{(selectedProduct as any).oldPrice}</span>}
               </span>
             </div>
 

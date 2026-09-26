@@ -46,6 +46,7 @@ export default function NaturaTemplate({ store }: NaturaTemplateProps) {
           name: p.name,
           desc: '',
           price: `S/ ${p.price.toFixed(2)}`,
+          oldPrice: p.price_anterior > 0 ? `S/ ${Number(p.price_anterior).toFixed(2)}` : undefined,
           category: categoryObj ? categoryObj.href : p.category.toLowerCase(),
           image: p.image || 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400&q=80',
         };
@@ -131,7 +132,7 @@ export default function NaturaTemplate({ store }: NaturaTemplateProps) {
                   <h3 className="font-bold text-[13px] leading-tight line-clamp-1" style={{ color: t.onSurface }}>{product.name}</h3>
                   <p className="text-[11px] mt-0.5 line-clamp-1" style={{ color: t.onSurfaceVariant }}>{product.desc}</p>
                   <div className="flex items-center justify-between mt-2">
-                    <span className="font-black text-[15px]" style={{ color: t.primary }}>{product.price}</span>
+                    <span className="font-black text-[15px]" style={{ color: t.primary }}>{product.price}{product.oldPrice && <span className="ml-1.5 text-[11px] font-medium line-through" style={{ color: t.onSurfaceVariant }}>{product.oldPrice}</span>}</span>
                     <button onClick={() => setCartCount((c) => c + 1)}
                       className="w-7 h-7 rounded-full flex items-center justify-center transition-transform active:scale-90"
                       style={{ background: t.primary, color: t.onPrimary }}>
@@ -163,7 +164,7 @@ export default function NaturaTemplate({ store }: NaturaTemplateProps) {
               <h2 className="font-bold text-lg" style={{ color: t.onSurface }}>{selectedProduct.name}</h2>
               <p className="text-[13px] mt-2 leading-relaxed" style={{ color: t.onSurfaceVariant }}>{selectedProduct.desc}</p>
               <div className="flex items-center justify-between mt-5">
-                <span className="font-black text-xl" style={{ color: t.primary }}>{selectedProduct.price}</span>
+                <span className="font-black text-xl" style={{ color: t.primary }}>{selectedProduct.price}{selectedProduct.oldPrice && <span className="ml-2 text-sm font-medium line-through" style={{ color: t.onSurfaceVariant }}>{selectedProduct.oldPrice}</span>}</span>
                 <button onClick={() => { setCartCount((c) => c + 1); setSelectedProduct(null); }}
                   className="px-6 py-2.5 rounded-xl font-bold text-sm flex items-center gap-1.5 transition-transform active:scale-95"
                   style={{ background: t.primary, color: t.onPrimary }}>

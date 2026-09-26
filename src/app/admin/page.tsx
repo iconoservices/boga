@@ -23,6 +23,7 @@ import { moverStock, registrarMovimientos, stockIlimitado } from '@/lib/stock';
 import PedidosTab, { type Pedido } from '@/components/admin/PedidosTab';
 import HistorialStock from '@/components/admin/HistorialStock';
 import MiPlan from '@/components/admin/MiPlan';
+import { COLS_OFERTA, precioOfertaVigente, porcentajeOferta } from '@/lib/ofertas';
 
 interface Product {
   id: string;
@@ -36,6 +37,9 @@ interface Product {
   image: string;
   description?: string;
   created_at: string;
+  /** Precio rebajado y último día de la oferta (SQL «OFERTAS EN PRODUCTOS»). Sin oferta = null. */
+  precio_oferta?: number | null;
+  oferta_hasta?: string | null;
 }
 
 type TabId = 'inicio' | 'products' | 'orders' | 'pos' | 'metrics' | 'stores';
@@ -331,6 +335,8 @@ function AdminDashboard({ user }: { user: User }) {
     stockQuantity: '',
     status: 'Activo',
     ubicacion: '',
+    precioOferta: '',
+    ofertaHasta: '',
   });
 
   // Tiendas de terrenos: "Sección" pasa a ser el área, y aparece un campo para la ubicación (enlace de Maps).
@@ -350,6 +356,8 @@ function AdminDashboard({ user }: { user: User }) {
       stockQuantity: '',
       status: 'Activo',
       ubicacion: '',
+      precioOferta: '',
+      ofertaHasta: '',
     });
     setSelectedFile(null);
     setPreviewUrl(null);
@@ -409,11 +417,14 @@ function AdminDashboard({ user }: { user: User }) {
       return;
     }
     setIsLoading(true);
-    const { data, error } = await supabase
+    const base = 'id,name,store,price,category,subcategory,stock,status,image,description,created_at';
+    let { data, error } = await supabase
       .from('products')
-      .select('id,name,store,price,category,subcategory,stock,status,image,description,created_at')
+      .select(`${base},${COLS_OFERTA}`)
       .in('store', slugs)
       .order('created_at', { ascending: false });
+    // Si el SQL de ofertas aún no se corrió, esas columnas no existen: se pide lo de siempre.
+    if (error) ({ data, error } = await supabase.from('products').select(base).in('store', slugs).order('created_at', { ascending: false }) as any);
 
     if (error) {
       console.error('Error fetching products:', error);
@@ -501,7 +512,8 @@ function AdminDashboard({ user }: { user: User }) {
       if (existing) {
         return prev.map(item => item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
       }
-      return [...prev, { product, quantity: 1 }];
+      // Entra con el precio vigente (oferta si la hay): de ahí salen el total, el pedido guardado y el ticket.
+      return [...prev, { product: { ...product, price: precioOfertaVigente(product) ?? product.price }, quantity: 1 }];
     });
   };
 
@@ -966,6 +978,17 @@ function AdminDashboard({ user }: { user: User }) {
         ? `${newProduct.desc.trim()}\n${newProduct.ubicacion.trim()}`.trim()
         : newProduct.desc;
 
+      // Oferta: precio rebajado (menor al normal) y, si quiere, hasta qué día. Los campos solo se mandan si hay
+      // oferta o si el producto tenía una que se está quitando (así guardar un producto normal no depende del SQL).
+      const precioNormal = parseFloat(newProduct.price);
+      const precioOfertaNum = parseFloat(newProduct.precioOferta);
+      const hayOferta = newProduct.precioOferta.trim() !== '' && precioOfertaNum > 0;
+      if (hayOferta && !(precioOfertaNum < precioNormal)) throw new Error('El precio en oferta debe ser menor al precio normal.');
+      const productoPrevio = editingProductId ? products.find(x => x.id === editingProductId) : undefined;
+      const camposOferta = hayOferta || productoPrevio?.precio_oferta
+        ? { precio_oferta: hayOferta ? precioOfertaNum : null, oferta_hasta: hayOferta && newProduct.ofertaHasta ? newProduct.ofertaHasta : null }
+        : {};
+
       // 3. Guardar en la base de datos
       if (editingProductId) {
         const { error: dbError } = await supabase.from('products').update({
@@ -976,6 +999,7 @@ function AdminDashboard({ user }: { user: User }) {
           subcategory: newProduct.subcategory,
           image: finalImageUrl,
           description: descripcionFinal,
+          ...camposOferta,
           // Sin módulo de inventario no se toca el stock guardado (por si lo vuelven a prender).
           ...(tiendaTiene(newProduct.store, 'inventario') ? { stock: finalStock } : {}),
           status: finalStatus,
@@ -1008,6 +1032,7 @@ function AdminDashboard({ user }: { user: User }) {
             subcategory: newProduct.subcategory,
             image: finalImageUrl,
             description: descripcionFinal,
+            ...camposOferta,
             stock: finalStock,
             status: finalStatus,
           }
@@ -1047,6 +1072,8 @@ function AdminDashboard({ user }: { user: User }) {
       stockQuantity: hasFixedStock ? product.stock.toString() : '',
       status: product.status || 'Activo',
       ubicacion: (product.description || '').match(RE_MAPS)?.[0] ?? '',
+      precioOferta: product.precio_oferta ? String(product.precio_oferta) : '',
+      ofertaHasta: product.oferta_hasta ? product.oferta_hasta.slice(0, 10) : '',
     });
     setPreviewUrl(product.image);
     setSelectedFile(null);
@@ -1704,7 +1731,14 @@ function AdminDashboard({ user }: { user: User }) {
                                   </label>
                                 </td>
                                 <td className="p-3 font-bold text-gray-900">
-                                  S/ {Number(p.price).toFixed(2)}
+                                  {precioOfertaVigente(p) !== null ? (
+                                    <>
+                                      S/ {precioOfertaVigente(p)!.toFixed(2)}
+                                      <span className="block text-[11px] font-medium text-gray-400 line-through">S/ {Number(p.price).toFixed(2)}</span>
+                                    </>
+                                  ) : (
+                                    <>S/ {Number(p.price).toFixed(2)}</>
+                                  )}
                                 </td>
                                 <td className="p-3 text-right">
                                   <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1752,7 +1786,13 @@ function AdminDashboard({ user }: { user: User }) {
                             <div className="flex flex-col flex-1 min-w-0 py-0.5">
                               <div className="flex justify-between items-start gap-2">
                                 <h3 className="font-bold text-gray-900 text-[13px] leading-tight line-clamp-2">{p.name}</h3>
-                                <span className="font-bold text-primary text-[13px] whitespace-nowrap">S/ {Number(p.price).toFixed(2)}</span>
+                                <span className="font-bold text-primary text-[13px] whitespace-nowrap">
+                                  {precioOfertaVigente(p) !== null ? (
+                                    <>S/ {precioOfertaVigente(p)!.toFixed(2)} <span className="text-[10px] font-medium text-gray-400 line-through">S/ {Number(p.price).toFixed(2)}</span></>
+                                  ) : (
+                                    <>S/ {Number(p.price).toFixed(2)}</>
+                                  )}
+                                </span>
                               </div>
                               
                               <div className="flex items-center gap-1.5 flex-wrap mt-1">
@@ -2115,7 +2155,10 @@ function AdminDashboard({ user }: { user: User }) {
                           <div className="p-1.5 flex-1 flex flex-col justify-between">
                             <h3 className="font-bold text-[11px] text-[#191c1d] truncate leading-tight" title={p.name}>{p.name}</h3>
                             <div className="flex items-center justify-between mt-1">
-                              <p className="font-extrabold text-xs text-[#b8130e]">S/ {p.price.toFixed(2)}</p>
+                              <p className="font-extrabold text-xs text-[#b8130e]">
+                                S/ {(precioOfertaVigente(p) ?? p.price).toFixed(2)}
+                                {precioOfertaVigente(p) !== null && <span className="ml-1 text-[9px] font-medium text-gray-400 line-through">S/ {p.price.toFixed(2)}</span>}
+                              </p>
                               {quantity > 0 && (
                                 <div className="flex items-center gap-0.5 bg-[#ffece9] border border-[#e1e3e4]/20 p-0.5 rounded" onClick={e => e.stopPropagation()}>
                                   <button 
@@ -2662,6 +2705,44 @@ function AdminDashboard({ user }: { user: User }) {
                       ))}
                     </select>
                   </div>
+                </div>
+
+                {/* Oferta: aparece en tu tienda con el precio anterior tachado y en la página Promos de BogaHub */}
+                <div className="rounded-xl border border-dashed border-primary/40 bg-primary/5 p-4">
+                  <p className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-primary text-[18px]">local_offer</span>
+                    ¿Está en oferta? <span className="font-medium text-gray-500">(opcional)</span>
+                  </p>
+                  <div className="grid grid-cols-2 gap-4 mt-3">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Precio en oferta (S/)</label>
+                      <input
+                        type="number"
+                        step="0.10"
+                        min="0"
+                        value={newProduct.precioOferta}
+                        onChange={(e) => setNewProduct({...newProduct, precioOferta: e.target.value})}
+                        placeholder="Déjalo vacío si no"
+                        className="w-full px-3 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Hasta el día</label>
+                      <input
+                        type="date"
+                        value={newProduct.ofertaHasta}
+                        onChange={(e) => setNewProduct({...newProduct, ofertaHasta: e.target.value})}
+                        className="w-full px-3 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
+                      />
+                    </div>
+                  </div>
+                  {newProduct.precioOferta && parseFloat(newProduct.precioOferta) > 0 && parseFloat(newProduct.price) > 0 && (
+                    <p className="text-xs mt-2 font-medium" style={{ color: parseFloat(newProduct.precioOferta) < parseFloat(newProduct.price) ? '#15803d' : '#b91c1c' }}>
+                      {parseFloat(newProduct.precioOferta) < parseFloat(newProduct.price)
+                        ? `Tus clientes verán S/ ${parseFloat(newProduct.precioOferta).toFixed(2)} y el precio normal tachado (${porcentajeOferta(parseFloat(newProduct.price), parseFloat(newProduct.precioOferta))}). Sin fecha, la oferta dura hasta que la quites.`
+                        : 'El precio en oferta tiene que ser menor al precio normal.'}
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

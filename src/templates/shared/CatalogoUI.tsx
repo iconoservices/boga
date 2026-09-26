@@ -116,6 +116,9 @@ export function ProductGrid({
             <div className="flex justify-between items-center mt-auto">
               <span className={`font-extrabold ${TXT.lead}`} style={{ color: t.primary }}>
                 {soles(product.price)}
+                {product.priceAnterior && (
+                  <span className={`block ${TXT.micro} font-medium line-through`} style={{ color: t.onSurfaceVariant }}>{soles(product.priceAnterior)}</span>
+                )}
               </span>
               <AddButton t={t} nombre={product.name} onAdd={() => onAdd(product)} />
             </div>
@@ -226,7 +229,12 @@ export function ProductModal({
         style={{ background: `${t.surface}F5`, backdropFilter: 'blur(12px)', borderTop: `1px solid ${t.outlineVariant}40` }}
       >
         <div className="w-full max-w-2xl flex items-center justify-between gap-4 px-1">
-          <span className="font-black text-xl" style={{ color: t.primary }}>{soles(producto.price)}</span>
+          <span className="font-black text-xl" style={{ color: t.primary }}>
+            {soles(producto.price)}
+            {producto.priceAnterior && (
+              <span className="ml-2 text-sm font-medium line-through" style={{ color: t.onSurfaceVariant }}>{soles(producto.priceAnterior)}</span>
+            )}
+          </span>
           <button
             onClick={() => {
               // El modal se queda abierto: abajo hay sugeridos y el cliente

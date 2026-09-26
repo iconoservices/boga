@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
 
@@ -11,6 +12,7 @@ import MarketSecciones from '@/components/MarketSecciones';
 import { hrefTienda, esFuera } from '@/lib/tiendaUrl';
 
 export default function Home() {
+  const router = useRouter();
   const [activeCategory, setActiveCategory] = useState('Todas');
   const [showAllSubCategories, setShowAllSubCategories] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
@@ -28,7 +30,7 @@ export default function Home() {
   const [favorites, setFavorites] = useState<any[]>([]);
   const [marketplaceProducts, setMarketplaceProducts] = useState<any[]>([]);
 
-  const [storeData, setStoreData] = useState<{ name: string; slug: string; category: string; time: string; delivery: string; logo: string; externalUrl?: string; products: { name: string; price: string; img: string }[] }[]>([]);
+  const [storeData, setStoreData] = useState<{ name: string; slug: string; category: string; time: string; delivery: string; logo: string; externalUrl?: string; products: { name: string; price: string; original?: string; img: string }[] }[]>([]);
 
   useEffect(() => {
     const fetchRealData = async () => {
@@ -82,6 +84,7 @@ export default function Home() {
             name: p.name,
             title: p.name,
             price: `S/ ${p.price.toFixed(2)}`,
+            original: p.price_anterior > 0 ? `S/ ${Number(p.price_anterior).toFixed(2)}` : undefined,
             slug: p.store,
             image: p.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80',
             store: storeDef?.name || p.store,
@@ -96,7 +99,7 @@ export default function Home() {
           return {
             ...s,
             products: sProducts.length > 0 
-              ? sProducts.map(p => ({ name: p.title, price: p.price, img: p.image })) 
+              ? sProducts.map(p => ({ name: p.title, price: p.price, original: p.original, img: p.image })) 
               : s.products
           };
         }));
@@ -136,6 +139,7 @@ export default function Home() {
             newSectionsProducts[macroCat].push({
               name: p.name,
               price: `S/ ${p.price.toFixed(2)}`,
+              original: p.price_anterior > 0 ? `S/ ${Number(p.price_anterior).toFixed(2)}` : undefined,
               badge: 'Nuevo',
               img: p.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80'
             });
@@ -226,6 +230,7 @@ export default function Home() {
             id: p.id,
             title: p.name,
             price: `S/ ${p.price.toFixed(2)}`,
+            original: p.price_anterior > 0 ? `S/ ${Number(p.price_anterior).toFixed(2)}` : undefined,
             rating: "4.9",
             reviews: "(+50)",
             store: storeDef?.name || p.store,
@@ -367,6 +372,8 @@ export default function Home() {
                   <button
                     key={cat.id}
                     onClick={() => {
+                      // Promos no es un filtro: entra a su propia página (/promotions)
+                      if (cat.id === 'Combos & Promos') { router.push('/promotions'); return; }
                       setActiveCategory(cat.id);
                       setShowAllSubCategories(false);
                     }}
@@ -437,7 +444,7 @@ export default function Home() {
             <section className="flex flex-col gap-4">
               <div className="flex justify-between items-end mb-1">
                 <h3 className="font-headline-lg text-on-surface">Recomendados para ti</h3>
-                <Link href="/promotions" className="text-primary font-label-md text-sm">Ver todo</Link>
+                <Link href="/explore" className="text-primary font-label-md text-sm">Ver todo</Link>
               </div>
               <div className="grid grid-flow-row-dense grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-stack-lg">
                 {marketplaceProducts.map((prod, idx) => {
@@ -463,7 +470,7 @@ export default function Home() {
                                   <img loading="lazy" decoding="async" src={sp.img} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={sp.name} />
                                 </div>
                                 <h4 className="text-[10px] font-label-md text-secondary uppercase leading-tight line-clamp-1 mt-1">{sp.name}</h4>
-                                <span className="font-price-lg text-primary text-xs">{sp.price}</span>
+                                <span className="font-price-lg text-primary text-xs">{sp.price}{sp.original && <span className="ml-1 text-[9px] font-normal text-secondary line-through">{sp.original}</span>}</span>
                               </div>
                             ))}
                           </div>
@@ -515,7 +522,7 @@ export default function Home() {
                             <h4 className="font-headline-sm text-sm text-on-surface mt-2 line-clamp-1">{prod.title}</h4>
                           </div>
                           <div className="flex items-center justify-between mt-3">
-                            <span className="font-price-lg text-primary text-base">{prod.price}</span>
+                            <span className="font-price-lg text-primary text-base">{prod.price}{prod.original && <span className="ml-1.5 text-[11px] font-normal text-secondary line-through">{prod.original}</span>}</span>
                             <div className="flex items-center gap-2">
                               <button 
                                 onClick={(e) => {
@@ -578,7 +585,7 @@ export default function Home() {
                           <h4 className="font-headline-sm text-sm text-on-surface line-clamp-1">{prod.title}</h4>
                         </div>
                         <div className="flex justify-between items-center pt-2 mt-auto">
-                          <span className="font-price-lg text-primary text-base">{prod.price}</span>
+                          <span className="font-price-lg text-primary text-base">{prod.price}{prod.original && <span className="ml-1.5 text-[11px] font-normal text-secondary line-through">{prod.original}</span>}</span>
                           <button 
                             onClick={(e) => {
                               e.preventDefault();

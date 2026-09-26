@@ -22,8 +22,8 @@ export type EmpleoHome = { id: string; puesto: string; negocio: string; zona: st
 export type OficioHome = { id: string; nombre: string; oficio: string; zona: string; img: string };
 export type ViajeHome = { id: string; titulo: string; medio: string; tiempo: string; precio: string; icon: string };
 export type InmuebleHome = { id: string; titulo: string; zona: string; precio: string; tag: string; img: string };
-export type ProductoHome = { id: string; name: string; price: number; image: string; storeSlug: string; storeName: string; storeExternalUrl?: string };
-export type TiendaComida = { slug: string; name: string; tagline: string; logo: string; externalUrl?: string; productos: { id: string; name: string; price: number; image: string }[] };
+export type ProductoHome = { id: string; name: string; price: number; priceAnterior?: number; image: string; storeSlug: string; storeName: string; storeExternalUrl?: string };
+export type TiendaComida = { slug: string; name: string; tagline: string; logo: string; externalUrl?: string; productos: { id: string; name: string; price: number; priceAnterior?: number; image: string }[] };
 
 /** Cada bloque del Inicio que se lee por separado; si uno falla en el servidor, el cliente lo pide él solo. */
 export type SeccionHome = 'revista' | 'promos' | 'agenda' | 'chamba' | 'sorteos' | 'viajes' | 'inmuebles' | 'catalogo';
@@ -130,6 +130,7 @@ export function armarCatalogoHome(dbStores: any[], dbProducts: any[]): { product
       id: p.id,
       name: p.name,
       price: Number(p.price) || 0,
+      priceAnterior: Number(p.price_anterior) > 0 ? Number(p.price_anterior) : undefined,
       image: p.image,
       storeSlug: p.store,
       storeName: tiendasPorSlug[p.store]?.name || p.store,
@@ -158,7 +159,7 @@ export function armarCatalogoHome(dbStores: any[], dbProducts: any[]): { product
       externalUrl: st.external_url || undefined,
       productos: mezclar((dbProducts || []).filter((p) => p.store === st.slug && p.image))
         .slice(0, 3)
-        .map((p) => ({ id: p.id, name: p.name, price: Number(p.price) || 0, image: p.image })),
+        .map((p) => ({ id: p.id, name: p.name, price: Number(p.price) || 0, priceAnterior: Number(p.price_anterior) > 0 ? Number(p.price_anterior) : undefined, image: p.image })),
     }))
     .filter((t) => t.productos.length > 0);
 

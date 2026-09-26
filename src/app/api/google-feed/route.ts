@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { precioOfertaVigente } from '@/lib/ofertas';
 
 export const revalidate = 3600; // Refrescar cada hora
 
@@ -41,7 +42,7 @@ export async function GET() {
     ? { data: [], error: null }
     : await supabase
         .from('products')
-        .select('id, name, description, price, image, store, status, stock')
+        .select('id, name, description, price, image, store, status, stock, precio_oferta, oferta_hasta')
         .in('store', Array.from(storeMap.keys()))
         .neq('status', 'Inactivo');
 
@@ -78,6 +79,8 @@ export async function GET() {
       const availability = isAgotado ? 'out_of_stock' : 'in_stock';
       const priceNum = typeof p.price === 'number' ? p.price : parseFloat(p.price) || 0;
       const formattedPrice = priceNum.toFixed(2);
+      // Oferta vigente: Google pide el precio normal en g:price y el rebajado en g:sale_price.
+      const ofertaNum = precioOfertaVigente(p);
       const desc = (p.description || p.name || 'Producto disponible en ' + storeBrand).slice(0, 5000);
 
       return `    <item>
@@ -89,7 +92,8 @@ export async function GET() {
       <g:brand>${escapeXml(storeBrand)}</g:brand>
       <g:condition>new</g:condition>
       <g:availability>${availability}</g:availability>
-      <g:price>${formattedPrice} PEN</g:price>
+      <g:price>${formattedPrice} PEN</g:price>${ofertaNum !== null ? `
+      <g:sale_price>${ofertaNum.toFixed(2)} PEN</g:sale_price>` : ''}
       <g:identifier_exists>no</g:identifier_exists>
     </item>`;
     })

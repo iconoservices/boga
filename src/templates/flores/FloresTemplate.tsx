@@ -14,6 +14,8 @@ interface FloresTemplateProps {
 }
 
 interface Product {
+  /** Precio normal si el producto está en oferta (`price` ya es el de oferta). */
+  priceAnterior?: number;
   id: string;
   name: string;
   desc: string;
@@ -66,6 +68,7 @@ export default function FloresTemplate({ store }: FloresTemplateProps) {
           name: p.name,
           desc: p.description || '',
           price: p.price,
+          priceAnterior: Number(p.price_anterior) > 0 ? Number(p.price_anterior) : undefined,
           category: categoryObj ? categoryObj.href : p.category.toLowerCase(),
           image: p.image || 'https://images.unsplash.com/photo-1455659817273-f96807779a8a?w=600&q=80',
         };
@@ -210,7 +213,7 @@ export default function FloresTemplate({ store }: FloresTemplateProps) {
                   <h3 className="font-bold text-[13px] leading-tight line-clamp-1" style={{ color: t.onSurface }}>{product.name}</h3>
                   <p className="text-[11px] mt-0.5 line-clamp-1" style={{ color: t.onSurfaceVariant }}>{product.desc}</p>
                   <div className="flex items-center justify-between mt-2">
-                    <span className="font-black text-[15px]" style={{ color: t.primary }}>S/ {product.price.toFixed(2)}</span>
+                    <span className="font-black text-[15px]" style={{ color: t.primary }}>S/ {product.price.toFixed(2)}{product.priceAnterior && <span className="ml-1.5 text-[11px] font-medium line-through" style={{ color: t.onSurfaceVariant }}>S/ {product.priceAnterior.toFixed(2)}</span>}</span>
                     <button onClick={(e) => { e.stopPropagation(); addToCart(product); }}
                       className="w-7 h-7 rounded-full flex items-center justify-center transition-transform active:scale-90 cursor-pointer"
                       style={{ background: t.primary, color: t.onPrimary }}>

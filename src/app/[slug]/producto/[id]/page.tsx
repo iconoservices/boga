@@ -5,6 +5,7 @@ import { cache } from 'react';
 import { supabase } from '@/lib/supabase';
 import { getTemplate } from '@/lib/templates.config';
 import { conMarcaBlanca } from '@/lib/modulos';
+import { precioOfertaVigente } from '@/lib/ofertas';
 import PedirProducto from './PedirProducto';
 
 // Página propia de un producto: /<tienda>/producto/<id>.
@@ -25,7 +26,7 @@ const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app').rep
 
 const cargar = cache(async (slug: string, id: string) => {
   if (!ID_VALIDO.test(id)) return null;
-  const columnas = 'id,name,description,price,image,category,status,store';
+  const columnas = 'id,name,description,price,image,category,status,store,precio_oferta,oferta_hasta';
   const [{ data: tienda }, { data: porId }] = await Promise.all([
     supabase
       .from('stores')
@@ -79,7 +80,9 @@ export default async function ProductoPage({ params }: { params: Promise<Params>
   const tema = (tienda.theme && Object.keys(tienda.theme).length > 0 ? tienda.theme : getTemplate(tienda.template as string)?.theme) as
     | { primary?: string; background?: string; onBackground?: string } | undefined;
   const color = tema?.primary || '#b8130e';
-  const precio = Number(producto.price) || 0;
+  const precioNormal = Number(producto.price) || 0;
+  // Con oferta vigente se muestra, se pide y se declara a Google el precio rebajado.
+  const precio = precioOfertaVigente(producto) ?? precioNormal;
   const agotado = producto.status === 'Agotado' || producto.status === 'Sin stock';
   const logo = tienda.logo_image || tienda.hero_image;
 
@@ -133,7 +136,10 @@ export default async function ProductoPage({ params }: { params: Promise<Params>
         <div className="flex flex-col gap-2">
           {producto.category && <span className="text-xs font-bold uppercase tracking-wider opacity-60">{producto.category}</span>}
           <h1 className="text-2xl font-extrabold leading-tight">{producto.name}</h1>
-          <p className="text-3xl font-black" style={{ color }}>S/ {precio.toFixed(2)}</p>
+          <p className="text-3xl font-black" style={{ color }}>
+            S/ {precio.toFixed(2)}
+            {precio < precioNormal && <span className="ml-2 text-base font-medium line-through opacity-50">S/ {precioNormal.toFixed(2)}</span>}
+          </p>
           {producto.description && <p className="text-base leading-relaxed opacity-80 whitespace-pre-line">{producto.description}</p>}
         </div>
 

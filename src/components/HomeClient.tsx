@@ -368,7 +368,7 @@ export default function HomeClient({ inicial }: { inicial: HomeData }) {
                   <div className="p-2.5 flex flex-col gap-0.5">
                     <span className="font-label-md text-[9px] text-secondary uppercase tracking-wide truncate">{p.storeName}</span>
                     <h3 className="font-headline-sm text-xs text-on-surface leading-tight line-clamp-1">{p.name}</h3>
-                    <span className="font-price-lg text-primary text-sm mt-0.5">S/ {p.price.toFixed(2)}</span>
+                    <span className="font-price-lg text-primary text-sm mt-0.5">S/ {p.price.toFixed(2)}{p.priceAnterior && <span className="ml-1.5 text-[11px] font-normal text-secondary line-through">S/ {p.priceAnterior.toFixed(2)}</span>}</span>
                   </div>
                 </Link>
               ))}
@@ -501,7 +501,7 @@ export default function HomeClient({ inicial }: { inicial: HomeData }) {
                           <img src={p.image} alt={p.name} loading="lazy" className="w-full h-full object-cover" />
                         </div>
                         <p className="font-label-md text-[10px] text-on-surface leading-tight line-clamp-1 mt-1">{p.name}</p>
-                        <p className="font-price-lg text-primary text-[11px]">S/ {p.price.toFixed(2)}</p>
+                        <p className="font-price-lg text-primary text-[11px]">S/ {p.price.toFixed(2)}{p.priceAnterior && <span className="ml-1 text-[9px] font-normal text-secondary line-through">S/ {p.priceAnterior.toFixed(2)}</span>}</p>
                       </div>
                     ))}
                   </div>

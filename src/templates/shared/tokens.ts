@@ -39,6 +39,8 @@ export interface Producto {
   desc: string;
   /** Numerico: el carrito necesita sumar, no puede guardar "S/ 22.90". */
   price: number;
+  /** Precio normal cuando el producto está en oferta (`price` ya es el de oferta). */
+  priceAnterior?: number;
   /** Siempre el `href` de la categoria de la tienda, para que case con los chips. */
   category: string;
   image: string;

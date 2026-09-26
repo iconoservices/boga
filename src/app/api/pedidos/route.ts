@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { moduloActivo } from '@/lib/modulos';
 import { moverStock } from '@/lib/stock';
+import { COLS_OFERTA, aplicarOferta } from '@/lib/ofertas';
 
 // Guarda el pedido de la carta en la base ANTES de que el cliente abra WhatsApp.
 //
@@ -62,13 +63,16 @@ export async function POST(request: Request) {
   const { data: tienda } = await db.from('stores').select('slug,status,modulos').eq('slug', slug).maybeSingle();
   if (!tienda || tienda.status !== 'active') return NextResponse.json({ ok: false, motivo: 'tienda' }, { status: 404 });
 
-  const { data: productos } = await db
+  // El precio se lee de la base (nunca del cliente) y es el vigente: si el producto está en oferta se cobra la oferta.
+  const ids = Array.from(pedidas.keys());
+  let { data: productos, error: errProductos } = await db
     .from('products')
-    .select('id,name,price,stock,status')
+    .select(`id,name,price,stock,status,${COLS_OFERTA}`)
     .eq('store', slug)
-    .in('id', Array.from(pedidas.keys()));
+    .in('id', ids);
+  if (errProductos) ({ data: productos } = await db.from('products').select('id,name,price,stock,status').eq('store', slug).in('id', ids) as any);
 
-  const lineas = (productos ?? []).map((p) => ({
+  const lineas = ((productos ?? []) as any[]).map(aplicarOferta).map((p) => ({
     id: p.id as string,
     name: p.name as string,
     price: Number(p.price) || 0,
