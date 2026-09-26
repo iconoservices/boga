@@ -515,7 +515,7 @@ function ExploreContenido() {
                   </button>
                 </div>
                 <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin pb-3 snap-x scroll-pl-container-margin lg:scroll-pl-0" style={{ scrollbarWidth: 'none' }}>
-                  {section.products.slice(0, 4).map((p, idx) => (
+                  {section.products.slice(0, 12).map((p, idx) => (
                     <div key={idx} className="min-w-[160px] w-[160px] bg-white rounded-2xl shadow-[0_15px_15px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col border border-surface-container-highest snap-start">
                       <div className="relative aspect-square overflow-hidden bg-surface-container-low">
                         <img className={`w-full h-full object-cover ${p.status === 'Agotado' ? 'grayscale opacity-60' : ''}`} src={p.img} alt={p.name} />
