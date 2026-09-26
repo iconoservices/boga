@@ -215,7 +215,7 @@ function PortalesPanel() {
       <div className="flex flex-col gap-4 lg:h-full lg:justify-center">
         <div className="flex items-end justify-between gap-4">
           <div className="min-w-0">
-            <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">
+            <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-xl lg:whitespace-nowrap leading-tight">
               Todo Pucallpa en una sola app
             </h2>
             <p className="font-body-md text-secondary text-xs mt-1 max-w-[52ch]">
@@ -223,7 +223,7 @@ function PortalesPanel() {
               <span className="hidden lg:inline">Transporte verificado, servicios de confianza y la agenda de la ciudad, en tiempo real.</span>
             </p>
           </div>
-          <span className="hidden sm:flex items-center gap-1.5 font-label-md text-[10px] text-secondary shrink-0">
+          <span className="hidden sm:flex lg:hidden 2xl:flex items-center gap-1.5 font-label-md text-[10px] text-secondary shrink-0">
             <span className="w-1.5 h-1.5 rounded-full bg-[#0F8A55] animate-pulse" />
             Sincronizado
           </span>
@@ -234,13 +234,13 @@ function PortalesPanel() {
             <Link
               key={p.href}
               href={p.href}
-              className="group flex flex-col items-center gap-1.5 shrink-0 w-16 snap-start lg:w-auto lg:gap-1.5 lg:py-2 lg:bg-white lg:border lg:border-surface-container-highest lg:rounded-2xl lg:shadow-sm lg:hover:shadow-md lg:hover:border-primary/30 lg:transition-all"
+              className="group flex flex-col items-center gap-1.5 shrink-0 w-16 snap-start lg:w-auto lg:gap-2 lg:py-3.5 lg:bg-white lg:border lg:border-surface-container-highest lg:rounded-2xl lg:shadow-sm lg:hover:shadow-md lg:hover:border-primary/30 lg:transition-all"
             >
               <span
-                className="w-12 h-12 lg:w-10 lg:h-10 rounded-xl lg:rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform"
+                className="w-12 h-12 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform"
                 style={{ backgroundColor: p.color }}
               >
-                <span className="material-symbols-outlined text-white text-[22px] lg:text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>{p.icon}</span>
+                <span className="material-symbols-outlined text-white text-[22px] lg:text-[26px]" style={{ fontVariationSettings: "'FILL' 1" }}>{p.icon}</span>
               </span>
               <span className="font-label-md text-[10px] lg:text-xs lg:font-semibold text-on-surface text-center leading-tight line-clamp-1 w-full">{p.label}</span>
             </Link>
