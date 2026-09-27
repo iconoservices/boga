@@ -1404,7 +1404,7 @@ function AdminDashboard({ user }: { user: User }) {
           const titulo = 'text-[11px] font-extrabold uppercase tracking-wider text-gray-400 mb-2 px-1';
 
           return (
-          <div className="max-w-md md:max-w-2xl lg:max-w-5xl mx-auto flex flex-col gap-4 pb-4">
+          <div className="max-w-md md:max-w-2xl lg:max-w-5xl mx-auto flex flex-col gap-4 pb-24 md:pb-4">
             {/* Tu tienda: logo, selector, enlace y el interruptor "activa" */}
             <div className="rounded-xl p-3.5 text-white shadow-sm flex items-center gap-3" style={{ background: inicioStore.theme?.primary || '#b8130e' }}>
               <div className="w-10 h-10 rounded-full bg-white/15 border border-white/25 overflow-hidden flex items-center justify-center shrink-0">
@@ -3724,9 +3724,8 @@ function AdminDashboard({ user }: { user: User }) {
         </div>
       )}
 
-      {/* Mobile Bottom Navigation — no aparece en el Inicio: ahí es un hub, la
-          barra sale recién al entrar a una sección de trabajo. */}
-      {activeTab !== 'inicio' && (
+      {/* Mobile Bottom Navigation — en todas las pantallas, Inicio incluido (antes se ocultaba ahí porque el Inicio era
+          un menú de tarjetas; ahora es un panel de trabajo y la barra tiene que estar a mano). */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-2 py-3 flex justify-around items-center z-50 rounded-t-2xl shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
         {navTabs.filter(t => t.inBottomBar).map(t => (
           <button
@@ -3749,7 +3748,7 @@ function AdminDashboard({ user }: { user: User }) {
           <span className="text-[10px] font-bold">Más</span>
         </button>
       </div>
-      )}
+
 
       {isHistorialOpen && (
         <HistorialStock
