@@ -10,7 +10,10 @@ import type { StoreTheme } from './templates.config';
 export async function extractThemeFromImageClient(imageUrl: string): Promise<StoreTheme | null> {
   try {
     const { Vibrant } = await import('node-vibrant/browser');
-    const palette = await Vibrant.from(imageUrl).getPalette();
+    // Una imagen ya subida vive en otro dominio (fotos.bogahub.app) sin CORS: el navegador no deja leer sus píxeles.
+    // Se pide por /api/img-proxy (mismo dominio). Las recién elegidas del equipo (blob:) se leen directo.
+    const remota = /^https?:\/\//i.test(imageUrl) && new URL(imageUrl).origin !== window.location.origin;
+    const palette = await Vibrant.from(remota ? `/api/img-proxy?u=${encodeURIComponent(imageUrl)}` : imageUrl).getPalette();
 
     const vibrant    = palette.Vibrant?.hex    ?? null;
     const darkVib    = palette.DarkVibrant?.hex ?? null;
