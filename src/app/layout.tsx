@@ -70,7 +70,6 @@ import MarketTabs from '@/components/MarketTabs';
 import PlazaChatBubble from '@/components/PlazaChatBubble';
 import AvisosBogaPrompt from '@/components/AvisosBogaPrompt';
 import InstalarBogaPrompt from '@/components/InstalarBogaPrompt';
-import AbrirTiendasPropias from '@/components/AbrirTiendasPropias';
 import HomeFloatingActions from '@/components/HomeFloatingActions';
 import { RUTAS_HUB } from '@/lib/rutasHub';
 import MetaPixelTracker from '@/components/MetaPixelTracker';
@@ -179,7 +178,6 @@ export default function RootLayout({
                 <div className="boga-chrome"><InstalarBogaPrompt /></div>
                 <div className="boga-chrome"><AvisosBogaPrompt /></div>
                 <div className="boga-chrome"><HomeFloatingActions /></div>
-                <AbrirTiendasPropias />
               </CartProvider>
             </DemoProvider>
           </StoreSettingsProvider>
