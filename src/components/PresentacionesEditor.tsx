@@ -3,6 +3,7 @@
 // Editor de presentaciones (100 g / 250 g / 1 kg…) para el formulario de productos del superadmin.
 // El del panel del dueño (/admin) tiene el mismo comportamiento con su propio estilo. Ver lib/presentaciones.ts.
 
+import { useState } from 'react';
 import { PRESENTACIONES_SUGERIDAS, type FilaPresentacion } from '@/lib/presentaciones';
 
 export default function PresentacionesEditor({
@@ -12,6 +13,12 @@ export default function PresentacionesEditor({
   onChange: (filas: FilaPresentacion[]) => void;
   ayuda?: string;
 }) {
+  // Fila recién agregada: el cursor cae en lo que falta por escribir (el precio, o el nombre en "+ Otra").
+  const [foco, setFoco] = useState<{ i: number; campo: 'label' | 'price' } | null>(null);
+  const agregar = (label: string) => {
+    setFoco({ i: filas.length, campo: label ? 'price' : 'label' });
+    onChange([...filas, { label, price: '' }]);
+  };
   const cambiar = (i: number, campo: keyof FilaPresentacion, valor: string) =>
     onChange(filas.map((f, j) => (j === i ? { ...f, [campo]: valor } : f)));
   const usadas = new Set(filas.map((f) => f.label.trim().toLowerCase()));
@@ -31,6 +38,7 @@ export default function PresentacionesEditor({
             value={f.label}
             maxLength={30}
             onChange={(e) => cambiar(i, 'label', e.target.value)}
+            autoFocus={foco?.i === i && foco.campo === 'label'}
             placeholder="Ej. 250 g"
             className="flex-1 min-w-0 bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
           />
@@ -40,6 +48,7 @@ export default function PresentacionesEditor({
               type="number" min={0} step={0.1}
               value={f.price}
               onChange={(e) => cambiar(i, 'price', e.target.value)}
+              autoFocus={foco?.i === i && foco.campo === 'price'}
               placeholder="0.00"
               className="w-full bg-white border border-[#ecedf7] rounded-md pl-7 pr-2 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
             />
@@ -59,7 +68,7 @@ export default function PresentacionesEditor({
         {PRESENTACIONES_SUGERIDAS.filter((l) => !usadas.has(l.toLowerCase())).map((l) => (
           <button
             key={l} type="button"
-            onClick={() => onChange([...filas, { label: l, price: '' }])}
+            onClick={() => agregar(l)}
             className="px-2.5 py-1 rounded-full bg-white border border-[#ecedf7] text-[10px] font-bold text-[#424754] hover:border-[#0058be]"
           >
             + {l}
@@ -67,7 +76,7 @@ export default function PresentacionesEditor({
         ))}
         <button
           type="button"
-          onClick={() => onChange([...filas, { label: '', price: '' }])}
+          onClick={() => agregar('')}
           className="px-2.5 py-1 rounded-full bg-white border border-[#ecedf7] text-[10px] font-bold text-[#424754] hover:border-[#0058be]"
         >
           + Otra

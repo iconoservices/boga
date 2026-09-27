@@ -27,7 +27,8 @@ export function leerPresentaciones(v: unknown): Presentacion[] {
     out.push({ label, price: Math.round(price * 100) / 100 });
     if (out.length >= 12) break;
   }
-  return out;
+  // De menor a mayor precio (100 g, 250 g, 1 kg): así las ve el cliente sin importar en qué orden se cargaron.
+  return out.sort((a, b) => a.price - b.price);
 }
 
 /** La más barata: es el "Desde S/ …" y lo que se guarda en `products.price`. */
