@@ -369,10 +369,11 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     // Mismo criterio que al guardar: un preset elegido pisa el color de la
     // plantilla, la tipografia sigue viniendo de la plantilla. Sin esto, el
     // preview de la derecha no reflejaba el preset recien tocado.
-    const preset = colorPreset ? getColorPreset(colorPreset) : null;
-    const resolvedBaseTheme = preset
+    // "logo" no es un preset fijo: sus colores salen de logoTheme (extraídos de la imagen).
+    const presetTheme = colorPreset === 'logo' ? logoTheme : colorPreset ? getColorPreset(colorPreset)?.theme : null;
+    const resolvedBaseTheme = presetTheme
       ? {
-          ...preset.theme,
+          ...presetTheme,
           fontHeadline: tpl?.theme.fontHeadline ?? defaultTheme.fontHeadline,
           fontBody: tpl?.theme.fontBody ?? defaultTheme.fontBody,
           fontLabel: tpl?.theme.fontLabel ?? defaultTheme.fontLabel,
@@ -414,7 +415,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         store: activePreviewStore
       }, '*');
     }
-  }, [storeForm, stores, logoPreview, heroPreview, colorPreset]);
+  }, [storeForm, stores, logoPreview, heroPreview, colorPreset, logoTheme]);
 
   React.useEffect(() => {
     sendPreviewUpdate();
@@ -698,8 +699,11 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     // Si no (viene de la plantilla o de extraccion automatica de imagen), el
     // picker arranca en "colores de la plantilla" para no falsear el origen.
     const matchedPreset = COLOR_PRESETS.find((p) => p.theme.primary === store.theme?.primary);
-    setColorPreset(matchedPreset?.id ?? null);
-    setLogoTheme(null);
+    // Colores propios (sacados del logo o de un guardado anterior) que no son de un preset ni de la plantilla:
+    // se conservan como "Del logo". Antes se pisaban con los de la plantilla al volver a guardar la tienda.
+    const propios = !matchedPreset && store.theme?.primary && store.theme.primary !== getTemplate(store.template as string)?.theme.primary;
+    setColorPreset(matchedPreset?.id ?? (propios ? 'logo' : null));
+    setLogoTheme(propios ? (store.theme as StoreTheme) : null);
     setStoreForm({
       slug: store.slug,
       name: store.name,
@@ -2566,6 +2570,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                               store: storeForm.slug,
                               stock: null,
                               status: 'Activo',
+                              // Solo los demo por peso (plantilla Condimentos) llevan medidas; el resto no toca esa columna.
+                              ...(p.presentaciones?.length ? { presentaciones: p.presentaciones } : {}),
                             }))
                           ).then(({ error }) => {
                             setDemoProductsBusy(false);

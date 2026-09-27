@@ -5,6 +5,7 @@ import { moverStock } from '@/lib/stock';
 import { COLS_OFERTA, aplicarOferta } from '@/lib/ofertas';
 import { descontarStockEnLoyverse } from '@/lib/loyverse';
 import { leerCredencialesLoyverse } from '@/lib/loyverseServidor';
+import { COL_PRESENTACIONES, claveLinea, leerPresentaciones, nombreConPresentacion, presentacionPorEtiqueta } from '@/lib/presentaciones';
 
 // Guarda el pedido de la carta en la base ANTES de que el cliente abra WhatsApp.
 //
@@ -50,13 +51,16 @@ export async function POST(request: Request) {
   const slug = texto(body?.store, 80);
   if (!SLUG.test(slug)) return NextResponse.json({ ok: false, motivo: 'tienda' }, { status: 400 });
 
-  // Solo ids válidos, cantidades de 1 a 99 y hasta 60 líneas; los repetidos se suman.
-  const pedidas = new Map<string, number>();
-  for (const l of (Array.isArray(body?.items) ? body.items.slice(0, 60) : []) as { id?: unknown; quantity?: unknown }[]) {
+  // Solo ids válidos, cantidades de 1 a 99 y hasta 60 líneas; los repetidos se suman. Un producto con
+  // presentaciones ("250 g") es una línea por cada medida pedida.
+  const pedidas = new Map<string, { id: string; pres: string; q: number }>();
+  for (const l of (Array.isArray(body?.items) ? body.items.slice(0, 60) : []) as { id?: unknown; quantity?: unknown; pres?: unknown }[]) {
     const id = texto(l?.id, 60);
+    const pres = texto(l?.pres, 30);
     const q = Math.floor(Number(l?.quantity));
     if (!ID_VALIDO.test(id) || !(q >= 1)) continue;
-    pedidas.set(id, Math.min(99, (pedidas.get(id) ?? 0) + Math.min(q, 99)));
+    const clave = claveLinea(id, pres);
+    pedidas.set(clave, { id, pres, q: Math.min(99, (pedidas.get(clave)?.q ?? 0) + Math.min(q, 99)) });
   }
   if (pedidas.size === 0) return NextResponse.json({ ok: false, motivo: 'sin_productos' });
 
@@ -66,20 +70,28 @@ export async function POST(request: Request) {
   if (!tienda || tienda.status !== 'active') return NextResponse.json({ ok: false, motivo: 'tienda' }, { status: 404 });
 
   // El precio se lee de la base (nunca del cliente) y es el vigente: si el producto está en oferta se cobra la oferta.
-  const ids = Array.from(pedidas.keys());
-  let { data: productos, error: errProductos } = await db
-    .from('products')
-    .select(`id,name,price,stock,status,${COLS_OFERTA}`)
-    .eq('store', slug)
-    .in('id', ids);
-  if (errProductos) ({ data: productos } = await db.from('products').select('id,name,price,stock,status').eq('store', slug).in('id', ids) as any);
+  const ids = Array.from(new Set(Array.from(pedidas.values(), (l) => l.id)));
+  // Las columnas extra (ofertas, presentaciones) son opcionales: si su SQL aún no se corrió, cae al conjunto anterior.
+  const baseCols = 'id,name,price,stock,status';
+  const consulta = (cols: string) => db.from('products').select(cols).eq('store', slug).in('id', ids);
+  let { data: productos, error: errProductos } = await consulta(`${baseCols},${COLS_OFERTA},${COL_PRESENTACIONES}`);
+  if (errProductos) ({ data: productos, error: errProductos } = await consulta(`${baseCols},${COLS_OFERTA}`) as any);
+  if (errProductos) ({ data: productos } = await consulta(baseCols) as any);
 
-  const lineas = ((productos ?? []) as any[]).map(aplicarOferta).map((p) => ({
-    id: p.id as string,
-    name: p.name as string,
-    price: Number(p.price) || 0,
-    quantity: pedidas.get(p.id as string) ?? 1,
-  }));
+  const porId = new Map(((productos ?? []) as any[]).map((p) => [String(p.id), aplicarOferta(p) as any]));
+  const lineas: { id: string; name: string; price: number; quantity: number; conPres: boolean }[] = [];
+  for (const { id, pres, q } of pedidas.values()) {
+    const p = porId.get(id);
+    if (!p) continue;
+    if (pres) {
+      // Con presentación el precio sale de la lista guardada en la base; una etiqueta que ya no existe se descarta.
+      const elegida = presentacionPorEtiqueta(leerPresentaciones(p.presentaciones), pres);
+      if (!elegida) continue;
+      lineas.push({ id, name: nombreConPresentacion(p.name as string, elegida.label), price: elegida.price, quantity: q, conPres: true });
+    } else {
+      lineas.push({ id, name: p.name as string, price: Number(p.price) || 0, quantity: q, conPres: false });
+    }
+  }
   if (lineas.length === 0) return NextResponse.json({ ok: false, motivo: 'sin_productos' });
 
   const cliente = body?.cliente ?? {};
@@ -116,7 +128,8 @@ export async function POST(request: Request) {
       store: slug,
       motivo: 'venta_carta',
       pedidoId: pedido.id,
-      lineas: lineas.map((l) => ({ id: l.id, name: l.name, delta: -l.quantity })),
+      // El stock cuenta unidades enteras: no aplica a lo que se vende por peso o medida (presentaciones).
+      lineas: lineas.filter((l) => !l.conPres).map((l) => ({ id: l.id, name: l.name, delta: -l.quantity })),
     });
 
     // Si tiene integración Loyverse POS activa, descontar también en Loyverse en segundo plano
@@ -124,7 +137,7 @@ export async function POST(request: Request) {
     if (credLoyverse) {
       descontarStockEnLoyverse({
         token: credLoyverse.token,
-        itemsVendidos: lineas.map((l) => ({ id: l.id, name: l.name, quantity: l.quantity })),
+        itemsVendidos: lineas.filter((l) => !l.conPres).map((l) => ({ id: l.id, name: l.name, quantity: l.quantity })),
         productosDb: ((productos ?? []) as any[]).map((p) => ({
           id: p.id,
           name: p.name,

@@ -5,7 +5,7 @@
 
 export interface DatosPedido {
   /** Productos del carrito. Los que no existen en la base (ejemplos de plantilla) el servidor los descarta. */
-  items: { id: string; quantity: number }[];
+  items: { id: string; quantity: number; /** Etiqueta de la presentación elegida ("250 g"), si el producto las tiene. */ pres?: string }[];
   cliente?: { nombre?: string; telefono?: string; direccion?: string; entrega?: 'delivery' | 'recojo' };
 }
 

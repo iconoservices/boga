@@ -26,6 +26,7 @@ import LoyverseSyncModal from '@/components/admin/LoyverseSyncModal';
 import MiPlan from '@/components/admin/MiPlan';
 import CobroOnline from '@/components/admin/CobroOnline';
 import { COLS_OFERTA, precioOfertaVigente, porcentajeOferta } from '@/lib/ofertas';
+import { COL_PRESENTACIONES, PRESENTACIONES_SUGERIDAS, leerPresentaciones, precioDesde } from '@/lib/presentaciones';
 
 interface Product {
   id: string;
@@ -42,6 +43,8 @@ interface Product {
   /** Precio rebajado y último día de la oferta (SQL «OFERTAS EN PRODUCTOS»). Sin oferta = null. */
   precio_oferta?: number | null;
   oferta_hasta?: string | null;
+  /** Medidas o tamaños con su precio (100 g / 250 g / 1 kg…). Sin lista = un solo precio. */
+  presentaciones?: { label: string; price: number }[] | null;
 }
 
 type TabId = 'inicio' | 'products' | 'orders' | 'pos' | 'metrics' | 'stores';
@@ -341,6 +344,7 @@ function AdminDashboard({ user }: { user: User }) {
     ubicacion: '',
     precioOferta: '',
     ofertaHasta: '',
+    presentaciones: [] as { label: string; price: string }[],
   });
 
   // Tiendas de terrenos: "Sección" pasa a ser el área, y aparece un campo para la ubicación (enlace de Maps).
@@ -362,6 +366,7 @@ function AdminDashboard({ user }: { user: User }) {
       ubicacion: '',
       precioOferta: '',
       ofertaHasta: '',
+      presentaciones: [],
     });
     setSelectedFile(null);
     setPreviewUrl(null);
@@ -424,9 +429,11 @@ function AdminDashboard({ user }: { user: User }) {
     const base = 'id,name,store,price,category,subcategory,stock,status,image,description,created_at';
     let { data, error } = await supabase
       .from('products')
-      .select(`${base},${COLS_OFERTA}`)
+      .select(`${base},${COLS_OFERTA},${COL_PRESENTACIONES}`)
       .in('store', slugs)
       .order('created_at', { ascending: false });
+    // Si el SQL de presentaciones aún no se corrió, se pide sin esa columna.
+    if (error) ({ data, error } = await supabase.from('products').select(`${base},${COLS_OFERTA}`).in('store', slugs).order('created_at', { ascending: false }) as any);
     // Si el SQL de ofertas aún no se corrió, esas columnas no existen: se pide lo de siempre.
     if (error) ({ data, error } = await supabase.from('products').select(base).in('store', slugs).order('created_at', { ascending: false }) as any);
 
@@ -984,13 +991,24 @@ function AdminDashboard({ user }: { user: User }) {
 
       // Oferta: precio rebajado (menor al normal) y, si quiere, hasta qué día. Los campos solo se mandan si hay
       // oferta o si el producto tenía una que se está quitando (así guardar un producto normal no depende del SQL).
-      const precioNormal = parseFloat(newProduct.price);
-      const precioOfertaNum = parseFloat(newProduct.precioOferta);
-      const hayOferta = newProduct.precioOferta.trim() !== '' && precioOfertaNum > 0;
+      // Presentaciones (100 g / 250 g / 1 kg…): filas con etiqueta y precio válidos. Si hay, `price` guarda la más barata
+      // ("Desde S/ …") y no se usa oferta (cada medida ya tiene su precio).
+      const presLimpias = leerPresentaciones(newProduct.presentaciones.map((x) => ({ label: x.label, price: parseFloat(x.price) })));
+      if (newProduct.presentaciones.some((x) => (x.label.trim() || x.price.trim()) && !(x.label.trim() && parseFloat(x.price) > 0))) {
+        throw new Error('Cada presentación necesita un nombre (ej. 250 g) y un precio mayor a 0. Completa o quita las filas vacías.');
+      }
+      const hayPres = presLimpias.length > 0;
+      const precioNormal = hayPres ? precioDesde(presLimpias) : parseFloat(newProduct.price);
+      const precioOfertaNum = hayPres ? 0 : parseFloat(newProduct.precioOferta);
+      const hayOferta = !hayPres && newProduct.precioOferta.trim() !== '' && precioOfertaNum > 0;
       if (hayOferta && !(precioOfertaNum < precioNormal)) throw new Error('El precio en oferta debe ser menor al precio normal.');
       const productoPrevio = editingProductId ? products.find(x => x.id === editingProductId) : undefined;
       const camposOferta = hayOferta || productoPrevio?.precio_oferta
         ? { precio_oferta: hayOferta ? precioOfertaNum : null, oferta_hasta: hayOferta && newProduct.ofertaHasta ? newProduct.ofertaHasta : null }
+        : {};
+      // Igual que la oferta: la columna solo se manda si hay presentaciones o si el producto tenía y se le quitan.
+      const camposPres = hayPres || (productoPrevio?.presentaciones?.length ?? 0) > 0
+        ? { [COL_PRESENTACIONES]: hayPres ? presLimpias : null }
         : {};
 
       // 3. Guardar en la base de datos
@@ -998,12 +1016,13 @@ function AdminDashboard({ user }: { user: User }) {
         const { error: dbError } = await supabase.from('products').update({
           name: newProduct.name,
           store: newProduct.store,
-          price: parseFloat(newProduct.price),
+          price: precioNormal,
           category: newProduct.category,
           subcategory: newProduct.subcategory,
           image: finalImageUrl,
           description: descripcionFinal,
           ...camposOferta,
+          ...camposPres,
           // Sin módulo de inventario no se toca el stock guardado (por si lo vuelven a prender).
           ...(tiendaTiene(newProduct.store, 'inventario') ? { stock: finalStock } : {}),
           status: finalStatus,
@@ -1031,12 +1050,13 @@ function AdminDashboard({ user }: { user: User }) {
           {
             name: newProduct.name,
             store: newProduct.store,
-            price: parseFloat(newProduct.price),
+            price: precioNormal,
             category: newProduct.category,
             subcategory: newProduct.subcategory,
             image: finalImageUrl,
             description: descripcionFinal,
             ...camposOferta,
+            ...camposPres,
             stock: finalStock,
             status: finalStatus,
           }
@@ -1078,6 +1098,7 @@ function AdminDashboard({ user }: { user: User }) {
       ubicacion: (product.description || '').match(RE_MAPS)?.[0] ?? '',
       precioOferta: product.precio_oferta ? String(product.precio_oferta) : '',
       ofertaHasta: product.oferta_hasta ? product.oferta_hasta.slice(0, 10) : '',
+      presentaciones: leerPresentaciones(product.presentaciones).map((x) => ({ label: x.label, price: String(x.price) })),
     });
     setPreviewUrl(product.image);
     setSelectedFile(null);
@@ -2695,14 +2716,15 @@ function AdminDashboard({ user }: { user: User }) {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">Precio (S/)</label>
-                    <input 
-                      required
-                      type="number" 
+                    <input
+                      required={newProduct.presentaciones.length === 0}
+                      disabled={newProduct.presentaciones.length > 0}
+                      type="number"
                       step="0.10"
-                      value={newProduct.price}
+                      value={newProduct.presentaciones.length > 0 ? '' : newProduct.price}
                       onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
-                      placeholder="0.00"
-                      className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black transition-all"
+                      placeholder={newProduct.presentaciones.length > 0 ? 'Según presentaciones' : '0.00'}
+                      className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black transition-all disabled:opacity-60"
                     />
                   </div>
                   <div>
@@ -2729,7 +2751,82 @@ function AdminDashboard({ user }: { user: User }) {
                   </div>
                 </div>
 
+                {/* Presentaciones: un mismo producto en varias medidas o tamaños con su precio (100 g / 250 g / 1 kg…) */}
+                <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4">
+                  <p className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-gray-600 text-[18px]">scale</span>
+                    ¿Lo vendes por peso o en varios tamaños? <span className="font-medium text-gray-500">(opcional)</span>
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Ej. especias: 100 g, 250 g, 1 kg, cada uno con su precio. Tu cliente elige la medida al pedir.</p>
+
+                  {newProduct.presentaciones.length > 0 && (
+                    <div className="flex flex-col gap-2 mt-3">
+                      {newProduct.presentaciones.map((x, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <input
+                            value={x.label}
+                            maxLength={30}
+                            onChange={(e) => setNewProduct({...newProduct, presentaciones: newProduct.presentaciones.map((y, j) => j === i ? { ...y, label: e.target.value } : y)})}
+                            placeholder="Ej. 250 g"
+                            className="flex-1 min-w-0 px-3 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
+                          />
+                          <div className="relative w-32 shrink-0">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">S/</span>
+                            <input
+                              type="number"
+                              step="0.10"
+                              min="0"
+                              value={x.price}
+                              onChange={(e) => setNewProduct({...newProduct, presentaciones: newProduct.presentaciones.map((y, j) => j === i ? { ...y, price: e.target.value } : y)})}
+                              placeholder="0.00"
+                              className="w-full pl-9 pr-2 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            aria-label="Quitar presentación"
+                            onClick={() => setNewProduct({...newProduct, presentaciones: newProduct.presentaciones.filter((_, j) => j !== i)})}
+                            className="w-10 h-10 shrink-0 rounded-md flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50"
+                          >
+                            <span className="material-symbols-outlined text-[20px]">close</span>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {PRESENTACIONES_SUGERIDAS.filter((l) => !newProduct.presentaciones.some((x) => x.label.trim().toLowerCase() === l.toLowerCase())).map((l) => (
+                      <button
+                        key={l}
+                        type="button"
+                        onClick={() => setNewProduct({...newProduct, presentaciones: [...newProduct.presentaciones, { label: l, price: '' }]})}
+                        className="px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs font-bold text-gray-700 hover:border-black"
+                      >
+                        + {l}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setNewProduct({...newProduct, presentaciones: [...newProduct.presentaciones, { label: '', price: '' }]})}
+                      className="px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs font-bold text-gray-700 hover:border-black"
+                    >
+                      + Otra
+                    </button>
+                  </div>
+
+                  {newProduct.presentaciones.length > 0 && (
+                    <p className="text-xs mt-2 font-medium text-gray-600">
+                      Tus clientes verán «Desde S/ {(() => {
+                        const precios = newProduct.presentaciones.map((x) => parseFloat(x.price)).filter((n) => n > 0);
+                        return precios.length ? Math.min(...precios).toFixed(2) : '0.00';
+                      })()}» y elegirán la medida. Con presentaciones no se usa el precio en oferta ni el control de stock por unidades.
+                    </p>
+                  )}
+                </div>
+
                 {/* Oferta: aparece en tu tienda con el precio anterior tachado y en la página Promos de BogaHub */}
+                {newProduct.presentaciones.length === 0 && (
                 <div className="rounded-xl border border-dashed border-primary/40 bg-primary/5 p-4">
                   <p className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-primary text-[18px]">local_offer</span>
@@ -2766,6 +2863,7 @@ function AdminDashboard({ user }: { user: User }) {
                     </p>
                   )}
                 </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>

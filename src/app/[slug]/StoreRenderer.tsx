@@ -108,6 +108,7 @@ export default function StoreRenderer({ store: initialStore }: Props) {
     case 'polleria':
       return <PolleriaTemplate store={store} />;
     case 'mercado':
+    case 'condimentos':
       return <MercadoTemplate store={store} />;
     case 'menudirecto':
       return <MenuDirectoTemplate store={store} />;

@@ -7,6 +7,7 @@ import { getTemplate } from '@/lib/templates.config';
 import { conMarcaBlanca } from '@/lib/modulos';
 import { precioOfertaVigente } from '@/lib/ofertas';
 import PedirProducto from './PedirProducto';
+import { COL_PRESENTACIONES, leerPresentaciones } from '@/lib/presentaciones';
 
 // Página propia de un producto: /<tienda>/producto/<id>.
 // También abre con el `slug` de texto del producto (p. ej. /delva/producto/reloj-poedagar-613---marrn): así
@@ -48,7 +49,10 @@ const cargar = cache(async (slug: string, id: string) => {
     }
   }
   if (!tienda || tienda.status !== 'active' || !producto || producto.status === 'Inactivo') return null;
-  return { tienda, producto };
+  // Presentaciones (100 g / 250 g / 1 kg…): consulta aparte para que, si su SQL aún no se corrió, la página siga abriendo.
+  const { data: conPres } = await supabase.from('products').select(COL_PRESENTACIONES).eq('id', producto.id).maybeSingle();
+  const presentaciones = leerPresentaciones((conPres as Record<string, unknown> | null)?.[COL_PRESENTACIONES]);
+  return { tienda, producto, presentaciones };
 });
 
 const urlOficial = (tienda: { slug: string; subdominio_activo: boolean | null }, id: string) =>
@@ -75,7 +79,7 @@ export default async function ProductoPage({ params }: { params: Promise<Params>
   const { slug, id } = await params;
   const datos = await cargar(slug, id);
   if (!datos) notFound();
-  const { tienda, producto } = datos;
+  const { tienda, producto, presentaciones } = datos;
 
   const tema = (tienda.theme && Object.keys(tienda.theme).length > 0 ? tienda.theme : getTemplate(tienda.template as string)?.theme) as
     | { primary?: string; background?: string; onBackground?: string } | undefined;
@@ -137,7 +141,7 @@ export default async function ProductoPage({ params }: { params: Promise<Params>
           {producto.category && <span className="text-xs font-bold uppercase tracking-wider opacity-60">{producto.category}</span>}
           <h1 className="text-2xl font-extrabold leading-tight">{producto.name}</h1>
           <p className="text-3xl font-black" style={{ color }}>
-            S/ {precio.toFixed(2)}
+            {presentaciones.length > 0 && <span className="mr-2 text-base font-semibold opacity-60">Desde</span>}S/ {precio.toFixed(2)}
             {precio < precioNormal && <span className="ml-2 text-base font-medium line-through opacity-50">S/ {precioNormal.toFixed(2)}</span>}
           </p>
           {producto.description && <p className="text-base leading-relaxed opacity-80 whitespace-pre-line">{producto.description}</p>}
@@ -154,6 +158,7 @@ export default async function ProductoPage({ params }: { params: Promise<Params>
             nombre={producto.name}
             precio={precio}
             color={color}
+            presentaciones={presentaciones}
           />
         )}
 

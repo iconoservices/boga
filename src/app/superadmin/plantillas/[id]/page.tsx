@@ -128,6 +128,7 @@ export default function ProductosDemoPlantilla() {
     const { error } = await supabase.from('products').insert(demo.map((p) => ({
       name: p.name, store: slug, price: p.price, category: p.category, subcategory: p.subcategory || null,
       image: p.image, description: p.description || null, stock: null, status: 'Activo',
+      ...(p.presentaciones?.length ? { presentaciones: p.presentaciones } : {}),
     })));
     setGuardando(false);
     setMsg(error ? `Error: ${error.message}` : 'Ejemplos cargados: ya puedes editarlos.');

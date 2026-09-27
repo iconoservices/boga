@@ -12,13 +12,13 @@ import SuperadminSubheader from '@/components/SuperadminSubheader';
 
 // Plantillas con botón de pedido por WhatsApp implementado en su código.
 const TEMPLATES_WITH_WHATSAPP = new Set([
-  'polleria', 'estilosmirka', 'sweetkittynails', 'mercado', 'menudirecto', 'iniciocatalogo', 'flores',
+  'polleria', 'estilosmirka', 'sweetkittynails', 'mercado', 'condimentos', 'menudirecto', 'iniciocatalogo', 'flores',
   'fichadigital', 'fichaplana', 'veterinaria', 'terreno1', 'terreno2',
 ]);
 
 // Plantillas que montan <StoreFloatingActions/> (compartir + instalar PWA).
 const TEMPLATES_WITH_SHARE_INSTALL = new Set([
-  'polleria', 'estilosmirka', 'mercado', 'sunset', 'natura', 'amazonia', 'sweetkittynails',
+  'polleria', 'estilosmirka', 'mercado', 'condimentos', 'sunset', 'natura', 'amazonia', 'sweetkittynails',
   'menudirecto', 'iniciocatalogo', 'flores', 'fichadigital', 'fichaplana', 'veterinaria', 'terreno1', 'terreno2',
 ]);
 

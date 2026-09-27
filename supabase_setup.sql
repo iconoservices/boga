@@ -1771,3 +1771,12 @@ ON CONFLICT (store) DO NOTHING;
 UPDATE public.stores
 SET modulos = modulos - 'loyverse_token' - 'loyverse_merchant_id'
 WHERE modulos ? 'loyverse_token' OR modulos ? 'loyverse_merchant_id';
+
+
+-- ============================================================
+-- PRESENTACIONES EN PRODUCTOS (venta por peso / varios tamaños)
+-- ============================================================
+-- Un mismo producto en varias medidas con su precio: [{"label":"100 g","price":4},{"label":"250 g","price":9},{"label":"1 kg","price":32}].
+-- Opcional: NULL = un solo precio, como siempre. Con presentaciones, `price` guarda la más barata ("Desde S/ …").
+-- El pedido manda solo la etiqueta elegida; el precio lo lee el servidor de esta columna (lib/presentaciones.ts).
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS presentaciones JSONB;

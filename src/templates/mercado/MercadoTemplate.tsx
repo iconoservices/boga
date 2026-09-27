@@ -9,6 +9,7 @@ import { debeMostrarDemo } from '@/lib/demo';
 import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import { iconForCategory } from '@/templates/shared/tokens';
+import { claveLinea, nombreConPresentacion, type Presentacion } from '@/lib/presentaciones';
 
 interface MercadoTemplateProps {
   store: StoreConfig;
@@ -23,7 +24,14 @@ interface Producto {
   category: string;
   image: string;
   description: string;
+  /** Medidas o tamaños con su precio (ej. 100 g / 250 g / 1 kg). Sin lista, el producto tiene un solo precio. */
+  presentaciones?: Presentacion[];
 }
+
+/** Una línea del carrito: el mismo producto en dos medidas distintas son dos líneas. */
+interface Linea { producto: Producto; cantidad: number; pres?: Presentacion }
+const precioLinea = (l: Linea) => l.pres?.price ?? l.producto.price;
+const claveDe = (l: Linea) => claveLinea(l.producto.id, l.pres?.label);
 
 /**
  * Plantilla "Mercado": toma el lenguaje visual del marketplace de BogaHub
@@ -39,7 +47,9 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
   const [cargando, setCargando] = useState(true);
   const [categoriaActiva, setCategoriaActiva] = useState('todas');
   const [busqueda, setBusqueda] = useState('');
-  const [carrito, setCarrito] = useState<{ producto: Producto; cantidad: number }[]>([]);
+  const [carrito, setCarrito] = useState<Linea[]>([]);
+  // Producto con presentaciones cuyo selector de medida está abierto.
+  const [eligiendo, setEligiendo] = useState<Producto | null>(null);
   const [carritoAbierto, setCarritoAbierto] = useState(false);
   const [agregados, setAgregados] = useState<Record<string, boolean>>({});
 
@@ -60,6 +70,7 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
             category: (p.category || 'General').toLowerCase(),
             image: p.image || store.heroImage,
             description: p.description || '',
+            presentaciones: Array.isArray(p.presentaciones) && p.presentaciones.length ? p.presentaciones : undefined,
           }))
         : [];
 
@@ -72,6 +83,7 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
             category: p.category.toLowerCase(),
             image: p.image,
             description: p.description || '',
+            presentaciones: p.presentaciones,
           }))
         : [];
 
@@ -165,37 +177,41 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
   });
 
   // ── Carrito ──
-  const agregar = (producto: Producto) => {
+  const agregar = (producto: Producto, pres?: Presentacion) => {
+    // Con presentaciones, primero se elige la medida.
+    if (producto.presentaciones?.length && !pres) { setEligiendo(producto); return; }
+    const clave = claveLinea(producto.id, pres?.label);
     setCarrito((prev) => {
-      const existe = prev.find((i) => i.producto.id === producto.id);
+      const existe = prev.find((i) => claveDe(i) === clave);
       if (existe) {
-        return prev.map((i) => (i.producto.id === producto.id ? { ...i, cantidad: i.cantidad + 1 } : i));
+        return prev.map((i) => (claveDe(i) === clave ? { ...i, cantidad: i.cantidad + 1 } : i));
       }
-      return [...prev, { producto, cantidad: 1 }];
+      return [...prev, { producto, cantidad: 1, pres }];
     });
+    setEligiendo(null);
     setAgregados((prev) => ({ ...prev, [producto.id]: true }));
     setTimeout(() => setAgregados((prev) => ({ ...prev, [producto.id]: false })), 1000);
   };
 
-  const cambiarCantidad = (id: string, delta: number) => {
+  const cambiarCantidad = (clave: string, delta: number) => {
     setCarrito((prev) =>
       prev
-        .map((i) => (i.producto.id === id ? { ...i, cantidad: i.cantidad + delta } : i))
+        .map((i) => (claveDe(i) === clave ? { ...i, cantidad: i.cantidad + delta } : i))
         .filter((i) => i.cantidad > 0)
     );
   };
 
-  const total = carrito.reduce((acc, i) => acc + i.producto.price * i.cantidad, 0);
+  const total = carrito.reduce((acc, i) => acc + precioLinea(i) * i.cantidad, 0);
   const unidades = carrito.reduce((acc, i) => acc + i.cantidad, 0);
 
   const enviarPorWhatsApp = async () => {
     const cliente = await pedirDatosCliente({ color: store.theme.primary });
     if (!cliente) return;
-    const lineas = carrito.map((i) => `- ${i.producto.name} (x${i.cantidad}): S/ ${(i.producto.price * i.cantidad).toFixed(2)}`).join('\n');
+    const lineas = carrito.map((i) => `- ${i.pres ? nombreConPresentacion(i.producto.name, i.pres.label) : i.producto.name} (x${i.cantidad}): S/ ${(precioLinea(i) * i.cantidad).toFixed(2)}`).join('\n');
     enviarPedidoPorWhatsApp(
       store,
       `*Pedido de ${store.name}*\n-------------------------\n${lineas}\n-------------------------\n*Total:* S/ ${total.toFixed(2)}\n*Cliente:* ${cliente.nombre} (${cliente.telefono})`,
-      { items: carrito.map((i) => ({ id: String(i.producto.id), quantity: i.cantidad })), cliente },
+      { items: carrito.map((i) => ({ id: String(i.producto.id), quantity: i.cantidad, pres: i.pres?.label })), cliente },
     );
   };
 
@@ -391,9 +407,12 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
                     <div>
                       <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: t.onSurfaceVariant }}>{p.category}</span>
                       <h4 className="font-bold text-sm line-clamp-2 mt-0.5" style={{ fontFamily: t.fontHeadline }}>{p.name}</h4>
+                      {p.presentaciones && p.presentaciones.length > 0 && (
+                        <p className="text-[10px] mt-1 leading-tight" style={{ color: t.onSurfaceVariant }}>{p.presentaciones.map((x) => x.label).join(' · ')}</p>
+                      )}
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="font-black text-base" style={{ color: t.primary }}>S/ {p.price.toFixed(2)}{p.priceAnterior && <span className="ml-1.5 text-xs font-medium line-through" style={{ color: t.onSurfaceVariant }}>S/ {p.priceAnterior.toFixed(2)}</span>}</span>
+                      <span className="font-black text-base" style={{ color: t.primary }}>{p.presentaciones?.length ? <span className="text-[10px] font-semibold mr-1" style={{ color: t.onSurfaceVariant }}>Desde</span> : null}S/ {p.price.toFixed(2)}{p.priceAnterior && <span className="ml-1.5 text-xs font-medium line-through" style={{ color: t.onSurfaceVariant }}>S/ {p.priceAnterior.toFixed(2)}</span>}</span>
                       <button
                         onClick={() => agregar(p)}
                         aria-label={`Agregar ${p.name} al carrito`}
@@ -447,18 +466,18 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
                 <p className="py-10 text-center text-sm" style={{ color: t.onSurfaceVariant }}>Tu carrito está vacío</p>
               ) : (
                 carrito.map((i) => (
-                  <div key={i.producto.id} className="flex items-center gap-3">
+                  <div key={claveDe(i)} className="flex items-center gap-3">
                     <img src={i.producto.image} alt={i.producto.name} className="w-14 h-14 rounded-lg object-cover shrink-0" style={{ background: t.surfaceContainerLow }} />
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-sm truncate">{i.producto.name}</h4>
-                      <span className="font-bold text-sm" style={{ color: t.primary }}>S/ {(i.producto.price * i.cantidad).toFixed(2)}</span>
+                      <h4 className="font-semibold text-sm truncate">{i.producto.name}{i.pres && <span className="font-medium" style={{ color: t.onSurfaceVariant }}> · {i.pres.label}</span>}</h4>
+                      <span className="font-bold text-sm" style={{ color: t.primary }}>S/ {(precioLinea(i) * i.cantidad).toFixed(2)}</span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <button onClick={() => cambiarCantidad(i.producto.id, -1)} aria-label="Quitar uno" className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: t.surfaceContainer }}>
+                      <button onClick={() => cambiarCantidad(claveDe(i), -1)} aria-label="Quitar uno" className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: t.surfaceContainer }}>
                         <span className="material-symbols-outlined text-[16px]">remove</span>
                       </button>
                       <span className="w-5 text-center font-bold text-sm">{i.cantidad}</span>
-                      <button onClick={() => cambiarCantidad(i.producto.id, 1)} aria-label="Agregar uno" className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: t.primary, color: t.onPrimary }}>
+                      <button onClick={() => cambiarCantidad(claveDe(i), 1)} aria-label="Agregar uno" className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: t.primary, color: t.onPrimary }}>
                         <span className="material-symbols-outlined text-[16px]">add</span>
                       </button>
                     </div>
@@ -483,6 +502,43 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── ELEGIR MEDIDA (productos con presentaciones) ── */}
+      {eligiendo && (
+        <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/45 backdrop-blur-sm" onClick={() => setEligiendo(null)} />
+          <div className="relative w-full sm:max-w-sm rounded-t-lg sm:rounded-lg overflow-hidden shadow-2xl" style={{ background: t.surface }}>
+            <div className="px-5 py-4 flex items-center gap-3" style={{ borderBottom: `1px solid ${t.outlineVariant}` }}>
+              <img src={eligiendo.image} alt="" className="w-12 h-12 rounded-lg object-cover shrink-0" style={{ background: t.surfaceContainerLow }} />
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-base leading-tight truncate" style={{ fontFamily: t.fontHeadline }}>{eligiendo.name}</h3>
+                <p className="text-xs" style={{ color: t.onSurfaceVariant }}>Elige la cantidad que necesitas</p>
+              </div>
+              <button onClick={() => setEligiendo(null)} aria-label="Cerrar" className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: t.surfaceContainer }}>
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
+            <div className="p-4 flex flex-col gap-2">
+              {(eligiendo.presentaciones ?? []).map((x) => (
+                <button
+                  key={x.label}
+                  onClick={() => agregar(eligiendo, x)}
+                  className="flex items-center justify-between rounded-lg px-4 py-3 active:scale-[0.99] transition-transform"
+                  style={{ background: t.surfaceContainerLow, border: `1px solid ${t.outlineVariant}` }}
+                >
+                  <span className="font-bold text-sm">{x.label}</span>
+                  <span className="flex items-center gap-2">
+                    <span className="font-black" style={{ color: t.primary }}>S/ {x.price.toFixed(2)}</span>
+                    <span className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: t.primary, color: t.onPrimary }}>
+                      <span className="material-symbols-outlined text-[18px]">add</span>
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}

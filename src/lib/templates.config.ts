@@ -26,6 +26,8 @@ export interface DemoProduct {
   subcategory?: string;
   image: string;
   description?: string;
+  /** Medidas con su precio (100 g / 250 g / 1 kg…). `price` es la más barata. Ver lib/presentaciones.ts. */
+  presentaciones?: { label: string; price: number }[];
 }
 
 export interface TemplateConfig {
@@ -318,6 +320,56 @@ const TEMPLATES: Record<string, TemplateConfig> = {
       { name: 'Galletas Pack x6', price: 6.50, category: 'Snacks', image: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400&q=80', description: 'Surtido de galletas' },
       { name: 'Leche Entera 1L', price: 4.80, category: 'Lácteos', image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&q=80', description: 'Leche entera pasteurizada' },
     ],
+  },
+
+  // Catálogo por peso (especias, condimentos, granos, frutos secos): cada producto se pide en 100 g / 250 g / 1 kg.
+  // Reusa la pantalla de "mercado" (templates/mercado), que es la que sabe elegir la medida.
+  condimentos: {
+    id: 'condimentos',
+    name: 'Condimentos y Especias',
+    category: 'Mercado',
+    heroImage: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=1200&q=80',
+    heroAlt: 'Especias y hierbas variadas sobre una mesa',
+    theme: {
+      primary: '#b45309',
+      onPrimary: '#ffffff',
+      primaryContainer: '#d97706',
+      secondary: '#5f5e5e',
+      secondaryContainer: '#e2dfde',
+      background: '#fbf7f0',
+      surface: '#ffffff',
+      surfaceContainer: '#f3ece1',
+      surfaceContainerLow: '#f8f2e8',
+      surfaceContainerLowest: '#ffffff',
+      surfaceContainerHigh: '#ebe2d3',
+      onBackground: '#2b1d0e',
+      onSurface: '#2b1d0e',
+      onSurfaceVariant: '#6b4a2b',
+      outlineVariant: '#e6dccb',
+      fontHeadline: "'Outfit', sans-serif",
+      fontBody: "'Outfit', sans-serif",
+      fontLabel: "'Outfit', sans-serif",
+    },
+    categories: [
+      { name: 'Molidos', icon: 'grain', href: 'molidos' },
+      { name: 'Ajíes', icon: 'local_fire_department', href: 'ajies' },
+      { name: 'Hierbas', icon: 'grass', href: 'hierbas' },
+      { name: 'Especias enteras', icon: 'spa', href: 'especias-enteras' },
+    ],
+    demoProducts: [
+      { name: 'Comino molido', price: 3.5, category: 'Molidos', image: 'https://images.unsplash.com/photo-1506368249639-73a05d6f6488?w=400&q=80', description: 'Comino molido fino, aroma intenso. Ideal para carnes, guisos y menestras.', presentaciones: [{ label: '100 g', price: 3.5 }, { label: '250 g', price: 8 }, { label: '1 kg', price: 28 }] },
+      { name: 'Pimienta negra molida', price: 5, category: 'Molidos', image: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80', description: 'Pimienta negra recién molida. Para todo tipo de sazón.', presentaciones: [{ label: '100 g', price: 5 }, { label: '250 g', price: 11.5 }, { label: '1 kg', price: 40 }] },
+      { name: 'Palillo molido', price: 3, category: 'Molidos', image: 'https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400&q=80', description: 'Palillo (cúrcuma) molido: color y sabor para arroces y guisos.', presentaciones: [{ label: '100 g', price: 3 }, { label: '250 g', price: 7 }, { label: '1 kg', price: 24 }] },
+      { name: 'Ajo molido', price: 4, category: 'Molidos', image: 'https://images.unsplash.com/photo-1532336414038-cf19250c5757?w=400&q=80', description: 'Ajo deshidratado y molido, práctico para toda la cocina.', presentaciones: [{ label: '100 g', price: 4 }, { label: '250 g', price: 9 }, { label: '1 kg', price: 30 }] },
+      { name: 'Ají panca molido', price: 3, category: 'Ajíes', image: 'https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400&q=80', description: 'Ají panca molido, base de adobos y guisos criollos.', presentaciones: [{ label: '100 g', price: 3 }, { label: '250 g', price: 7 }, { label: '1 kg', price: 22 }] },
+      { name: 'Ají amarillo molido', price: 3.5, category: 'Ajíes', image: 'https://images.unsplash.com/photo-1506368249639-73a05d6f6488?w=400&q=80', description: 'Ají amarillo molido, el sabor de la cocina peruana.', presentaciones: [{ label: '100 g', price: 3.5 }, { label: '250 g', price: 8 }, { label: '1 kg', price: 26 }] },
+      { name: 'Orégano seco', price: 4, category: 'Hierbas', image: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80', description: 'Orégano seco, aromático. Para pizzas, adobos y aderezos.', presentaciones: [{ label: '100 g', price: 4 }, { label: '250 g', price: 9 }, { label: '1 kg', price: 30 }] },
+      { name: 'Canela en rama', price: 6, category: 'Especias enteras', image: 'https://images.unsplash.com/photo-1532336414038-cf19250c5757?w=400&q=80', description: 'Canela en rama seleccionada, para mazamorras, chicha y postres.', presentaciones: [{ label: '100 g', price: 6 }, { label: '250 g', price: 14 }, { label: '1 kg', price: 48 }] },
+    ],
+    zona: 'Pucallpa',
+    direccion: 'Mercado Modelo, Pucallpa',
+    horario: 'Lunes a Sábado: 7:00 AM – 6:00 PM',
+    rating: 4.8,
   },
 
   polleria: {
