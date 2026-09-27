@@ -1404,7 +1404,7 @@ function AdminDashboard({ user }: { user: User }) {
           const titulo = 'text-[11px] font-extrabold uppercase tracking-wider text-gray-400 mb-2 px-1';
 
           return (
-          <div className="max-w-md md:max-w-2xl mx-auto flex flex-col gap-4 pb-4">
+          <div className="max-w-md md:max-w-2xl lg:max-w-5xl mx-auto flex flex-col gap-4 pb-4">
             {/* Tu tienda: logo, selector, enlace y el interruptor "activa" */}
             <div className="rounded-xl p-3.5 text-white shadow-sm flex items-center gap-3" style={{ background: inicioStore.theme?.primary || '#b8130e' }}>
               <div className="w-10 h-10 rounded-full bg-white/15 border border-white/25 overflow-hidden flex items-center justify-center shrink-0">
@@ -1442,6 +1442,10 @@ function AdminDashboard({ user }: { user: User }) {
               </div>
             </div>
 
+            {/* Pantalla ancha: dos columnas (lo de hoy a la izquierda; completar y configurar a la derecha).
+                En celular y tablet es una sola columna en el mismo orden. */}
+            <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-5 lg:items-start">
+            <div className="flex flex-col gap-4">
             {/* Hoy: lo que importa de un vistazo */}
             <div>
               <p className={titulo}>Hoy</p>
@@ -1516,6 +1520,8 @@ function AdminDashboard({ user }: { user: User }) {
               </div>
             </div>
 
+            </div>
+            <div className="flex flex-col gap-4">
             {/* Completa tu tienda: solo mientras falte algo */}
             {faltan.length > 0 && (
               <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
@@ -1579,6 +1585,8 @@ function AdminDashboard({ user }: { user: User }) {
 
             {/* Tu plan: nivel, cuánto paga y hasta cuándo (solo si tiene costo o fecha de pago) */}
             <MiPlan slug={focusedStore} modulos={inicioDb?.modulos} subdominioActivo={inicioDb?.subdominio_activo} />
+            </div>
+            </div>
           </div>
           );
         })()}
