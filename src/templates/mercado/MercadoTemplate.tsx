@@ -150,9 +150,10 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
                   </button>
                 ))}
               </nav>
+              {/* Solo escritorio: en celular el carrito ya está en la barra inferior (Pedidos, con su contador). */}
               <button
                 onClick={() => irA('pedidos')}
-                className="relative w-10 h-10 rounded-lg flex items-center justify-center active:scale-90 transition-transform"
+                className="relative w-10 h-10 rounded-lg hidden md:flex items-center justify-center active:scale-90 transition-transform"
                 style={{ background: t.surfaceContainer }}
                 aria-label="Ver mi pedido"
               >
