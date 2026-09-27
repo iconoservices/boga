@@ -50,6 +50,8 @@ export interface Producto {
   extra?: Record<string, string>;
   /** Medidas o tamaños con su precio (100 g / 250 g / 1 kg…). Sin lista, el producto tiene un solo precio. Ver lib/presentaciones.ts. */
   presentaciones?: Presentacion[];
+  /** true = es un servicio (corte, consulta, reserva): no se agrega al carrito, se consulta directo por WhatsApp. */
+  esServicio?: boolean;
 }
 
 export interface Categoria {

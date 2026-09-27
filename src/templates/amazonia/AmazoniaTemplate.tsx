@@ -5,9 +5,11 @@ import { StoreConfig } from '@/lib/stores.config';
 import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { debeMostrarDemo } from '@/lib/demo';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
+import { useDetalleProducto } from '../shared/useDetalleProducto';
 
 interface AmazoniaTemplateProps {
   store: StoreConfig;
+  initialProductId?: string;
 }
 
 const MOCK_PRODUCTS = [
@@ -26,12 +28,14 @@ const CATEGORY_TABS = [
   { id: 'alimentos', label: 'Alimentos', icon: 'restaurant' },
 ];
 
-export default function AmazoniaTemplate({ store }: AmazoniaTemplateProps) {
+export default function AmazoniaTemplate({ store, initialProductId }: AmazoniaTemplateProps) {
   const demoPermitido = store.showDemoProducts === true;
   const [activeCategory, setActiveCategory] = useState('all');
   const [cartCount, setCartCount] = useState(0);
   const [products, setProducts] = useState<any[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  // Detalle de producto con URL propia (/<tienda>/producto/<id>): compartible y
+  // es lo que Google indexa, en vez de un modal que solo vivía en un useState.
+  const { seleccionado: selectedProduct, abrir: abrirProducto, cerrar: cerrarProducto } = useDetalleProducto(store.slug, products, initialProductId);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -122,7 +126,7 @@ export default function AmazoniaTemplate({ store }: AmazoniaTemplateProps) {
             const isFeatured = idx === 0 && activeCategory === 'all';
             return (
               <div key={product.id}
-                onClick={() => setSelectedProduct(product)}
+                onClick={() => abrirProducto(product)}
                 className={`rounded-2xl overflow-hidden cursor-pointer active:scale-95 transition-transform ${isFeatured ? 'col-span-2' : 'col-span-1'}`}
                 style={{ background: t.surface, border: `1px solid ${t.outlineVariant}`, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
                 <div className={isFeatured ? 'aspect-[2/1]' : 'aspect-square'}>
@@ -148,10 +152,10 @@ export default function AmazoniaTemplate({ store }: AmazoniaTemplateProps) {
 
       {/* Product detail modal */}
       {selectedProduct && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={() => setSelectedProduct(null)}>
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={() => cerrarProducto()}>
           <div className="w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()} style={{ background: t.surface }}>
             <div className="relative">
-              <button onClick={() => setSelectedProduct(null)}
+              <button onClick={() => cerrarProducto()}
                 className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center z-10"
                 style={{ background: 'rgba(0,0,0,0.4)', color: '#fff' }}>
                 <span className="material-symbols-outlined text-[18px]">close</span>
@@ -165,7 +169,7 @@ export default function AmazoniaTemplate({ store }: AmazoniaTemplateProps) {
               <p className="text-[13px] mt-2 leading-relaxed" style={{ color: t.onSurfaceVariant }}>{selectedProduct.desc}</p>
               <div className="flex items-center justify-between mt-5">
                 <span className="font-black text-xl" style={{ color: t.primary }}>{selectedProduct.price}{selectedProduct.oldPrice && <span className="ml-2 text-sm font-medium line-through" style={{ color: t.onSurfaceVariant }}>{selectedProduct.oldPrice}</span>}</span>
-                <button onClick={() => { setCartCount((c) => c + 1); setSelectedProduct(null); }}
+                <button onClick={() => { setCartCount((c) => c + 1); cerrarProducto(); }}
                   className="px-6 py-2.5 rounded-xl font-bold text-sm flex items-center gap-1.5 transition-transform active:scale-95"
                   style={{ background: t.primary, color: t.onPrimary }}>
                   <span className="material-symbols-outlined text-[18px]">add</span>

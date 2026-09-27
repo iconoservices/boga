@@ -34,6 +34,8 @@ export async function POST(request: Request) {
 
   rutasCatalogo(slug).forEach((p) => { if (!p.includes('?')) revalidatePath(p); });
   revalidatePath('/'); // el Inicio se genera en el servidor con el catálogo
+  // Global (no por tienda): si esto tocó el módulo de Google, que el feed no se quede sirviendo la versión vieja hasta 1 hora.
+  revalidatePath('/api/google-feed');
   revalidateTag('stores', { expire: 0 });
   await purgeCloudflare(rutasCatalogo(slug));
   return NextResponse.json({ ok: true });

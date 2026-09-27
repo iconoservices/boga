@@ -36,8 +36,10 @@ const ESTILO_DEFECTO: Record<string, string> = { market: 'center', home: 'bottom
 // (SQL de ofertas sin correr), pide las de siempre para que el catálogo no quede vacío.
 async function productosConOferta() {
   const base = 'id,name,price,category,image,store,status';
-  const r = await supabase.from('products').select(`${base},${COLS_OFERTA}`);
+  const r = await supabase.from('products').select(`${base},${COLS_OFERTA},es_servicio`);
   if (!r.error) return r;
+  const r2 = await supabase.from('products').select(`${base},${COLS_OFERTA}`);
+  if (!r2.error) return r2;
   return supabase.from('products').select(base);
 }
 

@@ -17,7 +17,8 @@ export async function GET(
   // Con precio de oferta (lib/ofertas.ts); si esas columnas aún no existen, cae a las de siempre.
   const base = 'id,name,description,price,category,subcategory,image,status';
   // Cada columna extra es opcional: si su SQL aún no se corrió, cae al conjunto anterior.
-  let { data, error } = await supabase.from('products').select(`${base},${COLS_OFERTA},${COL_PRESENTACIONES}`).eq('store', slug);
+  let { data, error } = await supabase.from('products').select(`${base},${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio`).eq('store', slug);
+  if (error) ({ data, error } = await supabase.from('products').select(`${base},${COLS_OFERTA},${COL_PRESENTACIONES}`).eq('store', slug) as any);
   if (error) ({ data, error } = await supabase.from('products').select(`${base},${COLS_OFERTA}`).eq('store', slug) as any);
   if (error) ({ data, error } = await supabase.from('products').select(base).eq('store', slug) as any);
 

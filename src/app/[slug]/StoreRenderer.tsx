@@ -26,9 +26,12 @@ const TerrenosCampoTemplate = dynamic(() => import('@/templates/terrenos/Terreno
 
 interface Props {
   store: StoreConfig;
+  // Solo llega desde /<tienda>/producto/<id> (el link que ve Google): abre ese
+  // producto ni bien carga el catalogo, en vez de la tienda vacía.
+  initialProductId?: string;
 }
 
-export default function StoreRenderer({ store: initialStore }: Props) {
+export default function StoreRenderer({ store: initialStore, initialProductId }: Props) {
   const [store, setStore] = useState<StoreConfig>(initialStore);
 
   // Sync state if props change (e.g. initial load)
@@ -100,38 +103,38 @@ export default function StoreRenderer({ store: initialStore }: Props) {
   const template = (() => {
   switch (store.template) {
     case 'default':
-      return <MenuDirectoTemplate store={store} />;
+      return <MenuDirectoTemplate store={store} initialProductId={initialProductId} />;
     case 'sunset':
-      return <SunsetTemplate store={store} />;
+      return <SunsetTemplate store={store} initialProductId={initialProductId} />;
     case 'natura':
-      return <NaturaTemplate store={store} />;
+      return <NaturaTemplate store={store} initialProductId={initialProductId} />;
     case 'amazonia':
-      return <AmazoniaTemplate store={store} />;
+      return <AmazoniaTemplate store={store} initialProductId={initialProductId} />;
     case 'sweetkittynails':
       return <SweetKittyNailsTemplate store={store} />;
     case 'estilosmirka':
-      return <EstilosMirkaTemplate store={store} />;
+      return <EstilosMirkaTemplate store={store} initialProductId={initialProductId} />;
     case 'polleria':
-      return <PolleriaTemplate store={store} />;
+      return <PolleriaTemplate store={store} initialProductId={initialProductId} />;
     case 'mercado':
     case 'condimentos':
-      return <MercadoTemplate store={store} />;
+      return <MercadoTemplate store={store} initialProductId={initialProductId} />;
     case 'menudirecto':
-      return <MenuDirectoTemplate store={store} />;
+      return <MenuDirectoTemplate store={store} initialProductId={initialProductId} />;
     case 'iniciocatalogo':
-      return <InicioCatalogoTemplate store={store} />;
+      return <InicioCatalogoTemplate store={store} initialProductId={initialProductId} />;
     case 'flores':
-      return <FloresTemplate store={store} />;
+      return <FloresTemplate store={store} initialProductId={initialProductId} />;
     case 'fichadigital':
-      return <FichaDigitalTemplate store={store} />;
+      return <FichaDigitalTemplate store={store} initialProductId={initialProductId} />;
     case 'fichaplana':
-      return <FichaPlanaTemplate store={store} />;
+      return <FichaPlanaTemplate store={store} initialProductId={initialProductId} />;
     case 'veterinaria':
-      return <VeterinariaTemplate store={store} />;
+      return <VeterinariaTemplate store={store} initialProductId={initialProductId} />;
     case 'terreno1':
-      return <TerrenosPortalTemplate store={store} />;
+      return <TerrenosPortalTemplate store={store} initialProductId={initialProductId} />;
     case 'terreno2':
-      return <TerrenosCampoTemplate store={store} />;
+      return <TerrenosCampoTemplate store={store} initialProductId={initialProductId} />;
     default:
       return (
         <div className="flex items-center justify-center min-h-screen">

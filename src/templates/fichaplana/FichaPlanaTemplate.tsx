@@ -6,13 +6,14 @@ import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import StoreHeader from '../shared/StoreHeader';
 import { useCatalogo } from '../shared/useCatalogo';
-import { TXT, ICON, estrellasDe, type Producto } from '../shared/tokens';
+import { TXT, ICON, estrellasDe } from '../shared/tokens';
 import {
   CategoryChips, ProductGrid, ProductModal, CartPanel, ContactPanel, BottomNav, StoreFooter,
 } from '../shared/CatalogoUI';
 
 interface Props {
   store: StoreConfig;
+  initialProductId?: string;
 }
 
 /**
@@ -24,12 +25,12 @@ interface Props {
  * resto (categorías en círculo, buscador, listado) es igual. Comparte motor
  * (catálogo, carrito, WhatsApp) con las demás plantillas de comida.
  */
-export default function FichaPlanaTemplate({ store }: Props) {
+export default function FichaPlanaTemplate({ store, initialProductId }: Props) {
   const t = store.theme;
-  const c = useCatalogo(store);
+  const c = useCatalogo(store, initialProductId);
 
   const [activeTab, setActiveTab] = useState('home');
-  const [selectedProduct, setSelectedProduct] = useState<Producto | null>(null);
+  const selectedProduct = c.detalle;
   const [busqueda, setBusqueda] = useState('');
   const [categoriaHome, setCategoriaHome] = useState('all');
 
@@ -233,7 +234,7 @@ export default function FichaPlanaTemplate({ store }: Props) {
                   <h3 className={`${TXT.title} font-black mb-4`} style={{ color: t.onSurface }}>
                     {resultadosBusqueda.length > 0 ? 'Resultados' : `Sin resultados para "${busqueda}"`}
                   </h3>
-                  <ProductGrid t={t} productos={resultadosBusqueda} onSelect={setSelectedProduct} onAdd={c.addToCart} />
+                  <ProductGrid t={t} productos={resultadosBusqueda} onSelect={c.abrirProducto} onAdd={c.addToCart} />
                 </div>
               ) : (
                 seccionesHome.map((cat) => {
@@ -242,7 +243,7 @@ export default function FichaPlanaTemplate({ store }: Props) {
                   return (
                     <div key={cat.id}>
                       <h3 className={`${TXT.title} font-black mb-4`} style={{ color: t.onSurface }}>{cat.label}</h3>
-                      <ProductGrid t={t} productos={productosCat} onSelect={setSelectedProduct} onAdd={c.addToCart} />
+                      <ProductGrid t={t} productos={productosCat} onSelect={c.abrirProducto} onAdd={c.addToCart} />
                     </div>
                   );
                 })
@@ -269,7 +270,7 @@ export default function FichaPlanaTemplate({ store }: Props) {
               <ProductGrid
                 t={t}
                 productos={c.filtered}
-                onSelect={setSelectedProduct}
+                onSelect={c.abrirProducto}
                 onAdd={c.addToCart}
                 onVerTodo={() => c.setActiveCategory('all')}
               />
@@ -334,7 +335,7 @@ export default function FichaPlanaTemplate({ store }: Props) {
         cartCount={c.cartCount}
       />
 
-      <ProductModal t={t} producto={selectedProduct} productos={c.products} onSelect={setSelectedProduct} onClose={() => setSelectedProduct(null)} onAdd={c.addToCart} />
+      <ProductModal t={t} producto={selectedProduct} productos={c.products} onSelect={c.abrirProducto} onClose={c.cerrarProducto} onAdd={c.addToCart} onConsultar={(p) => enviarPedidoPorWhatsApp(store, `Hola ${store.name}, quiero consultar por "${p.name}".`)} />
     </div>
   );
 }

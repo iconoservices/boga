@@ -1,21 +1,21 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import { supabase } from '@/lib/supabase';
-import { getTemplate } from '@/lib/templates.config';
-import { conMarcaBlanca } from '@/lib/modulos';
 import { precioOfertaVigente } from '@/lib/ofertas';
-import PedirProducto from './PedirProducto';
 import { COL_PRESENTACIONES, leerPresentaciones } from '@/lib/presentaciones';
+import { getDynamicStore } from '../../cargarTienda';
+import StoreRenderer from '../../StoreRenderer';
 
 // Página propia de un producto: /<tienda>/producto/<id>.
 // También abre con el `slug` de texto del producto (p. ej. /delva/producto/reloj-poedagar-613---marrn): así
 // funcionan los enlaces viejos que salían del feed de Delva y Google no encuentra un 404. El canonical
 // siempre apunta a la dirección con el id.
 //
-// Existe para que Google (feed de Merchant Center) y las redes tengan un link directo a cada producto.
-// Es una página simple, con los colores de la tienda; la carta completa sigue siendo /<tienda>.
+// Existe para que Google (feed de Merchant Center) y las redes tengan un link directo a cada producto,
+// y ese link abre la TIENDA de verdad (la misma plantilla que /<tienda>) con el producto ya seleccionado,
+// en vez de una página genérica aparte: antes había dos vistas del mismo producto, una con ruta y sin el
+// diseño de la tienda, y otra con el diseño pero sin ruta propia (el modal, solo un useState).
 
 export const revalidate = 300;
 
@@ -79,16 +79,15 @@ export default async function ProductoPage({ params }: { params: Promise<Params>
   const { slug, id } = await params;
   const datos = await cargar(slug, id);
   if (!datos) notFound();
-  const { tienda, producto, presentaciones } = datos;
+  const { tienda, producto } = datos;
 
-  const tema = (tienda.theme && Object.keys(tienda.theme).length > 0 ? tienda.theme : getTemplate(tienda.template as string)?.theme) as
-    | { primary?: string; background?: string; onBackground?: string } | undefined;
-  const color = tema?.primary || '#b8130e';
+  const store = await getDynamicStore(slug);
+  if (!store) notFound();
+
   const precioNormal = Number(producto.price) || 0;
-  // Con oferta vigente se muestra, se pide y se declara a Google el precio rebajado.
+  // Con oferta vigente se declara a Google el precio rebajado.
   const precio = precioOfertaVigente(producto) ?? precioNormal;
   const agotado = producto.status === 'Agotado' || producto.status === 'Sin stock';
-  const logo = tienda.logo_image || tienda.hero_image;
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -109,77 +108,9 @@ export default async function ProductoPage({ params }: { params: Promise<Params>
   };
 
   return (
-    <main className="min-h-screen" style={{ background: tema?.background || '#f9f9ff', color: tema?.onBackground || '#191b23' }}>
+    <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-
-      <header className="bg-white border-b border-black/5">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
-          {logo && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logo} alt="" className="w-9 h-9 rounded-lg object-cover" />
-          )}
-          <Link href={`/${tienda.slug}`} className="font-extrabold text-base truncate">{tienda.name}</Link>
-          <Link href={`/${tienda.slug}`} className="ml-auto text-sm font-bold whitespace-nowrap" style={{ color }}>Ver la carta →</Link>
-        </div>
-      </header>
-
-      <div className="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-5">
-        <div className="rounded-2xl overflow-hidden bg-white shadow-sm border border-black/5 aspect-square relative">
-          {producto.image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={producto.image} alt={producto.name} className={`w-full h-full object-cover ${agotado ? 'opacity-60' : ''}`} />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-black/20 text-6xl">🛍️</div>
-          )}
-          {agotado && (
-            <span className="absolute top-3 left-3 bg-black/80 text-white text-xs font-bold px-3 py-1 rounded-full">Agotado</span>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-2">
-          {producto.category && <span className="text-xs font-bold uppercase tracking-wider opacity-60">{producto.category}</span>}
-          <h1 className="text-2xl font-extrabold leading-tight">{producto.name}</h1>
-          <p className="text-3xl font-black" style={{ color }}>
-            {presentaciones.length > 0 && <span className="mr-2 text-base font-semibold opacity-60">Desde</span>}S/ {precio.toFixed(2)}
-            {precio < precioNormal && <span className="ml-2 text-base font-medium line-through opacity-50">S/ {precioNormal.toFixed(2)}</span>}
-          </p>
-          {producto.description && <p className="text-base leading-relaxed opacity-80 whitespace-pre-line">{producto.description}</p>}
-        </div>
-
-        {agotado ? (
-          <p className="text-center text-sm font-bold py-3 rounded-xl bg-black/5">Este producto está agotado por ahora.</p>
-        ) : (
-          <PedirProducto
-            slug={tienda.slug}
-            nombreTienda={tienda.name}
-            whatsapp={tienda.whatsapp}
-            productoId={producto.id}
-            nombre={producto.name}
-            precio={precio}
-            color={color}
-            presentaciones={presentaciones}
-          />
-        )}
-
-        {/* Envíos y cambios: visible en la página del producto (Google Merchant Center lo pide y el cliente lo agradece). */}
-        <section className="rounded-2xl bg-white border border-black/5 p-4 text-sm leading-relaxed">
-          <h2 className="font-extrabold text-sm mb-1.5">Envíos, pagos y cambios</h2>
-          <ul className="flex flex-col gap-1 opacity-80 list-disc pl-4">
-            <li>Haces el pedido por WhatsApp y coordinas el pago y la entrega directamente con {tienda.name}.</li>
-            <li>Los cambios y devoluciones también se coordinan directo con la tienda: cada tienda define su política, consúltala antes de comprar.</li>
-            <li>BogaHub solo te conecta con la tienda: no cobra ni entrega el pedido.</li>
-          </ul>
-        </section>
-
-        <Link href={`/${tienda.slug}`} className="text-center text-sm font-bold underline underline-offset-4 opacity-70">
-          Ver todos los productos de {tienda.name}
-        </Link>
-
-        {!conMarcaBlanca(tienda.modulos) && (
-          <p className="text-center text-xs opacity-50 pt-2">Powered by Boga Market</p>
-        )}
-      </div>
-    </main>
+      <StoreRenderer store={store} initialProductId={producto.id} />
+    </>
   );
 }

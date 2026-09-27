@@ -124,8 +124,11 @@ export function ProductGrid({
                   <span className={`block ${TXT.micro} font-medium line-through`} style={{ color: t.onSurfaceVariant }}>{soles(product.priceAnterior)}</span>
                 )}
               </span>
-              {/* Con medidas, el "+" agrega la más chica (la del precio "Desde"); para otra medida se toca el producto. */}
-              <AddButton t={t} nombre={product.name} onAdd={() => onAdd(product)} />
+              {/* Un servicio no se "agrega": se consulta desde su ficha (el tap en la tarjeta ya la abre). */}
+              {!product.esServicio && (
+                // Con medidas, el "+" agrega la más chica (la del precio "Desde"); para otra medida se toca el producto.
+                <AddButton t={t} nombre={product.name} onAdd={() => onAdd(product)} />
+              )}
             </div>
           </div>
         </div>
@@ -139,7 +142,7 @@ export function ProductGrid({
    ════════════════════════════════════════════ */
 
 export function ProductModal({
-  t, producto, productos = [], onClose, onAdd, onSelect,
+  t, producto, productos = [], onClose, onAdd, onSelect, onConsultar,
 }: {
   t: StoreTheme;
   producto: Producto | null;
@@ -149,6 +152,8 @@ export function ProductModal({
   onAdd: (p: Producto, pres?: Presentacion) => void;
   /** Para poder tocar un sugerido y que el modal cambie al producto elegido. */
   onSelect?: (p: Producto) => void;
+  /** Un servicio no se agrega al carrito: este botón manda directo a WhatsApp. */
+  onConsultar?: (p: Producto) => void;
 }) {
   const [agregado, setAgregado] = React.useState(false);
   // Medida elegida cuando el producto tiene presentaciones (por defecto la primera, la más chica).
@@ -268,21 +273,31 @@ export function ProductModal({
               <span className="ml-2 text-sm font-medium line-through" style={{ color: t.onSurfaceVariant }}>{soles(producto.priceAnterior)}</span>
             )}
           </span>
-          <button
-            onClick={() => {
-              // El modal se queda abierto: abajo hay sugeridos y el cliente
-              // puede seguir agregando o mirando mas platos sin salir de aca.
-              onAdd(producto, medida ?? undefined);
-              setAgregado(true);
-              if (cierre.current) clearTimeout(cierre.current);
-              cierre.current = setTimeout(() => setAgregado(false), 1200);
-            }}
-            className={`px-6 py-2.5 rounded-full font-bold ${TXT.body} flex items-center gap-1.5 transition-[background-color,transform] active:scale-95 ${agregado ? 'add-btn-pop' : ''}`}
-            style={{ background: agregado ? '#16a34a' : t.primary, color: agregado ? '#fff' : t.onPrimary }}
-          >
-            <span className={`material-symbols-outlined ${ICON.sm}`}>{agregado ? 'check' : 'add'}</span>
-            {agregado ? 'Agregado' : 'Agregar'}
-          </button>
+          {producto.esServicio ? (
+            <button
+              onClick={() => onConsultar?.(producto)}
+              className={`px-6 py-2.5 rounded-full font-bold ${TXT.body} flex items-center gap-1.5 active:scale-95 bg-[#25D366] text-white`}
+            >
+              <span className={`material-symbols-outlined ${ICON.sm}`}>chat</span>
+              Consultar por WhatsApp
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                // El modal se queda abierto: abajo hay sugeridos y el cliente
+                // puede seguir agregando o mirando mas platos sin salir de aca.
+                onAdd(producto, medida ?? undefined);
+                setAgregado(true);
+                if (cierre.current) clearTimeout(cierre.current);
+                cierre.current = setTimeout(() => setAgregado(false), 1200);
+              }}
+              className={`px-6 py-2.5 rounded-full font-bold ${TXT.body} flex items-center gap-1.5 transition-[background-color,transform] active:scale-95 ${agregado ? 'add-btn-pop' : ''}`}
+              style={{ background: agregado ? '#16a34a' : t.primary, color: agregado ? '#fff' : t.onPrimary }}
+            >
+              <span className={`material-symbols-outlined ${ICON.sm}`}>{agregado ? 'check' : 'add'}</span>
+              {agregado ? 'Agregado' : 'Agregar'}
+            </button>
+          )}
         </div>
       </div>
     </div>

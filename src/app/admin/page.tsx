@@ -45,6 +45,8 @@ interface Product {
   oferta_hasta?: string | null;
   /** Medidas o tamaños con su precio (100 g / 250 g / 1 kg…). Sin lista = un solo precio. */
   presentaciones?: { label: string; price: number }[] | null;
+  /** true = es un servicio (se reserva/consulta, no se agrega al carrito). Decide si sale en el toggle "Servicios" del Market. */
+  es_servicio?: boolean | null;
 }
 
 type TabId = 'inicio' | 'products' | 'orders' | 'pos' | 'metrics' | 'stores';
@@ -345,6 +347,7 @@ function AdminDashboard({ user }: { user: User }) {
     precioOferta: '',
     ofertaHasta: '',
     presentaciones: [] as { label: string; price: string }[],
+    esServicio: false,
   });
 
   // Tiendas de terrenos: "Sección" pasa a ser el área, y aparece un campo para la ubicación (enlace de Maps).
@@ -367,6 +370,7 @@ function AdminDashboard({ user }: { user: User }) {
       precioOferta: '',
       ofertaHasta: '',
       presentaciones: [],
+      esServicio: false,
     });
     setSelectedFile(null);
     setPreviewUrl(null);
@@ -429,9 +433,11 @@ function AdminDashboard({ user }: { user: User }) {
     const base = 'id,name,store,price,category,subcategory,stock,status,image,description,created_at';
     let { data, error } = await supabase
       .from('products')
-      .select(`${base},${COLS_OFERTA},${COL_PRESENTACIONES}`)
+      .select(`${base},${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio`)
       .in('store', slugs)
       .order('created_at', { ascending: false });
+    // Si el SQL de "es_servicio" aún no se corrió, se pide sin esa columna.
+    if (error) ({ data, error } = await supabase.from('products').select(`${base},${COLS_OFERTA},${COL_PRESENTACIONES}`).in('store', slugs).order('created_at', { ascending: false }) as any);
     // Si el SQL de presentaciones aún no se corrió, se pide sin esa columna.
     if (error) ({ data, error } = await supabase.from('products').select(`${base},${COLS_OFERTA}`).in('store', slugs).order('created_at', { ascending: false }) as any);
     // Si el SQL de ofertas aún no se corrió, esas columnas no existen: se pide lo de siempre.
@@ -1010,6 +1016,10 @@ function AdminDashboard({ user }: { user: User }) {
       const camposPres = hayPres || (productoPrevio?.presentaciones?.length ?? 0) > 0
         ? { [COL_PRESENTACIONES]: hayPres ? presLimpias : null }
         : {};
+      // Igual que arriba: la columna solo se manda si está marcado o si el producto ya la tenía (para poder destildarla).
+      const camposServicio = newProduct.esServicio || productoPrevio?.es_servicio
+        ? { es_servicio: newProduct.esServicio }
+        : {};
 
       // 3. Guardar en la base de datos
       if (editingProductId) {
@@ -1023,6 +1033,7 @@ function AdminDashboard({ user }: { user: User }) {
           description: descripcionFinal,
           ...camposOferta,
           ...camposPres,
+          ...camposServicio,
           // Sin módulo de inventario no se toca el stock guardado (por si lo vuelven a prender).
           ...(tiendaTiene(newProduct.store, 'inventario') ? { stock: finalStock } : {}),
           status: finalStatus,
@@ -1057,6 +1068,7 @@ function AdminDashboard({ user }: { user: User }) {
             description: descripcionFinal,
             ...camposOferta,
             ...camposPres,
+            ...camposServicio,
             stock: finalStock,
             status: finalStatus,
           }
@@ -1099,6 +1111,7 @@ function AdminDashboard({ user }: { user: User }) {
       precioOferta: product.precio_oferta ? String(product.precio_oferta) : '',
       ofertaHasta: product.oferta_hasta ? product.oferta_hasta.slice(0, 10) : '',
       presentaciones: leerPresentaciones(product.presentaciones).map((x) => ({ label: x.label, price: String(x.price) })),
+      esServicio: product.es_servicio === true,
     });
     setPreviewUrl(product.image);
     setSelectedFile(null);
@@ -2985,6 +2998,23 @@ function AdminDashboard({ user }: { user: User }) {
                     </datalist>
                   </div>
                 </div>
+
+                {/* Servicio: se reserva o se consulta, no se "agrega al carrito" como un producto normal. Decide si la tienda aparece en el toggle "Servicios" de BogaHub. */}
+                <label className="flex items-center gap-3 rounded-xl border border-dashed border-gray-300 bg-gray-50/70 p-4 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={newProduct.esServicio}
+                    onChange={(e) => setNewProduct({ ...newProduct, esServicio: e.target.checked })}
+                    className="w-5 h-5 accent-[#b8130e] shrink-0"
+                  />
+                  <span>
+                    <span className="block text-sm font-bold text-gray-800 flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[18px] text-gray-500">handyman</span>
+                      Es un servicio, no un producto
+                    </span>
+                    <span className="block text-xs text-gray-500 mt-0.5">Ej. un corte, una consulta, una reserva. Aparece marcado como servicio en tu tienda y en BogaHub.</span>
+                  </span>
+                </label>
 
                 {/* Disponibilidad e Inventario (solo con el módulo de inventario) */}
                 {tiendaTiene(newProduct.store, 'inventario') && (

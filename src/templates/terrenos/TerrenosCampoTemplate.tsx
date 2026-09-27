@@ -5,6 +5,7 @@ import type { StoreConfig } from '@/lib/stores.config';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import { inicialesDe } from '../shared/tokens';
 import { useTerrenos, areaDe, precioTerreno, descripcionLimpia } from './useTerrenos';
+import DetalleTerreno from './DetalleTerreno';
 
 const SERIF = "'Merriweather', Georgia, 'Times New Roman', serif";
 
@@ -14,9 +15,9 @@ const SERIF = "'Merriweather', Georgia, 'Times New Roman', serif";
  * serif y una barra de búsqueda grande con botón de acento, y luego una grilla
  * de fotos grandes con el precio bien visible. Se consulta por WhatsApp.
  */
-export default function TerrenosCampoTemplate({ store }: { store: StoreConfig }) {
+export default function TerrenosCampoTemplate({ store, initialProductId }: { store: StoreConfig; initialProductId?: string }) {
   const t = store.theme;
-  const c = useTerrenos(store);
+  const c = useTerrenos(store, initialProductId);
 
   // Corazón de favoritos: se guarda solo en este navegador (sin cuenta).
   const favKey = `terrenos_fav_${store.slug}`;
@@ -121,7 +122,7 @@ export default function TerrenosCampoTemplate({ store }: { store: StoreConfig })
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {c.resultados.map((p) => (
-              <article key={p.id} className="rounded overflow-hidden border flex flex-col shadow-sm bg-white" style={{ borderColor: t.outlineVariant }}>
+              <article key={p.id} onClick={() => c.abrirProducto(p)} className="rounded overflow-hidden border flex flex-col shadow-sm bg-white cursor-pointer" style={{ borderColor: t.outlineVariant }}>
                 {/* Foto con el acceso al mapa abajo a la izquierda */}
                 <div className="relative aspect-[16/10]">
                   <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
@@ -129,6 +130,7 @@ export default function TerrenosCampoTemplate({ store }: { store: StoreConfig })
                     href={c.ubicacionUrl(p)}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
                     className="absolute bottom-3 left-3 rounded-full border px-3 py-1 text-xs font-bold text-white backdrop-blur-sm"
                     style={{ borderColor: 'rgba(255,255,255,0.85)', background: 'rgba(0,0,0,0.35)' }}
                   >
@@ -142,7 +144,7 @@ export default function TerrenosCampoTemplate({ store }: { store: StoreConfig })
                       {precioTerreno(p.price)}{areaDe(p) ? ` • ${areaDe(p)}` : ''}
                     </p>
                     <button
-                      onClick={() => toggleFav(p.id)}
+                      onClick={(e) => { e.stopPropagation(); toggleFav(p.id); }}
                       aria-label={favs.includes(p.id) ? 'Quitar de favoritos' : 'Guardar en favoritos'}
                       className="shrink-0 active:scale-90 transition-transform"
                       style={{ color: favs.includes(p.id) ? '#dc2626' : t.onSurfaceVariant }}
@@ -170,7 +172,7 @@ export default function TerrenosCampoTemplate({ store }: { store: StoreConfig })
                       </div>
                     </div>
                     <button
-                      onClick={() => c.consultar(p)}
+                      onClick={(e) => { e.stopPropagation(); c.consultar(p); }}
                       className="shrink-0 rounded border-2 px-5 py-2 text-sm font-semibold hover:bg-black/5 active:scale-95 transition"
                       style={{ borderColor: t.onSurface, color: t.onSurface }}
                     >
@@ -196,6 +198,17 @@ export default function TerrenosCampoTemplate({ store }: { store: StoreConfig })
           Escríbenos por WhatsApp
         </button>
       </footer>
+
+      {c.detalle && (
+        <DetalleTerreno
+          store={store}
+          terreno={c.detalle}
+          nombreDeZona={c.nombreDeZona}
+          ubicacionUrl={c.ubicacionUrl}
+          onConsultar={() => c.consultar(c.detalle!)}
+          onClose={c.cerrarProducto}
+        />
+      )}
     </div>
   );
 }

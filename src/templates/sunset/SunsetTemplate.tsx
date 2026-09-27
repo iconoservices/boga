@@ -7,9 +7,11 @@ import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { debeMostrarDemo } from '@/lib/demo';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
+import { useDetalleProducto } from '../shared/useDetalleProducto';
 
 interface SunsetTemplateProps {
   store: StoreConfig;
+  initialProductId?: string;
 }
 
 const MENU_ITEMS = [
@@ -70,12 +72,14 @@ const MENU_ITEMS = [
   },
 ];
 
-export default function SunsetTemplate({ store }: SunsetTemplateProps) {
+export default function SunsetTemplate({ store, initialProductId }: SunsetTemplateProps) {
   const [activeTab, setActiveTab] = useState('all');
   const [entered, setEntered] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<typeof MENU_ITEMS[0] | null>(null);
   const [products, setProducts] = useState<typeof MENU_ITEMS>(MENU_ITEMS);
+  // Detalle de producto con URL propia (/<tienda>/producto/<id>): compartible y
+  // es lo que Google indexa, en vez de un modal que solo vivía en un useState.
+  const { seleccionado: selectedProduct, abrir: abrirProducto, cerrar: cerrarProducto } = useDetalleProducto(store.slug, products, initialProductId);
   const { getSettings } = useStoreSettings();
 
   // Productos que la tienda cargo de verdad (los MENU_ITEMS son los de ejemplo).
@@ -372,7 +376,7 @@ export default function SunsetTemplate({ store }: SunsetTemplateProps) {
           <div
             className="relative overflow-hidden mb-0 cursor-pointer group flex flex-col -mx-6 sm:mx-0 sm:rounded-xl"
             style={{ background: t.surfaceContainerLowest, borderBottom: `1px solid ${t.outlineVariant}1A`, borderTop: `1px solid ${t.outlineVariant}1A` }}
-            onClick={() => setSelectedProduct(featured)}
+            onClick={() => abrirProducto(featured)}
           >
             <div className="w-full aspect-[2/1] sm:aspect-[21/7] overflow-hidden bg-black/5">
               <img
@@ -460,7 +464,7 @@ export default function SunsetTemplate({ store }: SunsetTemplateProps) {
                       (e.currentTarget.style.background = t.surfaceContainer)
                     }
                     onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                    onClick={() => setSelectedProduct(item)}
+                    onClick={() => abrirProducto(item)}
                   >
                     <div className="z-10 flex items-center gap-4">
                       {settings.showProductImages && item.image && (
@@ -562,7 +566,7 @@ export default function SunsetTemplate({ store }: SunsetTemplateProps) {
         >
           {/* Back/Close button */}
           <button 
-            onClick={() => setSelectedProduct(null)}
+            onClick={() => cerrarProducto()}
             className="absolute top-6 left-6 z-50 w-12 h-12 rounded-full flex items-center justify-center transition-transform active:scale-90 hover:bg-black/20"
             style={{ 
               background: `${t.surface}4D`, 
@@ -617,7 +621,7 @@ export default function SunsetTemplate({ store }: SunsetTemplateProps) {
               }}
               onClick={() => {
                 /* Add to cart logic could go here */
-                setSelectedProduct(null);
+                cerrarProducto();
               }}
             >
               Agregar a la orden

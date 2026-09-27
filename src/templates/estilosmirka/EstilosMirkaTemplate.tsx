@@ -8,16 +8,16 @@ import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import { estrellasDe } from '../shared/tokens';
+import { useDetalleProducto } from '../shared/useDetalleProducto';
 
 interface EstilosMirkaTemplateProps {
   store: StoreConfig;
+  initialProductId?: string;
 }
 
-export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProps) {
+export default function EstilosMirkaTemplate({ store, initialProductId }: EstilosMirkaTemplateProps) {
   const [activeCategory, setActiveCategory] = useState<string>('all');
 
-  // Product Detail Sheet
-  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [selectedSize, setSelectedSize] = useState('M');
   const [detailQty, setDetailQty] = useState(1);
   
@@ -57,6 +57,10 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
 
   const theme = store.theme;
   const allProducts = supabaseProducts;
+
+  // Detalle de producto con URL propia (/<tienda>/producto/<id>): compartible y
+  // es lo que Google indexa, en vez de un modal que solo vivía en un useState.
+  const { seleccionado: selectedProduct, abrir: abrirProducto, cerrar: cerrarProducto } = useDetalleProducto(store.slug, allProducts, initialProductId);
 
   // Categorias de la ficha real de la tienda (panel admin), no una lista fija
   // de rubro de ropa: antes "Faldas"/"Blazers" salian aunque la tienda hubiera
@@ -304,7 +308,7 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
                 {filteredProducts.map((prod) => (
                   <div
                     key={prod.id}
-                    onClick={() => { setSelectedProduct(prod); setDetailQty(1); setSelectedSize('M'); }}
+                    onClick={() => { abrirProducto(prod); setDetailQty(1); setSelectedSize('M'); }}
                     className="bg-white border border-black/5 overflow-hidden flex flex-col group relative cursor-pointer"
                     style={{ borderRadius: '4px' }}
                   >
@@ -354,7 +358,7 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
           {/* Header/Top Bar */}
           <div className="flex items-center justify-between px-4 h-14 border-b border-black/5 shrink-0 bg-white" style={{ background: theme.surface }}>
             <button
-              onClick={() => setSelectedProduct(null)}
+              onClick={() => cerrarProducto()}
               className="w-10 h-10 flex items-center justify-center cursor-pointer hover:opacity-75 transition-opacity"
             >
               <span className="material-symbols-outlined text-xl" style={{ color: theme.primary }}>arrow_back</span>
@@ -363,7 +367,7 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
               Detalle del Producto
             </span>
             <button
-              onClick={() => { setSelectedProduct(null); setIsCartOpen(true); }}
+              onClick={() => { cerrarProducto(); setIsCartOpen(true); }}
               className="w-10 h-10 flex items-center justify-center cursor-pointer hover:opacity-75 transition-opacity relative"
             >
               <span className="material-symbols-outlined text-xl" style={{ color: theme.primary }}>shopping_bag</span>
@@ -464,7 +468,7 @@ export default function EstilosMirkaTemplate({ store }: EstilosMirkaTemplateProp
 
             {/* Add to cart */}
             <button
-              onClick={() => { addToCart(selectedProduct); setSelectedProduct(null); }}
+              onClick={() => { addToCart(selectedProduct); cerrarProducto(); }}
               className="flex-1 h-11 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 shadow-lg hover:opacity-90 active:scale-95 transition-all cursor-pointer"
               style={{ background: theme.primary }}
             >

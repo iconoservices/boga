@@ -6,13 +6,14 @@ import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import StoreHeader from '../shared/StoreHeader';
 import { useCatalogo } from '../shared/useCatalogo';
-import { TXT, ICON, estrellasDe, inicialesDe, type Producto } from '../shared/tokens';
+import { TXT, ICON, estrellasDe, inicialesDe } from '../shared/tokens';
 import {
   CategoryChips, ProductGrid, ProductModal, CartPanel, ContactPanel, BottomNav, StoreFooter,
 } from '../shared/CatalogoUI';
 
 interface PolleriaTemplateProps {
   store: StoreConfig;
+  initialProductId?: string;
 }
 
 /**
@@ -24,12 +25,12 @@ interface PolleriaTemplateProps {
  * entrada estan "Menú Directo" e "Inicio con Catálogo", que comparten este
  * mismo motor.
  */
-export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
+export default function PolleriaTemplate({ store, initialProductId }: PolleriaTemplateProps) {
   const t = store.theme;
-  const c = useCatalogo(store);
+  const c = useCatalogo(store, initialProductId);
 
   const [activeTab, setActiveTab] = useState('home');
-  const [selectedProduct, setSelectedProduct] = useState<Producto | null>(null);
+  const selectedProduct = c.detalle;
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
 
@@ -384,7 +385,7 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
               <ProductGrid
                 t={t}
                 productos={c.filtered}
-                onSelect={setSelectedProduct}
+                onSelect={c.abrirProducto}
                 onAdd={c.addToCart}
                 onVerTodo={() => c.setActiveCategory('all')}
               />
@@ -450,7 +451,7 @@ export default function PolleriaTemplate({ store }: PolleriaTemplateProps) {
         cartCount={c.cartCount}
       />
 
-      <ProductModal t={t} producto={selectedProduct} productos={c.products} onSelect={setSelectedProduct} onClose={() => setSelectedProduct(null)} onAdd={c.addToCart} />
+      <ProductModal t={t} producto={selectedProduct} productos={c.products} onSelect={c.abrirProducto} onClose={c.cerrarProducto} onAdd={c.addToCart} onConsultar={(p) => enviarPedidoPorWhatsApp(store, `Hola ${store.name}, quiero consultar por "${p.name}".`)} />
     </div>
   );
 }

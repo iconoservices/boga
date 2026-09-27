@@ -10,6 +10,7 @@ import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
 import { soles, iconForCategory, type Producto, type Categoria } from './tokens';
 import { avisarAgregado } from './AddFeedback';
 import { claveLinea, nombreConPresentacion, type Presentacion } from '@/lib/presentaciones';
+import { useDetalleProducto } from './useDetalleProducto';
 
 /** Una línea del carrito: el mismo producto en dos medidas distintas son dos líneas. */
 type LineaCarrito = { clave: string; producto: Producto; pres?: Presentacion; qty: number; precio: number };
@@ -22,7 +23,7 @@ type LineaCarrito = { clave: string; producto: Producto; pres?: Presentacion; qt
  * desincronizo. Aca, un arreglo del carrito o del mensaje de WhatsApp llega a
  * todas las plantillas que lo usan.
  */
-export function useCatalogo(store: StoreConfig) {
+export function useCatalogo(store: StoreConfig, initialProductId?: string) {
   const demoPermitido = store.showDemoProducts === true;
 
   const [products, setProducts] = useState<Producto[]>([]);
@@ -63,6 +64,7 @@ export function useCatalogo(store: StoreConfig) {
             image: p.image || store.heroImage,
             extra: p.subcategory ? { area: String(p.subcategory) } : undefined,
             presentaciones: Array.isArray(p.presentaciones) && p.presentaciones.length ? p.presentaciones : undefined,
+            esServicio: p.es_servicio === true,
           }))
         : [];
 
@@ -219,6 +221,10 @@ export function useCatalogo(store: StoreConfig) {
   const whatsappVisible = tieneWhatsApp(store);
   const telefonoVisible = whatsappVisible ? `+${(store.whatsapp || '').replace(/\D/g, '')}` : null;
 
+  // Detalle de producto con URL propia (/<tienda>/producto/<id>): compartible y
+  // es lo que Google indexa, en vez de un modal que solo vivía en un useState.
+  const { seleccionado: detalle, abrir: abrirProducto, cerrar: cerrarProducto } = useDetalleProducto(store.slug, products, initialProductId);
+
   return {
     products,
     cargando,
@@ -239,6 +245,9 @@ export function useCatalogo(store: StoreConfig) {
     pagarOnline,
     whatsappVisible,
     telefonoVisible,
+    detalle,
+    abrirProducto,
+    cerrarProducto,
   };
 }
 

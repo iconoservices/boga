@@ -11,7 +11,7 @@ import { purgeTodoCloudflare } from '@/lib/cloudflare';
 
 const ENDPOINTS = [
   '/api/catalog', '/api/drivers', '/api/chamba', '/api/viajes', '/api/eventos', '/api/lugares',
-  '/api/inmuebles', '/api/ventas', '/api/revista', '/api/sorteos', '/api/organizers',
+  '/api/inmuebles', '/api/ventas', '/api/revista', '/api/sorteos', '/api/organizers', '/api/google-feed',
 ];
 
 export async function POST(request: Request) {

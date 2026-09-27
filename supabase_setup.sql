@@ -1790,6 +1790,17 @@ ALTER TABLE public.products ADD COLUMN IF NOT EXISTS presentaciones JSONB;
 
 
 -- ============================================================
+-- SERVICIOS (marca "producto o servicio" por ítem)
+-- ============================================================
+-- El dueño marca un ítem como servicio desde su panel (Productos → editar → «Es un servicio, no un producto»).
+-- No hay tabla ni tipo nuevo: un servicio (una manicura, una consulta) es una fila más de `products`, solo que
+-- no se "agrega al carrito" en las plantillas y sirve para clasificar en el Market/Explorar (chip "Servicios")
+-- y en /explore?vista=servicios (la tienda aparece ahí si tiene AL MENOS UN producto marcado así — una misma
+-- tienda puede vender productos Y servicios a la vez, ej. Sweet Kitty Nails).
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS es_servicio BOOLEAN DEFAULT false;
+
+
+-- ============================================================
 -- CATEGORÍAS POR DEFECTO DE CADA PLANTILLA (editables desde /superadmin/plantillas/<id>)
 -- ============================================================
 -- Una fila por plantilla. Manda sobre las categorías de fábrica del código; sin fila se usan las del código.

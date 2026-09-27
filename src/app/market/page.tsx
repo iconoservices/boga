@@ -121,7 +121,9 @@ export default function Home() {
           const storeCategory = storeDef?.marketplaceCategory?.toLowerCase() || '';
           const productCategory = p.category?.toLowerCase() || '';
 
-          if (storeCategory.includes('moda') || productCategory.includes('ropa') || productCategory.includes('vestido') || storeCategory.includes('boutique')) {
+          if (p.es_servicio === true || storeCategory.includes('servicio') || productCategory.includes('servicio')) {
+            macroCat = 'Servicios';
+          } else if (storeCategory.includes('moda') || productCategory.includes('ropa') || productCategory.includes('vestido') || storeCategory.includes('boutique')) {
             macroCat = 'Moda';
           } else if (storeCategory.includes('salud') || productCategory.includes('salud') || storeCategory.includes('belleza')) {
             macroCat = 'Salud';
@@ -131,8 +133,6 @@ export default function Home() {
             macroCat = 'Bebidas';
           } else if (storeCategory.includes('mercado') || productCategory.includes('fruta') || productCategory.includes('carne')) {
             macroCat = 'Mercado';
-          } else if (storeCategory.includes('servicio')) {
-            macroCat = 'Servicios';
           }
 
           if (newSectionsProducts[macroCat]) {

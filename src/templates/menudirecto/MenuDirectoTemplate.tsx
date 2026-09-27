@@ -6,13 +6,14 @@ import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import StoreHeader from '../shared/StoreHeader';
 import { useCatalogo } from '../shared/useCatalogo';
-import { TXT, ICON, type Producto } from '../shared/tokens';
+import { TXT, ICON } from '../shared/tokens';
 import {
   CategoryChips, ProductGrid, ProductModal, CartPanel, ContactPanel, BottomNav, StoreFooter,
 } from '../shared/CatalogoUI';
 
 interface Props {
   store: StoreConfig;
+  initialProductId?: string;
 }
 
 /**
@@ -25,12 +26,12 @@ interface Props {
  * Comparte motor (catalogo, carrito, WhatsApp) y componentes con las demas
  * plantillas de comida; aca solo cambia como se arma la pantalla.
  */
-export default function MenuDirectoTemplate({ store }: Props) {
+export default function MenuDirectoTemplate({ store, initialProductId }: Props) {
   const t = store.theme;
-  const c = useCatalogo(store);
+  const c = useCatalogo(store, initialProductId);
 
   const [activeTab, setActiveTab] = useState('menu');
-  const [selectedProduct, setSelectedProduct] = useState<Producto | null>(null);
+  const selectedProduct = c.detalle;
 
   const TABS = [
     { id: 'menu', label: 'Menú' },
@@ -124,7 +125,7 @@ export default function MenuDirectoTemplate({ store }: Props) {
               <ProductGrid
                 t={t}
                 productos={c.filtered}
-                onSelect={setSelectedProduct}
+                onSelect={c.abrirProducto}
                 onAdd={c.addToCart}
                 onVerTodo={() => c.setActiveCategory('all')}
               />
@@ -188,7 +189,7 @@ export default function MenuDirectoTemplate({ store }: Props) {
         cartCount={c.cartCount}
       />
 
-      <ProductModal t={t} producto={selectedProduct} productos={c.products} onSelect={setSelectedProduct} onClose={() => setSelectedProduct(null)} onAdd={c.addToCart} />
+      <ProductModal t={t} producto={selectedProduct} productos={c.products} onSelect={c.abrirProducto} onClose={c.cerrarProducto} onAdd={c.addToCart} onConsultar={(p) => enviarPedidoPorWhatsApp(store, `Hola ${store.name}, quiero consultar por "${p.name}".`)} />
     </div>
   );
 }

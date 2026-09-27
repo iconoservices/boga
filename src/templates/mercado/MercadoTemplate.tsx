@@ -11,6 +11,7 @@ import type { Producto } from '@/templates/shared/tokens';
 
 interface MercadoTemplateProps {
   store: StoreConfig;
+  initialProductId?: string;
 }
 
 type Pestana = 'inicio' | 'pedidos' | 'contacto';
@@ -25,13 +26,13 @@ type Pestana = 'inicio' | 'pedidos' | 'contacto';
  * contacto) es la del motor compartido de las demas plantillas (templates/shared): producto a pantalla completa
  * con selector de medida, resumen del pedido con datos de entrega y barra inferior tipo app.
  */
-export default function MercadoTemplate({ store }: MercadoTemplateProps) {
+export default function MercadoTemplate({ store, initialProductId }: MercadoTemplateProps) {
   const t = store.theme;
-  const c = useCatalogo(store);
+  const c = useCatalogo(store, initialProductId);
 
   const [pestana, setPestana] = useState<Pestana>('inicio');
   const [busqueda, setBusqueda] = useState('');
-  const [detalle, setDetalle] = useState<Producto | null>(null);
+  const detalle = c.detalle;
   const [agregados, setAgregados] = useState<Record<string, boolean>>({});
 
   const irA = (p: Pestana) => {
@@ -302,7 +303,7 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
                   {filtrados.map((p) => (
                     <article
                       key={p.id}
-                      onClick={() => setDetalle(p)}
+                      onClick={() => c.abrirProducto(p)}
                       className="rounded-lg overflow-hidden flex flex-col group cursor-pointer"
                       style={{ background: t.surface, border: `1px solid ${t.outlineVariant}` }}
                     >
@@ -405,9 +406,10 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
         t={t}
         producto={detalle}
         productos={c.products}
-        onSelect={setDetalle}
-        onClose={() => setDetalle(null)}
+        onSelect={c.abrirProducto}
+        onClose={c.cerrarProducto}
         onAdd={c.addToCart}
+        onConsultar={(p) => enviarPedidoPorWhatsApp(store, `Hola ${store.name}, quiero consultar por "${p.name}".`)}
       />
     </div>
   );

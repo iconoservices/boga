@@ -6,13 +6,14 @@ import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import StoreHeader from '../shared/StoreHeader';
 import { useCatalogo } from '../shared/useCatalogo';
-import { TXT, ICON, type Producto } from '../shared/tokens';
+import { TXT, ICON } from '../shared/tokens';
 import {
   CategoryChips, ProductGrid, ProductModal, CartPanel, ContactPanel, BottomNav, StoreFooter,
 } from '../shared/CatalogoUI';
 
 interface Props {
   store: StoreConfig;
+  initialProductId?: string;
 }
 
 /**
@@ -26,12 +27,12 @@ interface Props {
  * A diferencia del Menú Directo, aca el Menú NO lleva banner propio: el hero
  * del inicio ya cumple esa funcion y repetirlo mostraba la misma foto dos veces.
  */
-export default function InicioCatalogoTemplate({ store }: Props) {
+export default function InicioCatalogoTemplate({ store, initialProductId }: Props) {
   const t = store.theme;
-  const c = useCatalogo(store);
+  const c = useCatalogo(store, initialProductId);
 
   const [activeTab, setActiveTab] = useState('home');
-  const [selectedProduct, setSelectedProduct] = useState<Producto | null>(null);
+  const selectedProduct = c.detalle;
 
   const TABS = [
     { id: 'home', label: 'Inicio' },
@@ -173,7 +174,7 @@ export default function InicioCatalogoTemplate({ store }: Props) {
               <ProductGrid
                 t={t}
                 productos={destacados}
-                onSelect={setSelectedProduct}
+                onSelect={c.abrirProducto}
                 onAdd={c.addToCart}
               />
             </section>
@@ -203,7 +204,7 @@ export default function InicioCatalogoTemplate({ store }: Props) {
               <ProductGrid
                 t={t}
                 productos={c.filtered}
-                onSelect={setSelectedProduct}
+                onSelect={c.abrirProducto}
                 onAdd={c.addToCart}
                 onVerTodo={() => c.setActiveCategory('all')}
               />
@@ -268,7 +269,7 @@ export default function InicioCatalogoTemplate({ store }: Props) {
         cartCount={c.cartCount}
       />
 
-      <ProductModal t={t} producto={selectedProduct} productos={c.products} onSelect={setSelectedProduct} onClose={() => setSelectedProduct(null)} onAdd={c.addToCart} />
+      <ProductModal t={t} producto={selectedProduct} productos={c.products} onSelect={c.abrirProducto} onClose={c.cerrarProducto} onAdd={c.addToCart} onConsultar={(p) => enviarPedidoPorWhatsApp(store, `Hola ${store.name}, quiero consultar por "${p.name}".`)} />
     </div>
   );
 }

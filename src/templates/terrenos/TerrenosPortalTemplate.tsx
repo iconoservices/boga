@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import type { StoreConfig } from '@/lib/stores.config';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import { useTerrenos, areaDe, precioTerreno, descripcionLimpia } from './useTerrenos';
+import DetalleTerreno from './DetalleTerreno';
 
 /**
  * Plantilla "Terreno 1": estilo inmobiliaria moderna (referencia: Los
@@ -11,9 +12,9 @@ import { useTerrenos, areaDe, precioTerreno, descripcionLimpia } from './useTerr
  * en una tarjeta que se monta sobre el borde de la foto, y listado en tarjetas
  * limpias con la zona como etiqueta. Se consulta por WhatsApp.
  */
-export default function TerrenosPortalTemplate({ store }: { store: StoreConfig }) {
+export default function TerrenosPortalTemplate({ store, initialProductId }: { store: StoreConfig; initialProductId?: string }) {
   const t = store.theme;
-  const c = useTerrenos(store);
+  const c = useTerrenos(store, initialProductId);
   const [menuAbierto, setMenuAbierto] = useState(false);
 
   // Cabecera con animación: se esconde hacia arriba al bajar y reaparece al subir.
@@ -136,7 +137,8 @@ export default function TerrenosPortalTemplate({ store }: { store: StoreConfig }
             {c.resultados.map((p) => (
               <article
                 key={p.id}
-                className="group rounded-[28px] overflow-hidden flex flex-col shadow-md hover:shadow-xl transition-shadow"
+                onClick={() => c.abrirProducto(p)}
+                className="group rounded-[28px] overflow-hidden flex flex-col shadow-md hover:shadow-xl transition-shadow cursor-pointer"
                 style={{ background: t.surface }}
               >
                 {/* Foto: en pantallas con mouse se encoge al pasar por encima para dejar ver el botón. */}
@@ -165,6 +167,7 @@ export default function TerrenosPortalTemplate({ store }: { store: StoreConfig }
                     href={c.ubicacionUrl(p)}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
                     className="mt-2 inline-flex items-center gap-1 text-sm font-bold hover:underline"
                     style={{ color: t.primary }}
                   >
@@ -177,7 +180,7 @@ export default function TerrenosPortalTemplate({ store }: { store: StoreConfig }
                   {/* Botón: siempre visible en celular; en escritorio aparece al pasar el mouse. */}
                   <div className="w-full overflow-hidden transition-all duration-300 max-h-16 [@media(hover:hover)]:max-h-0 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:max-h-16 [@media(hover:hover)]:group-hover:opacity-100">
                     <button
-                      onClick={() => c.consultar(p)}
+                      onClick={(e) => { e.stopPropagation(); c.consultar(p); }}
                       className="mt-3 rounded-full px-8 py-3 text-sm font-extrabold inline-flex items-center gap-2 active:scale-95 transition-transform"
                       style={{ background: t.primary, color: t.onPrimary }}
                     >
@@ -283,6 +286,17 @@ export default function TerrenosPortalTemplate({ store }: { store: StoreConfig }
           Escríbenos por WhatsApp
         </button>
       </footer>
+
+      {c.detalle && (
+        <DetalleTerreno
+          store={store}
+          terreno={c.detalle}
+          nombreDeZona={c.nombreDeZona}
+          ubicacionUrl={c.ubicacionUrl}
+          onConsultar={() => c.consultar(c.detalle!)}
+          onClose={c.cerrarProducto}
+        />
+      )}
     </div>
   );
 }

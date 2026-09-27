@@ -31,8 +31,8 @@ export const precioTerreno = (n: number) => `S/ ${Math.round(n).toLocaleString('
  * No hay carrito: en un terreno no se agrega y paga, se consulta. Por eso el
  * botón de cada tarjeta abre WhatsApp con el terreno ya nombrado.
  */
-export function useTerrenos(store: StoreConfig) {
-  const c = useCatalogo(store);
+export function useTerrenos(store: StoreConfig, initialProductId?: string) {
+  const c = useCatalogo(store, initialProductId);
   const [busqueda, setBusqueda] = useState('');
   const [zona, setZona] = useState('all');
 
