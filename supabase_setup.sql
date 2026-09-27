@@ -1436,6 +1436,13 @@ BEGIN
     IF NEW.push_creditos IS DISTINCT FROM OLD.push_creditos THEN
       NEW.push_creditos := OLD.push_creditos;
     END IF;
+    -- Servicios de pago: el subdominio propio (su app instalable con su logo) y los avisos push los prende solo el superadmin.
+    IF NEW.subdominio_activo IS DISTINCT FROM OLD.subdominio_activo THEN
+      NEW.subdominio_activo := OLD.subdominio_activo;
+    END IF;
+    IF NEW.push_activo IS DISTINCT FROM OLD.push_activo THEN
+      NEW.push_activo := OLD.push_activo;
+    END IF;
   END IF;
   RETURN NEW;
 END;
