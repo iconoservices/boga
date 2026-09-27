@@ -2791,7 +2791,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     {/* ── PRODUCTOS DE LA TIENDA: cargar la carta desde superadmin, sin pasar por /admin ── */}
     {productsStoreSlug && (
       <div className="fixed inset-0 z-[200] bg-[#191b23]/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg border border-[#c2c6d6] shadow-2xl w-[90vw] md:w-[640px] max-w-[640px] max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="bg-white rounded-lg border border-[#c2c6d6] shadow-2xl w-[95vw] md:w-[1040px] max-w-[1040px] max-h-[90vh] overflow-hidden flex flex-col">
           <div className="px-5 py-4 border-b border-[#c2c6d6] bg-[#f2f3fd] flex items-center justify-between shrink-0">
             <div>
               <h3 className="font-bold text-sm text-[#191b23]">Productos de {stores[productsStoreSlug]?.name || productsStoreSlug}</h3>
@@ -2805,14 +2805,16 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
             </button>
           </div>
 
-          <div className="p-5 flex-1 overflow-y-auto min-h-0 space-y-5">
-            {/* Formulario para agregar / editar: cerrado hasta tocar el botón */}
+          {/* Escritorio: dos paneles — a la izquierda la carta actual, a la derecha el formulario para agregar (siempre visible).
+              Celular: solo la lista, y el formulario se abre como ventana flotante con el botón "Agregar producto". */}
+          <div className="flex-1 min-h-0 flex flex-col md:flex-row">
+          <div className="p-5 flex-1 min-w-0 overflow-y-auto min-h-0 space-y-5">
             <div className="flex items-center gap-2">
               {!showStoreProductForm && (
                 <button
                   type="button"
                   onClick={() => setShowStoreProductForm(true)}
-                  className="shrink-0 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#0058be] text-white rounded-md font-bold text-xs hover:bg-[#004395] transition-colors"
+                  className="md:hidden shrink-0 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#0058be] text-white rounded-md font-bold text-xs hover:bg-[#004395] transition-colors"
                 >
                   <span className="material-symbols-outlined text-base">add</span>
                   Agregar producto
@@ -2829,19 +2831,62 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                 />
               </div>
             </div>
-            {/* Nuevo producto / Editando producto: ventana flotante propia encima de la lista (la lista no se recarga). */}
-            {showStoreProductForm && (
+            {/* Lista de productos ya cargados */}
+            <div>
+              <p className="text-[10px] font-black text-[#424754] uppercase tracking-widest mb-2">
+                Carta actual ({storeProductsList.length})
+              </p>
+              {isLoadingStoreProducts ? (
+                <p className="text-xs text-[#727785] italic py-4 text-center">Cargando…</p>
+              ) : storeProductsList.length === 0 ? (
+                <p className="text-xs text-[#727785] italic py-4 text-center">Todavía no hay productos cargados.</p>
+              ) : (
+                <div className="space-y-1.5">
+                  {storeProductsList.filter((p) => {
+                    const q = storeProductSearch.trim().toLowerCase();
+                    return !q || `${p.name} ${p.category || ''} ${p.subcategory || ''}`.toLowerCase().includes(q);
+                  }).map((p) => (
+                    <div key={p.id} className={`flex items-center gap-3 p-2 rounded-lg border bg-[#f9f9ff] ${editingStoreProductId === p.id ? 'border-[#0058be]' : 'border-[#ecedf7]'}`}>
+                      <img src={p.image} alt="" className="w-10 h-10 rounded-md object-cover shrink-0 bg-[#e6e7f2]" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-[#191b23] truncate">{p.name}</p>
+                        <p className="text-[10px] text-[#727785] font-semibold">
+                          S/ {Number(p.price).toFixed(2)}{p.category ? ` · ${p.category}` : ''}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleStartEditStoreProduct(p)}
+                        className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] transition-colors p-1 hover:bg-blue-50 rounded shrink-0"
+                        title="Editar"
+                      >
+                        edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteStoreProduct(p.id)}
+                        disabled={deletingStoreProductId === p.id}
+                        className="material-symbols-outlined text-[16px] text-[#727785] hover:text-red-600 transition-colors p-1 hover:bg-red-50 rounded shrink-0"
+                        title="Eliminar"
+                      >
+                        delete
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          {/* Panel derecho: Nuevo producto / Editando producto. En celular es una ventana flotante que se abre con "Agregar producto". */}
             <div
-              className="fixed inset-0 z-[130] flex items-center justify-center bg-black/45 p-4"
-              onMouseDown={(e) => { if (e.target === e.currentTarget) handleCancelEditStoreProduct(); }}
+              className={`${showStoreProductForm ? 'fixed inset-0 z-[130] flex items-center justify-center bg-black/45 p-4' : 'hidden'} md:static md:z-auto md:flex md:flex-col md:min-h-0 md:w-[420px] md:shrink-0 md:p-0 md:bg-[#f9f9ff] md:border-l md:border-[#ecedf7]`}
+              onMouseDown={(e) => { if (e.target === e.currentTarget && window.innerWidth < 768) handleCancelEditStoreProduct(); }}
             >
-              <div className="relative w-full max-w-lg max-h-[92vh] overflow-y-auto bg-white rounded-xl shadow-2xl border border-[#ecedf7]">
+              <div className="relative w-full max-w-lg max-h-[92vh] overflow-y-auto bg-white rounded-xl shadow-2xl border border-[#ecedf7] md:max-w-none md:max-h-none md:flex-1 md:min-h-0 md:rounded-none md:shadow-none md:border-0 md:bg-transparent">
                 <div className="sticky top-0 z-10 flex items-center justify-between gap-3 px-5 py-3 bg-[#f2f3fd] border-b border-[#ecedf7]">
                   <p className="text-xs font-black text-[#191b23] uppercase tracking-widest flex items-center gap-2">
                     <span className="material-symbols-outlined text-[18px] text-[#0058be]">{editingStoreProductId ? 'edit' : 'add_box'}</span>
                     {editingStoreProductId ? 'Editando producto' : 'Nuevo producto'}
                   </p>
-                  <button type="button" onClick={handleCancelEditStoreProduct} aria-label="Cerrar" className="w-8 h-8 rounded-full flex items-center justify-center text-[#424754] hover:bg-white transition-colors">
+                  <button type="button" onClick={handleCancelEditStoreProduct} aria-label="Cerrar" className="md:hidden w-8 h-8 rounded-full flex items-center justify-center text-[#424754] hover:bg-white transition-colors">
                     <span className="material-symbols-outlined text-[20px]">close</span>
                   </button>
                 </div>
@@ -2995,51 +3040,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
             </form>
               </div>
             </div>
-            )}
 
-            {/* Lista de productos ya cargados */}
-            <div>
-              <p className="text-[10px] font-black text-[#424754] uppercase tracking-widest mb-2">
-                Carta actual ({storeProductsList.length})
-              </p>
-              {isLoadingStoreProducts ? (
-                <p className="text-xs text-[#727785] italic py-4 text-center">Cargando…</p>
-              ) : storeProductsList.length === 0 ? (
-                <p className="text-xs text-[#727785] italic py-4 text-center">Todavía no hay productos cargados.</p>
-              ) : (
-                <div className="space-y-1.5">
-                  {storeProductsList.filter((p) => {
-                    const q = storeProductSearch.trim().toLowerCase();
-                    return !q || `${p.name} ${p.category || ''} ${p.subcategory || ''}`.toLowerCase().includes(q);
-                  }).map((p) => (
-                    <div key={p.id} className={`flex items-center gap-3 p-2 rounded-lg border bg-[#f9f9ff] ${editingStoreProductId === p.id ? 'border-[#0058be]' : 'border-[#ecedf7]'}`}>
-                      <img src={p.image} alt="" className="w-10 h-10 rounded-md object-cover shrink-0 bg-[#e6e7f2]" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-bold text-[#191b23] truncate">{p.name}</p>
-                        <p className="text-[10px] text-[#727785] font-semibold">
-                          S/ {Number(p.price).toFixed(2)}{p.category ? ` · ${p.category}` : ''}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => handleStartEditStoreProduct(p)}
-                        className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] transition-colors p-1 hover:bg-blue-50 rounded shrink-0"
-                        title="Editar"
-                      >
-                        edit
-                      </button>
-                      <button
-                        onClick={() => handleDeleteStoreProduct(p.id)}
-                        disabled={deletingStoreProductId === p.id}
-                        className="material-symbols-outlined text-[16px] text-[#727785] hover:text-red-600 transition-colors p-1 hover:bg-red-50 rounded shrink-0"
-                        title="Eliminar"
-                      >
-                        delete
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>
