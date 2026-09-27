@@ -168,7 +168,8 @@ export async function generateMetadata({ params }: Omit<Props, 'searchParams'>) 
         { url: iconUrl, sizes: '512x512', type: 'image/png' },
       ],
       apple: [
-        { url: iconUrl, sizes: '180x180', type: 'image/png' },
+        // Ícono de "Agregar a inicio" del iPhone: el de la tienda solo con subdominio propio; si no, el de BogaHub.
+        { url: store.subdominioActivo ? iconUrl : '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
       ],
     },
   };
