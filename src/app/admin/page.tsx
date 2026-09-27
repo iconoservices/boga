@@ -1379,31 +1379,33 @@ function AdminDashboard({ user }: { user: User }) {
           </div>
         )}
 
-        {activeTab === 'inicio' && inicioStore && (
-          <div className="max-w-md md:max-w-2xl mx-auto flex flex-col gap-3 pb-4">
-            {/* Acciones rápidas */}
-            <div className="flex gap-2 overflow-x-auto hide-scrollbar" style={{ scrollbarWidth: 'none' }}>
-              <button onClick={() => { setPickerDraft([]); setIsStorePickerOpen(true); }} className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-xs font-bold text-gray-700 hover:bg-gray-50">
-                <span className="material-symbols-outlined text-[16px]">menu_book</span>Mis cartas
-              </button>
-              {inicioDb?.push_activo ? (
-                <a href="/admin/notificaciones" className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-xs font-bold text-gray-700">
-                  <span className="material-symbols-outlined text-[16px]">notifications</span>Notificaciones
-                </a>
-              ) : null}
-              <a href={inicioUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-xs font-bold text-gray-700 hover:bg-gray-50">
-                <span className="material-symbols-outlined text-[16px]">open_in_new</span>Ver enlace
-              </a>
-              <button onClick={() => openStoreEditor(inicioStore.slug, 'datos')} className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-xs font-bold text-gray-700 hover:bg-gray-50">
-                <span className="material-symbols-outlined text-[16px]">edit</span>Editar perfil
-              </button>
-              <button onClick={async () => { await signOut(); router.replace('/login'); }} className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-xs font-bold text-[#8c0009] hover:bg-[#8c0009]/5">
-                <span className="material-symbols-outlined text-[16px]">logout</span>Cerrar sesión
-              </button>
-            </div>
+        {activeTab === 'inicio' && inicioStore && (() => {
+          // ── Datos del día (hora de Perú). Las canceladas no cuentan como venta. ──
+          const hoy = hoyLima();
+          const validas = inicioOrders.filter(o => o.status !== 'Cancelado');
+          const deHoy = validas.filter(o => fechaLima(o.created_at) === hoy);
+          const ventasHoy = deHoy.reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0);
+          const pendientes = inicioOrders.filter(o => o.status === 'Pendiente');
+          const misProductos = products.filter(p => p.store === inicioStore.slug);
 
-            {/* Fila 1: header con color de la carta — logo, selector, URL, y a la
-                derecha el toggle "activa" y el botón de compartir. */}
+          // ── "Completa tu tienda": lo que falta para vender bien, con un toque para arreglarlo ──
+          const tareas = [
+            { ok: !!inicioStore.logoImage, icon: 'add_photo_alternate', titulo: 'Sube tu logo', sub: 'Tus clientes te reconocen al instante', ir: () => openStoreEditor(inicioStore.slug, 'portada') },
+            { ok: misProductos.length >= 3, icon: 'inventory_2', titulo: 'Carga al menos 3 productos', sub: `Tienes ${misProductos.length}`, ir: () => { resetForm(); setNewProduct(prev => ({ ...prev, store: inicioStore.slug })); setIsModalOpen(true); } },
+            { ok: !!inicioStore.whatsapp, icon: 'chat', titulo: 'Agrega tu WhatsApp de pedidos', sub: 'Sin él, los pedidos no llegan a ti', ir: () => openStoreEditor(inicioStore.slug, 'avisos') },
+            { ok: !!inicioStore.horario, icon: 'schedule', titulo: 'Define tu horario', sub: 'Para que sepan cuándo atiendes', ir: () => openStoreEditor(inicioStore.slug, 'horario') },
+            { ok: (inicioStore.metodosPago?.length ?? 0) > 0, icon: 'payments', titulo: 'Elige cómo te pagan', sub: 'Efectivo, Yape, tarjeta…', ir: () => openStoreEditor(inicioStore.slug, 'pagos') },
+          ];
+          const hechas = tareas.filter(t => t.ok).length;
+          const faltan = tareas.filter(t => !t.ok);
+
+          const fila = 'w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors';
+          const icono = 'w-9 h-9 rounded-lg bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center shrink-0';
+          const titulo = 'text-[11px] font-extrabold uppercase tracking-wider text-gray-400 mb-2 px-1';
+
+          return (
+          <div className="max-w-md md:max-w-2xl mx-auto flex flex-col gap-4 pb-4">
+            {/* Tu tienda: logo, selector, enlace y el interruptor "activa" */}
             <div className="rounded-xl p-3.5 text-white shadow-sm flex items-center gap-3" style={{ background: inicioStore.theme?.primary || '#b8130e' }}>
               <div className="w-10 h-10 rounded-full bg-white/15 border border-white/25 overflow-hidden flex items-center justify-center shrink-0">
                 {inicioStore.logoImage
@@ -1436,95 +1438,150 @@ function AdminDashboard({ user }: { user: User }) {
                 >
                   <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${inicioActiva ? 'translate-x-5' : ''}`} />
                 </button>
-                <button onClick={compartirCarta} title="Compartir link de la carta" className="flex items-center gap-1 text-white/90 text-[10px] font-bold hover:text-white">
-                  <span className="material-symbols-outlined text-[15px]">share</span>Compartir
+                <span className="text-white/90 text-[10px] font-bold">{inicioActiva ? 'Abierta' : 'Cerrada'}</span>
+              </div>
+            </div>
+
+            {/* Hoy: lo que importa de un vistazo */}
+            <div>
+              <p className={titulo}>Hoy</p>
+              <div className="grid grid-cols-3 gap-2.5">
+                <div className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm">
+                  <p className="text-[11px] font-semibold text-gray-400">Ventas</p>
+                  <p className="text-xl font-black text-gray-900 leading-tight mt-1">S/ {ventasHoy.toFixed(2)}</p>
+                </div>
+                <div className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm">
+                  <p className="text-[11px] font-semibold text-gray-400">Pedidos</p>
+                  <p className="text-xl font-black text-gray-900 leading-tight mt-1">{deHoy.length}</p>
+                </div>
+                <button
+                  onClick={() => setActiveTab('orders')}
+                  className={`rounded-xl p-3 shadow-sm text-left border transition-colors ${pendientes.length > 0 ? 'bg-[#b8130e] border-[#b8130e] text-white' : 'bg-white border-gray-100 text-gray-900'}`}
+                >
+                  <p className={`text-[11px] font-semibold ${pendientes.length > 0 ? 'text-white/80' : 'text-gray-400'}`}>Por atender</p>
+                  <p className="text-xl font-black leading-tight mt-1">{pendientes.length}</p>
                 </button>
               </div>
             </div>
 
-            {/* Fila 2: resumen de pedidos */}
-            <button onClick={() => setActiveTab('orders')} className="w-full bg-white border border-gray-100 rounded-xl p-3 shadow-sm text-left hover:border-gray-200 transition-colors">
-              <div className="flex items-center justify-between">
-                <h4 className="font-bold text-gray-900 text-sm">Pedidos del negocio</h4>
-                <span className="material-symbols-outlined text-[#b8130e] text-[20px]">arrow_forward</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2 mt-2 text-center">
-                {[
-                  { k: 'Total', v: inicioOrders.length },
-                  { k: 'Pendientes', v: inicioOrders.filter(o => o.status === 'Pendiente').length },
-                  { k: 'Entregados', v: inicioOrders.filter(o => o.status === 'Entregado').length },
-                ].map(s => (
-                  <div key={s.k}>
-                    <p className="text-xl font-black text-gray-900 leading-none">{s.v}</p>
-                    <p className="text-[11px] font-semibold text-gray-400 mt-1">{s.k}</p>
+            {/* Pedidos por atender (los más recientes), o aviso de que está todo al día */}
+            <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+              {pendientes.length === 0 ? (
+                <div className="px-4 py-4 flex items-center gap-3">
+                  <span className="w-9 h-9 rounded-lg bg-green-50 text-green-600 flex items-center justify-center shrink-0"><span className="material-symbols-outlined text-[20px]">task_alt</span></span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-gray-900 text-sm">Todo al día</p>
+                    <p className="text-[11px] text-gray-500">No tienes pedidos por atender. Cuando llegue uno, aparece aquí.</p>
                   </div>
+                  <button onClick={() => setActiveTab('orders')} className="text-xs font-bold text-[#b8130e] shrink-0">Ver pedidos</button>
+                </div>
+              ) : (
+                <>
+                  <div className="px-4 pt-3 pb-1 flex items-center justify-between">
+                    <p className="font-bold text-gray-900 text-sm">Pedidos por atender</p>
+                    <button onClick={() => setActiveTab('orders')} className="text-xs font-bold text-[#b8130e]">Ver todos ({pendientes.length})</button>
+                  </div>
+                  <div className="divide-y divide-gray-100">
+                    {pendientes.slice(0, 3).map(o => (
+                      <button key={o.id} onClick={() => setActiveTab('orders')} className={fila}>
+                        <span className="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0"><span className="material-symbols-outlined text-[20px]">schedule</span></span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block font-bold text-gray-900 text-sm truncate">{o.customer_name || 'Cliente'}</span>
+                          <span className="block text-[11px] text-gray-500">{new Date(o.created_at).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Lima' })} · {o.customer_address || 'Recojo'}</span>
+                        </span>
+                        <span className="font-black text-gray-900 text-sm shrink-0">S/ {(Number(o.total_amount) || 0).toFixed(2)}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Acciones rápidas: lo que más se hace, a un toque */}
+            <div>
+              <p className={titulo}>Acciones rápidas</p>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { icon: 'add_circle', t: 'Agregar producto', s: 'Súbelo con su foto y precio', on: () => { resetForm(); setNewProduct(prev => ({ ...prev, store: inicioStore.slug })); setIsModalOpen(true); } },
+                  ...(posOn ? [{ icon: 'point_of_sale', t: 'Nueva venta', s: 'Caja rápida en el local', on: () => setActiveTab('pos') }] : []),
+                  { icon: 'share', t: 'Compartir mi tienda', s: 'Envía tu enlace por WhatsApp', on: compartirCarta },
+                  { icon: 'qr_code_2', t: 'Código QR', s: 'Para tus mesas o tu puerta', on: () => { setSelectedStore(inicioStore.slug); setIsQRModalOpen(true); } },
+                ].map(a => (
+                  <button key={a.t} onClick={a.on} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm text-left hover:shadow-md hover:border-gray-200 transition-all flex flex-col gap-2 active:scale-[0.98]">
+                    <span className={icono}><span className="material-symbols-outlined text-[20px]">{a.icon}</span></span>
+                    <span className="font-bold text-gray-900 text-sm leading-tight">{a.t}</span>
+                    <span className="text-[11px] text-gray-500 leading-snug">{a.s}</span>
+                  </button>
                 ))}
               </div>
-            </button>
+            </div>
+
+            {/* Completa tu tienda: solo mientras falte algo */}
+            {faltan.length > 0 && (
+              <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+                <div className="px-4 pt-3 pb-3">
+                  <div className="flex items-center justify-between">
+                    <p className="font-bold text-gray-900 text-sm">Completa tu tienda</p>
+                    <span className="text-xs font-bold text-gray-500">{hechas} de {tareas.length}</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-gray-100 mt-2 overflow-hidden">
+                    <div className="h-full rounded-full bg-[#b8130e] transition-all" style={{ width: `${(hechas / tareas.length) * 100}%` }} />
+                  </div>
+                </div>
+                <div className="divide-y divide-gray-100 border-t border-gray-100">
+                  {faltan.map(tarea => (
+                    <button key={tarea.titulo} onClick={tarea.ir} className={fila}>
+                      <span className={icono}><span className="material-symbols-outlined text-[20px]">{tarea.icon}</span></span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-bold text-gray-900 text-sm leading-tight">{tarea.titulo}</span>
+                        <span className="block text-[11px] text-gray-500 leading-snug">{tarea.sub}</span>
+                      </span>
+                      <span className="material-symbols-outlined text-gray-300 text-[20px] shrink-0">chevron_right</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Configuración y herramientas: lista compacta (lo de gestión ya está en el menú, no se repite) */}
+            <div>
+              <p className={titulo}>Configura tu tienda</p>
+              <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden divide-y divide-gray-100">
+                {[
+                  { icon: 'wallpaper', t: 'Portada y logo', s: 'Diseño y elementos visibles', on: () => openStoreEditor(inicioStore.slug, 'portada') },
+                  { icon: 'storefront', t: 'Datos del negocio', s: 'Información principal y redes', on: () => openStoreEditor(inicioStore.slug, 'datos') },
+                  { icon: 'schedule', t: 'Horarios', s: 'Apertura y cierre', on: () => openStoreEditor(inicioStore.slug, 'horario') },
+                  { icon: 'payments', t: 'Métodos de pago', s: 'Cómo te pagan tus clientes', on: () => openStoreEditor(inicioStore.slug, 'pagos') },
+                  { icon: 'notifications', t: 'Avisos de pedidos', s: 'WhatsApp y correo donde los recibes', on: () => openStoreEditor(inicioStore.slug, 'avisos') },
+                  ...(inicioDb?.push_activo ? [{ icon: 'campaign', t: 'Notificaciones a clientes', s: 'Envía avisos a quienes instalaron tu app', on: () => router.push('/admin/notificaciones') }] : []),
+                  { icon: 'picture_as_pdf', t: 'Exportar catálogo en PDF', s: 'Descarga tu carta para compartirla', on: () => { setSelectedStore(inicioStore.slug); setIsPDFModalOpen(true); } },
+                  { icon: 'menu_book', t: 'Mis cartas', s: 'Cambiar o reclamar otra tienda', on: () => { setPickerDraft([]); setIsStorePickerOpen(true); } },
+                ].map(f => (
+                  <button key={f.t} onClick={f.on} className={fila}>
+                    <span className={icono}><span className="material-symbols-outlined text-[20px]">{f.icon}</span></span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-bold text-gray-900 text-sm leading-tight">{f.t}</span>
+                      <span className="block text-[11px] text-gray-500 leading-snug">{f.s}</span>
+                    </span>
+                    <span className="material-symbols-outlined text-gray-300 text-[20px] shrink-0">chevron_right</span>
+                  </button>
+                ))}
+                <a href={inicioUrl} target="_blank" rel="noopener noreferrer" className={fila}>
+                  <span className={icono}><span className="material-symbols-outlined text-[20px]">open_in_new</span></span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-bold text-gray-900 text-sm leading-tight">Ver mi tienda</span>
+                    <span className="block text-[11px] text-gray-500 leading-snug">Tal como la ven tus clientes</span>
+                  </span>
+                  <span className="material-symbols-outlined text-gray-300 text-[20px] shrink-0">chevron_right</span>
+                </a>
+              </div>
+            </div>
 
             {/* Tu plan: nivel, cuánto paga y hasta cuándo (solo si tiene costo o fecha de pago) */}
             <MiPlan slug={focusedStore} modulos={inicioDb?.modulos} subdominioActivo={inicioDb?.subdominio_activo} />
-
-            {/* Gestión — mismas secciones y mismo orden que la sidebar / barra inferior */}
-            <div>
-              <p className="text-[11px] font-extrabold uppercase tracking-wider text-gray-400 mb-2 px-1">Gestión</p>
-              <div className="grid grid-cols-2 gap-3">
-                {navTabs.filter(t => t.id !== 'inicio' && t.id !== 'stores').map(t => (
-                  <button key={t.id} onClick={() => setActiveTab(t.id)} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm text-left hover:shadow-md hover:border-gray-200 transition-all flex flex-col gap-2">
-                    <span className="w-9 h-9 rounded-lg bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center">
-                      <span className="material-symbols-outlined text-[20px]">{t.icon}</span>
-                    </span>
-                    <span className="font-bold text-gray-900 text-sm leading-tight">{t.label}</span>
-                    <span className="text-[11px] text-gray-500 leading-snug">{t.sub}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Herramientas */}
-            <div>
-              <p className="text-[11px] font-extrabold uppercase tracking-wider text-gray-400 mb-2 px-1">Herramientas</p>
-              <div className="grid grid-cols-2 gap-3">
-                <button onClick={() => { setSelectedStore(inicioStore.slug); setIsQRModalOpen(true); }} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm text-left hover:shadow-md hover:border-gray-200 transition-all flex flex-col gap-2">
-                  <span className="w-9 h-9 rounded-lg bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[20px]">qr_code_2</span>
-                  </span>
-                  <span className="font-bold text-gray-900 text-sm leading-tight">Código QR</span>
-                  <span className="text-[11px] text-gray-500 leading-snug">Genéralo y compártelo para tus mesas</span>
-                </button>
-                <button onClick={() => { setSelectedStore(inicioStore.slug); setIsPDFModalOpen(true); }} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm text-left hover:shadow-md hover:border-gray-200 transition-all flex flex-col gap-2">
-                  <span className="w-9 h-9 rounded-lg bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[20px]">picture_as_pdf</span>
-                  </span>
-                  <span className="font-bold text-gray-900 text-sm leading-tight">Exportar PDF</span>
-                  <span className="text-[11px] text-gray-500 leading-snug">Descarga tu carta como catálogo</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Configuración de la carta */}
-            <div>
-              <p className="text-[11px] font-extrabold uppercase tracking-wider text-gray-400 mb-2 px-1">Configuración de la carta</p>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { icon: 'wallpaper', titulo: 'Editar portada', sub: 'Diseño y elementos visibles', section: 'portada' },
-                  { icon: 'storefront', titulo: 'Datos del negocio', sub: 'Información principal y redes', section: 'datos' },
-                  { icon: 'schedule', titulo: 'Horarios', sub: 'Define apertura y cierre', section: 'horario' },
-                  { icon: 'payments', titulo: 'Métodos de pago', sub: 'Configura opciones', section: 'pagos' },
-                  { icon: 'notifications', titulo: 'Avisos y notificaciones', sub: 'WhatsApp y correo donde recibes tus pedidos', section: 'avisos' },
-                ].map(c => (
-                  <button key={c.section} onClick={() => openStoreEditor(inicioStore.slug, c.section)} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm text-left hover:shadow-md hover:border-gray-200 transition-all flex flex-col gap-2">
-                    <span className="w-9 h-9 rounded-lg bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center">
-                      <span className="material-symbols-outlined text-[20px]">{c.icon}</span>
-                    </span>
-                    <span className="font-bold text-gray-900 text-sm leading-tight">{c.titulo}</span>
-                    <span className="text-[11px] text-gray-500 leading-snug">{c.sub}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
-        )}
+          );
+        })()}
 
         {activeTab === 'products' && (
           <>
