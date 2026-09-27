@@ -2815,9 +2815,9 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
             </button>
           </div>
 
-          {/* Escritorio: dos paneles — a la izquierda la carta actual, a la derecha el formulario para agregar (siempre visible).
+          {/* Escritorio: dos paneles — a la izquierda el formulario para agregar (siempre visible), a la derecha la carta actual.
               Celular: solo la lista, y el formulario se abre como ventana flotante con el botón "Agregar producto". */}
-          <div className="flex-1 min-h-0 flex flex-col md:flex-row">
+          <div className="flex-1 min-h-0 flex flex-col md:flex-row-reverse">
           <div className="p-5 flex-1 min-w-0 overflow-y-auto min-h-0 space-y-5">
             <div className="flex items-center gap-2">
               {!showStoreProductForm && (
@@ -2887,7 +2887,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
           </div>
           {/* Panel derecho: Nuevo producto / Editando producto. En celular es una ventana flotante que se abre con "Agregar producto". */}
             <div
-              className={`${showStoreProductForm ? 'fixed inset-0 z-[130] flex items-center justify-center bg-black/45 p-4' : 'hidden'} md:static md:z-auto md:flex md:flex-col md:min-h-0 md:w-[420px] md:shrink-0 md:p-0 md:bg-[#f9f9ff] md:border-l md:border-[#ecedf7]`}
+              className={`${showStoreProductForm ? 'fixed inset-0 z-[130] flex items-center justify-center bg-black/45 p-4' : 'hidden'} md:static md:z-auto md:flex md:flex-col md:min-h-0 md:w-[420px] md:shrink-0 md:p-0 md:bg-[#f9f9ff] md:border-r md:border-[#ecedf7]`}
               onMouseDown={(e) => { if (e.target === e.currentTarget && window.innerWidth < 768) handleCancelEditStoreProduct(); }}
             >
               <div className="relative w-full max-w-lg max-h-[92vh] overflow-y-auto bg-white rounded-xl shadow-2xl border border-[#ecedf7] md:max-w-none md:max-h-none md:flex-1 md:min-h-0 md:rounded-none md:shadow-none md:border-0 md:bg-transparent">
