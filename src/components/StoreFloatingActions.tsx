@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import StorePushBell from '@/components/StorePushBell';
 import type { StoreConfig } from '@/lib/stores.config';
 
 interface StoreFloatingActionsProps {
-  store: Pick<StoreConfig, 'slug' | 'name' | 'tagline' | 'theme' | 'pushActivo' | 'latitud' | 'longitud' | 'mostrarUbicacion' | 'appPropia' | 'heroImage' | 'logoImage'>;
+  store: Pick<StoreConfig, 'slug' | 'name' | 'tagline' | 'theme' | 'pushActivo' | 'latitud' | 'longitud' | 'mostrarUbicacion' | 'appPropia'>;
 }
 
 /**
@@ -137,55 +137,9 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
     }
   };
 
-  // Foto de la tienda lista para compartir (se prepara en segundo plano: en iPhone `navigator.share` solo funciona
-  // pegado al toque del usuario y no admite esperar una descarga).
-  const fotoCompartir = useRef<File | null>(null);
-  useEffect(() => {
-    const src = store.heroImage || store.logoImage;
-    if (!src || typeof navigator === 'undefined' || !navigator.share || typeof navigator.canShare !== 'function') return;
-    if (!window.matchMedia('(pointer: coarse)').matches) return;   // solo celulares y tabletas
-    let cancelado = false;
-    const preparar = async () => {
-      try {
-        // La foto vive en otro dominio sin CORS: se pide por /api/img-proxy (mismo dominio) para poder leerla.
-        const remota = /^https?:\/\//i.test(src) && new URL(src).origin !== window.location.origin;
-        const r = await fetch(remota ? `/api/img-proxy?u=${encodeURIComponent(src)}` : src);
-        if (!r.ok) return;
-        const blob = await r.blob();
-        const img = await new Promise<HTMLImageElement>((ok, fallo) => {
-          const i = new Image();
-          i.onload = () => ok(i);
-          i.onerror = fallo;
-          i.src = URL.createObjectURL(blob);
-        });
-        // JPEG de hasta 900 px: liviano y lo aceptan todas las apps (WhatsApp en iPhone no maneja bien webp).
-        const escala = Math.min(1, 900 / Math.max(img.naturalWidth, img.naturalHeight));
-        const c = document.createElement('canvas');
-        c.width = Math.round(img.naturalWidth * escala);
-        c.height = Math.round(img.naturalHeight * escala);
-        c.getContext('2d')?.drawImage(img, 0, 0, c.width, c.height);
-        URL.revokeObjectURL(img.src);
-        const jpeg: Blob | null = await new Promise((ok) => c.toBlob(ok, 'image/jpeg', 0.75));
-        if (!jpeg || cancelado) return;
-        const archivo = new File([jpeg], `${store.slug}.jpg`, { type: 'image/jpeg' });
-        if (navigator.canShare({ files: [archivo] })) fotoCompartir.current = archivo;
-      } catch { /* sin foto: se comparte solo el enlace, como antes */ }
-    };
-    const t = setTimeout(preparar, 2500);   // después de que la tienda ya cargó
-    return () => { cancelado = true; clearTimeout(t); };
-  }, [store.heroImage, store.logoImage, store.slug]);
-
   const compartir = () => {
     if (navigator.share) {
-      const url = `${window.location.origin}${window.location.pathname}`;
-      const foto = fotoCompartir.current;
-      if (foto && navigator.canShare?.({ files: [foto] })) {
-        // Con foto: la imagen de la tienda + nombre y enlace en el texto (así se ve la foto en cualquier app, incluida la
-        // app instalada de iPhone, que solo mostraba "BogaHub").
-        navigator.share({ files: [foto], title: store.name, text: `${store.name}${store.tagline ? ` — ${store.tagline}` : ''}\n${url}` }).catch(() => {});
-      } else {
-        navigator.share({ title: store.name, text: store.tagline, url }).catch(() => {});
-      }
+      navigator.share({ title: store.name, text: store.tagline, url: window.location.href }).catch(() => {});
     } else {
       navigator.clipboard?.writeText(window.location.href);
       alert('Enlace copiado ✅');
