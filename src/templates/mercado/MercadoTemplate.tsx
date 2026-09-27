@@ -137,33 +137,26 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
             </button>
 
             <div className="flex items-center gap-2 shrink-0">
-              {/* Escritorio: pestañas en el encabezado (en celular van abajo, tipo app) */}
-              <nav className="hidden md:flex items-center gap-1 mr-1">
+              {/* Escritorio: pestañas en el encabezado (en celular van abajo, tipo app). El carrito no es un botón aparte:
+                  es el icono de "Pedidos", con su contador. */}
+              <nav className="hidden md:flex items-center gap-1">
                 {([['inicio', 'Inicio'], ['pedidos', 'Pedidos'], ['contacto', 'Contacto']] as [Pestana, string][]).map(([id, label]) => (
                   <button
                     key={id}
                     onClick={() => irA(id)}
-                    className="px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors"
+                    className="px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors flex items-center gap-1.5"
                     style={{ background: pestana === id ? t.surfaceContainer : 'transparent', color: pestana === id ? t.primary : t.onSurfaceVariant }}
                   >
+                    {id === 'pedidos' && <span className="material-symbols-outlined text-[18px]">shopping_cart</span>}
                     {label}
+                    {id === 'pedidos' && c.cartCount > 0 && (
+                      <span className="min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center" style={{ background: t.primary, color: t.onPrimary }}>
+                        {c.cartCount}
+                      </span>
+                    )}
                   </button>
                 ))}
               </nav>
-              {/* Solo escritorio: en celular el carrito ya está en la barra inferior (Pedidos, con su contador). */}
-              <button
-                onClick={() => irA('pedidos')}
-                className="relative w-10 h-10 rounded-lg hidden md:flex items-center justify-center active:scale-90 transition-transform"
-                style={{ background: t.surfaceContainer }}
-                aria-label="Ver mi pedido"
-              >
-                <span className="material-symbols-outlined text-[20px]">shopping_cart</span>
-                {c.cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center" style={{ background: t.primary, color: t.onPrimary }}>
-                    {c.cartCount}
-                  </span>
-                )}
-              </button>
             </div>
           </div>
 
