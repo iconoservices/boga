@@ -41,6 +41,8 @@ export interface StoreConfig {
    */
   externalUrl?: string;
   subdominioActivo?: boolean;
+  /** true si la tienda puede instalarse como SU app (subdominio, dominio propio o enlace externo). Ver lib/appPropia.ts. */
+  appPropia?: boolean;
   /** Avisos push propios habilitados por el superadmin (solo se usan en la dirección propia de la tienda). */
   pushActivo?: boolean;
   /** Punto GPS del local (privado salvo que `mostrarUbicacion` esté prendido). */

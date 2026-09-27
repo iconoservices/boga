@@ -1,6 +1,7 @@
 import { getTemplate } from '@/lib/templates.config';
 import type { StoreTheme } from '@/lib/templates.config';
 import { temaDesdePaleta } from '@/lib/paleta';
+import { tieneAppPropia } from '@/lib/appPropia';
 import { BOGA_DEFAULT_ICON } from '@/lib/stores.config';
 import { notFound } from 'next/navigation';
 import StoreRenderer from './StoreRenderer';
@@ -103,6 +104,7 @@ async function cargarTienda(slug: string) {
         instagram: dbStore.instagram || undefined,
         tiktok: dbStore.tiktok || undefined,
         subdominioActivo: dbStore.subdominio_activo ?? undefined,
+        appPropia: tieneAppPropia({ subdominioActivo: dbStore.subdominio_activo, modulos: dbStore.modulos, externalUrl: dbStore.external_url }),
         pushActivo: dbStore.push_activo ?? undefined,
         latitud: typeof dbStore.latitud === 'number' ? dbStore.latitud : undefined,
         longitud: typeof dbStore.longitud === 'number' ? dbStore.longitud : undefined,
@@ -161,16 +163,21 @@ export async function generateMetadata({ params }: Omit<Props, 'searchParams'>) 
       description: store.tagline,
       images: [store.heroImage],
     },
+    // Íconos de la página: el logo de la tienda (pestaña, favicon), como siempre. Lo único que cambia según la tienda tenga
+    // o no app propia es lo que se INSTALA: el manifiesto (app/manifest.json/route.ts) y el ícono de "Agregar a inicio"
+    // del iPhone (apple-touch-icon): sin subdominio ni dominio propio se instala BogaHub, con el ícono de Boga.
     icons: {
       icon: [
         { url: iconUrl, sizes: 'any' },
         { url: iconUrl, sizes: '192x192', type: 'image/png' },
         { url: iconUrl, sizes: '512x512', type: 'image/png' },
       ],
-      apple: [
-        { url: iconUrl, sizes: '180x180', type: 'image/png' },
-      ],
+      apple: [{ url: store.appPropia ? iconUrl : '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
     },
+    // Nombre en el inicio del iPhone: con subdominio propio es SU app, con su nombre (si no, queda "BogaHub", el del layout).
+    ...(store.appPropia
+      ? { applicationName: store.name, appleWebApp: { capable: true, statusBarStyle: 'default' as const, title: store.name.slice(0, 20) } }
+      : {}),
   };
 }
 
@@ -206,6 +213,7 @@ export default async function StorePage({ params, searchParams }: Props) {
         instagram: undefined,
         tiktok: undefined,
         subdominioActivo: undefined,
+        appPropia: false,
         pushActivo: undefined,
         latitud: undefined,
         longitud: undefined,

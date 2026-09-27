@@ -38,8 +38,11 @@ export default function StoreRenderer({ store: initialStore }: Props) {
 
   // Update favicon dynamically when store changes
   useEffect(() => {
+    // La pestaña y los íconos de la página llevan siempre el logo de la tienda. Solo el ícono de "Agregar a inicio" del
+    // iPhone (apple-touch-icon) depende de si la tienda tiene app propia (subdominio, dominio o enlace propio): si no, el de Boga.
+    const conApp = !!store.appPropia;
     const iconUrl = store.logoImage || store.iconImage || store.heroImage || BOGA_DEFAULT_ICON;
-    
+
     // Add timestamp to force browser to reload favicon (bypass cache)
     const timestampedIcon = `${iconUrl}${iconUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
     
@@ -60,7 +63,8 @@ export default function StoreRenderer({ store: initialStore }: Props) {
       appleLink.rel = 'apple-touch-icon';
       document.head.appendChild(appleLink);
     }
-    appleLink.href = timestampedIcon;
+    // El ícono de "Agregar a inicio": el de la tienda solo si tiene subdominio propio; si no, el de BogaHub.
+    appleLink.href = conApp ? timestampedIcon : '/apple-touch-icon.png';
 
     // Update manifest to ensure it has the latest icon
     const manifestLink = document.querySelector("link[rel='manifest']") as HTMLLinkElement;
@@ -72,7 +76,7 @@ export default function StoreRenderer({ store: initialStore }: Props) {
         manifestLink.href = `/manifest.json?slug=${slug}`;
       }
     }
-  }, [store.logoImage, store.heroImage]);
+  }, [store.logoImage, store.heroImage, store.appPropia]);
 
   // Listen to postMessage from parent customizer for live updates
   useEffect(() => {

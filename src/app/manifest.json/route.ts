@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { getTemplate } from '@/lib/templates.config';
 import { BOGA_DEFAULT_ICON } from '@/lib/stores.config';
 import { supabase } from '@/lib/supabase';
+import { tieneAppPropia } from '@/lib/appPropia';
 
 // El icono puede venir de una subida del comercio (jpg, png, webp) o de un
 // asset propio (svg). Declarar un tipo que no corresponde hace que el navegador
@@ -41,9 +42,9 @@ export async function GET(request: NextRequest) {
 
   // Sin slug de tienda hay dos apps propias de la plataforma: el marketplace
   // publico (raiz) y el panel de administracion. Por defecto, el marketplace.
+  // Tambien es lo que se instala desde una tienda SIN subdominio propio (ver mas abajo).
   const app = request.nextUrl.searchParams.get('app');
-  if (!slug) {
-    const isAdmin = app === 'admin';
+  const respuestaPlataforma = (isAdmin: boolean) => {
     const manifest = isAdmin
       ? {
           id: '/admin',
@@ -88,7 +89,8 @@ export async function GET(request: NextRequest) {
       }),
       { headers: { 'Content-Type': 'application/manifest+json' } }
     );
-  }
+  };
+  if (!slug) return respuestaPlataforma(app === 'admin');
 
   let dbLogo: string | null = null;
   let dbHero: string | null = null;
@@ -96,9 +98,14 @@ export async function GET(request: NextRequest) {
   if (slug) {
     const { data } = await supabase
       .from('stores')
-      .select('name, logo_image, hero_image, theme, template')
+      .select('name, logo_image, hero_image, theme, template, subdominio_activo, modulos, external_url')
       .eq('slug', slug)
       .maybeSingle();
+    // Solo una tienda con subdominio propio (<tienda>.bogahub.app, plan de pago) se instala como SU app, con su
+    // nombre y su logo. Sin subdominio, "Instalar" instala BogaHub: nombre e ícono de Boga, no los de la tienda.
+    // (Con subdominio, dominio propio o enlace externo propio la tienda sí tiene app propia: ver lib/appPropia.ts.)
+    if (data && slugDeSubdominio !== slug
+      && !tieneAppPropia({ subdominioActivo: data.subdominio_activo, modulos: data.modulos, externalUrl: data.external_url })) return respuestaPlataforma(false);
     if (data) {
       storeName = data.name;
       storeSlug = slug;
