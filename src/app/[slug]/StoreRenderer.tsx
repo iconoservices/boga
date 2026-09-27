@@ -38,10 +38,12 @@ export default function StoreRenderer({ store: initialStore }: Props) {
 
   // Update favicon dynamically when store changes
   useEffect(() => {
-    const iconUrl = store.logoImage || store.iconImage || store.heroImage || BOGA_DEFAULT_ICON;
+    // Solo una tienda con subdominio propio (su propia app) usa su logo como ícono; sin subdominio todo es de Boga.
+    const conApp = !!store.subdominioActivo;
+    const iconUrl = conApp ? (store.logoImage || store.iconImage || store.heroImage || BOGA_DEFAULT_ICON) : '/favicon-64.png';
     
     // Add timestamp to force browser to reload favicon (bypass cache)
-    const timestampedIcon = `${iconUrl}${iconUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
+    const timestampedIcon = conApp ? `${iconUrl}${iconUrl.includes('?') ? '&' : '?'}t=${Date.now()}` : iconUrl;
     
     // Update existing favicon link or create new one
     let faviconLink = document.querySelector("link[rel='icon']") as HTMLLinkElement;
@@ -60,9 +62,8 @@ export default function StoreRenderer({ store: initialStore }: Props) {
       appleLink.rel = 'apple-touch-icon';
       document.head.appendChild(appleLink);
     }
-    // El ícono de "Agregar a inicio" del iPhone: el de la tienda solo si tiene subdominio propio (su propia app);
-    // si no, el de BogaHub (lo que se instala es BogaHub). El de la pestaña del navegador sí queda con el logo de la tienda.
-    appleLink.href = store.subdominioActivo ? timestampedIcon : '/apple-touch-icon.png';
+    // El ícono de "Agregar a inicio": el de la tienda solo si tiene subdominio propio; si no, el de BogaHub.
+    appleLink.href = conApp ? timestampedIcon : '/apple-touch-icon.png';
 
     // Update manifest to ensure it has the latest icon
     const manifestLink = document.querySelector("link[rel='manifest']") as HTMLLinkElement;

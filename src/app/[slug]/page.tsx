@@ -161,17 +161,26 @@ export async function generateMetadata({ params }: Omit<Props, 'searchParams'>) 
       description: store.tagline,
       images: [store.heroImage],
     },
-    icons: {
-      icon: [
-        { url: iconUrl, sizes: 'any' },
-        { url: iconUrl, sizes: '192x192', type: 'image/png' },
-        { url: iconUrl, sizes: '512x512', type: 'image/png' },
-      ],
-      apple: [
-        // Ícono de "Agregar a inicio" del iPhone: el de la tienda solo con subdominio propio; si no, el de BogaHub.
-        { url: store.subdominioActivo ? iconUrl : '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
-      ],
-    },
+    // Íconos: el logo de la tienda SOLO si tiene subdominio propio (su propia app). Sin subdominio, lo que se instala
+    // es BogaHub, así que TODOS los íconos declarados son los de Boga: el navegador escoge de esta lista el del
+    // acceso directo al inicio (Chrome de Android toma el más grande), y si hubiera ahí el logo de la tienda saldría ese.
+    icons: store.subdominioActivo
+      ? {
+          icon: [
+            { url: iconUrl, sizes: 'any' },
+            { url: iconUrl, sizes: '192x192', type: 'image/png' },
+            { url: iconUrl, sizes: '512x512', type: 'image/png' },
+          ],
+          apple: [{ url: iconUrl, sizes: '180x180', type: 'image/png' }],
+        }
+      : {
+          icon: [
+            { url: '/favicon-64.png', sizes: '64x64', type: 'image/png' },
+            { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+            { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+          ],
+          apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+        },
     // Nombre en el inicio del iPhone: con subdominio propio es SU app, con su nombre (si no, queda "BogaHub", el del layout).
     ...(store.subdominioActivo
       ? { applicationName: store.name, appleWebApp: { capable: true, statusBarStyle: 'default' as const, title: store.name.slice(0, 20) } }
