@@ -139,9 +139,9 @@ export async function generateMetadata({ params }: Omit<Props, 'searchParams'>) 
   
   const iconUrl = store.logoImage || store.iconImage || store.heroImage || BOGA_DEFAULT_ICON;
   // Chrome y Firefox de iPhone no pueden instalar apps y su menú Compartir muestra el ícono de la página (apple-touch-icon):
-  // ahí va la FOTO de la tienda (un logo sobre fondo blanco se ve como un cuadro vacío). Safari sí instala y sigue con su regla.
+  // ahí va el LOGO de la tienda (no la foto del banner: suele ser WebP y ese ícono no siempre lo lee). Safari sí instala y sigue con su regla.
   const uaIOSNoSafari = /CriOS|FxiOS|EdgiOS/i.test((await headers()).get('user-agent') || '');
-  const iconoApple = uaIOSNoSafari ? (store.heroImage || iconUrl) : (store.appPropia ? iconUrl : '/apple-touch-icon.png');
+  const iconoApple = uaIOSNoSafari ? iconUrl : (store.appPropia ? iconUrl : '/apple-touch-icon.png');
   
   return {
     // Chrome/Firefox de iPhone muestran el título de la página en su menú Compartir: solo el nombre (como Safari, que lee og:title).

@@ -64,9 +64,9 @@ export default function StoreRenderer({ store: initialStore }: Props) {
       document.head.appendChild(appleLink);
     }
     // El ícono de "Agregar a inicio": el de la tienda solo si tiene subdominio propio; si no, el de BogaHub.
-    // Chrome/Firefox de iPhone (no instalan apps): su menú Compartir usa este ícono, así que va la foto de la tienda.
+    // Chrome/Firefox de iPhone (no instalan apps): su menú Compartir usa este ícono, así que va el logo de la tienda.
     const iosNoSafari = /CriOS|FxiOS|EdgiOS/i.test(navigator.userAgent);
-    appleLink.href = iosNoSafari ? (store.heroImage || iconUrl) : conApp ? timestampedIcon : '/apple-touch-icon.png';
+    appleLink.href = iosNoSafari ? timestampedIcon : conApp ? timestampedIcon : '/apple-touch-icon.png';
 
     // Update manifest to ensure it has the latest icon
     const manifestLink = document.querySelector("link[rel='manifest']") as HTMLLinkElement;
