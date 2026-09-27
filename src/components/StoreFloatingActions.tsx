@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import StorePushBell from '@/components/StorePushBell';
+import { avisoInstalacion } from '@/lib/useInstalarBoga';
 import type { StoreConfig } from '@/lib/stores.config';
 
 interface StoreFloatingActionsProps {
@@ -100,9 +101,11 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
   }, [installKey, store.appPropia]);
 
   const instalar = () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then(() => setDeferredPrompt(null));
+    // Si el navegador disparó el aviso antes de que esta tienda montara, lo tiene guardado el módulo compartido
+    const aviso = deferredPrompt || avisoInstalacion();
+    if (aviso) {
+      aviso.prompt();
+      aviso.userChoice.then(() => setDeferredPrompt(null));
       return;
     }
 
@@ -132,6 +135,10 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
     if (/iphone|ipad|ipod/.test(ua) && isSafari) {
       setGuiaIOS(true);
+    } else if (!/android|iphone|ipad|ipod|mobile/.test(ua)) {
+      // Escritorio: Chrome y Edge la instalan desde la barra de direcciones o el menú (nada de «pantalla de inicio»)
+      const nombre = store.appPropia ? store.name : 'BogaHub';
+      alert(`Para instalar ${nombre} en tu computadora:\n\n1. Busca el ícono de instalar (⊕) al final de la barra de direcciones, o abre el menú del navegador (⋮)\n2. Elige "Instalar ${nombre}"\n\nSi no aparece, ya podría estar instalada, o tu navegador no la ofrece (usa Chrome o Edge).`);
     } else {
       alert('Para instalar:\n\n1. Abre el menú del navegador (⋯)\n2. Busca "Agregar a pantalla de inicio"\n3. Confirma la instalación');
     }
@@ -178,12 +185,13 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
       {isInstalled === false && (
         <button
           onClick={instalar}
-          className="w-10 h-10 rounded-full flex items-center justify-center bg-white/40 backdrop-blur-md border border-white/50 shadow-lg active:scale-90 hover:bg-white/60 transition-all"
-          style={{ color: t.primary }}
-          aria-label="Instalar aplicación"
-          title="Instalar"
+          className="relative w-10 h-10 rounded-full flex items-center justify-center border border-white/60 shadow-lg active:scale-90 hover:brightness-110 transition-all"
+          style={{ backgroundColor: t.primary, color: '#fff' }}
+          aria-label={store.appPropia ? 'Instalar aplicación' : 'Instalar BogaHub'}
+          title={store.appPropia ? 'Instalar app' : 'Instalar BogaHub'}
         >
-          <span className="material-symbols-outlined text-[20px]">download</span>
+          <span className="absolute inset-0 rounded-full animate-ping opacity-30" style={{ backgroundColor: t.primary }} aria-hidden />
+          <span className="material-symbols-outlined relative text-[22px]">download</span>
         </button>
       )}
       {guiaIOS && typeof document !== 'undefined' && createPortal(

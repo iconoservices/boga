@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import PasswordInput from '@/components/PasswordInput';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signIn, signUp, signInWithMagicLink, resetPassword } = useAuth();
+  const { signIn, signUp, signInWithMagicLink, resetPassword, signInWithGoogle } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -21,7 +21,30 @@ export default function LoginPage() {
   // (?redirect=/admin para comercios desde "Vende con BogaHub", /profile por
   // defecto para el resto) — antes siempre mandaba a /admin, así que un
   // cliente normal terminaba en el panel de la tienda en vez de su perfil.
-  const getRedirectTarget = () => new URLSearchParams(window.location.search).get('redirect') || '/profile';
+  // Solo rutas internas: un ?redirect=https://otro-sitio no debe sacar a la persona de BogaHub.
+  const getRedirectTarget = () => {
+    const r = new URLSearchParams(window.location.search).get('redirect');
+    return r && r.startsWith('/') && !r.startsWith('//') ? r : '/profile';
+  };
+
+  // Los botones "Crear cuenta" de otras páginas pueden abrir esto directo en el registro: /login?modo=registro
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('modo') === 'registro') setIsSignUp(true);
+  }, []);
+
+  const cambiarModo = (registro: boolean) => {
+    setIsSignUp(registro);
+    setUseMagicLink(false);
+    setError(null);
+    setConfirmMessage(null);
+  };
+
+  const handleGoogle = async () => {
+    setError(null);
+    setConfirmMessage(null);
+    const { error: googleError } = await signInWithGoogle(`${window.location.origin}${getRedirectTarget()}`);
+    if (googleError) setError('No pudimos abrir Google. Prueba con tu correo.');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +62,7 @@ export default function LoginPage() {
     }
 
     if (isSignUp) {
-      const { error: signUpError, needsEmailConfirm } = await signUp(email, password, name);
+      const { error: signUpError, needsEmailConfirm } = await signUp(email, password, name.trim() || email.split('@')[0]);
       setIsLoading(false);
       if (signUpError) { setError(signUpError); return; }
       if (needsEmailConfirm) {
@@ -82,7 +105,7 @@ export default function LoginPage() {
             <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
               <span className="color-white font-black text-xl text-white">B</span>
             </div>
-            <span className="text-white font-headline-md tracking-wider text-base font-extrabold">BOGA MARKET</span>
+            <span className="text-white font-headline-md tracking-wider text-base font-extrabold">BOGAHUB</span>
           </div>
 
           <div className="relative z-10 max-w-md my-auto">
@@ -108,7 +131,7 @@ export default function LoginPage() {
           </div>
 
           <p className="text-white/30 text-xs z-10">
-            © 2026 Boga Market Inc. Todos los derechos reservados.
+            © 2026 BogaHub. Todos los derechos reservados.
           </p>
         </div>
 
@@ -121,21 +144,63 @@ export default function LoginPage() {
               <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
                 <span className="color-white font-black text-lg text-white">B</span>
               </div>
-              <span className="text-on-surface font-headline-md tracking-wider text-sm font-extrabold">BOGA MARKET</span>
+              <span className="text-on-surface font-headline-md tracking-wider text-sm font-extrabold">BOGAHUB</span>
             </div>
 
             {/* Card */}
             <div className="bg-white rounded-3xl p-8 shadow-[0_15px_15px_rgba(0,0,0,0.03)] border border-surface-container-highest">
+              {/* Pestañas: se entiende de un vistazo si es entrar o crear cuenta */}
+              <div className="grid grid-cols-2 gap-1 p-1 mb-6 rounded-2xl bg-surface-container-low" role="tablist">
+                {[{ registro: false, texto: 'Entrar' }, { registro: true, texto: 'Crear cuenta' }].map((tab) => (
+                  <button
+                    key={tab.texto}
+                    type="button"
+                    role="tab"
+                    aria-selected={isSignUp === tab.registro}
+                    onClick={() => cambiarModo(tab.registro)}
+                    className={`py-2.5 rounded-xl text-sm font-extrabold transition-all ${
+                      isSignUp === tab.registro ? 'bg-white text-primary shadow-sm' : 'text-secondary hover:text-on-surface'
+                    }`}
+                  >
+                    {tab.texto}
+                  </button>
+                ))}
+              </div>
+
               <h2 className="font-headline-md text-xl text-on-surface font-black">
-                {useMagicLink ? 'Entrar sin contraseña' : isSignUp ? 'Crea tu espacio' : '¡Hola de nuevo! 👋'}
+                {useMagicLink ? 'Entrar sin contraseña' : isSignUp ? 'Crea tu cuenta gratis' : '¡Hola de nuevo! 👋'}
               </h2>
-              <p className="text-xs text-secondary mt-1 mb-6 leading-normal font-body-md">
+              <p className="text-xs text-secondary mt-1 mb-5 leading-normal font-body-md">
                 {useMagicLink
                   ? 'Escribe tu correo y te mandamos un link para entrar, sin contraseña.'
                   : isSignUp
-                  ? 'Únete a BogaHub y crea tu carta, catálogo o tienda local favorita en un clic.'
-                  : 'Ingresa para disfrutar, pedir o gestionar tus tiendas locales.'}
+                  ? 'Guarda tus pedidos y favoritos de todas las tiendas de Pucallpa. Solo tu correo y una contraseña.'
+                  : 'Entra para pedir, ver tus pedidos o gestionar tu tienda.'}
               </p>
+
+              {/* Google: lo más rápido, sin escribir nada */}
+              {!useMagicLink && (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleGoogle}
+                    className="w-full flex items-center justify-center gap-3 py-3 rounded-xl border border-surface-container-highest bg-white text-sm font-bold text-on-surface hover:bg-surface-container-low active:scale-95 transition-all"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
+                      <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z" />
+                      <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.4-4.1 7-10.1 7-17.6z" />
+                      <path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C.9 16.4 0 20.100 0 24s.9 7.600 2.600 10.800l7.900-6.100z" />
+                      <path fill="#34A853" d="M24 48c6.500 0 11.900-2.100 15.900-5.800l-7.600-5.900c-2.100 1.400-4.800 2.300-8.300 2.300-6.300 0-11.600-4.100-13.500-9.800l-7.900 6.100C6.500 42.600 14.600 48 24 48z" />
+                    </svg>
+                    Continuar con Google
+                  </button>
+                  <div className="flex items-center gap-3 my-5" aria-hidden>
+                    <span className="flex-1 h-px bg-surface-container-highest" />
+                    <span className="text-[10px] font-bold text-secondary/60 uppercase tracking-wider">o con tu correo</span>
+                    <span className="flex-1 h-px bg-surface-container-highest" />
+                  </div>
+                </>
+              )}
 
               {error && (
                 <div className="mb-4 px-3.5 py-2.5 rounded-xl bg-error-container text-on-error-container text-xs font-bold">
@@ -152,12 +217,11 @@ export default function LoginPage() {
                 {/* Full Name for Signup */}
                 {isSignUp && !useMagicLink && (
                   <div className="flex flex-col">
-                    <label className="text-[10px] font-bold text-secondary mb-1.5 uppercase tracking-wider">Nombre Completo</label>
+                    <label className="text-[10px] font-bold text-secondary mb-1.5 uppercase tracking-wider">Tu nombre <span className="normal-case font-medium text-secondary/60">(opcional)</span></label>
                     <div className="relative">
                       <span className="material-symbols-outlined text-secondary/40 text-[18px] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">person</span>
                       <input 
                         type="text" 
-                        required 
                         value={name} 
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Juan Pérez" 
@@ -211,18 +275,6 @@ export default function LoginPage() {
                   </div>
                 )}
 
-                {/* Remember */}
-                {!isSignUp && !useMagicLink && (
-                  <div className="flex items-center gap-2 mt-1">
-                    <input
-                      type="checkbox"
-                      id="remember"
-                      className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary accent-primary cursor-pointer"
-                    />
-                    <label htmlFor="remember" className="text-xs font-semibold text-secondary cursor-pointer select-none">Recordarme en este dispositivo</label>
-                  </div>
-                )}
-
                 {/* Submit */}
                 <button
                   type="submit"
@@ -261,20 +313,21 @@ export default function LoginPage() {
               {!useMagicLink && (
                 <div className="mt-4 pt-5 border-t border-surface-container-low text-center">
                   <p className="text-xs text-secondary font-medium">
-                    {isSignUp ? '¿Ya tienes una cuenta?' : '¿No tienes cuenta?'}{' '}
-                    <span
-                      onClick={() => { setIsSignUp(!isSignUp); setError(null); setConfirmMessage(null); }}
-                      className="text-primary font-bold cursor-pointer hover:underline"
+                    {isSignUp ? '¿Ya tienes una cuenta?' : '¿Primera vez aquí?'}{' '}
+                    <button
+                      type="button"
+                      onClick={() => cambiarModo(!isSignUp)}
+                      className="text-primary font-bold hover:underline"
                     >
-                      {isSignUp ? 'Inicia sesión' : 'Regístrate gratis'}
-                    </span>
+                      {isSignUp ? 'Entrar' : 'Crea tu cuenta gratis'}
+                    </button>
                   </p>
                 </div>
               )}
             </div>
 
             <p className="text-center text-[10px] text-secondary/35 lg:hidden">
-              © 2026 Boga Market Inc. Todos los derechos reservados.
+              © 2026 BogaHub. Todos los derechos reservados.
             </p>
           </div>
         </div>

@@ -39,6 +39,12 @@ if (typeof window !== 'undefined') {
   });
 }
 
+/** El aviso de instalación que el navegador ya disparó (o null). Lo usa también el botón de las tiendas: el evento
+ *  llega una sola vez y, si dispara antes de que la tienda termine de cargar, este módulo ya lo guardó. */
+export function avisoInstalacion(): any {
+  return estado.prompt;
+}
+
 function instalar() {
   if (estado.prompt) {
     const p = estado.prompt;

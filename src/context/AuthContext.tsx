@@ -12,6 +12,7 @@ interface AuthContextValue {
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signInWithMagicLink: (email: string, redirectTo: string) => Promise<{ error: string | null }>;
   resetPassword: (email: string, redirectTo: string) => Promise<{ error: string | null }>;
+  signInWithGoogle: (redirectTo: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -68,12 +69,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: error ? error.message : null };
   };
 
+  // Entrar con la cuenta de Google: un toque, sin escribir correo ni contraseña. Redirige a Google y vuelve a
+  // redirectTo con la sesión armada. Requiere el proveedor Google activo en Supabase (Authentication → Providers)
+  // y redirectTo dentro de las URLs permitidas.
+  const signInWithGoogle: AuthContextValue['signInWithGoogle'] = async (redirectTo) => {
+    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } });
+    return { error: error ? error.message : null };
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
 
   return (
-    <AuthContext.Provider value={{ user: session?.user ?? null, session, loading, signUp, signIn, signInWithMagicLink, resetPassword, signOut }}>
+    <AuthContext.Provider value={{ user: session?.user ?? null, session, loading, signUp, signIn, signInWithMagicLink, resetPassword, signInWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   );
