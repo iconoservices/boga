@@ -41,7 +41,7 @@ const claveDe = (l: Linea) => claveLinea(l.producto.id, l.pres?.label);
  */
 export default function MercadoTemplate({ store }: MercadoTemplateProps) {
   const t = store.theme;
-  const demoPermitido = store.showDemoProducts !== false;
+  const demoPermitido = store.showDemoProducts === true;
 
   const [productos, setProductos] = useState<Producto[]>([]);
   const [cargando, setCargando] = useState(true);

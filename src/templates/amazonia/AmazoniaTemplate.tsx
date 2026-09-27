@@ -27,7 +27,7 @@ const CATEGORY_TABS = [
 ];
 
 export default function AmazoniaTemplate({ store }: AmazoniaTemplateProps) {
-  const demoPermitido = store.showDemoProducts !== false;
+  const demoPermitido = store.showDemoProducts === true;
   const [activeCategory, setActiveCategory] = useState('all');
   const [cartCount, setCartCount] = useState(0);
   const [products, setProducts] = useState<any[]>([]);

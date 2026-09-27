@@ -19,7 +19,7 @@ import { avisarAgregado } from './AddFeedback';
  * todas las plantillas que lo usan.
  */
 export function useCatalogo(store: StoreConfig) {
-  const demoPermitido = store.showDemoProducts !== false;
+  const demoPermitido = store.showDemoProducts === true;
 
   const [products, setProducts] = useState<Producto[]>([]);
   const [activeCategory, setActiveCategory] = useState('all');

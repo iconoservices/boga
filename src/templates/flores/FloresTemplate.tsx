@@ -42,7 +42,7 @@ const CATEGORY_TABS = [
 ];
 
 export default function FloresTemplate({ store }: FloresTemplateProps) {
-  const demoPermitido = store.showDemoProducts !== false;
+  const demoPermitido = store.showDemoProducts === true;
   const t = store.theme;
 
   const [activeCategory, setActiveCategory] = useState('all');

@@ -55,6 +55,8 @@ export default async function PreviewPage({ params }: Props) {
     marketplaceCategory: tmpl.category,
     template: templateId,
     demoDePlantilla: true,
+    // Aqui el demo ES el punto: es la vitrina de la plantilla (no es una tienda real).
+    showDemoProducts: true,
   };
 
   return <StoreRenderer store={base} />;
