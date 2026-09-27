@@ -3,8 +3,9 @@
 // Extraído del page.tsx gigante de /superadmin (era la pestaña `paquetes`): paquetes comerciales
 // y catálogo de módulos de expansión. Todo vive en memoria por ahora (no hay tablas todavía).
 
-import React, { Suspense, useEffect, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import SuperadminSubheader from '@/components/SuperadminSubheader';
 import Toggle from '@/components/superadmin/Toggle';
@@ -321,6 +322,24 @@ interface Package {
   isPopular?: boolean;
 }
 
+interface PaqueteCarga {
+  clave: string;
+  nombre: string;
+  precio: number;
+  detalle: string;
+}
+
+// Servicio de carga manual: cuando el dueño no quiere subir sus productos y le pide
+// al equipo de Boga que lo haga por él. Precios provisionales, a confirmar todavía.
+// Se guardan en la tabla plan_precios (clave→monto) que ya usa /superadmin/cobros —
+// no hace falta tabla nueva, solo estas 3 filas.
+const PAQUETES_CARGA_INICIALES: PaqueteCarga[] = [
+  { clave: 'carga_20', nombre: 'Pack 20 productos', precio: 30, detalle: 'Carga manual de hasta 20 productos con foto, precio y categoría.' },
+  { clave: 'carga_50', nombre: 'Pack 50 productos', precio: 60, detalle: 'Carga manual de hasta 50 productos con foto, precio y categoría.' },
+  { clave: 'carga_masiva_estandar', nombre: 'Carga Masiva (500 productos) — Opción Estándar', precio: 150, detalle: 'Pago único. Subes los 500 productos organizados con buscador y categorías con íconos limpios (fotos que ya te pasa el comercio).' },
+  { clave: 'carga_masiva_premium', nombre: 'Carga Masiva (500 productos) — Opción Premium con Fotos HD', precio: 300, detalle: 'Pago único. Si además quieren que el equipo busque, recorte y edite las 500 fotos en alta calidad, se cobra el doble por el trabajo manual de diseño.' },
+];
+
 // useSearchParams (para ?nuevo=1) exige un Suspense a su alrededor al compilar.
 export default function PaquetesAdmin() {
   return (
@@ -379,6 +398,36 @@ function PaquetesContenido() {
       bannerUrl: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=500&auto=format&fit=crop&q=60'
     }
   ]);
+  // Paquetes de carga manual (cuando el dueño le pide a Boga que suba sus productos).
+  // Precios provisionales — quedan editables acá y se guardan en plan_precios.
+  const [paquetesCarga, setPaquetesCarga] = useState<PaqueteCarga[]>(PAQUETES_CARGA_INICIALES);
+  const [guardandoCarga, setGuardandoCarga] = useState(false);
+  const [mensajeCarga, setMensajeCarga] = useState('');
+
+  const cargarPreciosCarga = useCallback(async () => {
+    const claves = PAQUETES_CARGA_INICIALES.map((p) => p.clave);
+    const { data, error } = await supabase.from('plan_precios').select('clave,monto').in('clave', claves);
+    if (error || !data) return; // tabla no corrida todavía: se queda con los valores por defecto
+    setPaquetesCarga((prev) => prev.map((p) => {
+      const fila = data.find((d) => d.clave === p.clave);
+      return fila ? { ...p, precio: Number(fila.monto) || 0 } : p;
+    }));
+  }, []);
+
+  useEffect(() => { cargarPreciosCarga(); }, [cargarPreciosCarga]);
+
+  const actualizarPrecioCarga = (clave: string, precio: number) => {
+    setPaquetesCarga(prev => prev.map(p => p.clave === clave ? { ...p, precio } : p));
+  };
+
+  const guardarPreciosCarga = async () => {
+    setGuardandoCarga(true); setMensajeCarga('');
+    const filas = paquetesCarga.map((p) => ({ clave: p.clave, monto: Math.max(0, p.precio), updated_at: new Date().toISOString() }));
+    const { error } = await supabase.from('plan_precios').upsert(filas, { onConflict: 'clave' });
+    setGuardandoCarga(false);
+    setMensajeCarga(error ? `No se pudo guardar: ${error.message}` : '✅ Precios guardados.');
+  };
+
   // Histórico de paquetes de lanzamiento
   const archivedPackages = [
     { id: 'archive-1', name: 'Promo Piloto Huánuco', price: 29, usersCount: '18 tiendas', active: false },
@@ -505,6 +554,55 @@ function PaquetesContenido() {
 
               {/* Contacto de Boga: el WhatsApp del asesor que usa el botón flotante de /negocios */}
               <ContactoBoga />
+
+              {/* Paquetes de Carga de Productos: servicio manual cuando el dueño le pide a Boga
+                  que suba el catálogo por él. Precios provisionales (editables acá), sin tabla
+                  todavía — es referencia interna para cotizar por WhatsApp. */}
+              <div className="p-4 bg-white border border-[#c2c6d6] rounded-md flex flex-col gap-3">
+                <div>
+                  <h3 className="text-sm font-bold text-[#191b23] flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[18px] text-[#0058be]">inventory_2</span>
+                    Paquetes de Carga de Productos (Si te piden que tú lo hagas)
+                  </h3>
+                  <p className="text-xs text-[#424754] mt-1">
+                    Precios de referencia para cotizar al comercio. Provisionales — ajusta el monto y confírmalo antes de cobrar.
+                  </p>
+                  <p className="text-[10px] text-[#0058be] font-semibold mt-1">
+                    Solo visible acá en superadmin — el comercio no ve esta tabla.
+                  </p>
+                </div>
+                <div className="flex flex-col divide-y divide-[#ecedf7] border border-[#ecedf7] rounded-md">
+                  {paquetesCarga.map((pkg) => (
+                    <div key={pkg.clave} className="flex items-center justify-between gap-3 px-3 py-2.5">
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-[#191b23]">{pkg.nombre}</p>
+                        <p className="text-[10px] text-[#424754] mt-0.5">{pkg.detalle}</p>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span className="text-xs font-bold text-[#424754]">S/</span>
+                        <input
+                          type="number"
+                          min="0"
+                          value={pkg.precio}
+                          onChange={(e) => actualizarPrecioCarga(pkg.clave, Number(e.target.value))}
+                          className="w-16 h-8 px-2 rounded-md border border-[#c2c6d6] text-xs font-bold text-right outline-none focus:border-[#0058be]"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[10px] text-[#424754] font-semibold">{mensajeCarga}</p>
+                  <button
+                    type="button"
+                    onClick={guardarPreciosCarga}
+                    disabled={guardandoCarga}
+                    className="h-9 px-4 bg-[#0058be] text-white font-bold text-xs rounded-md disabled:opacity-60 shrink-0"
+                  >
+                    {guardandoCarga ? 'Guardando…' : 'Guardar precios'}
+                  </button>
+                </div>
+              </div>
 
               {/* Niveles reales: los que prenden o apagan módulos en el panel del dueño */}
               <NivelesModulos />

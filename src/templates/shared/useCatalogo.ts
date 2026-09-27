@@ -193,14 +193,19 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
   // ── Categorias ──
   // Salen de las categorias reales de la tienda; si no cargo ninguna, se
   // deducen del catalogo para no dejar el menu con un unico chip "Todos".
+  // En ambos casos se filtran las que no tienen ni un producto todavia: una
+  // categoria vacia en el menu del cliente parece un error, no un catalogo
+  // en construccion (mientras carga, `cargando` ya evita este filtro raro).
   const categoriasEfectivas: Categoria[] = categorias.length
-    ? categorias.map((c) => ({
-        id: c.href,
-        label: c.name,
-        // 'category' es el icono generico que se guardaba antes por defecto
-        // para toda categoria nueva; se recalcula para no dejarlo pegado.
-        icon: c.icon && c.icon !== 'category' ? c.icon : iconForCategory(c.name),
-      }))
+    ? categorias
+        .filter((c) => cargando || products.some((p) => p.category === c.href))
+        .map((c) => ({
+          id: c.href,
+          label: c.name,
+          // 'category' es el icono generico que se guardaba antes por defecto
+          // para toda categoria nueva; se recalcula para no dejarlo pegado.
+          icon: c.icon && c.icon !== 'category' ? c.icon : iconForCategory(c.name),
+        }))
     : [...new Set(products.map((p) => p.category))]
         .filter(Boolean)
         .map((c) => ({ id: c, label: c.charAt(0).toUpperCase() + c.slice(1), icon: iconForCategory(c) }));
