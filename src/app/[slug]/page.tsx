@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase';
 import { Vibrant } from 'node-vibrant/node';
 import { unstable_cache } from 'next/cache';
 import { cache } from 'react';
+import { headers } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
@@ -137,9 +138,15 @@ export async function generateMetadata({ params }: Omit<Props, 'searchParams'>) 
   if (!store) return { title: 'Tienda no encontrada' };
   
   const iconUrl = store.logoImage || store.iconImage || store.heroImage || BOGA_DEFAULT_ICON;
+  // Chrome y Firefox de iPhone no pueden instalar apps y su menú Compartir muestra el ícono de la página (apple-touch-icon):
+  // ahí va la FOTO de la tienda (un logo sobre fondo blanco se ve como un cuadro vacío). Safari sí instala y sigue con su regla.
+  const uaIOSNoSafari = /CriOS|FxiOS|EdgiOS/i.test((await headers()).get('user-agent') || '');
+  const iconoApple = uaIOSNoSafari ? (store.heroImage || iconUrl) : (store.appPropia ? iconUrl : '/apple-touch-icon.png');
   
   return {
-    title: `${store.name} en Pucallpa`,
+    // Chrome/Firefox de iPhone muestran el título de la página en su menú Compartir: solo el nombre (como Safari, que lee og:title).
+    // Para todo lo demás (Google, otros navegadores) el título sigue siendo "<tienda> en Pucallpa · BogaHub".
+    title: uaIOSNoSafari ? { absolute: store.name } : `${store.name} en Pucallpa`,
     description: store.tagline || `${store.name} en Pucallpa${store.marketplaceCategory && store.marketplaceCategory !== 'General' ? `: ${store.marketplaceCategory}` : ''}. Carta, precios y pedidos por WhatsApp en BogaHub.`,
     manifest: `/manifest.json?slug=${slug}`,
     // La dirección OFICIAL de la tienda es la del sitio principal (bogahub.app/<tienda>),
@@ -172,7 +179,7 @@ export async function generateMetadata({ params }: Omit<Props, 'searchParams'>) 
         { url: iconUrl, sizes: '192x192', type: 'image/png' },
         { url: iconUrl, sizes: '512x512', type: 'image/png' },
       ],
-      apple: [{ url: store.appPropia ? iconUrl : '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+      apple: [{ url: iconoApple, sizes: '180x180', type: 'image/png' }],
     },
     // Nombre en el inicio del iPhone: con subdominio propio es SU app, con su nombre (si no, queda "BogaHub", el del layout).
     ...(store.appPropia
