@@ -46,3 +46,25 @@ export const nombreConPresentacion = (nombre: string, label: string) => `${nombr
 
 /** Clave de una línea del carrito: el mismo producto en dos medidas son dos líneas. */
 export const claveLinea = (id: string, label?: string) => (label ? `${id}|${label}` : id);
+
+// ── Qué plantillas saben mostrar la elección de medida ──
+// Solo estas tienen el selector para el cliente; en las demás el producto se vendería al precio "desde".
+// `condimentos` es la que vende todo por peso: ahí el formulario de productos abre las presentaciones desde el inicio.
+const PLANTILLAS_CON_PRESENTACIONES = ['condimentos', 'mercado'];
+
+export const plantillaAceptaPresentaciones = (template: unknown) => PLANTILLAS_CON_PRESENTACIONES.includes(String(template));
+export const plantillaEsPorPeso = (template: unknown) => template === 'condimentos';
+
+/** Fila del formulario (texto) tal como se escribe: etiqueta y precio como texto. */
+export type FilaPresentacion = { label: string; price: string };
+
+/**
+ * Convierte las filas del formulario en presentaciones válidas. Devuelve `error` si alguna fila está a medias
+ * (nombre sin precio o al revés); las filas totalmente vacías se ignoran.
+ */
+export function filasAPresentaciones(filas: FilaPresentacion[]): { pres: Presentacion[]; error?: string } {
+  if (filas.some((x) => (x.label.trim() || x.price.trim()) && !(x.label.trim() && parseFloat(x.price) > 0))) {
+    return { pres: [], error: 'Cada presentación necesita un nombre (ej. 250 g) y un precio mayor a 0. Completa o quita las filas vacías.' };
+  }
+  return { pres: leerPresentaciones(filas.map((x) => ({ label: x.label, price: parseFloat(x.price) }))) };
+}

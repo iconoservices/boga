@@ -16,6 +16,8 @@ import { COLOR_PRESETS, getColorPreset } from '@/lib/colorPresets';
 import { extractThemeFromImageClient } from '@/lib/extractThemeClient';
 import { uploadFile } from '@/lib/uploadClient';
 import { refrescarTienda } from '@/lib/refrescar';
+import PresentacionesEditor from '@/components/PresentacionesEditor';
+import { filasAPresentaciones, leerPresentaciones, plantillaAceptaPresentaciones, plantillaEsPorPeso, precioDesde, type FilaPresentacion } from '@/lib/presentaciones';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import type { StoreTheme } from '@/lib/templates.config';
 import { MODULOS, moduloActivo, enMarketplace, conMarcaBlanca, PLANES_PRESETS, type PlanPreset, type Modulos } from '@/lib/modulos';
@@ -158,7 +160,9 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   const [productsStoreSlug, setProductsStoreSlug] = useState<string | null>(null);
   const [storeProductsList, setStoreProductsList] = useState<any[]>([]);
   const [isLoadingStoreProducts, setIsLoadingStoreProducts] = useState(false);
-  const [newStoreProduct, setNewStoreProduct] = useState({ name: '', price: '', category: '', subcategory: '', desc: '' });
+  const [newStoreProduct, setNewStoreProduct] = useState({ name: '', price: '', category: '', subcategory: '', desc: '', presentaciones: [] as FilaPresentacion[] });
+  // Sección de presentaciones abierta a mano (en plantillas por peso ya viene abierta).
+  const [presAbiertas, setPresAbiertas] = useState(false);
   const [newStoreProductFile, setNewStoreProductFile] = useState<File | null>(null);
   const [storeProductPreview, setStoreProductPreview] = useState<string | null>(null);
   const [isSavingStoreProduct, setIsSavingStoreProduct] = useState(false);
@@ -194,7 +198,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     setEditingStoreProductImage(null);
     setShowStoreProductForm(false);
     setStoreProductSearch('');
-    setNewStoreProduct({ name: '', price: '', category: '', subcategory: '', desc: '' });
+    setNewStoreProduct({ name: '', price: '', category: '', subcategory: '', desc: '', presentaciones: [] });
+    setPresAbiertas(false);
     setNewStoreProductFile(null);
     setStoreProductPreview(null);
     setIsLoadingStoreProducts(true);
@@ -214,6 +219,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       category: p.category || '',
       subcategory: p.subcategory || '',
       desc: p.description || '',
+      presentaciones: leerPresentaciones(p.presentaciones).map((x) => ({ label: x.label, price: String(x.price) })),
     });
     setNewStoreProductFile(null);
     setStoreProductPreview(p.image || null);
@@ -223,7 +229,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     setShowStoreProductForm(false);
     setEditingStoreProductId(null);
     setEditingStoreProductImage(null);
-    setNewStoreProduct({ name: '', price: '', category: '', subcategory: '', desc: '' });
+    setNewStoreProduct({ name: '', price: '', category: '', subcategory: '', desc: '', presentaciones: [] });
+    setPresAbiertas(false);
     setNewStoreProductFile(null);
     setStoreProductPreview(null);
   };
@@ -231,10 +238,19 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   const handleAddStoreProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!productsStoreSlug) return;
-    if (!newStoreProduct.name.trim() || !newStoreProduct.price) {
+    // Con presentaciones el precio del producto es el de la más barata ("Desde S/ …").
+    const { pres, error: errPres } = filasAPresentaciones(newStoreProduct.presentaciones);
+    if (errPres) { alert(errPres); return; }
+    const precioProducto = pres.length ? precioDesde(pres) : parseFloat(newStoreProduct.price) || 0;
+    if (!newStoreProduct.name.trim() || !(precioProducto > 0)) {
       alert('Faltan el nombre o el precio.');
       return;
     }
+    const productoPrevio = editingStoreProductId ? storeProductsList.find(x => x.id === editingStoreProductId) : undefined;
+    // La columna solo se manda si hay presentaciones o si el producto tenía y se le quitan.
+    const camposPres = pres.length || leerPresentaciones(productoPrevio?.presentaciones).length
+      ? { presentaciones: pres.length ? pres : null }
+      : {};
     if (!newStoreProductFile && !editingStoreProductId) {
       alert('Selecciona una foto para el producto.');
       return;
@@ -247,11 +263,12 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
           : editingStoreProductImage;
         const cambios = {
           name: newStoreProduct.name.trim(),
-          price: parseFloat(newStoreProduct.price) || 0,
+          price: precioProducto,
           category: newStoreProduct.category || null,
           subcategory: newStoreProduct.subcategory || null,
           image: imageUrl,
           description: newStoreProduct.desc || null,
+          ...camposPres,
         };
         const { error } = await supabase.from('products').update(cambios).eq('id', editingStoreProductId);
         if (error) throw error;
@@ -264,18 +281,20 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       const { data, error } = await supabase.from('products').insert([{
         name: newStoreProduct.name.trim(),
         store: productsStoreSlug,
-        price: parseFloat(newStoreProduct.price) || 0,
+        price: precioProducto,
         category: newStoreProduct.category || null,
         subcategory: newStoreProduct.subcategory || null,
         image: imageUrl,
         description: newStoreProduct.desc || null,
+        ...camposPres,
         stock: null,
         status: 'Activo',
       }]).select();
       if (error) throw error;
       setStoreProductsList(prev => [...(data || []), ...prev]);
       refrescarTienda(productsStoreSlug);
-      setNewStoreProduct({ name: '', price: '', category: '', subcategory: '', desc: '' });
+      setNewStoreProduct({ name: '', price: '', category: '', subcategory: '', desc: '', presentaciones: [] });
+    setPresAbiertas(false);
       setNewStoreProductFile(null);
       setStoreProductPreview(null);
     } catch (err: any) {
@@ -2813,14 +2832,42 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                 <div>
                   <label className="block text-[10px] font-bold text-[#545f73] mb-1">Precio (S/)</label>
                   <input
-                    type="number" required min={0} step={0.1}
-                    value={newStoreProduct.price}
+                    type="number" min={0} step={0.1}
+                    required={newStoreProduct.presentaciones.length === 0}
+                    disabled={newStoreProduct.presentaciones.length > 0}
+                    value={newStoreProduct.presentaciones.length > 0 ? '' : newStoreProduct.price}
                     onChange={(e) => setNewStoreProduct(prev => ({ ...prev, price: e.target.value }))}
-                    className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
-                    placeholder="0.00"
+                    className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all disabled:opacity-60"
+                    placeholder={newStoreProduct.presentaciones.length > 0 ? 'Según presentaciones' : '0.00'}
                   />
                 </div>
               </div>
+              {/* El formulario se adapta al tipo de tienda (su plantilla): las de venta por peso abren las presentaciones
+                  de entrada; Mercado las ofrece como opción; las plantillas sin selector de medida no las muestran. */}
+              {(() => {
+                const tpl = stores[productsStoreSlug ?? '']?.template;
+                if (!plantillaAceptaPresentaciones(tpl)) return null;
+                const abierta = plantillaEsPorPeso(tpl) || presAbiertas || newStoreProduct.presentaciones.length > 0;
+                if (!abierta) {
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => setPresAbiertas(true)}
+                      className="text-[10px] font-bold text-[#0058be] flex items-center gap-1 hover:underline"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">scale</span>
+                      Vender por peso o en varios tamaños
+                    </button>
+                  );
+                }
+                return (
+                  <PresentacionesEditor
+                    filas={newStoreProduct.presentaciones}
+                    onChange={(filas) => setNewStoreProduct(prev => ({ ...prev, presentaciones: filas }))}
+                    ayuda={plantillaEsPorPeso(tpl) ? 'Esta tienda vende por peso: agrega las medidas con su precio (100 g, 250 g, 1 kg…).' : 'Opcional: un mismo producto en varias medidas o tamaños, cada una con su precio.'}
+                  />
+                );
+              })()}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[10px] font-bold text-[#545f73] mb-1">Categoría</label>
