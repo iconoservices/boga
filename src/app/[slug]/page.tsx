@@ -161,33 +161,16 @@ export async function generateMetadata({ params }: Omit<Props, 'searchParams'>) 
       description: store.tagline,
       images: [store.heroImage],
     },
-    // Íconos: el logo de la tienda SOLO si tiene subdominio propio (su propia app). Sin subdominio, lo que se instala
-    // es BogaHub, así que TODOS los íconos declarados son los de Boga: el navegador escoge de esta lista el del
-    // acceso directo al inicio (Chrome de Android toma el más grande), y si hubiera ahí el logo de la tienda saldría ese.
-    icons: store.subdominioActivo
-      ? {
-          icon: [
-            { url: iconUrl, sizes: 'any' },
-            { url: iconUrl, sizes: '192x192', type: 'image/png' },
-            { url: iconUrl, sizes: '512x512', type: 'image/png' },
-          ],
-          apple: [{ url: iconUrl, sizes: '180x180', type: 'image/png' }],
-        }
-      : {
-          icon: [
-            // El logo de la tienda va SOLO como ícono chico (32 px): es el de la pestaña del navegador. Los grandes
-            // (192/512) son de Boga porque de esos elige el acceso directo al inicio (toma el más grande).
-            { url: iconUrl, sizes: '16x16', type: 'image/png' },
-            { url: iconUrl, sizes: '32x32', type: 'image/png' },
-            { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-            { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
-          ],
-          apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
-        },
-    // Nombre en el inicio del iPhone: con subdominio propio es SU app, con su nombre (si no, queda "BogaHub", el del layout).
-    ...(store.subdominioActivo
-      ? { applicationName: store.name, appleWebApp: { capable: true, statusBarStyle: 'default' as const, title: store.name.slice(0, 20) } }
-      : {}),
+    icons: {
+      icon: [
+        { url: iconUrl, sizes: 'any' },
+        { url: iconUrl, sizes: '192x192', type: 'image/png' },
+        { url: iconUrl, sizes: '512x512', type: 'image/png' },
+      ],
+      apple: [
+        { url: iconUrl, sizes: '180x180', type: 'image/png' },
+      ],
+    },
   };
 }
 

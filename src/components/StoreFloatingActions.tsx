@@ -6,7 +6,7 @@ import StorePushBell from '@/components/StorePushBell';
 import type { StoreConfig } from '@/lib/stores.config';
 
 interface StoreFloatingActionsProps {
-  store: Pick<StoreConfig, 'slug' | 'name' | 'tagline' | 'theme' | 'pushActivo' | 'latitud' | 'longitud' | 'mostrarUbicacion' | 'subdominioActivo'>;
+  store: Pick<StoreConfig, 'slug' | 'name' | 'tagline' | 'theme' | 'pushActivo' | 'latitud' | 'longitud' | 'mostrarUbicacion'>;
 }
 
 /**
@@ -44,12 +44,8 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
       setDeferredPrompt(e);
     };
 
-    // Sin subdominio propio lo que se instala es BogaHub (el mismo desde cualquier tienda): se recuerda con la marca
-    // compartida de BogaHub, así el botón no reaparece en cada tienda pidiendo instalar lo que ya está instalado.
-    const instalaBoga = !store.subdominioActivo;
     const handleInstalled = () => {
       localStorage.setItem(installKey, 'true');
-      if (instalaBoga) localStorage.setItem('boga_pwa_installed', 'true');
       setIsInstalled(true);
     };
 
@@ -85,7 +81,7 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
     const checkInstalled = () => {
       const enModoApp = !!((window.navigator as any).standalone || window.matchMedia('(display-mode: standalone)').matches);
       if (enDireccionPropia) return enModoApp && (localStorage.getItem(installKey) === 'true' || !llegoDeOtroOrigen);
-      return localStorage.getItem(installKey) === 'true' || (instalaBoga && localStorage.getItem('boga_pwa_installed') === 'true') || !!(window.navigator as any).standalone;
+      return localStorage.getItem(installKey) === 'true' || !!(window.navigator as any).standalone;
     };
 
     setIsInstalled(checkInstalled());
@@ -97,7 +93,7 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
       window.removeEventListener('appinstalled', handleInstalled);
     };
-  }, [installKey, store.subdominioActivo]);
+  }, [installKey]);
 
   const instalar = () => {
     if (deferredPrompt) {

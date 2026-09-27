@@ -41,9 +41,9 @@ export async function GET(request: NextRequest) {
 
   // Sin slug de tienda hay dos apps propias de la plataforma: el marketplace
   // publico (raiz) y el panel de administracion. Por defecto, el marketplace.
-  // Tambien es lo que se instala desde una tienda SIN subdominio propio (ver mas abajo).
   const app = request.nextUrl.searchParams.get('app');
-  const respuestaPlataforma = (isAdmin: boolean) => {
+  if (!slug) {
+    const isAdmin = app === 'admin';
     const manifest = isAdmin
       ? {
           id: '/admin',
@@ -88,8 +88,7 @@ export async function GET(request: NextRequest) {
       }),
       { headers: { 'Content-Type': 'application/manifest+json' } }
     );
-  };
-  if (!slug) return respuestaPlataforma(app === 'admin');
+  }
 
   let dbLogo: string | null = null;
   let dbHero: string | null = null;
@@ -97,12 +96,9 @@ export async function GET(request: NextRequest) {
   if (slug) {
     const { data } = await supabase
       .from('stores')
-      .select('name, logo_image, hero_image, theme, template, subdominio_activo')
+      .select('name, logo_image, hero_image, theme, template')
       .eq('slug', slug)
       .maybeSingle();
-    // Solo una tienda con subdominio propio (<tienda>.bogahub.app, plan de pago) se instala como SU app, con su
-    // nombre y su logo. Sin subdominio, "Instalar" instala BogaHub: nombre e ícono de Boga, no los de la tienda.
-    if (data && !data.subdominio_activo && slugDeSubdominio !== slug) return respuestaPlataforma(false);
     if (data) {
       storeName = data.name;
       storeSlug = slug;
