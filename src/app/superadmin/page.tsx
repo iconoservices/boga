@@ -344,6 +344,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   const [heroFile, setHeroFile] = useState<File | null>(null);
   const [heroPreview, setHeroPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  // Aviso de "Guardado" en el editor de tienda (que ya no se cierra al guardar).
+  const [guardadoOk, setGuardadoOk] = useState(false);
   // Refleja si la tienda ya tiene cargados los productos demo de su plantilla
   // (se detecta por nombre contra getDemoProducts). El switch inserta/borra.
   const [demoProductsActive, setDemoProductsActive] = useState(false);
@@ -1057,7 +1059,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         setStoreIds(prev => rekey(prev, editingStore.id));
       }
 
-      setStores(prev => rekey(prev, {
+      const tiendaGuardada = {
         ...existingStoreObj,
         slug,
         subdominioActivo: !!storeForm.subdominioActivo,
@@ -1072,9 +1074,27 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         categories: categoriesList,
         logoImage: logoUrl || (logoRemoved ? undefined : existingStoreObj.logoImage),
         theme
-      }));
+      };
+      setStores(prev => rekey(prev, tiendaGuardada));
 
-      setShowStoreModal(false);
+      // La página pública guarda los datos de la tienda (plantilla, colores) en caché ~5 min: se refresca aquí para
+      // que un cambio de plantilla o de color se vea de una vez, sin esperar ni usar "Refrescar todo".
+      refrescarTienda(slug);
+      if (isRename && oldSlug) refrescarTienda(oldSlug);
+
+      // El editor se queda abierto (se vuelve a la lista con la flecha): así se sigue ajustando y viendo el resultado.
+      // Lo guardado pasa a ser "la tienda en edición": el próximo guardado actualiza esta misma fila y no re-sube archivos.
+      const idGuardado = writeData?.[0]?.id ?? editingStore?.id;
+      setEditingStore({ ...tiendaGuardada, id: idGuardado });
+      if (idGuardado) setStoreIds(prev => ({ ...prev, [slug]: idGuardado }));
+      setLogoFile(null);
+      setHeroFile(null);
+      setLogoRemoved(false);
+      if (logoUrl) setLogoPreview(logoUrl);
+      if (heroUrl) setHeroPreview(heroUrl);
+      if (ownerUserId) setOriginalOwnerEmail(ownerEmailTrim);
+      setGuardadoOk(true);
+      setTimeout(() => setGuardadoOk(false), 3000);
 
       if (ownerInviteLink) {
         try {
@@ -1666,8 +1686,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                 disabled={saving}
                 className="px-4 py-2 bg-[#0058be] text-white rounded-md font-bold text-xs hover:shadow-lg active:scale-95 transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span className="material-symbols-outlined text-[14px]">{saving ? 'progress_activity' : 'publish'}</span>
-                {saving ? 'Guardando...' : 'Publish Changes'}
+                <span className="material-symbols-outlined text-[14px]">{saving ? 'progress_activity' : guardadoOk ? 'check' : 'publish'}</span>
+                {saving ? 'Guardando...' : guardadoOk ? '¡Guardado!' : 'Publish Changes'}
               </button>
               <div className="w-8 h-8 rounded-md border border-[#c2c6d6]/60 flex items-center justify-center bg-white cursor-pointer hover:bg-[#f2f3fd] transition-colors text-[#545f73]">
                 <span className="material-symbols-outlined text-[18px]">notifications</span>
