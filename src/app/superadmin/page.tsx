@@ -879,7 +879,14 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       tier: storeForm.tier
     };
     const heroAlt = existingStoreObj.heroAlt || 'store image';
-    const categoriesList = existingStoreObj.categories || [];
+    // Categorías de la tienda: una tienda nueva nace con las de su plantilla (antes quedaba vacía y el formulario de
+    // productos solo ofrecía "Sin categoría"). Si se cambia de plantilla y las que tenía eran las de la plantilla
+    // anterior sin tocar, pasan a ser las de la nueva. Las que el dueño armó a mano no se pisan nunca.
+    const categoriasActuales: { name: string; icon: string; href: string }[] = existingStoreObj.categories || [];
+    const plantillaAnterior = editingStore ? getTemplate(editingStore.template as string) : null;
+    const nombres = (l: { name: string }[]) => l.map((c) => c.name).join('|');
+    const sinPersonalizar = categoriasActuales.length === 0 || (!!plantillaAnterior && nombres(categoriasActuales) === nombres(plantillaAnterior.categories));
+    const categoriesList = sinPersonalizar ? (tpl?.categories ?? categoriasActuales) : categoriasActuales;
 
     // En paralelo: son subidas independientes, esperarlas en fila duplica lo
     // que tarda guardar cuando se cambian logo y portada a la vez.
@@ -2877,7 +2884,11 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                     className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all appearance-none"
                   >
                     <option value="">Sin categoría</option>
-                    {(stores[productsStoreSlug]?.categories || []).map((c) => (
+                    {/* Las de la tienda; si aún no tiene (tiendas creadas antes), las de su plantilla. */}
+                    {(stores[productsStoreSlug ?? '']?.categories?.length
+                      ? stores[productsStoreSlug ?? ''].categories
+                      : getTemplate(stores[productsStoreSlug ?? '']?.template as string)?.categories ?? []
+                    ).map((c: { name: string; href: string }) => (
                       <option key={c.href} value={c.name}>{c.name}</option>
                     ))}
                   </select>
