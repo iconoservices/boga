@@ -1705,10 +1705,20 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
 
             {/* Right: User actions */}
             <div className="flex items-center gap-4">
-              <div className="text-[10px] text-[#545f73] font-bold flex items-center gap-1.5 border-r border-[#ecedf7] pr-4">
-                <span className="material-symbols-outlined text-[16px] text-[#727785]">visibility</span>
-                Preview
-              </div>
+              {/* Abre la tienda REAL en otra pestaña con lo último guardado (?preview=true salta la caché). Para ver cambios
+                  sin guardar está la vista previa del teléfono de la derecha. */}
+              <a
+                href={storeForm.slug ? `/${storeForm.slug.trim().toLowerCase()}?preview=true` : undefined}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-disabled={!storeForm.slug}
+                title="Abrir la tienda en otra pestaña (con lo último que guardaste)"
+                className={`text-[10px] font-bold flex items-center gap-1.5 border-r border-[#ecedf7] pr-4 transition-colors ${storeForm.slug ? 'text-[#0058be] hover:underline' : 'text-[#727785] pointer-events-none'}`}
+              >
+                <span className="material-symbols-outlined text-[16px]">visibility</span>
+                Ver tienda
+                <span className="material-symbols-outlined text-[13px]">open_in_new</span>
+              </a>
               <button
                 type="button"
                 onClick={() => {
