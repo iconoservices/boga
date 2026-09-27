@@ -175,7 +175,9 @@ export async function generateMetadata({ params }: Omit<Props, 'searchParams'>) 
         }
       : {
           icon: [
-            { url: '/favicon-64.png', sizes: '64x64', type: 'image/png' },
+            // El logo de la tienda va SOLO como ícono chico (32 px): es el de la pestaña del navegador. Los grandes
+            // (192/512) son de Boga porque de esos elige el acceso directo al inicio (toma el más grande).
+            { url: iconUrl, sizes: '32x32', type: 'image/png' },
             { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
             { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
           ],

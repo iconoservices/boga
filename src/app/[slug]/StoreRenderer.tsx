@@ -38,12 +38,13 @@ export default function StoreRenderer({ store: initialStore }: Props) {
 
   // Update favicon dynamically when store changes
   useEffect(() => {
-    // Solo una tienda con subdominio propio (su propia app) usa su logo como ícono; sin subdominio todo es de Boga.
+    // La pestaña del navegador lleva siempre el logo de la tienda. El ícono del acceso directo / app instalada
+    // (apple-touch-icon y los íconos grandes) es el de la tienda solo si tiene subdominio propio; si no, el de Boga.
     const conApp = !!store.subdominioActivo;
-    const iconUrl = conApp ? (store.logoImage || store.iconImage || store.heroImage || BOGA_DEFAULT_ICON) : '/favicon-64.png';
-    
+    const iconUrl = store.logoImage || store.iconImage || store.heroImage || BOGA_DEFAULT_ICON;
+
     // Add timestamp to force browser to reload favicon (bypass cache)
-    const timestampedIcon = conApp ? `${iconUrl}${iconUrl.includes('?') ? '&' : '?'}t=${Date.now()}` : iconUrl;
+    const timestampedIcon = `${iconUrl}${iconUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
     
     // Update existing favicon link or create new one
     let faviconLink = document.querySelector("link[rel='icon']") as HTMLLinkElement;
