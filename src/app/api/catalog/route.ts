@@ -15,13 +15,14 @@ import { COLS_OFERTA, aplicarOferta } from '@/lib/ofertas';
 
 export const revalidate = 120;
 
-// Cada tienda se abre DENTRO de BogaHub (/<tienda>), tenga o no subdominio propio: antes las que tenían subdominio activo se
-// mandaban a su dirección <slug>.bogahub.app con target=_blank, y en el iPhone (sobre todo dentro de la app instalada) tocar la
-// tarjeta no abría nada. Solo un `external_url` puesto a mano en la tienda (p. ej. Delva, que es su propio sitio) sale afuera.
-// La dirección propia sigue sirviendo para instalar la app de la tienda y para compartir.
+// Una tienda con subdominio propio activo (plan de pago) se abre en su dirección
+// <slug>.bogahub.app, FUERA de la app instalada, como si fuera una app aparte
+// (igual que Delva). Se calcula acá para que todas las pantallas lo reciban como
+// `external_url` sin tocar cada una. Un external_url propio de la tienda manda.
+const DOMINIO = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app').host;
 const conDireccionPropia = <T extends { slug: string; external_url?: string | null; subdominio_activo?: boolean | null }>(s: T) => {
-  const { subdominio_activo: _subdominio, ...resto } = s;
-  return { ...resto, external_url: s.external_url || null };
+  const { subdominio_activo, ...resto } = s;
+  return { ...resto, external_url: s.external_url || (subdominio_activo ? `https://${s.slug}.${DOMINIO}` : null) };
 };
 
 // `page` distingue el carrusel de banners a devolver: 'market' (default, con
