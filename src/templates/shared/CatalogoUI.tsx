@@ -124,7 +124,8 @@ export function ProductGrid({
                   <span className={`block ${TXT.micro} font-medium line-through`} style={{ color: t.onSurfaceVariant }}>{soles(product.priceAnterior)}</span>
                 )}
               </span>
-              <AddButton t={t} nombre={product.name} onAdd={() => (product.presentaciones?.length ? onSelect(product) : onAdd(product))} />
+              {/* Con medidas, el "+" agrega la más chica (la del precio "Desde"); para otra medida se toca el producto. */}
+              <AddButton t={t} nombre={product.name} onAdd={() => onAdd(product)} />
             </div>
           </div>
         </div>

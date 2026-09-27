@@ -103,9 +103,9 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
   const filtrados = c.filtered.filter((p) => p.name.toLowerCase().includes(busqueda.toLowerCase()));
   const nombreCategoria = (id: string) => categorias.find((x) => x.id === id)?.label ?? id;
 
-  // "+" de la tarjeta: con medidas (100 g / 250 g / 1 kg) abre el producto para elegir; sin medidas agrega directo.
+  // "+" de la tarjeta: agrega directo. Con medidas (100 g / 250 g / 1 kg) va la más chica, que es la del precio "Desde";
+  // para otra medida se toca el producto (se abre a pantalla completa con el selector).
   const agregarRapido = (p: Producto) => {
-    if (p.presentaciones?.length) { setDetalle(p); return; }
     c.addToCart(p);
     setAgregados((prev) => ({ ...prev, [p.id]: true }));
     setTimeout(() => setAgregados((prev) => ({ ...prev, [p.id]: false })), 1000);
