@@ -1780,3 +1780,28 @@ WHERE modulos ? 'loyverse_token' OR modulos ? 'loyverse_merchant_id';
 -- Opcional: NULL = un solo precio, como siempre. Con presentaciones, `price` guarda la más barata ("Desde S/ …").
 -- El pedido manda solo la etiqueta elegida; el precio lo lee el servidor de esta columna (lib/presentaciones.ts).
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS presentaciones JSONB;
+
+
+-- ============================================================
+-- CATEGORÍAS POR DEFECTO DE CADA PLANTILLA (editables desde /superadmin/plantillas/<id>)
+-- ============================================================
+-- Una fila por plantilla. Manda sobre las categorías de fábrica del código; sin fila se usan las del código.
+-- Son solo el punto de partida: una tienda nueva las hereda al crearse (después cada dueño agrega las suyas).
+CREATE TABLE IF NOT EXISTS public.plantilla_categorias (
+  template_id TEXT PRIMARY KEY,
+  categories  JSONB NOT NULL DEFAULT '[]'::jsonb,
+  updated_at  TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE public.plantilla_categorias ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "plantilla_categorias: lectura pública" ON public.plantilla_categorias;
+DROP POLICY IF EXISTS "plantilla_categorias: solo superadmin gestiona" ON public.plantilla_categorias;
+
+CREATE POLICY "plantilla_categorias: lectura pública"
+ON public.plantilla_categorias FOR SELECT
+USING (true);
+
+CREATE POLICY "plantilla_categorias: solo superadmin gestiona"
+ON public.plantilla_categorias FOR ALL
+USING (public.is_superadmin())
+WITH CHECK (public.is_superadmin());

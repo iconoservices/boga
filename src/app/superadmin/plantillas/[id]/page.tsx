@@ -15,6 +15,7 @@ import { uploadFile } from '@/lib/uploadClient';
 import { getTemplate, getDemoProducts } from '@/lib/templates.config';
 import { demoSlug } from '@/lib/demoPlantilla';
 import SuperadminSidebarNav from '@/components/superadmin/SuperadminSidebarNav';
+import CategoriasPlantilla from '@/components/superadmin/CategoriasPlantilla';
 
 type Fila = Record<string, any>;
 
@@ -165,6 +166,7 @@ export default function ProductosDemoPlantilla() {
         </header>
 
         <main className="max-w-[900px] mx-auto px-container-margin py-8 flex flex-col gap-5">
+          <CategoriasPlantilla templateId={id} />
           <p className="text-sm text-secondary">
             Estos son los productos que se ven en la demo de <b>{tpl.name}</b> (y en su tarjeta de Productos). Cámbialos con tus propias fotos y datos.
             Si no guardas ninguno, la demo usa los ejemplos del código.

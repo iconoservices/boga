@@ -17,6 +17,7 @@ import { extractThemeFromImageClient } from '@/lib/extractThemeClient';
 import { uploadFile } from '@/lib/uploadClient';
 import { refrescarTienda } from '@/lib/refrescar';
 import PresentacionesEditor from '@/components/PresentacionesEditor';
+import { cargarCategoriasPersonalizadas, categoriasDePlantilla, type CategoriaPlantilla } from '@/lib/plantillaCategorias';
 import { filasAPresentaciones, leerPresentaciones, plantillaAceptaPresentaciones, plantillaEsPorPeso, precioDesde, type FilaPresentacion } from '@/lib/presentaciones';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import type { StoreTheme } from '@/lib/templates.config';
@@ -163,6 +164,9 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   const [newStoreProduct, setNewStoreProduct] = useState({ name: '', price: '', category: '', subcategory: '', desc: '', presentaciones: [] as FilaPresentacion[] });
   // Sección de presentaciones abierta a mano (en plantillas por peso ya viene abierta).
   const [presAbiertas, setPresAbiertas] = useState(false);
+  // Categorías por defecto que el superadmin personalizó por plantilla (lib/plantillaCategorias.ts); sin ellas valen las del código.
+  const [catsPlantilla, setCatsPlantilla] = useState<Record<string, CategoriaPlantilla[]>>({});
+  React.useEffect(() => { cargarCategoriasPersonalizadas().then(setCatsPlantilla); }, []);
   const [newStoreProductFile, setNewStoreProductFile] = useState<File | null>(null);
   const [storeProductPreview, setStoreProductPreview] = useState<string | null>(null);
   const [isSavingStoreProduct, setIsSavingStoreProduct] = useState(false);
@@ -883,10 +887,13 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     // productos solo ofrecía "Sin categoría"). Si se cambia de plantilla y las que tenía eran las de la plantilla
     // anterior sin tocar, pasan a ser las de la nueva. Las que el dueño armó a mano no se pisan nunca.
     const categoriasActuales: { name: string; icon: string; href: string }[] = existingStoreObj.categories || [];
-    const plantillaAnterior = editingStore ? getTemplate(editingStore.template as string) : null;
     const nombres = (l: { name: string }[]) => l.map((c) => c.name).join('|');
-    const sinPersonalizar = categoriasActuales.length === 0 || (!!plantillaAnterior && nombres(categoriasActuales) === nombres(plantillaAnterior.categories));
-    const categoriesList = sinPersonalizar ? (tpl?.categories ?? categoriasActuales) : categoriasActuales;
+    // "Sin tocar" = iguales a las de fábrica o a las personalizadas de la plantilla que tenía (o vacías).
+    const deLaPlantillaAnterior = editingStore
+      ? [getTemplate(editingStore.template as string)?.categories ?? [], categoriasDePlantilla(editingStore.template as string, catsPlantilla)].map(nombres)
+      : [];
+    const sinPersonalizar = categoriasActuales.length === 0 || deLaPlantillaAnterior.includes(nombres(categoriasActuales));
+    const categoriesList = sinPersonalizar ? (categoriasDePlantilla(templateKey, catsPlantilla).length ? categoriasDePlantilla(templateKey, catsPlantilla) : categoriasActuales) : categoriasActuales;
 
     // En paralelo: son subidas independientes, esperarlas en fila duplica lo
     // que tarda guardar cuando se cambian logo y portada a la vez.
@@ -2822,9 +2829,23 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                 />
               </div>
             </div>
+            {/* Nuevo producto / Editando producto: ventana flotante propia encima de la lista (la lista no se recarga). */}
             {showStoreProductForm && (
-            <form onSubmit={handleAddStoreProduct} className="space-y-3 pb-4 border-b border-[#ecedf7]">
-              <p className="text-[10px] font-black text-[#424754] uppercase tracking-widest">{editingStoreProductId ? 'Editando producto' : 'Nuevo Producto'}</p>
+            <div
+              className="fixed inset-0 z-[130] flex items-center justify-center bg-black/45 p-4"
+              onMouseDown={(e) => { if (e.target === e.currentTarget) handleCancelEditStoreProduct(); }}
+            >
+              <div className="relative w-full max-w-lg max-h-[92vh] overflow-y-auto bg-white rounded-xl shadow-2xl border border-[#ecedf7]">
+                <div className="sticky top-0 z-10 flex items-center justify-between gap-3 px-5 py-3 bg-[#f2f3fd] border-b border-[#ecedf7]">
+                  <p className="text-xs font-black text-[#191b23] uppercase tracking-widest flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[18px] text-[#0058be]">{editingStoreProductId ? 'edit' : 'add_box'}</span>
+                    {editingStoreProductId ? 'Editando producto' : 'Nuevo producto'}
+                  </p>
+                  <button type="button" onClick={handleCancelEditStoreProduct} aria-label="Cerrar" className="w-8 h-8 rounded-full flex items-center justify-center text-[#424754] hover:bg-white transition-colors">
+                    <span className="material-symbols-outlined text-[20px]">close</span>
+                  </button>
+                </div>
+            <form onSubmit={handleAddStoreProduct} className="space-y-3 p-5">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[10px] font-bold text-[#545f73] mb-1">Nombre</label>
@@ -2887,7 +2908,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                     {/* Las de la tienda; si aún no tiene (tiendas creadas antes), las de su plantilla. */}
                     {(stores[productsStoreSlug ?? '']?.categories?.length
                       ? stores[productsStoreSlug ?? ''].categories
-                      : getTemplate(stores[productsStoreSlug ?? '']?.template as string)?.categories ?? []
+                      : categoriasDePlantilla(stores[productsStoreSlug ?? '']?.template as string, catsPlantilla)
                     ).map((c: { name: string; href: string }) => (
                       <option key={c.href} value={c.name}>{c.name}</option>
                     ))}
@@ -2972,6 +2993,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                 </button>
               </div>
             </form>
+              </div>
+            </div>
             )}
 
             {/* Lista de productos ya cargados */}
