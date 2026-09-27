@@ -84,32 +84,26 @@ export default function MenuDirectoTemplate({ store }: Props) {
               <StoreFloatingActions store={store} />
             </section>
 
-            <section className="px-5 md:px-6">
-              <div className="pt-4 px-1">
-                <h1 className="font-black text-2xl md:text-4xl uppercase italic leading-tight" style={{ color: t.onBackground }}>
-                  {store.name}
-                </h1>
-                <p className={`${TXT.body} font-medium mt-1`} style={{ color: t.onSurfaceVariant }}>
-                  {store.tagline || 'Directo de la brasa a tu mesa'}
-                </p>
-                {(store.zona || store.horario) && (
-                  <div className={`flex items-center gap-4 mt-3 ${TXT.micro} font-semibold`} style={{ color: t.onSurfaceVariant }}>
-                    {store.zona && (
-                      <span className="flex items-center gap-1">
-                        <span className={`material-symbols-outlined ${ICON.xs}`}>location_on</span>
-                        {store.zona}
-                      </span>
-                    )}
-                    {store.horario && (
-                      <span className="flex items-center gap-1">
-                        <span className={`material-symbols-outlined ${ICON.xs}`}>schedule</span>
-                        {store.horario}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </section>
+            {/* El nombre y el lema ya salen en el encabezado (StoreHeader, que trae el h1): aquí no se repiten.
+                Solo queda la ubicación y el horario, si la tienda los cargó. */}
+            {(store.zona || store.horario) && (
+              <section className="px-5 md:px-6">
+                <div className={`pt-4 px-1 flex items-center gap-4 ${TXT.micro} font-semibold`} style={{ color: t.onSurfaceVariant }}>
+                  {store.zona && (
+                    <span className="flex items-center gap-1">
+                      <span className={`material-symbols-outlined ${ICON.xs}`}>location_on</span>
+                      {store.zona}
+                    </span>
+                  )}
+                  {store.horario && (
+                    <span className="flex items-center gap-1">
+                      <span className={`material-symbols-outlined ${ICON.xs}`}>schedule</span>
+                      {store.horario}
+                    </span>
+                  )}
+                </div>
+              </section>
+            )}
 
             <CategoryChips
               t={t}
