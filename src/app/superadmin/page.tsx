@@ -721,6 +721,20 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     setShowStoreModal(true);
   };
 
+  // Pausar/activar una tienda sin abrir el modal completo de edición: antes
+  // solo se podía desde ahí, con el checkbox "activa" enterrado en el formulario.
+  const [togglingStoreSlug, setTogglingStoreSlug] = useState<string | null>(null);
+  const handleTogglePausaTienda = async (store: any) => {
+    const id = storeIds[store.slug];
+    if (!id) return;
+    const activaAhora = !!activeStores[store.slug];
+    setTogglingStoreSlug(store.slug);
+    const { error } = await supabase.from('stores').update({ status: activaAhora ? 'inactive' : 'active' }).eq('id', id);
+    setTogglingStoreSlug(null);
+    if (error) { alert('No se pudo cambiar el estado de la tienda: ' + error.message); return; }
+    setActiveStores((prev) => ({ ...prev, [store.slug]: !activaAhora }));
+  };
+
   const handleOpenEditStore = (store: any) => {
     const slug = store.slug;
     setEditingStore({ ...store, id: storeIds[slug] });
@@ -1407,9 +1421,19 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                             </td>
                             <td className="px-5 py-3 text-right">
                               <div className="flex items-center justify-end gap-1.5">
-                                <Link 
+                                <button
+                                  onClick={() => handleTogglePausaTienda(store)}
+                                  disabled={togglingStoreSlug === store.slug}
+                                  className={`material-symbols-outlined text-[18px] transition-colors p-1 rounded disabled:opacity-50 ${
+                                    storeOn ? 'text-[#545f73] hover:text-red-600 hover:bg-red-50' : 'text-[#545f73] hover:text-emerald-600 hover:bg-emerald-50'
+                                  }`}
+                                  title={storeOn ? 'Pausar Tienda' : 'Activar Tienda'}
+                                >
+                                  {storeOn ? 'pause_circle' : 'play_circle'}
+                                </button>
+                                <Link
                                   href={`/${store.slug}`}
-                                  target="_blank" 
+                                  target="_blank"
                                   className="material-symbols-outlined text-[18px] text-[#545f73] hover:text-[#0058be] transition-colors p-1 hover:bg-[#e6e7f2] rounded"
                                   title="Ver Tienda Pública"
                                 >
