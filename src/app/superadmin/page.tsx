@@ -161,7 +161,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   const [productsStoreSlug, setProductsStoreSlug] = useState<string | null>(null);
   const [storeProductsList, setStoreProductsList] = useState<any[]>([]);
   const [isLoadingStoreProducts, setIsLoadingStoreProducts] = useState(false);
-  const [newStoreProduct, setNewStoreProduct] = useState({ name: '', price: '', category: '', subcategory: '', desc: '', presentaciones: [] as FilaPresentacion[] });
+  const [newStoreProduct, setNewStoreProduct] = useState({ name: '', price: '', category: '', subcategory: '', desc: '', presentaciones: [] as FilaPresentacion[], esServicio: false });
   // Sección de presentaciones abierta a mano (en plantillas por peso ya viene abierta).
   const [presAbiertas, setPresAbiertas] = useState(false);
   // Categorías por defecto que el superadmin personalizó por plantilla (lib/plantillaCategorias.ts); sin ellas valen las del código.
@@ -202,7 +202,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     setEditingStoreProductImage(null);
     setShowStoreProductForm(false);
     setStoreProductSearch('');
-    setNewStoreProduct({ name: '', price: '', category: '', subcategory: '', desc: '', presentaciones: [] });
+    setNewStoreProduct({ name: '', price: '', category: '', subcategory: '', desc: '', presentaciones: [], esServicio: false });
     setPresAbiertas(false);
     setNewStoreProductFile(null);
     setStoreProductPreview(null);
@@ -224,6 +224,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       subcategory: p.subcategory || '',
       desc: p.description || '',
       presentaciones: leerPresentaciones(p.presentaciones).map((x) => ({ label: x.label, price: String(x.price) })),
+      esServicio: p.es_servicio === true,
     });
     setNewStoreProductFile(null);
     setStoreProductPreview(p.image || null);
@@ -233,7 +234,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     setShowStoreProductForm(false);
     setEditingStoreProductId(null);
     setEditingStoreProductImage(null);
-    setNewStoreProduct({ name: '', price: '', category: '', subcategory: '', desc: '', presentaciones: [] });
+    setNewStoreProduct({ name: '', price: '', category: '', subcategory: '', desc: '', presentaciones: [], esServicio: false });
     setPresAbiertas(false);
     setNewStoreProductFile(null);
     setStoreProductPreview(null);
@@ -255,6 +256,10 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     const camposPres = pres.length || leerPresentaciones(productoPrevio?.presentaciones).length
       ? { presentaciones: pres.length ? pres : null }
       : {};
+    // La columna solo se manda si está marcado o si el producto ya la tenía (para poder destildarla).
+    const camposServicio = newStoreProduct.esServicio || productoPrevio?.es_servicio
+      ? { es_servicio: newStoreProduct.esServicio }
+      : {};
     if (!newStoreProductFile && !editingStoreProductId) {
       alert('Selecciona una foto para el producto.');
       return;
@@ -273,6 +278,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
           image: imageUrl,
           description: newStoreProduct.desc || null,
           ...camposPres,
+          ...camposServicio,
         };
         const { error } = await supabase.from('products').update(cambios).eq('id', editingStoreProductId);
         if (error) throw error;
@@ -291,13 +297,14 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         image: imageUrl,
         description: newStoreProduct.desc || null,
         ...camposPres,
+        ...camposServicio,
         stock: null,
         status: 'Activo',
       }]).select();
       if (error) throw error;
       setStoreProductsList(prev => [...(data || []), ...prev]);
       refrescarTienda(productsStoreSlug);
-      setNewStoreProduct({ name: '', price: '', category: '', subcategory: '', desc: '', presentaciones: [] });
+      setNewStoreProduct({ name: '', price: '', category: '', subcategory: '', desc: '', presentaciones: [], esServicio: false });
     setPresAbiertas(false);
       setNewStoreProductFile(null);
       setStoreProductPreview(null);
@@ -2995,6 +3002,18 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                   />
                 </div>
               </div>
+              <label className="flex items-center gap-2.5 rounded-lg border border-dashed border-[#c2c6d6] bg-[#f8fafc] px-3 py-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={newStoreProduct.esServicio}
+                  onChange={(e) => setNewStoreProduct(prev => ({ ...prev, esServicio: e.target.checked }))}
+                  className="w-4 h-4 accent-[#0058be] shrink-0"
+                />
+                <span>
+                  <span className="block text-xs font-bold text-[#191b23]">Es un servicio, no un producto</span>
+                  <span className="block text-[10px] text-[#727785] font-semibold">Ej. un corte, una consulta, una reserva. Aparece marcado como servicio en su tienda y en BogaHub.</span>
+                </span>
+              </label>
               <div>
                 <label className="block text-[10px] font-bold text-[#545f73] mb-1">Descripción (opcional)</label>
                 <textarea
