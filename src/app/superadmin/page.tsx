@@ -2896,11 +2896,26 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                     <span className="material-symbols-outlined text-[18px] text-[#0058be]">{editingStoreProductId ? 'edit' : 'add_box'}</span>
                     {editingStoreProductId ? 'Editando producto' : 'Nuevo producto'}
                   </p>
-                  <button type="button" onClick={handleCancelEditStoreProduct} aria-label="Cerrar" className="md:hidden w-8 h-8 rounded-full flex items-center justify-center text-[#424754] hover:bg-white transition-colors">
-                    <span className="material-symbols-outlined text-[20px]">close</span>
-                  </button>
+                  {/* Acciones arriba y fijas: no hace falta bajar hasta el final del formulario (el submit apunta al form por su id). */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={handleCancelEditStoreProduct}
+                      className="px-3 py-2 border border-[#c2c6d6] bg-white text-[#424754] rounded-md font-bold text-xs hover:bg-[#f2f3fd] transition-colors"
+                    >
+                      {editingStoreProductId ? 'Cancelar' : 'Cerrar'}
+                    </button>
+                    <button
+                      type="submit"
+                      form="form-producto-tienda"
+                      disabled={isSavingStoreProduct}
+                      className="px-4 py-2 bg-[#0058be] text-white rounded-md font-bold text-xs hover:bg-[#004395] transition-colors disabled:opacity-50"
+                    >
+                      {isSavingStoreProduct ? 'Guardando…' : editingStoreProductId ? 'Guardar' : 'Agregar'}
+                    </button>
+                  </div>
                 </div>
-            <form onSubmit={handleAddStoreProduct} className="space-y-3 p-5">
+            <form id="form-producto-tienda" onSubmit={handleAddStoreProduct} className="space-y-3 p-5">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[10px] font-bold text-[#545f73] mb-1">Nombre</label>
@@ -3028,25 +3043,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                   </label>
                 );
               })()}
-              <div className="flex items-center gap-3">
-                <p className="text-[10px] text-[#727785] font-semibold flex-1">{editingStoreProductId ? 'Toca la foto para cambiarla (opcional).' : 'Foto del producto (obligatoria).'}</p>
-                {(
-                  <button
-                    type="button"
-                    onClick={handleCancelEditStoreProduct}
-                    className="px-3 py-2.5 border border-[#c2c6d6] text-[#424754] rounded-md font-bold text-xs hover:bg-[#f2f3fd] transition-colors shrink-0"
-                  >
-                    {editingStoreProductId ? 'Cancelar' : 'Cerrar'}
-                  </button>
-                )}
-                <button
-                  type="submit"
-                  disabled={isSavingStoreProduct}
-                  className="px-4 py-2.5 bg-[#0058be] text-white rounded-md font-bold text-xs hover:bg-[#004395] transition-colors disabled:opacity-50 shrink-0"
-                >
-                  {isSavingStoreProduct ? 'Guardando…' : editingStoreProductId ? 'Guardar' : 'Agregar'}
-                </button>
-              </div>
+              <p className="text-[10px] text-[#727785] font-semibold">{editingStoreProductId ? 'Toca la foto para cambiarla (opcional).' : 'Foto del producto (obligatoria). Los botones para agregar están arriba.'}</p>
             </form>
               </div>
             </div>
