@@ -403,10 +403,10 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       direccion: storeForm.direccion || undefined,
       horario: storeForm.horario || undefined,
       rating: storeForm.rating !== '' ? Number(storeForm.rating) : undefined,
-      // Igual que la tienda real (show_demo_products = false por defecto): los productos de ejemplo NO salen solos.
-      // Entran únicamente cuando se activa "Productos Demo" (se guardan como productos de la tienda). Sin este
-      // valor la plantilla asumía "mostrar demo" en cualquier tienda vacía y la vista previa enseñaba platos falsos.
-      showDemoProducts: false,
+      // Solo en ESTA vista previa (donde armamos la tienda) se muestran los productos de ejemplo de la plantilla:
+      // ayudan a ver cómo quedan las tarjetas. En cuanto la tienda tiene productos propios, la plantilla los
+      // reemplaza sola (lib/demo.ts). La tienda pública real no los muestra nunca (show_demo_products = false).
+      showDemoProducts: true,
       theme: previewTheme,
       categories: existingStoreObj.categories || [
         { name: 'Entradas', icon: 'restaurant', href: '#entradas' },
