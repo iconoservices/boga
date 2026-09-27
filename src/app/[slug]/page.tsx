@@ -172,6 +172,10 @@ export async function generateMetadata({ params }: Omit<Props, 'searchParams'>) 
         { url: store.subdominioActivo ? iconUrl : '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
       ],
     },
+    // Nombre en el inicio del iPhone: con subdominio propio es SU app, con su nombre (si no, queda "BogaHub", el del layout).
+    ...(store.subdominioActivo
+      ? { applicationName: store.name, appleWebApp: { capable: true, statusBarStyle: 'default' as const, title: store.name.slice(0, 20) } }
+      : {}),
   };
 }
 
