@@ -596,7 +596,11 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
             mergedIds[slug] = dbStore.id;
             mergedOwners[slug] = dbStore.user_id || null;
             const dbTheme = dbStore.theme || {};
-            const location = dbTheme.location || 'Ecosistema, Global';
+            // Sin fallback acá: si no está seteada, se queda vacía de verdad. Antes
+            // se rellenaba con el texto "Ecosistema, Global" para mostrar algo en la
+            // tabla, pero ese mismo string terminaba pegado en el formulario de
+            // editar como si fuera el valor real, y se podía guardar por error.
+            const location = dbTheme.location || '';
             const emoji = dbTheme.emoji || '🏪';
             const tier = dbTheme.tier || 'Basic Tier';
 
@@ -1359,7 +1363,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                         if (!store.tagline) missingFields.push({ field: 'tagline', label: 'Frase corta / tagline' });
                         if (!store.marketplaceCategory || store.marketplaceCategory === 'General') missingFields.push({ field: 'categoría', label: 'Categoría en el marketplace' });
                         if (!store.template || store.template === 'default') missingFields.push({ field: 'template', label: 'Plantilla visual (usa default)' });
-                        if (details.location === '—') missingFields.push({ field: 'location', label: 'Ubicación / dirección' });
+                        if (!details.location || details.location === '—') missingFields.push({ field: 'location', label: 'Ubicación / dirección' });
                         const isIncomplete = missingFields.length > 0;
 
                         let tierBadgeClass = "bg-[#e0e3e5] text-[#444749]";
@@ -1399,7 +1403,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                                 : <span className="text-amber-600 italic text-[10px] font-semibold">Sin categoría</span>}
                             </td>
                             <td className="px-5 py-3 text-xs text-[#191b23] font-medium">
-                              {details.location !== '—' ? details.location : <span className="text-[#727785] italic text-[10px]">Sin ubicación</span>}
+                              {details.location && details.location !== '—' ? details.location : <span className="text-[#727785] italic text-[10px]">Sin ubicación</span>}
                             </td>
                             <td className="px-5 py-3">
                               <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-tight ${tierBadgeClass}`}>
@@ -3106,7 +3110,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         { ok: !!ds.tagline,      label: 'Frase corta (tagline)', hint: 'Una frase breve que describa tu negocio' },
         { ok: !!(ds.marketplaceCategory && ds.marketplaceCategory !== 'General'), label: 'Categoría en marketplace', hint: 'Elige una categoría específica para aparecer en explorar' },
         { ok: !!(ds.template && ds.template !== 'default'), label: 'Plantilla visual',  hint: 'Selecciona una plantilla que no sea "default" para personalizar' },
-        { ok: dDetails.location !== '—', label: 'Ubicación / dirección', hint: 'Indica la ubicación física de tu tienda' },
+        { ok: !!dDetails.location && dDetails.location !== '—', label: 'Ubicación / dirección', hint: 'Indica la ubicación física de tu tienda' },
       ];
       const missingCount = issues.filter(i => !i.ok).length;
       return (
