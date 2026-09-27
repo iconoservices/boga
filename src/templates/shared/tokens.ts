@@ -33,6 +33,8 @@ export const estrellasDe = (rating: number) => ({
 export const inicialesDe = (nombre: string) =>
   nombre.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
 
+import type { Presentacion } from '@/lib/presentaciones';
+
 export interface Producto {
   id: string;
   name: string;
@@ -46,6 +48,8 @@ export interface Producto {
   image: string;
   /** Datos propios del rubro, sacados de columnas que ya existen (terrenos: area = subcategory). */
   extra?: Record<string, string>;
+  /** Medidas o tamaños con su precio (100 g / 250 g / 1 kg…). Sin lista, el producto tiene un solo precio. Ver lib/presentaciones.ts. */
+  presentaciones?: Presentacion[];
 }
 
 export interface Categoria {

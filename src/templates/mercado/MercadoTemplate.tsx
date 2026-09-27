@@ -1,104 +1,50 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { pedirDatosCliente } from '@/components/pedirDatosCliente';
 import { StoreConfig } from '@/lib/stores.config';
-import { fetchProductosDeTienda } from '@/lib/catalogo';
-import { getDemoProducts } from '@/lib/templates.config';
-import { debeMostrarDemo } from '@/lib/demo';
 import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
-import { iconForCategory } from '@/templates/shared/tokens';
-import { claveLinea, nombreConPresentacion, type Presentacion } from '@/lib/presentaciones';
+import { useCatalogo } from '@/templates/shared/useCatalogo';
+import { AddedToast } from '@/templates/shared/AddFeedback';
+import { ProductModal, CartPanel, ContactPanel, BottomNav } from '@/templates/shared/CatalogoUI';
+import type { Producto } from '@/templates/shared/tokens';
 
 interface MercadoTemplateProps {
   store: StoreConfig;
 }
 
-interface Producto {
-  /** Precio normal si el producto está en oferta (`price` ya es el de oferta). */
-  priceAnterior?: number;
-  id: string;
-  name: string;
-  price: number;
-  category: string;
-  image: string;
-  description: string;
-  /** Medidas o tamaños con su precio (ej. 100 g / 250 g / 1 kg). Sin lista, el producto tiene un solo precio. */
-  presentaciones?: Presentacion[];
-}
-
-/** Una línea del carrito: el mismo producto en dos medidas distintas son dos líneas. */
-interface Linea { producto: Producto; cantidad: number; pres?: Presentacion }
-const precioLinea = (l: Linea) => l.pres?.price ?? l.producto.price;
-const claveDe = (l: Linea) => claveLinea(l.producto.id, l.pres?.label);
+type Pestana = 'inicio' | 'pedidos' | 'contacto';
 
 /**
  * Plantilla "Mercado": toma el lenguaje visual del marketplace de BogaHub
  * (banners, grilla de categorias, secciones de productos) pero muestra el
  * catalogo de UNA sola tienda. Pensada para clientes con catalogo grande:
- * minimarket, ferreteria, farmacia, distribuidora.
+ * minimarket, ferreteria, farmacia, distribuidora y venta por peso (plantilla "condimentos").
+ *
+ * El diseño es propio; la LOGICA (catalogo, carrito, medidas/presentaciones, pedido por WhatsApp o pago online,
+ * contacto) es la del motor compartido de las demas plantillas (templates/shared): producto a pantalla completa
+ * con selector de medida, resumen del pedido con datos de entrega y barra inferior tipo app.
  */
 export default function MercadoTemplate({ store }: MercadoTemplateProps) {
   const t = store.theme;
-  const demoPermitido = store.showDemoProducts === true;
+  const c = useCatalogo(store);
 
-  const [productos, setProductos] = useState<Producto[]>([]);
-  const [cargando, setCargando] = useState(true);
-  const [categoriaActiva, setCategoriaActiva] = useState('todas');
+  const [pestana, setPestana] = useState<Pestana>('inicio');
   const [busqueda, setBusqueda] = useState('');
-  const [carrito, setCarrito] = useState<Linea[]>([]);
-  // Producto con presentaciones cuyo selector de medida está abierto.
-  const [eligiendo, setEligiendo] = useState<Producto | null>(null);
-  const [carritoAbierto, setCarritoAbierto] = useState(false);
+  const [detalle, setDetalle] = useState<Producto | null>(null);
   const [agregados, setAgregados] = useState<Record<string, boolean>>({});
 
-  // ── Carga de productos de esta tienda ──
-  // Los productos demo de la plantilla solo se suman si la tienda todavia esta
-  // vacia; la decision viaja en los datos de la tienda, no en localStorage.
-  useEffect(() => {
-    const cargar = async () => {
-      const data = await fetchProductosDeTienda(store.slug);
-      const error = null;
-
-      const deLaBase: Producto[] = data && !error
-        ? data.map((p) => ({
-            id: String(p.id),
-            name: p.name,
-            price: Number(p.price) || 0,
-            priceAnterior: Number(p.price_anterior) > 0 ? Number(p.price_anterior) : undefined,
-            category: (p.category || 'General').toLowerCase(),
-            image: p.image || store.heroImage,
-            description: p.description || '',
-            presentaciones: Array.isArray(p.presentaciones) && p.presentaciones.length ? p.presentaciones : undefined,
-          }))
-        : [];
-
-      // Los demo solo entran si la tienda esta vacia (ver lib/demo.ts).
-      const demo: Producto[] = debeMostrarDemo({ showDemoProducts: demoPermitido }, deLaBase.length)
-        ? getDemoProducts(store.template).map((p, i) => ({
-            id: `demo-${i}`,
-            name: p.name,
-            price: p.price,
-            category: p.category.toLowerCase(),
-            image: p.image,
-            description: p.description || '',
-            presentaciones: p.presentaciones,
-          }))
-        : [];
-
-      setProductos([...deLaBase, ...demo]);
-      setCargando(false);
-    };
-    cargar();
-  }, [store.slug, store.template, store.heroImage, demoPermitido]);
+  const irA = (p: Pestana) => {
+    setPestana(p);
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // ── Banners: se arman con las mejores imagenes del catalogo ──
   const banners = React.useMemo(() => {
     const base = [
       { titulo1: 'BIENVENIDO A', titulo2: store.name.toUpperCase(), sub: store.tagline || 'Todo lo que necesitas, en un solo lugar', img: store.heroImage },
     ];
-    productos.slice(0, 2).forEach((p) => {
+    c.products.slice(0, 2).forEach((p) => {
       base.push({
         titulo1: 'DESTACADO',
         titulo2: p.name.toUpperCase().slice(0, 22),
@@ -107,7 +53,7 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
       });
     });
     return base;
-  }, [productos, store.name, store.tagline, store.heroImage]);
+  }, [c.products, store.name, store.tagline, store.heroImage]);
 
   const sliderRef = useRef<HTMLDivElement>(null);
   const [bannerIdx, setBannerIdx] = useState(0);
@@ -122,12 +68,12 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
   }, []);
 
   useEffect(() => {
-    if (banners.length < 2) return;
+    if (pestana !== 'inicio' || banners.length < 2) return;
     const id = setInterval(() => {
       irABanner((bannerIdxRef.current + 1) % banners.length);
     }, 5000);
     return () => clearInterval(id);
-  }, [irABanner, banners.length]);
+  }, [irABanner, banners.length, pestana]);
 
   useEffect(() => {
     const slider = sliderRef.current;
@@ -150,69 +96,19 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
     };
     slider.addEventListener('scroll', onScroll, { passive: true });
     return () => slider.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [pestana]);
 
-  // ── Categorias: las de la tienda, o las que se deducen del catalogo ──
-  const categorias = React.useMemo(() => {
-    if (store.categories?.length) {
-      return store.categories.map((c) => ({
-        id: c.name.toLowerCase(),
-        nombre: c.name,
-        // 'category' es el icono generico que se guardaba antes por defecto
-        // para toda categoria nueva; se recalcula para no dejarlo pegado.
-        icono: c.icon && c.icon !== 'category' ? c.icon : iconForCategory(c.name),
-      }));
-    }
-    const vistas = new Map<string, string>();
-    productos.forEach((p) => {
-      if (!vistas.has(p.category)) vistas.set(p.category, p.category);
-    });
-    return [...vistas.keys()].map((c) => ({ id: c, nombre: c.charAt(0).toUpperCase() + c.slice(1), icono: iconForCategory(c) }));
-  }, [store.categories, productos]);
+  // Categorias (las de la tienda, o las que se deducen del catalogo) y filtro por categoria + busqueda.
+  const categorias = c.categoriasEfectivas;
+  const filtrados = c.filtered.filter((p) => p.name.toLowerCase().includes(busqueda.toLowerCase()));
+  const nombreCategoria = (id: string) => categorias.find((x) => x.id === id)?.label ?? id;
 
-  const filtrados = productos.filter((p) => {
-    const coincideCat = categoriaActiva === 'todas' || p.category === categoriaActiva;
-    const coincideBusq = p.name.toLowerCase().includes(busqueda.toLowerCase());
-    return coincideCat && coincideBusq;
-  });
-
-  // ── Carrito ──
-  const agregar = (producto: Producto, pres?: Presentacion) => {
-    // Con presentaciones, primero se elige la medida.
-    if (producto.presentaciones?.length && !pres) { setEligiendo(producto); return; }
-    const clave = claveLinea(producto.id, pres?.label);
-    setCarrito((prev) => {
-      const existe = prev.find((i) => claveDe(i) === clave);
-      if (existe) {
-        return prev.map((i) => (claveDe(i) === clave ? { ...i, cantidad: i.cantidad + 1 } : i));
-      }
-      return [...prev, { producto, cantidad: 1, pres }];
-    });
-    setEligiendo(null);
-    setAgregados((prev) => ({ ...prev, [producto.id]: true }));
-    setTimeout(() => setAgregados((prev) => ({ ...prev, [producto.id]: false })), 1000);
-  };
-
-  const cambiarCantidad = (clave: string, delta: number) => {
-    setCarrito((prev) =>
-      prev
-        .map((i) => (claveDe(i) === clave ? { ...i, cantidad: i.cantidad + delta } : i))
-        .filter((i) => i.cantidad > 0)
-    );
-  };
-
-  const total = carrito.reduce((acc, i) => acc + precioLinea(i) * i.cantidad, 0);
-  const unidades = carrito.reduce((acc, i) => acc + i.cantidad, 0);
-
-  const enviarPorWhatsApp = async () => {
-    const cliente = await pedirDatosCliente({ color: store.theme.primary });
-    if (!cliente) return;
-    const lineas = carrito.map((i) => `- ${i.pres ? nombreConPresentacion(i.producto.name, i.pres.label) : i.producto.name} (x${i.cantidad}): S/ ${(precioLinea(i) * i.cantidad).toFixed(2)}`).join('\n');
-    enviarPedidoPorWhatsApp(
-      store,
-      `*Pedido de ${store.name}*\n-------------------------\n${lineas}\n-------------------------\n*Total:* S/ ${total.toFixed(2)}\n*Cliente:* ${cliente.nombre} (${cliente.telefono})`,
-      { items: carrito.map((i) => ({ id: String(i.producto.id), quantity: i.cantidad, pres: i.pres?.label })), cliente },
-    );
+  // "+" de la tarjeta: con medidas (100 g / 250 g / 1 kg) abre el producto para elegir; sin medidas agrega directo.
+  const agregarRapido = (p: Producto) => {
+    if (p.presentaciones?.length) { setDetalle(p); return; }
+    c.addToCart(p);
+    setAgregados((prev) => ({ ...prev, [p.id]: true }));
+    setTimeout(() => setAgregados((prev) => ({ ...prev, [p.id]: false })), 1000);
   };
 
   const iniciales = store.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
@@ -226,7 +122,7 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
       <header className="sticky top-0 z-40 shadow-sm" style={{ background: t.surface }}>
         <div className="max-w-[1440px] mx-auto px-4 lg:px-6 py-3 flex flex-col gap-3">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5 min-w-0">
+            <button onClick={() => irA('inicio')} className="flex items-center gap-2.5 min-w-0 text-left" aria-label="Ir al inicio">
               {store.logoImage ? (
                 <img src={store.logoImage} alt={store.name} className="w-10 h-10 rounded-lg object-cover shrink-0" />
               ) : (
@@ -238,310 +134,287 @@ export default function MercadoTemplate({ store }: MercadoTemplateProps) {
                 <h1 className="font-bold text-base leading-tight truncate" style={{ fontFamily: t.fontHeadline }}>{store.name}</h1>
                 <p className="text-[11px] truncate" style={{ color: t.onSurfaceVariant }}>{store.tagline}</p>
               </div>
-            </div>
-
-            <button
-              onClick={() => setCarritoAbierto(true)}
-              className="relative w-10 h-10 rounded-lg flex items-center justify-center shrink-0 active:scale-90 transition-transform"
-              style={{ background: t.surfaceContainer }}
-              aria-label="Ver carrito"
-            >
-              <span className="material-symbols-outlined text-[20px]">shopping_cart</span>
-              {unidades > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center" style={{ background: t.primary, color: t.onPrimary }}>
-                  {unidades}
-                </span>
-              )}
             </button>
+
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Escritorio: pestañas en el encabezado (en celular van abajo, tipo app) */}
+              <nav className="hidden md:flex items-center gap-1 mr-1">
+                {([['inicio', 'Inicio'], ['pedidos', 'Pedidos'], ['contacto', 'Contacto']] as [Pestana, string][]).map(([id, label]) => (
+                  <button
+                    key={id}
+                    onClick={() => irA(id)}
+                    className="px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors"
+                    style={{ background: pestana === id ? t.surfaceContainer : 'transparent', color: pestana === id ? t.primary : t.onSurfaceVariant }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </nav>
+              <button
+                onClick={() => irA('pedidos')}
+                className="relative w-10 h-10 rounded-lg flex items-center justify-center active:scale-90 transition-transform"
+                style={{ background: t.surfaceContainer }}
+                aria-label="Ver mi pedido"
+              >
+                <span className="material-symbols-outlined text-[20px]">shopping_cart</span>
+                {c.cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center" style={{ background: t.primary, color: t.onPrimary }}>
+                    {c.cartCount}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
 
-          <div className="relative">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[20px]" style={{ color: t.onSurfaceVariant }}>search</span>
-            <input
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              placeholder="Busca lo que necesites..."
-              className="w-full pl-11 pr-4 py-2.5 rounded-lg text-sm outline-none"
-              style={{ background: t.surfaceContainerLow, color: t.onSurface, border: `1px solid ${t.outlineVariant}` }}
-            />
-          </div>
+          {pestana === 'inicio' && (
+            <div className="relative">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[20px]" style={{ color: t.onSurfaceVariant }}>search</span>
+              <input
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                placeholder="Busca lo que necesites..."
+                className="w-full pl-11 pr-4 py-2.5 rounded-lg text-sm outline-none"
+                style={{ background: t.surfaceContainerLow, color: t.onSurface, border: `1px solid ${t.outlineVariant}` }}
+              />
+            </div>
+          )}
         </div>
       </header>
 
       <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-6 mt-4 px-4 lg:px-6">
-        {/* ── BANNERS ── */}
-        <section className="relative">
-          {/* ── COMPARTIR / INSTALAR — solo sobre los banners, se va con el scroll ── */}
-          <StoreFloatingActions store={store} />
+        {pestana === 'inicio' && (
+          <>
+            {/* ── BANNERS ── */}
+            <section className="relative">
+              {/* ── COMPARTIR / INSTALAR — solo sobre los banners, se va con el scroll ── */}
+              <StoreFloatingActions store={store} />
 
-          <div
-            ref={sliderRef}
-            className="hide-scrollbar flex overflow-x-auto rounded-lg"
-            style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
-          >
-            {banners.map((b, i) => (
               <div
-                key={i}
-                className="relative aspect-[21/9] lg:aspect-[21/6] overflow-hidden shrink-0 w-full"
-                style={{ scrollSnapAlign: 'start', flex: '0 0 100%' }}
+                ref={sliderRef}
+                className="hide-scrollbar flex overflow-x-auto rounded-lg"
+                style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
               >
-                <img alt="" src={b.img} className="absolute inset-0 w-full h-full object-cover" />
-                <div className="absolute inset-0 flex flex-col justify-center p-6 lg:px-12" style={{ background: 'linear-gradient(to right, rgba(0,0,0,.78), rgba(0,0,0,.35), transparent)' }}>
-                  <span className="text-white/70 text-[10px] lg:text-xs font-bold tracking-widest uppercase">{b.titulo1}</span>
-                  <h2 className="text-white font-black text-xl lg:text-4xl leading-tight mt-1" style={{ fontFamily: t.fontHeadline }}>{b.titulo2}</h2>
-                  <p className="text-white/80 text-xs lg:text-base mt-1.5 max-w-md">{b.sub}</p>
-                </div>
+                {banners.map((b, i) => (
+                  <div
+                    key={i}
+                    className="relative aspect-[21/9] lg:aspect-[21/6] overflow-hidden shrink-0 w-full"
+                    style={{ scrollSnapAlign: 'start', flex: '0 0 100%' }}
+                  >
+                    <img alt="" src={b.img} className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 flex flex-col justify-center p-6 lg:px-12" style={{ background: 'linear-gradient(to right, rgba(0,0,0,.78), rgba(0,0,0,.35), transparent)' }}>
+                      <span className="text-white/70 text-[10px] lg:text-xs font-bold tracking-widest uppercase">{b.titulo1}</span>
+                      <h2 className="text-white font-black text-xl lg:text-4xl leading-tight mt-1" style={{ fontFamily: t.fontHeadline }}>{b.titulo2}</h2>
+                      <p className="text-white/80 text-xs lg:text-base mt-1.5 max-w-md">{b.sub}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          {banners.length > 1 && (
-            <div className="flex justify-center gap-1.5 mt-2">
-              {banners.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => irABanner(i)}
-                  aria-label={`Ir al banner ${i + 1}`}
-                  className="rounded-full transition-all duration-300"
-                  style={{
-                    width: bannerIdx === i ? 16 : 6,
-                    height: 6,
-                    background: bannerIdx === i ? t.primary : t.outlineVariant,
-                  }}
-                />
-              ))}
-            </div>
-          )}
-        </section>
+              {banners.length > 1 && (
+                <div className="flex justify-center gap-1.5 mt-2">
+                  {banners.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => irABanner(i)}
+                      aria-label={`Ir al banner ${i + 1}`}
+                      className="rounded-full transition-all duration-300"
+                      style={{
+                        width: bannerIdx === i ? 16 : 6,
+                        height: 6,
+                        background: bannerIdx === i ? t.primary : t.outlineVariant,
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
 
-        {/* ── CATEGORIAS ── */}
-        {categorias.length > 0 && (
-          <section className="flex flex-col gap-3">
-            <h3 className="font-bold text-lg" style={{ fontFamily: t.fontHeadline }}>Explorar Categorías</h3>
-            <div className="grid grid-cols-4 lg:grid-cols-8 gap-2">
-              <button
-                onClick={() => setCategoriaActiva('todas')}
-                aria-label="Ver todas las categorías"
-                aria-pressed={categoriaActiva === 'todas'}
-                className="flex flex-col items-center justify-center gap-1 py-2.5 px-1 rounded-lg transition-all active:scale-95"
-                style={{
-                  background: categoriaActiva === 'todas' ? t.primary : t.surface,
-                  color: categoriaActiva === 'todas' ? t.onPrimary : t.onSurface,
-                  border: `1px solid ${categoriaActiva === 'todas' ? t.primary : t.outlineVariant}`,
-                }}
-              >
-                <span className="material-symbols-outlined text-[22px]">grid_view</span>
-                <span className="text-[10px] font-semibold leading-tight text-center">Todas</span>
-              </button>
-
-              {categorias.map((c) => {
-                const activa = categoriaActiva === c.id;
-                return (
+            {/* ── CATEGORIAS ── */}
+            {categorias.length > 0 && (
+              <section className="flex flex-col gap-3">
+                <h3 className="font-bold text-lg" style={{ fontFamily: t.fontHeadline }}>Explorar Categorías</h3>
+                <div className="grid grid-cols-4 lg:grid-cols-8 gap-2">
                   <button
-                    key={c.id}
-                    onClick={() => setCategoriaActiva(c.id)}
-                    aria-label={`Filtrar por ${c.nombre}`}
-                    aria-pressed={activa}
+                    onClick={() => c.setActiveCategory('all')}
+                    aria-label="Ver todas las categorías"
+                    aria-pressed={c.activeCategory === 'all'}
                     className="flex flex-col items-center justify-center gap-1 py-2.5 px-1 rounded-lg transition-all active:scale-95"
                     style={{
-                      background: activa ? t.primary : t.surface,
-                      color: activa ? t.onPrimary : t.onSurface,
-                      border: `1px solid ${activa ? t.primary : t.outlineVariant}`,
+                      background: c.activeCategory === 'all' ? t.primary : t.surface,
+                      color: c.activeCategory === 'all' ? t.onPrimary : t.onSurface,
+                      border: `1px solid ${c.activeCategory === 'all' ? t.primary : t.outlineVariant}`,
                     }}
                   >
-                    {c.icono && <span className="material-symbols-outlined text-[22px]">{c.icono}</span>}
-                    <span className="text-[10px] font-semibold leading-tight text-center line-clamp-2">{c.nombre}</span>
+                    <span className="material-symbols-outlined text-[22px]">grid_view</span>
+                    <span className="text-[10px] font-semibold leading-tight text-center">Todas</span>
                   </button>
-                );
-              })}
-            </div>
-          </section>
-        )}
 
-        {/* ── PRODUCTOS ── */}
-        <section className="flex flex-col gap-3">
-          <div className="flex justify-between items-end">
-            <h3 className="font-bold text-lg" style={{ fontFamily: t.fontHeadline }}>
-              {categoriaActiva === 'todas' ? 'Recomendados para ti' : categorias.find((c) => c.id === categoriaActiva)?.nombre}
-            </h3>
-            <span className="text-xs" style={{ color: t.onSurfaceVariant }}>
-              {filtrados.length} {filtrados.length === 1 ? 'producto' : 'productos'}
-            </span>
-          </div>
-
-          {cargando ? (
-            <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="rounded-lg overflow-hidden animate-pulse" style={{ background: t.surfaceContainer }}>
-                  <div className="aspect-square" style={{ background: t.surfaceContainerHigh }} />
-                  <div className="p-3 flex flex-col gap-2">
-                    <div className="h-3 rounded w-3/4" style={{ background: t.surfaceContainerHigh }} />
-                    <div className="h-3 rounded w-1/2" style={{ background: t.surfaceContainerHigh }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : filtrados.length === 0 ? (
-            <div className="py-16 flex flex-col items-center gap-2 text-center">
-              <span className="material-symbols-outlined text-4xl" style={{ color: t.outlineVariant }}>inventory_2</span>
-              <p className="font-semibold" style={{ color: t.onSurfaceVariant }}>
-                {busqueda ? `Sin resultados para "${busqueda}"` : 'Todavía no hay productos en esta categoría'}
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-              {filtrados.map((p) => (
-                <article
-                  key={p.id}
-                  className="rounded-lg overflow-hidden flex flex-col group"
-                  style={{ background: t.surface, border: `1px solid ${t.outlineVariant}` }}
-                >
-                  <div className="relative aspect-square overflow-hidden p-3" style={{ background: t.surfaceContainerLow }}>
-                    <img
-                      src={p.image}
-                      alt={p.name}
-                      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-                  <div className="p-3 flex flex-col flex-1 justify-between gap-2">
-                    <div>
-                      <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: t.onSurfaceVariant }}>{p.category}</span>
-                      <h4 className="font-bold text-sm line-clamp-2 mt-0.5" style={{ fontFamily: t.fontHeadline }}>{p.name}</h4>
-                      {p.presentaciones && p.presentaciones.length > 0 && (
-                        <p className="text-[10px] mt-1 leading-tight" style={{ color: t.onSurfaceVariant }}>{p.presentaciones.map((x) => x.label).join(' · ')}</p>
-                      )}
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="font-black text-base" style={{ color: t.primary }}>{p.presentaciones?.length ? <span className="text-[10px] font-semibold mr-1" style={{ color: t.onSurfaceVariant }}>Desde</span> : null}S/ {p.price.toFixed(2)}{p.priceAnterior && <span className="ml-1.5 text-xs font-medium line-through" style={{ color: t.onSurfaceVariant }}>S/ {p.priceAnterior.toFixed(2)}</span>}</span>
+                  {categorias.map((cat) => {
+                    const activa = c.activeCategory === cat.id;
+                    return (
                       <button
-                        onClick={() => agregar(p)}
-                        aria-label={`Agregar ${p.name} al carrito`}
-                        className="w-8 h-8 rounded-full flex items-center justify-center shadow-sm transition-transform active:scale-90"
+                        key={cat.id}
+                        onClick={() => c.setActiveCategory(cat.id)}
+                        aria-label={`Filtrar por ${cat.label}`}
+                        aria-pressed={activa}
+                        className="flex flex-col items-center justify-center gap-1 py-2.5 px-1 rounded-lg transition-all active:scale-95"
                         style={{
-                          background: agregados[p.id] ? '#25D366' : t.primary,
-                          color: t.onPrimary,
-                          transform: agregados[p.id] ? 'scale(1.1)' : undefined,
+                          background: activa ? t.primary : t.surface,
+                          color: activa ? t.onPrimary : t.onSurface,
+                          border: `1px solid ${activa ? t.primary : t.outlineVariant}`,
                         }}
                       >
-                        <span className="material-symbols-outlined text-[18px]">{agregados[p.id] ? 'check' : 'add'}</span>
+                        {cat.icon && <span className="material-symbols-outlined text-[22px]">{cat.icon}</span>}
+                        <span className="text-[10px] font-semibold leading-tight text-center line-clamp-2">{cat.label}</span>
                       </button>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
+            {/* ── PRODUCTOS ── */}
+            <section className="flex flex-col gap-3">
+              <div className="flex justify-between items-end">
+                <h3 className="font-bold text-lg" style={{ fontFamily: t.fontHeadline }}>
+                  {c.activeCategory === 'all' ? 'Recomendados para ti' : nombreCategoria(c.activeCategory)}
+                </h3>
+                <span className="text-xs" style={{ color: t.onSurfaceVariant }}>
+                  {filtrados.length} {filtrados.length === 1 ? 'producto' : 'productos'}
+                </span>
+              </div>
+
+              {c.cargando ? (
+                <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <div key={i} className="rounded-lg overflow-hidden animate-pulse" style={{ background: t.surfaceContainer }}>
+                      <div className="aspect-square" style={{ background: t.surfaceContainerHigh }} />
+                      <div className="p-3 flex flex-col gap-2">
+                        <div className="h-3 rounded w-3/4" style={{ background: t.surfaceContainerHigh }} />
+                        <div className="h-3 rounded w-1/2" style={{ background: t.surfaceContainerHigh }} />
+                      </div>
                     </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
+                  ))}
+                </div>
+              ) : filtrados.length === 0 ? (
+                <div className="py-16 flex flex-col items-center gap-2 text-center">
+                  <span className="material-symbols-outlined text-4xl" style={{ color: t.outlineVariant }}>inventory_2</span>
+                  <p className="font-semibold" style={{ color: t.onSurfaceVariant }}>
+                    {busqueda ? `Sin resultados para "${busqueda}"` : 'Todavía no hay productos en esta categoría'}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                  {filtrados.map((p) => (
+                    <article
+                      key={p.id}
+                      onClick={() => setDetalle(p)}
+                      className="rounded-lg overflow-hidden flex flex-col group cursor-pointer"
+                      style={{ background: t.surface, border: `1px solid ${t.outlineVariant}` }}
+                    >
+                      <div className="relative aspect-square overflow-hidden p-3" style={{ background: t.surfaceContainerLow }}>
+                        <img
+                          src={p.image}
+                          alt={p.name}
+                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+                      <div className="p-3 flex flex-col flex-1 justify-between gap-2">
+                        <div>
+                          <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: t.onSurfaceVariant }}>{nombreCategoria(p.category)}</span>
+                          <h4 className="font-bold text-sm line-clamp-2 mt-0.5" style={{ fontFamily: t.fontHeadline }}>{p.name}</h4>
+                          {p.presentaciones && p.presentaciones.length > 0 && (
+                            <p className="text-[10px] mt-1 leading-tight" style={{ color: t.onSurfaceVariant }}>{p.presentaciones.map((x) => x.label).join(' · ')}</p>
+                          )}
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="font-black text-base" style={{ color: t.primary }}>
+                            {p.presentaciones?.length ? <span className="text-[10px] font-semibold mr-1" style={{ color: t.onSurfaceVariant }}>Desde</span> : null}
+                            S/ {p.price.toFixed(2)}
+                            {p.priceAnterior && <span className="ml-1.5 text-xs font-medium line-through" style={{ color: t.onSurfaceVariant }}>S/ {p.priceAnterior.toFixed(2)}</span>}
+                          </span>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); agregarRapido(p); }}
+                            aria-label={`Agregar ${p.name} al carrito`}
+                            className="w-8 h-8 rounded-full flex items-center justify-center shadow-sm transition-transform active:scale-90"
+                            style={{
+                              background: agregados[p.id] ? '#25D366' : t.primary,
+                              color: t.onPrimary,
+                              transform: agregados[p.id] ? 'scale(1.1)' : undefined,
+                            }}
+                          >
+                            <span className="material-symbols-outlined text-[18px]">{agregados[p.id] ? 'check' : 'add'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+          </>
+        )}
+
+        {/* ── PEDIDOS ── (resumen del pedido, datos de entrega y pago: la misma pantalla de las demás plantillas) */}
+        {pestana === 'pedidos' && (
+          <CartPanel
+            t={t}
+            cartItems={c.cartItems}
+            subtotal={c.subtotal}
+            onAdd={c.addToCart}
+            onRemove={c.removeFromCart}
+            onVaciar={c.vaciarCarrito}
+            onConfirmar={c.confirmarPedido}
+            pagoOnline={c.cobraOnline}
+            onPagarOnline={c.pagarOnline}
+            onIrAlMenu={() => irA('inicio')}
+            whatsappVisible={c.whatsappVisible}
+            catalogo
+          />
+        )}
+
+        {/* ── CONTACTO ── */}
+        {pestana === 'contacto' && (
+          <ContactPanel
+            t={t}
+            telefonoVisible={c.telefonoVisible}
+            direccionVisible={store.direccion}
+            horarioVisible={store.horario}
+            facebookVisible={store.facebook}
+            instagramVisible={store.instagram}
+            tiktokVisible={store.tiktok}
+            onEnviar={(d) =>
+              enviarPedidoPorWhatsApp(store, `Hola ${store.name}, soy ${d.nombre} (${d.telefono}).\n\n${d.mensaje}`)
+            }
+          />
+        )}
       </main>
 
-      {/* ── BARRA FIJA DE CARRITO ── */}
-      {unidades > 0 && !carritoAbierto && (
-        <button
-          onClick={() => setCarritoAbierto(true)}
-          className="fixed bottom-4 left-4 right-4 z-40 max-w-[1440px] mx-auto rounded-lg px-5 py-3.5 flex items-center justify-between shadow-2xl active:scale-[0.99] transition-transform"
-          style={{ background: t.primary, color: t.onPrimary }}
-        >
-          <span className="font-bold text-sm">Ver pedido ({unidades})</span>
-          <span className="font-black">S/ {total.toFixed(2)}</span>
-        </button>
-      )}
+      {/* ── AVISO "Agregado al pedido" ── */}
+      {pestana !== 'pedidos' && <AddedToast t={t} onVerPedido={() => irA('pedidos')} />}
 
-      {/* ── CARRITO ── */}
-      {carritoAbierto && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
-          <div className="absolute inset-0 bg-black/45 backdrop-blur-sm" onClick={() => setCarritoAbierto(false)} />
-          <div
-            className="relative w-full sm:max-w-md rounded-t-lg sm:rounded-lg overflow-hidden flex flex-col max-h-[85vh] shadow-2xl"
-            style={{ background: t.surface }}
-          >
-            <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${t.outlineVariant}` }}>
-              <h3 className="font-bold text-lg" style={{ fontFamily: t.fontHeadline }}>Tu pedido</h3>
-              <button onClick={() => setCarritoAbierto(false)} aria-label="Cerrar carrito" className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: t.surfaceContainer }}>
-                <span className="material-symbols-outlined text-[18px]">close</span>
-              </button>
-            </div>
+      {/* ── BARRA INFERIOR TIPO APP (celular) ── */}
+      <BottomNav
+        t={t}
+        tabs={[
+          { id: 'inicio', icon: 'home', label: 'Inicio' },
+          { id: 'pedidos', icon: 'shopping_cart', label: 'Pedidos' },
+          { id: 'contacto', icon: 'chat', label: 'Contacto' },
+        ]}
+        active={pestana}
+        onSelect={(id) => irA(id as Pestana)}
+        cartCount={c.cartCount}
+      />
 
-            <div className="flex-1 overflow-y-auto px-5 py-3 flex flex-col gap-3">
-              {carrito.length === 0 ? (
-                <p className="py-10 text-center text-sm" style={{ color: t.onSurfaceVariant }}>Tu carrito está vacío</p>
-              ) : (
-                carrito.map((i) => (
-                  <div key={claveDe(i)} className="flex items-center gap-3">
-                    <img src={i.producto.image} alt={i.producto.name} className="w-14 h-14 rounded-lg object-cover shrink-0" style={{ background: t.surfaceContainerLow }} />
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-sm truncate">{i.producto.name}{i.pres && <span className="font-medium" style={{ color: t.onSurfaceVariant }}> · {i.pres.label}</span>}</h4>
-                      <span className="font-bold text-sm" style={{ color: t.primary }}>S/ {(precioLinea(i) * i.cantidad).toFixed(2)}</span>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button onClick={() => cambiarCantidad(claveDe(i), -1)} aria-label="Quitar uno" className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: t.surfaceContainer }}>
-                        <span className="material-symbols-outlined text-[16px]">remove</span>
-                      </button>
-                      <span className="w-5 text-center font-bold text-sm">{i.cantidad}</span>
-                      <button onClick={() => cambiarCantidad(claveDe(i), 1)} aria-label="Agregar uno" className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: t.primary, color: t.onPrimary }}>
-                        <span className="material-symbols-outlined text-[16px]">add</span>
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {carrito.length > 0 && (
-              <div className="px-5 py-4 flex flex-col gap-3" style={{ borderTop: `1px solid ${t.outlineVariant}` }}>
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold" style={{ color: t.onSurfaceVariant }}>Total</span>
-                  <span className="font-black text-xl" style={{ color: t.primary }}>S/ {total.toFixed(2)}</span>
-                </div>
-                <button
-                  onClick={enviarPorWhatsApp}
-                  className="w-full py-3.5 rounded-lg font-bold flex items-center justify-center gap-2 active:scale-[0.99] transition-transform"
-                  style={{ background: '#25D366', color: '#ffffff' }}
-                >
-                  <span className="material-symbols-outlined text-[20px]">chat</span>
-                  Pedir por WhatsApp
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── ELEGIR MEDIDA (productos con presentaciones) ── */}
-      {eligiendo && (
-        <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center">
-          <div className="absolute inset-0 bg-black/45 backdrop-blur-sm" onClick={() => setEligiendo(null)} />
-          <div className="relative w-full sm:max-w-sm rounded-t-lg sm:rounded-lg overflow-hidden shadow-2xl" style={{ background: t.surface }}>
-            <div className="px-5 py-4 flex items-center gap-3" style={{ borderBottom: `1px solid ${t.outlineVariant}` }}>
-              <img src={eligiendo.image} alt="" className="w-12 h-12 rounded-lg object-cover shrink-0" style={{ background: t.surfaceContainerLow }} />
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-base leading-tight truncate" style={{ fontFamily: t.fontHeadline }}>{eligiendo.name}</h3>
-                <p className="text-xs" style={{ color: t.onSurfaceVariant }}>Elige la cantidad que necesitas</p>
-              </div>
-              <button onClick={() => setEligiendo(null)} aria-label="Cerrar" className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: t.surfaceContainer }}>
-                <span className="material-symbols-outlined text-[18px]">close</span>
-              </button>
-            </div>
-            <div className="p-4 flex flex-col gap-2">
-              {(eligiendo.presentaciones ?? []).map((x) => (
-                <button
-                  key={x.label}
-                  onClick={() => agregar(eligiendo, x)}
-                  className="flex items-center justify-between rounded-lg px-4 py-3 active:scale-[0.99] transition-transform"
-                  style={{ background: t.surfaceContainerLow, border: `1px solid ${t.outlineVariant}` }}
-                >
-                  <span className="font-bold text-sm">{x.label}</span>
-                  <span className="flex items-center gap-2">
-                    <span className="font-black" style={{ color: t.primary }}>S/ {x.price.toFixed(2)}</span>
-                    <span className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: t.primary, color: t.onPrimary }}>
-                      <span className="material-symbols-outlined text-[18px]">add</span>
-                    </span>
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* ── PRODUCTO A PANTALLA COMPLETA (con selector de medida si tiene presentaciones) ── */}
+      <ProductModal
+        t={t}
+        producto={detalle}
+        productos={c.products}
+        onSelect={setDetalle}
+        onClose={() => setDetalle(null)}
+        onAdd={c.addToCart}
+      />
     </div>
   );
 }

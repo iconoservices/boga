@@ -9,6 +9,10 @@ import { debeMostrarDemo } from '@/lib/demo';
 import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
 import { soles, iconForCategory, type Producto, type Categoria } from './tokens';
 import { avisarAgregado } from './AddFeedback';
+import { claveLinea, nombreConPresentacion, type Presentacion } from '@/lib/presentaciones';
+
+/** Una línea del carrito: el mismo producto en dos medidas distintas son dos líneas. */
+type LineaCarrito = { clave: string; producto: Producto; pres?: Presentacion; qty: number; precio: number };
 
 /**
  * El motor de las plantillas de comida: catalogo, categorias y carrito.
@@ -22,9 +26,11 @@ export function useCatalogo(store: StoreConfig) {
   const demoPermitido = store.showDemoProducts === true;
 
   const [products, setProducts] = useState<Producto[]>([]);
+  // Falso cuando ya llego la respuesta del catalogo (para mostrar esqueletos en vez de "sin productos" mientras carga).
+  const [cargando, setCargando] = useState(true);
   const [activeCategory, setActiveCategory] = useState('all');
-  // id del producto -> cantidad. Antes era un contador suelto y el resumen del
-  // pedido mostraba siempre el mismo plato sin importar que agregaras.
+  // clave de la linea -> cantidad. La clave es el id del producto, o "id|medida" si se pidio una presentacion
+  // (ver claveLinea). Antes era un contador suelto y el resumen del pedido mostraba siempre el mismo plato.
   const [cart, setCart] = useState<Record<string, number>>({});
 
   // Clave estable de las categorias: store.categories es un array nuevo en cada
@@ -56,6 +62,7 @@ export function useCatalogo(store: StoreConfig) {
             category: hrefDeCategoria(p.category),
             image: p.image || store.heroImage,
             extra: p.subcategory ? { area: String(p.subcategory) } : undefined,
+            presentaciones: Array.isArray(p.presentaciones) && p.presentaciones.length ? p.presentaciones : undefined,
           }))
         : [];
 
@@ -70,36 +77,49 @@ export function useCatalogo(store: StoreConfig) {
             category: hrefDeCategoria(p.category),
             image: p.image,
             extra: p.subcategory ? { area: String(p.subcategory) } : undefined,
+            presentaciones: p.presentaciones,
           }))
         : [];
 
       setProducts([...deLaBase, ...demo]);
+      setCargando(false);
     };
 
     cargar();
   }, [store.slug, store.template, store.heroImage, demoPermitido, categorias]);
 
   // ── Carrito derivado ──
-  const cartItems = useMemo(
-    () =>
-      Object.entries(cart)
-        .map(([id, qty]) => ({ producto: products.find((p) => p.id === id), qty }))
-        .filter((l): l is { producto: Producto; qty: number } => Boolean(l.producto)),
-    [cart, products]
-  );
+  const cartItems = useMemo<LineaCarrito[]>(() => {
+    const out: LineaCarrito[] = [];
+    for (const [clave, qty] of Object.entries(cart)) {
+      const corte = clave.indexOf('|');
+      const id = corte < 0 ? clave : clave.slice(0, corte);
+      const label = corte < 0 ? '' : clave.slice(corte + 1);
+      const producto = products.find((p) => p.id === id);
+      if (!producto) continue;
+      const pres = label ? producto.presentaciones?.find((x) => x.label === label) : undefined;
+      if (label && !pres) continue;   // la medida ya no existe: la linea se descarta
+      out.push({ clave, producto, pres, qty, precio: pres?.price ?? producto.price });
+    }
+    return out;
+  }, [cart, products]);
   const cartCount = cartItems.reduce((n, l) => n + l.qty, 0);
-  const subtotal = cartItems.reduce((n, l) => n + l.producto.price * l.qty, 0);
+  const subtotal = cartItems.reduce((n, l) => n + l.precio * l.qty, 0);
 
-  const addToCart = (p: Producto) => {
-    setCart((c) => ({ ...c, [p.id]: (c[p.id] ?? 0) + 1 }));
-    avisarAgregado(p.name);
+  // Con presentaciones, quien llama elige la medida (el modal del producto); si no llega ninguna, va la primera.
+  const addToCart = (p: Producto, pres?: Presentacion) => {
+    const medida = pres ?? p.presentaciones?.[0];
+    const clave = claveLinea(p.id, medida?.label);
+    setCart((c) => ({ ...c, [clave]: (c[clave] ?? 0) + 1 }));
+    avisarAgregado(medida ? nombreConPresentacion(p.name, medida.label) : p.name);
   };
-  const removeFromCart = (id: string) =>
+  // `clave` es el id del producto (igual que siempre) o, con presentacion, "id|medida".
+  const removeFromCart = (clave: string) =>
     setCart((c) => {
-      const qty = (c[id] ?? 0) - 1;
+      const qty = (c[clave] ?? 0) - 1;
       const next = { ...c };
-      if (qty <= 0) delete next[id];
-      else next[id] = qty;
+      if (qty <= 0) delete next[clave];
+      else next[clave] = qty;
       return next;
     });
   const vaciarCarrito = () => setCart({});
@@ -127,7 +147,7 @@ export function useCatalogo(store: StoreConfig) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           store: store.slug,
-          items: cartItems.map((l) => ({ id: l.producto.id, quantity: l.qty })),
+          items: cartItems.map((l) => ({ id: l.producto.id, quantity: l.qty, pres: l.pres?.label })),
           cliente: { nombre: datos.nombre, telefono: datos.telefono, entrega: datos.entrega, direccion: datos.direccion },
         }),
       });
@@ -153,7 +173,7 @@ export function useCatalogo(store: StoreConfig) {
 
   const confirmarPedido = (datos: { nombre: string; telefono: string; entrega: 'delivery' | 'recojo'; direccion: string }) => {
     const lineas = cartItems
-      .map((l) => `• ${l.qty}x ${l.producto.name} — ${soles(l.producto.price * l.qty)}`)
+      .map((l) => `• ${l.qty}x ${l.pres ? nombreConPresentacion(l.producto.name, l.pres.label) : l.producto.name} — ${soles(l.precio * l.qty)}`)
       .join('\n');
     const entregaTexto = datos.entrega === 'delivery'
       ? `Delivery a: ${datos.direccion}`
@@ -162,7 +182,7 @@ export function useCatalogo(store: StoreConfig) {
       store,
       `¡Hola ${store.name}! Soy ${datos.nombre} (${datos.telefono}). Quiero hacer este pedido:\n\n${lineas}\n\nTotal: ${soles(subtotal)}\n\n${entregaTexto}`,
       {
-        items: cartItems.map((l) => ({ id: l.producto.id, quantity: l.qty })),
+        items: cartItems.map((l) => ({ id: l.producto.id, quantity: l.qty, pres: l.pres?.label })),
         cliente: { nombre: datos.nombre, telefono: datos.telefono, entrega: datos.entrega, direccion: datos.direccion },
       },
     );
@@ -201,6 +221,7 @@ export function useCatalogo(store: StoreConfig) {
 
   return {
     products,
+    cargando,
     filtered,
     activeCategory,
     setActiveCategory,

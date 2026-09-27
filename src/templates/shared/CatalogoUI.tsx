@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import { guardarCliente, leerCliente, normalizarCelular } from '@/lib/cliente';
 import type { StoreTheme } from '@/lib/templates.config';
+import type { Presentacion } from '@/lib/presentaciones';
 import { TXT, ICON, soles, type Producto, type Categoria } from './tokens';
 import { AddButton, CartBadge, EVENTO_VER_PEDIDO } from './AddFeedback';
 
@@ -59,13 +60,15 @@ export function CategoryChips({
    ════════════════════════════════════════════ */
 
 export function ProductGrid({
-  t, productos, onSelect, onAdd, onVerTodo,
+  t, productos, onSelect, onAdd, onVerTodo, catalogo,
 }: {
   t: StoreTheme;
   productos: Producto[];
   onSelect: (p: Producto) => void;
   onAdd: (p: Producto) => void;
   onVerTodo?: () => void;
+  /** Tienda de catálogo (no de comida): cambia los textos de "platos" y "menú". */
+  catalogo?: boolean;
 }) {
   // Antes una categoria sin productos dejaba la pantalla en blanco.
   if (productos.length === 0) {
@@ -75,7 +78,7 @@ export function ProductGrid({
           restaurant_menu
         </span>
         <p className={`font-bold ${TXT.body}`} style={{ color: t.onSurface }}>
-          Todavía no hay platos en esta categoría
+          {catalogo ? 'Todavía no hay productos en esta categoría' : 'Todavía no hay platos en esta categoría'}
         </p>
         {onVerTodo && (
           <button
@@ -83,7 +86,7 @@ export function ProductGrid({
             className={`mt-4 px-6 py-2.5 rounded-full font-bold ${TXT.small} uppercase active:scale-95 transition-all`}
             style={{ background: t.primary, color: t.onPrimary }}
           >
-            Ver todo el menú
+            {catalogo ? 'Ver todo el catálogo' : 'Ver todo el menú'}
           </button>
         )}
       </div>
@@ -111,16 +114,17 @@ export function ProductGrid({
               {product.name}
             </h4>
             <p className={`${TXT.micro} mb-2 line-clamp-2 flex-1`} style={{ color: t.onSurfaceVariant }}>
-              {product.desc}
+              {product.presentaciones?.length ? product.presentaciones.map((x) => x.label).join(' · ') : product.desc}
             </p>
             <div className="flex justify-between items-center mt-auto">
               <span className={`font-extrabold ${TXT.lead}`} style={{ color: t.primary }}>
+                {product.presentaciones?.length ? <span className={`block ${TXT.micro} font-semibold`} style={{ color: t.onSurfaceVariant }}>Desde</span> : null}
                 {soles(product.price)}
                 {product.priceAnterior && (
                   <span className={`block ${TXT.micro} font-medium line-through`} style={{ color: t.onSurfaceVariant }}>{soles(product.priceAnterior)}</span>
                 )}
               </span>
-              <AddButton t={t} nombre={product.name} onAdd={() => onAdd(product)} />
+              <AddButton t={t} nombre={product.name} onAdd={() => (product.presentaciones?.length ? onSelect(product) : onAdd(product))} />
             </div>
           </div>
         </div>
@@ -141,11 +145,13 @@ export function ProductModal({
   /** Catalogo completo de la tienda: de aca salen los "Tambien te puede interesar". */
   productos?: Producto[];
   onClose: () => void;
-  onAdd: (p: Producto) => void;
+  onAdd: (p: Producto, pres?: Presentacion) => void;
   /** Para poder tocar un sugerido y que el modal cambie al producto elegido. */
   onSelect?: (p: Producto) => void;
 }) {
   const [agregado, setAgregado] = React.useState(false);
+  // Medida elegida cuando el producto tiene presentaciones (por defecto la primera, la más chica).
+  const [medida, setMedida] = React.useState<Presentacion | null>(null);
   const cierre = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const contenedor = React.useRef<HTMLDivElement>(null);
 
@@ -155,6 +161,7 @@ export function ProductModal({
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setAgregado(false);
+    setMedida(producto?.presentaciones?.[0] ?? null);
     contenedor.current?.scrollTo({ top: 0 });
     return () => { if (cierre.current) clearTimeout(cierre.current); };
   }, [producto]);
@@ -214,6 +221,31 @@ export function ProductModal({
           <p className={`${TXT.body} mt-2 leading-relaxed`} style={{ color: t.onSurfaceVariant }}>{producto.desc}</p>
         )}
 
+        {/* Presentaciones: el cliente elige la cantidad (100 g, 250 g, 1 kg…) y el precio cambia. */}
+        {producto.presentaciones && producto.presentaciones.length > 0 && (
+          <div className="mt-6">
+            <h3 className={`font-bold ${TXT.body} mb-2`} style={{ color: t.onSurface }}>Elige la cantidad</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {producto.presentaciones.map((x) => {
+                const activa = medida?.label === x.label;
+                return (
+                  <button
+                    key={x.label}
+                    type="button"
+                    onClick={() => setMedida(x)}
+                    aria-pressed={activa}
+                    className="rounded-xl px-3 py-2.5 text-left border-2 transition-colors active:scale-[0.98]"
+                    style={{ borderColor: activa ? t.primary : `${t.outlineVariant}80`, background: activa ? `${t.primary}14` : t.surface, color: t.onSurface }}
+                  >
+                    <span className={`block font-extrabold ${TXT.body}`}>{x.label}</span>
+                    <span className={`block font-bold ${TXT.body}`} style={{ color: t.primary }}>{soles(x.price)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {sugeridos.length > 0 && (
           <div className="mt-10">
             <h3 className={`font-black uppercase italic tracking-tight mb-4 ${TXT.title}`} style={{ color: t.onBackground }}>
@@ -230,8 +262,8 @@ export function ProductModal({
       >
         <div className="w-full max-w-2xl flex items-center justify-between gap-4 px-1">
           <span className="font-black text-xl" style={{ color: t.primary }}>
-            {soles(producto.price)}
-            {producto.priceAnterior && (
+            {soles(medida?.price ?? producto.price)}
+            {!medida && producto.priceAnterior && (
               <span className="ml-2 text-sm font-medium line-through" style={{ color: t.onSurfaceVariant }}>{soles(producto.priceAnterior)}</span>
             )}
           </span>
@@ -239,7 +271,7 @@ export function ProductModal({
             onClick={() => {
               // El modal se queda abierto: abajo hay sugeridos y el cliente
               // puede seguir agregando o mirando mas platos sin salir de aca.
-              onAdd(producto);
+              onAdd(producto, medida ?? undefined);
               setAgregado(true);
               if (cierre.current) clearTimeout(cierre.current);
               cierre.current = setTimeout(() => setAgregado(false), 1200);
@@ -261,17 +293,20 @@ export function ProductModal({
    ════════════════════════════════════════════ */
 
 export function CartPanel({
-  t, cartItems, subtotal, onAdd, onRemove, onVaciar, onConfirmar, onIrAlMenu, whatsappVisible, pagoOnline, onPagarOnline,
+  t, cartItems, subtotal, onAdd, onRemove, onVaciar, onConfirmar, onIrAlMenu, whatsappVisible, pagoOnline, onPagarOnline, catalogo,
 }: {
   t: StoreTheme;
-  cartItems: { producto: Producto; qty: number }[];
+  /** `clave`, `pres` y `precio` los pone useCatalogo (ver lib/presentaciones.ts); sin ellos la línea es el producto a su precio. */
+  cartItems: { producto: Producto; qty: number; clave?: string; pres?: Presentacion; precio?: number }[];
   subtotal: number;
-  onAdd: (p: Producto) => void;
+  onAdd: (p: Producto, pres?: Presentacion) => void;
   onRemove: (id: string) => void;
   onVaciar: () => void;
   onConfirmar: (datos: { nombre: string; telefono: string; entrega: 'delivery' | 'recojo'; direccion: string }) => void;
   onIrAlMenu: () => void;
   whatsappVisible: boolean;
+  /** Tienda de catálogo (no de comida): cambia los textos de "menú" y "platos". */
+  catalogo?: boolean;
   /** La tienda cobra con tarjeta / Yape (Izipay): se ofrece pagar online además de confirmar por WhatsApp. */
   pagoOnline?: boolean;
   onPagarOnline?: (datos: { nombre: string; telefono: string; entrega: 'delivery' | 'recojo'; direccion: string }) => Promise<void> | void;
@@ -350,14 +385,14 @@ export function CartPanel({
         <div className="space-y-4">
           <h3 className={`font-bold ${TXT.title}`}>Tu carrito está vacío</h3>
           <p className={`${TXT.body} max-w-xs mx-auto`} style={{ color: t.onSurfaceVariant }}>
-            Explora nuestro delicioso menú y agrega tus combos o platos favoritos.
+            {catalogo ? 'Explora nuestro catálogo y agrega tus productos favoritos.' : 'Explora nuestro delicioso menú y agrega tus combos o platos favoritos.'}
           </p>
           <button
             onClick={onIrAlMenu}
             className={`px-8 py-3 rounded-full font-bold ${TXT.body} shadow-md uppercase inline-block active:scale-95 transition-all`}
             style={{ backgroundColor: t.primary, color: t.onPrimary }}
           >
-            Ir al Menú
+            {catalogo ? 'Ir al catálogo' : 'Ir al Menú'}
           </button>
         </div>
       ) : (
@@ -375,25 +410,25 @@ export function CartPanel({
           <div className="space-y-3">
             {cartItems.map((l) => (
               <div
-                key={l.producto.id}
+                key={l.clave ?? l.producto.id}
                 className="flex items-center gap-3 pb-3 border-b"
                 style={{ borderColor: `${t.outlineVariant}40` }}
               >
                 <img src={l.producto.image} alt={l.producto.name} className="w-12 h-12 rounded-lg object-cover shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className={`font-bold ${TXT.body} leading-tight line-clamp-2`} style={{ color: t.onSurface }}>
-                    {l.producto.name}
+                    {l.producto.name}{l.pres ? ` · ${l.pres.label}` : ''}
                   </p>
-                  <p className={TXT.micro} style={{ color: t.onSurfaceVariant }}>{soles(l.producto.price)} c/u</p>
+                  <p className={TXT.micro} style={{ color: t.onSurfaceVariant }}>{soles(l.precio ?? l.producto.price)} c/u</p>
                 </div>
                 {/* Total y controles apilados: en una sola fila el nombre quedaba en "Pa..." a 375px */}
                 <div className="flex flex-col items-end gap-1.5 shrink-0">
                   <span className={`font-black ${TXT.body}`} style={{ color: t.primary }}>
-                    {soles(l.producto.price * l.qty)}
+                    {soles((l.precio ?? l.producto.price) * l.qty)}
                   </span>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => onRemove(l.producto.id)}
+                      onClick={() => onRemove(l.clave ?? l.producto.id)}
                       className="w-7 h-7 rounded-full flex items-center justify-center active:scale-90 transition-all"
                       style={{ background: `${t.primary}15`, color: t.primary }}
                       aria-label={`Quitar uno de ${l.producto.name}`}
@@ -402,7 +437,7 @@ export function CartPanel({
                     </button>
                     <span className={`font-black ${TXT.body} w-5 text-center`} style={{ color: t.onSurface }}>{l.qty}</span>
                     <button
-                      onClick={() => onAdd(l.producto)}
+                      onClick={() => onAdd(l.producto, l.pres)}
                       className="w-7 h-7 rounded-full flex items-center justify-center active:scale-90 transition-all"
                       style={{ background: t.primary, color: t.onPrimary }}
                       aria-label={`Agregar otro ${l.producto.name}`}

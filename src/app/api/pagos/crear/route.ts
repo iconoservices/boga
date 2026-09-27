@@ -5,6 +5,7 @@ import { tiendaCobraOnline } from '@/lib/izipay';
 import { COLS_OFERTA, aplicarOferta } from '@/lib/ofertas';
 import { moduloActivo } from '@/lib/modulos';
 import { stockIlimitado } from '@/lib/stock';
+import { COL_PRESENTACIONES, claveLinea, leerPresentaciones, nombreConPresentacion, presentacionPorEtiqueta } from '@/lib/presentaciones';
 
 // Crea el pedido de un cliente que va a PAGAR ONLINE (tarjeta / Yape por Izipay) y devuelve su código: el cliente sigue
 // en /pagar/<código>. Igual que /api/pedidos, el cliente solo manda qué productos y cuántos; los precios (con ofertas) y
@@ -44,29 +45,44 @@ export async function POST(request: Request) {
   if (!SLUG.test(slug)) return NextResponse.json({ ok: false, motivo: 'tienda' }, { status: 400 });
   if (!(await tiendaCobraOnline(db, slug))) return NextResponse.json({ ok: false, motivo: 'sin_cobro_online' }, { status: 409 });
 
-  const pedidas = new Map<string, number>();
-  for (const l of (Array.isArray(body?.items) ? body!.items.slice(0, 60) : []) as { id?: unknown; quantity?: unknown }[]) {
+  // Un producto con presentaciones ("250 g") es una línea por cada medida pedida; el precio sale de la base (lib/presentaciones.ts).
+  const pedidas = new Map<string, { id: string; pres: string; q: number }>();
+  for (const l of (Array.isArray(body?.items) ? body!.items.slice(0, 60) : []) as { id?: unknown; quantity?: unknown; pres?: unknown }[]) {
     const id = texto(l?.id, 60);
+    const pres = texto(l?.pres, 30);
     const q = Math.floor(Number(l?.quantity));
     if (!ID_VALIDO.test(id) || !(q >= 1)) continue;
-    pedidas.set(id, Math.min(99, (pedidas.get(id) ?? 0) + Math.min(q, 99)));
+    const clave = claveLinea(id, pres);
+    pedidas.set(clave, { id, pres, q: Math.min(99, (pedidas.get(clave)?.q ?? 0) + Math.min(q, 99)) });
   }
   if (pedidas.size === 0) return NextResponse.json({ ok: false, motivo: 'sin_productos' });
 
-  const ids = Array.from(pedidas.keys());
-  let { data: productos, error: errProductos } = await db.from('products')
-    .select(`id,name,price,stock,status,${COLS_OFERTA}`).eq('store', slug).in('id', ids);
-  if (errProductos) ({ data: productos } = await db.from('products').select('id,name,price,stock,status').eq('store', slug).in('id', ids) as any);
+  const ids = Array.from(new Set(Array.from(pedidas.values(), (l) => l.id)));
+  // Las columnas extra (ofertas, presentaciones) son opcionales: si su SQL aún no se corrió, cae al conjunto anterior.
+  const baseCols = 'id,name,price,stock,status';
+  const consulta = (cols: string) => db.from('products').select(cols).eq('store', slug).in('id', ids);
+  let { data: productos, error: errProductos } = await consulta(`${baseCols},${COLS_OFERTA},${COL_PRESENTACIONES}`);
+  if (errProductos) ({ data: productos, error: errProductos } = await consulta(`${baseCols},${COLS_OFERTA}`) as any);
+  if (errProductos) ({ data: productos } = await consulta(baseCols) as any);
 
   const { data: tienda } = await db.from('stores').select('modulos').eq('slug', slug).maybeSingle();
   const conInventario = moduloActivo(tienda?.modulos, 'inventario');
 
+  const porId = new Map(((productos ?? []) as any[]).map((p) => [String(p.id), aplicarOferta(p) as any]));
   const lineas: { id: string; name: string; price: number; quantity: number }[] = [];
-  for (const p of ((productos ?? []) as any[]).map(aplicarOferta) as any[]) {
-    const quantity = pedidas.get(p.id as string) ?? 1;
+  for (const { id, pres, q: quantity } of pedidas.values()) {
+    const p = porId.get(id);
+    if (!p) continue;
     if (p.status === 'Agotado' || p.status === 'Inactivo') return NextResponse.json({ ok: false, motivo: 'agotado', producto: p.name });
+    if (pres) {
+      // Con presentación el precio sale de la lista guardada; una medida que ya no existe se descarta. El stock (unidades enteras) no aplica.
+      const elegida = presentacionPorEtiqueta(leerPresentaciones(p.presentaciones), pres);
+      if (!elegida) continue;
+      lineas.push({ id, name: nombreConPresentacion(p.name as string, elegida.label), price: elegida.price, quantity });
+      continue;
+    }
     if (conInventario && !stockIlimitado(p) && Number(p.stock) < quantity) return NextResponse.json({ ok: false, motivo: 'stock', producto: p.name });
-    lineas.push({ id: p.id as string, name: p.name as string, price: Number(p.price) || 0, quantity });
+    lineas.push({ id, name: p.name as string, price: Number(p.price) || 0, quantity });
   }
   if (lineas.length === 0) return NextResponse.json({ ok: false, motivo: 'sin_productos' });
   const total = Math.round(lineas.reduce((s, l) => s + l.price * l.quantity, 0) * 100) / 100;

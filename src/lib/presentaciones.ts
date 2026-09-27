@@ -51,7 +51,11 @@ export const claveLinea = (id: string, label?: string) => (label ? `${id}|${labe
 // ── Qué plantillas saben mostrar la elección de medida ──
 // Solo estas tienen el selector para el cliente; en las demás el producto se vendería al precio "desde".
 // `condimentos` es la que vende todo por peso: ahí el formulario de productos abre las presentaciones desde el inicio.
-const PLANTILLAS_CON_PRESENTACIONES = ['condimentos', 'mercado'];
+const PLANTILLAS_CON_PRESENTACIONES = [
+  'condimentos', 'mercado',
+  // las del motor compartido (templates/shared): el modal del producto trae el selector de medida
+  'default', 'menudirecto', 'polleria', 'iniciocatalogo', 'fichadigital', 'fichaplana', 'veterinaria',
+];
 
 export const plantillaAceptaPresentaciones = (template: unknown) => PLANTILLAS_CON_PRESENTACIONES.includes(String(template));
 export const plantillaEsPorPeso = (template: unknown) => template === 'condimentos';
