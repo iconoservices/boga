@@ -2685,19 +2685,41 @@ function AdminDashboard({ user }: { user: User }) {
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => !isSaving && setIsModalOpen(false)}></div>
           
-          <div className="relative bg-white w-[90vw] md:w-[550px] rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="p-6 md:p-8 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
-              <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">{editingProductId ? 'Editar Producto' : 'Añadir Producto'}</h2>
-              <button 
-                onClick={() => { if (!isSaving) { setIsModalOpen(false); resetForm(); } }}
-                className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors"
-                disabled={isSaving}
-              >
-                <span className="material-symbols-outlined text-[20px]">close</span>
-              </button>
+          <div className="relative bg-white w-[90vw] md:w-[980px] md:max-w-[95vw] rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Mismo formato que el formulario de productos del superadmin: las acciones van ARRIBA y fijas (no hay que bajar
+                hasta el final del formulario) y en escritorio la foto queda a la izquierda y los campos a la derecha. */}
+            <div className="px-6 py-4 md:px-8 border-b border-gray-100 flex justify-between items-center gap-3 bg-white sticky top-0 z-10">
+              <h2 className="text-xl md:text-2xl font-extrabold text-gray-900 tracking-tight truncate">{editingProductId ? 'Editar Producto' : 'Añadir Producto'}</h2>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => { if (!isSaving) { setIsModalOpen(false); resetForm(); } }}
+                  disabled={isSaving}
+                  className="px-4 py-2.5 rounded-md font-bold text-sm text-gray-600 border border-gray-200 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  form="form-producto-dueno"
+                  disabled={isSaving}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-[#b8130e] text-white rounded-md font-bold text-sm shadow-md shadow-[#b8130e]/20 hover:bg-[#8f0f0b] transition-colors disabled:opacity-70"
+                >
+                  {isSaving ? (
+                    <>
+                      <span className="material-symbols-outlined animate-spin text-[18px]">refresh</span>
+                      Guardando...
+                    </>
+                  ) : editingProductId ? (
+                    'Guardar Cambios'
+                  ) : (
+                    'Crear Producto'
+                  )}
+                </button>
+              </div>
             </div>
-            
-            <form onSubmit={handleSave} className="p-6 md:p-8 overflow-y-auto flex-1 custom-scrollbar">
+
+            <form id="form-producto-dueno" onSubmit={handleSave} className="p-6 md:p-8 overflow-y-auto flex-1 custom-scrollbar md:grid md:grid-cols-[300px_minmax(0,1fr)] md:gap-8 md:items-start">
               
               {/* Image Uploader */}
               <input 
@@ -2721,7 +2743,7 @@ function AdminDashboard({ user }: { user: User }) {
                   const file = e.dataTransfer.files?.[0];
                   if (file) { setSelectedFile(file); setPreviewUrl(URL.createObjectURL(file)); }
                 }}
-                className="w-full h-48 border-2 border-dashed border-gray-200 rounded-lg mb-8 flex flex-col items-center justify-center text-gray-400 hover:border-black hover:text-black transition-colors cursor-pointer bg-gray-50/50 overflow-hidden relative group focus:outline-none focus:border-black"
+                className="w-full h-48 md:h-auto md:aspect-square border-2 border-dashed border-gray-200 rounded-lg mb-8 md:mb-0 flex flex-col items-center justify-center text-gray-400 hover:border-black hover:text-black transition-colors cursor-pointer bg-gray-50/50 overflow-hidden relative group focus:outline-none focus:border-black"
               >
                 {previewUrl ? (
                   <>
@@ -3038,32 +3060,6 @@ function AdminDashboard({ user }: { user: User }) {
               </div>
             </form>
             
-            <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-end gap-3 sticky bottom-0">
-              <button 
-                type="button"
-                onClick={() => { setIsModalOpen(false); resetForm(); }}
-                disabled={isSaving}
-                className="px-6 py-3.5 rounded-md font-bold text-gray-600 hover:bg-gray-200 transition-colors disabled:opacity-50"
-              >
-                Cancelar
-              </button>
-              <button 
-                onClick={handleSave}
-                disabled={isSaving}
-                className="flex items-center gap-2 px-8 py-3.5 bg-[#b8130e] text-white rounded-md font-bold shadow-lg shadow-[#b8130e]/20 hover:shadow-[#b8130e]/30 transition-all hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0"
-              >
-                {isSaving ? (
-                  <>
-                    <span className="material-symbols-outlined animate-spin text-[20px]">refresh</span>
-                    Guardando...
-                  </>
-                ) : editingProductId ? (
-                  'Guardar Cambios'
-                ) : (
-                  'Crear Producto'
-                )}
-              </button>
-            </div>
           </div>
         </div>
       )}
