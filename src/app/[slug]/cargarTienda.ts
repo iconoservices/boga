@@ -84,7 +84,8 @@ async function cargarTienda(slug: string) {
         heroAlt: dbStore.hero_alt || 'store image',
         iconImage: tmpl?.iconImage || undefined,
         theme: resolvedTheme,
-        categories: dbStore.categories || [],
+        // Sin categorías propias guardadas: cae a las de fábrica de su plantilla (mismo criterio que /admin).
+        categories: (dbStore.categories && dbStore.categories.length ? dbStore.categories : tmpl?.categories) || [],
         logoImage: dbStore.logo_image || undefined,
         whatsapp: dbStore.whatsapp || undefined,
         modulos: dbStore.modulos ?? undefined,

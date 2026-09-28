@@ -1823,3 +1823,12 @@ CREATE POLICY "plantilla_categorias: solo superadmin gestiona"
 ON public.plantilla_categorias FOR ALL
 USING (public.is_superadmin())
 WITH CHECK (public.is_superadmin());
+
+
+-- ============================================================
+-- VARIAS FOTOS POR PRODUCTO (galería)
+-- ============================================================
+-- `image` sigue siendo la foto de portada (todo el código viejo que la usa sigue igual).
+-- `images` guarda TODAS las fotos en orden (la [0] siempre es la portada); NULL o vacía = solo la de `image`.
+-- Con más de una, la tarjeta del catálogo y la ficha del producto van rotando/mostrando miniaturas.
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS images JSONB;

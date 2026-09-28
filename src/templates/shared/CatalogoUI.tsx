@@ -55,6 +55,48 @@ export function CategoryChips({
   );
 }
 
+/** Foto de una tarjeta del catálogo: con varias fotos, al pasar el mouse va rotando entre ellas (como Delva). */
+function FotoTarjeta({ product }: { product: Producto }) {
+  const fotos = product.images && product.images.length > 1 ? product.images : [product.image];
+  const [activa, setActiva] = React.useState<number | null>(null);
+
+  useEffect(() => {
+    if (activa === null || fotos.length < 2) return;
+    const id = setTimeout(() => setActiva((activa + 1) % fotos.length), 900);
+    return () => clearTimeout(id);
+  }, [activa, fotos.length]);
+
+  return (
+    <div
+      className="aspect-square overflow-hidden relative"
+      onMouseEnter={() => fotos.length > 1 && setActiva(0)}
+      onMouseLeave={() => setActiva(null)}
+    >
+      {fotos.map((src, i) => (
+        <img
+          key={i}
+          className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-[opacity,transform] duration-500"
+          style={{ opacity: (activa ?? 0) === i ? 1 : 0 }}
+          alt={product.name}
+          src={src}
+          loading="lazy"
+        />
+      ))}
+      {fotos.length > 1 && (
+        <div className="absolute bottom-1.5 left-1.5 right-1.5 flex gap-1">
+          {fotos.map((_, i) => (
+            <div
+              key={i}
+              className="h-[3px] flex-1 rounded-full transition-colors"
+              style={{ background: (activa ?? 0) === i ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.4)' }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ════════════════════════════════════════════
    GRILLA DE PRODUCTOS
    ════════════════════════════════════════════ */
@@ -102,13 +144,7 @@ export function ProductGrid({
           className="rounded-2xl overflow-hidden group relative cursor-pointer border hover:shadow-lg transition-all duration-300 flex flex-col"
           style={{ background: t.surface, borderColor: `${t.outlineVariant}30` }}
         >
-          <div className="aspect-square overflow-hidden relative">
-            <img
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-              alt={product.name}
-              src={product.image}
-            />
-          </div>
+          <FotoTarjeta product={product} />
           <div className="p-2.5 flex flex-col flex-1">
             <h4 className={`font-bold ${TXT.body} leading-tight mb-1 line-clamp-2`} style={{ color: t.onSurface }}>
               {product.name}
@@ -158,6 +194,8 @@ export function ProductModal({
   const [agregado, setAgregado] = React.useState(false);
   // Medida elegida cuando el producto tiene presentaciones (por defecto la primera, la más chica).
   const [medida, setMedida] = React.useState<Presentacion | null>(null);
+  // Foto que se ve arriba, cuando el producto tiene más de una.
+  const [fotoActiva, setFotoActiva] = React.useState(0);
   const cierre = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const contenedor = React.useRef<HTMLDivElement>(null);
 
@@ -168,6 +206,7 @@ export function ProductModal({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setAgregado(false);
     setMedida(producto?.presentaciones?.[0] ?? null);
+    setFotoActiva(0);
     contenedor.current?.scrollTo({ top: 0 });
     return () => { if (cierre.current) clearTimeout(cierre.current); };
   }, [producto]);
@@ -199,6 +238,8 @@ export function ProductModal({
 
   if (!producto) return null;
 
+  const fotos = producto.images && producto.images.length > 1 ? producto.images : [producto.image];
+
   return (
     <div
       ref={contenedor}
@@ -217,8 +258,25 @@ export function ProductModal({
         <span className={`material-symbols-outlined ${ICON.md}`}>close</span>
       </button>
 
-      <div className="w-full h-64 md:h-[420px]">
-        <img className="w-full h-full object-cover" alt={producto.name} src={producto.image} />
+      <div className="w-full h-64 md:h-[420px] relative">
+        <img className="w-full h-full object-cover" alt={producto.name} src={fotos[fotoActiva] ?? producto.image} />
+        {fotos.length > 1 && (
+          <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2 px-4 flex-wrap">
+            {fotos.map((foto, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setFotoActiva(i)}
+                aria-label={`Ver foto ${i + 1} de ${producto.name}`}
+                aria-current={fotoActiva === i}
+                className="w-12 h-12 rounded-lg overflow-hidden border-2 shrink-0 transition-all active:scale-95"
+                style={{ borderColor: fotoActiva === i ? '#fff' : 'transparent', opacity: fotoActiva === i ? 1 : 0.7 }}
+              >
+                <img src={foto} className="w-full h-full object-cover" alt="" />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="max-w-2xl mx-auto px-5 pt-5 pb-28">

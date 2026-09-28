@@ -16,6 +16,7 @@ import { uploadFile } from '@/lib/uploadClient';
 import { refrescarTienda } from '@/lib/refrescar';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import type { StoreTheme } from '@/lib/templates.config';
+import { getTemplate } from '@/lib/templates.config';
 import { iconForCategory } from '@/templates/shared/tokens';
 import { moduloActivo, STOCK_BAJO, type ModuloId } from '@/lib/modulos';
 import { fechaLima, hoyLima } from '@/lib/fechaLima';
@@ -38,6 +39,8 @@ interface Product {
   stock: number;
   status: string;
   image: string;
+  /** Todas las fotos en orden (la [0] es `image`). Sin lista, el producto tiene una sola foto. */
+  images?: string[] | null;
   description?: string;
   created_at: string;
   /** Precio rebajado y último día de la oferta (SQL «OFERTAS EN PRODUCTOS»). Sin oferta = null. */
@@ -224,7 +227,8 @@ function AdminDashboard({ user }: { user: User }) {
           facebook: s.facebook || undefined,
           instagram: s.instagram || undefined,
           tiktok: s.tiktok || undefined,
-          categories: s.categories || [],
+          // Sin categorías propias guardadas: cae a las de fábrica de su plantilla (ej. Estilos Mirka nunca las tuvo en la BD).
+          categories: (s.categories && s.categories.length ? s.categories : getTemplate(s.template)?.categories) || [],
           theme: s.theme || {
             primary: '#0058be',
             onPrimary: '#ffffff',
@@ -329,8 +333,14 @@ function AdminDashboard({ user }: { user: User }) {
   const [logoTheme, setLogoTheme] = useState<StoreTheme | null>(null);
   const [extractingTheme, setExtractingTheme] = useState(false);
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  // Fotos del producto en el formulario: la [0] es la portada. `file` solo está en las
+  // recién elegidas (aún no subidas); las que ya venían del producto solo traen `url`.
+  const [fotos, setFotos] = useState<{ url: string; file?: File }[]>([]);
+  const agregarFotos = (archivos: File[]) => {
+    const imagenes = archivos.filter((f) => f.type.startsWith('image/'));
+    if (imagenes.length === 0) return;
+    setFotos((prev) => [...prev, ...imagenes.map((file) => ({ url: URL.createObjectURL(file), file }))]);
+  };
 
   const [newProduct, setNewProduct] = useState({
     name: '',
@@ -372,8 +382,7 @@ function AdminDashboard({ user }: { user: User }) {
       presentaciones: [],
       esServicio: false,
     });
-    setSelectedFile(null);
-    setPreviewUrl(null);
+    setFotos([]);
   };
 
   // Tiendas y pedidos al iniciar (los pedidos ya vienen filtrados por dueño desde la base).
@@ -433,9 +442,11 @@ function AdminDashboard({ user }: { user: User }) {
     const base = 'id,name,store,price,category,subcategory,stock,status,image,description,created_at';
     let { data, error } = await supabase
       .from('products')
-      .select(`${base},${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio`)
+      .select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio`)
       .in('store', slugs)
       .order('created_at', { ascending: false });
+    // Si el SQL de "fotos extra" (galería) aún no se corrió, se pide sin esa columna.
+    if (error) ({ data, error } = await supabase.from('products').select(`${base},${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio`).in('store', slugs).order('created_at', { ascending: false }) as any);
     // Si el SQL de "es_servicio" aún no se corrió, se pide sin esa columna.
     if (error) ({ data, error } = await supabase.from('products').select(`${base},${COLS_OFERTA},${COL_PRESENTACIONES}`).in('store', slugs).order('created_at', { ascending: false }) as any);
     // Si el SQL de presentaciones aún no se corrió, se pide sin esa columna.
@@ -947,29 +958,23 @@ function AdminDashboard({ user }: { user: User }) {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    }
+    if (e.target.files?.length) agregarFotos(Array.from(e.target.files));
+    e.target.value = '';
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedFile && !editingProductId) {
-      alert("Por favor selecciona una imagen");
+    if (fotos.length === 0) {
+      alert("Por favor selecciona al menos una foto");
       return;
     }
     setIsSaving(true);
 
     try {
-      let finalImageUrl = newProduct.image;
-
-      // 1. Subir la imagen si hay una nueva
-      if (selectedFile) {
-        const folder = `product-images/${newProduct.store.replace(/\s+/g, '-').toLowerCase()}`;
-        finalImageUrl = await uploadFile(selectedFile, folder);
-      }
+      // 1. Subir las fotos nuevas (las que ya venían del producto no se vuelven a subir)
+      const folder = `product-images/${newProduct.store.replace(/\s+/g, '-').toLowerCase()}`;
+      const urlsFotos = await Promise.all(fotos.map((f) => (f.file ? uploadFile(f.file, folder) : Promise.resolve(f.url))));
+      const finalImageUrl = urlsFotos[0];
 
       // 2. Calcular stock y status
       let finalStock: number | null = null;
@@ -1020,6 +1025,10 @@ function AdminDashboard({ user }: { user: User }) {
       const camposServicio = newProduct.esServicio || productoPrevio?.es_servicio
         ? { es_servicio: newProduct.esServicio }
         : {};
+      // Igual que arriba: solo se manda si hay más de una foto o si el producto ya tenía galería (para poder achicarla a una sola).
+      const camposFotos = urlsFotos.length > 1 || (productoPrevio?.images?.length ?? 0) > 0
+        ? { images: urlsFotos.length > 1 ? urlsFotos : null }
+        : {};
 
       // 3. Guardar en la base de datos
       if (editingProductId) {
@@ -1034,6 +1043,7 @@ function AdminDashboard({ user }: { user: User }) {
           ...camposOferta,
           ...camposPres,
           ...camposServicio,
+          ...camposFotos,
           // Sin módulo de inventario no se toca el stock guardado (por si lo vuelven a prender).
           ...(tiendaTiene(newProduct.store, 'inventario') ? { stock: finalStock } : {}),
           status: finalStatus,
@@ -1069,6 +1079,7 @@ function AdminDashboard({ user }: { user: User }) {
             ...camposOferta,
             ...camposPres,
             ...camposServicio,
+            ...camposFotos,
             stock: finalStock,
             status: finalStatus,
           }
@@ -1113,8 +1124,9 @@ function AdminDashboard({ user }: { user: User }) {
       presentaciones: leerPresentaciones(product.presentaciones).map((x) => ({ label: x.label, price: String(x.price) })),
       esServicio: product.es_servicio === true,
     });
-    setPreviewUrl(product.image);
-    setSelectedFile(null);
+    setFotos(
+      product.images?.length ? product.images.map((url) => ({ url })) : product.image ? [{ url: product.image }] : []
+    );
     setIsModalOpen(true);
   };
 
@@ -2734,43 +2746,73 @@ function AdminDashboard({ user }: { user: User }) {
 
             <form id="form-producto-dueno" onSubmit={handleSave} className="p-6 md:p-8 overflow-y-auto flex-1 custom-scrollbar md:grid md:grid-cols-[300px_minmax(0,1fr)] md:gap-8 md:items-start">
               
-              {/* Image Uploader */}
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleFileChange} 
-                accept="image/*" 
-                className="sr-only" 
-              />
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                tabIndex={0}
-                onPaste={(e) => {
-                  const file = Array.from(e.clipboardData.files)[0]
-                    || Array.from(e.clipboardData.items).find(i => i.type.startsWith('image/'))?.getAsFile();
-                  if (file) { setSelectedFile(file); setPreviewUrl(URL.createObjectURL(file)); }
-                }}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  const file = e.dataTransfer.files?.[0];
-                  if (file) { setSelectedFile(file); setPreviewUrl(URL.createObjectURL(file)); }
-                }}
-                className="w-full h-48 md:h-auto md:aspect-square border-2 border-dashed border-gray-200 rounded-lg mb-8 md:mb-0 flex flex-col items-center justify-center text-gray-400 hover:border-black hover:text-black transition-colors cursor-pointer bg-gray-50/50 overflow-hidden relative group focus:outline-none focus:border-black"
-              >
-                {previewUrl ? (
-                  <>
-                    <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white font-bold transition-opacity">
-                      Cambiar Imagen
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <span className="material-symbols-outlined text-4xl mb-2">add_a_photo</span>
-                    <span className="font-bold text-sm">Clic para subir foto</span>
-                    <span className="text-xs mt-1 opacity-70">Recomendado cuadrado (1:1)</span>
-                  </>
+              {/* Fotos del producto: la primera es la portada. Se pueden elegir/soltar/pegar varias de una sola vez. */}
+              <div className="mb-8 md:mb-0">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  multiple
+                  className="sr-only"
+                />
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  tabIndex={0}
+                  onPaste={(e) => {
+                    const archivos = Array.from(e.clipboardData.files).filter((f) => f.type.startsWith('image/'));
+                    if (archivos.length) { e.preventDefault(); agregarFotos(archivos); }
+                  }}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    agregarFotos(Array.from(e.dataTransfer.files));
+                  }}
+                  className="w-full h-48 md:h-auto md:aspect-square border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-black hover:text-black transition-colors cursor-pointer bg-gray-50/50 overflow-hidden relative group focus:outline-none focus:border-black"
+                >
+                  {fotos[0] ? (
+                    <>
+                      <img src={fotos[0].url} alt="Portada" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white font-bold transition-opacity text-center px-2">
+                        Agregar más fotos
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-4xl mb-2">add_a_photo</span>
+                      <span className="font-bold text-sm">Clic para subir foto(s)</span>
+                      <span className="text-xs mt-1 opacity-70">Puedes elegir varias a la vez</span>
+                    </>
+                  )}
+                </div>
+
+                {fotos.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {fotos.map((foto, i) => (
+                      <div key={foto.url} className="relative w-14 h-14 rounded-lg overflow-hidden border border-gray-200 shrink-0 group/thumb">
+                        <img src={foto.url} alt={i === 0 ? 'Portada' : `Foto ${i + 1}`} className="w-full h-full object-cover" />
+                        {i === 0 && (
+                          <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[8px] font-bold text-center py-0.5">PORTADA</span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setFotos((prev) => prev.filter((_, j) => j !== i))}
+                          className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity"
+                          aria-label={`Quitar foto ${i + 1}`}
+                        >
+                          <span className="material-symbols-outlined text-[12px]">close</span>
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-14 h-14 rounded-lg border-2 border-dashed border-gray-200 hover:border-black hover:text-black flex items-center justify-center text-gray-400 transition-colors shrink-0"
+                      aria-label="Agregar más fotos"
+                    >
+                      <span className="material-symbols-outlined text-xl">add</span>
+                    </button>
+                  </div>
                 )}
               </div>
 
@@ -2968,10 +3010,25 @@ function AdminDashboard({ user }: { user: User }) {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">Categoría</label>
-                    <select 
+                    <select
                       required
                       value={newProduct.category}
-                      onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
+                      onChange={async (e) => {
+                        if (e.target.value !== '__nueva__') { setNewProduct({ ...newProduct, category: e.target.value }); return; }
+                        const nombre = window.prompt('Nombre de la nueva categoría (ej: Bebidas)')?.trim();
+                        if (!nombre) return;
+                        const href = nombre.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+                        const tienda = Object.values(stores).find((s) => s.slug === newProduct.store);
+                        if (!tienda) return;
+                        // Ya existe con ese mismo nombre (mismo enlace): no se duplica, solo se selecciona.
+                        const existente = tienda.categories.find((c) => c.href === href);
+                        if (existente) { setNewProduct({ ...newProduct, category: existente.name }); return; }
+                        const categoriasNuevas = [...tienda.categories, { name: nombre, icon: iconForCategory(nombre), href }];
+                        const { error } = await supabase.from('stores').update({ categories: categoriasNuevas }).eq('slug', newProduct.store);
+                        if (error) { alert('No se pudo crear la categoría: ' + error.message); return; }
+                        setDbStores((prev) => prev.map((s: any) => s.slug === newProduct.store ? { ...s, categories: categoriasNuevas } : s));
+                        setNewProduct({ ...newProduct, category: nombre });
+                      }}
                       className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black transition-all appearance-none cursor-pointer"
                       style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'black\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.2em' }}
                     >
@@ -2979,6 +3036,7 @@ function AdminDashboard({ user }: { user: User }) {
                       {Object.values(stores).find(s => s.slug === newProduct.store)?.categories.map(cat => (
                         <option key={cat.name} value={cat.name}>{cat.name}</option>
                       ))}
+                      <option value="__nueva__">+ Nueva categoría...</option>
                     </select>
                   </div>
                   <div>

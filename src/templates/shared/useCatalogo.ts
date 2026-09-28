@@ -62,6 +62,7 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
             priceAnterior: Number(p.price_anterior) > 0 ? Number(p.price_anterior) : undefined,
             category: hrefDeCategoria(p.category),
             image: p.image || store.heroImage,
+            images: Array.isArray(p.images) && p.images.length > 1 ? p.images : undefined,
             extra: p.subcategory ? { area: String(p.subcategory) } : undefined,
             presentaciones: Array.isArray(p.presentaciones) && p.presentaciones.length ? p.presentaciones : undefined,
             esServicio: p.es_servicio === true,

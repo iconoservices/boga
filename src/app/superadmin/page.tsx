@@ -531,10 +531,11 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     return () => window.removeEventListener('message', handleMessage);
   }, [sendPreviewUpdate]);
 
-  // Auto-generar slug desde el nombre
+  // Auto-generar slug desde el nombre: por defecto con guion entre palabras (ej. "El Cholao" ->
+  // "el-cholao"), como siempre. Quien quiera otro formato lo edita a mano abajo (slugManuallyEdited).
   React.useEffect(() => {
     if (!editingStore && !slugManuallyEdited && storeForm.name) {
-      const generated = storeForm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const generated = storeForm.name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
       if (generated !== storeForm.slug) {
         setStoreForm(prev => ({ ...prev, slug: generated }));
       }
@@ -640,7 +641,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                   fontBody: "'Inter', sans-serif", fontLabel: "'Inter', sans-serif",
                 };
               })(),
-              categories: dbStore.categories || []
+              // Sin categorías propias guardadas: cae a las de fábrica de su plantilla (mismo criterio que /admin).
+              categories: (dbStore.categories?.length ? dbStore.categories : getTemplate(dbStore.template as string)?.categories) || []
             };
 
             mergedDetails[slug] = {

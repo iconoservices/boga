@@ -46,6 +46,8 @@ export interface Producto {
   /** Siempre el `href` de la categoria de la tienda, para que case con los chips. */
   category: string;
   image: string;
+  /** Todas las fotos del producto en orden (la [0] es siempre `image`). Sin lista o con una sola, el producto tiene una sola foto. */
+  images?: string[];
   /** Datos propios del rubro, sacados de columnas que ya existen (terrenos: area = subcategory). */
   extra?: Record<string, string>;
   /** Medidas o tamaños con su precio (100 g / 250 g / 1 kg…). Sin lista, el producto tiene un solo precio. Ver lib/presentaciones.ts. */
