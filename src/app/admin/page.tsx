@@ -1586,7 +1586,7 @@ function AdminDashboard({ user }: { user: User }) {
                   { icon: 'notifications', t: 'Avisos de pedidos', s: 'WhatsApp y correo donde los recibes', on: () => openStoreEditor(inicioStore.slug, 'avisos') },
                   ...(inicioDb?.push_activo ? [{ icon: 'campaign', t: 'Notificaciones a clientes', s: 'Envía avisos a quienes instalaron tu app', on: () => router.push('/admin/notificaciones') }] : []),
                   { icon: 'picture_as_pdf', t: 'Exportar catálogo en PDF', s: 'Descarga tu carta para compartirla', on: () => { setSelectedStore(inicioStore.slug); setIsPDFModalOpen(true); } },
-                  { icon: 'menu_book', t: 'Mis cartas', s: 'Cambiar o reclamar otra tienda', on: () => { setPickerDraft([]); setIsStorePickerOpen(true); } },
+                  { icon: 'store', t: 'Mis Tiendas', s: 'Todas tus sucursales, una por una', on: () => setActiveTab('stores') },
                 ].map(f => (
                   <button key={f.t} onClick={f.on} className={fila}>
                     <span className={icono}><span className="material-symbols-outlined text-[20px]">{f.icon}</span></span>

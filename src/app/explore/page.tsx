@@ -153,7 +153,9 @@ function ExploreContenido() {
               img: p.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80',
               status: p.status || 'Activo',
               store: storeDef?.name || p.store,
-              logo: storeDef?.logoImage || ''
+              logo: storeDef?.logoImage || '',
+              slug: p.store,
+              externalUrl: storeDef?.externalUrl,
             });
           }
         });
@@ -465,7 +467,7 @@ function ExploreContenido() {
                 <button onClick={() => { setViewMode('stores'); setActiveCategory('Todas'); }} className="text-primary font-label-md text-sm">Ver todo</button>
               </div>
               <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin pb-3 snap-x scroll-pl-container-margin lg:scroll-pl-0" style={{ scrollbarWidth: 'none' }}>
-                {storeData.map((store) => (
+                {storeData.filter((store) => store.products.length > 0).map((store) => (
                   <Link
                     href={hrefTienda(store.slug, store.externalUrl)}
                     key={store.slug}
@@ -515,8 +517,14 @@ function ExploreContenido() {
                   </button>
                 </div>
                 <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin pb-3 snap-x scroll-pl-container-margin lg:scroll-pl-0" style={{ scrollbarWidth: 'none' }}>
-                  {section.products.slice(0, 12).map((p, idx) => (
-                    <div key={idx} className="min-w-[160px] w-[160px] bg-white rounded-2xl shadow-[0_15px_15px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col border border-surface-container-highest snap-start">
+                  {section.products.slice(0, 12).map((p: any, idx) => (
+                    <Link
+                      key={idx}
+                      href={hrefTienda(p.slug, p.externalUrl)}
+                      target={esFuera(hrefTienda(p.slug, p.externalUrl)) ? '_blank' : undefined}
+                      rel={esFuera(hrefTienda(p.slug, p.externalUrl)) ? 'noopener' : undefined}
+                      className="min-w-[160px] w-[160px] bg-white rounded-2xl shadow-[0_15px_15px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col border border-surface-container-highest snap-start"
+                    >
                       <div className="relative aspect-square overflow-hidden bg-surface-container-low">
                         <img className={`w-full h-full object-cover ${p.status === 'Agotado' ? 'grayscale opacity-60' : ''}`} src={p.img} alt={p.name} />
                         <div className="absolute top-2 left-2 bg-[#dc3225] text-white text-[10px] font-black px-2 py-0.5 rounded-lg">{p.badge}</div>
@@ -540,23 +548,11 @@ function ExploreContenido() {
                         <div>
                           <h4 className={`font-headline-sm text-sm line-clamp-1 ${p.status === 'Agotado' ? 'text-secondary/50' : 'text-on-surface'}`}>{p.name}</h4>
                         </div>
-                        <div className="flex justify-between items-center mt-2">
+                        <div className="flex items-center mt-2">
                           <span className={`font-price-lg text-primary text-sm ${p.status === 'Agotado' ? 'text-secondary/50' : ''}`}>{p.price}{p.original && <span className="ml-1.5 text-[11px] font-normal text-secondary line-through">{p.original}</span>}</span>
-                          <button 
-                            disabled={p.status === 'Agotado'}
-                            onClick={() => handleAddToCartWithAnim(p)}
-                            className={`w-7 h-7 rounded-full flex items-center justify-center shadow-md transition-transform ${
-                              p.status === 'Agotado' ? 'bg-surface-container-high text-secondary cursor-not-allowed' :
-                              addedItems[p.name] ? 'bg-[#25D366] text-white scale-110' : 'bg-primary text-white active:scale-90'
-                            }`}
-                          >
-                            <span className="material-symbols-outlined text-[16px]">
-                              {addedItems[p.name] ? 'check' : 'add'}
-                            </span>
-                          </button>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </section>
@@ -633,8 +629,14 @@ function ExploreContenido() {
             </div>
             
             <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-stack-lg">
-              {(sections.find(s => s.id === activeCategory)?.products || []).map((p, idx) => (
-                <div key={idx} className="bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col">
+              {(sections.find(s => s.id === activeCategory)?.products || []).map((p: any, idx) => (
+                <Link
+                  key={idx}
+                  href={hrefTienda(p.slug, p.externalUrl)}
+                  target={esFuera(hrefTienda(p.slug, p.externalUrl)) ? '_blank' : undefined}
+                  rel={esFuera(hrefTienda(p.slug, p.externalUrl)) ? 'noopener' : undefined}
+                  className="bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col"
+                >
                   <div className="relative aspect-square overflow-hidden bg-surface-container-low p-4">
                     <img className={`w-full h-full object-contain ${p.status === 'Agotado' ? 'grayscale opacity-60' : ''}`} src={p.img} alt={p.name} />
                     <div className="absolute top-2 left-2 bg-[#dc3225] text-white text-[10px] font-black px-2 py-0.5 rounded-lg">{p.badge}</div>
@@ -659,23 +661,11 @@ function ExploreContenido() {
                       <h4 className={`font-headline-sm text-sm line-clamp-1 ${p.status === 'Agotado' ? 'text-secondary/50' : 'text-on-surface'}`}>{p.name}</h4>
                       {(p as any).original && <span className="text-secondary text-[11px] line-through">{(p as any).original}</span>}
                     </div>
-                    <div className="flex justify-between items-center pt-2 mt-auto">
+                    <div className="flex items-center pt-2 mt-auto">
                       <span className={`font-price-lg text-primary text-base ${p.status === 'Agotado' ? 'text-secondary/50' : ''}`}>{p.price}</span>
-                      <button 
-                        disabled={p.status === 'Agotado'}
-                        onClick={() => handleAddToCartWithAnim(p)}
-                        className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-transform ${
-                          p.status === 'Agotado' ? 'bg-surface-container-high text-secondary cursor-not-allowed' :
-                          addedItems[p.name] ? 'bg-[#25D366] text-white scale-110' : 'bg-primary text-white active:scale-90'
-                        }`}
-                      >
-                        <span className="material-symbols-outlined text-[18px]">
-                          {addedItems[p.name] ? 'check' : 'add'}
-                        </span>
-                      </button>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </section>
