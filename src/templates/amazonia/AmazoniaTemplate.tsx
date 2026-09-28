@@ -36,6 +36,12 @@ export default function AmazoniaTemplate({ store, initialProductId }: AmazoniaTe
   // Detalle de producto con URL propia (/<tienda>/producto/<id>): compartible y
   // es lo que Google indexa, en vez de un modal que solo vivía en un useState.
   const { seleccionado: selectedProduct, abrir: abrirProducto, cerrar: cerrarProducto } = useDetalleProducto(store.slug, products, initialProductId);
+  // Foto que se ve arriba en el detalle, cuando el producto tiene más de una.
+  const [fotoActiva, setFotoActiva] = useState(0);
+  useEffect(() => { setFotoActiva(0); }, [selectedProduct]);
+  const fotosDetalle = selectedProduct
+    ? (selectedProduct.images && selectedProduct.images.length > 1 ? selectedProduct.images : [selectedProduct.image])
+    : [];
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -53,6 +59,7 @@ export default function AmazoniaTemplate({ store, initialProductId }: AmazoniaTe
           oldPrice: p.price_anterior > 0 ? `S/ ${Number(p.price_anterior).toFixed(2)}` : undefined,
           category: categoryObj ? categoryObj.href : p.category.toLowerCase(),
           image: p.image || 'https://images.unsplash.com/photo-1612196808214-b8e1d6145a8c?w=400&q=80',
+          images: Array.isArray(p.images) && p.images.length > 1 ? p.images : undefined,
         };
       }) : [];
       
@@ -160,8 +167,25 @@ export default function AmazoniaTemplate({ store, initialProductId }: AmazoniaTe
                 style={{ background: 'rgba(0,0,0,0.4)', color: '#fff' }}>
                 <span className="material-symbols-outlined text-[18px]">close</span>
               </button>
-              <div className="aspect-square">
-                <img className="w-full h-full object-cover" alt={selectedProduct.name} src={selectedProduct.image} />
+              <div className="aspect-square relative">
+                <img className="w-full h-full object-cover" alt={selectedProduct.name} src={fotosDetalle[fotoActiva] ?? selectedProduct.image} />
+                {fotosDetalle.length > 1 && (
+                  <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 px-3 flex-wrap">
+                    {fotosDetalle.map((foto: string, i: number) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setFotoActiva(i)}
+                        aria-label={`Ver foto ${i + 1} de ${selectedProduct.name}`}
+                        aria-current={fotoActiva === i}
+                        className="w-10 h-10 rounded-lg overflow-hidden border-2 shrink-0 transition-all active:scale-95"
+                        style={{ borderColor: fotoActiva === i ? '#fff' : 'transparent', opacity: fotoActiva === i ? 1 : 0.7 }}
+                      >
+                        <img src={foto} className="w-full h-full object-cover" alt="" />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
             <div className="p-5">

@@ -3018,6 +3018,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                     filas={newStoreProduct.presentaciones}
                     onChange={(filas) => setNewStoreProduct(prev => ({ ...prev, presentaciones: filas }))}
                     ayuda={plantillaEsPorPeso(tpl) ? 'Esta tienda vende por peso: agrega las medidas con su precio (100 g, 250 g, 1 kg…).' : 'Opcional: un mismo producto en varias medidas o tamaños, cada una con su precio.'}
+                    categoria={newStoreProduct.category}
                   />
                 );
               })()}

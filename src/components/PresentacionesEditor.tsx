@@ -4,14 +4,16 @@
 // El del panel del dueño (/admin) tiene el mismo comportamiento con su propio estilo. Ver lib/presentaciones.ts.
 
 import { useState } from 'react';
-import { PRESENTACIONES_SUGERIDAS, type FilaPresentacion } from '@/lib/presentaciones';
+import { presentacionesSugeridas, type FilaPresentacion } from '@/lib/presentaciones';
 
 export default function PresentacionesEditor({
-  filas, onChange, ayuda,
+  filas, onChange, ayuda, categoria,
 }: {
   filas: FilaPresentacion[];
   onChange: (filas: FilaPresentacion[]) => void;
   ayuda?: string;
+  /** Categoría del producto: si es de bebidas, los botones rápidos sugieren onzas en vez de peso. */
+  categoria?: string;
 }) {
   // Fila recién agregada: el cursor cae en lo que falta por escribir (el precio, o el nombre en "+ Otra").
   const [foco, setFoco] = useState<{ i: number; campo: 'label' | 'price' } | null>(null);
@@ -65,7 +67,7 @@ export default function PresentacionesEditor({
       ))}
 
       <div className="flex flex-wrap gap-1.5">
-        {PRESENTACIONES_SUGERIDAS.filter((l) => !usadas.has(l.toLowerCase())).map((l) => (
+        {presentacionesSugeridas(categoria).filter((l) => !usadas.has(l.toLowerCase())).map((l) => (
           <button
             key={l} type="button"
             onClick={() => agregar(l)}

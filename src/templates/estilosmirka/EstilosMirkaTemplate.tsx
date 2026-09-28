@@ -20,7 +20,9 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
 
   const [selectedSize, setSelectedSize] = useState('M');
   const [detailQty, setDetailQty] = useState(1);
-  
+  // Foto que se ve arriba en el detalle, cuando el producto tiene más de una.
+  const [fotoActiva, setFotoActiva] = useState(0);
+
   // Cart State
   const [cart, setCart] = useState<{ product: any; quantity: number }[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -43,6 +45,7 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
             hasOffer: p.price_anterior > 0,
             category: p.category ? p.category.toLowerCase() : 'vestidos',
             image: p.image || 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&q=80',
+            images: Array.isArray(p.images) && p.images.length > 1 ? p.images : undefined,
             description: p.description || 'Prenda exclusiva de Estilos Mirka.'
           }));
           setSupabaseProducts(formatted);
@@ -61,6 +64,15 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
   // Detalle de producto con URL propia (/<tienda>/producto/<id>): compartible y
   // es lo que Google indexa, en vez de un modal que solo vivía en un useState.
   const { seleccionado: selectedProduct, abrir: abrirProducto, cerrar: cerrarProducto } = useDetalleProducto(store.slug, allProducts, initialProductId);
+
+  // Al abrir otro producto se vuelve a la primera foto de su galería.
+  useEffect(() => {
+    setFotoActiva(0);
+  }, [selectedProduct]);
+
+  const fotosDetalle = selectedProduct
+    ? (selectedProduct.images && selectedProduct.images.length > 1 ? selectedProduct.images : [selectedProduct.image])
+    : [];
 
   // Categorias de la ficha real de la tienda (panel admin), no una lista fija
   // de rubro de ropa: antes "Faldas"/"Blazers" salian aunque la tienda hubiera
@@ -392,15 +404,33 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
 
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto pb-28">
-            {/* Image (3:4 ratio for clothes) */}
+            {/* Image gallery (3:4 ratio for clothes) */}
             <div className="w-full relative bg-gray-100 aspect-[3/4] max-w-md mx-auto">
               <img
-                src={selectedProduct.image}
+                src={fotosDetalle[fotoActiva] ?? selectedProduct.image}
                 alt={selectedProduct.title}
                 className="w-full h-full object-cover object-top"
               />
               {selectedProduct.hasOffer && (
                 <span className="absolute top-4 left-4 text-white text-[10px] font-black px-3 py-1 shadow uppercase tracking-wide" style={{ background: theme.primary, borderRadius: '2px' }}>OFERTA</span>
+              )}
+              {/* Miniaturas: solo si hay más de una foto */}
+              {fotosDetalle.length > 1 && (
+                <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2 px-4 flex-wrap">
+                  {fotosDetalle.map((foto: string, i: number) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setFotoActiva(i)}
+                      aria-label={`Ver foto ${i + 1} de ${selectedProduct.title}`}
+                      aria-current={fotoActiva === i}
+                      className="w-11 h-11 rounded-lg overflow-hidden border-2 shrink-0 transition-all active:scale-95"
+                      style={{ borderColor: fotoActiva === i ? '#fff' : 'transparent', opacity: fotoActiva === i ? 1 : 0.7 }}
+                    >
+                      <img src={foto} className="w-full h-full object-cover" alt="" />
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
 

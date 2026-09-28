@@ -27,7 +27,7 @@ import LoyverseSyncModal from '@/components/admin/LoyverseSyncModal';
 import MiPlan from '@/components/admin/MiPlan';
 import CobroOnline from '@/components/admin/CobroOnline';
 import { COLS_OFERTA, precioOfertaVigente, porcentajeOferta } from '@/lib/ofertas';
-import { COL_PRESENTACIONES, PRESENTACIONES_SUGERIDAS, leerPresentaciones, precioDesde } from '@/lib/presentaciones';
+import { COL_PRESENTACIONES, presentacionesSugeridas, leerPresentaciones, precioDesde } from '@/lib/presentaciones';
 
 interface Product {
   id: string;
@@ -2958,7 +2958,11 @@ function AdminDashboard({ user }: { user: User }) {
                     <span className="material-symbols-outlined text-gray-600 text-[18px]">scale</span>
                     ¿Lo vendes por peso o en varios tamaños? <span className="font-medium text-gray-500">(opcional)</span>
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">Ej. especias: 100 g, 250 g, 1 kg, cada uno con su precio. Tu cliente elige la medida al pedir.</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {newProduct.category.toLowerCase().includes('bebida')
+                      ? 'Ej. bebidas: 12 oz, 16 oz, cada una con su precio. Tu cliente elige el tamaño de vaso al pedir.'
+                      : 'Ej. especias: 100 g, 250 g, 1 kg, cada uno con su precio. Tu cliente elige la medida al pedir.'}
+                  </p>
 
                   {newProduct.presentaciones.length > 0 && (
                     <div className="flex flex-col gap-2 mt-3">
@@ -2997,7 +3001,7 @@ function AdminDashboard({ user }: { user: User }) {
                   )}
 
                   <div className="flex flex-wrap gap-2 mt-3">
-                    {PRESENTACIONES_SUGERIDAS.filter((l) => !newProduct.presentaciones.some((x) => x.label.trim().toLowerCase() === l.toLowerCase())).map((l) => (
+                    {presentacionesSugeridas(newProduct.category).filter((l) => !newProduct.presentaciones.some((x) => x.label.trim().toLowerCase() === l.toLowerCase())).map((l) => (
                       <button
                         key={l}
                         type="button"

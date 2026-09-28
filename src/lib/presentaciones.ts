@@ -11,8 +11,17 @@ export type Presentacion = { label: string; price: number };
 /** Nombre de la columna en `products`. */
 export const COL_PRESENTACIONES = 'presentaciones';
 
-/** Botones rápidos del formulario del dueño. */
+/** Botones rápidos del formulario del dueño (productos por peso: especias, granos…). */
 export const PRESENTACIONES_SUGERIDAS = ['100 g', '250 g', '500 g', '1 kg'];
+
+/** Botones rápidos para bebidas (tamaño de vaso): medidas de onzas en vez de peso. */
+export const PRESENTACIONES_SUGERIDAS_BEBIDAS = ['12 oz', '14 oz', '16 oz', '20 oz'];
+
+/** Elige los botones rápidos según la categoría del producto: onzas si la categoría es de bebidas, peso si no. */
+export function presentacionesSugeridas(categoria: unknown): string[] {
+  const c = typeof categoria === 'string' ? categoria.toLowerCase() : '';
+  return c.includes('bebida') ? PRESENTACIONES_SUGERIDAS_BEBIDAS : PRESENTACIONES_SUGERIDAS;
+}
 
 /** Lee lo que venga de la base y deja solo presentaciones válidas (etiqueta con texto y precio > 0), sin repetir etiquetas. */
 export function leerPresentaciones(v: unknown): Presentacion[] {
