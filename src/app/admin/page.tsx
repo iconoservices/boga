@@ -344,7 +344,8 @@ function AdminDashboard({ user }: { user: User }) {
 
   const [newProduct, setNewProduct] = useState({
     name: '',
-    store: selectedStore === 'all' ? '' : selectedStore,
+    // "all" sin tienda propia que asumir, salvo que solo administres una: ahí no hay ambigüedad.
+    store: selectedStore === 'all' ? (Object.keys(stores).length === 1 ? Object.keys(stores)[0] : '') : selectedStore,
     price: '',
     category: '',
     subcategory: '',
@@ -367,7 +368,8 @@ function AdminDashboard({ user }: { user: User }) {
     setEditingProductId(null);
     setNewProduct({
       name: '',
-      store: selectedStore === 'all' ? '' : selectedStore,
+      // "all" sin tienda propia que asumir, salvo que solo administres una: ahí no hay ambigüedad.
+      store: selectedStore === 'all' ? (Object.keys(stores).length === 1 ? Object.keys(stores)[0] : '') : selectedStore,
       price: '',
       category: '',
       subcategory: '',
@@ -2871,7 +2873,8 @@ function AdminDashboard({ user }: { user: User }) {
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">Asignar a Tienda</label>
-                    <select 
+                    <select
+                      required
                       value={newProduct.store}
                       onChange={(e) => {
                         const newStore = e.target.value;
@@ -2886,6 +2889,7 @@ function AdminDashboard({ user }: { user: User }) {
                       className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black transition-all appearance-none cursor-pointer"
                       style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'black\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.2em' }}
                     >
+                      <option value="" disabled>Selecciona...</option>
                       {Object.values(stores).map(store => (
                         <option key={store.slug} value={store.slug}>{store.name}</option>
                       ))}
