@@ -347,6 +347,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     horario: '',
     rating: '',
     metodosPago: [] as string[],
+    entrega: 'ambos' as 'delivery' | 'recojo' | 'ambos',
     facebook: '',
     instagram: '',
     tiktok: '',
@@ -433,6 +434,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       direccion: storeForm.direccion || undefined,
       horario: storeForm.horario || undefined,
       rating: storeForm.rating !== '' ? Number(storeForm.rating) : undefined,
+      entrega: storeForm.entrega,
       // Solo en ESTA vista previa (donde armamos la tienda) se muestran los productos de ejemplo de la plantilla:
       // ayudan a ver cómo quedan las tarjetas. En cuanto la tienda tiene productos propios, la plantilla los
       // reemplaza sola (lib/demo.ts). La tienda pública real no los muestra nunca (show_demo_products = false).
@@ -497,6 +499,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       horario: '',
       rating: '',
       metodosPago: [],
+      entrega: 'ambos',
       facebook: '',
       instagram: '',
       tiktok: '',
@@ -714,6 +717,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       horario: '',
       rating: '',
       metodosPago: [],
+      entrega: 'ambos',
       facebook: '',
       instagram: '',
       tiktok: '',
@@ -776,6 +780,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       horario: store.horario || '',
       rating: store.rating != null ? String(store.rating) : '',
       metodosPago: store.metodosPago || [],
+      entrega: store.entrega === 'delivery' || store.entrega === 'recojo' ? store.entrega : 'ambos',
       facebook: store.facebook || '',
       instagram: store.instagram || '',
       tiktok: store.tiktok || '',
@@ -985,6 +990,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       horario: storeForm.horario || null,
       rating: storeForm.rating !== '' ? Number(storeForm.rating) : null,
       metodos_pago: storeForm.metodosPago.length ? storeForm.metodosPago : null,
+      entrega: storeForm.entrega,
       facebook: storeForm.facebook || null,
       instagram: storeForm.instagram || null,
       tiktok: storeForm.tiktok || null,
@@ -1024,7 +1030,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       // Mismo problema que ya paso con `whatsapp` en el panel del cliente: si una
       // columna nueva todavia no existe en la base, reintenta sin ella en vez de
       // perder el guardado completo de la tienda.
-      const columnasOpcionales = ['whatsapp', 'zona', 'direccion', 'horario', 'rating', 'show_demo_products', 'metodos_pago', 'facebook', 'instagram', 'tiktok', 'external_url', 'subdominio_activo', 'push_activo', 'modulos'];
+      const columnasOpcionales = ['whatsapp', 'zona', 'direccion', 'horario', 'rating', 'show_demo_products', 'metodos_pago', 'entrega', 'facebook', 'instagram', 'tiktok', 'external_url', 'subdominio_activo', 'push_activo', 'modulos'];
       const columnasFaltantes: string[] = [];
       let faltante = columnasOpcionales.find((col) => col in upsertData && new RegExp(col).test(error?.message || ''));
       while (error && faltante) {
@@ -2376,6 +2382,32 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                       </div>
 
                       <div>
+                        <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">¿Cómo Entrega sus Pedidos?</label>
+                        <div className="flex flex-wrap gap-2">
+                          {([
+                            { id: 'ambos', label: 'Ambos' },
+                            { id: 'delivery', label: 'Solo delivery' },
+                            { id: 'recojo', label: 'Solo recojo' },
+                          ] as const).map((op) => {
+                            const activo = storeForm.entrega === op.id;
+                            return (
+                              <button
+                                key={op.id}
+                                type="button"
+                                onClick={() => setStoreForm(prev => ({ ...prev, entrega: op.id }))}
+                                className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-all ${
+                                  activo ? 'bg-[#0058be] text-white border-[#0058be]' : 'bg-[#f8fafc] text-[#545f73] border-[#ecedf7]'
+                                }`}
+                              >
+                                {op.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <p className="text-[9px] text-[#727785] font-semibold mt-1">Define qué le ofrece el carrito al cliente al confirmar su pedido.</p>
+                      </div>
+
+                      <div>
                         <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Paquete Comercial</label>
                         <select
                           value={storeForm.tier}
@@ -2406,30 +2438,15 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                       Se ve en el sitio público de la tienda. Si no tiene local a la calle, déjalo vacío.
                     </p>
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Zona / Distrito</label>
-                        <input
-                          type="text"
-                          value={storeForm.zona}
-                          onChange={(e) => setStoreForm(prev => ({ ...prev, zona: e.target.value }))}
-                          className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
-                          placeholder="Ej: Miraflores"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Calificación</label>
-                        <input
-                          type="number"
-                          min={0}
-                          max={5}
-                          step={0.1}
-                          value={storeForm.rating}
-                          onChange={(e) => setStoreForm(prev => ({ ...prev, rating: e.target.value }))}
-                          className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
-                          placeholder="Ej: 4.8"
-                        />
-                      </div>
+                    <div>
+                      <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Zona / Distrito</label>
+                      <input
+                        type="text"
+                        value={storeForm.zona}
+                        onChange={(e) => setStoreForm(prev => ({ ...prev, zona: e.target.value }))}
+                        className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
+                        placeholder="Ej: Miraflores"
+                      />
                     </div>
 
                     <div>
@@ -2747,6 +2764,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           horario: '',
                           rating: '',
                           metodosPago: [],
+                          entrega: 'ambos',
                           facebook: '',
                           instagram: '',
                           tiktok: '',

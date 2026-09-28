@@ -3662,44 +3662,44 @@ function AdminDashboard({ user }: { user: User }) {
                       Si prendes el interruptor de abajo, tus clientes verán un botón «Cómo llegar».
                     </p>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!navigator.geolocation) { alert('Este dispositivo no permite ubicarte.'); return; }
-                        navigator.geolocation.getCurrentPosition(
-                          (pos) => setStoreForm(prev => ({ ...prev, latitud: Number(pos.coords.latitude.toFixed(6)), longitud: Number(pos.coords.longitude.toFixed(6)) })),
-                          () => alert('No pudimos ubicarte. Activa el permiso de ubicación del navegador e inténtalo de nuevo.'),
-                          { enableHighAccuracy: true, timeout: 15000 },
-                        );
-                      }}
-                      className="px-4 py-2.5 bg-black text-white rounded-md text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-transform"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">my_location</span>
-                      {storeForm.latitud != null ? 'Actualizar con mi ubicación actual' : 'Ubicar mi tienda'}
-                    </button>
-                    {storeForm.latitud != null && storeForm.longitud != null && (
-                      <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!navigator.geolocation) { alert('Este dispositivo no permite ubicarte.'); return; }
+                      navigator.geolocation.getCurrentPosition(
+                        (pos) => setStoreForm(prev => ({ ...prev, latitud: Number(pos.coords.latitude.toFixed(6)), longitud: Number(pos.coords.longitude.toFixed(6)) })),
+                        () => alert('No pudimos ubicarte. Activa el permiso de ubicación del navegador e inténtalo de nuevo.'),
+                        { enableHighAccuracy: true, timeout: 15000 },
+                      );
+                    }}
+                    className="px-4 py-2.5 bg-black text-white rounded-md text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-transform"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">my_location</span>
+                    {storeForm.latitud != null ? 'Actualizar con mi ubicación actual' : 'Ubicar mi tienda'}
+                  </button>
+                  {storeForm.latitud != null && storeForm.longitud != null ? (
+                    <div className="flex flex-wrap items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                      <span className="material-symbols-outlined text-green-600 text-[18px] shrink-0">check_circle</span>
+                      <span className="text-xs font-bold text-green-800">Ubicación guardada</span>
+                      <span className="text-[10px] text-green-700/70 font-mono">{storeForm.latitud}, {storeForm.longitud}</span>
+                      <div className="flex items-center gap-1 ml-auto">
                         <a
                           href={`https://www.google.com/maps?q=${storeForm.latitud},${storeForm.longitud}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs font-bold text-blue-600 underline underline-offset-2"
+                          className="text-xs font-bold text-blue-700 bg-white border border-blue-200 rounded-full px-2.5 py-1 hover:bg-blue-50 transition-colors"
                         >
                           Ver en el mapa
                         </a>
                         <button
                           type="button"
                           onClick={() => setStoreForm(prev => ({ ...prev, latitud: null, longitud: null, mostrar_ubicacion: false }))}
-                          className="text-xs font-bold text-red-600"
+                          className="text-xs font-bold text-red-600 bg-white border border-red-200 rounded-full px-2.5 py-1 hover:bg-red-50 transition-colors"
                         >
                           Quitar
                         </button>
-                      </>
-                    )}
-                  </div>
-                  {storeForm.latitud != null && storeForm.longitud != null ? (
-                    <p className="text-[11px] text-gray-500">Guardado: {storeForm.latitud}, {storeForm.longitud} (se aplica al guardar la tienda)</p>
+                      </div>
+                    </div>
                   ) : (
                     <p className="text-[11px] text-gray-400">Todavía no ubicaste tu tienda.</p>
                   )}
@@ -3713,19 +3713,6 @@ function AdminDashboard({ user }: { user: User }) {
                     />
                     <span><b>Mostrar «Cómo llegar»</b> a mis clientes (abre Google Maps con la ruta a tu local). Déjalo apagado si atiendes desde tu casa.</span>
                   </label>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5">Calificación (0 a 5, opcional)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    max={5}
-                    step={0.1}
-                    value={storeForm.rating}
-                    onChange={e => setStoreForm({ ...storeForm, rating: e.target.value })}
-                    className="w-full sm:w-40 px-4 py-3 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
-                    placeholder="Ej: 4.8"
-                  />
                 </div>
               </div>
 
