@@ -3716,8 +3716,19 @@ function AdminDashboard({ user }: { user: User }) {
             <div className="p-8 flex flex-col items-center gap-6" id="qr-container">
               <div className="p-4 bg-white rounded-md shadow-sm border border-gray-100 flex flex-col items-center">
                 <div className="text-lg font-black tracking-tight mb-4">{selectedStore !== 'all' ? stores[selectedStore]?.name : 'Boga Market'}</div>
-                <QRCodeSVG 
-                  value={selectedStore !== 'all' ? `${siteOrigin}/${selectedStore}` : `${siteOrigin}/explore`}
+                <QRCodeSVG
+                  value={(() => {
+                    if (selectedStore === 'all') return `${siteOrigin}/explore`;
+                    // Con subdominio propio activo, el QR apunta ahí en vez de a bogahub.app/<tienda>.
+                    const tieneSubdominio = dbStores.find((s: any) => s.slug === selectedStore)?.subdominio_activo === true;
+                    if (tieneSubdominio) {
+                      try {
+                        const u = new URL(siteOrigin);
+                        return `${u.protocol}//${selectedStore}.${u.host}`;
+                      } catch { /* siteOrigin vacío en el primer render del servidor: cae al de abajo */ }
+                    }
+                    return `${siteOrigin}/${selectedStore}`;
+                  })()}
                   size={200}
                   level="H"
                   includeMargin={true}
