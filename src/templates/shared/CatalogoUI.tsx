@@ -367,7 +367,7 @@ export function ProductModal({
    ════════════════════════════════════════════ */
 
 export function CartPanel({
-  t, cartItems, subtotal, onAdd, onRemove, onVaciar, onConfirmar, onIrAlMenu, whatsappVisible, pagoOnline, onPagarOnline, catalogo,
+  t, cartItems, subtotal, onAdd, onRemove, onVaciar, onConfirmar, onIrAlMenu, whatsappVisible, pagoOnline, onPagarOnline, catalogo, entregaDisponible = 'ambos',
 }: {
   t: StoreTheme;
   /** `clave`, `pres` y `precio` los pone useCatalogo (ver lib/presentaciones.ts); sin ellos la línea es el producto a su precio. */
@@ -384,6 +384,8 @@ export function CartPanel({
   /** La tienda cobra con tarjeta / Yape (Izipay): se ofrece pagar online además de confirmar por WhatsApp. */
   pagoOnline?: boolean;
   onPagarOnline?: (datos: { nombre: string; telefono: string; entrega: 'delivery' | 'recojo'; direccion: string }) => Promise<void> | void;
+  /** Cómo entrega la tienda: 'ambos' deja elegir (de siempre); 'delivery'/'recojo' fuerza esa sola opción y esconde el selector. */
+  entregaDisponible?: 'delivery' | 'recojo' | 'ambos';
 }) {
   const [pagando, setPagando] = React.useState(false);
   // «Usar mi ubicación»: en Pucallpa muchas direcciones son «jirón tal, frente al colegio»; con el punto del GPS el repartidor llega.
@@ -394,7 +396,7 @@ export function CartPanel({
   // dueño tenia que volver a preguntar quien pedia y si era delivery o recojo.
   // Pedirlo aca hace que el primer mensaje ya venga completo.
   const [nombre, setNombre] = React.useState('');
-  const [entrega, setEntrega] = React.useState<'delivery' | 'recojo'>('delivery');
+  const [entrega, setEntrega] = React.useState<'delivery' | 'recojo'>(entregaDisponible === 'recojo' ? 'recojo' : 'delivery');
   const [direccion, setDireccion] = React.useState('');
   const [celular, setCelular] = React.useState('');
 
@@ -575,23 +577,25 @@ export function CartPanel({
               </p>
             </div>
 
-            <div className="flex gap-2">
-              {(['delivery', 'recojo'] as const).map((opcion) => (
-                <button
-                  key={opcion}
-                  type="button"
-                  onClick={() => setEntrega(opcion)}
-                  className={`flex-1 py-2.5 rounded-xl font-bold ${TXT.small} uppercase border transition-all`}
-                  style={{
-                    background: entrega === opcion ? t.primary : t.surface,
-                    color: entrega === opcion ? t.onPrimary : t.onSurfaceVariant,
-                    borderColor: entrega === opcion ? 'transparent' : `${t.outlineVariant}80`,
-                  }}
-                >
-                  {opcion === 'delivery' ? 'Delivery' : 'Recojo en tienda'}
-                </button>
-              ))}
-            </div>
+            {entregaDisponible === 'ambos' && (
+              <div className="flex gap-2">
+                {(['delivery', 'recojo'] as const).map((opcion) => (
+                  <button
+                    key={opcion}
+                    type="button"
+                    onClick={() => setEntrega(opcion)}
+                    className={`flex-1 py-2.5 rounded-xl font-bold ${TXT.small} uppercase border transition-all`}
+                    style={{
+                      background: entrega === opcion ? t.primary : t.surface,
+                      color: entrega === opcion ? t.onPrimary : t.onSurfaceVariant,
+                      borderColor: entrega === opcion ? 'transparent' : `${t.outlineVariant}80`,
+                    }}
+                  >
+                    {opcion === 'delivery' ? 'Delivery' : 'Recojo en tienda'}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {entrega === 'delivery' && (
               <div>

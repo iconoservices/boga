@@ -364,6 +364,7 @@ export default function MercadoTemplate({ store, initialProductId }: MercadoTemp
             onPagarOnline={c.pagarOnline}
             onIrAlMenu={() => irA('inicio')}
             whatsappVisible={c.whatsappVisible}
+            entregaDisponible={store.entrega}
             catalogo
           />
         )}

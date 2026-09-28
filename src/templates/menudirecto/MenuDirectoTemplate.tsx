@@ -147,6 +147,7 @@ export default function MenuDirectoTemplate({ store, initialProductId }: Props) 
             onPagarOnline={c.pagarOnline}
             onIrAlMenu={irAlMenu}
             whatsappVisible={c.whatsappVisible}
+            entregaDisponible={store.entrega}
           />
         )}
 

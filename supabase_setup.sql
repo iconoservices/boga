@@ -1832,3 +1832,11 @@ WITH CHECK (public.is_superadmin());
 -- `images` guarda TODAS las fotos en orden (la [0] siempre es la portada); NULL o vacía = solo la de `image`.
 -- Con más de una, la tarjeta del catálogo y la ficha del producto van rotando/mostrando miniaturas.
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS images JSONB;
+
+
+-- ============================================================
+-- CÓMO ENTREGA SUS PEDIDOS LA TIENDA (delivery / recojo / ambos)
+-- ============================================================
+-- 'ambos' (por defecto) deja elegir al cliente en el carrito, igual que siempre.
+-- 'delivery' o 'recojo' fuerzan esa única opción y esconden el selector.
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS entrega TEXT NOT NULL DEFAULT 'ambos';

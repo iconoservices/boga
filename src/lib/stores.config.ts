@@ -30,6 +30,8 @@ export interface StoreConfig {
   rating?: number;
   /** Metodos que el comercio acepta de verdad (ninguno se procesa en la app: el pago se coordina por WhatsApp). Si no cargo ninguno, se asume solo Efectivo. */
   metodosPago?: string[];
+  /** Cómo entrega sus pedidos: solo delivery, solo recojo en el local, o deja elegir al cliente. Sin configurar, se asume 'ambos'. */
+  entrega?: 'delivery' | 'recojo' | 'ambos';
   /** Links a sus redes: opcionales, cada uno se oculta si no lo cargo. */
   facebook?: string;
   instagram?: string;

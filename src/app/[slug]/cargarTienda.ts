@@ -96,6 +96,7 @@ async function cargarTienda(slug: string) {
         horario: dbStore.horario || undefined,
         rating: dbStore.rating ?? undefined,
         metodosPago: dbStore.metodos_pago || undefined,
+        entrega: (dbStore.entrega === 'delivery' || dbStore.entrega === 'recojo' ? dbStore.entrega : 'ambos') as 'delivery' | 'recojo' | 'ambos',
         facebook: dbStore.facebook || undefined,
         instagram: dbStore.instagram || undefined,
         tiktok: dbStore.tiktok || undefined,

@@ -304,6 +304,7 @@ export default function FichaDigitalTemplate({ store, initialProductId }: Props)
             onPagarOnline={c.pagarOnline}
             onIrAlMenu={() => navToMenu()}
             whatsappVisible={c.whatsappVisible}
+            entregaDisponible={store.entrega}
           />
         )}
 

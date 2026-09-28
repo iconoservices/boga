@@ -351,7 +351,7 @@ function AdminDashboard({ user }: { user: User }) {
   const [isStoreEditorOpen, setIsStoreEditorOpen] = useState(false);
   const [editingStoreSlug, setEditingStoreSlug] = useState<string | null>(null);
   const [isStoreSaving, setIsStoreSaving] = useState(false);
-  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '', show_demo_products: false, zona: '', direccion: '', horario: '', rating: '', metodos_pago: [] as string[], facebook: '', instagram: '', tiktok: '', latitud: null as number | null, longitud: null as number | null, mostrar_ubicacion: false });
+  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '', show_demo_products: false, zona: '', direccion: '', horario: '', rating: '', metodos_pago: [] as string[], facebook: '', instagram: '', tiktok: '', latitud: null as number | null, longitud: null as number | null, mostrar_ubicacion: false, entrega: 'ambos' as 'delivery' | 'recojo' | 'ambos' });
   // Constructor de horario a golpe de clic: arma el texto de storeForm.horario a partir de los días
   // y la hora elegidos, en vez de que el dueño tenga que escribirlo a mano. El campo de texto sigue
   // ahí para ajustarlo o escribir algo distinto (ej. "Cerramos los feriados").
@@ -711,6 +711,7 @@ function AdminDashboard({ user }: { user: User }) {
       latitud: typeof dbData?.latitud === 'number' ? dbData.latitud : null,
       longitud: typeof dbData?.longitud === 'number' ? dbData.longitud : null,
       mostrar_ubicacion: dbData?.mostrar_ubicacion === true,
+      entrega: dbData?.entrega === 'delivery' || dbData?.entrega === 'recojo' ? dbData.entrega : 'ambos',
     });
     // El constructor de horario arranca en blanco: no intenta adivinar los días/hora desde el texto libre que ya tenía.
     setHorarioDias([]);
@@ -785,6 +786,7 @@ function AdminDashboard({ user }: { user: User }) {
         horario: storeForm.horario || null,
         rating: storeForm.rating !== '' ? Number(storeForm.rating) : null,
         metodos_pago: storeForm.metodos_pago.length ? storeForm.metodos_pago : null,
+        entrega: storeForm.entrega,
         facebook: storeForm.facebook || null,
         instagram: storeForm.instagram || null,
         tiktok: storeForm.tiktok || null,
@@ -3539,6 +3541,31 @@ function AdminDashboard({ user }: { user: User }) {
                 {storeForm.metodos_pago.length === 0 && (
                   <p className="text-xs text-gray-400 mt-2">Si no eliges ninguno, tu tienda muestra solo Efectivo.</p>
                 )}
+
+                <label className="block text-sm font-bold text-gray-700 mt-6 mb-1">¿Cómo entregas tus pedidos?</label>
+                <p className="text-xs text-gray-500 mb-3">Define qué le ofrece el carrito al cliente al confirmar su pedido.</p>
+                <div className="grid grid-cols-3 gap-2.5">
+                  {([
+                    { id: 'ambos', label: 'Ambos', icon: 'sync_alt' },
+                    { id: 'delivery', label: 'Solo delivery', icon: 'moped' },
+                    { id: 'recojo', label: 'Solo recojo', icon: 'storefront' },
+                  ] as const).map((op) => {
+                    const activo = storeForm.entrega === op.id;
+                    return (
+                      <button
+                        key={op.id}
+                        type="button"
+                        onClick={() => setStoreForm({ ...storeForm, entrega: op.id })}
+                        className="relative flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all bg-white hover:border-gray-300"
+                        style={activo ? { borderColor: '#111827', background: '#1118270d' } : { borderColor: '#e5e7eb' }}
+                      >
+                        {activo && <span className="material-symbols-outlined absolute top-1 right-1 text-[16px] text-gray-900">check_circle</span>}
+                        <span className="material-symbols-outlined text-[20px] text-gray-700">{op.icon}</span>
+                        <span className="text-xs font-bold text-gray-700">{op.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Cobro online (Izipay): solo con el módulo «pasarela_pago» prendido por el superadmin */}

@@ -42,8 +42,9 @@ Mira el detalle de mi pedido (N° ${codigo.toUpperCase()}): ${sitio}/pedido/${co
   window.open(`https://wa.me/${numero}?text=${encodeURIComponent(texto)}`, '_blank');
   // Conversión para Google Analytics / Ads: el cliente mandó su pedido a la tienda (solo si GA está activo).
   if (pedido) (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.('event', 'generate_lead', { tipo: 'pedido', currency: 'PEN', tienda: store.slug });
-  // Solo los pedidos de carrito: PedidoEnviadoSheet ofrece el comprobante en PDF para guardarlo o compartirlo luego.
-  if (pedido) window.dispatchEvent(new CustomEvent('boga:pedido-enviado', { detail: { tienda: store.name, mensaje, codigo } }));
+  // Comprobante en PDF (PedidoEnviadoSheet) desactivado por ahora: confundía al cliente, parecía parte
+  // de mandar el pedido. Para volver a ofrecerlo, solo hay que destapar esta línea.
+  // if (pedido) window.dispatchEvent(new CustomEvent('boga:pedido-enviado', { detail: { tienda: store.name, mensaje, codigo } }));
   return true;
 }
 

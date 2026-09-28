@@ -226,6 +226,7 @@ export default function InicioCatalogoTemplate({ store, initialProductId }: Prop
             onPagarOnline={c.pagarOnline}
             onIrAlMenu={() => navToMenu()}
             whatsappVisible={c.whatsappVisible}
+            entregaDisponible={store.entrega}
           />
         )}
 
