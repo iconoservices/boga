@@ -115,11 +115,12 @@ export default function FloresTemplate({ store, initialProductId }: FloresTempla
   const cartItemsCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   const sendCartToWhatsApp = async () => {
-    const cliente = await pedirDatosCliente({ color: store.theme.primary });
+    const cliente = await pedirDatosCliente({ color: store.theme.primary, pedirEntrega: true, entregaDisponible: store.entrega });
     if (!cliente) return;
     const header = `*Pedido de ${store.name}*\n-------------------------\n`;
     const itemsText = cart.map((item) => `- ${item.product.name} (x${item.quantity}): S/ ${(item.product.price * item.quantity).toFixed(2)}`).join('\n');
-    const footer = `\n-------------------------\n*Total:* S/ ${cartTotal.toFixed(2)}\n*Cliente:* ${cliente.nombre} (${cliente.telefono})`;
+    const entregaTexto = cliente.entrega === 'recojo' ? 'Recojo en tienda' : cliente.entrega === 'delivery' ? `Delivery a: ${cliente.direccion}` : '';
+    const footer = `\n-------------------------\n*Total:* S/ ${cartTotal.toFixed(2)}\n*Cliente:* ${cliente.nombre} (${cliente.telefono})${entregaTexto ? `\n*Entrega:* ${entregaTexto}` : ''}`;
     enviarPedidoPorWhatsApp(store, header + itemsText + footer, {
       items: cart.map((item) => ({ id: String(item.product.id), quantity: item.quantity })),
       cliente,
@@ -341,7 +342,8 @@ export default function FloresTemplate({ store, initialProductId }: FloresTempla
                   <span className="text-lg" style={{ color: t.primary }}>S/ {cartTotal.toFixed(2)}</span>
                 </div>
                 <button onClick={sendCartToWhatsApp} className="w-full py-3 rounded-full text-xs font-black uppercase text-white shadow-md flex items-center justify-center gap-1.5 hover:brightness-105 active:scale-95 transition-all cursor-pointer bg-[#25D366]">
-                  💬 Enviar Pedido por WhatsApp
+                  <span className="material-symbols-outlined text-[18px]">chat</span>
+                  Enviar Pedido por WhatsApp
                 </button>
                 <button onClick={() => setIsCartOpen(false)} className="w-full py-3 rounded-full text-xs font-black uppercase cursor-pointer transition-all active:scale-95" style={{ background: t.onSurface, color: t.surface }}>
                   Seguir Comprando

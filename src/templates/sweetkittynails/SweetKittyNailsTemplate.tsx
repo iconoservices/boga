@@ -180,11 +180,12 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
 
   // WhatsApp integrations
   const sendCartToWhatsApp = async () => {
-    const cliente = await pedirDatosCliente({ color: store.theme.primary });
+    const cliente = await pedirDatosCliente({ color: store.theme.primary, pedirEntrega: true, entregaDisponible: store.entrega });
     if (!cliente) return;
     const header = `*Pedido de ${store.name}*\n-------------------------\n`;
     const itemsText = cart.map(item => `- ${item.product.title} (x${item.quantity}): S/ ${(item.product.price * item.quantity).toFixed(2)}`).join('\n');
-    const footer = `\n-------------------------\n*Total:* S/ ${cartTotal.toFixed(2)}\n*Cliente:* ${cliente.nombre} (${cliente.telefono})`;
+    const entregaTexto = cliente.entrega === 'recojo' ? 'Recojo en tienda' : cliente.entrega === 'delivery' ? `Delivery a: ${cliente.direccion}` : '';
+    const footer = `\n-------------------------\n*Total:* S/ ${cartTotal.toFixed(2)}\n*Cliente:* ${cliente.nombre} (${cliente.telefono})${entregaTexto ? `\n*Entrega:* ${entregaTexto}` : ''}`;
     enviarPedidoPorWhatsApp(store, header + itemsText + footer, {
       items: cart.map((item) => ({ id: String(item.product.id), quantity: item.quantity })),
       cliente,
@@ -592,7 +593,8 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
                     onClick={sendCartToWhatsApp}
                     className="w-full py-3 rounded-full text-xs font-black uppercase text-white shadow-md flex items-center justify-center gap-1.5 hover:brightness-105 active:scale-95 transition-all cursor-pointer bg-[#25D366]"
                   >
-                    💬 Enviar Pedido vía WhatsApp
+                    <span className="material-symbols-outlined text-[18px]">chat</span>
+                    Enviar Pedido vía WhatsApp
                   </button>
                   <button 
                     onClick={() => { setIsCartOpen(false); handleOpenBooking(); }}
@@ -680,7 +682,8 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
                     onClick={sendBookingToWhatsApp}
                     className="w-full py-3 rounded-full text-xs font-black uppercase text-white shadow-md flex items-center justify-center gap-1.5 hover:brightness-105 active:scale-95 transition-all cursor-pointer bg-[#25D366]"
                   >
-                    💬 Notificar a Kitty por WhatsApp
+                    <span className="material-symbols-outlined text-[18px]">chat</span>
+                    Notificar a Kitty por WhatsApp
                   </button>
                   <button 
                     onClick={() => setIsBookingOpen(false)}
