@@ -355,9 +355,16 @@ function AdminDashboard({ user }: { user: User }) {
   // Constructor de horario a golpe de clic: arma el texto de storeForm.horario a partir de los días
   // y la hora elegidos, en vez de que el dueño tenga que escribirlo a mano. El campo de texto sigue
   // ahí para ajustarlo o escribir algo distinto (ej. "Cerramos los feriados").
-  const [horarioDias, setHorarioDias] = useState<string[]>([]);
-  const [horarioDesde, setHorarioDesde] = useState('09:00');
-  const [horarioHasta, setHorarioHasta] = useState('18:00');
+  type BloqueHorario = { dias: string[]; desde: string; hasta: string };
+  const BLOQUE_VACIO: BloqueHorario = { dias: [], desde: '09:00', hasta: '18:00' };
+  const [horarioBloques, setHorarioBloques] = useState<BloqueHorario[]>([BLOQUE_VACIO]);
+  // Un mismo día no puede estar en dos bloques a la vez (¿cuál horario valdría?): el JSX
+  // deshabilita el botón de ese día en los demás bloques mientras esté marcado en uno.
+  const actualizarBloques = (bloques: BloqueHorario[]) => {
+    setHorarioBloques(bloques);
+    const texto = bloques.map((b) => formatearHorario(b.dias, b.desde, b.hasta)).filter(Boolean).join(' · ');
+    setStoreForm((prev) => ({ ...prev, horario: texto || prev.horario }));
+  };
   const [storeLogoFile, setStoreLogoFile] = useState<File | null>(null);
   const [storeHeroFile, setStoreHeroFile] = useState<File | null>(null);
   const [storeLogoPreview, setStoreLogoPreview] = useState<string | null>(null);
@@ -714,9 +721,7 @@ function AdminDashboard({ user }: { user: User }) {
       entrega: dbData?.entrega === 'delivery' || dbData?.entrega === 'recojo' ? dbData.entrega : 'ambos',
     });
     // El constructor de horario arranca en blanco: no intenta adivinar los días/hora desde el texto libre que ya tenía.
-    setHorarioDias([]);
-    setHorarioDesde('09:00');
-    setHorarioHasta('18:00');
+    setHorarioBloques([BLOQUE_VACIO]);
     setStoreHeroPreview(dbData?.hero_image || config?.heroImage || null);
     setStoreLogoPreview(dbData?.logo_image || config?.logoImage || null);
     setStoreLogoFile(null);
@@ -3460,13 +3465,22 @@ function AdminDashboard({ user }: { user: User }) {
               {/* Category */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Categoría en el Marketplace</label>
-                <input
-                  type="text"
+                <p className="text-xs text-gray-500 mb-2">Decide en qué sección de Explorar aparece tu tienda.</p>
+                <select
                   value={storeForm.marketplace_category}
                   onChange={e => setStoreForm({...storeForm, marketplace_category: e.target.value})}
-                  className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
-                  placeholder="Ej: Restaurantes, Moda, Salud..."
-                />
+                  className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none cursor-pointer"
+                  style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'black\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.2em' }}
+                >
+                  <option value="" disabled>Selecciona...</option>
+                  <option value="Restaurantes">Restaurantes</option>
+                  <option value="Mercado">Mercado</option>
+                  <option value="Salud y Bienestar">Salud y Bienestar</option>
+                  <option value="Moda y Belleza">Moda y Belleza</option>
+                  <option value="Moda">Moda</option>
+                  <option value="Servicios">Servicios</option>
+                  <option value="Tecnología">Tecnología</option>
+                </select>
               </div>
 
               {/* WhatsApp de pedidos */}
@@ -3595,51 +3609,80 @@ function AdminDashboard({ user }: { user: User }) {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1.5">Horario de atención</label>
-                  <div className="flex flex-wrap gap-1.5 mb-2">
-                    {DIAS_SEMANA.map((dia) => {
-                      const activo = horarioDias.includes(dia);
+                  <div className="space-y-3">
+                    {horarioBloques.map((bloque, idx) => {
+                      // Un día ya usado en otro bloque no se puede volver a marcar aquí (evita dos horarios para el mismo día).
+                      const diasUsadosEnOtros = new Set(horarioBloques.flatMap((b, j) => (j === idx ? [] : b.dias)));
                       return (
-                        <button
-                          key={dia}
-                          type="button"
-                          onClick={() => {
-                            const dias = activo ? horarioDias.filter((d) => d !== dia) : [...horarioDias, dia];
-                            setHorarioDias(dias);
-                            setStoreForm((prev) => ({ ...prev, horario: formatearHorario(dias, horarioDesde, horarioHasta) || prev.horario }));
-                          }}
-                          className={`w-10 h-9 rounded-lg text-xs font-bold transition-colors ${activo ? 'bg-black text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-                        >
-                          {dia}
-                        </button>
+                        <div key={idx} className="p-3 bg-gray-50 border border-gray-200 rounded-lg space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex flex-wrap gap-1.5">
+                              {DIAS_SEMANA.map((dia) => {
+                                const activo = bloque.dias.includes(dia);
+                                const usadoEnOtro = diasUsadosEnOtros.has(dia);
+                                return (
+                                  <button
+                                    key={dia}
+                                    type="button"
+                                    disabled={usadoEnOtro}
+                                    onClick={() => {
+                                      const dias = activo ? bloque.dias.filter((d) => d !== dia) : [...bloque.dias, dia];
+                                      actualizarBloques(horarioBloques.map((b, j) => (j === idx ? { ...b, dias } : b)));
+                                    }}
+                                    className={`w-9 h-8 rounded-lg text-xs font-bold transition-colors ${
+                                      usadoEnOtro ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : activo ? 'bg-black text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'
+                                    }`}
+                                  >
+                                    {dia}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            {horarioBloques.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => actualizarBloques(horarioBloques.filter((_, j) => j !== idx))}
+                                className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors shrink-0"
+                                aria-label="Quitar este horario"
+                              >
+                                <span className="material-symbols-outlined text-[16px]">close</span>
+                              </button>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="time"
+                              value={bloque.desde}
+                              onChange={(e) => actualizarBloques(horarioBloques.map((b, j) => (j === idx ? { ...b, desde: e.target.value } : b)))}
+                              className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-md font-medium text-sm focus:outline-none focus:border-black transition-all"
+                            />
+                            <span className="text-xs font-bold text-gray-400 shrink-0">a</span>
+                            <input
+                              type="time"
+                              value={bloque.hasta}
+                              onChange={(e) => actualizarBloques(horarioBloques.map((b, j) => (j === idx ? { ...b, hasta: e.target.value } : b)))}
+                              className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-md font-medium text-sm focus:outline-none focus:border-black transition-all"
+                            />
+                          </div>
+                        </div>
                       );
                     })}
-                  </div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <input
-                      type="time"
-                      value={horarioDesde}
-                      onChange={(e) => {
-                        setHorarioDesde(e.target.value);
-                        if (horarioDias.length) setStoreForm((prev) => ({ ...prev, horario: formatearHorario(horarioDias, e.target.value, horarioHasta) }));
-                      }}
-                      className="flex-1 px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-md font-medium text-sm focus:bg-white focus:outline-none focus:border-black transition-all"
-                    />
-                    <span className="text-xs font-bold text-gray-400 shrink-0">a</span>
-                    <input
-                      type="time"
-                      value={horarioHasta}
-                      onChange={(e) => {
-                        setHorarioHasta(e.target.value);
-                        if (horarioDias.length) setStoreForm((prev) => ({ ...prev, horario: formatearHorario(horarioDias, horarioDesde, e.target.value) }));
-                      }}
-                      className="flex-1 px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-md font-medium text-sm focus:bg-white focus:outline-none focus:border-black transition-all"
-                    />
+                    {horarioBloques.some((b) => b.dias.length) && horarioBloques.length < 7 && (
+                      <button
+                        type="button"
+                        onClick={() => setHorarioBloques([...horarioBloques, { ...BLOQUE_VACIO }])}
+                        className="text-xs font-bold text-gray-600 hover:text-black flex items-center gap-1"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">add</span>
+                        Agregar otro horario (ej. fin de semana distinto)
+                      </button>
+                    )}
                   </div>
                   <input
                     type="text"
                     value={storeForm.horario}
                     onChange={e => setStoreForm({ ...storeForm, horario: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                    className="w-full px-4 py-3 mt-2 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
                     placeholder="Ej: Lun a Dom, 12pm - 11pm"
                   />
                   <p className="text-[11px] text-gray-400 mt-1">Marca los días y la hora, o escribe el texto tal como quieres que se vea.</p>
