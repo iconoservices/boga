@@ -97,7 +97,7 @@ export default function DashboardPage() {
   if (loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#f9f9ff]">
-        <div className="w-8 h-8 border-2 border-[#c2c6d6] border-t-[#b8130e] rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[#c2c6d6] border-t-[var(--tienda-color)] rounded-full animate-spin" />
       </div>
     );
   }
@@ -886,9 +886,9 @@ function AdminDashboard({ user }: { user: User }) {
           onChange={(e) => setNuevoVendedor(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); agregarVendedor(); } }}
           placeholder="Nombre del vendedor"
-          className="flex-1 min-w-0 px-1.5 py-0.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#b8130e] h-7"
+          className="flex-1 min-w-0 px-1.5 py-0.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[var(--tienda-color)] h-7"
         />
-        <button type="button" onClick={agregarVendedor} className="px-2 h-7 rounded bg-[#b8130e] text-white text-[10px] font-bold cursor-pointer">Agregar</button>
+        <button type="button" onClick={agregarVendedor} className="px-2 h-7 rounded bg-[var(--tienda-color)] text-white text-[10px] font-bold cursor-pointer">Agregar</button>
       </div>
     </div>
   ) : null;
@@ -951,7 +951,7 @@ function AdminDashboard({ user }: { user: User }) {
           type="button"
           onClick={() => agregarStock(p)}
           title="Ingresar mercadería"
-          className="w-6 h-6 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:text-[#b8130e] hover:border-[#b8130e]/40 transition-colors cursor-pointer"
+          className="w-6 h-6 flex items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:text-[var(--tienda-color)] hover:border-[var(--tienda-color)]/40 transition-colors cursor-pointer"
         >
           <span className="material-symbols-outlined text-[14px]">add</span>
         </button>
@@ -1255,7 +1255,12 @@ function AdminDashboard({ user }: { user: User }) {
   };
 
   return (
-    <div className="min-h-screen md:h-screen md:overflow-hidden bg-[#f8f9fa] font-['Outfit'] flex flex-col md:flex-row">
+    <div
+      className="min-h-screen md:h-screen md:overflow-hidden bg-[#f8f9fa] font-['Outfit'] flex flex-col md:flex-row"
+      // Todo el rojo fijo del panel (bg-[var(--tienda-color)], text-[var(--tienda-color)]...) ahora
+      // toma la marca de la tienda que se está viendo; sin tienda (o sin color propio) cae al rojo de BogaHub.
+      style={{ '--tienda-color': inicioStore?.theme?.primary || '#b8130e' } as React.CSSProperties}
+    >
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
@@ -1264,7 +1269,7 @@ function AdminDashboard({ user }: { user: User }) {
           bajar con la rueda del mouse porque el documento entero scrolleaba. */}
       <aside className="hidden md:flex w-64 shrink-0 bg-white border-r border-gray-100 flex-col h-screen">
         <div className="p-6 flex items-center gap-3 border-b border-gray-50">
-          <div className="w-8 h-8 rounded-lg bg-[#b8130e] text-white flex items-center justify-center font-bold text-xl">B</div>
+          <div className="w-8 h-8 rounded-lg bg-[var(--tienda-color)] text-white flex items-center justify-center font-bold text-xl">B</div>
           <span className="font-extrabold text-xl tracking-tight text-gray-900">Workspace</span>
         </div>
         <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
@@ -1272,7 +1277,7 @@ function AdminDashboard({ user }: { user: User }) {
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md font-semibold transition-colors ${activeTab === t.id ? 'bg-[#b8130e] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md font-semibold transition-colors ${activeTab === t.id ? 'bg-[var(--tienda-color)] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
             >
               <span className="material-symbols-outlined text-[20px]">{t.icon}</span>
               {t.label}
@@ -1290,7 +1295,7 @@ function AdminDashboard({ user }: { user: User }) {
                 window.location.reload();
               }
             }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 text-[#b8130e] hover:bg-[#b8130e]/10 rounded-md font-bold transition-colors mt-4"
+            className="w-full flex items-center gap-3 px-3 py-2.5 text-[var(--tienda-color)] hover:bg-[var(--tienda-color)]/10 rounded-md font-bold transition-colors mt-4"
           >
             <span className="material-symbols-outlined text-[20px]">install_mobile</span>
             Instalar App
@@ -1380,7 +1385,7 @@ function AdminDashboard({ user }: { user: User }) {
                 </button>
                 <button
                   onClick={() => { resetForm(); setIsModalOpen(true); }}
-                  className="flex items-center justify-center gap-2 bg-[#b8130e] text-white px-5 py-2.5 rounded-md font-bold shadow-lg shadow-[#b8130e]/20 hover:shadow-[#b8130e]/30 transition-all hover:-translate-y-0.5 active:translate-y-0 w-full md:w-auto"
+                  className="flex items-center justify-center gap-2 bg-[var(--tienda-color)] text-white px-5 py-2.5 rounded-md font-bold shadow-lg shadow-[var(--tienda-color)]/20 hover:shadow-[var(--tienda-color)]/30 transition-all hover:-translate-y-0.5 active:translate-y-0 w-full md:w-auto"
                 >
                   <span className="material-symbols-outlined text-[18px]">add</span>
                   Nuevo Producto
@@ -1399,7 +1404,7 @@ function AdminDashboard({ user }: { user: User }) {
             <p className="text-gray-500 text-sm mt-1">Reclama la que te creó el equipo de BogaHub para empezar.</p>
             <button
               onClick={() => { setPickerDraft([]); setIsStorePickerOpen(true); }}
-              className="mt-5 px-4 py-2.5 bg-[#b8130e] text-white font-bold rounded-md text-sm"
+              className="mt-5 px-4 py-2.5 bg-[var(--tienda-color)] text-white font-bold rounded-md text-sm"
             >
               Reclamar mi carta
             </button>
@@ -1427,13 +1432,13 @@ function AdminDashboard({ user }: { user: User }) {
           const faltan = tareas.filter(t => !t.ok);
 
           const fila = 'w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors';
-          const icono = 'w-9 h-9 rounded-lg bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center shrink-0';
+          const icono = 'w-9 h-9 rounded-lg bg-[var(--tienda-color)]/10 text-[var(--tienda-color)] flex items-center justify-center shrink-0';
           const titulo = 'text-[11px] font-extrabold uppercase tracking-wider text-gray-400 mb-2 px-1';
 
           return (
           <div className="max-w-md md:max-w-2xl lg:max-w-5xl mx-auto flex flex-col gap-4 pb-24 md:pb-4">
             {/* Tu tienda: logo, selector, enlace y el interruptor "activa" */}
-            <div className="rounded-xl p-3.5 text-white shadow-sm flex items-center gap-3" style={{ background: inicioStore.theme?.primary || '#b8130e' }}>
+            <div className="rounded-xl p-3.5 text-white shadow-sm flex items-center gap-3" style={{ background: inicioStore.theme?.primary || 'var(--tienda-color)' }}>
               <div className="w-10 h-10 rounded-full bg-white/15 border border-white/25 overflow-hidden flex items-center justify-center shrink-0">
                 {inicioStore.logoImage
                   ? <img src={inicioStore.logoImage} alt={inicioStore.name} className="w-full h-full object-cover" />
@@ -1487,7 +1492,7 @@ function AdminDashboard({ user }: { user: User }) {
                 </div>
                 <button
                   onClick={() => setActiveTab('orders')}
-                  className={`rounded-xl p-3 shadow-sm text-left border transition-colors ${pendientes.length > 0 ? 'bg-[#b8130e] border-[#b8130e] text-white' : 'bg-white border-gray-100 text-gray-900'}`}
+                  className={`rounded-xl p-3 shadow-sm text-left border transition-colors ${pendientes.length > 0 ? 'bg-[var(--tienda-color)] border-[var(--tienda-color)] text-white' : 'bg-white border-gray-100 text-gray-900'}`}
                 >
                   <p className={`text-[11px] font-semibold ${pendientes.length > 0 ? 'text-white/80' : 'text-gray-400'}`}>Por atender</p>
                   <p className="text-xl font-black leading-tight mt-1">{pendientes.length}</p>
@@ -1504,13 +1509,13 @@ function AdminDashboard({ user }: { user: User }) {
                     <p className="font-bold text-gray-900 text-sm">Todo al día</p>
                     <p className="text-[11px] text-gray-500">No tienes pedidos por atender. Cuando llegue uno, aparece aquí.</p>
                   </div>
-                  <button onClick={() => setActiveTab('orders')} className="text-xs font-bold text-[#b8130e] shrink-0">Ver pedidos</button>
+                  <button onClick={() => setActiveTab('orders')} className="text-xs font-bold text-[var(--tienda-color)] shrink-0">Ver pedidos</button>
                 </div>
               ) : (
                 <>
                   <div className="px-4 pt-3 pb-1 flex items-center justify-between">
                     <p className="font-bold text-gray-900 text-sm">Pedidos por atender</p>
-                    <button onClick={() => setActiveTab('orders')} className="text-xs font-bold text-[#b8130e]">Ver todos ({pendientes.length})</button>
+                    <button onClick={() => setActiveTab('orders')} className="text-xs font-bold text-[var(--tienda-color)]">Ver todos ({pendientes.length})</button>
                   </div>
                   <div className="divide-y divide-gray-100">
                     {pendientes.slice(0, 3).map(o => (
@@ -1558,7 +1563,7 @@ function AdminDashboard({ user }: { user: User }) {
                     <span className="text-xs font-bold text-gray-500">{hechas} de {tareas.length}</span>
                   </div>
                   <div className="h-1.5 rounded-full bg-gray-100 mt-2 overflow-hidden">
-                    <div className="h-full rounded-full bg-[#b8130e] transition-all" style={{ width: `${(hechas / tareas.length) * 100}%` }} />
+                    <div className="h-full rounded-full bg-[var(--tienda-color)] transition-all" style={{ width: `${(hechas / tareas.length) * 100}%` }} />
                   </div>
                 </div>
                 <div className="divide-y divide-gray-100 border-t border-gray-100">
@@ -1626,7 +1631,7 @@ function AdminDashboard({ user }: { user: User }) {
                 onClick={() => setSelectedStore('all')}
                 className={`px-4 py-2 rounded-md text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-2 ${
                   selectedStore === 'all' 
-                    ? 'bg-[#b8130e] text-white shadow-md' 
+                    ? 'bg-[var(--tienda-color)] text-white shadow-md' 
                     : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
                 }`}
               >
@@ -1639,7 +1644,7 @@ function AdminDashboard({ user }: { user: User }) {
                   onClick={() => setSelectedStore(store.slug)}
                   className={`px-4 py-2 rounded-md text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-2 border ${
                     selectedStore === store.slug 
-                      ? 'bg-[#b8130e] text-white border-[#b8130e] shadow-md' 
+                      ? 'bg-[var(--tienda-color)] text-white border-[var(--tienda-color)] shadow-md' 
                       : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200'
                   }`}
                 >
@@ -1714,7 +1719,7 @@ function AdminDashboard({ user }: { user: User }) {
                           <div className="flex flex-row items-center gap-1.5">
                             <button
                               onClick={() => setIsQRModalOpen(true)}
-                              className="px-2.5 py-1.5 text-[11px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 bg-[#b8130e] text-white hover:bg-[#8f0f0b] whitespace-nowrap active:scale-95 cursor-pointer shadow-sm"
+                              className="px-2.5 py-1.5 text-[11px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 bg-[var(--tienda-color)] text-white hover:bg-[#8f0f0b] whitespace-nowrap active:scale-95 cursor-pointer shadow-sm"
                             >
                               <span className="material-symbols-outlined text-[14px]">qr_code_2</span>
                               Código QR
@@ -1764,7 +1769,7 @@ function AdminDashboard({ user }: { user: User }) {
                             onClick={() => setSelectedFilterCategory('all')}
                             className={`px-4 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition-colors uppercase tracking-wider border ${
                               selectedFilterCategory === 'all' 
-                                ? 'bg-[#b8130e] text-white border-transparent' 
+                                ? 'bg-[var(--tienda-color)] text-white border-transparent' 
                                 : 'bg-transparent text-gray-600 border-gray-200 hover:bg-gray-50'
                             }`}
                           >
@@ -1776,7 +1781,7 @@ function AdminDashboard({ user }: { user: User }) {
                               onClick={() => setSelectedFilterCategory(cat)}
                               className={`px-4 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap uppercase tracking-wider transition-colors border ${
                                 selectedFilterCategory === cat 
-                                  ? 'bg-[#b8130e] text-white border-transparent' 
+                                  ? 'bg-[var(--tienda-color)] text-white border-transparent' 
                                   : 'bg-transparent text-gray-600 border-gray-200 hover:bg-gray-50'
                               }`}
                             >
@@ -1799,7 +1804,7 @@ function AdminDashboard({ user }: { user: User }) {
                       <p className="text-gray-500 text-sm max-w-sm">No se encontraron productos para esta tienda. Empieza añadiendo el primero.</p>
                       <button 
                         onClick={() => { resetForm(); setIsModalOpen(true); }}
-                        className="mt-6 px-4 py-2 bg-[#b8130e] text-white font-semibold rounded-lg hover:bg-[#8f0f0b] transition-colors"
+                        className="mt-6 px-4 py-2 bg-[var(--tienda-color)] text-white font-semibold rounded-lg hover:bg-[#8f0f0b] transition-colors"
                       >
                         Añadir Producto
                       </button>
@@ -2074,7 +2079,7 @@ function AdminDashboard({ user }: { user: User }) {
 
             {/* Info banner */}
             <div className="bg-gray-50 border border-dashed border-gray-200 rounded-lg p-5 flex items-start gap-4">
-              <div className="w-10 h-10 rounded-full bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-full bg-[var(--tienda-color)]/10 text-[var(--tienda-color)] flex items-center justify-center shrink-0">
                 <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>tips_and_updates</span>
               </div>
               <div>
@@ -2150,7 +2155,7 @@ function AdminDashboard({ user }: { user: User }) {
                       <ul className="divide-y divide-gray-50">
                         {masVendidos.map((m, idx) => (
                           <li key={m.name + idx} className="flex items-center gap-3 px-4 py-3">
-                            <span className="w-6 h-6 rounded-full bg-[#b8130e]/10 text-[#b8130e] text-xs font-black flex items-center justify-center shrink-0">{idx + 1}</span>
+                            <span className="w-6 h-6 rounded-full bg-[var(--tienda-color)]/10 text-[var(--tienda-color)] text-xs font-black flex items-center justify-center shrink-0">{idx + 1}</span>
                             <span className="flex-1 min-w-0 truncate text-sm font-bold text-gray-900">{m.name}</span>
                             <span className="text-xs font-semibold text-gray-500">{m.unidades} unid.</span>
                             <span className="text-sm font-extrabold text-gray-900">S/ {m.monto.toFixed(2)}</span>
@@ -2164,7 +2169,7 @@ function AdminDashboard({ user }: { user: User }) {
             })()}
 
             {/* Install App Card for Mobile users */}
-            <div className="md:hidden bg-[#b8130e] text-white p-6 rounded-md shadow-md mt-2 flex flex-col items-center text-center">
+            <div className="md:hidden bg-[var(--tienda-color)] text-white p-6 rounded-md shadow-md mt-2 flex flex-col items-center text-center">
               <span className="material-symbols-outlined text-4xl mb-2">install_mobile</span>
               <h3 className="font-bold text-lg mb-1">Instalar Boga Dash</h3>
               <p className="text-white/80 text-sm mb-4">Instala la app en tu celular para una experiencia más rápida y nativa.</p>
@@ -2175,7 +2180,7 @@ function AdminDashboard({ user }: { user: User }) {
                     window.location.reload();
                   }
                 }}
-                className="w-full py-3 bg-white text-[#b8130e] rounded-md font-bold hover:bg-gray-50 transition-colors"
+                className="w-full py-3 bg-white text-[var(--tienda-color)] rounded-md font-bold hover:bg-gray-50 transition-colors"
               >
                 Instalar Ahora
               </button>
@@ -2205,7 +2210,7 @@ function AdminDashboard({ user }: { user: User }) {
                     value={posProductSearch}
                     onChange={(e) => setPosProductSearch(e.target.value)}
                     placeholder="Buscar productos..." 
-                    className="w-full h-8 pl-8 pr-2.5 bg-gray-50 border border-[#e1e3e4]/40 rounded-lg focus:ring-1 focus:ring-[#b8130e] focus:border-[#b8130e] focus:outline-none transition-all text-xs font-medium text-[#191c1d]"
+                    className="w-full h-8 pl-8 pr-2.5 bg-gray-50 border border-[#e1e3e4]/40 rounded-lg focus:ring-1 focus:ring-[var(--tienda-color)] focus:border-[var(--tienda-color)] focus:outline-none transition-all text-xs font-medium text-[#191c1d]"
                   />
                 </div>
                 <div className="flex-1 flex gap-1 overflow-x-auto hide-scrollbar py-0.5" style={{ scrollbarWidth: 'none' }}>
@@ -2213,7 +2218,7 @@ function AdminDashboard({ user }: { user: User }) {
                     onClick={() => setPosProductCategory('all')}
                     className={`px-2.5 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all border ${
                       posProductCategory === 'all' 
-                        ? 'bg-[#b8130e] text-white border-transparent shadow-sm' 
+                        ? 'bg-[var(--tienda-color)] text-white border-transparent shadow-sm' 
                         : 'bg-transparent text-gray-600 border-gray-100 hover:bg-gray-50'
                     }`}
                   >
@@ -2225,7 +2230,7 @@ function AdminDashboard({ user }: { user: User }) {
                       onClick={() => setPosProductCategory(cat)}
                       className={`px-2.5 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all border ${
                         posProductCategory === cat 
-                          ? 'bg-[#b8130e] text-white border-transparent shadow-sm' 
+                          ? 'bg-[var(--tienda-color)] text-white border-transparent shadow-sm' 
                           : 'bg-transparent text-gray-600 border-gray-100 hover:bg-gray-50'
                       }`}
                     >
@@ -2270,7 +2275,7 @@ function AdminDashboard({ user }: { user: User }) {
                           className={`product-card text-left flex flex-col bg-white border rounded-md overflow-hidden transition-all group ${
                             agotado ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-sm active:scale-[0.98] cursor-pointer'
                           } ${
-                            quantity > 0 ? 'border-[#b8130e] ring-1 ring-[#b8130e]/20' : 'border-[#e1e3e4]/30'
+                            quantity > 0 ? 'border-[var(--tienda-color)] ring-1 ring-[var(--tienda-color)]/20' : 'border-[#e1e3e4]/30'
                           }`}
                         >
                           <div className="h-20 w-full bg-[#ffece9] relative overflow-hidden shrink-0">
@@ -2282,7 +2287,7 @@ function AdminDashboard({ user }: { user: User }) {
                               </div>
                             )}
                             {(agotado || quantity > 0 || limitado) && (
-                              <div className={`absolute top-1 right-1 px-1 py-0.5 backdrop-blur rounded font-bold text-[7px] ${agotado ? 'bg-[#8c0009] text-white' : 'bg-white/90 text-[#b8130e]'}`}>
+                              <div className={`absolute top-1 right-1 px-1 py-0.5 backdrop-blur rounded font-bold text-[7px] ${agotado ? 'bg-[#8c0009] text-white' : 'bg-white/90 text-[var(--tienda-color)]'}`}>
                                 {agotado ? 'AGOTADO' : enMaximo ? `${quantity} EN CARRO · MÁX.` : quantity > 0 ? `${quantity} EN CARRO` : `QUEDAN ${p.stock}`}
                               </div>
                             )}
@@ -2290,7 +2295,7 @@ function AdminDashboard({ user }: { user: User }) {
                           <div className="p-1.5 flex-1 flex flex-col justify-between">
                             <h3 className="font-bold text-[11px] text-[#191c1d] truncate leading-tight" title={p.name}>{p.name}</h3>
                             <div className="flex items-center justify-between mt-1">
-                              <p className="font-extrabold text-xs text-[#b8130e]">
+                              <p className="font-extrabold text-xs text-[var(--tienda-color)]">
                                 S/ {(precioOfertaVigente(p) ?? p.price).toFixed(2)}
                                 {precioOfertaVigente(p) !== null && <span className="ml-1 text-[9px] font-medium text-gray-400 line-through">S/ {p.price.toFixed(2)}</span>}
                               </p>
@@ -2306,7 +2311,7 @@ function AdminDashboard({ user }: { user: User }) {
                                   <span className="text-[10px] font-black text-[#191c1d] w-3 text-center">{quantity}</span>
                                   <button 
                                     onClick={() => addToCart(p)}
-                                    className="text-gray-500 hover:text-[#b8130e] transition-colors flex items-center justify-center font-bold text-[10px] bg-white rounded shadow-sm cursor-pointer"
+                                    className="text-gray-500 hover:text-[var(--tienda-color)] transition-colors flex items-center justify-center font-bold text-[10px] bg-white rounded shadow-sm cursor-pointer"
                                     style={{ width: '18px', height: '18px' }}
                                   >
                                     +
@@ -2338,7 +2343,7 @@ function AdminDashboard({ user }: { user: User }) {
                 </div>
                 <button 
                   onClick={() => setIsCustomerDetailsOpen(!isCustomerDetailsOpen)}
-                  className="flex items-center gap-1 text-[#b8130e] font-bold text-[9px] mt-0.5 hover:underline cursor-pointer"
+                  className="flex items-center gap-1 text-[var(--tienda-color)] font-bold text-[9px] mt-0.5 hover:underline cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-[13px]">person_add</span>
                   {posCustomerName ? `${posCustomerName} (${posCustomerPhone || 'Sin Celular'})` : 'Agregar Cliente'}
@@ -2355,14 +2360,14 @@ function AdminDashboard({ user }: { user: User }) {
                       value={posCustomerName}
                       onChange={(e) => setPosCustomerName(e.target.value)}
                       placeholder="Nombre" 
-                      className="w-full px-1.5 py-0.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#b8130e] h-7"
+                      className="w-full px-1.5 py-0.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[var(--tienda-color)] h-7"
                     />
                     <input 
                       type="text" 
                       value={posCustomerPhone}
                       onChange={(e) => setPosCustomerPhone(e.target.value)}
                       placeholder="WhatsApp" 
-                      className="w-full px-1.5 py-0.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#b8130e] h-7"
+                      className="w-full px-1.5 py-0.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[var(--tienda-color)] h-7"
                     />
                   </div>
                 </div>
@@ -2375,7 +2380,7 @@ function AdminDashboard({ user }: { user: User }) {
                   <select 
                     value={posSeller} 
                     onChange={(e) => setPosSeller(e.target.value)}
-                    className="px-1.5 py-0.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#b8130e] cursor-pointer h-7"
+                    className="px-1.5 py-0.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[var(--tienda-color)] cursor-pointer h-7"
                   >
                     <option value="Administrador">Admin</option>
                     {equipo.map(n => <option key={n} value={n}>{n}</option>)}
@@ -2387,10 +2392,10 @@ function AdminDashboard({ user }: { user: User }) {
                       value={customSeller}
                       onChange={(e) => setCustomSeller(e.target.value)}
                       placeholder="Nombre" 
-                      className="w-24 px-1.5 py-0.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#b8130e] h-7"
+                      className="w-24 px-1.5 py-0.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[var(--tienda-color)] h-7"
                     />
                   )}
-                  <button type="button" onClick={() => setIsEquipoOpen(v => !v)} title="Mi equipo" className="w-7 h-7 shrink-0 flex items-center justify-center rounded border border-[#e1e3e4]/40 text-gray-500 hover:text-[#b8130e] cursor-pointer">
+                  <button type="button" onClick={() => setIsEquipoOpen(v => !v)} title="Mi equipo" className="w-7 h-7 shrink-0 flex items-center justify-center rounded border border-[#e1e3e4]/40 text-gray-500 hover:text-[var(--tienda-color)] cursor-pointer">
                     <span className="material-symbols-outlined text-[15px]">group</span>
                   </button>
                 </div>
@@ -2424,7 +2429,7 @@ function AdminDashboard({ user }: { user: User }) {
                           <span className="text-[10px] font-black text-[#191c1d] w-3 text-center">{item.quantity}</span>
                           <button 
                             onClick={() => addToCart(item.product)}
-                            className="text-gray-500 hover:text-[#b8130e] transition-colors flex items-center justify-center font-bold text-[10px] bg-white rounded shadow-sm cursor-pointer"
+                            className="text-gray-500 hover:text-[var(--tienda-color)] transition-colors flex items-center justify-center font-bold text-[10px] bg-white rounded shadow-sm cursor-pointer"
                             style={{ width: '18px', height: '18px' }}
                           >
                             +
@@ -2479,7 +2484,7 @@ function AdminDashboard({ user }: { user: User }) {
                   <button 
                     onClick={handlePosCheckout}
                     disabled={posCart.length === 0 || isPosSaving}
-                    className="w-full py-2 bg-[#b8130e] text-white rounded-lg font-bold text-[13px] shadow-lg shadow-[#b8130e]/20 hover:scale-[1.01] active:scale-95 transition-all disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none cursor-pointer flex items-center justify-center gap-1.5"
+                    className="w-full py-2 bg-[var(--tienda-color)] text-white rounded-lg font-bold text-[13px] shadow-lg shadow-[var(--tienda-color)]/20 hover:scale-[1.01] active:scale-95 transition-all disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     {isPosSaving ? (
                       <>
@@ -2501,12 +2506,12 @@ function AdminDashboard({ user }: { user: User }) {
             <div className="lg:hidden fixed bottom-[76px] md:bottom-0 left-0 right-0 bg-white border-t border-[#e1e3e4]/20 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] px-4 py-3 z-40 flex items-center justify-between">
               <div className="flex flex-col">
                 <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Total</span>
-                <span className="text-base font-black text-[#b8130e]">S/ {posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0).toFixed(2)}</span>
+                <span className="text-base font-black text-[var(--tienda-color)]">S/ {posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0).toFixed(2)}</span>
               </div>
               <button 
                 onClick={() => setIsMobileCheckoutOpen(true)}
                 disabled={posCart.length === 0}
-                className="bg-[#b8130e] text-white px-5 py-2.5 rounded-md font-bold text-xs flex items-center gap-1.5 active:scale-95 transition-transform disabled:bg-gray-200 disabled:text-gray-400 cursor-pointer shadow-md"
+                className="bg-[var(--tienda-color)] text-white px-5 py-2.5 rounded-md font-bold text-xs flex items-center gap-1.5 active:scale-95 transition-transform disabled:bg-gray-200 disabled:text-gray-400 cursor-pointer shadow-md"
               >
                 <span className="material-symbols-outlined text-[16px]">shopping_cart</span>
                 Cobrar ({posCart.reduce((sum, item) => sum + item.quantity, 0)})
@@ -2520,7 +2525,7 @@ function AdminDashboard({ user }: { user: User }) {
                   {/* Drawer Header */}
                   <div className="p-4 border-b border-[#e1e3e4]/30 bg-white flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[#b8130e] text-[20px]">shopping_cart</span>
+                      <span className="material-symbols-outlined text-[var(--tienda-color)] text-[20px]">shopping_cart</span>
                       <h3 className="font-extrabold text-base text-[#191c1d]">Confirmar Venta</h3>
                     </div>
                     <button onClick={() => setIsMobileCheckoutOpen(false)} className="text-gray-400 hover:text-black">
@@ -2548,7 +2553,7 @@ function AdminDashboard({ user }: { user: User }) {
                     <div className="p-3 border-b border-[#e1e3e4]/30 bg-white">
                       <button 
                         onClick={() => setIsCustomerDetailsOpen(!isCustomerDetailsOpen)}
-                        className="flex items-center gap-1 text-[#b8130e] font-bold text-xs hover:underline cursor-pointer"
+                        className="flex items-center gap-1 text-[var(--tienda-color)] font-bold text-xs hover:underline cursor-pointer"
                       >
                         <span className="material-symbols-outlined text-[16px]">person_add</span>
                         {posCustomerName ? `${posCustomerName} (${posCustomerPhone || 'Sin Celular'})` : 'Agregar Cliente'}
@@ -2561,14 +2566,14 @@ function AdminDashboard({ user }: { user: User }) {
                               value={posCustomerName}
                               onChange={(e) => setPosCustomerName(e.target.value)}
                               placeholder="Nombre" 
-                              className="w-full px-2.5 py-1.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#b8130e]"
+                              className="w-full px-2.5 py-1.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[var(--tienda-color)]"
                             />
                             <input 
                               type="text" 
                               value={posCustomerPhone}
                               onChange={(e) => setPosCustomerPhone(e.target.value)}
                               placeholder="WhatsApp" 
-                              className="w-full px-2.5 py-1.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#b8130e]"
+                              className="w-full px-2.5 py-1.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[var(--tienda-color)]"
                             />
                           </div>
                         </div>
@@ -2582,7 +2587,7 @@ function AdminDashboard({ user }: { user: User }) {
                         <select 
                           value={posSeller} 
                           onChange={(e) => setPosSeller(e.target.value)}
-                          className="w-full px-2.5 py-1.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#b8130e] cursor-pointer"
+                          className="w-full px-2.5 py-1.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[var(--tienda-color)] cursor-pointer"
                         >
                           <option value="Administrador">Administrador</option>
                           {equipo.map(n => <option key={n} value={n}>{n}</option>)}
@@ -2594,11 +2599,11 @@ function AdminDashboard({ user }: { user: User }) {
                             value={customSeller}
                             onChange={(e) => setCustomSeller(e.target.value)}
                             placeholder="Nombre" 
-                            className="w-full px-2.5 py-1.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[#b8130e]"
+                            className="w-full px-2.5 py-1.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[var(--tienda-color)]"
                           />
                         )}
                       </div>
-                      <button type="button" onClick={() => setIsEquipoOpen(v => !v)} className="self-start flex items-center gap-1 text-[#b8130e] font-bold text-[10px] hover:underline cursor-pointer">
+                      <button type="button" onClick={() => setIsEquipoOpen(v => !v)} className="self-start flex items-center gap-1 text-[var(--tienda-color)] font-bold text-[10px] hover:underline cursor-pointer">
                         <span className="material-symbols-outlined text-[14px]">group</span>
                         {isEquipoOpen ? 'Cerrar mi equipo' : 'Mi equipo'}
                       </button>
@@ -2626,7 +2631,7 @@ function AdminDashboard({ user }: { user: User }) {
                               <span className="text-[11px] font-black text-[#191c1d] w-3 text-center">{item.quantity}</span>
                               <button 
                                 onClick={() => addToCart(item.product)}
-                                className="text-gray-500 hover:text-[#b8130e] transition-colors w-5.5 h-5.5 flex items-center justify-center font-bold text-xs"
+                                className="text-gray-500 hover:text-[var(--tienda-color)] transition-colors w-5.5 h-5.5 flex items-center justify-center font-bold text-xs"
                               >
                                 +
                               </button>
@@ -2683,7 +2688,7 @@ function AdminDashboard({ user }: { user: User }) {
                             setIsMobileCheckoutOpen(false);
                           }}
                           disabled={posCart.length === 0 || isPosSaving}
-                          className="w-full py-3 bg-[#b8130e] text-white rounded-lg font-bold text-sm shadow-lg shadow-[#b8130e]/20 hover:scale-[1.01] active:scale-95 transition-all disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none cursor-pointer flex items-center justify-center gap-1.5"
+                          className="w-full py-3 bg-[var(--tienda-color)] text-white rounded-lg font-bold text-sm shadow-lg shadow-[var(--tienda-color)]/20 hover:scale-[1.01] active:scale-95 transition-all disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none cursor-pointer flex items-center justify-center gap-1.5"
                         >
                           {isPosSaving ? (
                             <>
@@ -2730,7 +2735,7 @@ function AdminDashboard({ user }: { user: User }) {
                   type="submit"
                   form="form-producto-dueno"
                   disabled={isSaving}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-[#b8130e] text-white rounded-md font-bold text-sm shadow-md shadow-[#b8130e]/20 hover:bg-[#8f0f0b] transition-colors disabled:opacity-70"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-[var(--tienda-color)] text-white rounded-md font-bold text-sm shadow-md shadow-[var(--tienda-color)]/20 hover:bg-[#8f0f0b] transition-colors disabled:opacity-70"
                 >
                   {isSaving ? (
                     <>
@@ -2799,10 +2804,10 @@ function AdminDashboard({ user }: { user: User }) {
                         <button
                           type="button"
                           onClick={() => setFotos((prev) => prev.filter((_, j) => j !== i))}
-                          className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity"
+                          className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-black/70 text-white flex items-center justify-center shadow-sm hover:bg-red-600 transition-colors"
                           aria-label={`Quitar foto ${i + 1}`}
                         >
-                          <span className="material-symbols-outlined text-[12px]">close</span>
+                          <span className="material-symbols-outlined text-[13px]">close</span>
                         </button>
                       </div>
                     ))}
@@ -3067,7 +3072,7 @@ function AdminDashboard({ user }: { user: User }) {
                     type="checkbox"
                     checked={newProduct.esServicio}
                     onChange={(e) => setNewProduct({ ...newProduct, esServicio: e.target.checked })}
-                    className="w-5 h-5 accent-[#b8130e] shrink-0"
+                    className="w-5 h-5 accent-[var(--tienda-color)] shrink-0"
                   />
                   <span>
                     <span className="block text-sm font-bold text-gray-800 flex items-center gap-1.5">
@@ -3084,7 +3089,7 @@ function AdminDashboard({ user }: { user: User }) {
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-[18px] text-[#b8130e]">inventory_2</span>
+                        <span className="material-symbols-outlined text-[18px] text-[var(--tienda-color)]">inventory_2</span>
                         Disponibilidad e Inventario
                       </h4>
                       <p className="text-xs text-gray-500 mt-0.5">Define si el producto tiene stock controlado o siempre está disponible</p>
@@ -3097,11 +3102,11 @@ function AdminDashboard({ user }: { user: User }) {
                       onClick={() => setNewProduct({ ...newProduct, stockType: 'ilimitado' })}
                       className={`p-3 rounded-lg border text-left transition-all flex items-start gap-2.5 ${
                         newProduct.stockType === 'ilimitado'
-                          ? 'border-[#b8130e] bg-white ring-2 ring-[#b8130e]/10 shadow-sm'
+                          ? 'border-[var(--tienda-color)] bg-white ring-2 ring-[var(--tienda-color)]/10 shadow-sm'
                           : 'border-gray-200 bg-white/50 hover:bg-white text-gray-600'
                       }`}
                     >
-                      <span className={`material-symbols-outlined text-[20px] shrink-0 mt-0.5 ${newProduct.stockType === 'ilimitado' ? 'text-[#b8130e]' : 'text-gray-400'}`}>
+                      <span className={`material-symbols-outlined text-[20px] shrink-0 mt-0.5 ${newProduct.stockType === 'ilimitado' ? 'text-[var(--tienda-color)]' : 'text-gray-400'}`}>
                         all_inclusive
                       </span>
                       <div>
@@ -3115,11 +3120,11 @@ function AdminDashboard({ user }: { user: User }) {
                       onClick={() => setNewProduct({ ...newProduct, stockType: 'limitado', stockQuantity: newProduct.stockQuantity || '10' })}
                       className={`p-3 rounded-lg border text-left transition-all flex items-start gap-2.5 ${
                         newProduct.stockType === 'limitado'
-                          ? 'border-[#b8130e] bg-white ring-2 ring-[#b8130e]/10 shadow-sm'
+                          ? 'border-[var(--tienda-color)] bg-white ring-2 ring-[var(--tienda-color)]/10 shadow-sm'
                           : 'border-gray-200 bg-white/50 hover:bg-white text-gray-600'
                       }`}
                     >
-                      <span className={`material-symbols-outlined text-[20px] shrink-0 mt-0.5 ${newProduct.stockType === 'limitado' ? 'text-[#b8130e]' : 'text-gray-400'}`}>
+                      <span className={`material-symbols-outlined text-[20px] shrink-0 mt-0.5 ${newProduct.stockType === 'limitado' ? 'text-[var(--tienda-color)]' : 'text-gray-400'}`}>
                         inventory
                       </span>
                       <div>
@@ -3141,7 +3146,7 @@ function AdminDashboard({ user }: { user: User }) {
                           min="0"
                           value={newProduct.stockQuantity}
                           onChange={(e) => setNewProduct({ ...newProduct, stockQuantity: e.target.value })}
-                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-center font-bold text-gray-900 focus:outline-none focus:border-[#b8130e]"
+                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-center font-bold text-gray-900 focus:outline-none focus:border-[var(--tienda-color)]"
                           placeholder="Ej: 15"
                         />
                       </div>
@@ -3691,7 +3696,7 @@ function AdminDashboard({ user }: { user: User }) {
                 <button
                   onClick={handleStoreSave}
                   disabled={isStoreSaving}
-                  className="flex items-center gap-2 px-8 py-3.5 bg-[#b8130e] text-white rounded-md font-bold shadow-lg shadow-[#b8130e]/20 hover:shadow-[#b8130e]/30 transition-all hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0"
+                  className="flex items-center gap-2 px-8 py-3.5 bg-[var(--tienda-color)] text-white rounded-md font-bold shadow-lg shadow-[var(--tienda-color)]/20 hover:shadow-[var(--tienda-color)]/30 transition-all hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0"
                 >
                   {isStoreSaving ? (
                     <>
@@ -3760,7 +3765,7 @@ function AdminDashboard({ user }: { user: User }) {
                     img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
                   }
                 }}
-                className="w-full flex items-center justify-center gap-2 bg-[#b8130e] text-white px-5 py-3 rounded-md font-bold shadow-lg hover:shadow-[#b8130e]/30 transition-all"
+                className="w-full flex items-center justify-center gap-2 bg-[var(--tienda-color)] text-white px-5 py-3 rounded-md font-bold shadow-lg hover:shadow-[var(--tienda-color)]/30 transition-all"
               >
                 <span className="material-symbols-outlined text-[18px]">download</span>
                 Descargar PNG
@@ -3792,7 +3797,7 @@ function AdminDashboard({ user }: { user: User }) {
                       setIsPDFModalOpen(false);
                     }}
                     disabled={isExporting}
-                    className="w-full flex items-center justify-between p-4 bg-[#f8f9fa] hover:bg-[#b8130e]/5 border border-gray-100 hover:border-[#b8130e]/20 rounded-lg transition-all text-left group cursor-pointer"
+                    className="w-full flex items-center justify-between p-4 bg-[#f8f9fa] hover:bg-[var(--tienda-color)]/5 border border-gray-100 hover:border-[var(--tienda-color)]/20 rounded-lg transition-all text-left group cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-md bg-white border border-gray-100 flex items-center justify-center text-red-500 shadow-sm">
@@ -3803,7 +3808,7 @@ function AdminDashboard({ user }: { user: User }) {
                         <p className="text-[11px] text-gray-500 mt-0.5">Catálogo listo para descargar</p>
                       </div>
                     </div>
-                    <span className="material-symbols-outlined text-gray-400 group-hover:text-[#b8130e] transition-colors">download</span>
+                    <span className="material-symbols-outlined text-gray-400 group-hover:text-[var(--tienda-color)] transition-colors">download</span>
                   </button>
                 ))}
             </div>
@@ -3816,7 +3821,7 @@ function AdminDashboard({ user }: { user: User }) {
         <div className="md:hidden fixed right-4 bottom-24 z-40">
           <button 
             onClick={() => { setIsModalOpen(true); resetForm(); }}
-            className="w-14 h-14 bg-[#b8130e] text-white rounded-full flex items-center justify-center shadow-lg hover:bg-[#8f0f0b] transition-colors"
+            className="w-14 h-14 bg-[var(--tienda-color)] text-white rounded-full flex items-center justify-center shadow-lg hover:bg-[#8f0f0b] transition-colors"
           >
             <span className="material-symbols-outlined text-3xl">add</span>
           </button>
@@ -3830,7 +3835,7 @@ function AdminDashboard({ user }: { user: User }) {
           <button
             key={t.id}
             onClick={() => setActiveTab(t.id)}
-            className={`relative flex flex-col items-center gap-1 w-16 py-2 rounded-[20px] transition-all ${activeTab === t.id ? 'bg-[#b8130e] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+            className={`relative flex flex-col items-center gap-1 w-16 py-2 rounded-[20px] transition-all ${activeTab === t.id ? 'bg-[var(--tienda-color)] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
           >
             {t.id === 'orders' && pedidosPendientes > 0 && (
               <span className="absolute top-0.5 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-orange-500 text-white text-[10px] font-black flex items-center justify-center">{pedidosPendientes}</span>
@@ -3922,7 +3927,7 @@ function AdminDashboard({ user }: { user: User }) {
                   <button
                     key={t.id}
                     onClick={() => { setActiveTab(t.id); setIsMobileMenuOpen(false); }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-md font-semibold transition-colors ${activeTab === t.id ? 'bg-[#b8130e] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-md font-semibold transition-colors ${activeTab === t.id ? 'bg-[var(--tienda-color)] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
                   >
                     <span className="material-symbols-outlined text-[20px]">{t.icon}</span>
                     {t.label}
@@ -3970,7 +3975,7 @@ function AdminDashboard({ user }: { user: User }) {
                       window.location.reload();
                     }
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-[#b8130e] bg-[#b8130e]/5 hover:bg-[#b8130e]/10 rounded-md font-bold transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-[var(--tienda-color)] bg-[var(--tienda-color)]/5 hover:bg-[var(--tienda-color)]/10 rounded-md font-bold transition-colors"
                 >
                   <span className="material-symbols-outlined text-[20px]">install_mobile</span>
                   Instalar App
@@ -4104,7 +4109,7 @@ function AdminDashboard({ user }: { user: User }) {
                     window.print();
                   }
                 }}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-[#b8130e] text-white hover:bg-[#8f0f0b] font-bold rounded-md transition-all shadow-md cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 py-3 bg-[var(--tienda-color)] text-white hover:bg-[#8f0f0b] font-bold rounded-md transition-all shadow-md cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[18px]">print</span>
                 Imprimir Ticket (Impresora Térmica)
@@ -4252,7 +4257,7 @@ function AdminDashboard({ user }: { user: User }) {
                   className={`px-5 py-2.5 rounded-md font-bold text-xs transition-all ${
                     pickerDraft.length === 0 || claiming
                       ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-[#b8130e] text-white shadow-lg shadow-[#b8130e]/20 hover:-translate-y-0.5 active:translate-y-0'
+                      : 'bg-[var(--tienda-color)] text-white shadow-lg shadow-[var(--tienda-color)]/20 hover:-translate-y-0.5 active:translate-y-0'
                   }`}
                 >
                   {claiming ? 'Reclamando...' : 'Reclamar tienda'}
