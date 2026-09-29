@@ -55,6 +55,11 @@ const TEMPLATE_PRESENTATION: Record<string, { category?: string; description: st
     description: 'Diseño de boutique de moda premium con gran espacio para fotos de prendas, catálogos y colecciones de temporada.',
     previewUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&q=80',
   },
+  atelier: {
+    category: 'Comercio',
+    description: 'Estudio de moda contemporánea y estilo urbano minimalista con historias tipo Instagram, tarjetas de lookbook verticales (3:4) y selector rápido de tallas.',
+    previewUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&q=80',
+  },
   polleria: {
     category: 'Gourmet',
     description: 'Estilo cálido y rústico optimizado para pollerías, parrilladas y restaurantes de comida rápida con fotos grandes y navegación fluida.',

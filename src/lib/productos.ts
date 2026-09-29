@@ -57,7 +57,7 @@ export const PRODUCTOS_MOSTRADOR: ProductoMostrador[] = [
     para: 'Bodegas, tiendas y boutiques',
     descripcion: 'Un catálogo con carrito, instalable como app. Tú vendes y cobras directo; BogaHub solo cobra el plan.',
     beneficios: ['Catálogo con carrito', 'Se instala como app en el celular', 'Módulos que sumas al crecer', 'Tu dirección propia'],
-    plantillas: ['mercado', 'condimentos', 'estilosmirka', 'flores', 'natura', 'amazonia', 'sweetkittynails'],
+    plantillas: ['mercado', 'condimentos', 'estilosmirka', 'atelier', 'flores', 'natura', 'amazonia', 'sweetkittynails'],
     estado: 'listo',
   },
   {
