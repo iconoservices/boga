@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { pedirDatosCliente } from '@/components/pedirDatosCliente';
 import { StoreConfig } from '@/lib/stores.config';
 import { getDemoProducts } from '@/lib/templates.config';
+import { debeMostrarDemo } from '@/lib/demo';
 import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
@@ -87,9 +88,12 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
     };
   }, [store.slug]);
 
-  // Demo fallback if store has no products yet (e.g. preview)
+  // Demo fallback: solo si la tienda lo pidió expresamente y ya se sabe que no tiene productos
+  // propios (mientras isLoading es true, no se sabe todavía — mostrar demo ahí daba el efecto de
+  // "aparece y después desaparece" apenas llegaban los productos reales).
   const allProducts = useMemo<ProductItem[]>(() => {
     if (supabaseProducts.length > 0) return supabaseProducts;
+    if (isLoading || !debeMostrarDemo(store, 0)) return [];
     const demoList = (store as any).demoProducts || getDemoProducts(store.template || 'atelier');
     if (demoList && demoList.length > 0) {
       return demoList.map((p: any, idx: number) => ({
@@ -109,7 +113,7 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
       }));
     }
     return [];
-  }, [supabaseProducts, (store as any).demoProducts, store.template]);
+  }, [supabaseProducts, isLoading, store, (store as any).demoProducts, store.template]);
 
   const theme = store.theme;
 

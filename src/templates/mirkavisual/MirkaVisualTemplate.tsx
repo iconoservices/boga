@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { pedirDatosCliente } from '@/components/pedirDatosCliente';
 import { StoreConfig } from '@/lib/stores.config';
 import { getDemoProducts } from '@/lib/templates.config';
+import { debeMostrarDemo } from '@/lib/demo';
 import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
@@ -31,6 +32,7 @@ export default function MirkaVisualTemplate({ store, initialProductId }: MirkaVi
 
   // Dynamic Products from Supabase
   const [supabaseProducts, setSupabaseProducts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -54,6 +56,8 @@ export default function MirkaVisualTemplate({ store, initialProductId }: MirkaVi
         }
       } catch (err) {
         console.error('Error fetching Supabase products:', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
     };
 
@@ -65,9 +69,12 @@ export default function MirkaVisualTemplate({ store, initialProductId }: MirkaVi
 
   const theme = store.theme;
 
-  // Fallback a productos demo si no hay en la base de datos (ej. vista previa)
+  // Demo fallback: solo si la tienda lo pidió expresamente y ya se sabe que no tiene productos
+  // propios (mientras isLoading es true, no se sabe todavía — mostrar demo ahí daba el efecto de
+  // "aparece y después desaparece" apenas llegaban los productos reales).
   const allProducts = React.useMemo<any[]>(() => {
     if (supabaseProducts.length > 0) return supabaseProducts;
+    if (isLoading || !debeMostrarDemo(store, 0)) return [];
     const demoList = (store as any).demoProducts || getDemoProducts(store.template || 'mirkavisual');
     if (demoList && demoList.length > 0) {
       return demoList.map((p: any, idx: number) => ({
@@ -87,7 +94,7 @@ export default function MirkaVisualTemplate({ store, initialProductId }: MirkaVi
       }));
     }
     return [];
-  }, [supabaseProducts, (store as any).demoProducts, store.template]);
+  }, [supabaseProducts, isLoading, store, (store as any).demoProducts, store.template]);
 
   // Detalle de producto con URL propia (/<tienda>/producto/<id>)
   const { seleccionado: selectedProduct, abrir: abrirProducto, cerrar: cerrarProducto } = useDetalleProducto<any>(
