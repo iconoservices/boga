@@ -328,7 +328,10 @@ function GestionTienda({
 
           {/* Registrar un pago */}
           <section className="flex flex-col gap-3">
-            <p className="text-[10px] font-black text-[#424754] uppercase tracking-widest">Registrar un pago recibido</p>
+            <div>
+              <p className="text-[10px] font-black text-[#424754] uppercase tracking-widest">Registrar un pago recibido</p>
+              <p className="text-[11px] text-[#727785] font-semibold mt-0.5">Anota lo que te acaba de pagar. Solo mueve "Pagado hasta" — no toca el precio.</p>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <label className="text-[10px] font-bold text-[#545f73]">Monto (S/)
                 <input type="number" min={0} step="0.01" value={pagoMonto} onChange={(e) => setPagoMonto(e.target.value)} className={`${campo} mt-1`} />
@@ -355,7 +358,10 @@ function GestionTienda({
 
           {/* Acuerdo */}
           <section className="flex flex-col gap-3 border-t border-[#ecedf7] pt-5">
-            <p className="text-[10px] font-black text-[#424754] uppercase tracking-widest">Acuerdo con esta tienda</p>
+            <div>
+              <p className="text-[10px] font-black text-[#424754] uppercase tracking-widest">Acuerdo con esta tienda</p>
+              <p className="text-[11px] text-[#727785] font-semibold mt-0.5">Cuánto le toca pagar por mes a esta tienda en particular. Sin nada aquí, paga el precio sugerido de arriba.</p>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <label className="text-[10px] font-bold text-[#545f73]">Monto acordado (S/ al mes)
                 <input type="number" min={0} step="0.01" value={acordado} onChange={(e) => setAcordado(e.target.value)} placeholder={`Vacío = ${sugerido}`} className={`${campo} mt-1`} />
