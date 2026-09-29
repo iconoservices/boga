@@ -82,6 +82,8 @@ export type ModuloVenta = {
   unidad?: string;
   incluidoEn: PlanId[];
   pronto?: boolean;
+  /** Existe y se puede prender por tienda, pero todavía no está listo para vendérselo a una tienda real. */
+  enDesarrollo?: boolean;
 };
 
 export const MODULOS_VENTA: { grupo: string; items: ModuloVenta[] }[] = [
@@ -104,7 +106,7 @@ export const MODULOS_VENTA: { grupo: string; items: ModuloVenta[] }[] = [
     grupo: 'Controla tu local',
     items: [
       { id: 'loyverse', icon: 'sync_alt', nombre: 'Integración Loyverse POS', body: 'Sincronización automática de productos, precios y stock en tiempo real con tu caja física Loyverse.', precio: 'S/ 49', unidad: ' /mes', incluidoEn: ['app_google'] },
-      { id: 'caja', icon: 'point_of_sale', nombre: 'Caja de ventas', body: 'Cobra en tu local con boleta por PDF o WhatsApp, vendedores propios y las ventas del día y del mes.', precio: POR_DEFINIR, incluidoEn: [] },
+      { id: 'caja', icon: 'point_of_sale', nombre: 'Caja de ventas', body: 'Cobra en tu local con boleta por PDF o WhatsApp, vendedores propios y las ventas del día y del mes.', precio: POR_DEFINIR, incluidoEn: [], enDesarrollo: true },
       { id: 'inventario', icon: 'inventory_2', nombre: 'Inventario', body: 'El stock se descuenta solo con cada venta y cada pedido; te avisa cuando queda poco. Va sobre la caja de ventas.', precio: POR_DEFINIR, incluidoEn: [] },
     ],
   },

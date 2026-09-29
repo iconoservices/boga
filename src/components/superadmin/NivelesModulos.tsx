@@ -23,10 +23,16 @@ function Nuevo() {
   return <span className="ml-2 align-middle text-[9px] font-bold uppercase tracking-wider text-[#0058be] bg-[#d8e2ff] px-1.5 py-0.5 rounded">Nuevo</span>;
 }
 
+// Marca lo que YA se puede prender por tienda pero todavía no está listo para cobrárselo a una tienda real
+// (a diferencia de "Aún no existe": esto sí existe, solo que no está terminado).
+function EnDesarrollo() {
+  return <span className="ml-2 align-middle text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">En desarrollo</span>;
+}
+
 function Tabla<T extends string>({ titulo, niveles, capacidades, incluye }: {
   titulo: string;
   niveles: { id: T; nombre: string }[];
-  capacidades: { texto: string; desde: T; nuevo?: boolean }[];
+  capacidades: { texto: string; desde: T; nuevo?: boolean; enDesarrollo?: boolean }[];
   incluye: (nivel: T, desde: T) => boolean;
 }) {
   return (
@@ -43,7 +49,7 @@ function Tabla<T extends string>({ titulo, niveles, capacidades, incluye }: {
         <tbody>
           {capacidades.map((c) => (
             <tr key={c.texto} className="border-t border-[#ecedf7]">
-              <td className="p-3 font-semibold text-[#191b23]">{c.texto}{c.nuevo && <Nuevo />}</td>
+              <td className="p-3 font-semibold text-[#191b23]">{c.texto}{c.nuevo && <Nuevo />}{c.enDesarrollo && <EnDesarrollo />}</td>
               {niveles.map((n) => (
                 <td key={n.id} className="p-3 text-center">
                   {incluye(n.id, c.desde) ? (
@@ -212,6 +218,7 @@ export default function NivelesModulos() {
                   <td className="p-3 font-semibold text-[#191b23]">
                     {m.nombre}<Nuevo />
                     {m.pronto && <span className="ml-2 align-middle text-[9px] font-bold uppercase tracking-wider text-[#5c4a00] bg-[#fff8e1] border border-[#f5c518]/50 px-1.5 py-0.5 rounded">Aún no existe</span>}
+                    {m.enDesarrollo && <EnDesarrollo />}
                     {m.promo && <p className="text-[10px] text-[#727785] font-semibold mt-0.5">{m.promo}</p>}
                   </td>
                   <td className="p-3 text-[#424754]">{m.precio}{m.precio !== 'Por definir' && (m.unidad ?? ' /mes')}</td>

@@ -131,8 +131,8 @@ export const OPERACIONES: { id: OperacionId; nombre: string; resumen: string }[]
   { id: 'inventario', nombre: 'Ventas + Inventario', resumen: 'Suma el control de stock automático.' },
 ];
 
-export const CAPACIDADES_OPERACION: { texto: string; desde: OperacionId }[] = [
-  { texto: 'Caja rápida (POS) con boleta en PDF y por WhatsApp', desde: 'ventas' },
+export const CAPACIDADES_OPERACION: { texto: string; desde: OperacionId; enDesarrollo?: boolean }[] = [
+  { texto: 'Caja rápida (POS) con boleta en PDF y por WhatsApp', desde: 'ventas', enDesarrollo: true },
   { texto: 'Vendedores propios de cada negocio', desde: 'ventas' },
   { texto: 'Métricas de ventas del local (hoy, mes y más vendidos)', desde: 'ventas' },
   { texto: 'Stock que se descuenta solo con cada venta del POS', desde: 'inventario' },
