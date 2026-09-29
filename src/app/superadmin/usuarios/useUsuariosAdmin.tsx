@@ -19,6 +19,31 @@ export function useUsuariosAdmin({ stores, authUser }: {
   // de una lista inventada: ver `derivedUsers` mas abajo.
   const [profiles, setProfiles] = useState<{ id: string; email: string; name: string | null }[]>([]);
   const [storeOwners, setStoreOwners] = useState<Record<string, string | null>>({});
+  // Co-administradores por tienda (store_admins): además del dueño de arriba, quiénes más tienen
+  // el mismo acceso completo a esa tienda. Tabla nueva: si el SQL no corrió, queda vacío sin romper nada.
+  const [coAdmins, setCoAdmins] = useState<Record<string, string[]>>({});
+  const cargarCoAdmins = React.useCallback(() => {
+    supabase.from('store_admins').select('store,user_id').then(({ data, error }) => {
+      if (error) return;
+      const porTienda: Record<string, string[]> = {};
+      (data ?? []).forEach((r: { store: string; user_id: string }) => {
+        (porTienda[r.store] ??= []).push(r.user_id);
+      });
+      setCoAdmins(porTienda);
+    });
+  }, []);
+  React.useEffect(() => { cargarCoAdmins(); }, [cargarCoAdmins]);
+
+  const handleAgregarCoAdmin = async (slug: string, userId: string) => {
+    const { error } = await supabase.from('store_admins').insert({ store: slug, user_id: userId });
+    if (error) { alert('No se pudo agregar: ' + error.message); return; }
+    setCoAdmins((prev) => ({ ...prev, [slug]: [...(prev[slug] ?? []), userId] }));
+  };
+  const handleQuitarCoAdmin = async (slug: string, userId: string) => {
+    const { error } = await supabase.from('store_admins').delete().eq('store', slug).eq('user_id', userId);
+    if (error) { alert('No se pudo quitar: ' + error.message); return; }
+    setCoAdmins((prev) => ({ ...prev, [slug]: (prev[slug] ?? []).filter((id) => id !== userId) }));
+  };
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteStore, setInviteStore] = useState('');
   const [inviteRole, setInviteRole] = useState<UserRole>('store_admin');
@@ -377,6 +402,6 @@ export function useUsuariosAdmin({ stores, authUser }: {
   );
 
   return {
-    profiles, setProfiles, storeOwners, setStoreOwners, inviteEmail, setInviteEmail, inviteStore, setInviteStore, inviteRole, setInviteRole, inviteSent, setInviteSent, isSendingInvite, setIsSendingInvite, editingUser, setEditingUser, editingUserOriginalStore, setEditingUserOriginalStore, editingUserStores, setEditingUserStores, isCopyingLink, setIsCopyingLink, assignStoreSlug, setAssignStoreSlug, derivedUsers, groupedUsers, expandedUserIds, setExpandedUserIds, toggleExpandedUser, usuariosSinTienda, asignandoExistente, setAsignandoExistente, handleAsignarExistente, asignarTiendaInvitada, handleSendInvite, handleCopyInviteLink, abrirEditorUsuarioMulti, handleSaveUser, handleRevokeAccess, camposInvitacion, avisoInvitacionEnviada,
+    profiles, setProfiles, storeOwners, setStoreOwners, coAdmins, handleAgregarCoAdmin, handleQuitarCoAdmin, inviteEmail, setInviteEmail, inviteStore, setInviteStore, inviteRole, setInviteRole, inviteSent, setInviteSent, isSendingInvite, setIsSendingInvite, editingUser, setEditingUser, editingUserOriginalStore, setEditingUserOriginalStore, editingUserStores, setEditingUserStores, isCopyingLink, setIsCopyingLink, assignStoreSlug, setAssignStoreSlug, derivedUsers, groupedUsers, expandedUserIds, setExpandedUserIds, toggleExpandedUser, usuariosSinTienda, asignandoExistente, setAsignandoExistente, handleAsignarExistente, asignarTiendaInvitada, handleSendInvite, handleCopyInviteLink, abrirEditorUsuarioMulti, handleSaveUser, handleRevokeAccess, camposInvitacion, avisoInvitacionEnviada,
   };
 }

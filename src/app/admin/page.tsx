@@ -205,11 +205,24 @@ function AdminDashboard({ user }: { user: User }) {
   const [pickerDraft, setPickerDraft] = useState<string[]>([]);
   const [claiming, setClaiming] = useState(false);
 
+  // Tiendas donde este usuario es co-administrador (store_admins), además de las que tiene como
+  // dueño (user_id) — una tienda ahora puede tener más de una persona con el mismo acceso.
+  const [coAdminSlugs, setCoAdminSlugs] = useState<string[]>([]);
+  useEffect(() => {
+    let vivo = true;
+    supabase.from('store_admins').select('store').eq('user_id', user.id).then(({ data, error }) => {
+      // Tabla nueva: si el SQL todavía no se corrió, sigue funcionando como antes (solo dueño).
+      if (!vivo || error) return;
+      setCoAdminSlugs((data ?? []).map((r: any) => r.store));
+    });
+    return () => { vivo = false; };
+  }, [user.id]);
+
   const myStoreSlugs = React.useMemo(
     () => viendoComo
       ? dbStores.filter((s: any) => s.slug === viendoComo).map((s: any) => s.slug)
-      : dbStores.filter((s: any) => s.user_id === user.id).map((s: any) => s.slug),
-    [dbStores, user.id, viendoComo]
+      : dbStores.filter((s: any) => s.user_id === user.id || coAdminSlugs.includes(s.slug)).map((s: any) => s.slug),
+    [dbStores, user.id, viendoComo, coAdminSlugs]
   );
   const unclaimedStores = React.useMemo(
     () => dbStores.filter((s: any) => !s.user_id),

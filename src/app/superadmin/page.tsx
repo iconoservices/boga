@@ -625,7 +625,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
 
   // Usuarios y dueños de tienda: la lógica vive en usuarios/useUsuariosAdmin.tsx (la comparte /superadmin/usuarios).
   const {
-    profiles, setProfiles, storeOwners, setStoreOwners, inviteEmail, setInviteEmail, inviteStore, setInviteStore, inviteRole, setInviteRole, inviteSent, setInviteSent, isSendingInvite, setIsSendingInvite, editingUser, setEditingUser, editingUserOriginalStore, setEditingUserOriginalStore, editingUserStores, setEditingUserStores, isCopyingLink, setIsCopyingLink, assignStoreSlug, setAssignStoreSlug, derivedUsers, groupedUsers, expandedUserIds, setExpandedUserIds, toggleExpandedUser, usuariosSinTienda, asignandoExistente, setAsignandoExistente, handleAsignarExistente, asignarTiendaInvitada, handleSendInvite, handleCopyInviteLink, abrirEditorUsuarioMulti, handleSaveUser, handleRevokeAccess, camposInvitacion, avisoInvitacionEnviada,
+    profiles, setProfiles, storeOwners, setStoreOwners, coAdmins, handleAgregarCoAdmin, handleQuitarCoAdmin, inviteEmail, setInviteEmail, inviteStore, setInviteStore, inviteRole, setInviteRole, inviteSent, setInviteSent, isSendingInvite, setIsSendingInvite, editingUser, setEditingUser, editingUserOriginalStore, setEditingUserOriginalStore, editingUserStores, setEditingUserStores, isCopyingLink, setIsCopyingLink, assignStoreSlug, setAssignStoreSlug, derivedUsers, groupedUsers, expandedUserIds, setExpandedUserIds, toggleExpandedUser, usuariosSinTienda, asignandoExistente, setAsignandoExistente, handleAsignarExistente, asignarTiendaInvitada, handleSendInvite, handleCopyInviteLink, abrirEditorUsuarioMulti, handleSaveUser, handleRevokeAccess, camposInvitacion, avisoInvitacionEnviada,
   } = useUsuariosAdmin({ stores, authUser });
 
 
@@ -1648,6 +1648,49 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                     onChange={(e) => setEditingUser(prev => prev ? { ...prev, name: e.target.value } : prev)}
                     className="w-full bg-[#f2f3fd] border border-[#c2c6d6] rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-[#0058be] focus:bg-white transition-colors"
                   />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-[#424754] mb-1.5 uppercase tracking-wide">
+                    Otros administradores <span className="normal-case font-medium text-[#727785]">(mismo acceso completo, sin niveles todavía)</span>
+                  </label>
+                  <div className="flex flex-col gap-1.5 mb-2">
+                    {(coAdmins[assignStoreSlug] ?? []).map((id) => {
+                      const p = profiles.find((pr) => pr.id === id);
+                      return (
+                        <div key={id} className="flex items-center justify-between gap-2 bg-[#f2f3fd] rounded-lg px-3 py-2">
+                          <span className="text-xs font-semibold text-[#191b23] truncate">{p?.name || p?.email || id}</span>
+                          <button
+                            onClick={() => handleQuitarCoAdmin(assignStoreSlug, id)}
+                            title="Quitar acceso"
+                            className="w-6 h-6 shrink-0 flex items-center justify-center text-[#a3a8b8] hover:text-red-600 hover:bg-red-100 rounded transition-colors"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">close</span>
+                          </button>
+                        </div>
+                      );
+                    })}
+                    {(coAdmins[assignStoreSlug] ?? []).length === 0 && (
+                      <p className="text-[11px] text-[#727785] italic">Ninguno todavía.</p>
+                    )}
+                  </div>
+                  {(() => {
+                    const yaTiene = new Set([editingUser.id, ...(coAdmins[assignStoreSlug] ?? [])]);
+                    const candidatos = profiles.filter((p) => !yaTiene.has(p.id));
+                    return candidatos.length > 0 ? (
+                      <select
+                        value=""
+                        onChange={(e) => e.target.value && handleAgregarCoAdmin(assignStoreSlug, e.target.value)}
+                        className="w-full bg-[#f2f3fd] border border-[#c2c6d6] rounded-lg px-3 py-2 text-xs font-bold outline-none focus:border-[#0058be] focus:bg-white transition-colors"
+                      >
+                        <option value="">+ Agregar otro administrador...</option>
+                        {candidatos.map((p) => (
+                          <option key={p.id} value={p.id}>{p.name || p.email} — {p.email}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="text-[11px] text-[#727785] italic">No hay más cuentas para agregar — invítalas primero desde Usuarios.</p>
+                    );
+                  })()}
                 </div>
                 <div className="flex gap-2 pt-2">
                   <button

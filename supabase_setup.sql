@@ -79,6 +79,36 @@ ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS external_url TEXT;
 CREATE INDEX IF NOT EXISTS stores_slug_idx ON public.stores (slug);
 CREATE INDEX IF NOT EXISTS stores_user_id_idx ON public.stores (user_id);
 
+-- Co-administradores: además del dueño (stores.user_id, uno solo), una tienda puede tener otras
+-- personas con el mismo acceso completo (por ahora sin niveles/roles — eso se suma después). El
+-- superadmin los asigna/quita desde Usuarios; nunca reemplazan al dueño, se suman.
+CREATE TABLE IF NOT EXISTS public.store_admins (
+  store TEXT NOT NULL REFERENCES public.stores(slug) ON UPDATE CASCADE ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  PRIMARY KEY (store, user_id)
+);
+CREATE INDEX IF NOT EXISTS store_admins_user_idx ON public.store_admins (user_id);
+
+-- Único lugar que decide "¿administra esta tienda quien llama?" (dueño o co-administrador). No
+-- revisa superadmin: cada política ya lo hace aparte con is_superadmin(), como siempre.
+CREATE OR REPLACE FUNCTION public.es_admin_de(p_store TEXT)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+AS $$
+  SELECT EXISTS (SELECT 1 FROM public.stores s WHERE s.slug = p_store AND s.user_id = auth.uid())
+      OR EXISTS (SELECT 1 FROM public.store_admins sa WHERE sa.store = p_store AND sa.user_id = auth.uid())
+$$;
+
+ALTER TABLE public.store_admins ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "store_admins: dueño, co-admins o superadmin ve" ON public.store_admins;
+DROP POLICY IF EXISTS "store_admins: superadmin escribe"               ON public.store_admins;
+CREATE POLICY "store_admins: dueño, co-admins o superadmin ve"
+ON public.store_admins FOR SELECT
+USING (public.is_superadmin() OR public.es_admin_de(store));
+CREATE POLICY "store_admins: superadmin escribe" ON public.store_admins FOR ALL USING (public.is_superadmin()) WITH CHECK (public.is_superadmin());
+
 CREATE TABLE IF NOT EXISTS public.products (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -290,10 +320,12 @@ USING (
   auth.uid() = user_id
   OR user_id IS NULL
   OR public.is_superadmin()
+  OR public.es_admin_de(slug)
 )
 WITH CHECK (
   auth.uid() = user_id
   OR public.is_superadmin()
+  OR public.es_admin_de(slug)
 );
 
 CREATE POLICY "stores: dueño o superadmin borra"
@@ -312,21 +344,21 @@ CREATE POLICY "products: dueño o superadmin crea"
 ON public.products FOR INSERT
 WITH CHECK (
   public.is_superadmin()
-  OR EXISTS (SELECT 1 FROM public.stores s WHERE s.slug = products.store AND s.user_id = auth.uid())
+  OR public.es_admin_de(products.store)
 );
 
 CREATE POLICY "products: dueño o superadmin edita"
 ON public.products FOR UPDATE
 USING (
   public.is_superadmin()
-  OR EXISTS (SELECT 1 FROM public.stores s WHERE s.slug = products.store AND s.user_id = auth.uid())
+  OR public.es_admin_de(products.store)
 );
 
 CREATE POLICY "products: dueño o superadmin borra"
 ON public.products FOR DELETE
 USING (
   public.is_superadmin()
-  OR EXISTS (SELECT 1 FROM public.stores s WHERE s.slug = products.store AND s.user_id = auth.uid())
+  OR public.es_admin_de(products.store)
 );
 
 -- ============================================================
@@ -336,28 +368,28 @@ CREATE POLICY "orders: dueño o superadmin ve"
 ON public.orders FOR SELECT
 USING (
   public.is_superadmin()
-  OR EXISTS (SELECT 1 FROM public.stores s WHERE s.slug = orders.store AND s.user_id = auth.uid())
+  OR public.es_admin_de(orders.store)
 );
 
 CREATE POLICY "orders: dueño o superadmin crea"
 ON public.orders FOR INSERT
 WITH CHECK (
   public.is_superadmin()
-  OR EXISTS (SELECT 1 FROM public.stores s WHERE s.slug = orders.store AND s.user_id = auth.uid())
+  OR public.es_admin_de(orders.store)
 );
 
 CREATE POLICY "orders: dueño o superadmin actualiza"
 ON public.orders FOR UPDATE
 USING (
   public.is_superadmin()
-  OR EXISTS (SELECT 1 FROM public.stores s WHERE s.slug = orders.store AND s.user_id = auth.uid())
+  OR public.es_admin_de(orders.store)
 );
 
 CREATE POLICY "orders: dueño o superadmin borra"
 ON public.orders FOR DELETE
 USING (
   public.is_superadmin()
-  OR EXISTS (SELECT 1 FROM public.stores s WHERE s.slug = orders.store AND s.user_id = auth.uid())
+  OR public.es_admin_de(orders.store)
 );
 
 -- ============================================================
@@ -1443,6 +1475,13 @@ BEGIN
     IF NEW.push_activo IS DISTINCT FROM OLD.push_activo THEN
       NEW.push_activo := OLD.push_activo;
     END IF;
+    -- Quién es el dueño (stores.user_id) de una tienda YA reclamada lo cambia solo el superadmin:
+    -- sin esto, un co-administrador (ver store_admins) podría ponerse a sí mismo como dueño al
+    -- guardar. Ojo: no frena "reclamar mi tienda" (OLD.user_id NULL -> el propio usuario), la
+    -- política RLS de stores ya exige ahí que sea auth.uid() = user_id.
+    IF OLD.user_id IS NOT NULL AND NEW.user_id IS DISTINCT FROM OLD.user_id THEN
+      NEW.user_id := OLD.user_id;
+    END IF;
   END IF;
   RETURN NEW;
 END;
@@ -1499,13 +1538,13 @@ CREATE POLICY "stock_movements: dueño o superadmin ve"
 ON public.stock_movements FOR SELECT
 USING (
   public.is_superadmin()
-  OR EXISTS (SELECT 1 FROM public.stores s WHERE s.slug = stock_movements.store AND s.user_id = auth.uid())
+  OR public.es_admin_de(stock_movements.store)
 );
 CREATE POLICY "stock_movements: dueño o superadmin crea"
 ON public.stock_movements FOR INSERT
 WITH CHECK (
   public.is_superadmin()
-  OR EXISTS (SELECT 1 FROM public.stores s WHERE s.slug = stock_movements.store AND s.user_id = auth.uid())
+  OR public.es_admin_de(stock_movements.store)
 );
 
 -- ============================================================
@@ -1560,7 +1599,7 @@ CREATE POLICY "store_suscripciones: dueño o superadmin ve"
 ON public.store_suscripciones FOR SELECT
 USING (
   public.is_superadmin()
-  OR EXISTS (SELECT 1 FROM public.stores s WHERE s.slug = store_suscripciones.store AND s.user_id = auth.uid())
+  OR public.es_admin_de(store_suscripciones.store)
 );
 CREATE POLICY "store_suscripciones: superadmin escribe" ON public.store_suscripciones FOR ALL USING (public.is_superadmin()) WITH CHECK (public.is_superadmin());
 
@@ -1570,7 +1609,7 @@ CREATE POLICY "store_pagos: dueño o superadmin ve"
 ON public.store_pagos FOR SELECT
 USING (
   public.is_superadmin()
-  OR EXISTS (SELECT 1 FROM public.stores s WHERE s.slug = store_pagos.store AND s.user_id = auth.uid())
+  OR public.es_admin_de(store_pagos.store)
 );
 CREATE POLICY "store_pagos: superadmin escribe" ON public.store_pagos FOR ALL USING (public.is_superadmin()) WITH CHECK (public.is_superadmin());
 
