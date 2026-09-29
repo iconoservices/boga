@@ -237,7 +237,7 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
           <div className="text-white space-y-3 max-w-[260px] sm:max-w-md md:max-w-xl lg:max-w-2xl">
             <p className="text-[10px] uppercase tracking-[0.25em] font-semibold text-white/70">Colección Exclusiva</p>
             <h1 className="text-3xl md:text-5xl font-bold leading-tight" style={{ fontFamily: theme.fontHeadline }}>
-              Sofisticante
+              {store.name}
             </h1>
             <p className="text-sm text-white/75 font-light leading-relaxed">
               {store.tagline}
