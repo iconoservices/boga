@@ -318,19 +318,6 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
 
           {/* Quick Actions Right */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {whatsappUrl && (
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 sm:px-3 sm:py-2 rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-bold transition-colors flex items-center gap-1.5"
-                title="Escribir por WhatsApp"
-              >
-                <span className="material-symbols-outlined text-base sm:text-lg">chat</span>
-                <span className="hidden sm:inline">WhatsApp</span>
-              </a>
-            )}
-
             {/* Bag Button */}
             <button
               onClick={() => setIsCartOpen(true)}
