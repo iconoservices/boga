@@ -178,7 +178,7 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
                 className="w-8 h-8 rounded-full object-cover border border-black/10" 
               />
             )}
-            <span className="text-xl font-bold tracking-tight" style={{ fontFamily: theme.fontHeadline, color: theme.primaryContainer }}>
+            <span className="text-xl font-bold tracking-tight" style={{ fontFamily: theme.fontHeadline, color: theme.onSurface || '#1a0a0d' }}>
               {store.name}
             </span>
           </div>
@@ -215,14 +215,14 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
           <div className="flex items-center gap-3">
             {/* Wishlist */}
             <button className="p-1.5 cursor-pointer hover:opacity-60 transition-opacity hidden md:block">
-              <span className="material-symbols-outlined text-xl" style={{ color: theme.primaryContainer }}>favorite_border</span>
+              <span className="material-symbols-outlined text-xl" style={{ color: theme.onSurface || '#1a0a0d' }}>favorite_border</span>
             </button>
             {/* Cart */}
             <button
               onClick={() => setIsCartOpen(true)}
               className="relative p-1.5 cursor-pointer hover:opacity-60 transition-opacity"
             >
-              <span className="material-symbols-outlined text-xl" style={{ color: theme.primaryContainer }}>shopping_bag</span>
+              <span className="material-symbols-outlined text-xl" style={{ color: theme.onSurface || '#1a0a0d' }}>shopping_bag</span>
               {cartItemsCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black text-white" style={{ backgroundColor: theme.primary }}>
                   {cartItemsCount}
@@ -299,7 +299,7 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
       <section id="catalog" className="max-w-6xl mx-auto px-4 py-8">
         {/* Search + title */}
         <div className="flex flex-col md:flex-row gap-4 md:items-center justify-between mb-6">
-          <h2 className="text-xl font-bold" style={{ fontFamily: theme.fontHeadline, color: theme.primaryContainer }}>
+          <h2 className="text-xl font-bold" style={{ fontFamily: theme.fontHeadline, color: theme.onBackground || '#1a0a0d' }}>
             Nuestra Colección
           </h2>
         </div>
@@ -399,7 +399,7 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
             >
               <span className="material-symbols-outlined text-xl" style={{ color: theme.primary }}>arrow_back</span>
             </button>
-            <span className="font-bold text-xs uppercase tracking-widest" style={{ fontFamily: theme.fontHeadline, color: theme.primaryContainer }}>
+            <span className="font-bold text-xs uppercase tracking-widest" style={{ fontFamily: theme.fontHeadline, color: theme.onSurface || '#1a0a0d' }}>
               Detalle del Producto
             </span>
             <button
@@ -454,7 +454,7 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
                 <span className="text-[10px] font-bold uppercase tracking-widest opacity-60" style={{ color: theme.primary }}>
                   {selectedProduct.category}
                 </span>
-                <h1 className="text-xl font-bold leading-tight" style={{ fontFamily: theme.fontHeadline, color: theme.primaryContainer }}>
+                <h1 className="text-xl font-bold leading-tight" style={{ fontFamily: theme.fontHeadline, color: theme.onSurface || '#1a0a0d' }}>
                   {selectedProduct.title}
                 </h1>
                 <div className="flex items-baseline gap-2 mt-1">
@@ -480,7 +480,7 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
                 if (tallas.length === 0) return null;
                 return (
                   <div className="border-t border-black/5 pt-4 mb-5">
-                    <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: theme.primaryContainer }}>Talla</p>
+                    <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: theme.onSurface || '#1a0a0d' }}>Talla</p>
                     <div className="flex gap-2 flex-wrap">
                       {tallas.map((item: any) => {
                         const sz = item.label;
@@ -517,11 +517,11 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
             {/* Qty */}
             <div className="flex items-center gap-3 bg-gray-100 rounded-full px-3 py-1.5 shrink-0">
               <button onClick={() => setDetailQty(Math.max(1, detailQty - 1))} className="w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center cursor-pointer hover:opacity-70 transition-opacity">
-                <span className="material-symbols-outlined text-base" style={{ color: theme.primaryContainer }}>remove</span>
+                <span className="material-symbols-outlined text-base" style={{ color: theme.onSurface || '#1a0a0d' }}>remove</span>
               </button>
-              <span className="font-black text-sm w-4 text-center" style={{ color: theme.primaryContainer }}>{detailQty}</span>
+              <span className="font-black text-sm w-4 text-center" style={{ color: theme.onSurface || '#1a0a0d' }}>{detailQty}</span>
               <button onClick={() => setDetailQty(detailQty + 1)} className="w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center cursor-pointer hover:opacity-70 transition-opacity">
-                <span className="material-symbols-outlined text-base" style={{ color: theme.primaryContainer }}>add</span>
+                <span className="material-symbols-outlined text-base" style={{ color: theme.onSurface || '#1a0a0d' }}>add</span>
               </button>
             </div>
 
@@ -673,7 +673,7 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
       {(store.direccion || store.horario || telefonoVisible) && (
         <section id="contacto" className="max-w-6xl mx-auto px-4 py-10 border-t border-black/5 grid md:grid-cols-2 gap-10">
           <div className="space-y-4">
-            <h3 className="text-lg font-bold" style={{ fontFamily: theme.fontHeadline, color: theme.primaryContainer }}>
+            <h3 className="text-lg font-bold" style={{ fontFamily: theme.fontHeadline, color: theme.onSurface || '#1a0a0d' }}>
               Visítanos o Escríbenos
             </h3>
             <div className="space-y-3">
