@@ -966,7 +966,7 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
                       </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div>
                       <button
                         onClick={() => {
                           const matchedPres = (selectedProduct.presentaciones || []).find(
@@ -976,28 +976,12 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
                           addToCart(selectedProduct, selectedSize, unitPrice, detailQty);
                           cerrarProducto();
                         }}
-                        className="flex-1 py-3 px-4 rounded-2xl bg-black text-white text-xs font-bold uppercase tracking-wider hover:bg-gray-800 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                        className="w-full py-3.5 px-4 rounded-2xl bg-black text-white text-xs font-bold uppercase tracking-wider hover:bg-gray-800 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
                         style={{ backgroundColor: theme.primary || '#111827' }}
                       >
                         <span className="material-symbols-outlined text-base">shopping_bag</span>
                         <span>Añadir a la bolsa</span>
                       </button>
-
-                      {whatsappVisible && (
-                        <a
-                          href={`https://wa.me/${(store.whatsapp || '').replace(/\D/g, '')}?text=${encodeURIComponent(
-                            `Hola ${store.name}, deseo consultar por la prenda: ${selectedProduct.title}${
-                              selectedSize ? ` en talla ${selectedSize}` : ''
-                            } (Precio: S/ ${Number(selectedProduct.price).toFixed(2)})`
-                          )}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center transition-colors cursor-pointer"
-                          title="Consultar por WhatsApp"
-                        >
-                          <span className="material-symbols-outlined text-lg">chat</span>
-                        </a>
-                      )}
                     </div>
                   </div>
                 </div>
