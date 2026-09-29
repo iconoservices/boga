@@ -22,6 +22,7 @@ import { filasAPresentaciones, leerPresentaciones, plantillaAceptaPresentaciones
 import { useEsSuperadmin } from '@/lib/superadmin';
 import type { StoreTheme } from '@/lib/templates.config';
 import { MODULOS, moduloActivo, enMarketplace, conMarcaBlanca, PLANES_PRESETS, type PlanPreset, type Modulos } from '@/lib/modulos';
+import { iconForCategory } from '@/templates/shared/tokens';
 
 // Correos con acceso al superadmin. A diferencia de /admin (donde cualquier
 // cuenta puede entrar y solo ve sus propias tiendas), este panel puede editar
@@ -238,6 +239,54 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     setPresAbiertas(false);
     setNewStoreProductFile(null);
     setStoreProductPreview(null);
+  };
+
+  const handleCrearCategoriaRapidaTienda = async (nombreSugerido?: string) => {
+    if (!productsStoreSlug) return;
+    const nombre = (nombreSugerido || window.prompt('Nombre de la nueva categoría (ej: Vestidos, Bebidas, Accesorios)'))?.trim();
+    if (!nombre) return;
+    const href = nombre
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    const tienda = stores[productsStoreSlug];
+    const categoriasBase = (tienda?.categories?.length
+      ? tienda.categories
+      : categoriasDePlantilla(tienda?.template as string, catsPlantilla)
+    ) || [];
+
+    const existente = categoriasBase.find(c => c.href === href || c.name.toLowerCase() === nombre.toLowerCase());
+    if (existente) {
+      setNewStoreProduct(prev => ({ ...prev, category: existente.name }));
+      return;
+    }
+
+    const nuevaCat = { name: nombre, icon: iconForCategory(nombre), href };
+    const categoriasNuevas = [...categoriasBase, nuevaCat];
+
+    const { error } = await supabase.from('stores').update({ categories: categoriasNuevas }).eq('slug', productsStoreSlug);
+    if (error) {
+      alert('No se pudo crear la categoría: ' + error.message);
+      return;
+    }
+
+    setStores(prev => {
+      const actual = prev[productsStoreSlug];
+      if (!actual) return prev;
+      return {
+        ...prev,
+        [productsStoreSlug]: {
+          ...actual,
+          categories: categoriasNuevas,
+        },
+      };
+    });
+
+    setNewStoreProduct(prev => ({ ...prev, category: nombre }));
+    refrescarTienda(productsStoreSlug);
   };
 
   const handleAddStoreProduct = async (e: React.FormEvent) => {
@@ -3024,21 +3073,44 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
               })()}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold text-[#545f73] mb-1">Categoría</label>
-                  <select
-                    value={newStoreProduct.category}
-                    onChange={(e) => setNewStoreProduct(prev => ({ ...prev, category: e.target.value }))}
-                    className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all appearance-none"
-                  >
-                    <option value="">Sin categoría</option>
-                    {/* Las de la tienda; si aún no tiene (tiendas creadas antes), las de su plantilla. */}
-                    {(stores[productsStoreSlug ?? '']?.categories?.length
-                      ? stores[productsStoreSlug ?? ''].categories
-                      : categoriasDePlantilla(stores[productsStoreSlug ?? '']?.template as string, catsPlantilla)
-                    ).map((c: { name: string; href: string }) => (
-                      <option key={c.href} value={c.name}>{c.name}</option>
-                    ))}
-                  </select>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[10px] font-bold text-[#545f73]">Categoría</label>
+                    <button
+                      type="button"
+                      onClick={() => handleCrearCategoriaRapidaTienda()}
+                      className="text-[10px] font-bold text-[#0058be] hover:underline flex items-center gap-0.5 cursor-pointer"
+                      title="Crear nueva categoría para esta tienda"
+                    >
+                      <span className="material-symbols-outlined text-[13px]">add</span>
+                      Nueva categoría
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <select
+                      value={newStoreProduct.category}
+                      onChange={(e) => {
+                        if (e.target.value === '__nueva__') {
+                          handleCrearCategoriaRapidaTienda();
+                        } else {
+                          setNewStoreProduct(prev => ({ ...prev, category: e.target.value }));
+                        }
+                      }}
+                      className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md pl-3 pr-8 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all appearance-none cursor-pointer"
+                    >
+                      <option value="">Sin categoría</option>
+                      {/* Las de la tienda; si aún no tiene (tiendas creadas antes), las de su plantilla. */}
+                      {(stores[productsStoreSlug ?? '']?.categories?.length
+                        ? stores[productsStoreSlug ?? ''].categories
+                        : categoriasDePlantilla(stores[productsStoreSlug ?? '']?.template as string, catsPlantilla)
+                      ).map((c: { name: string; href: string }) => (
+                        <option key={c.href} value={c.name}>{c.name}</option>
+                      ))}
+                      <option value="__nueva__">+ Nueva categoría…</option>
+                    </select>
+                    <span className="material-symbols-outlined pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[16px] text-[#727785]">
+                      expand_more
+                    </span>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-[#545f73] mb-1">Sección (opcional)</label>
