@@ -1527,6 +1527,9 @@ CREATE TABLE IF NOT EXISTS public.store_suscripciones (
   notas TEXT,
   updated_at TIMESTAMPTZ DEFAULT now()
 );
+-- Descuento temporal (ej. "20% por 6 meses"): mientras esta fecha no pase, manda monto_mensual;
+-- pasada la fecha, Cobros vuelve solo al precio sugerido sin que nadie tenga que acordarse de quitarlo.
+ALTER TABLE public.store_suscripciones ADD COLUMN IF NOT EXISTS descuento_hasta DATE;
 
 CREATE TABLE IF NOT EXISTS public.store_pagos (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,

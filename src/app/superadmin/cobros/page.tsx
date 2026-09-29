@@ -20,7 +20,7 @@ import {
 } from '@/lib/modulos';
 
 interface Tienda { slug: string; name: string; status: string | null; modulos: Modulos | null; subdominio_activo: boolean | null }
-interface Suscripcion { store: string; monto_mensual: number | null; vence: string | null; notas: string | null }
+interface Suscripcion { store: string; monto_mensual: number | null; vence: string | null; notas: string | null; descuento_hasta?: string | null }
 interface Pago { id: string; store: string; monto: number; metodo: string | null; referencia: string | null; meses: number; vence_despues: string | null; nota: string | null; created_at: string }
 
 const METODOS = ['Yape', 'Plin', 'Transferencia', 'Efectivo', 'Otro'];
@@ -53,13 +53,16 @@ export default function CobrosPage() {
   const hoy = hoyLima();
 
   const cargar = useCallback(async () => {
-    const [t, pr, su, pa] = await Promise.all([
+    const [t, pr, pa] = await Promise.all([
       supabase.from('stores').select('slug,name,status,modulos,subdominio_activo').order('name'),
       supabase.from('plan_precios').select('clave,monto'),
-      supabase.from('store_suscripciones').select('store,monto_mensual,vence,notas'),
       supabase.from('store_pagos').select('id,store,monto,metodo,referencia,meses,vence_despues,nota,created_at').order('created_at', { ascending: false }).limit(500),
     ]);
     setTiendas((t.data ?? []) as Tienda[]);
+    // `descuento_hasta` es columna nueva: si el SQL todavía no se corrió, reintenta sin ella en vez
+    // de tumbar toda la pantalla de Cobros por un campo que todavía nadie usó.
+    let su = await supabase.from('store_suscripciones').select('store,monto_mensual,vence,notas,descuento_hasta');
+    if (su.error) su = await supabase.from('store_suscripciones').select('store,monto_mensual,vence,notas');
     if (pr.error || su.error || pa.error) { setSinTablas(true); return; }
     setSinTablas(false);
     const mapaPrecios: Record<string, number> = {};
@@ -87,8 +90,12 @@ export default function CobrosPage() {
       tiendas.map((t) => {
         const sugerido = precioSugerido(pasosDeTienda(t), precios);
         const sub = subs[t.slug];
-        const monto = sub?.monto_mensual ?? sugerido;
-        return { tienda: t, sugerido, sub, monto, estado: estadoCobro(sub?.vence, monto, hoy) };
+        // Sin fecha de vencimiento, el monto acordado queda fijo para siempre (precio "congelado").
+        // Con fecha y ya pasada, el descuento venció: vuelve solo al precio sugerido, sin que nadie
+        // tenga que entrar a quitarlo a mano.
+        const descuentoVigente = sub?.monto_mensual != null && (!sub.descuento_hasta || sub.descuento_hasta >= hoy);
+        const monto = descuentoVigente ? (sub!.monto_mensual as number) : sugerido;
+        return { tienda: t, sugerido, sub, monto, descuentoVigente, estado: estadoCobro(sub?.vence, monto, hoy) };
       }),
     [tiendas, precios, subs, hoy],
   );
@@ -197,8 +204,13 @@ export default function CobrosPage() {
                   <div className="text-right">
                     <p className="text-sm font-bold">{soles(f.monto)}<span className="text-[10px] text-[#727785] font-semibold"> /mes</span></p>
                     <p className="text-[10px] text-[#727785] font-semibold">
-                      {f.sub?.monto_mensual != null ? 'monto acordado' : 'precio sugerido'}
+                      {f.descuentoVigente ? 'monto acordado' : 'precio sugerido'}
                     </p>
+                    {f.sub?.monto_mensual != null && f.sub.descuento_hasta && (
+                      <p className={`text-[10px] font-semibold ${f.descuentoVigente ? 'text-amber-700' : 'text-[#727785] italic'}`}>
+                        {f.descuentoVigente ? `descuento hasta ${f.sub.descuento_hasta}` : `descuento venció el ${f.sub.descuento_hasta}`}
+                      </p>
+                    )}
                   </div>
                   <div className="w-28 text-right">
                     <span className={`inline-block text-[10px] font-bold px-2 py-1 rounded-full border ${ui.clase}`}>{ui.texto(f.estado.dias)}</span>
@@ -246,6 +258,7 @@ function GestionTienda({
   const [acordado, setAcordado] = useState(sub?.monto_mensual != null ? String(sub.monto_mensual) : '');
   const [vence, setVence] = useState(sub?.vence ?? '');
   const [notas, setNotas] = useState(sub?.notas ?? '');
+  const [descuentoHasta, setDescuentoHasta] = useState(sub?.descuento_hasta ?? '');
   const [pagoMonto, setPagoMonto] = useState(String(monto || ''));
   const [metodo, setMetodo] = useState(METODOS[0]);
   const [referencia, setReferencia] = useState('');
@@ -263,6 +276,7 @@ function GestionTienda({
       monto_mensual: acordado.trim() === '' ? null : Math.max(0, Number(acordado) || 0),
       vence: vence || null,
       notas: notas.trim() || null,
+      descuento_hasta: descuentoHasta || null,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'store' });
     setOcupado(false);
@@ -285,6 +299,7 @@ function GestionTienda({
       monto_mensual: sub?.monto_mensual ?? null,
       vence: nuevoVence,
       notas: sub?.notas ?? null,
+      descuento_hasta: sub?.descuento_hasta ?? null,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'store' });
     setOcupado(false);
@@ -349,6 +364,31 @@ function GestionTienda({
                 <input type="date" value={vence} onChange={(e) => setVence(e.target.value)} className={`${campo} mt-1`} />
               </label>
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <label className="text-[10px] font-bold text-[#545f73]">Descuento válido por
+                <select
+                  value=""
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (!v) return;
+                    setDescuentoHasta(v === 'clear' ? '' : sumarMeses(hoy, Number(v)));
+                  }}
+                  className={`${campo} mt-1`}
+                >
+                  <option value="">Elegir plazo rápido…</option>
+                  <option value="clear">Sin vencimiento (precio congelado de por vida)</option>
+                  <option value="3">3 meses desde hoy</option>
+                  <option value="6">6 meses desde hoy</option>
+                  <option value="12">12 meses desde hoy</option>
+                </select>
+              </label>
+              <label className="text-[10px] font-bold text-[#545f73]">Descuento vence el (vacío = para siempre)
+                <input type="date" value={descuentoHasta} onChange={(e) => setDescuentoHasta(e.target.value)} className={`${campo} mt-1`} />
+              </label>
+            </div>
+            <p className="text-[10px] text-[#727785] font-semibold -mt-1">
+              Pasada esa fecha, esta tienda vuelve sola al precio sugerido ({soles(sugerido)}/mes) sin que tengas que entrar a quitarlo.
+            </p>
             <label className="text-[10px] font-bold text-[#545f73]">Notas
               <textarea rows={2} value={notas} onChange={(e) => setNotas(e.target.value)} className={`${campo} mt-1 resize-none`} />
             </label>
