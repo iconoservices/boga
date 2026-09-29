@@ -291,9 +291,9 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-4">
           {/* Logo / Brand Name */}
           <div className="flex items-center gap-3">
-            {store.iconImage ? (
+            {store.logoImage || store.iconImage ? (
               <img
-                src={store.iconImage}
+                src={store.logoImage || store.iconImage}
                 alt={store.name}
                 className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border border-gray-200 shadow-xs"
               />

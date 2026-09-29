@@ -287,9 +287,9 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 sm:h-18 flex items-center justify-between gap-4">
           {/* Logo & Name */}
           <div className="flex items-center gap-3">
-            {store.iconImage ? (
+            {store.logoImage || store.iconImage ? (
               <img
-                src={store.iconImage}
+                src={store.logoImage || store.iconImage}
                 alt={store.name}
                 className="w-9 h-9 sm:w-11 sm:h-11 rounded-full object-cover border border-gray-200 shadow-2xs"
               />
