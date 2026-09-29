@@ -27,18 +27,21 @@ export default function MiPlan({
   modulos: Modulos | null | undefined;
   subdominioActivo: boolean | null | undefined;
 }) {
-  const [datos, setDatos] = useState<{ precios: Record<string, number>; monto: number | null; vence: string | null } | null>(null);
+  const [datos, setDatos] = useState<{ precios: Record<string, number>; monto: number | null; descuentoHasta: string | null; vence: string | null } | null>(null);
 
   useEffect(() => {
     let vivo = true;
     Promise.all([
       supabase.from('plan_precios').select('clave,monto'),
-      supabase.from('store_suscripciones').select('monto_mensual,vence').eq('store', slug).maybeSingle(),
+      // `descuento_hasta` es columna nueva: si el SQL todavía no se corrió, reintenta sin ella
+      // (mismo criterio que /superadmin/cobros) en vez de dejar la tarjeta sin datos.
+      supabase.from('store_suscripciones').select('monto_mensual,vence,descuento_hasta').eq('store', slug).maybeSingle()
+        .then((r) => (r.error ? supabase.from('store_suscripciones').select('monto_mensual,vence').eq('store', slug).maybeSingle() : r)),
     ]).then(([pr, su]) => {
       if (!vivo || pr.error || su.error) return;
       const precios: Record<string, number> = {};
       (pr.data ?? []).forEach((r: { clave: string; monto: number }) => { precios[r.clave] = Number(r.monto) || 0; });
-      setDatos({ precios, monto: su.data?.monto_mensual ?? null, vence: su.data?.vence ?? null });
+      setDatos({ precios, monto: su.data?.monto_mensual ?? null, descuentoHasta: (su.data as any)?.descuento_hasta ?? null, vence: su.data?.vence ?? null });
     });
     return () => { vivo = false; };
   }, [slug]);
@@ -46,7 +49,10 @@ export default function MiPlan({
   if (!datos) return null;
 
   const tienda = { modulos, subdominio_activo: subdominioActivo };
-  const monto = datos.monto ?? precioSugerido(pasosDeTienda(tienda), datos.precios);
+  const sugerido = precioSugerido(pasosDeTienda(tienda), datos.precios);
+  // Sin descuentoHasta, el monto acordado queda fijo para siempre; con fecha ya pasada, vuelve solo al sugerido.
+  const descuentoVigente = datos.monto != null && (!datos.descuentoHasta || datos.descuentoHasta >= hoyLima());
+  const monto = descuentoVigente ? (datos.monto as number) : sugerido;
   if (!(monto > 0) && !datos.vence) return null;
 
   const estado = estadoCobro(datos.vence, monto, hoyLima());
