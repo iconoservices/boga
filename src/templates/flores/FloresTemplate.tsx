@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { pedirDatosCliente } from '@/components/pedirDatosCliente';
 import { conMarcaBlanca } from '@/lib/modulos';
 import { StoreConfig } from '@/lib/stores.config';
@@ -93,7 +93,39 @@ export default function FloresTemplate({ store, initialProductId }: FloresTempla
     fetchProducts();
   }, [store.slug, store.categories, demoPermitido]);
 
-  const filtered = activeCategory === 'all' ? products : products.filter((p) => p.category === activeCategory);
+  const categoryTabs = useMemo(() => {
+    const catsConProductos = new Set(
+      products.map((p) => (p.category || '').toLowerCase().trim()).filter(Boolean)
+    );
+
+    let base = (store.categories || []).map((c) => ({
+      id: (c.href || '').toLowerCase().trim(),
+      label: c.name,
+      icon: c.icon || 'local_florist',
+    }));
+
+    if (base.length === 0) {
+      base = CATEGORY_TABS.filter((tab) => tab.id !== 'all');
+    }
+
+    const filtradas = base.filter((c) => {
+      const slug = (c.id || '').toLowerCase().trim();
+      const nom = (c.label || '').toLowerCase().trim();
+      return catsConProductos.has(slug) || catsConProductos.has(nom);
+    });
+
+    return [{ id: 'all', label: 'Todo', icon: 'apps' }, ...filtradas];
+  }, [store.categories, products]);
+
+  const filtered =
+    activeCategory === 'all'
+      ? products
+      : products.filter((p) => {
+          const pc = (p.category || '').toLowerCase().trim();
+          const tab = categoryTabs.find((t) => t.id === activeCategory);
+          if (!tab) return pc === activeCategory.toLowerCase().trim();
+          return pc === tab.id || pc === tab.label.toLowerCase().trim();
+        });
 
   const addToCart = (product: Product, qty: number = 1) => {
     setCart((prev) => {
@@ -198,7 +230,7 @@ export default function FloresTemplate({ store, initialProductId }: FloresTempla
         <section id="catalogo" className="max-w-7xl mx-auto px-4 md:px-6 py-6">
           {/* Chips de categoría — visibles tambien en escritorio como filtro rapido */}
           <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
-            {CATEGORY_TABS.map((tab) => {
+            {categoryTabs.map((tab) => {
               const isActive = activeCategory === tab.id;
               return (
                 <button key={tab.id} onClick={() => setActiveCategory(tab.id)}

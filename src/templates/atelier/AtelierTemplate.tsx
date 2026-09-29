@@ -136,16 +136,28 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
       : [selectedProduct.image]
     : [];
 
-  // Categorías
+  // Categorías: solo mostrar las que tienen productos reales en catálogo
   const categoriasTienda = useMemo(() => {
+    const categoriasConProductos = new Set(
+      allProducts.map((p) => (p.category || '').toLowerCase().trim()).filter(Boolean)
+    );
+
     if ((store.categories || []).length > 0) {
-      return store.categories.map((c) => ({
-        id: c.href.toLowerCase(),
-        label: c.name,
-        icon: c.icon || 'checkroom',
-      }));
+      const filtradas = store.categories.filter((c) => {
+        const slug = (c.href || '').toLowerCase().trim();
+        const nom = (c.name || '').toLowerCase().trim();
+        return categoriasConProductos.has(slug) || categoriasConProductos.has(nom);
+      });
+      if (filtradas.length > 0) {
+        return filtradas.map((c) => ({
+          id: (c.href || '').toLowerCase().trim(),
+          label: c.name,
+          icon: c.icon || 'checkroom',
+        }));
+      }
     }
-    const unicas = [...new Set(allProducts.map((p) => p.category))].filter(Boolean);
+
+    const unicas = [...categoriasConProductos];
     return unicas.map((c) => ({
       id: c,
       label: c.charAt(0).toUpperCase() + c.slice(1),
@@ -156,7 +168,13 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
   // Filtrado
   const filteredProducts = useMemo(() => {
     return allProducts.filter((prod) => {
-      const matchCategory = activeCategory === 'all' || prod.category === activeCategory;
+      const prodCat = (prod.category || '').toLowerCase().trim();
+      const matchedCategory = categoriasTienda.find((c) => c.id === activeCategory);
+      const matchCategory =
+        activeCategory === 'all' ||
+        (!matchedCategory
+          ? prodCat === activeCategory
+          : prodCat === matchedCategory.id || prodCat === matchedCategory.label.toLowerCase().trim());
       const matchSearch =
         !searchQuery.trim() ||
         prod.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
@@ -164,7 +182,7 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
       const matchOffer = !onlyOffers || prod.hasOffer;
       return matchCategory && matchSearch && matchOffer;
     });
-  }, [allProducts, activeCategory, searchQuery, onlyOffers]);
+  }, [allProducts, activeCategory, searchQuery, onlyOffers, categoriasTienda]);
 
   // Wishlist toggle
   const toggleWishlist = (productId: string, e: React.MouseEvent) => {

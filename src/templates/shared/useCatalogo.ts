@@ -199,7 +199,15 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
   // en construccion (mientras carga, `cargando` ya evita este filtro raro).
   const categoriasEfectivas: Categoria[] = categorias.length
     ? categorias
-        .filter((c) => cargando || products.some((p) => p.category === c.href))
+        .filter((c) =>
+          cargando ||
+          products.some((p) => {
+            const pc = (p.category || '').toLowerCase().trim();
+            const ch = (c.href || '').toLowerCase().trim();
+            const cn = (c.name || '').toLowerCase().trim();
+            return pc === ch || pc === cn;
+          })
+        )
         .map((c) => ({
           id: c.href,
           label: c.name,
@@ -215,7 +223,12 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
 
   const filtered = activeCategory === 'all'
     ? products
-    : products.filter((p) => p.category === activeCategory);
+    : products.filter((p) => {
+        const pc = (p.category || '').toLowerCase().trim();
+        const cat = categoriasEfectivas.find((c) => c.id === activeCategory);
+        if (!cat) return pc === activeCategory.toLowerCase().trim();
+        return pc === cat.id.toLowerCase().trim() || pc === cat.label.toLowerCase().trim();
+      });
 
   /** Categorias con una foto real del catalogo, para las tarjetas del inicio. */
   const categoriasConFoto = (limite = 3) =>

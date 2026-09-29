@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { StoreConfig } from '@/lib/stores.config';
 import { fetchProductosDeTienda } from '@/lib/catalogo';
@@ -126,8 +126,27 @@ export default function SunsetTemplate({ store, initialProductId }: SunsetTempla
   // Los de ejemplo solo se ven mientras la tienda no cargo los suyos (lib/demo.ts)
   const visibleProducts = demoOn ? products : propios;
 
+  // Categorías que realmente tienen productos en catálogo
+  const categoriasConProductos = useMemo(() => {
+    return (store.categories || []).filter((cat) =>
+      visibleProducts.some((p) => {
+        const pc = (p.category || '').toLowerCase().trim();
+        const ch = (cat.href || '').toLowerCase().trim();
+        const cn = (cat.name || '').toLowerCase().trim();
+        return pc === ch || pc === cn;
+      })
+    );
+  }, [store.categories, visibleProducts]);
+
   const filtered =
-    activeTab === 'all' ? visibleProducts : visibleProducts.filter((m) => m.category === activeTab);
+    activeTab === 'all'
+      ? visibleProducts
+      : visibleProducts.filter((m) => {
+          const mc = (m.category || '').toLowerCase().trim();
+          const target = categoriasConProductos.find((c) => c.href === activeTab);
+          if (!target) return mc === activeTab.toLowerCase().trim();
+          return mc === target.href.toLowerCase().trim() || mc === target.name.toLowerCase().trim();
+        });
   const featured = filtered.find((m) => m.featured) ?? filtered[0];
   const rest = filtered; // Show all items in the list, featured included
 
@@ -345,7 +364,7 @@ export default function SunsetTemplate({ store, initialProductId }: SunsetTempla
         >
           {[
             { id: 'all', label: 'Recomendados' },
-            ...store.categories.map(cat => ({ id: cat.href, label: cat.name }))
+            ...categoriasConProductos.map(cat => ({ id: cat.href, label: cat.name }))
           ].map((tab) => (
             <button
               key={tab.id}
@@ -510,7 +529,7 @@ export default function SunsetTemplate({ store, initialProductId }: SunsetTempla
         }}
       >
         <div className="flex justify-center items-center gap-6 md:gap-10 w-full max-w-md h-full px-4">
-          {store.categories.map((cat) => {
+          {categoriasConProductos.map((cat) => {
             const isActive = activeTab === cat.href;
             return (
               <button

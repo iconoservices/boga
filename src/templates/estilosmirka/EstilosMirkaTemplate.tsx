@@ -82,22 +82,35 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
     ? (selectedProduct.images && selectedProduct.images.length > 1 ? selectedProduct.images : [selectedProduct.image])
     : [];
 
-  // Categorias de la ficha real de la tienda (panel admin), no una lista fija
-  // de rubro de ropa: antes "Faldas"/"Blazers" salian aunque la tienda hubiera
-  // cargado categorias distintas, y las suyas no aparecian como filtro. Si la
-  // tienda no configuro categorias, se deducen del catalogo (igual que hace
-  // useCatalogo para el resto de plantillas) en vez de dejar un unico "Todo".
-  const categoriasTienda = (store.categories || []).length
-    ? (store.categories || []).map((c) => ({ id: c.href, label: c.name }))
-    : [...new Set(allProducts.map((p) => p.category))]
-        .filter(Boolean)
-        .map((c) => ({ id: c, label: c.charAt(0).toUpperCase() + c.slice(1) }));
-
-  // Habia un filtro por searchTerm, pero nunca se construyo el input que lo
-  // alimentara: el termino era siempre '' y la condicion siempre true.
-  const filteredProducts = allProducts.filter(
-    (prod) => activeCategory === 'all' || prod.category === activeCategory
+  // Solo mostrar categorías que realmente tienen productos cargados en la tienda
+  const categoriasConProductos = React.useMemo(
+    () => new Set(allProducts.map((p: any) => (p.category || '').toLowerCase().trim()).filter(Boolean)),
+    [allProducts]
   );
+
+  const categoriasTienda = React.useMemo(() => {
+    if ((store.categories || []).length > 0) {
+      const filtradas = store.categories.filter((c) => {
+        const slug = (c.href || '').toLowerCase().trim();
+        const nom = (c.name || '').toLowerCase().trim();
+        return categoriasConProductos.has(slug) || categoriasConProductos.has(nom);
+      });
+      if (filtradas.length > 0) {
+        return filtradas.map((c) => ({ id: c.href.toLowerCase().trim(), label: c.name }));
+      }
+    }
+
+    const unicas = [...categoriasConProductos];
+    return unicas.map((c: any) => ({ id: c, label: c.charAt(0).toUpperCase() + c.slice(1) }));
+  }, [store.categories, categoriasConProductos]);
+
+  const filteredProducts = allProducts.filter((prod: any) => {
+    if (activeCategory === 'all') return true;
+    const prodCat = (prod.category || '').toLowerCase().trim();
+    const matchedCategory = categoriasTienda.find((c) => c.id === activeCategory);
+    if (!matchedCategory) return prodCat === activeCategory;
+    return prodCat === matchedCategory.id || prodCat === matchedCategory.label.toLowerCase().trim();
+  });
 
   const whatsappVisible = tieneWhatsApp(store);
   const telefonoVisible = whatsappVisible ? `+${(store.whatsapp || '').replace(/\D/g, '')}` : null;

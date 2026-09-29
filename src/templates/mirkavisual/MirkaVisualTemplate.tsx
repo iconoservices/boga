@@ -110,17 +110,34 @@ export default function MirkaVisualTemplate({ store, initialProductId }: MirkaVi
       : [selectedProduct.image]
     : [];
 
+  // Solo mostrar categorías que realmente tienen productos en la tienda
   const categoriasTienda = React.useMemo(() => {
+    const categoriasConProductos = new Set(
+      allProducts.map((p: any) => (p.category || '').toLowerCase().trim()).filter(Boolean)
+    );
+
     if ((store.categories || []).length > 0) {
-      return (store.categories || []).map((c) => ({ id: c.href.toLowerCase(), label: c.name }));
+      const filtradas = store.categories.filter((c) => {
+        const slug = (c.href || '').toLowerCase().trim();
+        const nom = (c.name || '').toLowerCase().trim();
+        return categoriasConProductos.has(slug) || categoriasConProductos.has(nom);
+      });
+      if (filtradas.length > 0) {
+        return filtradas.map((c) => ({ id: c.href.toLowerCase().trim(), label: c.name }));
+      }
     }
-    const unicas = [...new Set(allProducts.map((p: any) => p.category))].filter(Boolean);
+
+    const unicas = [...categoriasConProductos];
     return unicas.map((c: any) => ({ id: c, label: c.charAt(0).toUpperCase() + c.slice(1) }));
   }, [store.categories, allProducts]);
 
-  const filteredProducts = allProducts.filter(
-    (prod: any) => activeCategory === 'all' || prod.category === activeCategory
-  );
+  const filteredProducts = allProducts.filter((prod: any) => {
+    if (activeCategory === 'all') return true;
+    const prodCat = (prod.category || '').toLowerCase().trim();
+    const matchedCategory = categoriasTienda.find((c) => c.id === activeCategory);
+    if (!matchedCategory) return prodCat === activeCategory;
+    return prodCat === matchedCategory.id || prodCat === matchedCategory.label.toLowerCase().trim();
+  });
 
   const whatsappVisible = tieneWhatsApp(store);
   const telefonoVisible = whatsappVisible ? `+${(store.whatsapp || '').replace(/\D/g, '')}` : null;

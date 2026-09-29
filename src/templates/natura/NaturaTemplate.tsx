@@ -73,7 +73,39 @@ export default function NaturaTemplate({ store, initialProductId }: NaturaTempla
 
   const t = store.theme;
 
-  const filtered = activeCategory === 'all' ? products : products.filter((p) => p.category === activeCategory);
+  const categoryTabs = React.useMemo(() => {
+    const catsConProductos = new Set(
+      products.map((p: any) => (p.category || '').toLowerCase().trim()).filter(Boolean)
+    );
+
+    let base = (store.categories || []).map((c) => ({
+      id: (c.href || '').toLowerCase().trim(),
+      label: c.name,
+      icon: c.icon || 'category',
+    }));
+
+    if (base.length === 0) {
+      base = CATEGORY_TABS.filter((tab) => tab.id !== 'all');
+    }
+
+    const filtradas = base.filter((c) => {
+      const slug = (c.id || '').toLowerCase().trim();
+      const nom = (c.label || '').toLowerCase().trim();
+      return catsConProductos.has(slug) || catsConProductos.has(nom);
+    });
+
+    return [{ id: 'all', label: 'Todo', icon: 'apps' }, ...filtradas];
+  }, [store.categories, products]);
+
+  const filtered =
+    activeCategory === 'all'
+      ? products
+      : products.filter((p) => {
+          const pc = (p.category || '').toLowerCase().trim();
+          const tab = categoryTabs.find((t) => t.id === activeCategory);
+          if (!tab) return pc === activeCategory.toLowerCase().trim();
+          return pc === tab.id || pc === tab.label.toLowerCase().trim();
+        });
 
   return (
     <div className="min-h-screen" style={{ background: t.background, color: t.onBackground, fontFamily: t.fontBody }}>
@@ -99,9 +131,9 @@ export default function NaturaTemplate({ store, initialProductId }: NaturaTempla
         </button>
       </header>
 
-      <main className="pt-14 pb-24">
+      <main className="pt-14 pb-20">
         {/* Hero banner */}
-        <div className="relative h-52 overflow-hidden">
+        <div className="relative h-64 overflow-hidden">
           <img className="w-full h-full object-cover" style={{ filter: 'brightness(0.6)' }} alt={store.heroAlt} src={store.heroImage} />
           {/* ── COMPARTIR / INSTALAR — solo sobre el banner, se va con el scroll ── */}
           <StoreFloatingActions store={store} />
@@ -114,7 +146,7 @@ export default function NaturaTemplate({ store, initialProductId }: NaturaTempla
 
         {/* Category chips with Material Icons */}
         <div className="flex gap-2 overflow-x-auto px-4 py-3 no-scrollbar">
-          {CATEGORY_TABS.map((tab) => {
+          {categoryTabs.map((tab) => {
             const isActive = activeCategory === tab.id;
             return (
               <button key={tab.id} onClick={() => setActiveCategory(tab.id)}
