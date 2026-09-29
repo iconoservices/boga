@@ -161,12 +161,11 @@ export default function StoreFloatingActions({ store }: StoreFloatingActionsProp
     <div className="absolute top-3 right-3 z-30 flex flex-col gap-2">
       <button
         onClick={compartir}
-        className="w-10 h-10 rounded-full flex items-center justify-center bg-white/40 backdrop-blur-md border border-white/50 shadow-lg active:scale-90 hover:bg-white/60 transition-all"
-        style={{ color: t.onBackground }}
+        className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90 backdrop-blur-md border border-black/10 shadow-lg active:scale-90 hover:bg-white transition-all text-neutral-800 cursor-pointer"
         aria-label="Compartir"
         title="Compartir"
       >
-        <span className="material-symbols-outlined text-[20px]">share</span>
+        <span className="material-symbols-outlined text-[20px] text-neutral-800">share</span>
       </button>
       {store.pushActivo && <StorePushBell slug={store.slug} nombre={store.name} color={t.primary} />}
       {store.mostrarUbicacion && store.latitud != null && store.longitud != null && (

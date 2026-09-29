@@ -356,7 +356,8 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
       */}
       <section className="w-full bg-gray-50 border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-0 sm:px-4 sm:py-4">
-          <div className="w-full overflow-hidden sm:rounded-3xl shadow-sm bg-gray-100">
+          <div className="w-full overflow-hidden sm:rounded-3xl shadow-sm bg-gray-100 relative">
+            <StoreFloatingActions store={store} />
             <img
               src={store.heroImage || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1600&q=85'}
               alt={store.heroAlt || store.name}
@@ -1117,8 +1118,6 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
         </div>
       )}
 
-      {/* Floating Actions */}
-      <StoreFloatingActions store={store} />
     </div>
   );
 }

@@ -370,63 +370,54 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
         </div>
       </header>
 
-      {/* ── HERO LOOKBOOK BANNER ────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-black text-white">
-        <div className="relative min-h-[380px] sm:min-h-[480px] lg:min-h-[540px] flex items-center">
-          {/* Background Image with Dark Vignette */}
-          <div className="absolute inset-0 z-0">
-            <img
-              src={store.heroImage || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1600&q=85'}
-              alt={store.heroAlt || store.name}
-              className="w-full h-full object-cover object-center opacity-70 filter brightness-90"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/30" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+      {/* ── PORTADA 100% VISUAL (SOLO IMAGEN, SIN TEXTOS SUPERPUESTOS) ── */}
+      <section className="overflow-hidden w-full bg-black/5">
+        <div className="w-full max-w-7xl mx-auto relative">
+          <StoreFloatingActions store={store} />
+          <img
+            src={store.heroImage || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1600&q=85'}
+            alt={store.heroAlt || store.name}
+            className="w-full h-auto max-h-[500px] object-cover object-center block"
+          />
+        </div>
+      </section>
+
+      {/* ── INFO BAR & BENEFICIOS DE BOUTIQUE (DEBAJO DEL BANNER) ──── */}
+      <section className="bg-white border-b border-gray-100 py-3.5 sm:py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-3">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span className="font-extrabold uppercase tracking-wider text-gray-900">
+              Colección 2026
+            </span>
+            {store.zona && (
+              <span className="text-gray-500 border-l border-gray-200 pl-3 hidden sm:inline">
+                📍 {store.zona}
+              </span>
+            )}
           </div>
-
-          {/* Hero Content */}
-          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-12 lg:py-20 w-full">
-            <div className="max-w-2xl space-y-4 sm:space-y-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs uppercase tracking-widest font-bold text-gray-200">
-                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                Nueva Colección 2026
-              </div>
-
-              <h1
-                className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] text-white"
-                style={{ fontFamily: theme.fontHeadline || "'Outfit', sans-serif" }}
-              >
-                {store.tagline || store.name || 'Diseño, elegancia y tendencia para ti.'}
-              </h1>
-
-              <p className="text-sm sm:text-base text-gray-300 font-light max-w-lg leading-relaxed">
-                {store.heroAlt || (store.zona ? `Colección exclusiva en ${store.zona}. ` : '') + 'Descubre prendas confeccionadas con atención a cada detalle. Elige tu talla y pide directamente por WhatsApp.'}
-              </p>
-
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                <button
-                  onClick={() => {
-                    setActiveCategory('all');
-                    document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="px-6 py-3 rounded-full bg-white text-black font-bold text-xs sm:text-sm uppercase tracking-wider hover:bg-gray-100 transition-all hover:scale-105 active:scale-95 shadow-lg cursor-pointer flex items-center gap-2"
-                >
-                  <span>Explorar Colección</span>
-                  <span className="material-symbols-outlined text-base">arrow_forward</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setOnlyOffers(true);
-                    document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="px-5 py-3 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/20 text-white font-semibold text-xs sm:text-sm uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2"
-                >
-                  <span className="material-symbols-outlined text-rose-400 text-base">local_fire_department</span>
-                  <span>Ver Ofertas</span>
-                </button>
-              </div>
-            </div>
+          <div className="flex items-center gap-4 text-gray-600">
+            <span className="hidden md:flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-sm text-amber-500" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+              <span className="font-semibold text-gray-900">{store.rating ? store.rating.toFixed(1) : '5.0'}</span>
+              <span>Calidad Boutique</span>
+            </span>
+            {store.entrega && (
+              <span className="px-2.5 py-1 rounded-full bg-gray-100 font-medium text-[11px] text-gray-700">
+                {store.entrega === 'delivery' ? '🛵 Solo Delivery' : store.entrega === 'recojo' ? '🏢 Recojo en tienda' : '🛵 Delivery & Recojo'}
+              </span>
+            )}
+            <button
+              onClick={() => {
+                setOnlyOffers((prev) => !prev);
+              }}
+              className={`px-3 py-1 rounded-full font-bold text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
+                onlyOffers ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-600 hover:bg-rose-100'
+              }`}
+            >
+              <span className="material-symbols-outlined text-sm">local_fire_department</span>
+              <span>Ofertas</span>
+            </button>
           </div>
         </div>
       </section>
@@ -1159,8 +1150,6 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
         </div>
       )}
 
-      {/* Floating WhatsApp and Cart Quick Access */}
-      <StoreFloatingActions store={store} />
     </div>
   );
 }

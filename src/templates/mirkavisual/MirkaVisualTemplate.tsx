@@ -18,6 +18,8 @@ interface MirkaVisualTemplateProps {
 
 export default function MirkaVisualTemplate({ store, initialProductId }: MirkaVisualTemplateProps) {
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [onlyOffers, setOnlyOffers] = useState(false);
 
   const [selectedSize, setSelectedSize] = useState('M');
   const [detailQty, setDetailQty] = useState(1);
@@ -131,13 +133,35 @@ export default function MirkaVisualTemplate({ store, initialProductId }: MirkaVi
     return unicas.map((c: any) => ({ id: c, label: c.charAt(0).toUpperCase() + c.slice(1) }));
   }, [store.categories, allProducts]);
 
-  const filteredProducts = allProducts.filter((prod: any) => {
-    if (activeCategory === 'all') return true;
-    const prodCat = (prod.category || '').toLowerCase().trim();
-    const matchedCategory = categoriasTienda.find((c) => c.id === activeCategory);
-    if (!matchedCategory) return prodCat === activeCategory;
-    return prodCat === matchedCategory.id || prodCat === matchedCategory.label.toLowerCase().trim();
-  });
+  const fotoDeCategoria = (catId: string, catLabel: string) => {
+    const p = allProducts.find((item: any) => {
+      const pc = (item.category || '').toLowerCase().trim();
+      return pc === catId.toLowerCase().trim() || pc === catLabel.toLowerCase().trim();
+    });
+    return p?.image || store.heroImage || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&q=80';
+  };
+
+  const productosDestacados = React.useMemo(() => {
+    return allProducts.slice(0, 6);
+  }, [allProducts]);
+
+  const filteredProducts = React.useMemo(() => {
+    return allProducts.filter((prod: any) => {
+      const prodCat = (prod.category || '').toLowerCase().trim();
+      const matchedCategory = categoriasTienda.find((c) => c.id === activeCategory);
+      const matchCategory =
+        activeCategory === 'all' ||
+        (!matchedCategory
+          ? prodCat === activeCategory
+          : prodCat === matchedCategory.id || prodCat === matchedCategory.label.toLowerCase().trim());
+      const matchSearch =
+        !searchQuery.trim() ||
+        (prod.title || '').toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+        (prod.category || '').toLowerCase().includes(searchQuery.toLowerCase().trim());
+      const matchOffer = !onlyOffers || prod.hasOffer;
+      return matchCategory && matchSearch && matchOffer;
+    });
+  }, [allProducts, activeCategory, searchQuery, onlyOffers, categoriasTienda]);
 
   const whatsappVisible = tieneWhatsApp(store);
   const telefonoVisible = whatsappVisible ? `+${(store.whatsapp || '').replace(/\D/g, '')}` : null;
@@ -311,9 +335,9 @@ export default function MirkaVisualTemplate({ store, initialProductId }: MirkaVi
       </header>
 
       {/* ── PORTADA 100% VISUAL (SOLO IMAGEN, SIN LETRAS ENCIMA) ───── */}
-      <section className="relative overflow-hidden w-full bg-black/5">
-        <StoreFloatingActions store={store} />
-        <div className="w-full max-w-7xl mx-auto">
+      <section className="overflow-hidden w-full bg-black/5">
+        <div className="w-full max-w-7xl mx-auto relative">
+          <StoreFloatingActions store={store} />
           <img
             src={store.heroImage || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1600&q=80'}
             alt={store.heroAlt || store.name}
@@ -322,16 +346,196 @@ export default function MirkaVisualTemplate({ store, initialProductId }: MirkaVi
         </div>
       </section>
 
+      {/* ── BARRA DE BENEFICIOS BOUTIQUE (DEBAJO DEL BANNER) ──────── */}
+      <section className="bg-white border-b border-black/8 py-3.5 px-4 shadow-2xs">
+        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+          <div className="flex items-center justify-center gap-2.5 py-1">
+            <span className="material-symbols-outlined text-xl shrink-0" style={{ color: theme.primary }}>local_shipping</span>
+            <div className="text-left">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-gray-900 leading-tight">Envíos a Todo el Perú</p>
+              <p className="text-[10px] text-gray-500 hidden sm:block">Rápidos y seguros</p>
+            </div>
+          </div>
+          <div className="flex items-center justify-center gap-2.5 py-1">
+            <span className="material-symbols-outlined text-xl shrink-0" style={{ color: theme.primary }}>diamond</span>
+            <div className="text-left">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-gray-900 leading-tight">Prendas Exclusivas</p>
+              <p className="text-[10px] text-gray-500 hidden sm:block">Confección y diseño</p>
+            </div>
+          </div>
+          <div className="flex items-center justify-center gap-2.5 py-1">
+            <span className="material-symbols-outlined text-xl shrink-0" style={{ color: theme.primary }}>verified_user</span>
+            <div className="text-left">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-gray-900 leading-tight">Compra Segura</p>
+              <p className="text-[10px] text-gray-500 hidden sm:block">Yape, Plin y Transferencia</p>
+            </div>
+          </div>
+          <div className="flex items-center justify-center gap-2.5 py-1">
+            <span className="material-symbols-outlined text-xl shrink-0" style={{ color: theme.primary }}>chat</span>
+            <div className="text-left">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-gray-900 leading-tight">Asesoría de Tallas</p>
+              <p className="text-[10px] text-gray-500 hidden sm:block">Atención directa por WhatsApp</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── BARRA DE PERFIL Y UBICACIÓN DEL LOCAL ─────────────────── */}
+      <section className="bg-white/80 border-b border-black/8 py-2.5 px-4 text-xs">
+        <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3 text-gray-600">
+          <div className="flex items-center gap-3">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span className="font-bold text-gray-900 uppercase tracking-wider text-[11px]">Boutique Abierta</span>
+            {store.zona && (
+              <span className="text-gray-500 border-l border-black/10 pl-3 hidden sm:inline">
+                📍 {store.zona}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-3 sm:gap-5 text-[11px]">
+            {store.horario && (
+              <div className="hidden sm:flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm text-gray-400">schedule</span>
+                <span>{store.horario}</span>
+              </div>
+            )}
+            {store.entrega && (
+              <span className="px-2 py-0.5 bg-black/5 rounded-xs font-semibold text-gray-700">
+                {store.entrega === 'delivery' ? '🛵 Solo Delivery' : store.entrega === 'recojo' ? '🏢 Recojo en tienda' : '🛵 Delivery & Recojo'}
+              </span>
+            )}
+            <span className="flex items-center gap-1 text-gray-800 font-semibold">
+              <span className="material-symbols-outlined text-amber-500 text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+              <span>{store.rating ? store.rating.toFixed(1) : '5.0'}</span>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* ── HISTORIAS CIRCULARES DE COLECCIONES ─────────────────────── */}
+      {categoriasTienda.length > 0 && (
+        <section className="bg-white border-b border-black/8 py-4 sm:py-5">
+          <div className="max-w-6xl mx-auto px-4">
+            <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+              {/* Burbuja Todo */}
+              <button
+                onClick={() => {
+                  setActiveCategory('all');
+                  setOnlyOffers(false);
+                }}
+                className="flex flex-col items-center gap-1.5 shrink-0 group cursor-pointer focus:outline-none"
+              >
+                <div
+                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0.5 transition-transform group-hover:scale-105"
+                  style={{
+                    border: `2px solid ${activeCategory === 'all' && !onlyOffers ? theme.primary : 'rgba(0,0,0,0.12)'}`,
+                  }}
+                >
+                  <div
+                    className="w-full h-full rounded-full flex items-center justify-center font-bold text-[11px] uppercase tracking-wider"
+                    style={{
+                      backgroundColor: activeCategory === 'all' && !onlyOffers ? theme.primary : '#ffffff',
+                      color: activeCategory === 'all' && !onlyOffers ? '#ffffff' : '#333333',
+                    }}
+                  >
+                    TODO
+                  </div>
+                </div>
+                <span className="text-[11px] font-semibold text-gray-800">Colección</span>
+              </button>
+
+              {/* Burbujas de categorías con foto real */}
+              {categoriasTienda.map((cat) => {
+                const fotoCat = fotoDeCategoria(cat.id, cat.label);
+                const isActive = activeCategory === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => {
+                      setActiveCategory(cat.id);
+                      setOnlyOffers(false);
+                    }}
+                    className="flex flex-col items-center gap-1.5 shrink-0 group cursor-pointer focus:outline-none"
+                  >
+                    <div
+                      className="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0.5 transition-transform group-hover:scale-105"
+                      style={{
+                        border: `2px solid ${isActive ? theme.primary : 'rgba(0,0,0,0.12)'}`,
+                        boxShadow: isActive ? `0 0 0 2px ${theme.primary}33` : 'none',
+                      }}
+                    >
+                      <img
+                        src={fotoCat}
+                        alt={cat.label}
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    </div>
+                    <span
+                      className="text-[11px] font-medium whitespace-nowrap line-clamp-1 max-w-[70px] text-center"
+                      style={{ color: isActive ? theme.primary : '#4b5563', fontWeight: isActive ? 700 : 500 }}
+                    >
+                      {cat.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ── MAIN CATALOG (TARJETAS CUADRADAS TAL CUAL ESTILOS MIRKA) ── */}
       <section id="catalog" className="max-w-6xl mx-auto px-4 py-8">
-        {/* Search + title */}
-        <div className="flex flex-col md:flex-row gap-4 md:items-center justify-between mb-6">
-          <h2
-            className="text-xl font-bold"
-            style={{ fontFamily: theme.fontHeadline, color: theme.onBackground || '#1a0a0d' }}
-          >
-            Nuestra Colección
-          </h2>
+        {/* Search + title + quick filters */}
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <h2
+              className="text-xl font-bold tracking-tight"
+              style={{ fontFamily: theme.fontHeadline, color: theme.onBackground || '#1a0a0d' }}
+            >
+              Nuestra Colección
+            </h2>
+            <span className="text-xs text-gray-500 font-medium px-2 py-0.5 bg-black/5 rounded-xs">
+              {filteredProducts.length} prendas
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1 sm:w-64">
+              <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-base">
+                search
+              </span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar prenda o estilo..."
+                className="w-full pl-8 pr-7 py-1.5 bg-white border border-black/15 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-black/40 transition-all shadow-2xs"
+                style={{ borderRadius: '2px' }}
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <span className="material-symbols-outlined text-sm">close</span>
+                </button>
+              )}
+            </div>
+
+            <button
+              onClick={() => setOnlyOffers((v) => !v)}
+              className={`px-3 py-1.5 text-xs font-semibold border transition-all cursor-pointer flex items-center gap-1 shrink-0 ${
+                onlyOffers
+                  ? 'bg-rose-600 text-white border-rose-600'
+                  : 'bg-white text-gray-700 border-black/15 hover:border-black/30'
+              }`}
+              style={{ borderRadius: '2px' }}
+            >
+              <span className="material-symbols-outlined text-sm text-rose-500">local_fire_department</span>
+              <span>Ofertas</span>
+            </button>
+          </div>
         </div>
 
         {/* Category Ribbon — con estilo rectangular de Estilos Mirka */}
