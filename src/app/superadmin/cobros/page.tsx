@@ -308,6 +308,15 @@ function GestionTienda({
     onClose();
   };
 
+  const borrarPago = async (pago: Pago) => {
+    if (!confirm(`¿Borrar el pago de ${soles(Number(pago.monto))} del ${pago.created_at.slice(0, 10)}? Esto NO mueve "Pagado hasta" — si hace falta, corrígelo a mano abajo.`)) return;
+    setOcupado(true); setError(null);
+    const { error: err } = await supabase.from('store_pagos').delete().eq('id', pago.id);
+    setOcupado(false);
+    if (err) { setError(err.message); return; }
+    onCambio(`Pago de ${soles(Number(pago.monto))} borrado.`);
+  };
+
   const campo = 'w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold outline-none focus:border-[#0058be]';
 
   return (
@@ -416,7 +425,17 @@ function GestionTienda({
                       {new Date(p.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' })}
                       {' · '}{p.metodo || '—'}{p.referencia ? ` · ${p.referencia}` : ''}
                     </span>
-                    <span className="font-bold whitespace-nowrap">{soles(Number(p.monto))} <span className="text-[10px] text-[#727785]">({p.meses}m)</span></span>
+                    <span className="flex items-center gap-2 shrink-0">
+                      <span className="font-bold whitespace-nowrap">{soles(Number(p.monto))} <span className="text-[10px] text-[#727785]">({p.meses}m)</span></span>
+                      <button
+                        onClick={() => borrarPago(p)}
+                        disabled={ocupado || deshabilitado}
+                        title="Borrar este pago (ej. si se cargó por error o duplicado)"
+                        className="w-6 h-6 flex items-center justify-center text-[#a3a8b8] hover:text-red-600 hover:bg-red-50 rounded disabled:opacity-40"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">delete</span>
+                      </button>
+                    </span>
                   </li>
                 ))}
               </ul>
