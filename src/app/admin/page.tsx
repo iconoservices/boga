@@ -320,9 +320,16 @@ function AdminDashboard({ user }: { user: User }) {
   // Una pestaña/sección se muestra según la tienda elegida en el selector: con una tienda puntual elegida, decide
   // SOLO esa tienda (antes se prendía si CUALQUIER otra tienda mía tenía el módulo, y un cliente con varios rubros
   // veía el POS de una tienda en la que no existía). Con "Todas mis tiendas" alcanza con que alguna lo tenga.
+  // Mientras las tiendas todavía no cargaron, NO se asume que sí (antes hacía eso, y a una tienda con el módulo
+  // apagado le salía el tab un instante para luego desaparecer apenas llegaban los datos reales).
   const algunaTiene = (modulo: ModuloId) => {
-    if (selectedStore !== 'all') return moduloActivo(dbStores.find((s: any) => s.slug === selectedStore)?.modulos, modulo);
-    return visibleDbStores.length === 0 || visibleDbStores.some((s: any) => moduloActivo(s.modulos, modulo));
+    if (selectedStore !== 'all') {
+      const s = dbStores.find((s: any) => s.slug === selectedStore);
+      if (!s) return false;
+      return moduloActivo(s.modulos, modulo);
+    }
+    if (visibleDbStores.length === 0) return false;
+    return visibleDbStores.some((s: any) => moduloActivo(s.modulos, modulo));
   };
   const posOn = algunaTiene('pos');
   const inventarioOn = algunaTiene('inventario');
