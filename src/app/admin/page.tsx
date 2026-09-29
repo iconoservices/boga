@@ -330,7 +330,18 @@ function AdminDashboard({ user }: { user: User }) {
   const inicioDb = dbStores.find((s: any) => s.slug === focusedStore);
   const inicioActiva = (inicioDb?.status ?? 'active') === 'active';
   const inicioNombre = (user.user_metadata?.name as string | undefined)?.split(' ')[0];
-  const inicioUrl = inicioStore ? `${siteOrigin}/${inicioStore.slug}` : '';
+  // Con subdominio propio activo, el link/QR/compartir apuntan ahí en vez de a bogahub.app/<tienda>
+  // (mismo criterio que el QR de abajo, que sí lo revisaba — este no, y por eso quedaban distintos).
+  const inicioUrl = (() => {
+    if (!inicioStore) return '';
+    if (inicioDb?.subdominio_activo === true) {
+      try {
+        const u = new URL(siteOrigin);
+        return `${u.protocol}//${inicioStore.slug}.${u.host}`;
+      } catch { /* siteOrigin vacío en el primer render del servidor: cae al de abajo */ }
+    }
+    return `${siteOrigin}/${inicioStore.slug}`;
+  })();
   const inicioOrders = inicioStore ? orders.filter(o => o.store === inicioStore.slug) : [];
   const compartirCarta = async () => {
     if (typeof navigator === 'undefined') return;
@@ -411,7 +422,7 @@ function AdminDashboard({ user }: { user: User }) {
     esServicio: false,
   });
 
-  // Tiendas de terrenos: "Sección" pasa a ser el área, y aparece un campo para la ubicación (enlace de Maps).
+  // Tiendas de terrenos: "Subcategoría" pasa a ser el área, y aparece un campo para la ubicación (enlace de Maps).
   const esTerreno = ['terreno1', 'terreno2'].includes(String((stores as any)[newProduct.store]?.template ?? ''));
 
   const resetForm = () => {
@@ -1262,7 +1273,7 @@ function AdminDashboard({ user }: { user: User }) {
           head: [['', cat.toUpperCase(), 'Descripción', 'Precio']],
           body: catProducts.map(p => [
             '', // placeholder for image
-            p.name + (p.subcategory ? `\n(Sección: ${p.subcategory})` : ''), 
+            p.name + (p.subcategory ? `\n(Subcategoría: ${p.subcategory})` : ''),
             p.description || '-', 
             `S/ ${Number(p.price).toFixed(2)}`
           ]),
@@ -3117,7 +3128,7 @@ function AdminDashboard({ user }: { user: User }) {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">{esTerreno ? 'Área del terreno' : 'Sección (Ej: Entradas)'}</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">{esTerreno ? 'Área del terreno' : 'Subcategoría (Ej: Entradas)'}</label>
                     <input 
                       type="text" 
                       list="existing-subcategories"
