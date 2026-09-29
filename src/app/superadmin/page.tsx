@@ -2704,7 +2704,12 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                             className="mt-0.5 w-4 h-4 accent-[#0058be]"
                           />
                           <span>
-                            <span className="block text-xs font-black text-[#191b23]">{m.label}</span>
+                            <span className="block text-xs font-black text-[#191b23]">
+                              {m.label}
+                              {m.enDesarrollo && (
+                                <span className="ml-1.5 align-middle text-[9px] font-bold uppercase tracking-wide text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">En desarrollo</span>
+                              )}
+                            </span>
                             <span className="block text-[10px] text-[#727785] font-semibold mt-0.5">{m.desc}</span>
                           </span>
                         </label>

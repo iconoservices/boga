@@ -14,12 +14,14 @@ export type Modulos = Partial<Record<ModuloId, boolean>> & {
   pasarela_public_key?: string;
 };
 
-export const MODULOS: { id: ModuloId; label: string; icon: string; desc: string }[] = [
+export const MODULOS: { id: ModuloId; label: string; icon: string; desc: string; enDesarrollo?: boolean }[] = [
   {
     id: 'pos',
     label: 'Ventas en el local (POS)',
     icon: 'point_of_sale',
     desc: 'Caja rápida con boleta, vendedores propios y ventas en las métricas.',
+    // Prender solo para probar: activo, todavía no está listo para venderlo a una tienda real.
+    enDesarrollo: true,
   },
   {
     id: 'inventario',
