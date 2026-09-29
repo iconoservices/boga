@@ -55,6 +55,11 @@ const TEMPLATE_PRESENTATION: Record<string, { category?: string; description: st
     description: 'Diseño de boutique de moda premium con gran espacio para fotos de prendas, catálogos y colecciones de temporada.',
     previewUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&q=80',
   },
+  mirkavisual: {
+    category: 'Comercio',
+    description: 'Estilo boutique de lujo idéntico a Estilos Mirka pero con portada 100% limpia sin textos superpuestos. Ideal para banners personalizados.',
+    previewUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&q=80',
+  },
   atelier: {
     category: 'Comercio',
     description: 'Estudio de moda contemporánea y estilo urbano minimalista con historias tipo Instagram, tarjetas de lookbook verticales (3:4) y selector rápido de tallas.',

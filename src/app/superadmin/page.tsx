@@ -36,6 +36,7 @@ const META: Record<string, { emoji: string; cat: string }> = {
   natura:   { emoji: '🪴', cat: 'Salud' },
   amazonia: { emoji: '🏺', cat: 'Artesanía' },
   estilosmirka: { emoji: '👗', cat: 'Boutique' },
+  mirkavisual:  { emoji: '✨', cat: 'Boutique' },
   atelier:      { emoji: '🧥', cat: 'Moda' },
   lookbook:     { emoji: '🖼️', cat: 'Moda' },
   sweetkittynails: { emoji: '💅', cat: 'Beauty' },
