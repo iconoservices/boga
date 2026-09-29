@@ -18,7 +18,7 @@ import { uploadFile } from '@/lib/uploadClient';
 import { refrescarTienda } from '@/lib/refrescar';
 import PresentacionesEditor from '@/components/PresentacionesEditor';
 import { cargarCategoriasPersonalizadas, categoriasDePlantilla, type CategoriaPlantilla } from '@/lib/plantillaCategorias';
-import { filasAPresentaciones, leerPresentaciones, plantillaAceptaPresentaciones, plantillaEsPorPeso, precioDesde, type FilaPresentacion } from '@/lib/presentaciones';
+import { filasAPresentaciones, leerPresentaciones, plantillaAceptaPresentaciones, plantillaEsPorPeso, precioDesde, textosPresentacion, type FilaPresentacion } from '@/lib/presentaciones';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import type { StoreTheme } from '@/lib/templates.config';
 import { MODULOS, moduloActivo, enMarketplace, conMarcaBlanca, PLANES_PRESETS, type PlanPreset, type Modulos } from '@/lib/modulos';
@@ -3051,14 +3051,15 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                 if (!plantillaAceptaPresentaciones(tpl)) return null;
                 const abierta = plantillaEsPorPeso(tpl) || presAbiertas || newStoreProduct.presentaciones.length > 0;
                 if (!abierta) {
+                  const info = textosPresentacion(newStoreProduct.category, tpl);
                   return (
                     <button
                       type="button"
                       onClick={() => setPresAbiertas(true)}
-                      className="text-[10px] font-bold text-[#0058be] flex items-center gap-1 hover:underline"
+                      className="text-[10px] font-bold text-[#0058be] flex items-center gap-1 hover:underline cursor-pointer"
                     >
-                      <span className="material-symbols-outlined text-[14px]">scale</span>
-                      Vender por peso o en varios tamaños
+                      <span className="material-symbols-outlined text-[14px]">{info.icono}</span>
+                      {info.titulo.replace(' (opcional)', '')}
                     </button>
                   );
                 }
@@ -3066,8 +3067,10 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                   <PresentacionesEditor
                     filas={newStoreProduct.presentaciones}
                     onChange={(filas) => setNewStoreProduct(prev => ({ ...prev, presentaciones: filas }))}
-                    ayuda={plantillaEsPorPeso(tpl) ? 'Esta tienda vende por peso: agrega las medidas con su precio (100 g, 250 g, 1 kg…).' : 'Opcional: un mismo producto en varias medidas o tamaños, cada una con su precio.'}
+                    ayuda={plantillaEsPorPeso(tpl) ? 'Esta tienda vende por peso: agrega las medidas con su precio (100 g, 250 g, 1 kg…).' : undefined}
                     categoria={newStoreProduct.category}
+                    template={tpl as string}
+                    precioBase={newStoreProduct.price}
                   />
                 );
               })()}

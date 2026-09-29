@@ -12,15 +12,95 @@ export type Presentacion = { label: string; price: number };
 export const COL_PRESENTACIONES = 'presentaciones';
 
 /** Botones rápidos del formulario del dueño (productos por peso: especias, granos…). */
-export const PRESENTACIONES_SUGERIDAS = ['100 g', '250 g', '500 g', '1 kg'];
+export const PRESENTACIONES_SUGERIDAS_PESO = ['100 g', '250 g', '500 g', '1 kg'];
+export const PRESENTACIONES_SUGERIDAS = PRESENTACIONES_SUGERIDAS_PESO;
 
-/** Botones rápidos para bebidas (tamaño de vaso): medidas de onzas en vez de peso. */
-export const PRESENTACIONES_SUGERIDAS_BEBIDAS = ['12 oz', '14 oz', '16 oz', '20 oz'];
+/** Botones rápidos para bebidas (tamaño de vaso): medidas de onzas y litros. */
+export const PRESENTACIONES_SUGERIDAS_BEBIDAS = ['12 oz', '14 oz', '16 oz', '20 oz', '1 L'];
 
-/** Elige los botones rápidos según la categoría del producto: onzas si la categoría es de bebidas, peso si no. */
-export function presentacionesSugeridas(categoria: unknown): string[] {
-  const c = typeof categoria === 'string' ? categoria.toLowerCase() : '';
-  return c.includes('bebida') ? PRESENTACIONES_SUGERIDAS_BEBIDAS : PRESENTACIONES_SUGERIDAS;
+/** Botones rápidos para ropa / moda (tallas de prendas). */
+export const PRESENTACIONES_SUGERIDAS_ROPA = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Estándar'];
+
+/** Botones rápidos para calzado / calzados. */
+export const PRESENTACIONES_SUGERIDAS_CALZADO = ['35', '36', '37', '38', '39', '40', '41'];
+
+export type TipoPresentacion = 'ropa' | 'calzado' | 'bebida' | 'peso';
+
+export function tipoPresentacionDe(categoria: unknown, template?: unknown): TipoPresentacion {
+  const c = typeof categoria === 'string'
+    ? categoria.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    : '';
+  const t = typeof template === 'string' ? template.toLowerCase() : '';
+
+  if (/zapato|zapatilla|calzado|sandalia|bota|tacon|tacone/.test(c)) {
+    return 'calzado';
+  }
+
+  if (
+    t === 'estilosmirka' ||
+    /ropa|moda|vestido|blusa|pantalon|conjunto|polo|camisa|falda|short|casaca|chaqueta|poleron|chompa|talla|prenda|lenceria|bikini|traje/.test(c)
+  ) {
+    return 'ropa';
+  }
+
+  if (
+    /bebid|jugo|cafe|coctel|trago|cerveza|refresc|batido|smoothie|frappe|vaso|chicha|emolient|cholao|infusion|licuado|gaseosa/.test(c)
+  ) {
+    return 'bebida';
+  }
+
+  return 'peso';
+}
+
+/** Elige los botones rápidos según la categoría o plantilla del producto. */
+export function presentacionesSugeridas(categoria: unknown, template?: unknown): string[] {
+  const tipo = tipoPresentacionDe(categoria, template);
+  switch (tipo) {
+    case 'calzado': return PRESENTACIONES_SUGERIDAS_CALZADO;
+    case 'ropa': return PRESENTACIONES_SUGERIDAS_ROPA;
+    case 'bebida': return PRESENTACIONES_SUGERIDAS_BEBIDAS;
+    default: return PRESENTACIONES_SUGERIDAS_PESO;
+  }
+}
+
+/** Título, subtítulo e icono para el bloque de presentaciones según el rubro. */
+export function textosPresentacion(categoria: unknown, template?: unknown): {
+  titulo: string;
+  subtitulo: string;
+  icono: string;
+  ejemploLabel: string;
+} {
+  const tipo = tipoPresentacionDe(categoria, template);
+  switch (tipo) {
+    case 'calzado':
+      return {
+        titulo: '¿Tiene números de calzado? (opcional)',
+        subtitulo: 'Ej. calzado: 36, 37, 38, cada uno con su precio. Tu cliente elige el número al pedir.',
+        icono: 'steps',
+        ejemploLabel: 'Ej. 37',
+      };
+    case 'ropa':
+      return {
+        titulo: '¿Tiene tallas disponibles? (opcional)',
+        subtitulo: 'Ej. prendas: S, M, L, XL con su precio (pueden tener el mismo precio). Tu cliente elige la talla al pedir.',
+        icono: 'checkroom',
+        ejemploLabel: 'Ej. M',
+      };
+    case 'bebida':
+      return {
+        titulo: '¿Vendes en varios tamaños de vaso? (opcional)',
+        subtitulo: 'Ej. bebidas: 12 oz, 16 oz, 20 oz, cada una con su precio. Tu cliente elige el tamaño de vaso al pedir.',
+        icono: 'local_drink',
+        ejemploLabel: 'Ej. 16 oz',
+      };
+    default:
+      return {
+        titulo: '¿Lo vendes por peso o en varios tamaños? (opcional)',
+        subtitulo: 'Ej. especias o abarrotes: 100 g, 250 g, 1 kg, cada uno con su precio. Tu cliente elige la medida al pedir.',
+        icono: 'scale',
+        ejemploLabel: 'Ej. 250 g',
+      };
+  }
 }
 
 /** Lee lo que venga de la base y deja solo presentaciones válidas (etiqueta con texto y precio > 0), sin repetir etiquetas. */
@@ -61,7 +141,7 @@ export const claveLinea = (id: string, label?: string) => (label ? `${id}|${labe
 // Solo estas tienen el selector para el cliente; en las demás el producto se vendería al precio "desde".
 // `condimentos` es la que vende todo por peso: ahí el formulario de productos abre las presentaciones desde el inicio.
 const PLANTILLAS_CON_PRESENTACIONES = [
-  'condimentos', 'mercado',
+  'condimentos', 'mercado', 'estilosmirka',
   // las del motor compartido (templates/shared): el modal del producto trae el selector de medida
   'default', 'menudirecto', 'polleria', 'iniciocatalogo', 'fichadigital', 'fichaplana', 'veterinaria',
 ];

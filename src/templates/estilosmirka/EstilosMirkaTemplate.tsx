@@ -9,6 +9,7 @@ import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import { estrellasDe } from '../shared/tokens';
 import { useDetalleProducto } from '../shared/useDetalleProducto';
+import { leerPresentaciones } from '@/lib/presentaciones';
 
 interface EstilosMirkaTemplateProps {
   store: StoreConfig;
@@ -24,7 +25,7 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
   const [fotoActiva, setFotoActiva] = useState(0);
 
   // Cart State
-  const [cart, setCart] = useState<{ product: any; quantity: number }[]>([]);
+  const [cart, setCart] = useState<{ product: any; quantity: number; size?: string; unitPrice?: number }[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   
   // Dynamic Products from Supabase
@@ -46,7 +47,8 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
             category: p.category ? p.category.toLowerCase() : 'vestidos',
             image: p.image || 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&q=80',
             images: Array.isArray(p.images) && p.images.length > 1 ? p.images : undefined,
-            description: p.description || 'Prenda exclusiva de Estilos Mirka.'
+            description: p.description || 'Prenda exclusiva de Estilos Mirka.',
+            presentaciones: leerPresentaciones(p.presentaciones),
           }));
           setSupabaseProducts(formatted);
         }
@@ -65,9 +67,15 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
   // es lo que Google indexa, en vez de un modal que solo vivía en un useState.
   const { seleccionado: selectedProduct, abrir: abrirProducto, cerrar: cerrarProducto } = useDetalleProducto(store.slug, allProducts, initialProductId);
 
-  // Al abrir otro producto se vuelve a la primera foto de su galería.
+  // Al abrir otro producto se vuelve a la primera foto de su galería y se preselecciona la primera talla si tiene.
   useEffect(() => {
     setFotoActiva(0);
+    setDetailQty(1);
+    if (selectedProduct?.presentaciones && selectedProduct.presentaciones.length > 0) {
+      setSelectedSize(selectedProduct.presentaciones[0].label);
+    } else {
+      setSelectedSize('');
+    }
   }, [selectedProduct]);
 
   const fotosDetalle = selectedProduct
@@ -99,30 +107,31 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
   const [contactoMensaje, setContactoMensaje] = useState('');
 
   // Cart Handlers
-  const addToCart = (product: any) => {
+  const addToCart = (product: any, size?: string, unitPrice?: number, qty = 1) => {
+    const finalPrice = unitPrice ?? product.price;
     setCart((prev) => {
-      const existing = prev.find((item) => item.product.id === product.id);
+      const existing = prev.find((item) => item.product.id === product.id && item.size === size);
       if (existing) {
         return prev.map((item) =>
-          item.product.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+          item.product.id === product.id && item.size === size
+            ? { ...item, quantity: item.quantity + qty }
             : item
         );
       }
-      return [...prev, { product, quantity: 1 }];
+      return [...prev, { product, quantity: qty, size, unitPrice: finalPrice }];
     });
     setIsCartOpen(true);
   };
 
-  const removeFromCart = (productId: string) => {
-    setCart((prev) => prev.filter((item) => item.product.id !== productId));
+  const removeFromCart = (productId: string, size?: string) => {
+    setCart((prev) => prev.filter((item) => !(item.product.id === productId && item.size === size)));
   };
 
-  const updateQuantity = (productId: string, amount: number) => {
+  const updateQuantity = (productId: string, amount: number, size?: string) => {
     setCart((prev) =>
       prev
         .map((item) => {
-          if (item.product.id === productId) {
+          if (item.product.id === productId && item.size === size) {
             return { ...item, quantity: item.quantity + amount };
           }
           return item;
@@ -131,14 +140,18 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
     );
   };
 
-  const cartTotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+  const cartTotal = cart.reduce((acc, item) => acc + (item.unitPrice ?? item.product.price) * item.quantity, 0);
   const cartItemsCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   const sendCartToWhatsApp = async () => {
     const cliente = await pedirDatosCliente({ color: store.theme.primary, pedirEntrega: true, entregaDisponible: store.entrega });
     if (!cliente) return;
     const header = `*Pedido de ${store.name}*\n-------------------------\n`;
-    const itemsText = cart.map(item => `- ${item.product.title} (x${item.quantity}): S/ ${(item.product.price * item.quantity).toFixed(2)}`).join('\n');
+    const itemsText = cart.map(item => {
+      const itemPrice = (item.unitPrice ?? item.product.price) * item.quantity;
+      const tallaTexto = item.size ? ` (Talla: ${item.size})` : '';
+      return `- ${item.product.title}${tallaTexto} (x${item.quantity}): S/ ${itemPrice.toFixed(2)}`;
+    }).join('\n');
     const entregaTexto = cliente.entrega === 'recojo' ? 'Recojo en tienda' : cliente.entrega === 'delivery' ? `Delivery a: ${cliente.direccion}` : '';
     const footer = `\n-------------------------\n*Total:* S/ ${cartTotal.toFixed(2)}\n*Cliente:* ${cliente.nombre} (${cliente.telefono})${entregaTexto ? `\n*Entrega:* ${entregaTexto}` : ''}`;
     enviarPedidoPorWhatsApp(store, header + itemsText + footer, {
@@ -459,27 +472,43 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
                 </div>
               )}
 
-              {/* Size selector */}
-              <div className="border-t border-black/5 pt-4 mb-5">
-                <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: theme.primaryContainer }}>Talla</p>
-                <div className="flex gap-2 flex-wrap">
-                  {['XS','S','M','L','XL','XXL'].map((sz) => (
-                    <button
-                      key={sz}
-                      onClick={() => setSelectedSize(sz)}
-                      className="w-10 h-10 text-xs font-bold border transition-all cursor-pointer"
-                      style={{
-                        borderRadius: '2px',
-                        background: selectedSize === sz ? theme.primary : 'white',
-                        color: selectedSize === sz ? 'white' : '#555',
-                        borderColor: selectedSize === sz ? theme.primary : 'rgba(0,0,0,0.15)',
-                      }}
-                    >
-                      {sz}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              {/* Size selector: tallas reales configuradas del producto */}
+              {(() => {
+                const tallas = (selectedProduct.presentaciones && selectedProduct.presentaciones.length > 0)
+                  ? selectedProduct.presentaciones
+                  : [];
+                if (tallas.length === 0) return null;
+                return (
+                  <div className="border-t border-black/5 pt-4 mb-5">
+                    <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: theme.primaryContainer }}>Talla</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {tallas.map((item: any) => {
+                        const sz = item.label;
+                        const isSelected = (selectedSize || tallas[0]?.label) === sz;
+                        return (
+                          <button
+                            key={sz}
+                            type="button"
+                            onClick={() => setSelectedSize(sz)}
+                            className="px-3.5 h-10 min-w-10 text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                            style={{
+                              borderRadius: '2px',
+                              background: isSelected ? theme.primary : 'white',
+                              color: isSelected ? 'white' : '#555',
+                              borderColor: isSelected ? theme.primary : 'rgba(0,0,0,0.15)',
+                            }}
+                          >
+                            <span>{sz}</span>
+                            {item.price && item.price !== selectedProduct.price && (
+                              <span className="text-[10px] opacity-80">S/ {item.price.toFixed(2)}</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
 
@@ -497,14 +526,25 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
             </div>
 
             {/* Add to cart */}
-            <button
-              onClick={() => { addToCart(selectedProduct); cerrarProducto(); }}
-              className="flex-1 h-11 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 shadow-lg hover:opacity-90 active:scale-95 transition-all cursor-pointer"
-              style={{ background: theme.primary }}
-            >
-              <span className="material-symbols-outlined text-lg">shopping_bag</span>
-              Añadir · S/ {(selectedProduct.price * detailQty).toFixed(2)}
-            </button>
+            {(() => {
+              const presSeleccionada = selectedProduct.presentaciones?.find((p: any) => p.label === selectedSize) || selectedProduct.presentaciones?.[0];
+              const precioUnitario = presSeleccionada?.price || selectedProduct.price;
+              const tallaElegida = presSeleccionada?.label || selectedSize || undefined;
+
+              return (
+                <button
+                  onClick={() => {
+                    addToCart(selectedProduct, tallaElegida, precioUnitario, detailQty);
+                    cerrarProducto();
+                  }}
+                  className="flex-1 h-11 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 shadow-lg hover:opacity-90 active:scale-95 transition-all cursor-pointer"
+                  style={{ background: theme.primary }}
+                >
+                  <span className="material-symbols-outlined text-lg">shopping_bag</span>
+                  Añadir · S/ {(precioUnitario * detailQty).toFixed(2)}
+                </button>
+              );
+            })()}
           </div>
         </div>
       )}
@@ -543,51 +583,58 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
                   <p className="text-xs text-gray-400 mt-1">Explora productos premium y añádelos aquí.</p>
                 </div>
               ) : (
-                cart.map((item) => (
-                  <div key={item.product.id} className="flex gap-4 p-3 bg-gray-50 rounded-2xl border border-black/5 relative">
-                    <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-white border">
-                      <img src={item.product.image} className="w-full h-full object-cover" alt={item.product.title} />
-                    </div>
-
-                    <div className="flex-1 flex flex-col justify-between min-w-0">
-                      <div>
-                        <h4 className="font-bold text-xs text-gray-900 truncate leading-snug">
-                          {item.product.title}
-                        </h4>
-                        <span className="font-black text-xs block mt-1" style={{ color: theme.primary }}>
-                          S/ {item.product.price.toFixed(2)}
-                        </span>
+                cart.map((item) => {
+                  const itemKey = `${item.product.id}-${item.size || 'default'}`;
+                  const itemPrice = item.unitPrice ?? item.product.price;
+                  return (
+                    <div key={itemKey} className="flex gap-4 p-3 bg-gray-50 rounded-2xl border border-black/5 relative">
+                      <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-white border">
+                        <img src={item.product.image} className="w-full h-full object-cover" alt={item.product.title} />
                       </div>
 
-                      <div className="flex items-center justify-between mt-2">
-                        {/* Quantity adjust */}
-                        <div className="flex items-center bg-white border rounded-lg p-0.5">
-                          <button 
-                            onClick={() => updateQuantity(item.product.id, -1)}
-                            className="w-5 h-5 flex items-center justify-center font-bold text-xs text-gray-500 hover:text-black cursor-pointer"
-                          >
-                            -
-                          </button>
-                          <span className="px-2 text-[11px] font-black text-gray-800">{item.quantity}</span>
-                          <button 
-                            onClick={() => updateQuantity(item.product.id, 1)}
-                            className="w-5 h-5 flex items-center justify-center font-bold text-xs text-gray-500 hover:text-black cursor-pointer"
-                          >
-                            +
-                          </button>
+                      <div className="flex-1 flex flex-col justify-between min-w-0">
+                        <div>
+                          <h4 className="font-bold text-xs text-gray-900 truncate leading-snug">
+                            {item.product.title}
+                          </h4>
+                          {item.size && (
+                            <span className="text-[10px] font-semibold text-gray-500 block mt-0.5">Talla: {item.size}</span>
+                          )}
+                          <span className="font-black text-xs block mt-1" style={{ color: theme.primary }}>
+                            S/ {itemPrice.toFixed(2)}
+                          </span>
                         </div>
 
-                        {/* Remove */}
-                        <button 
-                          onClick={() => removeFromCart(item.product.id)}
-                          className="text-[10px] font-bold text-red-500 hover:underline cursor-pointer"
-                        >
-                          Eliminar
-                        </button>
+                        <div className="flex items-center justify-between mt-2">
+                          {/* Quantity adjust */}
+                          <div className="flex items-center bg-white border rounded-lg p-0.5">
+                            <button 
+                              onClick={() => updateQuantity(item.product.id, -1, item.size)}
+                              className="w-5 h-5 flex items-center justify-center font-bold text-xs text-gray-500 hover:text-black cursor-pointer"
+                            >
+                              -
+                            </button>
+                            <span className="px-2 text-[11px] font-black text-gray-800">{item.quantity}</span>
+                            <button 
+                              onClick={() => updateQuantity(item.product.id, 1, item.size)}
+                              className="w-5 h-5 flex items-center justify-center font-bold text-xs text-gray-500 hover:text-black cursor-pointer"
+                            >
+                              +
+                            </button>
+                          </div>
+
+                          {/* Remove */}
+                          <button 
+                            onClick={() => removeFromCart(item.product.id, item.size)}
+                            className="text-[10px] font-bold text-red-500 hover:underline cursor-pointer"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
 

@@ -27,7 +27,7 @@ import LoyverseSyncModal from '@/components/admin/LoyverseSyncModal';
 import MiPlan from '@/components/admin/MiPlan';
 import CobroOnline from '@/components/admin/CobroOnline';
 import { COLS_OFERTA, precioOfertaVigente, porcentajeOferta } from '@/lib/ofertas';
-import { COL_PRESENTACIONES, presentacionesSugeridas, leerPresentaciones, precioDesde } from '@/lib/presentaciones';
+import { COL_PRESENTACIONES, presentacionesSugeridas, textosPresentacion, leerPresentaciones, precioDesde } from '@/lib/presentaciones';
 
 interface Product {
   id: string;
@@ -2952,83 +2952,93 @@ function AdminDashboard({ user }: { user: User }) {
                   </div>
                 </div>
 
-                {/* Presentaciones: un mismo producto en varias medidas o tamaños con su precio (100 g / 250 g / 1 kg…) */}
-                <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4">
-                  <p className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-gray-600 text-[18px]">scale</span>
-                    ¿Lo vendes por peso o en varios tamaños? <span className="font-medium text-gray-500">(opcional)</span>
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {newProduct.category.toLowerCase().includes('bebida')
-                      ? 'Ej. bebidas: 12 oz, 16 oz, cada una con su precio. Tu cliente elige el tamaño de vaso al pedir.'
-                      : 'Ej. especias: 100 g, 250 g, 1 kg, cada uno con su precio. Tu cliente elige la medida al pedir.'}
-                  </p>
+                {/* Presentaciones: tallas, tamaños de vaso, medidas o peso con su precio */}
+                {(() => {
+                  const storeObj = Object.values(stores).find(s => s.slug === newProduct.store);
+                  const infoPres = textosPresentacion(newProduct.category, storeObj?.template);
+                  return (
+                    <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4">
+                      <p className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-gray-600 text-[18px]">{infoPres.icono}</span>
+                        {infoPres.titulo}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {infoPres.subtitulo}
+                      </p>
 
-                  {newProduct.presentaciones.length > 0 && (
-                    <div className="flex flex-col gap-2 mt-3">
-                      {newProduct.presentaciones.map((x, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <input
-                            value={x.label}
-                            maxLength={30}
-                            onChange={(e) => setNewProduct({...newProduct, presentaciones: newProduct.presentaciones.map((y, j) => j === i ? { ...y, label: e.target.value } : y)})}
-                            placeholder="Ej. 250 g"
-                            className="flex-1 min-w-0 px-3 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
-                          />
-                          <div className="relative w-32 shrink-0">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">S/</span>
-                            <input
-                              type="number"
-                              step="0.10"
-                              min="0"
-                              value={x.price}
-                              onChange={(e) => setNewProduct({...newProduct, presentaciones: newProduct.presentaciones.map((y, j) => j === i ? { ...y, price: e.target.value } : y)})}
-                              placeholder="0.00"
-                              className="w-full pl-9 pr-2 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            aria-label="Quitar presentación"
-                            onClick={() => setNewProduct({...newProduct, presentaciones: newProduct.presentaciones.filter((_, j) => j !== i)})}
-                            className="w-10 h-10 shrink-0 rounded-md flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50"
-                          >
-                            <span className="material-symbols-outlined text-[20px]">close</span>
-                          </button>
+                      {newProduct.presentaciones.length > 0 && (
+                        <div className="flex flex-col gap-2 mt-3">
+                          {newProduct.presentaciones.map((x, i) => (
+                            <div key={i} className="flex items-center gap-2">
+                              <input
+                                value={x.label}
+                                maxLength={30}
+                                onChange={(e) => setNewProduct({...newProduct, presentaciones: newProduct.presentaciones.map((y, j) => j === i ? { ...y, label: e.target.value } : y)})}
+                                placeholder={infoPres.ejemploLabel}
+                                className="flex-1 min-w-0 px-3 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
+                              />
+                              <div className="relative w-32 shrink-0">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">S/</span>
+                                <input
+                                  type="number"
+                                  step="0.10"
+                                  min="0"
+                                  value={x.price}
+                                  onChange={(e) => setNewProduct({...newProduct, presentaciones: newProduct.presentaciones.map((y, j) => j === i ? { ...y, price: e.target.value } : y)})}
+                                  placeholder="0.00"
+                                  className="w-full pl-9 pr-2 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                aria-label="Quitar opción"
+                                onClick={() => setNewProduct({...newProduct, presentaciones: newProduct.presentaciones.filter((_, j) => j !== i)})}
+                                className="w-10 h-10 shrink-0 rounded-md flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50"
+                              >
+                                <span className="material-symbols-outlined text-[20px]">close</span>
+                              </button>
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      )}
+
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {presentacionesSugeridas(newProduct.category, storeObj?.template).filter((l) => !newProduct.presentaciones.some((x) => x.label.trim().toLowerCase() === l.toLowerCase())).map((l) => (
+                          <button
+                            key={l}
+                            type="button"
+                            onClick={() => {
+                              const precioSugerido = newProduct.price || (newProduct.presentaciones[0]?.price ?? '');
+                              setNewProduct({...newProduct, presentaciones: [...newProduct.presentaciones, { label: l, price: precioSugerido }]});
+                            }}
+                            className="px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs font-bold text-gray-700 hover:border-black"
+                          >
+                            + {l}
+                          </button>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const precioSugerido = newProduct.price || (newProduct.presentaciones[0]?.price ?? '');
+                            setNewProduct({...newProduct, presentaciones: [...newProduct.presentaciones, { label: '', price: precioSugerido }]});
+                          }}
+                          className="px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs font-bold text-gray-700 hover:border-black"
+                        >
+                          + Otra
+                        </button>
+                      </div>
+
+                      {newProduct.presentaciones.length > 0 && (
+                        <p className="text-xs mt-2 font-medium text-gray-600">
+                          Tus clientes verán «Desde S/ {(() => {
+                            const precios = newProduct.presentaciones.map((x) => parseFloat(x.price)).filter((n) => n > 0);
+                            return precios.length ? Math.min(...precios).toFixed(2) : '0.00';
+                          })()}» y elegirán la opción al pedir.
+                        </p>
+                      )}
                     </div>
-                  )}
-
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {presentacionesSugeridas(newProduct.category).filter((l) => !newProduct.presentaciones.some((x) => x.label.trim().toLowerCase() === l.toLowerCase())).map((l) => (
-                      <button
-                        key={l}
-                        type="button"
-                        onClick={() => setNewProduct({...newProduct, presentaciones: [...newProduct.presentaciones, { label: l, price: '' }]})}
-                        className="px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs font-bold text-gray-700 hover:border-black"
-                      >
-                        + {l}
-                      </button>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() => setNewProduct({...newProduct, presentaciones: [...newProduct.presentaciones, { label: '', price: '' }]})}
-                      className="px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs font-bold text-gray-700 hover:border-black"
-                    >
-                      + Otra
-                    </button>
-                  </div>
-
-                  {newProduct.presentaciones.length > 0 && (
-                    <p className="text-xs mt-2 font-medium text-gray-600">
-                      Tus clientes verán «Desde S/ {(() => {
-                        const precios = newProduct.presentaciones.map((x) => parseFloat(x.price)).filter((n) => n > 0);
-                        return precios.length ? Math.min(...precios).toFixed(2) : '0.00';
-                      })()}» y elegirán la medida. Con presentaciones no se usa el precio en oferta ni el control de stock por unidades.
-                    </p>
-                  )}
-                </div>
+                  );
+                })()}
 
                 {/* Oferta: aparece en tu tienda con el precio anterior tachado y en la página Promos de BogaHub */}
                 {newProduct.presentaciones.length === 0 && (
