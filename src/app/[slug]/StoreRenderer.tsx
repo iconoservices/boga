@@ -14,6 +14,7 @@ const AmazoniaTemplate = dynamic(() => import('@/templates/amazonia/AmazoniaTemp
 const SweetKittyNailsTemplate = dynamic(() => import('@/templates/sweetkittynails/SweetKittyNailsTemplate'));
 const EstilosMirkaTemplate = dynamic(() => import('@/templates/estilosmirka/EstilosMirkaTemplate'));
 const AtelierTemplate = dynamic(() => import('@/templates/atelier/AtelierTemplate'));
+const LookbookTemplate = dynamic(() => import('@/templates/lookbook/LookbookTemplate'));
 const PolleriaTemplate = dynamic(() => import('@/templates/polleria/PolleriaTemplate'));
 const MercadoTemplate = dynamic(() => import('@/templates/mercado/MercadoTemplate'));
 const MenuDirectoTemplate = dynamic(() => import('@/templates/menudirecto/MenuDirectoTemplate'));
@@ -117,6 +118,8 @@ export default function StoreRenderer({ store: initialStore, initialProductId }:
       return <EstilosMirkaTemplate store={store} initialProductId={initialProductId} />;
     case 'atelier':
       return <AtelierTemplate store={store} initialProductId={initialProductId} />;
+    case 'lookbook':
+      return <LookbookTemplate store={store} initialProductId={initialProductId} />;
     case 'polleria':
       return <PolleriaTemplate store={store} initialProductId={initialProductId} />;
     case 'mercado':

@@ -7,11 +7,10 @@ import { getDemoProducts } from '@/lib/templates.config';
 import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
-import { estrellasDe } from '../shared/tokens';
 import { useDetalleProducto } from '../shared/useDetalleProducto';
 import { leerPresentaciones } from '@/lib/presentaciones';
 
-interface AtelierTemplateProps {
+interface LookbookTemplateProps {
   store: StoreConfig;
   initialProductId?: string;
 }
@@ -30,13 +29,13 @@ interface ProductItem {
 }
 
 interface CartItem {
-  product: any;
+  product: ProductItem;
   quantity: number;
   size?: string;
   unitPrice?: number;
 }
 
-export default function AtelierTemplate({ store, initialProductId }: AtelierTemplateProps) {
+export default function LookbookTemplate({ store, initialProductId }: LookbookTemplateProps) {
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [onlyOffers, setOnlyOffers] = useState(false);
@@ -60,7 +59,7 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
       try {
         const data = await fetchProductosDeTienda(store.slug);
         if (isMounted && data && data.length > 0) {
-          const formatted = data.map((p) => ({
+          const formatted: ProductItem[] = data.map((p) => ({
             id: String(p.id),
             title: p.name,
             price: Number(p.price) || 0,
@@ -75,7 +74,7 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
           setSupabaseProducts(formatted);
         }
       } catch (err) {
-        console.error('Error cargando catálogo en AtelierTemplate:', err);
+        console.error('Error cargando catálogo en LookbookTemplate:', err);
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -90,7 +89,7 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
   // Demo fallback if store has no products yet (e.g. preview)
   const allProducts = useMemo<ProductItem[]>(() => {
     if (supabaseProducts.length > 0) return supabaseProducts;
-    const demoList = (store as any).demoProducts || getDemoProducts(store.template || 'atelier');
+    const demoList = (store as any).demoProducts || getDemoProducts(store.template || 'lookbook');
     if (demoList && demoList.length > 0) {
       return demoList.map((p: any, idx: number) => ({
         id: `demo-${idx + 1}`,
@@ -145,7 +144,7 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
         icon: c.icon || 'checkroom',
       }));
     }
-    const unicas = [...new Set(allProducts.map((p) => p.category))].filter(Boolean);
+    const unicas = [...new Set(allProducts.map((p: any) => p.category))].filter(Boolean);
     return unicas.map((c) => ({
       id: c,
       label: c.charAt(0).toUpperCase() + c.slice(1),
@@ -173,7 +172,7 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
   };
 
   // Cart operations
-  const addToCart = (product: any, size?: string, unitPrice?: number, qty = 1) => {
+  const addToCart = (product: ProductItem, size?: string, unitPrice?: number, qty = 1) => {
     const finalPrice = unitPrice ?? product.price;
     setCart((prev) => {
       const existing = prev.find((item) => item.product.id === product.id && item.size === size);
@@ -212,13 +211,13 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
   // WhatsApp checkout
   const sendCartToWhatsApp = async () => {
     const cliente = await pedirDatosCliente({
-      color: theme.primary || '#111827',
+      color: theme.primary || '#18181b',
       pedirEntrega: true,
       entregaDisponible: store.entrega,
     });
     if (!cliente) return;
 
-    const header = `🛍️ *PEDIDO ATELIER — ${store.name}*\n────────────────────────\n`;
+    const header = `🛍️ *PEDIDO — ${store.name}*\n────────────────────────\n`;
     const itemsText = cart
       .map((item) => {
         const itemPrice = (item.unitPrice ?? item.product.price) * item.quantity;
@@ -234,7 +233,7 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
         ? `🛵 Envío a domicilio: ${cliente.direccion}`
         : '';
 
-    const footer = `\n────────────────────────\n💰 *Total a Pagar:* S/ ${cartTotal.toFixed(2)}\n👤 *Cliente:* ${cliente.nombre}\n📱 *Teléfono:* ${cliente.telefono}${entregaTexto ? `\n📍 *Entrega:* ${entregaTexto}` : ''}\n\n_Por favor confirmar disponibilidad para coordinar el pago._`;
+    const footer = `\n────────────────────────\n💰 *Total:* S/ ${cartTotal.toFixed(2)}\n👤 *Cliente:* ${cliente.nombre}\n📱 *Teléfono:* ${cliente.telefono}${entregaTexto ? `\n📍 *Entrega:* ${entregaTexto}` : ''}\n\n_Por favor confirmar disponibilidad._`;
 
     enviarPedidoPorWhatsApp(store, header + itemsText + footer, {
       items: cart.map((item) => ({ id: String(item.product.id), quantity: item.quantity })),
@@ -244,196 +243,173 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
 
   const whatsappVisible = tieneWhatsApp(store);
   const telefonoVisible = whatsappVisible ? `+${(store.whatsapp || '').replace(/\D/g, '')}` : null;
+  const whatsappUrl = whatsappVisible
+    ? `https://wa.me/${(store.whatsapp || '').replace(/\D/g, '')}?text=${encodeURIComponent(
+        `Hola ${store.name}, vi su catálogo y me gustaría hacer una consulta.`
+      )}`
+    : null;
 
   return (
     <div
       style={{
-        backgroundColor: theme.background || '#faf9f6',
-        color: theme.onBackground || '#111827',
+        backgroundColor: theme.background || '#ffffff',
+        color: theme.onBackground || '#18181b',
         fontFamily: theme.fontBody || "'Plus Jakarta Sans', sans-serif",
       }}
       className="min-h-screen flex flex-col selection:bg-black selection:text-white"
     >
       {/* Google Fonts */}
       <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet"
       />
 
-      {/* ── TOP ANNOUNCEMENT BAR ────────────────────────────────────── */}
-      <div
-        className="text-[11px] font-semibold tracking-wider uppercase py-2 px-4 text-center text-white flex items-center justify-center gap-2"
-        style={{ backgroundColor: theme.primary || '#111827' }}
-      >
-        <span>✨ NUEVA COLECCIÓN // ENVIOS A TODO EL PAÍS // COMPRA DIRECTA POR WHATSAPP</span>
-      </div>
-
       {/* ── STICKY NAVBAR ───────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 transition-shadow duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-4">
-          {/* Logo / Brand Name */}
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-xs">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 sm:h-18 flex items-center justify-between gap-4">
+          {/* Logo & Name */}
           <div className="flex items-center gap-3">
             {store.iconImage ? (
               <img
                 src={store.iconImage}
                 alt={store.name}
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border border-gray-200 shadow-xs"
+                className="w-9 h-9 sm:w-11 sm:h-11 rounded-full object-cover border border-gray-200 shadow-2xs"
               />
             ) : (
               <div
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-xs"
-                style={{ backgroundColor: theme.primary || '#111827' }}
+                className="w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-2xs"
+                style={{ backgroundColor: theme.primary || '#18181b' }}
               >
                 {store.name.charAt(0)}
               </div>
             )}
             <div className="flex flex-col">
               <span
-                className="text-lg sm:text-2xl font-extrabold tracking-tight"
+                className="text-base sm:text-xl font-extrabold tracking-tight text-gray-900"
                 style={{ fontFamily: theme.fontHeadline || "'Outfit', sans-serif" }}
               >
                 {store.name}
               </span>
-              <span className="text-[10px] sm:text-xs uppercase tracking-widest text-gray-500 font-medium">
-                {store.tagline || 'Estudio de Moda & Boutique'}
-              </span>
+              {store.tagline && (
+                <span className="text-[10px] sm:text-xs text-gray-500 font-medium line-clamp-1">
+                  {store.tagline}
+                </span>
+              )}
             </div>
           </div>
 
-          {/* Quick Nav Links (Desktop) */}
-          <nav className="hidden md:flex items-center gap-6 text-xs uppercase tracking-widest font-semibold text-gray-600">
-            <button
-              onClick={() => {
-                setActiveCategory('all');
-                document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="hover:text-black transition-colors cursor-pointer"
-            >
-              Colección
-            </button>
-            <button
-              onClick={() => {
-                setOnlyOffers(true);
-                document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="hover:text-black transition-colors cursor-pointer text-rose-600 font-bold"
-            >
-              Ofertas 🔥
-            </button>
-            <button
-              onClick={() => document.getElementById('garantias')?.scrollIntoView({ behavior: 'smooth' })}
-              className="hover:text-black transition-colors cursor-pointer"
-            >
-              Beneficios
-            </button>
-            <button
-              onClick={() => document.getElementById('contacto')?.scrollIntoView({ behavior: 'smooth' })}
-              className="hover:text-black transition-colors cursor-pointer"
-            >
-              Contacto
-            </button>
-          </nav>
-
-          {/* Right Actions */}
+          {/* Quick Actions Right */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Bag / Cart Button */}
+            {whatsappUrl && (
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 sm:px-3 sm:py-2 rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-bold transition-colors flex items-center gap-1.5"
+                title="Escribir por WhatsApp"
+              >
+                <span className="material-symbols-outlined text-base sm:text-lg">chat</span>
+                <span className="hidden sm:inline">WhatsApp</span>
+              </a>
+            )}
+
+            {/* Bag Button */}
             <button
               onClick={() => setIsCartOpen(true)}
-              className="relative flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-full bg-gray-900 text-white hover:bg-black transition-transform active:scale-95 shadow-sm cursor-pointer"
-              style={{ backgroundColor: theme.primary || '#111827' }}
+              className="relative flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-full text-white transition-transform active:scale-95 shadow-xs cursor-pointer"
+              style={{ backgroundColor: theme.primary || '#18181b' }}
             >
               <span className="material-symbols-outlined text-lg sm:text-xl">shopping_bag</span>
               <span className="text-xs sm:text-sm font-bold">{cartItemsCount}</span>
-              <span className="hidden sm:inline text-xs font-medium border-l border-white/20 pl-2">
-                S/ {cartTotal.toFixed(2)}
-              </span>
+              {cartTotal > 0 && (
+                <span className="hidden sm:inline text-xs font-semibold border-l border-white/20 pl-2">
+                  S/ {cartTotal.toFixed(2)}
+                </span>
+              )}
             </button>
           </div>
         </div>
       </header>
 
-      {/* ── HERO LOOKBOOK BANNER ────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-black text-white">
-        <div className="relative min-h-[380px] sm:min-h-[480px] lg:min-h-[540px] flex items-center">
-          {/* Background Image with Dark Vignette */}
-          <div className="absolute inset-0 z-0">
+      {/* ── PORTADA 100% VISUAL (SIN TEXTOS SUPERPUESTOS) ───────────── */}
+      {/* 
+        El cliente puede diseñar libremente su banner en Canva / Photoshop con sus logos, 
+        promociones y tipografías sin que el sistema le superponga textos encima.
+      */}
+      <section className="w-full bg-gray-50 border-b border-gray-100">
+        <div className="max-w-6xl mx-auto px-0 sm:px-4 sm:py-4">
+          <div className="w-full overflow-hidden sm:rounded-3xl shadow-sm bg-gray-100">
             <img
               src={store.heroImage || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1600&q=85'}
               alt={store.heroAlt || store.name}
-              className="w-full h-full object-cover object-center opacity-70 filter brightness-90"
+              className="w-full h-auto max-h-[500px] object-cover object-center block"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/30" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
-          </div>
-
-          {/* Hero Content */}
-          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-12 lg:py-20 w-full">
-            <div className="max-w-2xl space-y-4 sm:space-y-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs uppercase tracking-widest font-bold text-gray-200">
-                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                Nueva Colección 2026
-              </div>
-
-              <h1
-                className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] text-white"
-                style={{ fontFamily: theme.fontHeadline || "'Outfit', sans-serif" }}
-              >
-                {store.tagline || store.name || 'Diseño, elegancia y tendencia para ti.'}
-              </h1>
-
-              <p className="text-sm sm:text-base text-gray-300 font-light max-w-lg leading-relaxed">
-                {store.heroAlt || (store.zona ? `Colección exclusiva en ${store.zona}. ` : '') + 'Descubre prendas confeccionadas con atención a cada detalle. Elige tu talla y pide directamente por WhatsApp.'}
-              </p>
-
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                <button
-                  onClick={() => {
-                    setActiveCategory('all');
-                    document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="px-6 py-3 rounded-full bg-white text-black font-bold text-xs sm:text-sm uppercase tracking-wider hover:bg-gray-100 transition-all hover:scale-105 active:scale-95 shadow-lg cursor-pointer flex items-center gap-2"
-                >
-                  <span>Explorar Colección</span>
-                  <span className="material-symbols-outlined text-base">arrow_forward</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setOnlyOffers(true);
-                    document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="px-5 py-3 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/20 text-white font-semibold text-xs sm:text-sm uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2"
-                >
-                  <span className="material-symbols-outlined text-rose-400 text-base">local_fire_department</span>
-                  <span>Ver Ofertas</span>
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
-      {/* ── STORIES / HIGHLIGHTS CATEGORY BUBBLES ───────────────────── */}
+      {/* ── INFO BAR DEL LOCAL / BOUTIQUE (DEBAJO DEL BANNER) ────────── */}
+      <section className="bg-white border-b border-gray-100 py-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-bold uppercase tracking-wider text-gray-800">
+              Catálogo de Temporada
+            </span>
+            {store.zona && (
+              <span className="text-xs text-gray-500 border-l border-gray-200 pl-3">
+                📍 {store.zona}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3 text-xs text-gray-500">
+            {store.horario && (
+              <div className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm text-gray-400">schedule</span>
+                <span>{store.horario}</span>
+              </div>
+            )}
+            {store.entrega && (
+              <span className="bg-gray-100 text-gray-700 px-2.5 py-0.5 rounded-full font-medium text-[11px]">
+                {store.entrega === 'delivery'
+                  ? '🛵 Solo Delivery'
+                  : store.entrega === 'recojo'
+                  ? '🏢 Recojo en tienda'
+                  : '🛵 Delivery & Recojo'}
+              </span>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ── HISTORIAS CIRCULARES DE CATEGORÍAS ──────────────────────── */}
       {categoriasTienda.length > 0 && (
-        <section className="bg-white border-b border-gray-100 py-4 sm:py-6 shadow-xs">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <section className="bg-gray-50/60 py-4 sm:py-5 border-b border-gray-100">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto pb-2 scrollbar-none">
-              {/* "Todo" Bubble */}
+              {/* Botón Todo */}
               <button
                 onClick={() => {
                   setActiveCategory('all');
                   setOnlyOffers(false);
                 }}
-                className="flex flex-col items-center gap-2 shrink-0 group cursor-pointer focus:outline-none"
+                className="flex flex-col items-center gap-1.5 shrink-0 group cursor-pointer focus:outline-none"
               >
                 <div
                   className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0.5 transition-transform group-hover:scale-105 ${
                     activeCategory === 'all' && !onlyOffers
-                      ? 'ring-2 ring-offset-2 ring-black'
-                      : 'border border-gray-200'
+                      ? 'ring-2 ring-offset-2 ring-black bg-black'
+                      : 'border border-gray-300 bg-white'
                   }`}
                 >
-                  <div className="w-full h-full rounded-full bg-gray-900 text-white flex items-center justify-center font-bold text-xs sm:text-sm">
+                  <div
+                    className={`w-full h-full rounded-full flex items-center justify-center font-bold text-xs sm:text-sm ${
+                      activeCategory === 'all' && !onlyOffers
+                        ? 'bg-black text-white'
+                        : 'bg-white text-gray-800'
+                    }`}
+                  >
                     TODO
                   </div>
                 </div>
@@ -442,9 +418,9 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
                 </span>
               </button>
 
-              {/* Individual Category Bubbles */}
+              {/* Categorías dinámicas de la tienda */}
               {categoriasTienda.map((cat) => {
-                const isActive = activeCategory === cat.id;
+                const isActive = activeCategory === cat.id && !onlyOffers;
                 return (
                   <button
                     key={cat.id}
@@ -452,20 +428,26 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
                       setActiveCategory(cat.id);
                       setOnlyOffers(false);
                     }}
-                    className="flex flex-col items-center gap-2 shrink-0 group cursor-pointer focus:outline-none"
+                    className="flex flex-col items-center gap-1.5 shrink-0 group cursor-pointer focus:outline-none"
                   >
                     <div
                       className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0.5 transition-transform group-hover:scale-105 ${
-                        isActive ? 'ring-2 ring-offset-2 ring-black' : 'border border-gray-200'
+                        isActive
+                          ? 'ring-2 ring-offset-2 ring-black bg-black'
+                          : 'border border-gray-300 bg-white'
                       }`}
                     >
-                      <div className="w-full h-full rounded-full bg-gray-100 flex items-center justify-center text-gray-800">
+                      <div
+                        className={`w-full h-full rounded-full flex items-center justify-center ${
+                          isActive ? 'bg-black text-white' : 'bg-white text-gray-700'
+                        }`}
+                      >
                         <span className="material-symbols-outlined text-xl sm:text-2xl">{cat.icon}</span>
                       </div>
                     </div>
                     <span
                       className={`text-[11px] font-semibold tracking-wider uppercase whitespace-nowrap ${
-                        isActive ? 'text-black font-extrabold' : 'text-gray-500'
+                        isActive ? 'text-black font-extrabold' : 'text-gray-600'
                       }`}
                     >
                       {cat.label}
@@ -474,20 +456,26 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
                 );
               })}
 
-              {/* Offers Bubble */}
+              {/* Botón Ofertas */}
               <button
                 onClick={() => {
                   setOnlyOffers(true);
                   setActiveCategory('all');
                 }}
-                className="flex flex-col items-center gap-2 shrink-0 group cursor-pointer focus:outline-none"
+                className="flex flex-col items-center gap-1.5 shrink-0 group cursor-pointer focus:outline-none"
               >
                 <div
                   className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0.5 transition-transform group-hover:scale-105 ${
-                    onlyOffers ? 'ring-2 ring-offset-2 ring-rose-500' : 'border border-rose-200'
+                    onlyOffers
+                      ? 'ring-2 ring-offset-2 ring-rose-600 bg-rose-600'
+                      : 'border border-rose-300 bg-rose-50'
                   }`}
                 >
-                  <div className="w-full h-full rounded-full bg-rose-50 text-rose-600 flex items-center justify-center">
+                  <div
+                    className={`w-full h-full rounded-full flex items-center justify-center ${
+                      onlyOffers ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-600'
+                    }`}
+                  >
                     <span className="material-symbols-outlined text-xl sm:text-2xl">local_fire_department</span>
                   </div>
                 </div>
@@ -500,41 +488,40 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
         </section>
       )}
 
-      {/* ── CATALOG SECTION ─────────────────────────────────────────── */}
-      <main id="catalog" className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 w-full">
-        {/* Controls: Search, Tabs & Counter */}
-        <div className="flex flex-col md:flex-row gap-4 md:items-center justify-between pb-6 border-b border-gray-200">
+      {/* ── CATÁLOGO DE PRENDAS (3:4 RATIO) ─────────────────────────── */}
+      <main id="catalogo" className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 py-8 w-full">
+        {/* Barra de Filtro y Buscador */}
+        <div className="flex flex-col sm:flex-row gap-4 sm:items-center justify-between pb-6 border-b border-gray-100">
           <div>
             <h2
               className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900"
               style={{ fontFamily: theme.fontHeadline || "'Outfit', sans-serif" }}
             >
-              {onlyOffers ? 'Prendas en Promoción' : activeCategory === 'all' ? 'Nuestra Colección' : `Colección ${activeCategory}`}
+              {onlyOffers ? 'Prendas con Descuento' : activeCategory === 'all' ? 'Nuestra Colección' : `Colección ${activeCategory}`}
             </h2>
-            <p className="text-xs sm:text-sm text-gray-500 mt-1">
-              Mostrando {filteredProducts.length} prenda{filteredProducts.length === 1 ? '' : 's'} disponible{filteredProducts.length === 1 ? '' : 's'}
+            <p className="text-xs text-gray-500 mt-1">
+              {filteredProducts.length} prenda{filteredProducts.length === 1 ? '' : 's'} disponible{filteredProducts.length === 1 ? '' : 's'}
             </p>
           </div>
 
-          {/* Search bar */}
           <div className="flex items-center gap-2">
-            <div className="relative w-full md:w-72">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">
+            <div className="relative w-full sm:w-64">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base">
                 search
               </span>
               <input
                 type="text"
-                placeholder="Buscar prenda o estilo..."
+                placeholder="Buscar prenda..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-8 py-2 rounded-full border border-gray-200 bg-white text-xs sm:text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black transition-all"
+                className="w-full pl-9 pr-8 py-2 rounded-full border border-gray-200 bg-white text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black transition-all"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
                 >
-                  <span className="material-symbols-outlined text-base">close</span>
+                  <span className="material-symbols-outlined text-sm">close</span>
                 </button>
               )}
             </div>
@@ -545,21 +532,21 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
                 className="px-3 py-2 rounded-full bg-rose-100 text-rose-700 text-xs font-bold hover:bg-rose-200 cursor-pointer flex items-center gap-1 shrink-0"
               >
                 <span>Ofertas</span>
-                <span className="material-symbols-outlined text-sm">close</span>
+                <span className="material-symbols-outlined text-xs">close</span>
               </button>
             )}
           </div>
         </div>
 
-        {/* Product Grid (3:4 aspect ratio fashion cards) */}
+        {/* Grilla de Prendas (Proporción vertical 3:4) */}
         {filteredProducts.length === 0 ? (
-          <div className="py-20 text-center space-y-4">
-            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto text-gray-400">
-              <span className="material-symbols-outlined text-3xl">checkroom</span>
+          <div className="py-20 text-center space-y-3">
+            <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto text-gray-400">
+              <span className="material-symbols-outlined text-2xl">checkroom</span>
             </div>
-            <h3 className="text-lg font-bold text-gray-800">No encontramos prendas con estos filtros</h3>
-            <p className="text-xs text-gray-500 max-w-sm mx-auto">
-              Prueba cambiando la categoría o borrando el término de búsqueda para ver más modelos.
+            <h3 className="text-base font-bold text-gray-800">No encontramos prendas en esta selección</h3>
+            <p className="text-xs text-gray-500 max-w-xs mx-auto">
+              Prueba cambiando la categoría o borrando el texto de búsqueda.
             </p>
             <button
               onClick={() => {
@@ -567,7 +554,7 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
                 setSearchQuery('');
                 setOnlyOffers(false);
               }}
-              className="px-5 py-2.5 rounded-full bg-black text-white text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-gray-800"
+              className="px-4 py-2 rounded-full bg-black text-white text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-gray-800"
             >
               Ver todo el catálogo
             </button>
@@ -575,16 +562,16 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 pt-6">
             {filteredProducts.map((product) => {
-              const hasSizes = product.presentaciones && product.presentaciones.length > 0;
+              const hasSizes = Boolean(product.presentaciones && product.presentaciones.length > 0);
               const isWishlisted = Boolean(wishlist[product.id]);
 
               return (
                 <article
                   key={product.id}
                   onClick={() => abrirProducto(product)}
-                  className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 cursor-pointer relative"
+                  className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-lg transition-all duration-300 cursor-pointer relative"
                 >
-                  {/* Photo Container (Fashion 3:4 aspect ratio) */}
+                  {/* Foto con aspecto 3:4 */}
                   <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
                     <img
                       src={product.image}
@@ -593,7 +580,7 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
                       className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
                     />
 
-                    {/* Discount or New Badge */}
+                    {/* Badges */}
                     <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
                       {product.hasOffer ? (
                         <span className="px-2 py-0.5 rounded-md bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider shadow-sm">
@@ -606,10 +593,10 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
                       )}
                     </div>
 
-                    {/* Wishlist Heart */}
+                    {/* Botón Favorito */}
                     <button
                       onClick={(e) => toggleWishlist(product.id, e)}
-                      className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur-xs flex items-center justify-center text-gray-700 hover:text-rose-500 transition-colors shadow-sm cursor-pointer z-10"
+                      className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur-xs flex items-center justify-center text-gray-700 hover:text-rose-500 transition-colors shadow-2xs cursor-pointer z-10"
                     >
                       <span
                         className={`material-symbols-outlined text-base ${
@@ -621,11 +608,11 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
                       </span>
                     </button>
 
-                    {/* Available Sizes preview pill */}
+                    {/* Tallas disponibles flotantes */}
                     {hasSizes && product.presentaciones && (
-                      <div className="absolute bottom-2 left-2 right-2 flex items-center justify-center gap-1 bg-black/60 backdrop-blur-md rounded-lg py-1 px-2 text-white text-[10px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="absolute bottom-2 left-2 right-2 flex items-center justify-center gap-1 bg-black/70 backdrop-blur-md rounded-lg py-1 px-2 text-white text-[10px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
                         <span>Tallas:</span>
-                        {product.presentaciones.slice(0, 4).map((p: any) => (
+                        {product.presentaciones.slice(0, 4).map((p) => (
                           <span key={p.label} className="bg-white/20 px-1 rounded">
                             {p.label}
                           </span>
@@ -634,7 +621,7 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
                     )}
                   </div>
 
-                  {/* Card Content */}
+                  {/* Info de la Prenda */}
                   <div className="p-3 sm:p-4 flex-1 flex flex-col justify-between">
                     <div>
                       <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-400">
@@ -660,7 +647,7 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
                         </span>
                       </div>
 
-                      {/* Quick Add Button */}
+                      {/* Botón rápido */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -670,11 +657,11 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
                             addToCart(product);
                           }
                         }}
-                        className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gray-900 text-white hover:bg-black flex items-center justify-center transition-transform active:scale-90 cursor-pointer shadow-xs"
-                        style={{ backgroundColor: theme.primary || '#111827' }}
+                        className="w-8 h-8 rounded-full text-white flex items-center justify-center transition-transform active:scale-90 cursor-pointer shadow-2xs"
+                        style={{ backgroundColor: theme.primary || '#18181b' }}
                         title="Añadir a la bolsa"
                       >
-                        <span className="material-symbols-outlined text-base sm:text-lg">add</span>
+                        <span className="material-symbols-outlined text-base">add</span>
                       </button>
                     </div>
                   </div>
@@ -685,142 +672,117 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
         )}
       </main>
 
-      {/* ── GUARANTEES & TRUST BAR ──────────────────────────────────── */}
-      <section id="garantias" className="bg-white border-y border-gray-100 py-10 my-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+      {/* ── BENEFICIOS Y GARANTÍAS ──────────────────────────────────── */}
+      <section className="bg-gray-50 border-y border-gray-100 py-8 my-6">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center shrink-0 text-gray-900">
-                <span className="material-symbols-outlined text-2xl">local_shipping</span>
-              </div>
+              <span className="material-symbols-outlined text-2xl text-gray-800">local_shipping</span>
               <div>
-                <h4 className="text-xs sm:text-sm font-bold text-gray-900">Envíos Seguros</h4>
-                <p className="text-[11px] text-gray-500">Delivery local y a agencias a nivel nacional</p>
+                <h4 className="text-xs font-bold text-gray-900">Envíos Rápidos</h4>
+                <p className="text-[11px] text-gray-500">Entrega local o a agencias</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center shrink-0 text-gray-900">
-                <span className="material-symbols-outlined text-2xl">verified</span>
-              </div>
+              <span className="material-symbols-outlined text-2xl text-gray-800">straighten</span>
               <div>
-                <h4 className="text-xs sm:text-sm font-bold text-gray-900">Calidad Superior</h4>
-                <p className="text-[11px] text-gray-500">Telas y confección probada en cada prenda</p>
+                <h4 className="text-xs font-bold text-gray-900">Asesoría de Tallas</h4>
+                <p className="text-[11px] text-gray-500">Te ayudamos por WhatsApp</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center shrink-0 text-gray-900">
-                <span className="material-symbols-outlined text-2xl">straighten</span>
-              </div>
+              <span className="material-symbols-outlined text-2xl text-gray-800">verified</span>
               <div>
-                <h4 className="text-xs sm:text-sm font-bold text-gray-900">Asesoría de Tallas</h4>
-                <p className="text-[11px] text-gray-500">Te guiamos en medidas y ajuste por WhatsApp</p>
+                <h4 className="text-xs font-bold text-gray-900">Prendas de Calidad</h4>
+                <p className="text-[11px] text-gray-500">Confección y acabados finos</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center shrink-0 text-gray-900">
-                <span className="material-symbols-outlined text-2xl">payments</span>
-              </div>
+              <span className="material-symbols-outlined text-2xl text-gray-800">payments</span>
               <div>
-                <h4 className="text-xs sm:text-sm font-bold text-gray-900">Pagos Cómodos</h4>
-                <p className="text-[11px] text-gray-500">Yape, Plin, transferencia o contraentrega</p>
+                <h4 className="text-xs font-bold text-gray-900">Yape, Plin y Más</h4>
+                <p className="text-[11px] text-gray-500">Pagas al coordinar el pedido</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── STORE INFO & CONTACT ────────────────────────────────────── */}
-      <footer id="contacto" className="bg-gray-900 text-gray-300 py-12 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-3 gap-8 pb-10 border-b border-gray-800">
-          {/* Brand Col */}
-          <div className="space-y-3">
+      {/* ── FOOTER Y DATOS DE LA TIENDA ─────────────────────────────── */}
+      <footer className="bg-gray-900 text-gray-300 py-10 mt-auto">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-3 gap-8 pb-8 border-b border-gray-800">
+          <div className="space-y-2">
             <h3
-              className="text-xl font-extrabold text-white tracking-tight"
+              className="text-lg font-extrabold text-white"
               style={{ fontFamily: theme.fontHeadline || "'Outfit', sans-serif" }}
             >
               {store.name}
             </h3>
-            <p className="text-xs text-gray-400 max-w-sm leading-relaxed">
-              {store.heroAlt || store.tagline || 'Moda con actitud. Diseños contemporáneos pensados para destacar.'}
-            </p>
+            {store.tagline && <p className="text-xs text-gray-400">{store.tagline}</p>}
             {whatsappVisible && (
               <div className="pt-2">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-800 text-[11px] text-emerald-300 font-semibold">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  Atención activa por WhatsApp
+                  Pedidos activos por WhatsApp
                 </span>
               </div>
             )}
           </div>
 
-          {/* Details Col */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-white">Ubicación y Horario</h4>
-            <div className="space-y-2 text-xs text-gray-400">
-              {store.direccion && (
-                <div className="flex items-start gap-2">
-                  <span className="material-symbols-outlined text-base text-gray-500">location_on</span>
-                  <span>{store.direccion}</span>
-                </div>
-              )}
-              {store.horario && (
-                <div className="flex items-start gap-2">
-                  <span className="material-symbols-outlined text-base text-gray-500">schedule</span>
-                  <span>{store.horario}</span>
-                </div>
-              )}
-              {telefonoVisible && (
-                <div className="flex items-start gap-2">
-                  <span className="material-symbols-outlined text-base text-gray-500">call</span>
-                  <span>{telefonoVisible}</span>
-                </div>
-              )}
-            </div>
+          <div className="space-y-2 text-xs text-gray-400">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-white">Atención y Local</h4>
+            {store.direccion && (
+              <p className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-sm text-gray-500">location_on</span>
+                <span>{store.direccion}</span>
+              </p>
+            )}
+            {store.horario && (
+              <p className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-sm text-gray-500">schedule</span>
+                <span>{store.horario}</span>
+              </p>
+            )}
+            {telefonoVisible && (
+              <p className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-sm text-gray-500">call</span>
+                <span>{telefonoVisible}</span>
+              </p>
+            )}
           </div>
 
-          {/* Direct WhatsApp Call to Action */}
-          <div className="space-y-3 flex flex-col justify-between">
-            <div>
-              <h4 className="text-xs font-bold uppercase tracking-wider text-white">¿Tienes alguna consulta?</h4>
-              <p className="text-xs text-gray-400 mt-1">
-                Escríbenos directamente para consultar stock, fotos adicionales de las prendas o pedidos especiales.
-              </p>
-            </div>
-            {whatsappVisible && (
+          <div className="space-y-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-white">Contacto Directo</h4>
+            {whatsappUrl && (
               <a
-                href={`https://wa.me/${(store.whatsapp || '').replace(/\D/g, '')}?text=${encodeURIComponent(
-                  `Hola ${store.name}, vi su catálogo y me gustaría hacer una consulta.`
-                )}`}
+                href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider transition-colors"
               >
                 <span className="material-symbols-outlined text-base">chat</span>
-                <span>Chatear por WhatsApp</span>
+                <span>Escribir por WhatsApp</span>
               </a>
             )}
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-gray-500">
-          <p>© {new Date().getFullYear()} {store.name}. Todos los derechos reservados.</p>
-          <p className="flex items-center gap-1">
-            Impulsado por <span className="font-bold text-gray-300">Boga Market</span>
-          </p>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-gray-500">
+          <p>© {new Date().getFullYear()} {store.name}.</p>
+          <p>Potenciado por Boga Market</p>
         </div>
       </footer>
 
-      {/* ── PRODUCT DETAIL MODAL ────────────────────────────────────── */}
+      {/* ── MODAL DETALLE DE PRENDA ─────────────────────────────────── */}
       {selectedProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
           <div
             onClick={(e) => e.stopPropagation()}
             className="bg-white rounded-3xl overflow-hidden max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl relative"
           >
-            {/* Modal Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
               <span className="text-[11px] uppercase tracking-widest font-bold text-gray-400">
                 Detalle de Prenda
@@ -833,10 +795,9 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
               </button>
             </div>
 
-            {/* Modal Body */}
             <div className="overflow-y-auto p-5 sm:p-6 space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {/* Photo & Gallery */}
+                {/* Fotos */}
                 <div className="space-y-3">
                   <div className="aspect-[3/4] bg-gray-100 rounded-2xl overflow-hidden shadow-xs relative">
                     <img
@@ -868,7 +829,7 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
                   )}
                 </div>
 
-                {/* Info & Options */}
+                {/* Info & Selector de Tallas */}
                 <div className="flex flex-col justify-between space-y-4">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
@@ -896,7 +857,7 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
                       {selectedProduct.description}
                     </p>
 
-                    {/* Size Selector */}
+                    {/* Selector de Tallas */}
                     {selectedProduct.presentaciones && selectedProduct.presentaciones.length > 0 && (
                       <div className="mt-5 pt-4 border-t border-gray-100">
                         <div className="flex items-center justify-between mb-2">
@@ -905,7 +866,7 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
                           </label>
                           {selectedSize && (
                             <span className="text-[11px] font-semibold text-gray-500">
-                              Seleccionada: <strong>{selectedSize}</strong>
+                              Elegida: <strong>{selectedSize}</strong>
                             </span>
                           )}
                         </div>
@@ -936,21 +897,21 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
                     )}
                   </div>
 
-                  {/* Quantity & Actions */}
+                  {/* Cantidad y Agregar */}
                   <div className="space-y-3 pt-4 border-t border-gray-100">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-semibold text-gray-600">Cantidad:</span>
                       <div className="flex items-center gap-3 bg-gray-100 rounded-full px-3 py-1">
                         <button
                           onClick={() => setDetailQty(Math.max(1, detailQty - 1))}
-                          className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-gray-700 hover:bg-gray-200 cursor-pointer shadow-xs"
+                          className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-gray-700 hover:bg-gray-200 cursor-pointer shadow-2xs"
                         >
                           -
                         </button>
                         <span className="text-xs font-bold w-4 text-center">{detailQty}</span>
                         <button
                           onClick={() => setDetailQty(detailQty + 1)}
-                          className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-gray-700 hover:bg-gray-200 cursor-pointer shadow-xs"
+                          className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-gray-700 hover:bg-gray-200 cursor-pointer shadow-2xs"
                         >
                           +
                         </button>
@@ -968,7 +929,7 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
                           cerrarProducto();
                         }}
                         className="flex-1 py-3 px-4 rounded-2xl bg-black text-white text-xs font-bold uppercase tracking-wider hover:bg-gray-800 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
-                        style={{ backgroundColor: theme.primary || '#111827' }}
+                        style={{ backgroundColor: theme.primary || '#18181b' }}
                       >
                         <span className="material-symbols-outlined text-base">shopping_bag</span>
                         <span>Añadir a la bolsa</span>
@@ -998,17 +959,16 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
         </div>
       )}
 
-      {/* ── SLIDE-OVER BAG / CART DRAWER ────────────────────────────── */}
+      {/* ── BOLSA DE COMPRAS (DRAWER) ───────────────────────────────── */}
       {isCartOpen && (
         <div className="fixed inset-0 z-50 overflow-hidden">
           <div
             onClick={() => setIsCartOpen(false)}
-            className="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+            className="absolute inset-0 bg-black/60 backdrop-blur-2xs transition-opacity"
           />
 
           <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
             <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col">
-              {/* Cart Drawer Header */}
               <div className="p-5 border-b border-gray-100 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-xl text-gray-900">shopping_bag</span>
@@ -1030,7 +990,6 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
                 </button>
               </div>
 
-              {/* Cart Items List */}
               <div className="flex-1 overflow-y-auto p-5 space-y-4">
                 {cart.length === 0 ? (
                   <div className="py-20 text-center space-y-3">
@@ -1105,7 +1064,6 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
                 )}
               </div>
 
-              {/* Cart Drawer Footer */}
               {cart.length > 0 && (
                 <div className="p-5 border-t border-gray-100 bg-gray-50 space-y-4">
                   <div className="space-y-1.5 text-xs text-gray-600">
@@ -1114,7 +1072,7 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
                       <span className="font-semibold text-gray-900">S/ {cartTotal.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Coordinación de envío</span>
+                      <span>Coordinación de entrega</span>
                       <span className="font-medium text-emerald-600">Por WhatsApp</span>
                     </div>
                     <div className="flex justify-between text-sm font-extrabold text-gray-900 pt-2 border-t border-gray-200">
@@ -1141,7 +1099,7 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
         </div>
       )}
 
-      {/* Floating WhatsApp and Cart Quick Access */}
+      {/* Floating Actions */}
       <StoreFloatingActions store={store} />
     </div>
   );

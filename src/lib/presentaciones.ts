@@ -39,6 +39,7 @@ export function tipoPresentacionDe(categoria: unknown, template?: unknown): Tipo
   if (
     t === 'estilosmirka' ||
     t === 'atelier' ||
+    t === 'lookbook' ||
     /ropa|moda|vestido|blusa|pantalon|conjunto|polo|camisa|falda|short|casaca|chaqueta|poleron|chompa|talla|prenda|lenceria|bikini|traje/.test(c)
   ) {
     return 'ropa';
@@ -142,7 +143,7 @@ export const claveLinea = (id: string, label?: string) => (label ? `${id}|${labe
 // Solo estas tienen el selector para el cliente; en las demás el producto se vendería al precio "desde".
 // `condimentos` es la que vende todo por peso: ahí el formulario de productos abre las presentaciones desde el inicio.
 const PLANTILLAS_CON_PRESENTACIONES = [
-  'condimentos', 'mercado', 'estilosmirka', 'atelier',
+  'condimentos', 'mercado', 'estilosmirka', 'atelier', 'lookbook',
   // las del motor compartido (templates/shared): el modal del producto trae el selector de medida
   'default', 'menudirecto', 'polleria', 'iniciocatalogo', 'fichadigital', 'fichaplana', 'veterinaria',
 ];
