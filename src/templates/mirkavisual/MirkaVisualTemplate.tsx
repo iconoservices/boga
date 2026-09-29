@@ -300,41 +300,10 @@ export default function MirkaVisualTemplate({ store, initialProductId }: MirkaVi
           <img
             src={store.heroImage || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1600&q=80'}
             alt={store.heroAlt || store.name}
-            className="w-full h-auto max-h-[460px] object-cover object-top block"
+            className="w-full h-auto max-h-[500px] object-cover object-top block"
           />
         </div>
       </section>
-
-      {/* ── BARRA DE LOCAL Y CALIFICACIÓN ─────────────────────────── */}
-      {(store.rating != null || store.zona || store.tagline) && (
-        <div className="bg-white border-b border-black/5 py-2.5 px-5">
-          <div className="max-w-6xl mx-auto flex items-center justify-between text-xs text-gray-600 flex-wrap gap-2">
-            <div className="flex items-center gap-3 flex-wrap">
-              {store.tagline && <span className="font-medium italic text-gray-700">&ldquo;{store.tagline}&rdquo;</span>}
-              {store.zona && (
-                <span className="flex items-center gap-1 font-semibold text-gray-800">
-                  <span className="material-symbols-outlined text-sm" style={{ color: theme.primary }}>location_on</span>
-                  {store.zona}
-                </span>
-              )}
-            </div>
-            {store.rating != null && (
-              <div className="flex items-center gap-1">
-                {[...Array(estrellasDe(store.rating).llenas)].map((_, i) => (
-                  <span
-                    key={i}
-                    className="material-symbols-outlined text-sm"
-                    style={{ fontVariationSettings: "'FILL' 1", color: '#f59e0b' }}
-                  >
-                    star
-                  </span>
-                ))}
-                <span className="text-xs font-semibold">{store.rating.toFixed(1)}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* ── MAIN CATALOG (TARJETAS CUADRADAS TAL CUAL ESTILOS MIRKA) ── */}
       <section id="catalog" className="max-w-6xl mx-auto px-4 py-8">
