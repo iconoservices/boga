@@ -304,9 +304,13 @@ function AdminDashboard({ user }: { user: User }) {
     if (!slug) return visibleDbStores.length === 0 || visibleDbStores.some((s: any) => moduloActivo(s.modulos, modulo));
     return moduloActivo(dbStores.find((s: any) => s.slug === slug)?.modulos, modulo);
   };
-  // Una pestaña/sección se muestra si AL MENOS una de mis tiendas tiene el módulo (o si todavía no cargaron).
-  const algunaTiene = (modulo: ModuloId) =>
-    visibleDbStores.length === 0 || visibleDbStores.some((s: any) => moduloActivo(s.modulos, modulo));
+  // Una pestaña/sección se muestra según la tienda elegida en el selector: con una tienda puntual elegida, decide
+  // SOLO esa tienda (antes se prendía si CUALQUIER otra tienda mía tenía el módulo, y un cliente con varios rubros
+  // veía el POS de una tienda en la que no existía). Con "Todas mis tiendas" alcanza con que alguna lo tenga.
+  const algunaTiene = (modulo: ModuloId) => {
+    if (selectedStore !== 'all') return moduloActivo(dbStores.find((s: any) => s.slug === selectedStore)?.modulos, modulo);
+    return visibleDbStores.length === 0 || visibleDbStores.some((s: any) => moduloActivo(s.modulos, modulo));
+  };
   const posOn = algunaTiene('pos');
   const inventarioOn = algunaTiene('inventario');
   // Pedidos es para todos: los pedidos de la carta ahora se registran. Caja y Métricas de ventas son del módulo de ventas.
