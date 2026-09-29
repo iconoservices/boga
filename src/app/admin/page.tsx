@@ -1236,7 +1236,11 @@ function AdminDashboard({ user }: { user: User }) {
 
   const getBase64Image = async (url: string): Promise<string | null> => {
     try {
-      const res = await fetch(url);
+      // fotos.bogahub.app (R2) no manda cabeceras CORS: pedir la imagen directo desde el navegador
+      // falla siempre ("Failed to fetch"), por eso el PDF salía sin fotos. Mismo arreglo que ya
+      // existe para sacar la paleta de colores del logo (ver lib/extractThemeClient.ts).
+      const remota = /^https?:\/\//i.test(url) && typeof window !== 'undefined' && new URL(url).origin !== window.location.origin;
+      const res = await fetch(remota ? `/api/img-proxy?u=${encodeURIComponent(url)}` : url);
       const blob = await res.blob();
       return new Promise((resolve) => {
         const reader = new FileReader();
