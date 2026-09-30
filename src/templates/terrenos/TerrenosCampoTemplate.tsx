@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import type { StoreConfig } from '@/lib/stores.config';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
-import { useAuth } from '@/context/AuthContext';
+import { useFavoritos } from '@/lib/useFavoritos';
 import { useCustomerSession } from '@/context/CustomerSessionContext';
 import { inicialesDe } from '../shared/tokens';
 import { useTerrenos, areaDe, precioTerreno, descripcionLimpia } from './useTerrenos';
@@ -22,20 +22,10 @@ export default function TerrenosCampoTemplate({ store, initialProductId }: { sto
   const c = useTerrenos(store, initialProductId);
 
   // Corazón de favoritos: requiere cuenta (sin sesión abre el modal de entrar / crear cuenta).
-  const { user } = useAuth();
+  const { esFavorito, alternar } = useFavoritos();
   const { setModalAbierto } = useCustomerSession();
-  const favKey = `terrenos_fav_${store.slug}`;
-  const [favs, setFavs] = useState<string[]>([]);
-  useEffect(() => {
-    try { setFavs(JSON.parse(localStorage.getItem(favKey) || '[]')); } catch { /* sin storage: queda vacío */ }
-  }, [favKey]);
-  const toggleFav = (id: string) => {
-    if (!user) { setModalAbierto(true); return; }
-    setFavs((prev) => {
-      const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
-      try { localStorage.setItem(favKey, JSON.stringify(next)); } catch { /* idem */ }
-      return next;
-    });
+  const toggleFav = (p: { id: string; name: string; price: number; image?: string }) => {
+    if (!alternar({ store: store.slug, id: p.id, name: p.name, price: p.price, image: p.image })) setModalAbierto(true);
   };
   return (
     <div className="min-h-screen" style={{ background: t.background, color: t.onBackground, fontFamily: t.fontBody }}>
@@ -149,12 +139,12 @@ export default function TerrenosCampoTemplate({ store, initialProductId }: { sto
                       {precioTerreno(p.price)}{areaDe(p) ? ` • ${areaDe(p)}` : ''}
                     </p>
                     <button
-                      onClick={(e) => { e.stopPropagation(); toggleFav(p.id); }}
-                      aria-label={favs.includes(p.id) ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+                      onClick={(e) => { e.stopPropagation(); toggleFav(p); }}
+                      aria-label={esFavorito(store.slug, p.id) ? 'Quitar de favoritos' : 'Guardar en favoritos'}
                       className="shrink-0 active:scale-90 transition-transform"
-                      style={{ color: favs.includes(p.id) ? '#dc2626' : t.onSurfaceVariant }}
+                      style={{ color: esFavorito(store.slug, p.id) ? '#dc2626' : t.onSurfaceVariant }}
                     >
-                      <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: `'FILL' ${favs.includes(p.id) ? 1 : 0}` }}>favorite</span>
+                      <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: `'FILL' ${esFavorito(store.slug, p.id) ? 1 : 0}` }}>favorite</span>
                     </button>
                   </div>
                   <p className="text-sm" style={{ color: t.onSurfaceVariant }}>{p.name}</p>

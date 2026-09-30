@@ -6,6 +6,7 @@ import { useCustomerSession, DatosCliente } from '@/context/CustomerSessionConte
 import { useAuth } from '@/context/AuthContext';
 import { leerMisPedidos, PedidoLocal } from '@/lib/pedidos';
 import { CLAVE_REABRIR_MODAL, setAuthCookie } from '@/lib/authCookies';
+import { useFavoritos } from '@/lib/useFavoritos';
 
 interface Props {
   storeSlug: string;
@@ -16,7 +17,10 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
   const { cliente, guardarCliente, cerrarSesion: cerrarClienteLocal, modalAbierto, setModalAbierto } = useCustomerSession();
   const { user, signInWithGoogle, signIn, signUp, signOut } = useAuth();
 
-  const [tab, setTab] = useState<'perfil' | 'pedidos'>('perfil');
+  const { lista: listaFavs, alternar: alternarFav } = useFavoritos();
+  const favsTienda = listaFavs.filter((f) => f.store === storeSlug);
+
+  const [tab, setTab] = useState<'perfil' | 'pedidos' | 'favoritos'>('perfil');
   const [form, setForm] = useState<DatosCliente>({
     nombre: '',
     telefono: '',
@@ -243,6 +247,17 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
             >
               Mis Pedidos ({misPedidos.length})
               {tab === 'pedidos' && <span className="absolute bottom-0 inset-x-0 h-0.5 bg-primary rounded-full" />}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setTab('favoritos')}
+              className={`pb-2 text-xs font-bold transition-all relative ${
+                tab === 'favoritos' ? 'text-primary' : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              Favoritos ({favsTienda.length})
+              {tab === 'favoritos' && <span className="absolute bottom-0 inset-x-0 h-0.5 bg-primary rounded-full" />}
             </button>
           </div>
         )}
@@ -577,6 +592,53 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
                   ¿Administras este negocio? Acceso staff
                 </button>
               </div>
+            </div>
+          ) : tab === 'favoritos' ? (
+            /* Favoritos de esta tienda (ligados a la cuenta) */
+            <div className="flex flex-col gap-3 animate-fade-in">
+              {!user ? (
+                <div className="text-center py-8 text-gray-500 flex flex-col items-center gap-3">
+                  <span className="material-symbols-outlined text-4xl opacity-50">favorite</span>
+                  <p className="text-xs font-semibold max-w-[240px]">Crea tu cuenta o inicia sesión para guardar tus favoritos.</p>
+                  <button type="button" onClick={() => setModoInvitado(false)} className="text-xs font-bold text-primary hover:underline">
+                    Iniciar sesión
+                  </button>
+                </div>
+              ) : favsTienda.length === 0 ? (
+                <div className="text-center py-8 text-gray-400 flex flex-col items-center gap-2">
+                  <span className="material-symbols-outlined text-4xl opacity-50">favorite</span>
+                  <p className="text-xs font-semibold">Todavía no tienes favoritos en {storeName}.</p>
+                  <p className="text-[11px]">Toca el corazón de un producto para guardarlo aquí.</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {favsTienda.map((f) => (
+                    <div key={f.product_id} className="p-2.5 bg-gray-50 rounded-xl border border-gray-100 flex items-center gap-3">
+                      <Link
+                        href={`/${storeSlug}/producto/${f.product_id}`}
+                        onClick={() => setModalAbierto(false)}
+                        className="flex items-center gap-3 min-w-0 flex-1"
+                      >
+                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-200 shrink-0">
+                          {f.image && <img src={f.image} alt="" className="w-full h-full object-cover" />}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-gray-900 truncate">{f.name || 'Producto'}</p>
+                          {f.price != null && <p className="text-[11px] font-semibold text-primary">S/ {Number(f.price).toFixed(2)}</p>}
+                        </div>
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => alternarFav({ store: f.store, id: f.product_id })}
+                        aria-label="Quitar de favoritos"
+                        className="w-8 h-8 rounded-full bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center shrink-0"
+                      >
+                        <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             /* Vista de Mis Pedidos (solo cuando tiene sesión o modo invitado) */

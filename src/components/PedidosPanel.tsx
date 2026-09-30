@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { leerMisPedidos, type PedidoLocal } from '@/lib/pedidos';
+import { useFavoritos } from '@/lib/useFavoritos';
 
 type Vivo = { estado: string; total: number };
 const colorEstado = (e: string) =>
@@ -13,9 +14,21 @@ const colorEstado = (e: string) =>
   : 'bg-green-50 text-green-700 border-green-200';
 
 // Panel de Favoritos (Me gusta). Se muestra en la pestaña "Favoritos" del perfil
-// y en /orders. Los favoritos viven en localStorage ('boga_favorites').
+// y en /orders. Los favoritos viven en la cuenta (tabla `favoritos`).
 export default function PedidosPanel() {
-  const [favorites, setFavorites] = useState<any[]>([]);
+  const { lista, alternar } = useFavoritos();
+  // Misma forma que usaba antes el panel (título, precio en texto, imagen)
+  const favorites = lista.map((f) => ({
+    id: f.product_id,
+    slug: f.store,
+    store: f.store,
+    title: f.name || 'Producto',
+    name: f.name || 'Producto',
+    price: f.price ?? 0,
+    image: f.image || '',
+    img: f.image || '',
+    logo: '',
+  }));
   const { addToCart } = useCart();
   // Pedidos de la carta hechos desde este dispositivo, con su estado al día
   const [misPedidos, setMisPedidos] = useState<PedidoLocal[]>([]);
@@ -32,20 +45,7 @@ export default function PedidosPanel() {
     });
   }, []);
 
-  useEffect(() => {
-    const saved = localStorage.getItem('boga_favorites');
-    if (saved) {
-      try {
-        setFavorites(JSON.parse(saved));
-      } catch {}
-    }
-  }, []);
-
-  const removeFavorite = (id: string | number) => {
-    const updated = favorites.filter(f => String(f.id) !== String(id));
-    setFavorites(updated);
-    localStorage.setItem('boga_favorites', JSON.stringify(updated));
-  };
+  const removeFavorite = (store: string, id: string | number) => { alternar({ store, id }); };
 
   return (
     <div className="flex flex-col gap-5">
@@ -150,14 +150,14 @@ export default function PedidosPanel() {
                     {prod.title}
                   </h4>
                   <p className="text-xs sm:text-sm text-primary font-price-lg font-bold mt-0.5">
-                    {prod.price}
+                    S/ {Number(prod.price).toFixed(2)}
                   </p>
                 </div>
               </div>
               
               <div className="flex items-center gap-1.5 shrink-0 z-10">
                 <button 
-                  onClick={() => removeFavorite(prod.id)}
+                  onClick={() => removeFavorite(prod.slug, prod.id)}
                   className="w-8 h-8 rounded-full bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center active:scale-90 transition-transform border border-red-100 shrink-0"
                   title="Quitar de favoritos"
                 >

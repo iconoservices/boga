@@ -1882,3 +1882,36 @@ ALTER TABLE public.products ADD COLUMN IF NOT EXISTS images JSONB;
 -- 'ambos' (por defecto) deja elegir al cliente en el carrito, igual que siempre.
 -- 'delivery' o 'recojo' fuerzan esa única opción y esconden el selector.
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS entrega TEXT NOT NULL DEFAULT 'ambos';
+
+
+-- ============================================================
+-- FAVORITOS DE LOS CLIENTES (con su cuenta BogaHub)
+-- ============================================================
+-- Cada cliente guarda sus favoritos ligados a su cuenta: los ve igual en BogaHub y en cualquier tienda.
+-- Se guarda un "retrato" (nombre, precio, imagen) para pintar la lista sin bajar el catálogo entero.
+-- Solo el dueño de la cuenta lee y escribe sus filas.
+CREATE TABLE IF NOT EXISTS public.favoritos (
+  user_id    UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  store      TEXT NOT NULL,
+  product_id TEXT NOT NULL,
+  name       TEXT,
+  price      NUMERIC,
+  image      TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  PRIMARY KEY (user_id, store, product_id)
+);
+CREATE INDEX IF NOT EXISTS favoritos_store_idx ON public.favoritos (store);
+
+ALTER TABLE public.favoritos ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "favoritos: el dueño lee" ON public.favoritos;
+DROP POLICY IF EXISTS "favoritos: el dueño escribe" ON public.favoritos;
+
+CREATE POLICY "favoritos: el dueño lee"
+ON public.favoritos FOR SELECT
+USING (auth.uid() = user_id);
+
+CREATE POLICY "favoritos: el dueño escribe"
+ON public.favoritos FOR ALL
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);

@@ -1,5 +1,7 @@
 'use client';
 
+import { useFavoritos } from '@/lib/useFavoritos';
+import { useCustomerSession } from '@/context/CustomerSessionContext';
 import React, { useState, useEffect, useMemo } from 'react';
 import { pedirDatosCliente } from '@/components/pedirDatosCliente';
 import { StoreConfig } from '@/lib/stores.config';
@@ -42,7 +44,9 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [onlyOffers, setOnlyOffers] = useState(false);
-  const [wishlist, setWishlist] = useState<Record<string, boolean>>({});
+  // Favoritos ligados a la cuenta: sin sesión se abre el modal de entrar / crear cuenta
+  const { esFavorito, alternar: alternarFav } = useFavoritos();
+  const { setModalAbierto: abrirModalCuenta } = useCustomerSession();
 
   const [selectedSize, setSelectedSize] = useState('');
   const [detailQty, setDetailQty] = useState(1);
@@ -190,10 +194,12 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
   }, [allProducts, activeCategory, searchQuery, onlyOffers, categoriasTienda]);
 
   // Wishlist toggle
-  const toggleWishlist = (productId: string, e: React.MouseEvent) => {
+  const toggleWishlist = (product: ProductItem, e: React.MouseEvent) => {
     e.stopPropagation();
-    setWishlist((prev) => ({ ...prev, [productId]: !prev[productId] }));
+    const ok = alternarFav({ store: store.slug, id: product.id, name: product.title, price: product.price, image: product.image });
+    if (!ok) abrirModalCuenta(true);
   };
+
 
   // Cart operations
   const addToCart = (product: any, size?: string, unitPrice?: number, qty = 1) => {
@@ -591,7 +597,7 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 pt-6">
             {filteredProducts.map((product) => {
               const hasSizes = product.presentaciones && product.presentaciones.length > 0;
-              const isWishlisted = Boolean(wishlist[product.id]);
+              const isWishlisted = esFavorito(store.slug, product.id);
 
               return (
                 <article
@@ -623,7 +629,7 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
 
                     {/* Wishlist Heart */}
                     <button
-                      onClick={(e) => toggleWishlist(product.id, e)}
+                      onClick={(e) => toggleWishlist(product, e)}
                       className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur-xs flex items-center justify-center text-gray-700 hover:text-rose-500 transition-colors shadow-sm cursor-pointer z-10"
                     >
                       <span

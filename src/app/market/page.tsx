@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
+import { useFavoritos } from '@/lib/useFavoritos';
 
 import { fetchCatalogo } from '@/lib/catalogo';
 import { MarketCityBanner } from '@/components/CityWaitlist';
@@ -29,7 +30,7 @@ export default function Home() {
   const { addToCart, cartCount, setIsCartOpen } = useCart();
   const [addedItems, setAddedItems] = useState<Record<string, boolean>>({});
   const [activeSort, setActiveSort] = useState('Populares');
-  const [favorites, setFavorites] = useState<any[]>([]);
+  const { esFavorito, alternar } = useFavoritos();
   const [marketplaceProducts, setMarketplaceProducts] = useState<any[]>([]);
 
   const [storeData, setStoreData] = useState<{ name: string; slug: string; category: string; time: string; delivery: string; logo: string; externalUrl?: string; products: { name: string; price: string; original?: string; img: string }[] }[]>([]);
@@ -139,6 +140,8 @@ export default function Home() {
 
           if (newSectionsProducts[macroCat]) {
             newSectionsProducts[macroCat].push({
+              id: p.id,
+              slug: p.store,
               name: p.name,
               price: `S/ ${p.price.toFixed(2)}`,
               original: p.price_anterior > 0 ? `S/ ${Number(p.price_anterior).toFixed(2)}` : undefined,
@@ -177,31 +180,19 @@ export default function Home() {
     fetchRealData();
   }, []);
 
-  useEffect(() => {
-    const saved = localStorage.getItem('boga_favorites');
-    if (saved) {
-      try {
-        setFavorites(JSON.parse(saved));
-      } catch {}
-    }
-  }, []);
-
+  // Favoritos ligados a la cuenta: sin sesión se manda a entrar / crear cuenta
+  const precioNum = (v: any) => (typeof v === 'number' ? v : parseFloat(String(v ?? '').replace(/[^\d.]/g, '')) || 0);
   const toggleFavorite = (product: any) => {
-    // Los favoritos son de la cuenta: sin sesión se manda a iniciar o crear cuenta
-    if (!user) {
-      router.push('/login?redirect=/market');
-      return;
-    }
-    const isFav = favorites.some(f => String(f.id) === String(product.id));
-    let updated;
-    if (isFav) {
-      updated = favorites.filter(f => String(f.id) !== String(product.id));
-    } else {
-      updated = [...favorites, product];
-    }
-    setFavorites(updated);
-    localStorage.setItem('boga_favorites', JSON.stringify(updated));
+    const ok = alternar({
+      store: product.slug || product.store,
+      id: product.id,
+      name: product.title || product.name,
+      price: precioNum(product.price),
+      image: product.image || product.img,
+    });
+    if (!ok) router.push('/login?redirect=/market');
   };
+  const esFav = (product: any) => !!product.id && esFavorito(product.slug || product.store, product.id);
 
   useEffect(() => {
     const fetchRealData = async () => {
@@ -500,7 +491,7 @@ export default function Home() {
                   }
 
                   if (isFeaturedProduct) {
-                    const isFav = favorites.some(f => String(f.id) === String(prod.id));
+                    const isFav = esFav(prod);
                     return (
                       <Link
                         key={prod.id}
@@ -558,7 +549,7 @@ export default function Home() {
                     );
                   }
 
-                  const isFav = favorites.some(f => String(f.id) === String(prod.id));
+                  const isFav = esFav(prod);
                   return (
                     <Link
                       key={prod.id}
@@ -650,7 +641,7 @@ export default function Home() {
             )}
             <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-stack-lg">
               {(sections.find(s => s.id === activeCategory)?.products || []).map((p, idx) => {
-                const isFav = favorites.some(f => String(f.id) === String((p as any).id || p.name));
+                const isFav = esFav(p);
                 return (
                   <div key={idx} className="bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col">
                     <div className="relative aspect-square overflow-hidden bg-surface-container-low p-4">
@@ -658,7 +649,7 @@ export default function Home() {
                       <button 
                         onClick={(e) => {
                           e.preventDefault();
-                          toggleFavorite({ id: (p as any).id || p.name, name: p.name, price: p.price, image: p.img });
+                          toggleFavorite(p);
                         }}
                         className="absolute top-2 right-2 w-8 h-8 bg-white/80 backdrop-blur rounded-full flex items-center justify-center text-secondary shadow-sm active:scale-90 transition-transform"
                       >
