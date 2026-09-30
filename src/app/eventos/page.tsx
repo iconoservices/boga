@@ -86,8 +86,8 @@ export default function Eventos() {
 
       <main className="max-w-[1200px] mx-auto px-container-margin lg:px-6 w-full pt-4 flex flex-col gap-8 pb-14">
 
-        {/* Encabezado principal SEO */}
-        <header className="flex flex-col gap-1.5 pt-1">
+        {/* Encabezado principal (en móvil va arriba; en desktop con carrusel va en la columna derecha) */}
+        <header className={`flex flex-col gap-1.5 pt-1 ${carrusel.length > 0 ? 'lg:hidden' : ''}`}>
           <div className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-wider">
             <span className="material-symbols-outlined text-[18px]">calendar_month</span>
             Agenda & Eventos en Pucallpa
@@ -100,14 +100,14 @@ export default function Eventos() {
           </p>
         </header>
 
-        {/* Destacado + categorías: lado a lado en escritorio (como el Market) */}
-        <div className={carrusel.length > 0 ? 'flex flex-col gap-8 lg:grid lg:grid-cols-[1.6fr_1fr] lg:gap-6 lg:items-center' : 'contents'}>
+        {/* Destacado + categorías: lado a lado en escritorio (banner solito a la izquierda, textos + categorías a la derecha) */}
+        <div className={carrusel.length > 0 ? 'flex flex-col gap-8 lg:grid lg:grid-cols-[1.25fr_1fr] lg:gap-8 lg:items-center' : 'contents'}>
 
-        {/* Carrusel destacado */}
+        {/* Carrusel destacado (solito a la izquierda en desktop) */}
         {carrusel.length > 0 && (
-        <section>
+        <section className="w-full">
           <div
-            className="relative overflow-hidden rounded-xl shadow-sm h-[360px] sm:h-auto sm:aspect-[21/9] lg:aspect-auto lg:h-[340px]"
+            className="relative overflow-hidden rounded-2xl shadow-sm h-[360px] sm:h-auto sm:aspect-[21/9] lg:aspect-auto lg:h-[370px]"
             onTouchStart={(e) => { swipeX.current = e.touches[0].clientX; }}
             onTouchEnd={(e) => {
               if (swipeX.current === null) return;
@@ -178,7 +178,7 @@ export default function Eventos() {
           </div>
 
           {carrusel.length > 1 && (
-            <div className="flex justify-center gap-1.5 mt-1.5">
+            <div className="flex justify-center gap-1.5 mt-2">
               {carrusel.map((_, i) => (
                 <button
                   key={i}
@@ -192,40 +192,58 @@ export default function Eventos() {
         </section>
         )}
 
-        {/* Categorías */}
-        <section className="flex flex-col gap-3">
-          <h2 className="font-headline-lg text-on-surface">Explora por categoría</h2>
-          <div className="flex gap-4 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-1 lg:grid lg:grid-cols-5 lg:gap-x-2 lg:gap-y-4 lg:overflow-visible" style={{ scrollbarWidth: 'none' }}>
-            <button
-              onClick={() => setCat(null)}
-              className="flex flex-col items-center gap-1.5 shrink-0 w-[68px] lg:w-auto group"
-            >
-              <span className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
-                cat === null ? 'bg-primary text-white' : 'bg-surface-container-low text-primary group-hover:bg-primary-fixed'
-              }`}>
-                <span className="material-symbols-outlined text-[24px]">apps</span>
-              </span>
-              <span className="font-label-md text-[10px] text-center leading-tight text-secondary">Todos</span>
-            </button>
-            {CATEGORIAS.map((c) => {
-              const active = cat === c.cat;
-              return (
-                <button
-                  key={c.cat}
-                  onClick={() => setCat(active ? null : c.cat)}
-                  className="flex flex-col items-center gap-1.5 shrink-0 w-[68px] lg:w-auto group"
-                >
-                  <span className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
-                    active ? 'bg-primary text-white' : 'bg-surface-container-low text-primary group-hover:bg-primary-fixed'
-                  }`}>
-                    <span className="material-symbols-outlined text-[24px]">{c.icon}</span>
-                  </span>
-                  <span className="font-label-md text-[10px] text-center leading-tight text-secondary">{c.cat}</span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
+        {/* Lado derecho en escritorio: Encabezado + Categorías */}
+        <div className="flex flex-col gap-6 justify-center">
+          {carrusel.length > 0 && (
+            <header className="hidden lg:flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-wider">
+                <span className="material-symbols-outlined text-[18px]">calendar_month</span>
+                Agenda & Eventos en Pucallpa
+              </div>
+              <h1 className="font-headline-lg font-black text-2xl lg:text-3xl text-on-surface tracking-tight leading-tight">
+                ¿Qué hacer en Pucallpa hoy?
+              </h1>
+              <p className="font-body-md text-xs sm:text-sm text-secondary leading-relaxed">
+                Cartelera completa de conciertos, festivales, ferias gastronómicas, eventos culturales, deporte y fiestas en Pucallpa y Yarinacocha.
+              </p>
+            </header>
+          )}
+
+          {/* Categorías */}
+          <section className="flex flex-col gap-3">
+            <h2 className="font-headline-lg text-on-surface text-base sm:text-lg font-bold">Explora por categoría</h2>
+            <div className="flex gap-4 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-1 lg:grid lg:grid-cols-5 lg:gap-x-2 lg:gap-y-3.5 lg:overflow-visible" style={{ scrollbarWidth: 'none' }}>
+              <button
+                onClick={() => setCat(null)}
+                className="flex flex-col items-center gap-1.5 shrink-0 w-[68px] lg:w-auto group"
+              >
+                <span className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
+                  cat === null ? 'bg-primary text-white' : 'bg-surface-container-low text-primary group-hover:bg-primary-fixed'
+                }`}>
+                  <span className="material-symbols-outlined text-[24px]">apps</span>
+                </span>
+                <span className="font-label-md text-[10px] text-center leading-tight text-secondary">Todos</span>
+              </button>
+              {CATEGORIAS.map((c) => {
+                const active = cat === c.cat;
+                return (
+                  <button
+                    key={c.cat}
+                    onClick={() => setCat(active ? null : c.cat)}
+                    className="flex flex-col items-center gap-1.5 shrink-0 w-[68px] lg:w-auto group"
+                  >
+                    <span className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
+                      active ? 'bg-primary text-white' : 'bg-surface-container-low text-primary group-hover:bg-primary-fixed'
+                    }`}>
+                      <span className="material-symbols-outlined text-[24px]">{c.icon}</span>
+                    </span>
+                    <span className="font-label-md text-[10px] text-center leading-tight text-secondary">{c.cat}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        </div>
 
         </div>
 
