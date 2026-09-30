@@ -140,17 +140,19 @@ export default function Home() {
             macroCat = 'Mercado';
           }
 
-          if (newSectionsProducts[macroCat]) {
-            newSectionsProducts[macroCat].push({
-              id: p.id,
-              slug: p.store,
-              name: p.name,
-              price: `S/ ${p.price.toFixed(2)}`,
-              original: p.price_anterior > 0 ? `S/ ${Number(p.price_anterior).toFixed(2)}` : undefined,
-              badge: 'Nuevo',
-              img: p.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80'
-            });
-          }
+          const enOferta = p.price_anterior > 0 && p.price_anterior > p.price;
+          const item = {
+            id: p.id,
+            slug: p.store,
+            name: p.name,
+            price: `S/ ${p.price.toFixed(2)}`,
+            original: p.price_anterior > 0 ? `S/ ${Number(p.price_anterior).toFixed(2)}` : undefined,
+            badge: enOferta ? 'Oferta' : 'Nuevo',
+            img: p.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80'
+          };
+          if (newSectionsProducts[macroCat]) newSectionsProducts[macroCat].push(item);
+          // Promos y Combos: junta las ofertas de todas las categorías, como un filtro más
+          if (enOferta && macroCat !== 'Combos & Promos') newSectionsProducts['Combos & Promos'].push(item);
         });
 
         setSections(prev => {
@@ -373,8 +375,6 @@ export default function Home() {
                   <button
                     key={cat.id}
                     onClick={() => {
-                      // Promos no es un filtro: entra a su propia página (/promotions)
-                      if (cat.id === 'Combos & Promos') { router.push('/promotions'); return; }
                       setActiveCategory(cat.id);
                       setShowAllSubCategories(false);
                     }}
