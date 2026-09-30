@@ -13,6 +13,7 @@ import Toggle from '@/components/superadmin/Toggle';
 import ImageUploadInput from '@/components/superadmin/ImageUploadInput';
 import { useDemo } from '@/context/DemoContext';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
+import { PRODUCTOS_MOSTRADOR, portadaDe } from '@/lib/productos';
 
 export default function BannersAdmin() {
   const { esSuperadmin, cargando } = useEsSuperadmin();
@@ -39,9 +40,46 @@ export default function BannersAdmin() {
   // market_banners (via el mismo endpoint cacheado /api/catalog).
   const [marketBanners, setMarketBanners] = useState<any[]>([]);
   const [isLoadingMarketBanners, setIsLoadingMarketBanners] = useState(true);
-  // Que carrusel se esta editando: /market o el de Inicio "/". Misma tabla,
-  // solo cambia el filtro y a que pagina se le asigna lo nuevo.
-  const [bannerPageTab, setBannerPageTab] = useState<'market' | 'home' | 'negocios'>('market');
+  // Que carrusel se esta editando: /market, Inicio "/", /negocios o /productos.
+  const [bannerPageTab, setBannerPageTab] = useState<'market' | 'home' | 'negocios' | 'productos'>('market');
+  const [productosBanners, setProductosBanners] = useState<Record<string, string>>({});
+  const [guardandoProductoSlug, setGuardandoProductoSlug] = useState<string | null>(null);
+  const [mensajeProducto, setMensajeProducto] = useState<string | null>(null);
+
+  const fetchProductosBanners = async () => {
+    const { data } = await supabase.from('site_settings').select('valor').eq('clave', 'productos_banners').maybeSingle();
+    if (data?.valor) {
+      try {
+        const parsed = typeof data.valor === 'string' ? JSON.parse(data.valor) : data.valor;
+        setProductosBanners(parsed || {});
+      } catch {}
+    }
+  };
+
+  const handleSaveProductoBanner = async (slug: string, url: string) => {
+    setGuardandoProductoSlug(slug);
+    setMensajeProducto(null);
+    const updated = { ...productosBanners };
+    if (url && url.trim()) {
+      updated[slug] = url.trim();
+    } else {
+      delete updated[slug];
+    }
+    setProductosBanners(updated);
+    const { error } = await supabase.from('site_settings').upsert({
+      clave: 'productos_banners',
+      valor: JSON.stringify(updated),
+      updated_at: new Date().toISOString(),
+    });
+    setGuardandoProductoSlug(null);
+    if (error) {
+      alert('Error al guardar banner: ' + error.message);
+    } else {
+      setMensajeProducto(`✅ Banner actualizado para "${slug}"`);
+      setTimeout(() => setMensajeProducto(null), 3500);
+      await revalidarCatalogo();
+    }
+  };
   const visibleMarketBanners = React.useMemo(
     () => marketBanners.filter(b => (b.page || 'market') === bannerPageTab),
     [marketBanners, bannerPageTab]
@@ -92,7 +130,7 @@ export default function BannersAdmin() {
     setMarketBanners(data || []);
   };
 
-  React.useEffect(() => { fetchMarketBanners(); fetchBannerStyles(); }, []);
+  React.useEffect(() => { fetchMarketBanners(); fetchBannerStyles(); fetchProductosBanners(); }, []);
 
   const handleOpenNewMarketBanner = () => {
     setEditingMarketBannerId('new');
@@ -211,18 +249,20 @@ export default function BannersAdmin() {
                     <h2 className="text-sm font-bold text-[#191b23]">Banners de Portada</h2>
                     <p className="text-[11px] text-[#424754] mt-0.5">Los carruseles de /market y del Inicio — son del sitio entero, no de una tienda.</p>
                   </div>
-                  <button
-                    onClick={handleOpenNewMarketBanner}
-                    className="px-3 py-2 bg-[#0058be] text-white rounded-md font-bold text-xs hover:bg-[#004395] transition-colors flex items-center gap-1.5 shrink-0"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">add</span>
-                    Nuevo Banner
-                  </button>
+                  {bannerPageTab !== 'productos' && (
+                    <button
+                      onClick={handleOpenNewMarketBanner}
+                      className="px-3 py-2 bg-[#0058be] text-white rounded-md font-bold text-xs hover:bg-[#004395] transition-colors flex items-center gap-1.5 shrink-0"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">add</span>
+                      Nuevo Banner
+                    </button>
+                  )}
                 </div>
 
                 <div className="px-5 pt-3 flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex gap-1.5">
-                    {([['market', 'Market'], ['home', 'Inicio'], ['negocios', 'Foto de /negocios']] as const).map(([id, label]) => (
+                  <div className="flex gap-1.5 flex-wrap">
+                    {([['market', 'Market'], ['home', 'Inicio'], ['negocios', 'Foto de /negocios'], ['productos', 'Productos (/productos)']] as const).map(([id, label]) => (
                       <button
                         key={id}
                         onClick={() => setBannerPageTab(id)}
@@ -235,146 +275,242 @@ export default function BannersAdmin() {
                     ))}
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-[#727785] uppercase tracking-wide">Estilo del carrusel:</span>
-                    <div className="flex gap-1 bg-[#f2f3fd] p-0.5 rounded-full">
-                      {([['center', 'Centrado'], ['bottom', 'Abajo']] as const).map(([id, label]) => (
-                        <button
-                          key={id}
-                          onClick={() => handleSetBannerStyle(id)}
-                          className={`px-3 py-1 rounded-full text-[11px] font-bold transition-colors ${
-                            (bannerStyles[bannerPageTab] || 'center') === id ? 'bg-white text-[#0058be] shadow-sm' : 'text-[#727785] hover:text-[#424754]'
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      ))}
+                  {bannerPageTab !== 'productos' && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold text-[#727785] uppercase tracking-wide">Estilo del carrusel:</span>
+                      <div className="flex gap-1 bg-[#f2f3fd] p-0.5 rounded-full">
+                        {([['center', 'Centrado'], ['bottom', 'Abajo']] as const).map(([id, label]) => (
+                          <button
+                            key={id}
+                            onClick={() => handleSetBannerStyle(id)}
+                            className={`px-3 py-1 rounded-full text-[11px] font-bold transition-colors ${
+                              (bannerStyles[bannerPageTab] || 'center') === id ? 'bg-white text-[#0058be] shadow-sm' : 'text-[#727785] hover:text-[#424754]'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
-                <p className="px-5 pb-1 text-[10px] text-[#727785] font-semibold">
-                  Afecta a TODOS los banners de {{ market: '/market', home: 'el Inicio', negocios: 'la portada de /negocios (se usa la primera foto activa)' }[bannerPageTab]}, no solo al que estés editando.
-                </p>
+
+                {bannerPageTab !== 'productos' ? (
+                  <p className="px-5 pb-1 text-[10px] text-[#727785] font-semibold">
+                    Afecta a TODOS los banners de {{ market: '/market', home: 'el Inicio', negocios: 'la portada de /negocios (se usa la primera foto activa)' }[bannerPageTab]}, no solo al que estés editando.
+                  </p>
+                ) : (
+                  <div className="px-5 pb-2 pt-1 flex items-center justify-between gap-2 flex-wrap border-b border-[#ecedf7]">
+                    <p className="text-[11px] text-[#424754] font-medium">
+                      Portadas de las tarjetas de <a href="/productos" target="_blank" className="text-[#0058be] underline font-bold">/productos</a>. Sube una imagen (16:9) o pega un enlace para personalizar cada solución.
+                    </p>
+                    {mensajeProducto && (
+                      <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-0.5 rounded-full animate-fade-in">
+                        {mensajeProducto}
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 <div className="p-4">
-                  {editingMarketBannerId && (
-                    <form onSubmit={handleSaveMarketBanner} className="mb-4 p-4 bg-[#f2f3fd]/40 rounded-lg border border-[#c2c6d6] space-y-3">
-                      <p className="text-[10px] font-black text-[#424754] uppercase tracking-widest">
-                        {editingMarketBannerId === 'new' ? 'Nuevo banner' : 'Editar banner'}
-                      </p>
-                      <p className="text-[10px] text-[#727785] font-semibold -mt-1.5">
-                        Si tu imagen ya tiene el texto dibujado (un flyer armado en Canva u otra herramienta), deja el tag y los títulos vacíos — si los llenás, la web dibuja ese texto ENCIMA del de tu imagen y se pisan.
-                      </p>
-                      <div className="flex gap-3">
-                        <label className="shrink-0 w-20 h-14 rounded-lg border-2 border-dashed border-[#c2c6d6] flex items-center justify-center cursor-pointer hover:bg-white transition-colors overflow-hidden bg-white">
-                          {marketBannerImagePreview ? (
-                            <img src={marketBannerImagePreview} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <span className="material-symbols-outlined text-[#727785] text-[20px]">add_a_photo</span>
-                          )}
-                          <input
-                            type="file" accept="image/*" className="sr-only"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (!file) return;
-                              setMarketBannerImageFile(file);
-                              setMarketBannerImagePreview(URL.createObjectURL(file));
-                            }}
-                          />
-                        </label>
-                        <div className="flex-1 grid grid-cols-2 gap-2">
-                          <input
-                            type="text" placeholder="Tag (opcional, ej: Promo Exclusiva)"
-                            value={marketBannerForm.tag}
-                            onChange={(e) => setMarketBannerForm(prev => ({ ...prev, tag: e.target.value }))}
-                            className="col-span-2 bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be]"
-                          />
-                          <input
-                            type="text" placeholder="Título línea 1 (ej: 2X1 EN) — opcional"
-                            value={marketBannerForm.title1}
-                            onChange={(e) => setMarketBannerForm(prev => ({ ...prev, title1: e.target.value }))}
-                            className="bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be]"
-                          />
-                          <input
-                            type="text" placeholder="Título línea 2 (ej: HAMBURGUESAS)"
-                            value={marketBannerForm.title2}
-                            onChange={(e) => setMarketBannerForm(prev => ({ ...prev, title2: e.target.value }))}
-                            className="bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be]"
-                          />
-                        </div>
-                      </div>
-                      <input
-                        type="text" placeholder="Descripción corta (ej: Solo por hoy en locales seleccionados)"
-                        value={marketBannerForm.sub}
-                        onChange={(e) => setMarketBannerForm(prev => ({ ...prev, sub: e.target.value }))}
-                        className="w-full bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-medium text-[#191b23] outline-none focus:border-[#0058be]"
-                      />
-                      <input
-                        type="text" placeholder="Link opcional al tocarlo (ej: /promotions o una url)"
-                        value={marketBannerForm.link}
-                        onChange={(e) => setMarketBannerForm(prev => ({ ...prev, link: e.target.value }))}
-                        className="w-full bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-medium text-[#191b23] outline-none focus:border-[#0058be]"
-                      />
-                      <div className="flex items-center justify-between pt-1">
-                        <div className="flex items-center gap-4">
-                          <label className="flex items-center gap-2 text-[11px] font-bold text-[#424754] cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={marketBannerForm.active}
-                              onChange={(e) => setMarketBannerForm(prev => ({ ...prev, active: e.target.checked }))}
-                              className="w-4 h-4 accent-[#0058be]"
-                            />
-                            Visible en {{ market: '/market', home: 'el Inicio', negocios: 'la portada de /negocios (se usa la primera foto activa)' }[bannerPageTab]}
-                          </label>
-                          <label className="flex items-center gap-2 text-[11px] font-bold text-[#424754] cursor-pointer" title="Desmarca esto si tu imagen ya trae el texto dibujado — el tag/título/descripción quedan guardados pero no se dibujan encima.">
-                            <input
-                              type="checkbox"
-                              checked={marketBannerForm.showText}
-                              onChange={(e) => setMarketBannerForm(prev => ({ ...prev, showText: e.target.checked }))}
-                              className="w-4 h-4 accent-[#0058be]"
-                            />
-                            Mostrar texto encima
-                          </label>
-                        </div>
-                        <div className="flex gap-2">
-                          <button type="button" onClick={() => setEditingMarketBannerId(null)} className="px-3 py-2 rounded-md font-bold text-xs text-[#424754] hover:bg-[#e6e7f2] transition-colors">
-                            Cancelar
-                          </button>
-                          <button type="submit" disabled={isSavingMarketBanner} className="px-4 py-2 bg-[#0058be] text-white rounded-md font-bold text-xs hover:bg-[#004395] transition-colors disabled:opacity-50">
-                            {isSavingMarketBanner ? 'Guardando…' : 'Guardar'}
-                          </button>
-                        </div>
-                      </div>
-                    </form>
-                  )}
+                  {bannerPageTab === 'productos' ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {PRODUCTOS_MOSTRADOR.map((p) => {
+                        const customUrl = productosBanners[p.slug] || '';
+                        const currentImg = customUrl || portadaDe(p);
+                        const isSaving = guardandoProductoSlug === p.slug;
 
-                  {isLoadingMarketBanners ? (
-                    <p className="text-xs text-[#727785] italic py-3 text-center">Cargando…</p>
-                  ) : visibleMarketBanners.length === 0 ? (
-                    <p className="text-xs text-[#727785] italic py-3 text-center">
-                      Sin banners cargados para {{ market: '/market', home: 'el Inicio', negocios: 'la portada de /negocios (se usa la primera foto activa)' }[bannerPageTab]} — muestra los de ejemplo por defecto.
-                    </p>
-                  ) : (
-                    <div className="space-y-1.5">
-                      {visibleMarketBanners.map((b, idx) => (
-                        <div key={b.id} className="flex items-center gap-3 p-2 rounded-lg border border-[#ecedf7]">
-                          <img src={b.image} alt="" className="w-16 h-9 rounded-md object-cover shrink-0 bg-[#e6e7f2]" />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs font-bold text-[#191b23] truncate">
-                              {b.title1} {b.title2}
-                              {!b.active && <span className="ml-2 text-[9px] font-bold text-amber-600 uppercase">Oculto</span>}
-                            </p>
-                            <p className="text-[10px] text-[#727785] truncate">{b.sub}{b.link ? ` · → ${b.link}` : ''}</p>
+                        return (
+                          <div key={p.slug} className="bg-white rounded-xl border border-[#c2c6d6] overflow-hidden flex flex-col shadow-sm">
+                            <div className="relative aspect-[16/9] bg-[#e6e7f2] overflow-hidden">
+                              {currentImg ? (
+                                <img src={currentImg} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-[#727785]">
+                                  <span className="material-symbols-outlined text-[48px] opacity-60">{p.icon}</span>
+                                </div>
+                              )}
+                              <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
+                                <span className="material-symbols-outlined text-[13px]">{p.icon}</span>
+                                {p.para}
+                              </div>
+                              {customUrl ? (
+                                <span className="absolute top-2.5 right-2.5 text-[9px] font-extrabold uppercase bg-emerald-600 text-white px-2 py-0.5 rounded shadow">
+                                  Personalizado
+                                </span>
+                              ) : (
+                                <span className="absolute top-2.5 right-2.5 text-[9px] font-extrabold uppercase bg-black/50 text-white/80 px-2 py-0.5 rounded">
+                                  Por defecto
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="p-4 flex flex-col gap-2.5 flex-1">
+                              <div>
+                                <h4 className="font-bold text-sm text-[#191b23]">{p.titulo}</h4>
+                                <p className="text-[11px] text-[#727785] line-clamp-1">{p.gancho}</p>
+                              </div>
+
+                              <div className="mt-auto pt-2 space-y-2">
+                                <label className="text-[10px] font-extrabold text-[#424754] uppercase tracking-wider block">
+                                  Banner (recomendado 16:9):
+                                </label>
+                                <ImageUploadInput
+                                  value={customUrl}
+                                  onChange={(url) => handleSaveProductoBanner(p.slug, url)}
+                                  placeholder="URL del banner o sube un archivo..."
+                                />
+
+                                <div className="flex items-center justify-between pt-1">
+                                  <a
+                                    href={`/productos/${p.slug}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-[11px] font-bold text-[#0058be] hover:underline flex items-center gap-0.5"
+                                  >
+                                    Ver producto
+                                    <span className="material-symbols-outlined text-[13px]">open_in_new</span>
+                                  </a>
+
+                                  {customUrl && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSaveProductoBanner(p.slug, '')}
+                                      disabled={isSaving}
+                                      className="text-[11px] font-semibold text-red-600 hover:text-red-800 disabled:opacity-50"
+                                    >
+                                      Restablecer por defecto
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-0.5 shrink-0">
-                            <button onClick={() => handleMoveMarketBanner(b.id, -1)} disabled={idx === 0} className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] p-1 hover:bg-[#e6e7f2] rounded disabled:opacity-30 disabled:pointer-events-none">arrow_upward</button>
-                            <button onClick={() => handleMoveMarketBanner(b.id, 1)} disabled={idx === visibleMarketBanners.length - 1} className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] p-1 hover:bg-[#e6e7f2] rounded disabled:opacity-30 disabled:pointer-events-none">arrow_downward</button>
-                            <button onClick={() => handleOpenEditMarketBanner(b)} className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] p-1 hover:bg-[#e6e7f2] rounded">edit</button>
-                            <button onClick={() => handleDeleteMarketBanner(b.id)} className="material-symbols-outlined text-[16px] text-[#727785] hover:text-red-600 p-1 hover:bg-red-50 rounded">delete</button>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
+                  ) : (
+                    <>
+                      {editingMarketBannerId && (
+                        <form onSubmit={handleSaveMarketBanner} className="mb-4 p-4 bg-[#f2f3fd]/40 rounded-lg border border-[#c2c6d6] space-y-3">
+                          <p className="text-[10px] font-black text-[#424754] uppercase tracking-widest">
+                            {editingMarketBannerId === 'new' ? 'Nuevo banner' : 'Editar banner'}
+                          </p>
+                          <p className="text-[10px] text-[#727785] font-semibold -mt-1.5">
+                            Si tu imagen ya tiene el texto dibujado (un flyer armado en Canva u otra herramienta), deja el tag y los títulos vacíos — si los llenás, la web dibuja ese texto ENCIMA del de tu imagen y se pisan.
+                          </p>
+                          <div className="flex gap-3">
+                            <label className="shrink-0 w-20 h-14 rounded-lg border-2 border-dashed border-[#c2c6d6] flex items-center justify-center cursor-pointer hover:bg-white transition-colors overflow-hidden bg-white">
+                              {marketBannerImagePreview ? (
+                                <img src={marketBannerImagePreview} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="material-symbols-outlined text-[#727785] text-[20px]">add_a_photo</span>
+                              )}
+                              <input
+                                type="file" accept="image/*" className="sr-only"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  setMarketBannerImageFile(file);
+                                  setMarketBannerImagePreview(URL.createObjectURL(file));
+                                }}
+                              />
+                            </label>
+                            <div className="flex-1 grid grid-cols-2 gap-2">
+                              <input
+                                type="text" placeholder="Tag (opcional, ej: Promo Exclusiva)"
+                                value={marketBannerForm.tag}
+                                onChange={(e) => setMarketBannerForm(prev => ({ ...prev, tag: e.target.value }))}
+                                className="col-span-2 bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be]"
+                              />
+                              <input
+                                type="text" placeholder="Título línea 1 (ej: 2X1 EN) — opcional"
+                                value={marketBannerForm.title1}
+                                onChange={(e) => setMarketBannerForm(prev => ({ ...prev, title1: e.target.value }))}
+                                className="bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be]"
+                              />
+                              <input
+                                type="text" placeholder="Título línea 2 (ej: HAMBURGUESAS)"
+                                value={marketBannerForm.title2}
+                                onChange={(e) => setMarketBannerForm(prev => ({ ...prev, title2: e.target.value }))}
+                                className="bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be]"
+                              />
+                            </div>
+                          </div>
+                          <input
+                            type="text" placeholder="Descripción corta (ej: Solo por hoy en locales seleccionados)"
+                            value={marketBannerForm.sub}
+                            onChange={(e) => setMarketBannerForm(prev => ({ ...prev, sub: e.target.value }))}
+                            className="w-full bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-medium text-[#191b23] outline-none focus:border-[#0058be]"
+                          />
+                          <input
+                            type="text" placeholder="Link opcional al tocarlo (ej: /promotions o una url)"
+                            value={marketBannerForm.link}
+                            onChange={(e) => setMarketBannerForm(prev => ({ ...prev, link: e.target.value }))}
+                            className="w-full bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-medium text-[#191b23] outline-none focus:border-[#0058be]"
+                          />
+                          <div className="flex items-center justify-between pt-1">
+                            <div className="flex items-center gap-4">
+                              <label className="flex items-center gap-2 text-[11px] font-bold text-[#424754] cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={marketBannerForm.active}
+                                  onChange={(e) => setMarketBannerForm(prev => ({ ...prev, active: e.target.checked }))}
+                                  className="w-4 h-4 accent-[#0058be]"
+                                />
+                                Visible en {{ market: '/market', home: 'el Inicio', negocios: 'la portada de /negocios (se usa la primera foto activa)' }[bannerPageTab]}
+                              </label>
+                              <label className="flex items-center gap-2 text-[11px] font-bold text-[#424754] cursor-pointer" title="Desmarca esto si tu imagen ya trae el texto dibujado — el tag/título/descripción quedan guardados pero no se dibujan encima.">
+                                <input
+                                  type="checkbox"
+                                  checked={marketBannerForm.showText}
+                                  onChange={(e) => setMarketBannerForm(prev => ({ ...prev, showText: e.target.checked }))}
+                                  className="w-4 h-4 accent-[#0058be]"
+                                />
+                                Mostrar texto encima
+                              </label>
+                            </div>
+                            <div className="flex gap-2">
+                              <button type="button" onClick={() => setEditingMarketBannerId(null)} className="px-3 py-2 rounded-md font-bold text-xs text-[#424754] hover:bg-[#e6e7f2] transition-colors">
+                                Cancelar
+                              </button>
+                              <button type="submit" disabled={isSavingMarketBanner} className="px-4 py-2 bg-[#0058be] text-white rounded-md font-bold text-xs hover:bg-[#004395] transition-colors disabled:opacity-50">
+                                {isSavingMarketBanner ? 'Guardando…' : 'Guardar'}
+                              </button>
+                            </div>
+                          </div>
+                        </form>
+                      )}
+
+                      {isLoadingMarketBanners ? (
+                        <p className="text-xs text-[#727785] italic py-3 text-center">Cargando…</p>
+                      ) : visibleMarketBanners.length === 0 ? (
+                        <p className="text-xs text-[#727785] italic py-3 text-center">
+                          Sin banners cargados para {{ market: '/market', home: 'el Inicio', negocios: 'la portada de /negocios (se usa la primera foto activa)' }[bannerPageTab]} — muestra los de ejemplo por defecto.
+                        </p>
+                      ) : (
+                        <div className="space-y-1.5">
+                          {visibleMarketBanners.map((b, idx) => (
+                            <div key={b.id} className="flex items-center gap-3 p-2 rounded-lg border border-[#ecedf7]">
+                              <img src={b.image} alt="" className="w-16 h-9 rounded-md object-cover shrink-0 bg-[#e6e7f2]" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-bold text-[#191b23] truncate">
+                                  {b.title1} {b.title2}
+                                  {!b.active && <span className="ml-2 text-[9px] font-bold text-amber-600 uppercase">Oculto</span>}
+                                </p>
+                                <p className="text-[10px] text-[#727785] truncate">{b.sub}{b.link ? ` · → ${b.link}` : ''}</p>
+                              </div>
+                              <div className="flex items-center gap-0.5 shrink-0">
+                                <button onClick={() => handleMoveMarketBanner(b.id, -1)} disabled={idx === 0} className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] p-1 hover:bg-[#e6e7f2] rounded disabled:opacity-30 disabled:pointer-events-none">arrow_upward</button>
+                                <button onClick={() => handleMoveMarketBanner(b.id, 1)} disabled={idx === visibleMarketBanners.length - 1} className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] p-1 hover:bg-[#e6e7f2] rounded disabled:opacity-30 disabled:pointer-events-none">arrow_downward</button>
+                                <button onClick={() => handleOpenEditMarketBanner(b)} className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] p-1 hover:bg-[#e6e7f2] rounded">edit</button>
+                                <button onClick={() => handleDeleteMarketBanner(b.id)} className="material-symbols-outlined text-[16px] text-[#727785] hover:text-red-600 p-1 hover:bg-red-50 rounded">delete</button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

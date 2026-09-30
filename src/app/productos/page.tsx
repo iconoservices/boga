@@ -8,13 +8,24 @@ import React from 'react';
 import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
 import { PRODUCTOS_MOSTRADOR, plantillasDe, portadaDe } from '@/lib/productos';
+import { supabase } from '@/lib/supabase';
 
 export const metadata: Metadata = {
   title: 'Productos para tu negocio',
   description: 'Soluciones y productos de BogaHub para tu negocio: cartas digitales QR, tiendas online, apps y páginas web.',
 };
 
-export default function MostradorPage() {
+export const revalidate = 30;
+
+export default async function MostradorPage() {
+  let customBanners: Record<string, string> = {};
+  try {
+    const { data } = await supabase.from('site_settings').select('valor').eq('clave', 'productos_banners').maybeSingle();
+    if (data?.valor) {
+      customBanners = typeof data.valor === 'string' ? JSON.parse(data.valor) : (data.valor as Record<string, string>);
+    }
+  } catch {}
+
   return (
     <div className="min-h-screen bg-background text-on-background font-body-md overflow-x-hidden">
       <AppHeader />
@@ -32,7 +43,7 @@ export default function MostradorPage() {
 
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {PRODUCTOS_MOSTRADOR.map((p) => {
-            const portada = portadaDe(p);
+            const portada = customBanners[p.slug] || portadaDe(p);
             const n = plantillasDe(p).length;
             return (
               <Link
