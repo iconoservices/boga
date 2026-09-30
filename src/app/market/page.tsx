@@ -7,6 +7,7 @@ import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useFavoritos } from '@/lib/useFavoritos';
+import PedirCuentaModal from '@/components/PedirCuentaModal';
 
 import { fetchCatalogo } from '@/lib/catalogo';
 import { MarketCityBanner } from '@/components/CityWaitlist';
@@ -31,6 +32,7 @@ export default function Home() {
   const [addedItems, setAddedItems] = useState<Record<string, boolean>>({});
   const [activeSort, setActiveSort] = useState('Populares');
   const { esFavorito, alternar } = useFavoritos();
+  const [pedirCuenta, setPedirCuenta] = useState(false);
   const [marketplaceProducts, setMarketplaceProducts] = useState<any[]>([]);
 
   const [storeData, setStoreData] = useState<{ name: string; slug: string; category: string; time: string; delivery: string; logo: string; externalUrl?: string; products: { name: string; price: string; original?: string; img: string }[] }[]>([]);
@@ -180,7 +182,7 @@ export default function Home() {
     fetchRealData();
   }, []);
 
-  // Favoritos ligados a la cuenta: sin sesión se manda a entrar / crear cuenta
+  // Favoritos ligados a la cuenta: sin sesión se abre un aviso para entrar / crear cuenta (sin salir de la página)
   const precioNum = (v: any) => (typeof v === 'number' ? v : parseFloat(String(v ?? '').replace(/[^\d.]/g, '')) || 0);
   const toggleFavorite = (product: any) => {
     const ok = alternar({
@@ -190,7 +192,7 @@ export default function Home() {
       price: precioNum(product.price),
       image: product.image || product.img,
     });
-    if (!ok) router.push('/login?redirect=/market');
+    if (!ok) setPedirCuenta(true);
   };
   const esFav = (product: any) => !!product.id && esFavorito(product.slug || product.store, product.id);
 
@@ -339,6 +341,7 @@ export default function Home() {
 
   return (
     <>
+      <PedirCuentaModal abierto={pedirCuenta} onCerrar={() => setPedirCuenta(false)} motivo="guardar tus favoritos" volverA="/market" />
       <AppHeader
         cartCount={cartCount}
         onCartClick={() => setIsCartOpen(true)}
