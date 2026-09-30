@@ -1,14 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
 import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { getDemoProducts } from '@/lib/templates.config';
 import { pedirDatosCliente } from '@/components/pedirDatosCliente';
-import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import { leerPresentaciones, Presentacion } from '@/lib/presentaciones';
-import { fetchEventos, Evento } from '@/lib/eventos';
+import { fetchEventos } from '@/lib/eventos';
 
 interface CarteleraTemplateProps {
   store: StoreConfig;
@@ -18,21 +17,21 @@ interface CarteleraTemplateProps {
 export interface EventoItem {
   id: string;
   titulo: string;
-  fechaTexto: string; // ej. "Sábado 04 Octubre"
-  diaNum: string;     // ej. "04"
+  fechaTexto: string; // ej. "Viernes 03 de Octubre"
+  diaNum: string;     // ej. "03"
   mesTexto: string;   // ej. "OCT"
-  diaSemana: string;  // ej. "SÁBADO"
+  diaSemana: string;  // ej. "VIERNES"
   hora: string;       // ej. "10:00 PM"
   lugar?: string;
   flyer: string;
-  genero?: string;    // ej. "Urban & Reggaeton Old School"
-  lineup?: string;    // ej. "DJ Aldo + DJ Residente"
+  genero?: string;    // ej. "Electro & Tech House"
+  lineup?: string;    // ej. "Guest DJ Marco + Visual Light Show 360°"
   descripcion?: string;
   precioDesde: number;
   precioTexto?: string; // ej. "Desde S/ 30.00"
   entradas?: { label: string; price: number; aforo?: string }[];
   isDestacado?: boolean;
-  statusBadge?: string; // ej. "PREVENTA ACTIVA", "ÚLTIMAS ENTRADAS"
+  statusBadge?: string; // ej. "PREVENTA 1 ACTIVA", "ÚLTIMOS BOXES"
   ordenFecha: string;  // YYYY-MM-DD para ordenar
 }
 
@@ -101,6 +100,29 @@ const DEMO_EVENTOS_CARTELERA: EventoItem[] = [
   },
   {
     id: 'evt-3',
+    titulo: 'FIESTA RETRO 90S & 2000S LIVE',
+    fechaTexto: 'Viernes 17 de Octubre',
+    diaNum: '17',
+    mesTexto: 'OCT',
+    diaSemana: 'VIERNES',
+    hora: '10:00 PM',
+    lugar: 'Terraza Lounge',
+    flyer: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=900&q=85',
+    genero: 'Rock, Pop Latino & Disco Hits',
+    lineup: 'Banda en Vivo + DJ Set Retro',
+    descripcion: 'Un viaje en el tiempo con lo mejor del pop, rock y dance de dos décadas doradas con sonido y luces retro.',
+    precioDesde: 35,
+    precioTexto: 'Desde S/ 35.00',
+    statusBadge: 'CONFIRMADO',
+    isDestacado: false,
+    ordenFecha: '2026-10-17',
+    entradas: [
+      { label: 'Entrada General', price: 35 },
+      { label: 'Mesa Alta Reservada (4 personas)', price: 200 },
+    ],
+  },
+  {
+    id: 'evt-4',
     titulo: 'HALLOWEEN HORROR FEST (EDICIÓN ESPECIAL)',
     fechaTexto: 'Sábado 31 de Octubre',
     diaNum: '31',
@@ -124,38 +146,41 @@ const DEMO_EVENTOS_CARTELERA: EventoItem[] = [
     ],
   },
   {
-    id: 'evt-4',
-    titulo: 'FIESTA RETRO 90S & 2000S LIVE',
-    fechaTexto: 'Viernes 07 de Noviembre',
-    diaNum: '07',
+    id: 'evt-5',
+    titulo: 'URBAN FESTIVAL NOCHE BLANCA',
+    fechaTexto: 'Viernes 14 de Noviembre',
+    diaNum: '14',
     mesTexto: 'NOV',
     diaSemana: 'VIERNES',
     hora: '10:00 PM',
-    lugar: 'Terraza Lounge',
-    flyer: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=900&q=85',
-    genero: 'Rock, Pop Latino & Disco Hits',
-    lineup: 'Banda en Vivo + DJ Set Retro',
-    descripcion: 'Un viaje en el tiempo con lo mejor del pop, rock y dance de dos décadas doradas con sonido y luces retro.',
+    lugar: 'Open Air Stage',
+    flyer: 'https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=900&q=85',
+    genero: 'Trap, Reggaeton & Perreo',
+    lineup: 'DJs Nacionales Invitados + Show de Láseres',
+    descripcion: 'Dress code blanco obligatorio. 8 horas de fiesta continua con la mejor acústica de la ciudad.',
     precioDesde: 35,
     precioTexto: 'Desde S/ 35.00',
-    statusBadge: 'CONFIRMADO',
+    statusBadge: 'NUEVA FECHA',
     isDestacado: false,
-    ordenFecha: '2026-11-07',
+    ordenFecha: '2026-11-14',
     entradas: [
-      { label: 'Entrada General', price: 35 },
-      { label: 'Mesa Alta Reservada (4 personas)', price: 200 },
+      { label: 'General White Pass', price: 35 },
+      { label: 'VIP Lounge Pass', price: 70 },
+      { label: 'Box Stage White', price: 900 },
     ],
   },
 ];
 
 export default function CarteleraTemplate({ store, initialProductId }: CarteleraTemplateProps) {
-  // Pestaña principal: "eventos" o "carta"
-  const [tabActiva, setTabActiva] = useState<'eventos' | 'carta'>('eventos');
+  // Vista: 'inicio' (Carrusel de próximos eventos + Carta debajo) o 'cartelera_completa' (Apartado cronológico)
+  const [vista, setVista] = useState<'inicio' | 'cartelera_completa'>('inicio');
+
+  // Ref del carrusel horizontal
+  const carouselRef = useRef<HTMLDivElement>(null);
 
   // Eventos state
-  const [eventosLista, setEventosLista] = useState<EventoItem[]>([]);
-  const [cargandoEventos, setCargandoEventos] = useState(true);
-  const [filtroEventos, setFiltroEventos] = useState<'todos' | 'proximos'>('todos');
+  const [eventosLista, setEventosLista] = useState<EventoItem[]>(DEMO_EVENTOS_CARTELERA);
+  const [searchEventoQuery, setSearchEventoQuery] = useState('');
 
   // Modal de Evento Seleccionado
   const [eventoSeleccionado, setEventoSeleccionado] = useState<EventoItem | null>(null);
@@ -211,15 +236,21 @@ export default function CarteleraTemplate({ store, initialProductId }: Cartelera
           setSupabaseProducts(formatted);
         }
 
-        // 2. Cargar eventos de Supabase o filtrar por tienda
+        // 2. Cargar eventos
+        // Si es el preview de la plantilla demo ('cartelera'), usar los demo eventos nocturnos
+        if (store.slug === 'cartelera' || store.slug === 'preview/cartelera') {
+          if (isMounted) setEventosLista(DEMO_EVENTOS_CARTELERA);
+          return;
+        }
+
         const evts = await fetchEventos();
         if (isMounted) {
-          // Filtrar eventos que coincidan con el nombre de la tienda o su slug
+          const nom = (store.name || '').toLowerCase().trim();
+          const slug = (store.slug || '').toLowerCase().trim();
+
           const matchTienda = evts.filter((e) => {
-            const org = (e.organiza || '').toLowerCase();
-            const nom = (store.name || '').toLowerCase();
-            const slug = (store.slug || '').toLowerCase();
-            return org.includes(nom) || org.includes(slug) || nom.includes(org);
+            const org = (e.organiza || '').toLowerCase().trim();
+            return org.length > 2 && (org.includes(nom) || org.includes(slug) || (nom.length > 3 && nom.includes(org)));
           });
 
           if (matchTienda.length > 0) {
@@ -287,7 +318,6 @@ export default function CarteleraTemplate({ store, initialProductId }: Cartelera
               });
               setEventosLista(formateadosDesdeProds);
             } else {
-              // Cargar demo eventos de calidad
               setEventosLista(DEMO_EVENTOS_CARTELERA);
             }
           }
@@ -295,8 +325,6 @@ export default function CarteleraTemplate({ store, initialProductId }: Cartelera
       } catch (err) {
         console.error('Error cargando cartelera:', err);
         setEventosLista(DEMO_EVENTOS_CARTELERA);
-      } finally {
-        if (isMounted) setCargandoEventos(false);
       }
     }
 
@@ -309,7 +337,7 @@ export default function CarteleraTemplate({ store, initialProductId }: Cartelera
   // Lista de productos para la carta
   const allProducts = useMemo<ProductItem[]>(() => {
     if (supabaseProducts.length > 0) return supabaseProducts;
-    const demoList = (store as any).demoProducts || getDemoProducts(store.template || 'discoteca');
+    const demoList = (store as any).demoProducts || getDemoProducts(store.template || 'cartelera');
     if (demoList && demoList.length > 0) {
       return demoList.map((p: any, idx: number) => ({
         id: `demo-${idx + 1}`,
@@ -329,10 +357,23 @@ export default function CarteleraTemplate({ store, initialProductId }: Cartelera
     return [];
   }, [supabaseProducts, (store as any).demoProducts, store.template]);
 
-  // Eventos ordenados cronológicamente por fecha
+  // Eventos ordenados cronológicamente por fecha (del más próximo al más lejano)
   const eventosOrdenados = useMemo(() => {
     return [...eventosLista].sort((a, b) => (a.ordenFecha || '').localeCompare(b.ordenFecha || ''));
   }, [eventosLista]);
+
+  // Filtrado de eventos para la vista de Cartelera Completa
+  const eventosFiltradosCartelera = useMemo(() => {
+    if (!searchEventoQuery.trim()) return eventosOrdenados;
+    const q = searchEventoQuery.toLowerCase().trim();
+    return eventosOrdenados.filter(
+      (e) =>
+        e.titulo.toLowerCase().includes(q) ||
+        (e.genero || '').toLowerCase().includes(q) ||
+        (e.lineup || '').toLowerCase().includes(q) ||
+        e.fechaTexto.toLowerCase().includes(q)
+    );
+  }, [eventosOrdenados, searchEventoQuery]);
 
   // Categorías de la carta con productos (SOLO las que realmente tienen items)
   const categoriasCarta = useMemo(() => {
@@ -380,6 +421,14 @@ export default function CarteleraTemplate({ store, initialProductId }: Cartelera
       return matchCategory && matchSearch;
     });
   }, [allProducts, activeCategory, searchQuery, categoriasCarta]);
+
+  // Scroll horizontal en carrusel
+  const scrollCarrusel = (direction: 'left' | 'right') => {
+    if (carouselRef.current) {
+      const offset = direction === 'left' ? -320 : 320;
+      carouselRef.current.scrollBy({ left: offset, behavior: 'smooth' });
+    }
+  };
 
   // Abrir modal de evento
   const abrirModalEvento = (evento: EventoItem) => {
@@ -508,7 +557,7 @@ export default function CarteleraTemplate({ store, initialProductId }: Cartelera
   return (
     <div className="min-h-screen bg-[#07070a] text-slate-100 flex flex-col font-sans selection:bg-purple-500 selection:text-white pb-24">
       {/* ── HEADER SUPERIOR ────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 bg-[#09090f]/90 backdrop-blur-md border-b border-white/10 px-4 py-3">
+      <header className="sticky top-0 z-40 bg-[#09090f]/95 backdrop-blur-md border-b border-white/10 px-4 py-3">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             {store.logoImage || store.iconImage ? (
@@ -612,68 +661,407 @@ export default function CarteleraTemplate({ store, initialProductId }: Cartelera
         </div>
       </section>
 
-      {/* ── TABS NAVEGACIÓN: [📅 PRÓXIMOS EVENTOS] vs [🍾 CARTA & BOTELAS] ─ */}
+      {/* ── TABS RÁPIDAS DE NAVEGACIÓN ─────────────────────────────── */}
       <section className="sticky top-[57px] z-30 bg-[#09090f]/95 backdrop-blur-md border-b border-white/10 py-2.5 px-4 shadow-xl">
-        <div className="max-w-6xl mx-auto flex items-center justify-center gap-2 sm:gap-4">
-          <button
-            onClick={() => setTabActiva('eventos')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
-              tabActiva === 'eventos'
-                ? 'bg-purple-600 text-white shadow-[0_0_15px_rgba(139,92,246,0.5)] border border-purple-400'
-                : 'bg-white/5 text-gray-400 hover:text-white border border-white/5'
-            }`}
-          >
-            <span className="material-symbols-outlined text-sm">event</span>
-            <span>Próximos Eventos ({eventosOrdenados.length})</span>
-          </button>
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setVista('inicio')}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+                vista === 'inicio'
+                  ? 'bg-purple-600 text-white shadow-[0_0_15px_rgba(139,92,246,0.5)] border border-purple-400'
+                  : 'bg-white/5 text-gray-400 hover:text-white border border-white/5'
+              }`}
+            >
+              <span className="material-symbols-outlined text-sm">home</span>
+              <span>Inicio & Carta</span>
+            </button>
 
-          <button
-            onClick={() => setTabActiva('carta')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
-              tabActiva === 'carta'
-                ? 'bg-purple-600 text-white shadow-[0_0_15px_rgba(139,92,246,0.5)] border border-purple-400'
-                : 'bg-white/5 text-gray-400 hover:text-white border border-white/5'
-            }`}
-          >
-            <span className="material-symbols-outlined text-sm">local_bar</span>
-            <span>Carta & Boxes VIP</span>
-          </button>
+            <button
+              onClick={() => setVista('cartelera_completa')}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+                vista === 'cartelera_completa'
+                  ? 'bg-purple-600 text-white shadow-[0_0_15px_rgba(139,92,246,0.5)] border border-purple-400'
+                  : 'bg-white/5 text-gray-400 hover:text-white border border-white/5'
+              }`}
+            >
+              <span className="material-symbols-outlined text-sm">calendar_month</span>
+              <span>Cartelera Completa ({eventosOrdenados.length})</span>
+            </button>
+          </div>
+
+          {vista === 'inicio' && (
+            <button
+              onClick={() => setVista('cartelera_completa')}
+              className="hidden sm:flex items-center gap-1 text-xs font-bold text-purple-300 hover:text-purple-200 transition-colors"
+            >
+              <span>Ver todas las fechas</span>
+              <span className="material-symbols-outlined text-sm">arrow_forward</span>
+            </button>
+          )}
         </div>
       </section>
 
       {/* ── CUERPO PRINCIPAL ────────────────────────────────────────── */}
       <main className="max-w-6xl mx-auto px-4 py-6 w-full flex-1">
         {/* ══════════════════════════════════════════════════════════════
-            PESTAÑA 1: EVENTOS PRIMERO (CARTELERA ORDENADA POR FECHA)
+            VISTA 1: INICIO (CARRUSEL HORIZONTAL HACIA LA DERECHA + CARTA)
            ══════════════════════════════════════════════════════════════ */}
-        {tabActiva === 'eventos' && (
-          <div className="space-y-6">
-            {/* Header de Cartelera */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#11111a] border border-white/10 p-4 sm:p-5 rounded-2xl">
-              <div>
-                <span className="text-[10px] uppercase tracking-widest text-purple-400 font-black flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-sm">confirmation_number</span>
-                  Cartelera Oficial en Vivo
-                </span>
-                <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight mt-0.5">
-                  Próximos Eventos & Fiestas
-                </h2>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  Fechas ordenadas cronológicamente. Asegura tus entradas antes que se agoten las preventas.
-                </p>
+        {vista === 'inicio' && (
+          <div className="space-y-10">
+            {/* ── 1. CARRUSEL HORIZONTAL DE PRÓXIMOS EVENTOS ───────────── */}
+            <section className="space-y-4">
+              {/* Header de la sección de eventos */}
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400">
+                      <span className="material-symbols-outlined text-sm">bolt</span>
+                    </span>
+                    <h2 className="text-lg sm:text-xl font-black text-white uppercase tracking-tight">
+                      Próximos Eventos
+                    </h2>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-950 border border-purple-500/30 text-purple-300 font-extrabold">
+                      FECHAS CERCANAS
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Desliza hacia la derecha para ver los eventos más próximos de este mes.
+                  </p>
+                </div>
+
+                {/* Controles y Botón Ver Más */}
+                <div className="flex items-center gap-2">
+                  <div className="hidden sm:flex items-center gap-1">
+                    <button
+                      onClick={() => scrollCarrusel('left')}
+                      className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 text-white flex items-center justify-center transition-all cursor-pointer"
+                      title="Anterior"
+                    >
+                      <span className="material-symbols-outlined text-base">chevron_left</span>
+                    </button>
+                    <button
+                      onClick={() => scrollCarrusel('right')}
+                      className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 text-white flex items-center justify-center transition-all cursor-pointer"
+                      title="Siguiente"
+                    >
+                      <span className="material-symbols-outlined text-base">chevron_right</span>
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => setVista('cartelera_completa')}
+                    className="px-3.5 py-1.5 rounded-xl bg-purple-950/70 hover:bg-purple-900/80 border border-purple-500/30 text-purple-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shrink-0"
+                  >
+                    <span>Ver más</span>
+                    <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                  </button>
+                </div>
               </div>
 
-              {/* Badges de fechas */}
-              <div className="flex items-center gap-2 self-start sm:self-center">
-                <span className="px-3 py-1.5 rounded-xl bg-purple-950/70 border border-purple-500/30 text-purple-300 text-xs font-bold">
+              {/* Contenedor del Carrusel Horizontal */}
+              <div
+                ref={carouselRef}
+                className="flex gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory py-2 px-1"
+                style={{ scrollBehavior: 'smooth' }}
+              >
+                {eventosOrdenados.map((evt) => (
+                  <div
+                    key={evt.id}
+                    className="w-[270px] sm:w-[290px] shrink-0 snap-start bg-[#12121c] border border-white/10 hover:border-purple-500/50 rounded-2xl overflow-hidden shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between group relative"
+                  >
+                    {/* Badge de Estado en el flyer */}
+                    {evt.statusBadge && (
+                      <div className="absolute top-3 right-3 z-10">
+                        <span className="px-2.5 py-1 rounded-full bg-black/80 backdrop-blur-md border border-purple-500/40 text-purple-300 text-[10px] font-black uppercase tracking-wider shadow-lg">
+                          {evt.statusBadge}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Flyer con Aspect Ratio 4:5 estilo Afiche */}
+                    <div
+                      onClick={() => abrirModalEvento(evt)}
+                      className="aspect-[4/5] w-full overflow-hidden bg-black/40 relative cursor-pointer"
+                    >
+                      <img
+                        src={evt.flyer}
+                        alt={evt.titulo}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#12121c] via-transparent to-black/20" />
+
+                      {/* Fecha Destacada Estilo Calendario Neón */}
+                      <div className="absolute bottom-3 left-3 z-10 flex items-center gap-2.5 bg-black/85 backdrop-blur-md border border-purple-500/40 px-3 py-1.5 rounded-xl shadow-2xl">
+                        <div className="text-center pr-2 border-r border-white/20">
+                          <span className="block text-[9px] font-black uppercase tracking-widest text-purple-400">
+                            {evt.mesTexto}
+                          </span>
+                          <span className="block text-xl font-black text-white leading-none">
+                            {evt.diaNum}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block text-[10px] font-black uppercase tracking-wider text-white">
+                            {evt.diaSemana}
+                          </span>
+                          <span className="block text-[9px] text-gray-400">
+                            {evt.hora}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Info de la tarjeta del carrusel */}
+                    <div className="p-3.5 flex-1 flex flex-col justify-between">
+                      <div>
+                        {evt.genero && (
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400 block mb-1">
+                            {evt.genero}
+                          </span>
+                        )}
+
+                        <h3
+                          onClick={() => abrirModalEvento(evt)}
+                          className="text-sm sm:text-base font-black text-white hover:text-purple-300 transition-colors cursor-pointer line-clamp-1 leading-snug"
+                        >
+                          {evt.titulo}
+                        </h3>
+
+                        {evt.lineup && (
+                          <p className="text-[11px] text-cyan-300 font-bold mt-1 truncate">
+                            {evt.lineup}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Precios y Botón de Acción */}
+                      <div className="pt-3 mt-3 border-t border-white/10 flex items-center justify-between gap-2">
+                        <div>
+                          <span className="text-[9px] text-gray-400 block uppercase font-bold">
+                            Entradas
+                          </span>
+                          <span className="text-sm font-black text-white">
+                            {evt.precioTexto || `S/ ${evt.precioDesde.toFixed(2)}`}
+                          </span>
+                        </div>
+
+                        <button
+                          onClick={() => abrirModalEvento(evt)}
+                          className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-[11px] font-black uppercase tracking-wider shadow-md transition-all active:scale-95 cursor-pointer"
+                        >
+                          Entradas
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Tarjeta especial al final del carrusel: "Ver Cartelera Completa" */}
+                <div
+                  onClick={() => setVista('cartelera_completa')}
+                  className="w-[200px] shrink-0 snap-start bg-gradient-to-b from-[#141424] to-[#0c0c16] border border-dashed border-purple-500/40 hover:border-purple-400 rounded-2xl flex flex-col items-center justify-center p-6 text-center cursor-pointer transition-all hover:scale-102 group shadow-xl"
+                >
+                  <div className="w-14 h-14 rounded-full bg-purple-600/20 border border-purple-500/40 flex items-center justify-center text-purple-300 group-hover:scale-110 group-hover:bg-purple-600 group-hover:text-white transition-all shadow-[0_0_15px_rgba(139,92,246,0.3)] mb-3">
+                    <span className="material-symbols-outlined text-2xl">calendar_month</span>
+                  </div>
+                  <h4 className="text-sm font-black text-white uppercase tracking-wider">
+                    Ver Cartelera Completa
+                  </h4>
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    Todas las {eventosOrdenados.length} fechas en orden cronológico
+                  </p>
+                  <span className="mt-4 px-3 py-1.5 rounded-xl bg-white/10 text-white text-[11px] font-bold flex items-center gap-1 group-hover:bg-purple-600 transition-colors">
+                    <span>Ver más</span>
+                    <span className="material-symbols-outlined text-xs">arrow_forward</span>
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            {/* ── 2. CARTA DE BOTELLAS, BOXES & BEBIDAS ────────────────── */}
+            <section className="space-y-5 pt-4 border-t border-white/10">
+              {/* Header de la Carta */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-pink-500/20 text-pink-400">
+                      <span className="material-symbols-outlined text-sm">local_bar</span>
+                    </span>
+                    <h2 className="text-lg sm:text-xl font-black text-white uppercase tracking-tight">
+                      Carta de Bebidas & Boxes VIP
+                    </h2>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Combos con energizantes, botellas premium, baldes de cerveza y atención a mesa o box.
+                  </p>
+                </div>
+
+                {/* Buscador de tragos */}
+                <div className="relative w-full sm:w-72">
+                  <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-base">
+                    search
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Buscar trago, box o botella..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 rounded-full bg-[#11111a] border border-white/10 text-white placeholder-gray-500 text-xs focus:outline-none focus:border-purple-500 transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Chips de Categorías de la Carta */}
+              {categoriasCarta.length > 0 && (
+                <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-1">
+                  <button
+                    onClick={() => setActiveCategory('all')}
+                    className={`px-4 py-2 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                      activeCategory === 'all'
+                        ? 'bg-purple-600 text-white shadow-[0_0_12px_rgba(139,92,246,0.4)]'
+                        : 'bg-[#12121c] text-gray-400 hover:text-white border border-white/10'
+                    }`}
+                  >
+                    Todo ({allProducts.length})
+                  </button>
+                  {categoriasCarta.map((c) => (
+                    <button
+                      key={c.id}
+                      onClick={() => setActiveCategory(c.id)}
+                      className={`px-4 py-2 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                        activeCategory === c.id
+                          ? 'bg-purple-600 text-white shadow-[0_0_12px_rgba(139,92,246,0.4)]'
+                          : 'bg-[#12121c] text-gray-400 hover:text-white border border-white/10'
+                      }`}
+                    >
+                      <span>{c.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Grilla de Productos */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {productosFiltrados.map((prod) => (
+                  <div
+                    key={prod.id}
+                    className="bg-[#12121c] border border-white/10 hover:border-purple-500/40 rounded-2xl overflow-hidden shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between group"
+                  >
+                    <div
+                      onClick={() => {
+                        setSelectedProduct(prod);
+                        setDetailQty(1);
+                        if (prod.presentaciones && prod.presentaciones.length > 0) {
+                          setSelectedSize(prod.presentaciones[0].label);
+                        } else {
+                          setSelectedSize('');
+                        }
+                      }}
+                      className="aspect-square w-full overflow-hidden bg-black/40 relative cursor-pointer"
+                    >
+                      <img
+                        src={prod.image}
+                        alt={prod.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    </div>
+
+                    <div className="p-3.5 flex-1 flex flex-col justify-between">
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400 block">
+                          {prod.category}
+                        </span>
+                        <h4 className="text-xs sm:text-sm font-bold text-white line-clamp-2 mt-0.5">
+                          {prod.title}
+                        </h4>
+                      </div>
+
+                      <div className="pt-3 mt-2 border-t border-white/10 flex items-center justify-between gap-2">
+                        <div>
+                          {prod.presentaciones && prod.presentaciones.length > 0 && (
+                            <span className="text-[9px] text-gray-400 block">Desde</span>
+                          )}
+                          <span className="text-sm font-black text-white">
+                            S/ {prod.price.toFixed(2)}
+                          </span>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            setSelectedProduct(prod);
+                            setDetailQty(1);
+                            if (prod.presentaciones && prod.presentaciones.length > 0) {
+                              setSelectedSize(prod.presentaciones[0].label);
+                            } else {
+                              setSelectedSize('');
+                            }
+                          }}
+                          className="w-8 h-8 rounded-xl bg-purple-600 hover:bg-purple-500 text-white flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-md"
+                        >
+                          <span className="material-symbols-outlined text-base">add</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════════
+            VISTA 2: APARTADO DE CARTELERA COMPLETA (ORDEN CRONOLÓGICO)
+           ══════════════════════════════════════════════════════════════ */}
+        {vista === 'cartelera_completa' && (
+          <div className="space-y-6 animate-in fade-in duration-200">
+            {/* Header del Apartado Cronológico */}
+            <div className="bg-[#11111a] border border-white/10 p-4 sm:p-6 rounded-3xl space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <button
+                  onClick={() => setVista('inicio')}
+                  className="flex items-center gap-1.5 text-xs font-bold text-purple-300 hover:text-white transition-colors self-start cursor-pointer px-3 py-1.5 rounded-full bg-white/5 border border-white/10"
+                >
+                  <span className="material-symbols-outlined text-base">arrow_back</span>
+                  <span>Volver a la Tienda & Carta</span>
+                </button>
+
+                <span className="px-3 py-1.5 rounded-xl bg-purple-950/70 border border-purple-500/30 text-purple-300 text-xs font-bold self-start sm:self-auto">
                   {eventosOrdenados.length} Fechas Programadas
                 </span>
               </div>
+
+              <div>
+                <span className="text-[10px] uppercase tracking-widest text-purple-400 font-black flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-sm">confirmation_number</span>
+                  Cartelera Oficial en Orden Cronológico
+                </span>
+                <h2 className="text-xl sm:text-3xl font-black text-white uppercase tracking-tight mt-1">
+                  Todos los Próximos Eventos
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-400 mt-1 max-w-2xl leading-relaxed">
+                  Consulta todas las fechas programadas organizadas del evento más próximo al más lejano. Selecciona cualquiera para ver tipos de entradas, aforo y reserva de boxes VIP.
+                </p>
+              </div>
+
+              {/* Buscador de Eventos */}
+              <div className="relative max-w-md pt-2">
+                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-base">
+                  search
+                </span>
+                <input
+                  type="text"
+                  placeholder="Buscar evento por artista, fiesta o fecha..."
+                  value={searchEventoQuery}
+                  onChange={(e) => setSearchEventoQuery(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2.5 rounded-full bg-[#181824] border border-white/15 text-white placeholder-gray-500 text-xs focus:outline-none focus:border-purple-500 transition-all"
+                />
+              </div>
             </div>
 
-            {/* Grilla de Eventos (Cartelera) */}
+            {/* Grilla Completa de Fechas en Cronológico */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {eventosOrdenados.map((evt) => (
+              {eventosFiltradosCartelera.map((evt) => (
                 <div
                   key={evt.id}
                   className="bg-[#12121c] border border-white/10 hover:border-purple-500/50 rounded-2xl overflow-hidden shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col group relative"
@@ -699,7 +1087,7 @@ export default function CarteleraTemplate({ store, initialProductId }: Cartelera
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#12121c] via-transparent to-black/20" />
 
-                    {/* Fecha Destacada Estilo Calendario Neón en la esquina inferior */}
+                    {/* Fecha Destacada Estilo Calendario Neón */}
                     <div className="absolute bottom-3 left-3 z-10 flex items-center gap-2.5 bg-black/85 backdrop-blur-md border border-purple-500/40 px-3 py-1.5 rounded-xl shadow-2xl">
                       <div className="text-center pr-2 border-r border-white/20">
                         <span className="block text-[9px] font-black uppercase tracking-widest text-purple-400">
@@ -778,152 +1166,6 @@ export default function CarteleraTemplate({ store, initialProductId }: Cartelera
                           <span className="material-symbols-outlined text-sm">arrow_forward</span>
                         </button>
                       </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Banner Informativo para el Administrador / Dueño */}
-            <div className="bg-gradient-to-r from-purple-950/40 via-[#10101d] to-indigo-950/40 border border-purple-500/20 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-300">
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-purple-400 text-2xl">event_available</span>
-                <div>
-                  <strong className="text-white block text-sm">¿Cómo subir nuevos eventos a tu cartelera?</strong>
-                  <span>
-                    Puedes subir eventos como productos en tu catálogo (categoría &quot;Eventos&quot;) o programarlos en la Agenda del Superadmin.
-                  </span>
-                </div>
-              </div>
-              <a
-                href="/admin"
-                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold shrink-0 transition-all"
-              >
-                Panel de Administración
-              </a>
-            </div>
-          </div>
-        )}
-
-        {/* ══════════════════════════════════════════════════════════════
-            PESTAÑA 2: CARTA DE BEBIDAS, BOTELLAS & BOXES VIP
-           ══════════════════════════════════════════════════════════════ */}
-        {tabActiva === 'carta' && (
-          <div className="space-y-6">
-            {/* Buscador de Tragos / Botellas */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="relative flex-1 max-w-md">
-                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-lg">
-                  search
-                </span>
-                <input
-                  type="text"
-                  placeholder="Buscar trago, botella, combo o pique..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-full bg-[#11111a] border border-white/10 text-white placeholder-gray-500 text-xs focus:outline-none focus:border-purple-500 transition-all"
-                />
-              </div>
-
-              {/* Botón rápido para volver a ver eventos */}
-              <button
-                onClick={() => setTabActiva('eventos')}
-                className="text-xs text-purple-300 font-bold hover:underline flex items-center gap-1 self-start sm:self-center"
-              >
-                <span className="material-symbols-outlined text-sm">arrow_back</span>
-                <span>Ver Próximos Eventos</span>
-              </button>
-            </div>
-
-            {/* Categorías que SÍ tienen productos */}
-            {categoriasCarta.length > 0 && (
-              <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-2">
-                <button
-                  onClick={() => setActiveCategory('all')}
-                  className={`px-4 py-2 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                    activeCategory === 'all'
-                      ? 'bg-purple-600 text-white shadow-[0_0_12px_rgba(139,92,246,0.4)]'
-                      : 'bg-[#12121c] text-gray-400 hover:text-white border border-white/10'
-                  }`}
-                >
-                  Todo ({allProducts.length})
-                </button>
-                {categoriasCarta.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => setActiveCategory(c.id)}
-                    className={`px-4 py-2 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
-                      activeCategory === c.id
-                        ? 'bg-purple-600 text-white shadow-[0_0_12px_rgba(139,92,246,0.4)]'
-                        : 'bg-[#12121c] text-gray-400 hover:text-white border border-white/10'
-                    }`}
-                  >
-                    <span>{c.label}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Grilla de Productos de la Carta */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {productosFiltrados.map((prod) => (
-                <div
-                  key={prod.id}
-                  className="bg-[#12121c] border border-white/10 hover:border-purple-500/40 rounded-2xl overflow-hidden shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between group"
-                >
-                  <div
-                    onClick={() => {
-                      setSelectedProduct(prod);
-                      setDetailQty(1);
-                      if (prod.presentaciones && prod.presentaciones.length > 0) {
-                        setSelectedSize(prod.presentaciones[0].label);
-                      } else {
-                        setSelectedSize('');
-                      }
-                    }}
-                    className="aspect-square w-full overflow-hidden bg-black/40 relative cursor-pointer"
-                  >
-                    <img
-                      src={prod.image}
-                      alt={prod.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-
-                  <div className="p-3.5 flex-1 flex flex-col justify-between">
-                    <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400 block">
-                        {prod.category}
-                      </span>
-                      <h4 className="text-xs sm:text-sm font-bold text-white line-clamp-2 mt-0.5">
-                        {prod.title}
-                      </h4>
-                    </div>
-
-                    <div className="pt-3 mt-2 border-t border-white/10 flex items-center justify-between gap-2">
-                      <div>
-                        {prod.presentaciones && prod.presentaciones.length > 0 && (
-                          <span className="text-[9px] text-gray-400 block">Desde</span>
-                        )}
-                        <span className="text-sm font-black text-white">
-                          S/ {prod.price.toFixed(2)}
-                        </span>
-                      </div>
-
-                      <button
-                        onClick={() => {
-                          setSelectedProduct(prod);
-                          setDetailQty(1);
-                          if (prod.presentaciones && prod.presentaciones.length > 0) {
-                            setSelectedSize(prod.presentaciones[0].label);
-                          } else {
-                            setSelectedSize('');
-                          }
-                        }}
-                        className="w-8 h-8 rounded-xl bg-purple-600 hover:bg-purple-500 text-white flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-md"
-                      >
-                        <span className="material-symbols-outlined text-base">add</span>
-                      </button>
                     </div>
                   </div>
                 </div>
@@ -1298,7 +1540,7 @@ export default function CarteleraTemplate({ store, initialProductId }: Cartelera
 
                   <button
                     onClick={handleCheckoutWhatsApp}
-                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(160,185,129,0.3)] transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-lg">chat</span>
                     <span>Confirmar Reserva por WhatsApp</span>

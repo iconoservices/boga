@@ -166,7 +166,8 @@ body { transition: padding-left 0.2s ease; }
    pie, barra lateral, chat). layout.tsx marca <html data-tienda> antes del primer paint.
    `display: contents` hace que el contenedor no altere el layout donde sí se muestra. */
 .boga-chrome { display: contents; }
-html[data-tienda] .boga-chrome { display: none !important; }
+html[data-tienda] .boga-chrome,
+html[data-tienda] aside[aria-label="Plaza BogaHub"] { display: none !important; }
 
 /* Feedback al agregar un plato al pedido (templates/shared/AddFeedback.tsx).
    Solo transform/opacity; se apagan con "reducir movimiento". */

@@ -44,6 +44,14 @@ export default function StoreRenderer({ store: initialStore, initialProductId }:
     setStore(initialStore);
   }, [initialStore]);
 
+  // Asegurar que dentro de una tienda o preview no se muestre el marco/chat de BogaHub
+  useEffect(() => {
+    document.documentElement.dataset.tienda = '1';
+    return () => {
+      delete document.documentElement.dataset.tienda;
+    };
+  }, []);
+
   // Update favicon dynamically when store changes
   useEffect(() => {
     // La pestaña y los íconos de la página llevan siempre el logo de la tienda. Solo el ícono de "Agregar a inicio" del

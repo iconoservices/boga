@@ -130,19 +130,20 @@ export default function PlazaChatBubble() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen]);
 
-  // No mostrar en rutas administrativas
+  // No mostrar en rutas administrativas ni en previsualizaciones de plantillas
   if (
     pathname.startsWith('/admin') ||
     pathname.startsWith('/superadmin') ||
-    pathname.startsWith('/negocios')
+    pathname.startsWith('/negocios') ||
+    pathname.startsWith('/preview')
   ) {
     return null;
   }
 
   // Tampoco dentro de una tienda: ni en bogahub.app/<tienda> ni en su dirección propia
-  // (<tienda>.bogahub.app, donde la portada "/" es la tienda). El chat es de la plaza de BogaHub.
+  // (<tienda>.bogahub.app, donde la portada "/" es la tienda) ni en /preview/<plantilla>.
   const primero = pathname.split('/')[1] || '';
-  const enTienda = primero !== '' && !RUTAS_DE_BOGAHUB.has(primero);
+  const enTienda = (primero !== '' && !RUTAS_DE_BOGAHUB.has(primero)) || primero === 'preview';
   if (enTienda || enDireccionDeTienda !== false) return null;
 
   const filteredMessages =
