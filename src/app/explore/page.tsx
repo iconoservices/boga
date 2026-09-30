@@ -11,6 +11,8 @@ import { hrefTienda, esFuera } from '@/lib/tiendaUrl';
 import MarketSecciones from '@/components/MarketSecciones';
 import MarketBannerSlider from '@/components/MarketBannerSlider';
 import ServiciosContenido from '@/components/ServiciosContenido';
+import { useFavoritos } from '@/lib/useFavoritos';
+import PedirCuentaModal from '@/components/PedirCuentaModal';
 
 // useSearchParams exige un Suspense a su alrededor al compilar.
 export default function Explore() {
@@ -33,6 +35,8 @@ function ExploreContenido() {
   const { addToCart, cartCount, setIsCartOpen } = useCart();
   const [addedItems, setAddedItems] = useState<Record<string, boolean>>({});
   const [activeSort, setActiveSort] = useState('Populares');
+  const { esFavorito, alternar } = useFavoritos();
+  const [pedirCuenta, setPedirCuenta] = useState(false);
 
   type StoreDataType = { name: string, slug: string, category: string, macroCat: string, time: string, delivery: string, logo: string, externalUrl?: string, products: { name: string, price: string, original?: string, img: string, status?: string }[] };
   const [storeData, setStoreData] = useState<StoreDataType[]>([]);
@@ -120,44 +124,56 @@ function ExploreContenido() {
           'Mercado': [],
           'Salud': [],
           'Moda': [],
+          'Tecnología': [],
+          'Hogar': [],
           'Servicios': []
+        };
+
+        // Clasifica mirando primero el producto (nombre y categoría) y solo después la tienda:
+        // así una tienda de variedades no mete todo en la misma fila.
+        const macroDeProducto = (nombre: string, categoria: string, catTienda: string, esServicio: boolean): string => {
+          const t = `${nombre} ${categoria}`.toLowerCase();
+          const tiene = (...ks: string[]) => ks.some((k) => t.includes(k));
+          if (esServicio || catTienda.includes('servicio') || tiene('servicio')) return 'Servicios';
+          if (tiene('reloj', 'ropa', 'vestido', 'blusa', 'polo', 'pantal', 'short', 'falda', 'camisa', 'casaca', 'zapat', 'zapatill', 'sandal', 'calzado', 'cartera', 'mochila', 'morral', 'bolso', 'lentes', 'collar', 'arete', 'anillo', 'pulsera', 'joya', 'accesorio', 'enteriz', 'conjunto', 'gorra', 'cinturon', 'cinturón')) return 'Moda';
+          if (tiene('celular', 'audífono', 'audifono', 'cargador', 'cable', 'parlante', 'laptop', 'tablet', 'teclado', 'mouse', 'usb', 'cámara', 'camara', 'smart', 'bluetooth', 'tecnolog', 'electr')) return 'Tecnología';
+          if (tiene('hogar', 'decorac', 'lámpara', 'lampara', 'mueble', 'menaje', 'sábana', 'sabana', 'cortina', 'limpieza')) return 'Hogar';
+          if (tiene('salud', 'medic', 'suplement', 'vitamin', 'cuidado', 'crema', 'shampoo', 'perfum', 'maquill', 'belleza', 'uñas', 'unas')) return 'Salud';
+          if (tiene('cerveza', 'licor', 'vino', 'pisco', 'cóctel', 'coctel', 'gaseosa', 'jugo', 'bebida', 'café', 'cafe', 'refresco')) return 'Bebidas';
+          if (tiene('pollo', 'pizza', 'hamburg', 'menú', 'menu', 'almuerzo', 'desayuno', 'combo', 'comida', 'cocina', 'plato', 'sandwich', 'sándwich', 'postre', 'torta', 'ceviche', 'juane')) return 'Comida';
+          if (tiene('fruta', 'verdura', 'carne', 'lácteo', 'lacteo', 'huevo', 'abarrote', 'condimento', 'especia', 'mercado')) return 'Mercado';
+          // Sin pistas en el producto: manda la categoría de la tienda
+          if (catTienda.includes('moda') || catTienda.includes('boutique')) return 'Moda';
+          if (catTienda.includes('salud') || catTienda.includes('belleza')) return 'Salud';
+          if (catTienda.includes('restaurante') || catTienda.includes('comida')) return 'Comida';
+          if (catTienda.includes('tecnolog')) return 'Tecnología';
+          if (catTienda.includes('hogar')) return 'Hogar';
+          return 'Mercado';
         };
 
         filteredData.forEach((p: any) => {
           const storeDef = allStores[p.store];
-          let macroCat = 'Mercado';
-
           const storeCategory = storeDef?.marketplaceCategory?.toLowerCase() || '';
-          const productCategory = p.category?.toLowerCase() || '';
+          const macroCat = macroDeProducto(p.name || '', p.category || '', storeCategory, p.es_servicio === true);
+          const enOferta = p.price_anterior > 0 && p.price_anterior > p.price;
 
-          if (p.es_servicio === true || storeCategory.includes('servicio') || productCategory.includes('servicio')) {
-            macroCat = 'Servicios';
-          } else if (storeCategory.includes('moda') || productCategory.includes('ropa') || productCategory.includes('vestido') || storeCategory.includes('boutique')) {
-            macroCat = 'Moda';
-          } else if (storeCategory.includes('salud') || productCategory.includes('salud') || storeCategory.includes('belleza')) {
-            macroCat = 'Salud';
-          } else if (storeCategory.includes('restaurante') || productCategory.includes('comida') || productCategory.includes('cocina')) {
-            macroCat = 'Comida';
-          } else if (productCategory.includes('bebida') || productCategory.includes('bar') || productCategory.includes('café')) {
-            macroCat = 'Bebidas';
-          } else if (storeCategory.includes('mercado') || productCategory.includes('fruta') || productCategory.includes('carne')) {
-            macroCat = 'Mercado';
-          }
-
-          if (newSectionsProducts[macroCat]) {
-            newSectionsProducts[macroCat].push({
-              name: p.name,
-              price: `S/ ${p.price.toFixed(2)}`,
-              original: p.price_anterior > 0 ? `S/ ${Number(p.price_anterior).toFixed(2)}` : undefined,
-              badge: 'Nuevo',
-              img: p.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80',
-              status: p.status || 'Activo',
-              store: storeDef?.name || p.store,
-              logo: storeDef?.logoImage || '',
-              slug: p.store,
-              externalUrl: storeDef?.externalUrl,
-            });
-          }
+          const item = {
+            id: p.id,
+            name: p.name,
+            price: `S/ ${p.price.toFixed(2)}`,
+            priceNum: p.price,
+            original: p.price_anterior > 0 ? `S/ ${Number(p.price_anterior).toFixed(2)}` : undefined,
+            badge: enOferta ? 'Oferta' : 'Nuevo',
+            img: p.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80',
+            status: p.status || 'Activo',
+            store: storeDef?.name || p.store,
+            logo: storeDef?.logoImage || '',
+            slug: p.store,
+            externalUrl: storeDef?.externalUrl,
+          };
+          newSectionsProducts[macroCat].push(item);
+          // Las ofertas también salen en la fila de Promos
+          if (enOferta && macroCat !== 'Combos & Promos') newSectionsProducts['Combos & Promos'].push(item);
         });
 
         setSections(prev => {
@@ -173,6 +189,8 @@ function ExploreContenido() {
                 if (catId === 'Moda') title = 'Moda y Estilo 👗';
                 if (catId === 'Salud') title = 'Salud y Bienestar 💊';
                 if (catId === 'Servicios') title = 'Servicios 🛠️';
+                if (catId === 'Tecnología') title = 'Tecnología 🎧';
+                if (catId === 'Hogar') title = 'Hogar y Decoración 🏠';
                 
                 updated.push({
                   id: catId,
@@ -189,6 +207,15 @@ function ExploreContenido() {
     };
     fetchRealData();
   }, []);
+
+  // Favoritos ligados a la cuenta: sin sesión se abre un aviso para entrar / crear cuenta (sin salir de la página)
+  const toggleFavorito = (e: React.MouseEvent, p: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!p.id) return;
+    const ok = alternar({ store: p.slug, id: p.id, name: p.name, price: p.priceNum, image: p.img });
+    if (!ok) setPedirCuenta(true);
+  };
 
   const handleAddToCartWithAnim = (product: any) => {
     addToCart(product);
@@ -208,6 +235,8 @@ function ExploreContenido() {
     { id: 'Mercado',         name: 'Mercado',         icon: 'storefront'       },
     { id: 'Salud',           name: 'Salud',           icon: 'medical_services' },
     { id: 'Moda',            name: 'Moda',            icon: 'apparel'          },
+    { id: 'Tecnología',      name: 'Tecnología',      icon: 'headphones'       },
+    { id: 'Hogar',           name: 'Hogar',           icon: 'chair'            },
     { id: 'Servicios',       name: 'Servicios',       icon: 'handyman'         },
   ];
 
@@ -255,6 +284,16 @@ function ExploreContenido() {
       { name: 'Camisas',        icon: 'checkroom'       },
       { name: 'Accesorios',     icon: 'shopping_bag'    },
     ],
+    'Tecnología': [
+      { name: 'Audífonos',      icon: 'headphones'      },
+      { name: 'Cargadores',     icon: 'battery_charging_full' },
+      { name: 'Celulares',      icon: 'smartphone'      },
+    ],
+    'Hogar': [
+      { name: 'Decoración',     icon: 'chair'           },
+      { name: 'Cocina',         icon: 'kitchen'         },
+      { name: 'Limpieza',       icon: 'cleaning_services'},
+    ],
     'Servicios': [
       { name: 'Limpieza',       icon: 'cleaning_services'},
       { name: 'Reparación',     icon: 'build'           },
@@ -266,7 +305,7 @@ function ExploreContenido() {
     ? Object.values(subCategories).flat()
     : subCategories[activeCategory] || [];
 
-  type SectionType = { id: string, title: string, link?: string, products: { name: string, price: string, original?: string, badge?: string, img: string, status?: string, store?: string, logo?: string }[] };
+  type SectionType = { id: string, title: string, link?: string, products: { id?: string, slug?: string, priceNum?: number, name: string, price: string, original?: string, badge?: string, img: string, status?: string, store?: string, logo?: string }[] };
   // Sin productos de muestra: cada sección se llena con lo que hay en la base y la que queda vacía no se muestra.
   const [sections, setSections] = useState<SectionType[]>([
     { id: 'Combos & Promos', title: 'Promos & Combos 🏷️', link: '/promotions', products: [] },
@@ -277,6 +316,7 @@ function ExploreContenido() {
 
   return (
     <>
+      <PedirCuentaModal abierto={pedirCuenta} onCerrar={() => setPedirCuenta(false)} motivo="guardar tus favoritos" volverA="/explore" />
       <AppHeader 
         cartCount={cartCount}
         onCartClick={() => setIsCartOpen(true)}
@@ -528,6 +568,14 @@ function ExploreContenido() {
                       <div className="relative aspect-square overflow-hidden bg-surface-container-low">
                         <img className={`w-full h-full object-cover ${p.status === 'Agotado' ? 'grayscale opacity-60' : ''}`} src={p.img} alt={p.name} />
                         <div className="absolute top-2 left-2 bg-[#dc3225] text-white text-[10px] font-black px-2 py-0.5 rounded-lg">{p.badge}</div>
+                        <button
+                          type="button"
+                          onClick={(e) => toggleFavorito(e, p)}
+                          aria-label={esFavorito(p.slug, p.id) ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+                          className="absolute top-2 right-2 w-8 h-8 bg-white/85 backdrop-blur rounded-full flex items-center justify-center shadow-sm active:scale-90 transition-transform z-10"
+                        >
+                          <span className="material-symbols-outlined text-[18px]" style={{ color: esFavorito(p.slug, p.id) ? '#dc2626' : undefined, fontVariationSettings: esFavorito(p.slug, p.id) ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
+                        </button>
                         {p.store && (
                           <div className="absolute bottom-2 left-2 bg-white/95 backdrop-blur-sm shadow-sm rounded-lg px-2 py-1 flex items-center gap-1 border border-surface-container-highest">
                             {p.logo ? (
@@ -640,6 +688,14 @@ function ExploreContenido() {
                   <div className="relative aspect-square overflow-hidden bg-surface-container-low p-4">
                     <img className={`w-full h-full object-contain ${p.status === 'Agotado' ? 'grayscale opacity-60' : ''}`} src={p.img} alt={p.name} />
                     <div className="absolute top-2 left-2 bg-[#dc3225] text-white text-[10px] font-black px-2 py-0.5 rounded-lg">{p.badge}</div>
+                    <button
+                      type="button"
+                      onClick={(e) => toggleFavorito(e, p)}
+                      aria-label={esFavorito(p.slug, p.id) ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+                      className="absolute top-2 right-2 w-8 h-8 bg-white/85 backdrop-blur rounded-full flex items-center justify-center shadow-sm active:scale-90 transition-transform z-10"
+                    >
+                      <span className="material-symbols-outlined text-[18px]" style={{ color: esFavorito(p.slug, p.id) ? '#dc2626' : undefined, fontVariationSettings: esFavorito(p.slug, p.id) ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
+                    </button>
                     {p.store && (
                       <div className="absolute bottom-2 left-2 bg-white/95 backdrop-blur-sm shadow-sm rounded-lg px-2 py-1 flex items-center gap-1 border border-surface-container-highest">
                         {p.logo ? (
