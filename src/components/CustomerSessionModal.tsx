@@ -46,12 +46,14 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
   // Sincronizar datos si el usuario de Supabase / Google está conectado
   useEffect(() => {
     if (user) {
-      const nombreUser = user.user_metadata?.name || user.user_metadata?.full_name || '';
+      const nombreUser = user.user_metadata?.full_name || user.user_metadata?.name || '';
       const emailUser = user.email || '';
       setForm((prev) => ({
         ...prev,
-        nombre: prev.nombre || nombreUser,
-        email: emailUser || prev.email,
+        nombre: (prev.nombre.trim() && prev.nombre !== 'Invitado') ? prev.nombre : (nombreUser || cliente?.nombre || ''),
+        email: emailUser || prev.email || cliente?.email || '',
+        telefono: prev.telefono || cliente?.telefono || '',
+        direccion: prev.direccion || cliente?.direccion || '',
       }));
     } else if (cliente) {
       setForm({
@@ -82,6 +84,11 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
   const handleGoogleLogin = async () => {
     setErrorAuth(null);
     setCargandoAuth(true);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('boga_reopen_customer_modal', 'true');
+      } catch {}
+    }
     const { error } = await signInWithGoogle(window.location.href);
     setCargandoAuth(false);
     if (error) {

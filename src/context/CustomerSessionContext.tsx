@@ -21,6 +21,7 @@ type CustomerSessionContextType = {
 const CustomerSessionContext = createContext<CustomerSessionContextType | undefined>(undefined);
 
 const CLAVE_CLIENTE_LOCAL = 'boga_cliente_datos';
+const CLAVE_REABRIR_MODAL = 'boga_reopen_customer_modal';
 
 export function CustomerSessionProvider({ children }: { children: React.ReactNode }) {
   const [cliente, setCliente] = useState<DatosCliente | null>(null);
@@ -35,18 +36,46 @@ export function CustomerSessionProvider({ children }: { children: React.ReactNod
       }
     } catch {}
 
-    // Si además tiene sesión en Supabase, sincronizar
-    supabase.auth.getSession().then(({ data }) => {
-      const u = data?.session?.user;
-      if (u) {
-        setCliente((prev) => ({
-          nombre: prev?.nombre || u.user_metadata?.full_name || u.user_metadata?.name || '',
-          telefono: prev?.telefono || u.user_metadata?.phone || '',
+    const syncUsuario = (u: any) => {
+      if (!u) return;
+      const nombreGoogle = u.user_metadata?.full_name || u.user_metadata?.name || '';
+      const emailGoogle = u.email || '';
+      const phoneGoogle = u.user_metadata?.phone || u.phone || '';
+
+      setCliente((prev) => {
+        const nombreFinal = (prev?.nombre && prev.nombre !== 'Invitado') ? prev.nombre : (nombreGoogle || prev?.nombre || '');
+        const nuevo: DatosCliente = {
+          nombre: nombreFinal,
+          telefono: prev?.telefono || phoneGoogle,
           direccion: prev?.direccion || '',
-          email: u.email || prev?.email || '',
-        }));
-      }
+          email: emailGoogle || prev?.email || '',
+        };
+        try {
+          localStorage.setItem(CLAVE_CLIENTE_LOCAL, JSON.stringify(nuevo));
+        } catch {}
+        return nuevo;
+      });
+    };
+
+    // Sincronizar al montar
+    supabase.auth.getSession().then(({ data }) => {
+      syncUsuario(data?.session?.user);
     });
+
+    // Sincronizar en tiempo real cuando cambia el estado de auth
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      syncUsuario(newSession?.user);
+    });
+
+    // Auto reabrir modal si venía de iniciar sesión con Google en esta tienda
+    try {
+      if (localStorage.getItem(CLAVE_REABRIR_MODAL) === 'true') {
+        localStorage.removeItem(CLAVE_REABRIR_MODAL);
+        setModalAbierto(true);
+      }
+    } catch {}
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const guardarCliente = (datos: DatosCliente) => {
@@ -60,6 +89,7 @@ export function CustomerSessionProvider({ children }: { children: React.ReactNod
     setCliente(null);
     try {
       localStorage.removeItem(CLAVE_CLIENTE_LOCAL);
+      localStorage.removeItem(CLAVE_REABRIR_MODAL);
     } catch {}
     supabase.auth.signOut().catch(() => {});
   };

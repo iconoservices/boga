@@ -18,6 +18,53 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+const CLAVE_RETURN_URL = 'boga_auth_return_url';
+
+function restaurarReturnUrl(sess: Session | null) {
+  if (!sess || typeof window === 'undefined') return;
+  try {
+    const returnUrl = localStorage.getItem(CLAVE_RETURN_URL);
+    if (!returnUrl) return;
+
+    let targetPath = returnUrl;
+    let targetPathname = '';
+    try {
+      const parsed = new URL(returnUrl, window.location.origin);
+      // Validar que sea del mismo origen (seguridad anti-open redirect)
+      if (parsed.origin !== window.location.origin) {
+        localStorage.removeItem(CLAVE_RETURN_URL);
+        return;
+      }
+      targetPath = parsed.pathname + parsed.search + parsed.hash;
+      targetPathname = parsed.pathname;
+    } catch {
+      if (!returnUrl.startsWith('/')) {
+        localStorage.removeItem(CLAVE_RETURN_URL);
+        return;
+      }
+      targetPathname = returnUrl.split('?')[0].split('#')[0];
+    }
+
+    // Verificar si ya estamos en la misma ruta y los mismos query params
+    const currentFull = window.location.pathname + window.location.search;
+    const targetQuery = targetPath.includes('?') ? targetPath.substring(targetPath.indexOf('?')).split('#')[0] : '';
+    const targetFull = targetPathname + targetQuery;
+
+    if (currentFull === targetFull) {
+      localStorage.removeItem(CLAVE_RETURN_URL);
+      return;
+    }
+
+    // Limpiar antes de redirigir para evitar bucles infinitos
+    localStorage.removeItem(CLAVE_RETURN_URL);
+
+    // Redirigir de inmediato a la tienda o página previa
+    window.location.replace(targetPath);
+  } catch (err) {
+    console.error('Error restaurando URL previa tras auth:', err);
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -26,11 +73,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setLoading(false);
+      if (data.session) {
+        restaurarReturnUrl(data.session);
+      }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
       setSession(newSession);
       setLoading(false);
+      if (newSession && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+        restaurarReturnUrl(newSession);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -70,14 +123,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Entrar con la cuenta de Google: un toque, sin escribir correo ni contraseña. Redirige a Google y vuelve a
-  // redirectTo con la sesión armada. Requiere el proveedor Google activo en Supabase (Authentication → Providers)
-  // y redirectTo dentro de las URLs permitidas.
+  // redirectTo con la sesión armada. Guarda target en storage para restaurar si Supabase cae en la home.
   const signInWithGoogle: AuthContextValue['signInWithGoogle'] = async (redirectTo) => {
-    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } });
+    const target = redirectTo || (typeof window !== 'undefined' ? window.location.href : '/');
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(CLAVE_RETURN_URL, target);
+      } catch {}
+    }
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: target,
+      },
+    });
     return { error: error ? error.message : null };
   };
 
   const signOut = async () => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem(CLAVE_RETURN_URL);
+      } catch {}
+    }
     await supabase.auth.signOut();
   };
 
