@@ -40,6 +40,7 @@ const META: Record<string, { emoji: string; cat: string }> = {
   atelier:      { emoji: '🧥', cat: 'Moda' },
   lookbook:     { emoji: '🖼️', cat: 'Moda' },
   discoteca:    { emoji: '🪩', cat: 'Nocturno' },
+  cartelera:    { emoji: '🎟️', cat: 'Nocturno' },
   sweetkittynails: { emoji: '💅', cat: 'Beauty' },
   menudirecto: { emoji: '🍔', cat: 'Restaurantes' },
   iniciocatalogo: { emoji: '🔥', cat: 'Restaurantes' },
@@ -60,6 +61,7 @@ const CATEGORY_ICONS: Record<string, string> = {
 const STORE_DETAILS: Record<string, { location: string; date: string; icon: string }> = {
   sunset:   { location: 'Buenos Aires, AR', date: '12 Oct 2023', icon: 'storefront' },
   discoteca:{ location: 'Pucallpa, PE',     date: 'Hoy',         icon: 'nightlife' },
+  cartelera:{ location: 'Pucallpa, PE',     date: 'Hoy',         icon: 'confirmation_number' },
   delva:    { location: 'Santiago, CL',     date: '14 Oct 2023', icon: 'shopping_bag' },
   natura:   { location: 'Bogotá, CO',        date: '15 Oct 2023', icon: 'bakery_dining' },
   amazonia: { location: 'Lima, PE',          date: '18 Oct 2023', icon: 'storefront' },

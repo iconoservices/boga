@@ -51,6 +51,7 @@ export function tipoPresentacionDe(categoria: unknown, template?: unknown): Tipo
 
   if (
     t === 'discoteca' ||
+    t === 'cartelera' ||
     /bebid|jugo|cafe|coctel|trago|cerveza|refresc|batido|smoothie|frappe|vaso|chicha|emolient|cholao|infusion|licuado|gaseosa|botella|whisky|vodka|ron|gin|tequila|box/.test(c)
   ) {
     return 'bebida';
@@ -62,7 +63,7 @@ export function tipoPresentacionDe(categoria: unknown, template?: unknown): Tipo
 /** Elige los botones rápidos según la categoría o plantilla del producto. */
 export function presentacionesSugeridas(categoria: unknown, template?: unknown): string[] {
   const t = typeof template === 'string' ? template.toLowerCase() : '';
-  if (t === 'discoteca') return PRESENTACIONES_SUGERIDAS_DISCOTECA;
+  if (t === 'discoteca' || t === 'cartelera') return PRESENTACIONES_SUGERIDAS_DISCOTECA;
   const tipo = tipoPresentacionDe(categoria, template);
   switch (tipo) {
     case 'calzado': return PRESENTACIONES_SUGERIDAS_CALZADO;
@@ -150,7 +151,7 @@ export const claveLinea = (id: string, label?: string) => (label ? `${id}|${labe
 // Solo estas tienen el selector para el cliente; en las demás el producto se vendería al precio "desde".
 // `condimentos` es la que vende todo por peso: ahí el formulario de productos abre las presentaciones desde el inicio.
 const PLANTILLAS_CON_PRESENTACIONES = [
-  'condimentos', 'mercado', 'estilosmirka', 'mirkavisual', 'atelier', 'lookbook', 'discoteca',
+  'condimentos', 'mercado', 'estilosmirka', 'mirkavisual', 'atelier', 'lookbook', 'discoteca', 'cartelera',
   // las del motor compartido (templates/shared): el modal del producto trae el selector de medida
   'default', 'menudirecto', 'polleria', 'iniciocatalogo', 'fichadigital', 'fichaplana', 'veterinaria',
 ];

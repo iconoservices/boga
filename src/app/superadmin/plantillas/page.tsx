@@ -75,6 +75,11 @@ const TEMPLATE_PRESENTATION: Record<string, { category?: string; description: st
     description: 'Club nocturno, lounge y discoteca con estética neón dark luxury. Portada 100% visual y limpia para flyers de eventos, boxes VIP, combos con energizantes y tragos.',
     previewUrl: 'https://images.unsplash.com/photo-1566737236500-c8ac43014a67?w=600&q=80',
   },
+  cartelera: {
+    category: 'Nocturno',
+    description: 'Cartelera de conciertos y eventos de club con fechas ordenadas cronológicamente. Venta de preventas, selección de entradas/boxes y carta de botellas.',
+    previewUrl: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600&q=80',
+  },
   polleria: {
     category: 'Gourmet',
     description: 'Estilo cálido y rústico optimizado para pollerías, parrilladas y restaurantes de comida rápida con fotos grandes y navegación fluida.',
