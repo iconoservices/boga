@@ -262,8 +262,8 @@ export default function Home() {
   };
 
   const macroCategories = [
-    { id: 'Todas',           name: 'Todas',           icon: 'grid_view'        },
-    { id: 'Combos & Promos', name: 'Promos',          icon: 'loyalty'          },
+    { id: 'Todas',           name: 'Descubrir',       icon: 'explore'          },
+    { id: 'Combos & Promos', name: 'Promos y Combos', icon: 'loyalty'          },
     { id: 'Comida',          name: 'Comida',          icon: 'restaurant'       },
     { id: 'Bebidas',         name: 'Bebidas',         icon: 'local_bar'        },
     { id: 'Mercado',         name: 'Mercado',         icon: 'storefront'       },

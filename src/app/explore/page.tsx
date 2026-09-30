@@ -282,8 +282,8 @@ function ExploreContenido() {
   };
 
   const macroCategories = [
-    { id: 'Todas',           name: 'Todas',           icon: 'grid_view'        },
-    { id: 'Combos & Promos', name: 'Promos',          icon: 'loyalty'          },
+    { id: 'Todas',           name: 'Descubrir',       icon: 'explore'          },
+    { id: 'Combos & Promos', name: 'Promos y Combos', icon: 'loyalty'          },
     { id: 'Comida',          name: 'Comida',          icon: 'restaurant'       },
     { id: 'Bebidas',         name: 'Bebidas',         icon: 'local_bar'        },
     { id: 'Mercado',         name: 'Mercado',         icon: 'storefront'       },
@@ -393,7 +393,7 @@ function ExploreContenido() {
         {/* Adaptive Macro-Categories Selector */}
         <section className="flex flex-col gap-2 transition-all duration-500 lg:min-w-0 lg:[[data-banner]+&]:col-span-1">
           <div className="flex justify-between items-center px-1">
-            <h2 className="font-headline-sm text-sm text-on-surface">Categorías Principales</h2>
+            <h2 className="font-headline-sm text-sm text-on-surface">{activeCategory === 'Todas' ? 'Secciones' : 'Categorías'}</h2>
             <div className="flex items-center gap-3 shrink-0">
                 {activeCategory !== 'Todas' && (
                 <Link
@@ -433,8 +433,8 @@ function ExploreContenido() {
                 aria-current="page"
                 className="flex flex-col items-center justify-center gap-1 py-2 px-1.5 rounded-xl shadow-md bg-primary text-white border border-primary"
               >
-                <span className="material-symbols-outlined text-xl lg:text-4xl text-white">grid_view</span>
-                <span className="font-label-md text-[10px] lg:text-sm leading-tight text-white">Todo</span>
+                <span className="material-symbols-outlined text-xl lg:text-4xl text-white">explore</span>
+                <span className="font-label-md text-[10px] lg:text-sm leading-tight text-white">Descubrir</span>
               </div>
               {([
                 { href: '/market', nombre: 'Comprar', icon: 'shopping_bag' },
@@ -488,7 +488,9 @@ function ExploreContenido() {
                     }
                     ${isActive 
                       ? 'bg-primary text-white border-primary shadow-md' 
-                      : 'bg-white border border-surface-container-highest text-secondary'
+                      : cat.id === 'Combos & Promos'
+                        ? 'bg-primary-fixed border border-primary/25 text-primary'
+                        : 'bg-white border border-surface-container-highest text-secondary'
                     }
                   `}
                 >
