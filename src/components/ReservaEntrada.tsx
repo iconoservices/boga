@@ -5,11 +5,15 @@
 // puerta. Ver memoria eventos-ticketing para el resto del plan (promotores,
 // pasarela de pago, etc. — nivel 2, no está acá).
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
 import { supabase } from '@/lib/supabase';
 
-export default function ReservaEntrada({ eventoId }: { eventoId: string }) {
+function ReservaEntradaContenido({ eventoId }: { eventoId: string }) {
+  const searchParams = useSearchParams();
+  const promotorRef = searchParams.get('ref') || searchParams.get('promo') || searchParams.get('promotor') || '';
+
   const [abierto, setAbierto] = useState(false);
   const [nombre, setNombre] = useState('');
   const [telefono, setTelefono] = useState('');
@@ -23,14 +27,34 @@ export default function ReservaEntrada({ eventoId }: { eventoId: string }) {
     setEnviando(true);
     setError('');
 
-    const { data, error: rpcError } = await supabase.rpc('reservar_ticket', {
-      p: { event_id: eventoId, nombre: nombre.trim(), telefono: telefono.trim() || null },
-    });
-
-    setEnviando(false);
-    if (rpcError) { setError(rpcError.message); return; }
-    const fila = Array.isArray(data) ? data[0] : data;
-    setToken(fila?.token ?? null);
+    try {
+      const res = await fetch('/api/eventos/reservar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event_id: eventoId,
+          nombre: nombre.trim(),
+          telefono: telefono.trim() || undefined,
+          promotor: promotorRef || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        // Fallback directo a supabase RPC
+        const { data: rpcData, error: rpcError } = await supabase.rpc('reservar_ticket', {
+          p: { event_id: eventoId, nombre: nombre.trim(), telefono: telefono.trim() || null },
+        });
+        if (rpcError) throw new Error(rpcError.message);
+        const fila = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+        setToken(fila?.token ?? null);
+      } else {
+        setToken(data.token);
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Error al reservar entrada');
+    } finally {
+      setEnviando(false);
+    }
   };
 
   if (token) {
@@ -87,3 +111,12 @@ export default function ReservaEntrada({ eventoId }: { eventoId: string }) {
     </form>
   );
 }
+
+export default function ReservaEntrada({ eventoId }: { eventoId: string }) {
+  return (
+    <Suspense fallback={<div className="text-xs text-center py-2 opacity-50">Cargando reserva…</div>}>
+      <ReservaEntradaContenido eventoId={eventoId} />
+    </Suspense>
+  );
+}
+

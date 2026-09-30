@@ -6,6 +6,9 @@ import React, { useState, useEffect } from 'react';
 import PixelEvent from '@/components/PixelEvent';
 import AvisoTiendaMovida from '@/components/AvisoTiendaMovida';
 import PedidoEnviadoSheet from '@/components/PedidoEnviadoSheet';
+import { CustomerSessionProvider } from '@/context/CustomerSessionContext';
+import CustomerSessionModal from '@/components/CustomerSessionModal';
+import CustomerAccountButton from '@/components/CustomerAccountButton';
 
 // Lazy load templates so only the needed one is downloaded
 const SunsetTemplate = dynamic(() => import('@/templates/sunset/SunsetTemplate'));
@@ -168,7 +171,7 @@ export default function StoreRenderer({ store: initialStore, initialProductId }:
   })();
 
   return (
-    <>
+    <CustomerSessionProvider>
       <PixelEvent
         event="ViewContent"
         data={{
@@ -180,6 +183,8 @@ export default function StoreRenderer({ store: initialStore, initialProductId }:
       />
       <AvisoTiendaMovida nombre={store.name} />
       <PedidoEnviadoSheet />
+      <CustomerSessionModal storeSlug={store.slug} storeName={store.name} />
+      <CustomerAccountButton />
       {template}
       <a
         href="/negocios?ref=menu"
@@ -189,6 +194,6 @@ export default function StoreRenderer({ store: initialStore, initialProductId }:
       >
         Menú digital creado por <strong className="text-gray-800">Boga</strong> · <span className="underline">Pide el tuyo aquí</span>
       </a>
-    </>
+    </CustomerSessionProvider>
   );
 }
