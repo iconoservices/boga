@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useCustomerSession, DatosCliente } from '@/context/CustomerSessionContext';
 import { useAuth } from '@/context/AuthContext';
 import { leerMisPedidos, PedidoLocal } from '@/lib/pedidos';
+import { CLAVE_REABRIR_MODAL, setAuthCookie } from '@/lib/authCookies';
 
 interface Props {
   storeSlug: string;
@@ -86,7 +87,8 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
     setCargandoAuth(true);
     if (typeof window !== 'undefined') {
       try {
-        localStorage.setItem('boga_reopen_customer_modal', 'true');
+        setAuthCookie(CLAVE_REABRIR_MODAL, 'true');
+        localStorage.setItem(CLAVE_REABRIR_MODAL, 'true');
       } catch {}
     }
     const { error } = await signInWithGoogle(window.location.href);

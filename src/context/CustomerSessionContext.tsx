@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { CLAVE_REABRIR_MODAL, getAuthCookie, deleteAuthCookie } from '@/lib/authCookies';
 
 export type DatosCliente = {
   nombre: string;
@@ -21,7 +22,6 @@ type CustomerSessionContextType = {
 const CustomerSessionContext = createContext<CustomerSessionContextType | undefined>(undefined);
 
 const CLAVE_CLIENTE_LOCAL = 'boga_cliente_datos';
-const CLAVE_REABRIR_MODAL = 'boga_reopen_customer_modal';
 
 export function CustomerSessionProvider({ children }: { children: React.ReactNode }) {
   const [cliente, setCliente] = useState<DatosCliente | null>(null);
@@ -69,7 +69,9 @@ export function CustomerSessionProvider({ children }: { children: React.ReactNod
 
     // Auto reabrir modal si venía de iniciar sesión con Google en esta tienda
     try {
-      if (localStorage.getItem(CLAVE_REABRIR_MODAL) === 'true') {
+      const debeReabrir = getAuthCookie(CLAVE_REABRIR_MODAL) === 'true' || localStorage.getItem(CLAVE_REABRIR_MODAL) === 'true';
+      if (debeReabrir) {
+        deleteAuthCookie(CLAVE_REABRIR_MODAL);
         localStorage.removeItem(CLAVE_REABRIR_MODAL);
         setModalAbierto(true);
       }
@@ -90,6 +92,7 @@ export function CustomerSessionProvider({ children }: { children: React.ReactNod
     try {
       localStorage.removeItem(CLAVE_CLIENTE_LOCAL);
       localStorage.removeItem(CLAVE_REABRIR_MODAL);
+      deleteAuthCookie(CLAVE_REABRIR_MODAL);
     } catch {}
     supabase.auth.signOut().catch(() => {});
   };

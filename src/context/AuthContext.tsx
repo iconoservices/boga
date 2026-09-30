@@ -4,6 +4,15 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 
+import {
+  CLAVE_AUTH_RETURN,
+  setAuthCookie,
+  getAuthCookie,
+  deleteAuthCookie,
+  esDestinoInternoValido,
+  construirUrlRetornoConSesion,
+} from '@/lib/authCookies';
+
 interface AuthContextValue {
   user: User | null;
   session: Session | null;
@@ -18,48 +27,54 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const CLAVE_RETURN_URL = 'boga_auth_return_url';
-
 function restaurarReturnUrl(sess: Session | null) {
   if (!sess || typeof window === 'undefined') return;
   try {
-    const returnUrl = localStorage.getItem(CLAVE_RETURN_URL);
+    const returnUrl = getAuthCookie(CLAVE_AUTH_RETURN) || localStorage.getItem(CLAVE_AUTH_RETURN);
     if (!returnUrl) return;
 
-    let targetPath = returnUrl;
-    let targetPathname = '';
-    try {
-      const parsed = new URL(returnUrl, window.location.origin);
-      // Validar que sea del mismo origen (seguridad anti-open redirect)
-      if (parsed.origin !== window.location.origin) {
-        localStorage.removeItem(CLAVE_RETURN_URL);
-        return;
-      }
-      targetPath = parsed.pathname + parsed.search + parsed.hash;
-      targetPathname = parsed.pathname;
-    } catch {
-      if (!returnUrl.startsWith('/')) {
-        localStorage.removeItem(CLAVE_RETURN_URL);
-        return;
-      }
-      targetPathname = returnUrl.split('?')[0].split('#')[0];
-    }
-
-    // Verificar si ya estamos en la misma ruta y los mismos query params
-    const currentFull = window.location.pathname + window.location.search;
-    const targetQuery = targetPath.includes('?') ? targetPath.substring(targetPath.indexOf('?')).split('#')[0] : '';
-    const targetFull = targetPathname + targetQuery;
-
-    if (currentFull === targetFull) {
-      localStorage.removeItem(CLAVE_RETURN_URL);
+    // Validar que sea un destino interno permitido (mismo host o subdominio de bogahub.app)
+    if (!esDestinoInternoValido(returnUrl)) {
+      deleteAuthCookie(CLAVE_AUTH_RETURN);
+      localStorage.removeItem(CLAVE_AUTH_RETURN);
       return;
     }
 
-    // Limpiar antes de redirigir para evitar bucles infinitos
-    localStorage.removeItem(CLAVE_RETURN_URL);
+    let targetHref = returnUrl;
+    if (returnUrl.startsWith('/') && !returnUrl.startsWith('//')) {
+      targetHref = `${window.location.origin}${returnUrl}`;
+    }
 
-    // Redirigir de inmediato a la tienda o página previa
-    window.location.replace(targetPath);
+    let parsedTarget: URL;
+    try {
+      parsedTarget = new URL(targetHref, window.location.origin);
+    } catch {
+      deleteAuthCookie(CLAVE_AUTH_RETURN);
+      localStorage.removeItem(CLAVE_AUTH_RETURN);
+      return;
+    }
+
+    const hostActual = window.location.hostname.toLowerCase();
+    const hostDestino = parsedTarget.hostname.toLowerCase();
+
+    // Si ya estamos exactamente en el mismo host y misma ruta (pathname + query), no redirigir
+    const currentFull = window.location.pathname + window.location.search;
+    const targetFull = parsedTarget.pathname + parsedTarget.search;
+    if (hostActual === hostDestino && currentFull === targetFull) {
+      deleteAuthCookie(CLAVE_AUTH_RETURN);
+      localStorage.removeItem(CLAVE_AUTH_RETURN);
+      return;
+    }
+
+    // Consumir el returnUrl para no crear bucles
+    deleteAuthCookie(CLAVE_AUTH_RETURN);
+    localStorage.removeItem(CLAVE_AUTH_RETURN);
+
+    // Preparar URL final (inyecta tokens en hash si navega a un subdominio diferente)
+    const urlFinal = construirUrlRetornoConSesion(targetHref, sess);
+
+    // Redirigir de inmediato al subdominio o página previa
+    window.location.replace(urlFinal);
   } catch (err) {
     console.error('Error restaurando URL previa tras auth:', err);
   }
@@ -96,8 +111,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       options: { data: { name } },
     });
     if (error) return { error: error.message, needsEmailConfirm: false };
-    // Si el proyecto tiene "Confirm email" activado en Supabase, signUp no
-    // devuelve sesion todavia: hay que avisarle al usuario que revise su correo.
     return { error: null, needsEmailConfirm: !data.session };
   };
 
@@ -106,29 +119,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: error ? error.message : null };
   };
 
-  // Sin contraseña: manda un link al correo. Al tocarlo, Supabase abre
-  // redirectTo con la sesion ya armada en la URL — el cliente la detecta
-  // solo (detectSessionInUrl viene activado por defecto).
   const signInWithMagicLink: AuthContextValue['signInWithMagicLink'] = async (email, redirectTo) => {
     const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } });
     return { error: error ? error.message : null };
   };
 
-  // Manda un correo con un link para poner una contraseña nueva. Al tocarlo,
-  // Supabase abre redirectTo con una sesion de recuperacion en la URL — ahi
-  // recien se puede llamar updateUser({ password }) para fijarla.
   const resetPassword: AuthContextValue['resetPassword'] = async (email, redirectTo) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
     return { error: error ? error.message : null };
   };
 
-  // Entrar con la cuenta de Google: un toque, sin escribir correo ni contraseña. Redirige a Google y vuelve a
-  // redirectTo con la sesión armada. Guarda target en storage para restaurar si Supabase cae en la home.
+  // Entrar con la cuenta de Google: guarda el destino tanto en cookies (.bogahub.app)
+  // como en localStorage para garantizar el retorno incluso entre subdominios
   const signInWithGoogle: AuthContextValue['signInWithGoogle'] = async (redirectTo) => {
     const target = redirectTo || (typeof window !== 'undefined' ? window.location.href : '/');
     if (typeof window !== 'undefined') {
       try {
-        localStorage.setItem(CLAVE_RETURN_URL, target);
+        setAuthCookie(CLAVE_AUTH_RETURN, target);
+        localStorage.setItem(CLAVE_AUTH_RETURN, target);
       } catch {}
     }
     const { error } = await supabase.auth.signInWithOAuth({
@@ -143,7 +151,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     if (typeof window !== 'undefined') {
       try {
-        localStorage.removeItem(CLAVE_RETURN_URL);
+        deleteAuthCookie(CLAVE_AUTH_RETURN);
+        localStorage.removeItem(CLAVE_AUTH_RETURN);
       } catch {}
     }
     await supabase.auth.signOut();
