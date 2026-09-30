@@ -147,6 +147,7 @@ export default function Home() {
             name: p.name,
             price: `S/ ${p.price.toFixed(2)}`,
             original: p.price_anterior > 0 ? `S/ ${Number(p.price_anterior).toFixed(2)}` : undefined,
+            rubro: macroCat,
             badge: enOferta ? 'Oferta' : 'Nuevo',
             img: p.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80'
           };
@@ -325,7 +326,7 @@ export default function Home() {
     ],
   };
 
-  const currentSubCategories = activeCategory === 'Todas' 
+  const subBase = activeCategory === 'Todas' 
     ? Object.values(subCategories).flat() 
     : subCategories[activeCategory] || [];
 
@@ -340,6 +341,34 @@ export default function Home() {
     { id: 'Bebidas',         title: 'Bebidas & Piqueos 🥤',                    products: [] },
     { id: 'Mercado',         title: 'Mercado Fresco 🥬',                       products: [] },
   ]);
+
+  // Dentro de Promos y Combos las "subcategorías" son los rubros que tienen ofertas ahora mismo;
+  // en el resto, las de siempre. Tocar una filtra los productos de la lista (tocarla otra vez la quita).
+  const norm = (t: string) => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const rubrosConOferta = Array.from(new Set(((sections.find((x) => x.id === 'Combos & Promos')?.products || []) as any[]).map((x) => x.rubro).filter(Boolean))) as string[];
+  const currentSubCategories: { name: string; icon: string }[] = activeCategory === 'Combos & Promos'
+    ? rubrosConOferta.map((r) => ({ name: r, icon: macroCategories.find((c) => c.id === r)?.icon || 'sell' }))
+    : subBase;
+  const [subSel, setSubSel] = useState<{ cat: string; sub: string } | null>(null);
+  const subActiva = subSel && subSel.cat === activeCategory ? subSel.sub : null;
+  const productosVista = (prods: any[]) => {
+    let lista = prods;
+    if (subActiva) {
+      if (activeCategory === 'Combos & Promos') lista = prods.filter((x) => x.rubro === subActiva);
+      else {
+        const k = norm(subActiva);
+        const raiz = k.slice(0, Math.max(4, k.length - 2));
+        lista = prods.filter((x) => norm(String(x.name || '')).includes(raiz));
+      }
+    }
+    // Orden elegido arriba (Populares = el orden en que vienen)
+    const precio = (x: any) => parseFloat(String(x.price ?? '').replace(/[^\d.]/g, '')) || 0;
+    if (activeSort === 'Menor Precio') return [...lista].sort((a, b) => precio(a) - precio(b));
+    if (activeSort === 'A-Z') return [...lista].sort((a, b) => norm(String(a.name || '')).localeCompare(norm(String(b.name || ''))));
+    if (activeSort === 'Nuevos') return [...lista].reverse();
+    return lista;
+  };
+
 
   return (
     <>
@@ -400,36 +429,38 @@ export default function Home() {
           </section>
 
           {/* Specific Sub-Categories (Filtered): solo salen cuando eligen una categoría; con «Todas» estorban. */}
-          {activeCategory !== 'Todas' && (
-          <section className="hide-scrollbar overflow-x-auto flex gap-4 items-start w-full px-container-margin lg:px-0">
+          {activeCategory !== 'Todas' && currentSubCategories.length > 0 && (
+          <section className="hide-scrollbar overflow-x-auto w-full px-container-margin lg:px-0">
             <div
-              className={`py-1 ${showAllSubCategories ? 'flex flex-wrap gap-x-3 gap-y-2.5 justify-start w-full' : 'flex gap-3 items-center'}`}
+              className={`py-0.5 ${showAllSubCategories ? 'flex flex-wrap gap-2' : 'flex gap-2 items-center'}`}
               style={{ scrollbarWidth: 'none' }}
             >
-              <div 
+              <button
+                type="button"
                 onClick={() => setShowAllSubCategories(!showAllSubCategories)}
-                className="flex flex-col items-center gap-1 shrink-0 group cursor-pointer active:scale-90 transition-transform"
+                className="shrink-0 h-8 w-8 rounded-full bg-primary-fixed text-primary flex items-center justify-center shadow-sm active:scale-90 transition-transform"
+                aria-label={showAllSubCategories ? 'Ver menos' : 'Ver todo'}
               >
-                <div className="w-11 h-11 rounded-full bg-primary-fixed flex items-center justify-center text-primary shadow-sm">
-                  <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                    {showAllSubCategories ? 'unfold_less' : 'unfold_more'}
-                  </span>
-                </div>
-                <span className="text-primary font-label-md text-[10px] text-center leading-tight mt-0.5">
-                  {showAllSubCategories ? 'Ver menos' : 'Ver todo'}
+                <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  {showAllSubCategories ? 'unfold_less' : 'unfold_more'}
                 </span>
-              </div>
-
-              {currentSubCategories.map((sub, idx) => (
-                <div key={idx} className="flex flex-col items-center gap-1 shrink-0 group cursor-pointer active:scale-90 transition-transform">
-                  <div className="w-11 h-11 rounded-full bg-white border border-surface-container-highest flex items-center justify-center text-on-surface shadow-sm group-hover:border-primary group-hover:shadow-md transition-all">
-                    <span className="material-symbols-outlined text-[18px]">
-                      {sub.icon}
-                    </span>
-                  </div>
-                  <span className="text-secondary font-label-md text-[10px] text-center leading-tight mt-0.5">{sub.name}</span>
-                </div>
-              ))}
+              </button>
+              {currentSubCategories.map((sub, idx) => {
+                const activa = subActiva === sub.name;
+                return (
+                  <button
+                    type="button"
+                    key={idx}
+                    onClick={() => setSubSel(activa ? null : { cat: activeCategory, sub: sub.name })}
+                    className={`shrink-0 h-8 px-3 rounded-full flex items-center gap-1.5 text-[11px] font-label-md shadow-sm active:scale-95 transition-all border ${
+                      activa ? 'bg-primary text-white border-primary' : 'bg-white text-secondary border-surface-container-highest hover:border-primary'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[16px]" style={{ color: activa ? '#fff' : undefined }}>{sub.icon}</span>
+                    {sub.name}
+                  </button>
+                );
+              })}
             </div>
           </section>
           )}
@@ -607,26 +638,19 @@ export default function Home() {
             </section>
           </div>
         ) : (
-          <section className="flex flex-col gap-6 px-container-margin lg:px-6">
-            <div className="flex flex-col gap-4">
-              <div>
-                <h2 className="font-headline-md text-on-surface">
-                  {sections.find(s => s.id === activeCategory)?.title || activeCategory}
-                </h2>
-                <p className="text-secondary font-body-md text-xs">Mostrando todos los productos disponibles</p>
-              </div>
-
-              <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1" style={{ scrollbarWidth: 'none' }}>
-                <button className="flex items-center justify-center w-8 h-8 rounded-full border border-surface-container-highest bg-white shrink-0 text-on-surface shadow-sm hover:shadow-md transition-all active:scale-95">
-                  <span className="material-symbols-outlined text-[18px]">tune</span>
-                </button>
+          <section className="flex flex-col gap-3 px-container-margin lg:px-6">
+            <div className="flex items-center gap-3 justify-between">
+              <h2 className="font-headline-md text-base text-on-surface shrink-0">
+                {sections.find(s => s.id === activeCategory)?.title || activeCategory}
+              </h2>
+              <div className="flex gap-1.5 overflow-x-auto hide-scrollbar" style={{ scrollbarWidth: 'none' }}>
                 {['Populares', 'Menor Precio', 'Nuevos', 'A-Z'].map(sort => (
-                  <button 
+                  <button
                     key={sort}
                     onClick={() => setActiveSort(sort)}
-                    className={`px-4 py-1.5 rounded-full text-[12px] font-label-md shrink-0 transition-all shadow-sm ${
-                      activeSort === sort 
-                        ? 'bg-primary text-white border border-primary shadow-md' 
+                    className={`px-3 py-1 rounded-full text-[11px] font-label-md shrink-0 transition-all shadow-sm ${
+                      activeSort === sort
+                        ? 'bg-primary text-white border border-primary shadow-md'
                         : 'bg-white border border-surface-container-highest text-secondary hover:shadow-md'
                     }`}
                   >
@@ -635,15 +659,15 @@ export default function Home() {
                 ))}
               </div>
             </div>
-            
-            {(sections.find(s => s.id === activeCategory)?.products || []).length === 0 && (
+
+            {productosVista(sections.find(s => s.id === activeCategory)?.products || []).length === 0 && (
               <div className="py-16 flex flex-col items-center justify-center text-center gap-2">
                 <span className="material-symbols-outlined text-4xl text-secondary/40">storefront</span>
                 <p className="text-secondary font-body-md text-sm">Todavía no hay productos de tiendas dinámicas en esta categoría.</p>
               </div>
             )}
             <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-stack-lg">
-              {(sections.find(s => s.id === activeCategory)?.products || []).map((p, idx) => {
+              {productosVista(sections.find(s => s.id === activeCategory)?.products || []).map((p: any, idx) => {
                 const isFav = esFav(p);
                 return (
                   <div key={idx} className="bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col">
