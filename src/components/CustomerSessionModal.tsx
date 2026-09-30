@@ -70,9 +70,9 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
   }, [user, cliente]);
 
   useEffect(() => {
-    const guardado = user?.user_metadata?.promos_tiendas?.[storeSlug];
-    setPromos(guardado === true);
-  }, [user, storeSlug]);
+    const deCuenta = user?.user_metadata?.promos_tiendas?.[storeSlug];
+    setPromos(user ? deCuenta === true : cliente?.promos === true);
+  }, [user, storeSlug, cliente]);
 
   useEffect(() => {
     if (modalAbierto) {
@@ -146,7 +146,7 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
 
   const handleSubmitDatos = (e: React.FormEvent) => {
     e.preventDefault();
-    guardarCliente(form);
+    guardarCliente({ ...form, promos });
     if (user) {
       const previas = user.user_metadata?.promos_tiendas || {};
       supabase.auth.updateUser({ data: { promos_tiendas: { ...previas, [storeSlug]: promos } } }).catch(() => {});
@@ -458,13 +458,17 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
                 </div>
               ) : (
                 <div className="p-3 bg-gray-50 border border-gray-200 rounded-2xl flex items-center justify-between gap-2">
-                  <p className="text-xs text-gray-600">Modo invitado en este celular</p>
+                  <p className="text-xs text-gray-600 leading-snug">
+                    <strong className="text-gray-900">Modo invitado en este celular</strong>
+                    <br />
+                    Crea tu cuenta para guardar tus favoritos y pedidos.
+                  </p>
                   <button
                     type="button"
                     onClick={() => setModoInvitado(false)}
                     className="text-xs font-bold text-primary hover:underline"
                   >
-                    Iniciar sesión
+                    Crear cuenta
                   </button>
                 </div>
               )}
@@ -518,7 +522,6 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
                   />
                 </div>
 
-                {user && (
                   <label className="flex items-start gap-2 p-3 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer">
                     <input
                       type="checkbox"
@@ -532,7 +535,7 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
                       Opcional. Puedes cambiarlo cuando quieras.
                     </span>
                   </label>
-                )}
+
 
                 <p className="text-[10px] text-gray-400 leading-snug">
                   {storeName} usa tu nombre, WhatsApp y dirección solo para entregarte tu pedido. {user ? 'Tus datos se guardan en tu cuenta BogaHub.' : 'Tus datos se guardan solo en este celular.'}

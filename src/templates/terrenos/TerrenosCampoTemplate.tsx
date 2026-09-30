@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import type { StoreConfig } from '@/lib/stores.config';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
+import { useAuth } from '@/context/AuthContext';
+import { useCustomerSession } from '@/context/CustomerSessionContext';
 import { inicialesDe } from '../shared/tokens';
 import { useTerrenos, areaDe, precioTerreno, descripcionLimpia } from './useTerrenos';
 import DetalleTerreno from './DetalleTerreno';
@@ -19,13 +21,16 @@ export default function TerrenosCampoTemplate({ store, initialProductId }: { sto
   const t = store.theme;
   const c = useTerrenos(store, initialProductId);
 
-  // Corazón de favoritos: se guarda solo en este navegador (sin cuenta).
+  // Corazón de favoritos: requiere cuenta (sin sesión abre el modal de entrar / crear cuenta).
+  const { user } = useAuth();
+  const { setModalAbierto } = useCustomerSession();
   const favKey = `terrenos_fav_${store.slug}`;
   const [favs, setFavs] = useState<string[]>([]);
   useEffect(() => {
     try { setFavs(JSON.parse(localStorage.getItem(favKey) || '[]')); } catch { /* sin storage: queda vacío */ }
   }, [favKey]);
   const toggleFav = (id: string) => {
+    if (!user) { setModalAbierto(true); return; }
     setFavs((prev) => {
       const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
       try { localStorage.setItem(favKey, JSON.stringify(next)); } catch { /* idem */ }

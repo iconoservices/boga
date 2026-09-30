@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 
 import { fetchCatalogo } from '@/lib/catalogo';
 import { MarketCityBanner } from '@/components/CityWaitlist';
@@ -13,6 +14,7 @@ import { hrefTienda, esFuera } from '@/lib/tiendaUrl';
 
 export default function Home() {
   const router = useRouter();
+  const { user } = useAuth();
   const [activeCategory, setActiveCategory] = useState('Todas');
   const [showAllSubCategories, setShowAllSubCategories] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
@@ -185,6 +187,11 @@ export default function Home() {
   }, []);
 
   const toggleFavorite = (product: any) => {
+    // Los favoritos son de la cuenta: sin sesión se manda a iniciar o crear cuenta
+    if (!user) {
+      router.push('/login?redirect=/market');
+      return;
+    }
     const isFav = favorites.some(f => String(f.id) === String(product.id));
     let updated;
     if (isFav) {
