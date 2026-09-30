@@ -17,6 +17,9 @@ type CustomerSessionContextType = {
   cerrarSesion: () => void;
   modalAbierto: boolean;
   setModalAbierto: (abierto: boolean) => void;
+  // La plantilla trae su propio botón de cuenta dentro del encabezado: el flotante se oculta
+  cuentaEnEncabezado: boolean;
+  setCuentaEnEncabezado: (v: boolean) => void;
 };
 
 const CustomerSessionContext = createContext<CustomerSessionContextType | undefined>(undefined);
@@ -26,6 +29,7 @@ const CLAVE_CLIENTE_LOCAL = 'boga_cliente_datos';
 export function CustomerSessionProvider({ children }: { children: React.ReactNode }) {
   const [cliente, setCliente] = useState<DatosCliente | null>(null);
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [cuentaEnEncabezado, setCuentaEnEncabezado] = useState(false);
 
   // Cargar datos guardados del cliente
   useEffect(() => {
@@ -105,6 +109,8 @@ export function CustomerSessionProvider({ children }: { children: React.ReactNod
         cerrarSesion,
         modalAbierto,
         setModalAbierto,
+        cuentaEnEncabezado,
+        setCuentaEnEncabezado,
       }}
     >
       {children}

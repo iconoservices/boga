@@ -1,5 +1,6 @@
 'use client';
 
+import CustomerAccountButton from '@/components/CustomerAccountButton';
 import React, { useState, useEffect } from 'react';
 import type { StoreConfig } from '@/lib/stores.config';
 import { TXT, ICON, inicialesDe } from './tokens';
@@ -114,6 +115,7 @@ export default function StoreHeader({
               </span>
               <CartBadge t={t} count={cartCount} className="absolute -top-1 -right-1 min-w-4 h-4 px-1 text-[9px]" />
             </button>
+            <CustomerAccountButton variant="encabezado" background={`${t.primary}15`} color={t.primary} />
           </div>
         </div>
       </header>
@@ -134,6 +136,7 @@ export default function StoreHeader({
             </p>
           </div>
         </div>
+        <CustomerAccountButton variant="encabezado" background={`${t.primary}15`} color={t.primary} />
       </header>
 
       {/* En Pedidos el aviso sobra: ya se ve el carrito. */}

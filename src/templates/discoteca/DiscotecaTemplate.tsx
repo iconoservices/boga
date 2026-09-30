@@ -1,5 +1,6 @@
 'use client';
 
+import CustomerAccountButton from '@/components/CustomerAccountButton';
 import React, { useState, useEffect, useMemo } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
 import { fetchProductosDeTienda } from '@/lib/catalogo';
@@ -345,6 +346,7 @@ export default function DiscotecaTemplate({ store, initialProductId }: Discoteca
                 </span>
               )}
             </button>
+            <CustomerAccountButton variant="encabezado" />
           </div>
         </div>
       </header>

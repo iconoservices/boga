@@ -8,6 +8,7 @@ import { debeMostrarDemo } from '@/lib/demo';
 import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
+import CustomerAccountButton from '@/components/CustomerAccountButton';
 import { useDetalleProducto } from '../shared/useDetalleProducto';
 import { leerPresentaciones } from '@/lib/presentaciones';
 
@@ -336,6 +337,7 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
                 </span>
               )}
             </button>
+            <CustomerAccountButton variant="encabezado" />
           </div>
         </div>
       </header>

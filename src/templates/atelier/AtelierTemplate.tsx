@@ -8,6 +8,7 @@ import { debeMostrarDemo } from '@/lib/demo';
 import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
+import CustomerAccountButton from '@/components/CustomerAccountButton';
 import { estrellasDe } from '../shared/tokens';
 import { useDetalleProducto } from '../shared/useDetalleProducto';
 import { leerPresentaciones } from '@/lib/presentaciones';
@@ -370,6 +371,7 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
                 S/ {cartTotal.toFixed(2)}
               </span>
             </button>
+            <CustomerAccountButton variant="encabezado" />
           </div>
         </div>
       </header>
