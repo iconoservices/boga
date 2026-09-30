@@ -46,7 +46,7 @@ export const PRODUCTOS_MOSTRADOR: ProductoMostrador[] = [
     para: 'Restaurantes y pollerías',
     descripcion: 'Reemplaza la carta de papel o el PDF. La compartes por link o QR y el cliente pide desde su celular.',
     beneficios: ['Fotos y precios siempre al día', 'Pedido directo a tu WhatsApp', 'QR listo para imprimir', 'Sin comisión por venta'],
-    plantillas: ['polleria', 'menudirecto', 'fichadigital', 'fichaplana', 'iniciocatalogo', 'sunset'],
+    plantillas: ['polleria', 'menudirecto', 'fichadigital', 'fichaplana', 'iniciocatalogo', 'sunset', 'discoteca'],
     estado: 'listo',
   },
   {

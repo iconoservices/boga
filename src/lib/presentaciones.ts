@@ -18,6 +18,9 @@ export const PRESENTACIONES_SUGERIDAS = PRESENTACIONES_SUGERIDAS_PESO;
 /** Botones rápidos para bebidas (tamaño de vaso): medidas de onzas y litros. */
 export const PRESENTACIONES_SUGERIDAS_BEBIDAS = ['12 oz', '14 oz', '16 oz', '20 oz', '1 L'];
 
+/** Botones rápidos para discoteca / night club (botellas, combos, pases). */
+export const PRESENTACIONES_SUGERIDAS_DISCOTECA = ['Botella Sola', 'Combo + 2 Red Bull', 'Combo + 4 Red Bull', 'General', 'VIP'];
+
 /** Botones rápidos para ropa / moda (tallas de prendas). */
 export const PRESENTACIONES_SUGERIDAS_ROPA = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Estándar'];
 
@@ -47,7 +50,8 @@ export function tipoPresentacionDe(categoria: unknown, template?: unknown): Tipo
   }
 
   if (
-    /bebid|jugo|cafe|coctel|trago|cerveza|refresc|batido|smoothie|frappe|vaso|chicha|emolient|cholao|infusion|licuado|gaseosa/.test(c)
+    t === 'discoteca' ||
+    /bebid|jugo|cafe|coctel|trago|cerveza|refresc|batido|smoothie|frappe|vaso|chicha|emolient|cholao|infusion|licuado|gaseosa|botella|whisky|vodka|ron|gin|tequila|box/.test(c)
   ) {
     return 'bebida';
   }
@@ -57,6 +61,8 @@ export function tipoPresentacionDe(categoria: unknown, template?: unknown): Tipo
 
 /** Elige los botones rápidos según la categoría o plantilla del producto. */
 export function presentacionesSugeridas(categoria: unknown, template?: unknown): string[] {
+  const t = typeof template === 'string' ? template.toLowerCase() : '';
+  if (t === 'discoteca') return PRESENTACIONES_SUGERIDAS_DISCOTECA;
   const tipo = tipoPresentacionDe(categoria, template);
   switch (tipo) {
     case 'calzado': return PRESENTACIONES_SUGERIDAS_CALZADO;
@@ -144,7 +150,7 @@ export const claveLinea = (id: string, label?: string) => (label ? `${id}|${labe
 // Solo estas tienen el selector para el cliente; en las demás el producto se vendería al precio "desde".
 // `condimentos` es la que vende todo por peso: ahí el formulario de productos abre las presentaciones desde el inicio.
 const PLANTILLAS_CON_PRESENTACIONES = [
-  'condimentos', 'mercado', 'estilosmirka', 'mirkavisual', 'atelier', 'lookbook',
+  'condimentos', 'mercado', 'estilosmirka', 'mirkavisual', 'atelier', 'lookbook', 'discoteca',
   // las del motor compartido (templates/shared): el modal del producto trae el selector de medida
   'default', 'menudirecto', 'polleria', 'iniciocatalogo', 'fichadigital', 'fichaplana', 'veterinaria',
 ];

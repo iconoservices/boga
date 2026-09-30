@@ -70,6 +70,11 @@ const TEMPLATE_PRESENTATION: Record<string, { category?: string; description: st
     description: 'Boutique con portada 100% visual y limpia (sin textos encima). Ideal para subir banners diseñados a medida en Canva o Photoshop sin interferencias.',
     previewUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&q=80',
   },
+  discoteca: {
+    category: 'Nocturno',
+    description: 'Club nocturno, lounge y discoteca con estética neón dark luxury. Portada 100% visual y limpia para flyers de eventos, boxes VIP, combos con energizantes y tragos.',
+    previewUrl: 'https://images.unsplash.com/photo-1566737236500-c8ac43014a67?w=600&q=80',
+  },
   polleria: {
     category: 'Gourmet',
     description: 'Estilo cálido y rústico optimizado para pollerías, parrilladas y restaurantes de comida rápida con fotos grandes y navegación fluida.',
@@ -118,6 +123,7 @@ const TEMPLATE_PRESENTATION: Record<string, { category?: string; description: st
 const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   Comercio: 'Venta de productos físicos con catálogo visual: moda, mercado, artesanías. Fotos grandes, checkout simple.',
   Gourmet: 'Restaurantes y bares de ambiente cuidado, con identidad visual fuerte propia (no genérica).',
+  Nocturno: 'Discotecas, clubs, lounges y bares nocturnos: boxes VIP, combos con energizantes y flyers de eventos.',
   Negocios: 'Diseño neutro y minimalista para cualquier rubro que todavía no tiene una plantilla especializada.',
   Restaurantes: 'Comida rápida y delivery: menos pasos entre entrar y pedir, categorías de platos siempre a la vista.',
   Inmuebles: 'Terrenos, lotes y casas en venta: buscador por zona, fotos grandes y precio visible; el contacto es por WhatsApp.',
