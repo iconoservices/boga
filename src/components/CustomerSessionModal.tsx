@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useCustomerSession, DatosCliente } from '@/context/CustomerSessionContext';
+import { useAuth } from '@/context/AuthContext';
 import { leerMisPedidos, PedidoLocal } from '@/lib/pedidos';
 
 interface Props {
@@ -11,7 +12,8 @@ interface Props {
 }
 
 export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
-  const { cliente, guardarCliente, cerrarSesion, modalAbierto, setModalAbierto } = useCustomerSession();
+  const { cliente, guardarCliente, cerrarSesion: cerrarClienteLocal, modalAbierto, setModalAbierto } = useCustomerSession();
+  const { user, signInWithGoogle, signIn, signUp, signOut } = useAuth();
 
   const [tab, setTab] = useState<'perfil' | 'pedidos' | 'staff'>('perfil');
   const [form, setForm] = useState<DatosCliente>({
@@ -20,13 +22,32 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
     direccion: '',
     email: '',
   });
+
+  // Estado para login con correo
+  const [mostrarLoginCorreo, setMostrarLoginCorreo] = useState(false);
+  const [esRegistro, setEsRegistro] = useState(false);
+  const [emailAuth, setEmailAuth] = useState('');
+  const [passwordAuth, setPasswordAuth] = useState('');
+  const [nombreAuth, setNombreAuth] = useState('');
+  const [cargandoAuth, setCargandoAuth] = useState(false);
+  const [errorAuth, setErrorAuth] = useState<string | null>(null);
+
   const [guardadoOk, setGuardadoOk] = useState(false);
   const [misPedidos, setMisPedidos] = useState<PedidoLocal[]>([]);
   const [pinStaff, setPinStaff] = useState('');
   const [errorStaff, setErrorStaff] = useState('');
 
+  // Sincronizar datos si el usuario de Supabase / Google está conectado
   useEffect(() => {
-    if (cliente) {
+    if (user) {
+      const nombreUser = user.user_metadata?.name || user.user_metadata?.full_name || '';
+      const emailUser = user.email || '';
+      setForm((prev) => ({
+        ...prev,
+        nombre: prev.nombre || nombreUser,
+        email: emailUser || prev.email,
+      }));
+    } else if (cliente) {
       setForm({
         nombre: cliente.nombre || '',
         telefono: cliente.telefono || '',
@@ -34,20 +55,63 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
         email: cliente.email || '',
       });
     }
-  }, [cliente]);
+  }, [user, cliente]);
 
   useEffect(() => {
     if (modalAbierto) {
       const todos = leerMisPedidos();
-      // Filtrar pedidos de esta tienda
       const deEstaTienda = todos.filter((p) => p.slug === storeSlug || !p.slug);
       setMisPedidos(deEstaTienda);
       setGuardadoOk(false);
       setErrorStaff('');
+      setErrorAuth(null);
     }
   }, [modalAbierto, storeSlug]);
 
   if (!modalAbierto) return null;
+
+  const handleGoogleLogin = async () => {
+    setErrorAuth(null);
+    setCargandoAuth(true);
+    const { error } = await signInWithGoogle(window.location.href);
+    setCargandoAuth(false);
+    if (error) {
+      setErrorAuth('No se pudo conectar con Google. Prueba con correo o completa tus datos.');
+    }
+  };
+
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorAuth(null);
+    setCargandoAuth(true);
+
+    if (esRegistro) {
+      const { error, needsEmailConfirm } = await signUp(emailAuth, passwordAuth, nombreAuth);
+      setCargandoAuth(false);
+      if (error) {
+        setErrorAuth(error);
+        return;
+      }
+      if (needsEmailConfirm) {
+        setErrorAuth('Cuenta creada. Revisa tu correo para confirmarla e iniciar sesión.');
+        return;
+      }
+      setMostrarLoginCorreo(false);
+    } else {
+      const { error } = await signIn(emailAuth, passwordAuth);
+      setCargandoAuth(false);
+      if (error) {
+        setErrorAuth('Correo o contraseña incorrectos');
+        return;
+      }
+      setMostrarLoginCorreo(false);
+    }
+  };
+
+  const handleCerrarSesionCompleta = async () => {
+    cerrarClienteLocal();
+    await signOut();
+  };
 
   const handleSubmitDatos = (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,9 +129,11 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
       setErrorStaff('El PIN debe tener al menos 4 dígitos');
       return;
     }
-    // Redirigir al panel de administración de la tienda
     window.location.href = `/admin?store=${encodeURIComponent(storeSlug)}`;
   };
+
+  const userAvatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+  const userName = user?.user_metadata?.name || user?.user_metadata?.full_name || form.nombre || 'Cliente';
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in font-sans">
@@ -77,11 +143,19 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
       >
         {/* Cabecera */}
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/70">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary text-[24px]">account_circle</span>
+          <div className="flex items-center gap-2.5">
+            {userAvatar ? (
+              <img src={userAvatar} alt="" className="w-8 h-8 rounded-full object-cover border border-gray-300" />
+            ) : (
+              <span className="material-symbols-outlined text-primary text-[26px]">account_circle</span>
+            )}
             <div>
-              <h2 className="text-sm font-extrabold text-gray-900 leading-tight">Mi Cuenta de Cliente</h2>
-              <p className="text-[11px] text-gray-500">{storeName}</p>
+              <h2 className="text-sm font-extrabold text-gray-900 leading-tight">
+                {user ? userName : 'Mi Cuenta en ' + storeName}
+              </h2>
+              <p className="text-[11px] text-gray-500">
+                {user ? user.email : 'Datos guardados y pedidos'}
+              </p>
             </div>
           </div>
           <button
@@ -102,7 +176,7 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
               tab === 'perfil' ? 'text-primary' : 'text-gray-400 hover:text-gray-600'
             }`}
           >
-            Mis Datos de Entrega
+            Datos y Cuenta
             {tab === 'perfil' && <span className="absolute bottom-0 inset-x-0 h-0.5 bg-primary rounded-full" />}
           </button>
 
@@ -132,83 +206,193 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
         {/* Contenido según pestaña */}
         <div className="p-5 overflow-y-auto flex-1 flex flex-col gap-4">
           {tab === 'perfil' && (
-            <form onSubmit={handleSubmitDatos} className="flex flex-col gap-3">
-              <p className="text-xs text-gray-600 leading-relaxed">
-                Guarda tus datos una sola vez. Al pedir por WhatsApp se completarán solos sin tener que volver a escribirlos.
-              </p>
+            <div className="flex flex-col gap-4">
+              {/* Sección de Autenticación BogaHub / Google */}
+              {!user ? (
+                <div className="p-3.5 bg-gray-50 border border-gray-200 rounded-2xl flex flex-col gap-2.5">
+                  <div>
+                    <h3 className="text-xs font-black text-gray-900">Inicia sesión con tu cuenta BogaHub</h3>
+                    <p className="text-[11px] text-gray-500">
+                      Sincroniza tus direcciones y pedidos en todas las tiendas de BogaHub.
+                    </p>
+                  </div>
 
-              <div>
-                <label className="text-[11px] font-bold text-gray-700 uppercase tracking-wide block mb-1">
-                  Tu Nombre o Apodo
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={form.nombre}
-                  onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-                  placeholder="ej: María Torres"
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs text-gray-900 outline-none focus:border-primary focus:bg-white font-medium transition-all"
-                />
-              </div>
+                  {/* Botón de Google */}
+                  <button
+                    type="button"
+                    onClick={handleGoogleLogin}
+                    disabled={cargandoAuth}
+                    className="w-full flex items-center justify-center gap-2.5 bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 font-bold text-xs py-2.5 px-4 rounded-xl shadow-sm active:scale-95 transition-all disabled:opacity-50"
+                  >
+                    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                    </svg>
+                    Continuar con Google
+                  </button>
 
-              <div>
-                <label className="text-[11px] font-bold text-gray-700 uppercase tracking-wide block mb-1">
-                  Celular / WhatsApp
-                </label>
-                <input
-                  type="tel"
-                  required
-                  value={form.telefono}
-                  onChange={(e) => setForm({ ...form, telefono: e.target.value })}
-                  placeholder="ej: 987 654 321"
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs text-gray-900 outline-none focus:border-primary focus:bg-white font-medium transition-all"
-                />
-              </div>
+                  {/* Toggle para correo */}
+                  {!mostrarLoginCorreo ? (
+                    <button
+                      type="button"
+                      onClick={() => setMostrarLoginCorreo(true)}
+                      className="text-[11px] font-semibold text-primary hover:underline text-center"
+                    >
+                      O entrar con correo y contraseña
+                    </button>
+                  ) : (
+                    <form onSubmit={handleEmailAuth} className="flex flex-col gap-2 pt-1 border-t border-gray-200">
+                      {esRegistro && (
+                        <input
+                          type="text"
+                          required
+                          value={nombreAuth}
+                          onChange={(e) => setNombreAuth(e.target.value)}
+                          placeholder="Tu nombre completo"
+                          className="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-gray-900 outline-none focus:border-primary"
+                        />
+                      )}
+                      <input
+                        type="email"
+                        required
+                        value={emailAuth}
+                        onChange={(e) => setEmailAuth(e.target.value)}
+                        placeholder="tu@correo.com"
+                        className="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-gray-900 outline-none focus:border-primary"
+                      />
+                      <input
+                        type="password"
+                        required
+                        value={passwordAuth}
+                        onChange={(e) => setPasswordAuth(e.target.value)}
+                        placeholder="Contraseña"
+                        className="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-gray-900 outline-none focus:border-primary"
+                      />
 
-              <div>
-                <label className="text-[11px] font-bold text-gray-700 uppercase tracking-wide block mb-1">
-                  Dirección de Entrega habitual
-                </label>
-                <textarea
-                  rows={2}
-                  value={form.direccion}
-                  onChange={(e) => setForm({ ...form, direccion: e.target.value })}
-                  placeholder="ej: Jr. Tarapacá 450 (frente al parque)"
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-900 outline-none focus:border-primary focus:bg-white font-medium transition-all resize-none"
-                />
-              </div>
+                      {errorAuth && (
+                        <p className="text-[11px] text-red-600 font-semibold">{errorAuth}</p>
+                      )}
 
-              {guardadoOk && (
-                <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold text-center animate-fade-in flex items-center justify-center gap-1.5">
-                  <span className="material-symbols-outlined text-[16px]">check_circle</span>
-                  ¡Tus datos quedaron guardados para tus pedidos!
+                      <button
+                        type="submit"
+                        disabled={cargandoAuth}
+                        className="w-full bg-gray-900 text-white font-bold text-xs py-2 rounded-lg hover:bg-black active:scale-95 transition-all disabled:opacity-50"
+                      >
+                        {cargandoAuth ? 'Conectando…' : esRegistro ? 'Registrarme en BogaHub' : 'Entrar con correo'}
+                      </button>
+
+                      <div className="flex justify-between items-center text-[10px] text-gray-500 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setEsRegistro(!esRegistro)}
+                          className="hover:underline font-semibold text-primary"
+                        >
+                          {esRegistro ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setMostrarLoginCorreo(false)}
+                          className="hover:underline text-gray-400"
+                        >
+                          Ocultar
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              ) : (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-emerald-600 text-[20px]">verified_user</span>
+                    <div>
+                      <p className="text-xs font-bold text-emerald-900 leading-tight">Cuenta BogaHub Conectada</p>
+                      <p className="text-[10px] text-emerald-700">{user.email}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCerrarSesionCompleta}
+                    className="text-[11px] font-bold text-red-600 hover:text-red-800 underline"
+                  >
+                    Salir
+                  </button>
                 </div>
               )}
 
-              <button
-                type="submit"
-                className="w-full bg-primary text-white font-bold text-xs py-3 rounded-xl hover:opacity-95 active:scale-95 transition-all mt-1 shadow-md shadow-primary/20 flex items-center justify-center gap-1.5"
-              >
-                <span className="material-symbols-outlined text-[18px]">save</span>
-                Guardar mis datos
-              </button>
+              {/* Formulario de Datos de Entrega */}
+              <form onSubmit={handleSubmitDatos} className="flex flex-col gap-3">
+                <div className="border-t border-gray-100 pt-2">
+                  <h4 className="text-xs font-bold text-gray-900">Datos habituales para pedidos WhatsApp</h4>
+                  <p className="text-[11px] text-gray-500">
+                    Se completan solos en cada pedido que hagas en esta tienda.
+                  </p>
+                </div>
 
-              {cliente && (
+                <div>
+                  <label className="text-[11px] font-bold text-gray-700 uppercase tracking-wide block mb-1">
+                    Nombre o Contacto
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={form.nombre}
+                    onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+                    placeholder="ej: María Torres"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-900 outline-none focus:border-primary focus:bg-white font-medium transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-gray-700 uppercase tracking-wide block mb-1">
+                    Celular WhatsApp
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={form.telefono}
+                    onChange={(e) => setForm({ ...form, telefono: e.target.value })}
+                    placeholder="ej: 987 654 321"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-900 outline-none focus:border-primary focus:bg-white font-medium transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-gray-700 uppercase tracking-wide block mb-1">
+                    Dirección de Entrega
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={form.direccion}
+                    onChange={(e) => setForm({ ...form, direccion: e.target.value })}
+                    placeholder="ej: Jr. Tarapacá 450 (frente al parque)"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-900 outline-none focus:border-primary focus:bg-white font-medium transition-all resize-none"
+                  />
+                </div>
+
+                {guardadoOk && (
+                  <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold text-center animate-fade-in flex items-center justify-center gap-1.5">
+                    <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                    ¡Datos guardados con éxito!
+                  </div>
+                )}
+
                 <button
-                  type="button"
-                  onClick={cerrarSesion}
-                  className="text-xs text-gray-400 hover:text-red-500 font-semibold self-center transition-colors pt-1"
+                  type="submit"
+                  className="w-full bg-primary text-white font-bold text-xs py-3 rounded-xl hover:opacity-95 active:scale-95 transition-all mt-1 shadow-md shadow-primary/20 flex items-center justify-center gap-1.5"
                 >
-                  Borrar mis datos guardados
+                  <span className="material-symbols-outlined text-[18px]">save</span>
+                  Guardar mis datos
                 </button>
-              )}
-            </form>
+              </form>
+            </div>
           )}
 
           {tab === 'pedidos' && (
             <div className="flex flex-col gap-3">
               <p className="text-xs text-gray-600">
-                Historial de pedidos realizados en <strong>{storeName}</strong> desde este dispositivo.
+                Historial de pedidos realizados en <strong>{storeName}</strong>.
               </p>
 
               {misPedidos.length === 0 ? (
