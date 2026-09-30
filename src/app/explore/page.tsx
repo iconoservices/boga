@@ -176,6 +176,46 @@ function ExploreContenido() {
           if (enOferta && macroCat !== 'Combos & Promos') newSectionsProducts['Combos & Promos'].push(item);
         });
 
+        // Mezcla para que cada fila se vea variada: se baraja y se intercalan las tiendas
+        // (una de cada una por vuelta) para no ver 12 productos seguidos de la misma tienda.
+        const barajar = <T,>(arr: T[]): T[] => {
+          const a = [...arr];
+          for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+          }
+          return a;
+        };
+        const intercalar = (arr: any[]): any[] => {
+          const porTienda = new Map<string, any[]>();
+          barajar(arr).forEach((it) => {
+            const k = it.slug || it.store || '';
+            if (!porTienda.has(k)) porTienda.set(k, []);
+            porTienda.get(k)!.push(it);
+          });
+          const colas = barajar(Array.from(porTienda.values()));
+          const salida: any[] = [];
+          while (colas.some((c) => c.length > 0)) {
+            colas.forEach((c) => { const x = c.shift(); if (x) salida.push(x); });
+          }
+          return salida;
+        };
+
+        // Filas mixtas: de todas las categorías y tiendas a la vez
+        const todos = Object.keys(newSectionsProducts)
+          .filter((k) => k !== 'Combos & Promos')
+          .flatMap((k) => newSectionsProducts[k]);
+        const mezcla = intercalar(todos);
+        const cortes = [0, 14, 28];
+        const filasMixtas: Record<string, any[]> = {
+          'Para ti': mezcla.slice(cortes[0], cortes[1]),
+          'Descubre más': mezcla.slice(cortes[1], cortes[2]),
+          'Variedad del día': mezcla.slice(cortes[2], cortes[2] + 14),
+        };
+        // Cada categoría también sale mezclada entre tiendas
+        Object.keys(newSectionsProducts).forEach((k) => { newSectionsProducts[k] = intercalar(newSectionsProducts[k]); });
+        Object.keys(filasMixtas).forEach((k) => { if (filasMixtas[k].length >= 4) newSectionsProducts[k] = filasMixtas[k]; });
+
         setSections(prev => {
           const updated = [...prev];
           Object.keys(newSectionsProducts).forEach(catId => {
@@ -191,6 +231,9 @@ function ExploreContenido() {
                 if (catId === 'Servicios') title = 'Servicios 🛠️';
                 if (catId === 'Tecnología') title = 'Tecnología 🎧';
                 if (catId === 'Hogar') title = 'Hogar y Decoración 🏠';
+                if (catId === 'Para ti') title = 'Para ti 🎁';
+                if (catId === 'Descubre más') title = 'Descubre más ✨';
+                if (catId === 'Variedad del día') title = 'Variedad del día 🛍️';
                 
                 updated.push({
                   id: catId,
@@ -200,8 +243,19 @@ function ExploreContenido() {
               }
             }
           });
-          // Ordenadas según lo que hay disponible: primero las que más productos tienen.
-          return updated.sort((x, y) => y.products.length - x.products.length);
+          // Categorías: primero las que más productos tienen. Las filas mixtas se reparten entre ellas
+          // (Para ti arriba del todo) para que el feed se sienta variado de punta a punta.
+          const mixtas = ['Para ti', 'Descubre más', 'Variedad del día'];
+          const porCategoria = updated.filter((x) => !mixtas.includes(x.id)).sort((x, y) => y.products.length - x.products.length);
+          const filasM = mixtas.map((id) => updated.find((x) => x.id === id)).filter(Boolean) as typeof updated;
+          const salida: typeof updated = [];
+          const posiciones = [0, 2, 4];
+          let iCat = 0, iMix = 0;
+          for (let pos = 0; iCat < porCategoria.length || iMix < filasM.length; pos++) {
+            if (iMix < filasM.length && (posiciones.includes(pos) || iCat >= porCategoria.length)) salida.push(filasM[iMix++]);
+            else salida.push(porCategoria[iCat++]);
+          }
+          return salida;
         });
       }
     };
