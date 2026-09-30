@@ -6,6 +6,7 @@ import { useCustomerSession, DatosCliente } from '@/context/CustomerSessionConte
 import { useAuth } from '@/context/AuthContext';
 import { leerMisPedidos, PedidoLocal } from '@/lib/pedidos';
 import { CLAVE_REABRIR_MODAL, setAuthCookie } from '@/lib/authCookies';
+import { supabase } from '@/lib/supabase';
 
 interface Props {
   storeSlug: string;
@@ -42,6 +43,8 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
   const [errorStaff, setErrorStaff] = useState('');
 
   const [guardadoOk, setGuardadoOk] = useState(false);
+  // Permiso de promos de ESTA tienda (se guarda en la cuenta, por tienda; desmarcado por defecto)
+  const [promos, setPromos] = useState(false);
   const [misPedidos, setMisPedidos] = useState<PedidoLocal[]>([]);
 
   // Sincronizar datos si el usuario de Supabase / Google está conectado
@@ -65,6 +68,11 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
       });
     }
   }, [user, cliente]);
+
+  useEffect(() => {
+    const guardado = user?.user_metadata?.promos_tiendas?.[storeSlug];
+    setPromos(guardado === true);
+  }, [user, storeSlug]);
 
   useEffect(() => {
     if (modalAbierto) {
@@ -139,6 +147,10 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
   const handleSubmitDatos = (e: React.FormEvent) => {
     e.preventDefault();
     guardarCliente(form);
+    if (user) {
+      const previas = user.user_metadata?.promos_tiendas || {};
+      supabase.auth.updateUser({ data: { promos_tiendas: { ...previas, [storeSlug]: promos } } }).catch(() => {});
+    }
     setGuardadoOk(true);
     setTimeout(() => {
       setGuardadoOk(false);
@@ -381,6 +393,13 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
                   />
                 </div>
 
+                {modoAuth === 'registro' && (
+                  <p className="text-[10px] text-gray-500 leading-snug">
+                    Al crear tu cuenta aceptas los{' '}
+                    <a href="https://bogahub.app/legal" target="_blank" rel="noopener noreferrer" className="underline font-semibold">Términos y la Política de privacidad</a> de BogaHub.
+                  </p>
+                )}
+
                 {errorAuth && (
                   <p className="text-[11px] text-red-600 font-semibold">{errorAuth}</p>
                 )}
@@ -498,6 +517,26 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
                     className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-900 outline-none focus:border-primary focus:bg-white font-medium transition-all resize-none"
                   />
                 </div>
+
+                {user && (
+                  <label className="flex items-start gap-2 p-3 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={promos}
+                      onChange={(e) => setPromos(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 accent-[var(--color-primary,#b91c1c)] shrink-0"
+                    />
+                    <span className="text-[11px] text-gray-700 leading-snug">
+                      <strong className="text-gray-900">Quiero recibir promos de {storeName}</strong>
+                      <br />
+                      Opcional. Puedes cambiarlo cuando quieras.
+                    </span>
+                  </label>
+                )}
+
+                <p className="text-[10px] text-gray-400 leading-snug">
+                  {storeName} usa tu nombre, WhatsApp y dirección solo para entregarte tu pedido. {user ? 'Tus datos se guardan en tu cuenta BogaHub.' : 'Tus datos se guardan solo en este celular.'}
+                </p>
 
                 {guardadoOk && (
                   <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold text-center animate-fade-in flex items-center justify-center gap-1.5">

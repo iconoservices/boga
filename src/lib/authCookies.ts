@@ -5,6 +5,24 @@ export const CLAVE_AUTH_RETURN = 'boga_auth_return_url';
 export const CLAVE_REABRIR_MODAL = 'boga_reopen_customer_modal';
 export const CLAVE_COOKIE_ACCESS = 'boga_auth_token';
 export const CLAVE_COOKIE_REFRESH = 'boga_auth_refresh';
+export const DOMINIO_BASE = 'bogahub.app';
+const VIGENCIA_RETORNO_MS = 10 * 60 * 1000;
+
+// Guarda la URL de retorno con hora de vencimiento (evita rebotes por retornos viejos)
+export function guardarRetornoLocal(url: string): void {
+  try { localStorage.setItem(CLAVE_AUTH_RETURN, JSON.stringify({ url, exp: Date.now() + VIGENCIA_RETORNO_MS })); } catch {}
+}
+
+export function leerRetornoLocal(): string | null {
+  try {
+    const raw = localStorage.getItem(CLAVE_AUTH_RETURN);
+    if (!raw) return null;
+    const { url, exp } = JSON.parse(raw);
+    if (typeof url === 'string' && typeof exp === 'number' && exp > Date.now()) return url;
+    localStorage.removeItem(CLAVE_AUTH_RETURN);
+  } catch { try { localStorage.removeItem(CLAVE_AUTH_RETURN); } catch {} }
+  return null;
+}
 
 export function getCookieDomain(): string {
   if (typeof window === 'undefined') return '';
@@ -24,7 +42,8 @@ export function setAuthCookie(name: string, value: string, maxAge = 1800): void 
   if (typeof document === 'undefined') return;
   const domain = getCookieDomain();
   const domainAttr = domain ? `; domain=${domain}` : '';
-  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=Lax${domainAttr}`;
+  const secureAttr = window.location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=Lax${domainAttr}${secureAttr}`;
 }
 
 export function getAuthCookie(name: string): string | null {
@@ -54,20 +73,11 @@ export function esDestinoInternoValido(targetUrl: string): boolean {
     // Mismo host
     if (hostDestino === hostActual) return true;
 
-    // Localhost
+    // Localhost (pruebas locales)
     if (hostActual === 'localhost' && hostDestino === 'localhost') return true;
 
-    // Subdominios de bogahub.app (ej. dhafana.bogahub.app, tiendas.bogahub.app, bogahub.app)
-    if (hostDestino === 'bogahub.app' || hostDestino.endsWith('.bogahub.app')) {
-      return true;
-    }
-
-    // Dominio base compartido
-    const baseActual = hostActual.split('.').slice(-2).join('.');
-    const baseDestino = hostDestino.split('.').slice(-2).join('.');
-    if (baseActual && baseActual === baseDestino) {
-      return true;
-    }
+    // Solo bogahub.app y sus subdominios (tiendas). Si cambia el dominio, editar aquí.
+    if (hostDestino === DOMINIO_BASE || hostDestino.endsWith('.' + DOMINIO_BASE)) return true;
 
     return false;
   } catch {

@@ -14,6 +14,8 @@ import {
   deleteAuthCookie,
   esDestinoInternoValido,
   construirUrlRetornoConSesion,
+  guardarRetornoLocal,
+  leerRetornoLocal,
 } from '@/lib/authCookies';
 
 interface AuthContextValue {
@@ -33,7 +35,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 function restaurarReturnUrl(sess: Session | null) {
   if (!sess || typeof window === 'undefined') return;
   try {
-    const returnUrl = getAuthCookie(CLAVE_AUTH_RETURN) || localStorage.getItem(CLAVE_AUTH_RETURN);
+    const returnUrl = getAuthCookie(CLAVE_AUTH_RETURN) || leerRetornoLocal();
     if (!returnUrl) return;
 
     // Validar que sea un destino interno permitido (mismo host o subdominio de bogahub.app)
@@ -174,7 +176,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== 'undefined') {
       try {
         setAuthCookie(CLAVE_AUTH_RETURN, target);
-        localStorage.setItem(CLAVE_AUTH_RETURN, target);
+        guardarRetornoLocal(target);
       } catch {}
     }
     const { error } = await supabase.auth.signInWithOAuth({
@@ -195,7 +197,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem(CLAVE_AUTH_RETURN);
       } catch {}
     }
-    await supabase.auth.signOut();
+    // scope local: cerrar sesión aquí no cierra las demás (cada tienda y BogaHub tienen la suya)
+    await supabase.auth.signOut({ scope: 'local' });
   };
 
   return (

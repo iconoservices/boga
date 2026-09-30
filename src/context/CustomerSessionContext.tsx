@@ -94,7 +94,7 @@ export function CustomerSessionProvider({ children }: { children: React.ReactNod
       localStorage.removeItem(CLAVE_REABRIR_MODAL);
       deleteAuthCookie(CLAVE_REABRIR_MODAL);
     } catch {}
-    supabase.auth.signOut().catch(() => {});
+    supabase.auth.signOut({ scope: 'local' }).catch(() => {});
   };
 
   return (
