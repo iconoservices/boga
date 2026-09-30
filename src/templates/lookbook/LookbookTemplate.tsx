@@ -663,7 +663,11 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (hasSizes) {
+                          if (hasSizes && product.presentaciones && product.presentaciones.length === 1) {
+                            // Una sola talla/presentación: no hay nada que elegir, se agrega directo
+                            const unica = product.presentaciones[0];
+                            addToCart(product, unica.label, unica.price);
+                          } else if (hasSizes) {
                             abrirProducto(product);
                           } else {
                             addToCart(product);
