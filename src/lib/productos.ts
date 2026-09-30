@@ -24,6 +24,8 @@ export type ProductoMostrador = {
   estado: 'listo' | 'proximamente';
   /** Solo para 'proximamente': qué falta, dicho sin rodeos. */
   nota?: string;
+  /** Banner o portada personalizada para la tarjeta en /productos. Si no se pone, usa la foto de su primera plantilla. */
+  banner?: string;
 };
 
 export const PRODUCTOS_MOSTRADOR: ProductoMostrador[] = [
@@ -104,5 +106,5 @@ export const getProductoMostrador = (slug: string) => PRODUCTOS_MOSTRADOR.find((
 export const plantillasDe = (p: ProductoMostrador): TemplateConfig[] =>
   p.plantillas.map((id) => getTemplate(id)).filter((t): t is TemplateConfig => !!t);
 
-/** Foto de portada de la tarjeta: la de su primera plantilla, si tiene. */
-export const portadaDe = (p: ProductoMostrador): string | null => plantillasDe(p)[0]?.heroImage ?? null;
+/** Foto de portada de la tarjeta: su banner propio si tiene, o la de su primera plantilla. */
+export const portadaDe = (p: ProductoMostrador): string | null => p.banner ?? plantillasDe(p)[0]?.heroImage ?? null;
