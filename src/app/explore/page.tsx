@@ -246,15 +246,19 @@ function ExploreContenido() {
           // Categorías: primero las que más productos tienen. Las filas mixtas se reparten entre ellas
           // (Para ti arriba del todo) para que el feed se sienta variado de punta a punta.
           const mixtas = ['Para ti', 'Descubre más', 'Variedad del día'];
-          const porCategoria = updated.filter((x) => !mixtas.includes(x.id)).sort((x, y) => y.products.length - x.products.length);
+          // Promos y Combos va fija arriba (primera fila del feed): es lo que más mueve a comprar.
+          const promos = updated.find((x) => x.id === 'Combos & Promos');
+          const porCategoria = updated.filter((x) => !mixtas.includes(x.id) && x.id !== 'Combos & Promos').sort((x, y) => y.products.length - x.products.length);
           const filasM = mixtas.map((id) => updated.find((x) => x.id === id)).filter(Boolean) as typeof updated;
           const salida: typeof updated = [];
-          const posiciones = [0, 2, 4];
+          const posiciones = [1, 4, 6];
           let iCat = 0, iMix = 0;
           for (let pos = 0; iCat < porCategoria.length || iMix < filasM.length; pos++) {
+            if (pos === 0 && promos) { salida.push(promos); continue; }
             if (iMix < filasM.length && (posiciones.includes(pos) || iCat >= porCategoria.length)) salida.push(filasM[iMix++]);
             else salida.push(porCategoria[iCat++]);
           }
+          if (promos && !salida.includes(promos)) salida.push(promos);
           return salida;
         });
       }
