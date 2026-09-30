@@ -3,6 +3,8 @@ import type { Session } from '@supabase/supabase-js';
 
 export const CLAVE_AUTH_RETURN = 'boga_auth_return_url';
 export const CLAVE_REABRIR_MODAL = 'boga_reopen_customer_modal';
+export const CLAVE_COOKIE_ACCESS = 'boga_auth_token';
+export const CLAVE_COOKIE_REFRESH = 'boga_auth_refresh';
 
 export function getCookieDomain(): string {
   if (typeof window === 'undefined') return '';

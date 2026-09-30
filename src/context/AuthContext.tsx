@@ -6,6 +6,9 @@ import { supabase } from '@/lib/supabase';
 
 import {
   CLAVE_AUTH_RETURN,
+  CLAVE_REABRIR_MODAL,
+  CLAVE_COOKIE_ACCESS,
+  CLAVE_COOKIE_REFRESH,
   setAuthCookie,
   getAuthCookie,
   deleteAuthCookie,
@@ -70,7 +73,14 @@ function restaurarReturnUrl(sess: Session | null) {
     deleteAuthCookie(CLAVE_AUTH_RETURN);
     localStorage.removeItem(CLAVE_AUTH_RETURN);
 
-    // Preparar URL final (inyecta tokens en hash si navega a un subdominio diferente)
+    // Si va hacia otro subdominio, compartir tokens en cookie de dominio (.bogahub.app)
+    // para que supabase.auth.setSession lo active de inmediato al cargar el subdominio
+    if (hostActual !== hostDestino && sess?.access_token && sess?.refresh_token) {
+      setAuthCookie(CLAVE_COOKIE_ACCESS, sess.access_token, 300);
+      setAuthCookie(CLAVE_COOKIE_REFRESH, sess.refresh_token, 300);
+    }
+
+    // Preparar URL final (inyecta tokens en hash también para máxima compatibilidad)
     const urlFinal = construirUrlRetornoConSesion(targetHref, sess);
 
     // Redirigir de inmediato al subdominio o página previa
@@ -85,13 +95,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setLoading(false);
-      if (data.session) {
-        restaurarReturnUrl(data.session);
+    const initAuth = async () => {
+      // 1. Revisar si hay tokens heredados por cookie desde otro subdominio tras OAuth
+      const cookieAccess = getAuthCookie(CLAVE_COOKIE_ACCESS);
+      const cookieRefresh = getAuthCookie(CLAVE_COOKIE_REFRESH);
+
+      if (cookieAccess && cookieRefresh) {
+        deleteAuthCookie(CLAVE_COOKIE_ACCESS);
+        deleteAuthCookie(CLAVE_COOKIE_REFRESH);
+        try {
+          const { data: setRes } = await supabase.auth.setSession({
+            access_token: cookieAccess,
+            refresh_token: cookieRefresh,
+          });
+          if (setRes?.session) {
+            setSession(setRes.session);
+            setLoading(false);
+            restaurarReturnUrl(setRes.session);
+            return;
+          }
+        } catch (e) {
+          console.error('Error restaurando tokens entre subdominios', e);
+        }
       }
-    });
+
+      // 2. Si no, recuperar sesión normal local de Supabase
+      supabase.auth.getSession().then(({ data }) => {
+        setSession(data.session);
+        setLoading(false);
+        if (data.session) {
+          restaurarReturnUrl(data.session);
+        }
+      });
+    };
+
+    initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
       setSession(newSession);
@@ -152,6 +190,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== 'undefined') {
       try {
         deleteAuthCookie(CLAVE_AUTH_RETURN);
+        deleteAuthCookie(CLAVE_COOKIE_ACCESS);
+        deleteAuthCookie(CLAVE_COOKIE_REFRESH);
         localStorage.removeItem(CLAVE_AUTH_RETURN);
       } catch {}
     }
