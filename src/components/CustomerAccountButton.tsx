@@ -19,7 +19,7 @@ export default function CustomerAccountButton() {
     <button
       type="button"
       onClick={() => setModalAbierto(true)}
-      className="fixed bottom-4 left-4 z-40 bg-white/95 text-gray-800 hover:text-primary backdrop-blur-md pl-2 pr-3.5 py-1.5 rounded-full shadow-lg border border-gray-200/80 text-xs font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95 group"
+      className="fixed top-3 right-28 z-[55] bg-white/95 text-gray-800 hover:text-primary backdrop-blur-md p-1.5 sm:pl-2 sm:pr-3.5 rounded-full shadow-lg border border-gray-200/80 text-xs font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95 group"
       title="Mi Cuenta de Cliente y Pedidos"
     >
       {userAvatar ? (
@@ -33,7 +33,7 @@ export default function CustomerAccountButton() {
           {user || cliente ? 'account_circle' : 'person'}
         </span>
       )}
-      <span className="max-w-[120px] truncate">
+      <span className="hidden sm:inline max-w-[120px] truncate">
         {nombreMostrar ? `Hola, ${nombreMostrar.split(' ')[0]}` : 'Mi Cuenta'}
       </span>
     </button>

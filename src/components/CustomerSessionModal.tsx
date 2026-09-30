@@ -6,7 +6,6 @@ import { useCustomerSession, DatosCliente } from '@/context/CustomerSessionConte
 import { useAuth } from '@/context/AuthContext';
 import { leerMisPedidos, PedidoLocal } from '@/lib/pedidos';
 import { CLAVE_REABRIR_MODAL, setAuthCookie } from '@/lib/authCookies';
-import { supabase } from '@/lib/supabase';
 
 interface Props {
   storeSlug: string;
@@ -43,8 +42,8 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
   const [errorStaff, setErrorStaff] = useState('');
 
   const [guardadoOk, setGuardadoOk] = useState(false);
-  // Permiso de promos de ESTA tienda (se guarda en la cuenta, por tienda; desmarcado por defecto)
-  const [promos, setPromos] = useState(false);
+  const [ubicando, setUbicando] = useState(false);
+  const [ubicMsg, setUbicMsg] = useState('');
   const [misPedidos, setMisPedidos] = useState<PedidoLocal[]>([]);
 
   // Sincronizar datos si el usuario de Supabase / Google está conectado
@@ -68,11 +67,6 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
       });
     }
   }, [user, cliente]);
-
-  useEffect(() => {
-    const deCuenta = user?.user_metadata?.promos_tiendas?.[storeSlug];
-    setPromos(user ? deCuenta === true : cliente?.promos === true);
-  }, [user, storeSlug, cliente]);
 
   useEffect(() => {
     if (modalAbierto) {
@@ -144,13 +138,32 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
     await signOut();
   };
 
+  // Agrega a la dirección un enlace de Google Maps con la ubicación actual (igual que en el checkout)
+  const usarUbicacion = () => {
+    if (!navigator.geolocation) { setUbicMsg('Tu celular no permite ubicarte. Escribe tu dirección.'); return; }
+    setUbicando(true);
+    setUbicMsg('');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const enlace = `https://maps.google.com/?q=${pos.coords.latitude.toFixed(6)},${pos.coords.longitude.toFixed(6)}`;
+        setForm((f) => {
+          const base = f.direccion.replace(/\s*·?\s*📍\s*https:\/\/maps\.google\.com\/\?q=\S+/g, '').trim();
+          return { ...f, direccion: (base ? `${base} · ` : '') + `📍 ${enlace}` };
+        });
+        setUbicMsg('Ubicación agregada. Suma una referencia (ej: frente al parque).');
+        setUbicando(false);
+      },
+      (err) => {
+        setUbicMsg(err.code === 1 ? 'No diste permiso de ubicación. Escribe tu dirección.' : 'No pudimos obtener tu ubicación. Escribe tu dirección.');
+        setUbicando(false);
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
+    );
+  };
+
   const handleSubmitDatos = (e: React.FormEvent) => {
     e.preventDefault();
-    guardarCliente({ ...form, promos });
-    if (user) {
-      const previas = user.user_metadata?.promos_tiendas || {};
-      supabase.auth.updateUser({ data: { promos_tiendas: { ...previas, [storeSlug]: promos } } }).catch(() => {});
-    }
+    guardarCliente(form);
     setGuardadoOk(true);
     setTimeout(() => {
       setGuardadoOk(false);
@@ -396,7 +409,7 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
                 {modoAuth === 'registro' && (
                   <p className="text-[10px] text-gray-500 leading-snug">
                     Al crear tu cuenta aceptas los{' '}
-                    <a href="https://bogahub.app/legal" target="_blank" rel="noopener noreferrer" className="underline font-semibold">Términos y la Política de privacidad</a> de BogaHub.
+                    <a href="https://bogahub.app/legal" target="_blank" rel="noopener noreferrer" className="underline font-semibold">Términos y la Política de privacidad</a> de BogaHub, y recibir notificaciones y promociones de BogaHub y de las tiendas.
                   </p>
                 )}
 
@@ -521,22 +534,18 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
                     className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-900 outline-none focus:border-primary focus:bg-white font-medium transition-all resize-none"
                   />
                 </div>
+                  <button
+                    type="button"
+                    onClick={usarUbicacion}
+                    disabled={ubicando}
+                    className="mt-1.5 text-[11px] font-bold text-primary inline-flex items-center gap-1 hover:underline disabled:opacity-50"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">my_location</span>
+                    {ubicando ? 'Ubicando…' : 'Usar mi ubicación actual'}
+                  </button>
+                  {ubicMsg && <p className="text-[10px] text-gray-500 mt-1">{ubicMsg}</p>}
 
-                  <label className="flex items-start gap-2 p-3 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={promos}
-                      onChange={(e) => setPromos(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 accent-[var(--color-primary,#b91c1c)] shrink-0"
-                    />
-                    <span className="text-[11px] text-gray-700 leading-snug">
-                      <strong className="text-gray-900">Quiero recibir promos de {storeName}</strong>
-                      <br />
-                      Opcional. Puedes cambiarlo cuando quieras.
-                    </span>
-                  </label>
-
-
+  
                 <p className="text-[10px] text-gray-400 leading-snug">
                   {storeName} usa tu nombre, WhatsApp y dirección solo para entregarte tu pedido. {user ? 'Tus datos se guardan en tu cuenta BogaHub.' : 'Tus datos se guardan solo en este celular.'}
                 </p>

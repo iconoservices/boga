@@ -9,7 +9,6 @@ export type DatosCliente = {
   telefono: string;
   direccion: string;
   email?: string;
-  promos?: boolean;
 };
 
 type CustomerSessionContextType = {
