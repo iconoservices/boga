@@ -26,6 +26,8 @@ interface Props {
  */
 export default function RackTemplate({ store, initialProductId }: Props) {
   const t = store.theme;
+  // El texto "Tu TV merece más" es de la demo: en una tienda real el banner del dueño va limpio, sin letras encima.
+  const limpio = store.hideHeroText === true || store.slug !== 'rack';
   const c = useCatalogo(store, initialProductId);
   const [activeTab, setActiveTab] = useState<'inicio' | 'catalogo' | 'pedidos' | 'contacto'>('inicio');
   const selectedProduct = c.detalle;
@@ -150,9 +152,9 @@ export default function RackTemplate({ store, initialProductId }: Props) {
           {/* Con el texto oculto, el comercio carga un banner propio (con su arte y
               textos): se muestra entero, sin filtro oscuro ni recorte, y los botones
               van debajo. Con texto, es el hero clásico sobre la foto. */}
-          <section className={store.hideHeroText ? 'relative' : 'relative h-[60vh] min-h-[380px] max-h-[560px] md:h-[560px] md:max-h-none overflow-hidden'}>
-            {store.hideHeroText ? (
-              <div className="relative w-full aspect-video overflow-hidden">
+          <section className={limpio ? 'relative' : 'relative h-[60vh] min-h-[380px] max-h-[560px] md:h-[560px] md:max-h-none overflow-hidden'}>
+            {limpio ? (
+              <div className="relative w-full aspect-video md:max-h-[600px] overflow-hidden">
                 <img src={store.heroImage} alt={store.heroAlt || store.name} className="w-full h-full object-cover" />
                 <StoreFloatingActions store={store} />
               </div>
@@ -170,8 +172,8 @@ export default function RackTemplate({ store, initialProductId }: Props) {
               </>
             )}
 
-            <div className={store.hideHeroText ? 'flex flex-col px-5 pt-4 pb-5' : 'absolute inset-0 flex flex-col justify-end px-5 md:px-12 pb-8 md:pb-14 md:max-w-2xl'}>
-              {!store.hideHeroText && (
+            <div className={limpio ? 'flex flex-col px-5 pt-4 pb-5' : 'absolute inset-0 flex flex-col justify-end px-5 md:px-12 pb-8 md:pb-14 md:max-w-2xl'}>
+              {!limpio && (
                 <>
                   {/* Badge de categoría */}
                   <span
@@ -196,7 +198,7 @@ export default function RackTemplate({ store, initialProductId }: Props) {
                 </>
               )}
 
-              {store.hideHeroText && store.tagline && (
+              {limpio && store.tagline && (
                 <p className="text-center text-sm font-semibold mb-4 leading-snug" style={{ color: t.onSurfaceVariant }}>
                   {store.tagline}
                 </p>
@@ -213,7 +215,7 @@ export default function RackTemplate({ store, initialProductId }: Props) {
                 <button
                   onClick={() => setActiveTab('contacto')}
                   className="px-6 py-3.5 rounded-full font-bold text-sm uppercase transition-all border active:scale-95 flex items-center justify-center gap-2 w-full min-[420px]:flex-1 sm:flex-none sm:px-8"
-                  style={store.hideHeroText
+                  style={limpio
                     ? { borderColor: `${t.primary}80`, color: t.primary, background: `${t.primary}10` }
                     : { borderColor: 'rgba(255,255,255,0.3)', color: '#fff', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)' }}
                 >
