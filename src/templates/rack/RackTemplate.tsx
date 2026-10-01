@@ -94,11 +94,11 @@ export default function RackTemplate({ store, initialProductId }: Props) {
             </div>
           )}
           <div className="min-w-0">
-            <h1 className="font-extrabold uppercase italic leading-tight text-[13px] min-[400px]:text-sm line-clamp-2 break-words" style={{ color: t.onBackground }}>
+            <h1 className="font-extrabold uppercase italic leading-tight text-sm truncate" style={{ color: t.onBackground }}>
               {store.name}
             </h1>
             {store.tagline && (
-              <p className="text-[10px] font-medium leading-tight truncate" style={{ color: t.onSurfaceVariant }}>
+              <p className="hidden md:block text-[10px] font-medium leading-tight truncate" style={{ color: t.onSurfaceVariant }}>
                 {store.tagline}
               </p>
             )}
