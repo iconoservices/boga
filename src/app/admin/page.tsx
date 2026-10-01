@@ -1524,6 +1524,8 @@ function AdminDashboard({ user }: { user: User }) {
           const validas = inicioOrders.filter(o => o.status !== 'Cancelado');
           const deHoy = validas.filter(o => fechaLima(o.created_at) === hoy);
           const ventasHoy = deHoy.reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0);
+          const deMes = validas.filter(o => fechaLima(o.created_at).slice(0, 7) === hoy.slice(0, 7));
+          const ventasMes = deMes.reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0);
           const pendientes = inicioOrders.filter(o => o.status === 'Pendiente');
           const misProductos = products.filter(p => p.store === inicioStore.slug);
 
@@ -1592,10 +1594,12 @@ function AdminDashboard({ user }: { user: User }) {
                 <div className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm">
                   <p className="text-[11px] font-semibold text-gray-400">Ventas</p>
                   <p className="text-xl font-black text-gray-900 leading-tight mt-1">S/ {ventasHoy.toFixed(2)}</p>
+                  <p className="text-[10px] font-semibold text-gray-400 mt-1.5">Mes: S/ {ventasMes.toFixed(2)}</p>
                 </div>
                 <div className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm">
                   <p className="text-[11px] font-semibold text-gray-400">Pedidos</p>
                   <p className="text-xl font-black text-gray-900 leading-tight mt-1">{deHoy.length}</p>
+                  <p className="text-[10px] font-semibold text-gray-400 mt-1.5">Mes: {deMes.length}</p>
                 </div>
                 <button
                   onClick={() => setActiveTab('orders')}
@@ -1694,10 +1698,8 @@ function AdminDashboard({ user }: { user: User }) {
               <p className={titulo}>Configura tu tienda</p>
               <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden divide-y divide-gray-100">
                 {[
-                  { icon: 'wallpaper', t: 'Portada y logo', s: 'Diseño y elementos visibles', on: () => openStoreEditor(inicioStore.slug, 'portada') },
-                  { icon: 'storefront', t: 'Datos del negocio', s: 'Información principal y redes', on: () => openStoreEditor(inicioStore.slug, 'datos') },
-                  { icon: 'schedule', t: 'Horarios', s: 'Apertura y cierre', on: () => openStoreEditor(inicioStore.slug, 'horario') },
-                  { icon: 'payments', t: 'Métodos de pago', s: 'Cómo te pagan tus clientes', on: () => openStoreEditor(inicioStore.slug, 'pagos') },
+                  { icon: 'palette', t: 'Personaliza tu tienda', s: 'Logo, portada, datos, horario y pagos', on: () => openStoreEditor(inicioStore.slug) },
+                  { icon: 'category', t: 'Categorías', s: 'Crea y ordena los rubros de tu carta', on: () => setActiveTab('categories') },
                   { icon: 'notifications', t: 'Avisos de pedidos', s: 'WhatsApp y correo donde los recibes', on: () => openStoreEditor(inicioStore.slug, 'avisos') },
                   ...(inicioDb?.push_activo ? [{ icon: 'campaign', t: 'Notificaciones a clientes', s: 'Envía avisos a quienes instalaron tu app', on: () => router.push('/admin/notificaciones') }] : []),
                   { icon: 'picture_as_pdf', t: 'Exportar catálogo en PDF', s: 'Descarga tu carta para compartirla', on: () => { setSelectedStore(inicioStore.slug); setIsPDFModalOpen(true); } },
