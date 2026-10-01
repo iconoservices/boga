@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
 import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
+import CustomerAccountButton from '@/components/CustomerAccountButton';
 import { useCatalogo } from '../shared/useCatalogo';
 import { TXT, ICON } from '../shared/tokens';
 import {
@@ -62,7 +63,7 @@ export default function RackTemplate({ store, initialProductId }: Props) {
 
   return (
     <main
-      className="min-h-screen flex flex-col max-w-3xl mx-auto relative pb-24 md:pb-0 overflow-x-hidden"
+      className="min-h-screen flex flex-col mx-auto w-full relative pb-24 md:pb-0 overflow-x-hidden md:max-w-6xl md:shadow-[0_0_80px_rgba(0,0,0,0.5)]"
       style={{ background: t.background, color: t.onBackground, fontFamily: t.fontBody }}
     >
       {/* ─── MODALES ─── */}
@@ -78,10 +79,10 @@ export default function RackTemplate({ store, initialProductId }: Props) {
 
       {/* ─── NAVEGACIÓN SUPERIOR ─── */}
       <header
-        className="sticky top-0 z-50 px-5 md:px-6 h-16 flex items-center justify-between border-b"
+        className="sticky top-0 z-50 px-5 md:px-8 h-16 flex items-center justify-between border-b"
         style={{ background: `${t.background}F0`, backdropFilter: 'blur(16px)', borderColor: `${t.outlineVariant}60` }}
       >
-        <div className="flex items-center gap-3 min-w-0 max-w-[calc(100%-8.5rem)] md:max-w-none">
+        <div className="flex items-center gap-3 min-w-0">
           {store.logoImage ? (
             <img src={store.logoImage} alt={store.name} className="w-9 h-9 rounded-lg object-cover shrink-0" />
           ) : (
@@ -103,7 +104,22 @@ export default function RackTemplate({ store, initialProductId }: Props) {
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <nav className="hidden md:flex items-center gap-1 mx-4">
+          {TABS.map((tab) => {
+            const activo = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => { setActiveTab(tab.id); window.scrollTo({ top: 0 }); }}
+                className="px-4 py-2 rounded-full text-sm font-bold transition-all hover:brightness-125 active:scale-95"
+                style={{ background: activo ? `${t.primary}22` : 'transparent', color: activo ? t.primary : t.onSurfaceVariant }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </nav>
+        <div className="flex items-center gap-2 shrink-0">
           {c.cartCount > 0 && (
             <button
               onClick={() => setActiveTab('pedidos')}
@@ -122,6 +138,7 @@ export default function RackTemplate({ store, initialProductId }: Props) {
               </span>
             </button>
           )}
+          <CustomerAccountButton variant="encabezado" background={`${t.primary}22`} color={t.primary} />
         </div>
       </header>
 
@@ -133,7 +150,7 @@ export default function RackTemplate({ store, initialProductId }: Props) {
           {/* Con el texto oculto, el comercio carga un banner propio (con su arte y
               textos): se muestra entero, sin filtro oscuro ni recorte, y los botones
               van debajo. Con texto, es el hero clásico sobre la foto. */}
-          <section className={store.hideHeroText ? 'relative' : 'relative h-[60vh] min-h-[380px] max-h-[560px] md:h-[60vh] overflow-hidden'}>
+          <section className={store.hideHeroText ? 'relative' : 'relative h-[60vh] min-h-[380px] max-h-[560px] md:h-[560px] md:max-h-none overflow-hidden'}>
             {store.hideHeroText ? (
               <div className="relative w-full aspect-video overflow-hidden">
                 <img src={store.heroImage} alt={store.heroAlt || store.name} className="w-full h-full object-cover" />
@@ -153,7 +170,7 @@ export default function RackTemplate({ store, initialProductId }: Props) {
               </>
             )}
 
-            <div className={store.hideHeroText ? 'flex flex-col px-5 pt-4 pb-5' : 'absolute inset-0 flex flex-col justify-end px-5 md:px-6 pb-8 md:pb-12'}>
+            <div className={store.hideHeroText ? 'flex flex-col px-5 pt-4 pb-5' : 'absolute inset-0 flex flex-col justify-end px-5 md:px-12 pb-8 md:pb-14 md:max-w-2xl'}>
               {!store.hideHeroText && (
                 <>
                   {/* Badge de categoría */}
@@ -182,7 +199,7 @@ export default function RackTemplate({ store, initialProductId }: Props) {
               <div className="flex flex-col min-[420px]:flex-row gap-3">
                 <button
                   onClick={() => irAlCatalogo()}
-                  className="px-6 py-3.5 rounded-full font-bold text-sm uppercase transition-all hover:brightness-110 active:scale-95 flex items-center justify-center gap-2 w-full min-[420px]:flex-1 sm:flex-none sm:px-8 shadow-lg"
+                  className="px-6 py-3.5 rounded-full font-bold text-sm uppercase transition-all hover:brightness-110 active:scale-95 flex items-center justify-center gap-2 w-full min-[420px]:flex-1 sm:flex-none sm:px-8 md:flex-none shadow-lg"
                   style={{ background: t.primary, color: t.onPrimary, boxShadow: `0 8px 20px ${t.primary}50` }}
                 >
                   <span className={`material-symbols-outlined ${ICON.sm}`} style={{ fontVariationSettings: "'FILL' 1" }}>grid_view</span>
@@ -248,7 +265,7 @@ export default function RackTemplate({ store, initialProductId }: Props) {
 
                 {/* Secciones por categoría */}
                 {seccionesDestacadas.map((sec) => (
-                  <section key={sec.id} className="px-5 md:px-6">
+                  <section key={sec.id} className="px-5 md:px-8">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2">
                         {sec.icon && (
@@ -287,7 +304,7 @@ export default function RackTemplate({ store, initialProductId }: Props) {
 
                 {/* CTA Ver todo si hay muchos productos */}
                 {c.products.length > 4 && (
-                  <div className="px-5 md:px-6 pb-4">
+                  <div className="px-5 md:px-8 pb-4">
                     <button
                       onClick={() => irAlCatalogo()}
                       className="w-full py-4 rounded-2xl font-bold text-sm uppercase border-2 transition-all hover:brightness-110 active:scale-95 flex items-center justify-center gap-2"
@@ -305,7 +322,7 @@ export default function RackTemplate({ store, initialProductId }: Props) {
           {/* INFO DEL NEGOCIO */}
           {(store.zona || store.horario || store.direccion) && (
             <section
-              className="mx-5 md:mx-6 mb-8 rounded-2xl p-5 border"
+              className="mx-5 md:mx-8 mb-8 rounded-2xl p-5 border"
               style={{ background: t.surfaceContainer, borderColor: `${t.outlineVariant}40` }}
             >
               <h3
@@ -345,7 +362,7 @@ export default function RackTemplate({ store, initialProductId }: Props) {
       {/* ─── TAB: CATÁLOGO ─── */}
       {activeTab === 'catalogo' && (
         <div className="animate-fade-in">
-          <div className="px-5 md:px-6 pt-6 pb-2">
+          <div className="px-5 md:px-8 pt-6 pb-2">
             <h2
               className="font-black uppercase italic text-2xl md:text-3xl mb-1"
               style={{ color: t.onBackground }}
@@ -359,7 +376,7 @@ export default function RackTemplate({ store, initialProductId }: Props) {
 
           {/* Chips de categoría */}
           <nav
-            className="hide-scrollbar px-5 md:px-6 overflow-x-auto flex gap-3 whitespace-nowrap sticky top-16 md:top-[60px] py-3 z-40"
+            className="hide-scrollbar px-5 md:px-8 overflow-x-auto flex gap-3 whitespace-nowrap sticky top-16 md:top-[60px] py-3 z-40"
             style={{ background: `${t.background}F0`, backdropFilter: 'blur(12px)' }}
           >
             {c.categoryTabs.map((tab) => {
@@ -402,7 +419,7 @@ export default function RackTemplate({ store, initialProductId }: Props) {
             />
           )}
 
-          <section className="px-5 md:px-6 py-6">
+          <section className="px-5 md:px-8 py-6">
             <ProductGrid
               t={t}
               productos={c.filtered}
