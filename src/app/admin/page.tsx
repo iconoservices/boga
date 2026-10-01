@@ -354,16 +354,17 @@ function AdminDashboard({ user }: { user: User }) {
   const inicioNombre = (user.user_metadata?.name as string | undefined)?.split(' ')[0];
   // Con subdominio propio activo, el link/QR/compartir apuntan ahí en vez de a bogahub.app/<tienda>
   // (mismo criterio que el QR de abajo, que sí lo revisaba — este no, y por eso quedaban distintos).
-  const inicioUrl = (() => {
-    if (!inicioStore) return '';
-    if (inicioDb?.subdominio_activo === true) {
+  // Una sola función para todos los lados (ver tienda, QR, compartir): subdominio si lo tiene activo, ruta si no.
+  const urlDeTienda = (slug: string) => {
+    if (dbStores.find((x: any) => x.slug === slug)?.subdominio_activo === true) {
       try {
         const u = new URL(siteOrigin);
-        return `${u.protocol}//${inicioStore.slug}.${u.host}`;
+        return `${u.protocol}//${slug}.${u.host}`;
       } catch { /* siteOrigin vacío en el primer render del servidor: cae al de abajo */ }
     }
-    return `${siteOrigin}/${inicioStore.slug}`;
-  })();
+    return `${siteOrigin}/${slug}`;
+  };
+  const inicioUrl = inicioStore ? urlDeTienda(inicioStore.slug) : '';
   const inicioOrders = inicioStore ? orders.filter(o => o.store === inicioStore.slug) : [];
   const compartirCarta = async () => {
     if (typeof navigator === 'undefined') return;
@@ -2156,7 +2157,7 @@ function AdminDashboard({ user }: { user: User }) {
                       </div>
                       <div className="flex gap-1 shrink-0">
                         <a 
-                          href={`/${store.slug}`} 
+                          href={urlDeTienda(store.slug)}
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition-colors"
@@ -4054,15 +4055,7 @@ function AdminDashboard({ user }: { user: User }) {
                 <QRCodeSVG
                   value={(() => {
                     if (selectedStore === 'all') return `${siteOrigin}/explore`;
-                    // Con subdominio propio activo, el QR apunta ahí en vez de a bogahub.app/<tienda>.
-                    const tieneSubdominio = dbStores.find((s: any) => s.slug === selectedStore)?.subdominio_activo === true;
-                    if (tieneSubdominio) {
-                      try {
-                        const u = new URL(siteOrigin);
-                        return `${u.protocol}//${selectedStore}.${u.host}`;
-                      } catch { /* siteOrigin vacío en el primer render del servidor: cae al de abajo */ }
-                    }
-                    return `${siteOrigin}/${selectedStore}`;
+                    return urlDeTienda(selectedStore);
                   })()}
                   size={200}
                   level="H"
