@@ -136,7 +136,7 @@ function ExploreContenido() {
           const tiene = (...ks: string[]) => ks.some((k) => t.includes(k));
           if (esServicio || catTienda.includes('servicio') || tiene('servicio')) return 'Servicios';
           if (tiene('reloj', 'ropa', 'vestido', 'blusa', 'polo', 'pantal', 'short', 'falda', 'camisa', 'casaca', 'zapat', 'zapatill', 'sandal', 'calzado', 'cartera', 'mochila', 'morral', 'bolso', 'lentes', 'collar', 'arete', 'anillo', 'pulsera', 'joya', 'accesorio', 'enteriz', 'conjunto', 'gorra', 'cinturon', 'cinturón')) return 'Moda';
-          if (tiene('celular', 'audífono', 'audifono', 'cargador', 'cable', 'parlante', 'laptop', 'tablet', 'teclado', 'mouse', 'usb', 'cámara', 'camara', 'smart', 'bluetooth', 'tecnolog', 'electr')) return 'Tecnología';
+          if (tiene('celular', 'audífono', 'audifono', 'cargador', 'cable', 'parlante', 'laptop', 'tablet', 'teclado', 'mouse', 'usb', 'cámara', 'camara', 'smart', 'bluetooth', 'tecnolog', 'electr', 'televis', 'rack', 'soporte', 'pedestal', ' tv')) return 'Tecnología';
           if (tiene('hogar', 'decorac', 'lámpara', 'lampara', 'mueble', 'menaje', 'sábana', 'sabana', 'cortina', 'limpieza')) return 'Hogar';
           if (tiene('salud', 'medic', 'suplement', 'vitamin', 'cuidado', 'crema', 'shampoo', 'perfum', 'maquill', 'belleza', 'uñas', 'unas')) return 'Salud';
           if (tiene('cerveza', 'licor', 'vino', 'pisco', 'cóctel', 'coctel', 'gaseosa', 'jugo', 'bebida', 'café', 'cafe', 'refresco')) return 'Bebidas';

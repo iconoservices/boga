@@ -132,6 +132,8 @@ export default function Home() {
             macroCat = 'Moda';
           } else if (storeCategory.includes('salud') || productCategory.includes('salud') || storeCategory.includes('belleza')) {
             macroCat = 'Salud';
+          } else if (/rack|soporte|televis|pedestal|tv/.test(`${p.name || ''} ${productCategory}`.toLowerCase())) {
+            macroCat = 'Mercado'; // tecnología/hogar: no es comida aunque la tienda esté como restaurante
           } else if (storeCategory.includes('restaurante') || productCategory.includes('comida') || productCategory.includes('cocina')) {
             macroCat = 'Comida';
           } else if (productCategory.includes('bebida') || productCategory.includes('bar') || productCategory.includes('café')) {
