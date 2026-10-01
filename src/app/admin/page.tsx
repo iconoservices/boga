@@ -1649,6 +1649,7 @@ function AdminDashboard({ user }: { user: User }) {
                   ...(posOn ? [{ icon: 'point_of_sale', t: 'Nueva venta', s: 'Caja rápida en el local', on: () => setActiveTab('pos') }] : []),
                   { icon: 'share', t: 'Compartir mi tienda', s: 'Envía tu enlace por WhatsApp', on: compartirCarta },
                   { icon: 'qr_code_2', t: 'Código QR', s: 'Para tus mesas o tu puerta', on: () => { setSelectedStore(inicioStore.slug); setIsQRModalOpen(true); } },
+                  ...(inicioDb?.push_activo ? [{ icon: 'notifications', t: 'Notificaciones', s: 'Avisa a tus clientes de una oferta', on: () => { window.location.href = '/admin/notificaciones'; } }] : []),
                 ].map(a => (
                   <button key={a.t} onClick={a.on} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm text-left hover:shadow-md hover:border-gray-200 transition-all flex flex-col gap-2 active:scale-[0.98]">
                     <span className={icono}><span className="material-symbols-outlined text-[20px]">{a.icon}</span></span>
