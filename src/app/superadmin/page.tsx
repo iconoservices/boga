@@ -440,7 +440,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       pushActivo: false,
       modulos: { pos: false, inventario: false, google: false, marca_blanca: false, marketplace: true } as Modulos,
     ownerEmail: '',
-    hideHeroText: false
+    hideHeroText: true
   });
   // Para saber si storeForm.ownerEmail realmente cambio al guardar (y no
   // reasignar la tienda en cada edicion solo porque el campo llega precargado).
@@ -810,7 +810,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       subdominioActivo: false,
       pushActivo: false,
       modulos: { pos: false, inventario: false, google: false, marca_blanca: false, marketplace: true } as Modulos,
-      ownerEmail: ''
+      ownerEmail: '',
+      hideHeroText: true // por defecto el banner va limpio; el dueño decide si le suma textos
     });
     setOriginalOwnerEmail('');
     setShowStoreModal(true);
