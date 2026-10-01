@@ -104,7 +104,6 @@ export default function RackTemplate({ store, initialProductId }: Props) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <StoreFloatingActions store={store} />
           {c.cartCount > 0 && (
             <button
               onClick={() => setActiveTab('pedidos')}
@@ -138,6 +137,7 @@ export default function RackTemplate({ store, initialProductId }: Props) {
             {store.hideHeroText ? (
               <div className="relative w-full aspect-video overflow-hidden">
                 <img src={store.heroImage} alt={store.heroAlt || store.name} className="w-full h-full object-cover" />
+                <StoreFloatingActions store={store} />
               </div>
             ) : (
               <>
@@ -149,6 +149,7 @@ export default function RackTemplate({ store, initialProductId }: Props) {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
+                <StoreFloatingActions store={store} />
               </>
             )}
 
