@@ -790,7 +790,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       slug: '',
       name: '',
       tagline: '',
-      marketplaceCategory: 'Restaurantes',
+      marketplaceCategory: 'General',
       template: 'default',
       location: '',
       emoji: '🏪',
@@ -2445,6 +2445,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           onChange={(e) => setStoreForm(prev => ({ ...prev, marketplaceCategory: e.target.value }))}
                           className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
                         >
+                          <option value="General" disabled>Elige una categoría…</option>
                           <option value="Restaurantes">Restaurantes</option>
                           <option value="Mercado">Mercado</option>
                           <option value="Salud y Bienestar">Salud y Bienestar</option>
@@ -2452,6 +2453,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           <option value="Moda">Moda</option>
                           <option value="Servicios">Servicios</option>
                           <option value="Tecnología">Tecnología</option>
+                          <option value="Hogar">Hogar</option>
                         </select>
                       </div>
 
