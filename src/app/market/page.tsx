@@ -151,7 +151,8 @@ export default function Home() {
             rubro: macroCat,
             badge: esCombo ? 'Combo' : enOferta ? 'Oferta' : 'Nuevo',
             esCombo,
-            img: p.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80'
+            img: p.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80',
+            externalUrl: allStores[p.store]?.externalUrl
           };
           if (newSectionsProducts[macroCat]) newSectionsProducts[macroCat].push(item);
           // Promos y Combos: junta ofertas Y combos de todas las categorías
@@ -671,13 +672,23 @@ export default function Home() {
             <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-stack-lg">
               {productosVista(sections.find(s => s.id === activeCategory)?.products || []).map((p: any, idx) => {
                 const isFav = esFav(p);
+                const storeSlug = p.slug || p.store;
+                const targetHref = p.id ? `/${storeSlug}/producto/${p.id}` : hrefTienda(storeSlug, p.externalUrl);
+                const isExternal = esFuera(targetHref);
                 return (
-                  <div key={idx} className="bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col">
+                  <Link
+                    key={idx}
+                    href={targetHref}
+                    target={isExternal ? '_blank' : undefined}
+                    rel={isExternal ? 'noopener' : undefined}
+                    className="bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col group hover:shadow-md transition-all cursor-pointer"
+                  >
                     <div className="relative aspect-square overflow-hidden bg-surface-container-low p-4">
-                      <img loading="lazy" decoding="async" className="w-full h-full object-contain" src={p.img} alt={p.name} />
+                      <img loading="lazy" decoding="async" className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" src={p.img} alt={p.name} />
                       <button 
                         onClick={(e) => {
                           e.preventDefault();
+                          e.stopPropagation();
                           toggleFavorite(p);
                         }}
                         className="absolute top-2 right-2 w-8 h-8 bg-white/80 backdrop-blur rounded-full flex items-center justify-center text-secondary shadow-sm active:scale-90 transition-transform"
@@ -691,13 +702,17 @@ export default function Home() {
                     </div>
                     <div className="p-3 flex flex-col flex-1 justify-between">
                       <div>
-                        <h4 className="font-headline-sm text-sm text-on-surface line-clamp-1">{p.name}</h4>
+                        <h4 className="font-headline-sm text-sm text-on-surface line-clamp-1 group-hover:text-primary transition-colors">{p.name}</h4>
                         {(p as any).original && <span className="text-secondary text-[11px] line-through">{(p as any).original}</span>}
                       </div>
                       <div className="flex justify-between items-center pt-2 mt-auto">
                         <span className="font-price-lg text-primary text-base">{p.price}</span>
                         <button 
-                          onClick={() => handleAddToCartWithAnim(p)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleAddToCartWithAnim(p);
+                          }}
                           className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-transform ${
                             addedItems[p.name] ? 'bg-[#25D366] text-white scale-110' : 'bg-primary text-white active:scale-90'
                           }`}
@@ -708,7 +723,7 @@ export default function Home() {
                         </button>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 );
               })}
             </div>
