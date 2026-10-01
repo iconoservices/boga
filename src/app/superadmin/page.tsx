@@ -843,7 +843,15 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       externalUrl: store.externalUrl || '',
       subdominioActivo: store.subdominioActivo ?? false,
       pushActivo: store.pushActivo ?? false,
-      modulos: { pos: moduloActivo(store.modulos, 'pos'), inventario: moduloActivo(store.modulos, 'inventario'), google: store.modulos?.google === true, marca_blanca: conMarcaBlanca(store.modulos), marketplace: enMarketplace(store.modulos) } as Modulos,
+      modulos: {
+        ...(store.modulos || {}),
+        pos: moduloActivo(store.modulos, 'pos'),
+        inventario: moduloActivo(store.modulos, 'inventario'),
+        google: store.modulos?.google === true,
+        marca_blanca: conMarcaBlanca(store.modulos),
+        marketplace: enMarketplace(store.modulos),
+        promociones: store.modulos?.promociones === true,
+      } as Modulos,
       // Sale del dueño actual, no de la tienda. Si lo dejan igual al guardar
       // no se reasigna nada (ver originalOwnerEmail en handleSaveStore).
       ownerEmail: profiles.find((p) => p.id === storeOwners[slug])?.email || ''
@@ -1060,6 +1068,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         google: !!storeForm.modulos?.google,
         marca_blanca: !!storeForm.modulos?.marca_blanca,
         marketplace: storeForm.modulos?.marketplace !== false,
+        promociones: !!storeForm.modulos?.promociones,
       },
     };
     if (ownerUserId) upsertData.user_id = ownerUserId;
@@ -1186,7 +1195,15 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         slug,
         subdominioActivo: !!storeForm.subdominioActivo,
         pushActivo: !!storeForm.pushActivo,
-        modulos: { pos: !!storeForm.modulos?.pos, inventario: !!storeForm.modulos?.inventario, google: !!storeForm.modulos?.google, marca_blanca: !!storeForm.modulos?.marca_blanca, marketplace: storeForm.modulos?.marketplace !== false },
+        modulos: {
+          ...(storeForm.modulos || {}),
+          pos: !!storeForm.modulos?.pos,
+          inventario: !!storeForm.modulos?.inventario,
+          google: !!storeForm.modulos?.google,
+          marca_blanca: !!storeForm.modulos?.marca_blanca,
+          marketplace: storeForm.modulos?.marketplace !== false,
+          promociones: !!storeForm.modulos?.promociones,
+        },
         name: storeForm.name,
         tagline: storeForm.tagline,
         marketplaceCategory: storeForm.marketplaceCategory,

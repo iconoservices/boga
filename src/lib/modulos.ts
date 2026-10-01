@@ -4,7 +4,7 @@
 // el editor de tienda del superadmin (los interruptores) y la página de Paquetes
 // (la tabla de niveles). Si se agrega un módulo, se agrega acá y en NIVELES.
 
-export type ModuloId = 'pos' | 'inventario' | 'google' | 'marca_blanca' | 'marketplace' | 'loyverse' | 'dominio_propio' | 'pasarela_pago';
+export type ModuloId = 'pos' | 'inventario' | 'google' | 'marca_blanca' | 'marketplace' | 'loyverse' | 'dominio_propio' | 'pasarela_pago' | 'promociones';
 export type Modulos = Partial<Record<ModuloId, boolean>> & {
   // (La ficha de Loyverse y su merchant_id ya NO viven aquí: `stores.modulos` es público. Ver lib/loyverseServidor.ts.)
   loyverse_last_sync?: string;
@@ -28,6 +28,12 @@ export const MODULOS: { id: ModuloId; label: string; icon: string; desc: string;
     label: 'Inventario',
     icon: 'inventory_2',
     desc: 'Stock que se descuenta solo con cada venta del POS, "Agotado" automático y aviso de poco stock.',
+  },
+  {
+    id: 'promociones',
+    label: 'Promociones & Combos',
+    icon: 'loyalty',
+    desc: 'Permite al negocio crear Combos y Packs con etiqueta especial, pestaña propia en la carta y aparición en Promociones de BogaHub.',
   },
   {
     id: 'google',
@@ -189,6 +195,7 @@ export const PASOS_PRECIO: { clave: string; etiqueta: string; ayuda: string }[] 
   { clave: 'extra:dominio_propio', etiqueta: 'Dominio propio', ayuda: 'Se suma al conectar un dominio propio personalizado (.com / .pe).' },
   { clave: 'extra:loyverse', etiqueta: 'Loyverse POS', ayuda: 'Se suma al sincronizar con el punto de venta Loyverse.' },
   { clave: 'extra:pasarela_pago', etiqueta: 'Pasarela propia', ayuda: 'Se suma al habilitar pasarela de pago online para la tienda.' },
+  { clave: 'extra:promociones', etiqueta: 'Promociones & Combos', ayuda: 'Se suma al activar el módulo de combos y promociones comerciales.' },
 ];
 
 /** Presets de planes para configurar tiendas en 1 clic desde superadmin */
@@ -286,6 +293,7 @@ export function pasosDeTienda(t: { modulos?: Modulos | null; subdominio_activo?:
   if (moduloActivo(t.modulos, 'dominio_propio') || !!t.modulos?.dominio_propio_url) pasos.push('extra:dominio_propio');
   if (moduloActivo(t.modulos, 'loyverse')) pasos.push('extra:loyverse');
   if (moduloActivo(t.modulos, 'pasarela_pago')) pasos.push('extra:pasarela_pago');
+  if (moduloActivo(t.modulos, 'promociones')) pasos.push('extra:promociones');
   return pasos;
 }
 

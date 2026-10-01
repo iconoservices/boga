@@ -1841,6 +1841,14 @@ ALTER TABLE public.products ADD COLUMN IF NOT EXISTS presentaciones JSONB;
 -- tienda puede vender productos Y servicios a la vez, ej. Sweet Kitty Nails).
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS es_servicio BOOLEAN DEFAULT false;
 
+-- ============================================================
+-- COMBOS & PACKS (marca "es un combo" por ítem de catálogo)
+-- ============================================================
+-- El dueño marca un ítem como combo desde su panel si la tienda tiene el módulo 'promociones' activo.
+-- Agrega distintivo visual 'COMBO', pestaña automática de Combos en la carta, inclusión directa en
+-- /promotions y formato destacado en el carrito y mensaje de WhatsApp.
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS es_combo BOOLEAN DEFAULT false;
+
 
 -- ============================================================
 -- CATEGORÍAS POR DEFECTO DE CADA PLANTILLA (editables desde /superadmin/plantillas/<id>)

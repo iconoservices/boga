@@ -17,6 +17,7 @@ import { porcentajeOferta } from '@/lib/ofertas';
 type Promo = {
   id: string; name: string; image: string; precio: number; anterior: number;
   storeSlug: string; storeName: string; storeExternalUrl?: string; categoria: string;
+  esCombo?: boolean;
 };
 
 const soles = (n: number) => `S/ ${n.toFixed(2)}`;
@@ -33,14 +34,21 @@ export default function Promotions() {
       (stores || []).forEach((s: any) => { tiendas[s.slug] = s; });
       setPromos(
         (products || [])
-          .filter((p: any) => p.price_anterior > 0 && p.status !== 'Agotado' && tiendas[p.store])
+          .filter((p: any) => ((p.price_anterior > 0 && p.price_anterior > p.price) || p.es_combo === true) && p.status !== 'Agotado' && tiendas[p.store])
           .map((p: any) => ({
             id: p.id, name: p.name, image: p.image || '', precio: Number(p.price) || 0, anterior: Number(p.price_anterior) || 0,
             storeSlug: p.store, storeName: tiendas[p.store].name, storeExternalUrl: tiendas[p.store].external_url || undefined,
-            categoria: p.category || 'Otros',
+            categoria: p.es_combo ? 'Combos' : (p.category || 'Otros'),
+            esCombo: p.es_combo === true,
           }))
-          // las de mayor descuento primero
-          .sort((a: Promo, b: Promo) => (b.anterior - b.precio) / b.anterior - (a.anterior - a.precio) / a.anterior),
+          // Combos y mayores descuentos primero
+          .sort((a: Promo, b: Promo) => {
+            if (a.esCombo && !b.esCombo) return -1;
+            if (!a.esCombo && b.esCombo) return 1;
+            const descA = a.anterior > 0 ? (a.anterior - a.precio) / a.anterior : 0;
+            const descB = b.anterior > 0 ? (b.anterior - b.precio) / b.anterior : 0;
+            return descB - descA;
+          }),
       );
       setCargando(false);
     });
@@ -114,8 +122,10 @@ export default function Promotions() {
                   >
                     <div className="relative aspect-square overflow-hidden bg-surface-container-low">
                       {p.image && <img loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src={p.image} alt={p.name} />}
-                      <div className="absolute top-2 left-2 bg-primary text-white text-[10px] font-black px-2 py-0.5 rounded-lg shadow-sm">
-                        {porcentajeOferta(p.anterior, p.precio)}
+                      <div className={`absolute top-2 left-2 text-white text-[10px] font-black px-2 py-0.5 rounded-lg shadow-sm ${
+                        p.esCombo ? 'bg-gradient-to-r from-amber-500 to-orange-500' : 'bg-primary'
+                      }`}>
+                        {p.esCombo ? '🔥 COMBO' : porcentajeOferta(p.anterior, p.precio)}
                       </div>
                     </div>
                     <div className="p-3 flex flex-col gap-0.5">
@@ -123,7 +133,7 @@ export default function Promotions() {
                       <h3 className="font-headline-sm text-sm text-on-surface line-clamp-2 leading-tight">{p.name}</h3>
                       <div className="flex items-baseline gap-2 mt-1">
                         <span className="font-price-lg text-primary text-base">{soles(p.precio)}</span>
-                        <span className="text-secondary font-body-md text-[11px] line-through">{soles(p.anterior)}</span>
+                        {p.anterior > 0 && <span className="text-secondary font-body-md text-[11px] line-through">{soles(p.anterior)}</span>}
                       </div>
                     </div>
                   </Link>

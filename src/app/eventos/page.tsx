@@ -291,7 +291,21 @@ export default function Eventos() {
                   <span className="text-secondary font-label-md text-[11px] flex items-center gap-1 mt-auto">
                     <span className="material-symbols-outlined text-[12px]">location_on</span>{e.lugar}
                   </span>
-                  <span className="font-price-lg text-primary text-sm">{e.precio}</span>
+                  <div className="flex items-center justify-between mt-auto pt-1">
+                    <span className="font-price-lg text-primary text-sm">{e.precio}</span>
+                    {e.linkPostOriginal && (
+                      <a
+                        href={e.linkPostOriginal}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(ev) => ev.stopPropagation()}
+                        className="bg-[#f2f3fd] hover:bg-[#e6e7f2] text-[#0058be] text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 transition-colors border border-blue-200"
+                        title="Ver post original"
+                      >
+                        <span className="material-symbols-outlined text-[12px]">open_in_new</span>Post
+                      </a>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -456,7 +470,7 @@ export default function Eventos() {
                 <span className="font-price-lg text-primary text-lg">{eventoAbierto.precio}</span>
                 <button
                   onClick={() => setEventoAbierto(null)}
-                  className="bg-primary text-white font-label-md text-sm px-5 py-2.5 rounded-full active:scale-95 transition-transform"
+                  className="bg-surface-container-highest hover:bg-surface-container text-on-surface font-label-md text-sm px-5 py-2.5 rounded-full active:scale-95 transition-colors"
                 >
                   Cerrar
                 </button>
@@ -466,7 +480,7 @@ export default function Eventos() {
                   href={eventoAbierto.linkEntradas}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 bg-primary text-white font-label-md text-sm px-5 py-3 rounded-full active:scale-95 transition-transform"
+                  className="flex items-center justify-center gap-2 bg-primary text-white font-label-md text-sm px-5 py-3 rounded-full active:scale-95 transition-transform font-bold shadow-md"
                 >
                   <span className="material-symbols-outlined text-[18px]">confirmation_number</span>
                   Comprar entradas
@@ -478,11 +492,10 @@ export default function Eventos() {
                   href={eventoAbierto.linkPostOriginal}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 bg-[#f2f3fd] hover:bg-[#e6e7f2] text-[#0058be] border border-[#c2c6d6] font-label-md text-sm px-5 py-3 rounded-full active:scale-95 transition-transform"
+                  className="flex items-center justify-center gap-2 bg-[#0058be] hover:bg-[#0047a0] text-white font-label-md text-sm px-5 py-3 rounded-full active:scale-95 transition-all font-bold shadow-md"
                 >
-                  <span className="material-symbols-outlined text-[18px]">share</span>
-                  Ver post original
-                  <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                  <span className="material-symbols-outlined text-[18px]">open_in_new</span>
+                  Ver publicación original
                 </a>
               )}
               {eventoAbierto.reservable && <ReservaEntrada eventoId={eventoAbierto.id} />}

@@ -93,6 +93,11 @@ function FotoTarjeta({ product }: { product: Producto }) {
           ))}
         </div>
       )}
+      {product.esCombo && (
+        <div className="absolute top-2 left-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded-lg shadow-md z-10 flex items-center gap-0.5">
+          <span>🔥</span> COMBO
+        </div>
+      )}
     </div>
   );
 }
@@ -280,6 +285,13 @@ export function ProductModal({
       </div>
 
       <div className="max-w-2xl mx-auto px-5 pt-5 pb-28">
+        {producto.esCombo && (
+          <div className="mb-2">
+            <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[11px] font-black px-2.5 py-1 rounded-lg shadow-sm inline-flex items-center gap-1">
+              <span>🔥</span> COMBO / PACK
+            </span>
+          </div>
+        )}
         <h2 className={`font-bold ${TXT.title}`} style={{ color: t.onSurface }}>{producto.name}</h2>
         {producto.desc && (
           <p className={`${TXT.body} mt-2 leading-relaxed`} style={{ color: t.onSurfaceVariant }}>{producto.desc}</p>
@@ -493,6 +505,11 @@ export function CartPanel({
                 <img src={l.producto.image} alt={l.producto.name} className="w-12 h-12 rounded-lg object-cover shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className={`font-bold ${TXT.body} leading-tight line-clamp-2`} style={{ color: t.onSurface }}>
+                    {l.producto.esCombo && (
+                      <span className="inline-block bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded mr-1.5 align-middle shadow-xs">
+                        COMBO
+                      </span>
+                    )}
                     {l.producto.name}{l.pres ? ` · ${l.pres.label}` : ''}
                   </p>
                   <p className={TXT.micro} style={{ color: t.onSurfaceVariant }}>{soles(l.precio ?? l.producto.price)} c/u</p>

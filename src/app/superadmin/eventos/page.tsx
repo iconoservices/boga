@@ -389,8 +389,23 @@ export default function EventosAdmin() {
             )}
             <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Enlace de entradas o registro (opcional)
               <input value={ficha.link_entradas} onChange={(e) => setFicha({ ...ficha, link_entradas: e.target.value })} className={campo} placeholder="https://… (Novikpass, etc.). Muestra el botón «Comprar entradas»" /></label>
-            <label className="flex flex-col gap-1 text-xs font-bold text-secondary sm:col-span-2">Enlace a publicación o post original (Facebook, Instagram, TikTok…)
-              <input value={ficha.link_post_original} onChange={(e) => setFicha({ ...ficha, link_post_original: e.target.value })} className={campo} placeholder="https://facebook.com/... o https://instagram.com/p/... Muestra el botón «Ver post original»" /></label>
+            <div className="sm:col-span-2 bg-blue-50/70 border border-blue-200 rounded-xl p-3.5 flex flex-col gap-2">
+              <label className="flex flex-col gap-1 text-xs font-bold text-blue-900">
+                <span className="flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[18px] text-[#0058be]">link</span>
+                  Enlace al aviso / post original (opcional)
+                </span>
+                <input
+                  value={ficha.link_post_original}
+                  onChange={(e) => setFicha({ ...ficha, link_post_original: e.target.value })}
+                  className={campo + ' bg-white border-blue-200 focus:border-blue-600'}
+                  placeholder="https://facebook.com/... o https://instagram.com/p/... o web del evento"
+                />
+              </label>
+              <p className="text-[11px] text-blue-800/80 -mt-0.5">
+                Si pones un enlace, en la ficha del evento aparecerá el botón destacado «Ver publicación original» para que la gente vaya directamente con un toque (igual que en los empleos).
+              </p>
+            </div>
             <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Estado
               <select value={ficha.status} onChange={(e) => setFicha({ ...ficha, status: e.target.value })} className={campo}>
                 <option value="activo">Activo (visible)</option>

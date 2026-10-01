@@ -54,6 +54,8 @@ export interface Producto {
   presentaciones?: Presentacion[];
   /** true = es un servicio (corte, consulta, reserva): no se agrega al carrito, se consulta directo por WhatsApp. */
   esServicio?: boolean;
+  /** true = es un combo o paquete promocional con distintivo y visibilidad especial. */
+  esCombo?: boolean;
 }
 
 export interface Categoria {

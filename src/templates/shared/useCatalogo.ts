@@ -66,6 +66,7 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
             extra: p.subcategory ? { area: String(p.subcategory) } : undefined,
             presentaciones: Array.isArray(p.presentaciones) && p.presentaciones.length ? p.presentaciones : undefined,
             esServicio: p.es_servicio === true,
+            esCombo: p.es_combo === true,
           }))
         : [];
 
@@ -176,7 +177,7 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
 
   const confirmarPedido = (datos: { nombre: string; telefono: string; entrega: 'delivery' | 'recojo'; direccion: string }) => {
     const lineas = cartItems
-      .map((l) => `• ${l.qty}x ${l.pres ? nombreConPresentacion(l.producto.name, l.pres.label) : l.producto.name} — ${soles(l.precio * l.qty)}`)
+      .map((l) => `• ${l.qty}x ${l.producto.esCombo ? '🔥 [COMBO] ' : ''}${l.pres ? nombreConPresentacion(l.producto.name, l.pres.label) : l.producto.name} — ${soles(l.precio * l.qty)}`)
       .join('\n');
     const entregaTexto = datos.entrega === 'delivery'
       ? `Delivery a: ${datos.direccion}`
@@ -219,16 +220,20 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
         .filter(Boolean)
         .map((c) => ({ id: c, label: c.charAt(0).toUpperCase() + c.slice(1), icon: iconForCategory(c) }));
 
-  const categoryTabs: Categoria[] = [{ id: 'all', label: 'Todos', icon: 'apps' }, ...categoriasEfectivas];
+  const tieneCombos = products.some((p) => p.esCombo);
+  const comboTab: Categoria[] = tieneCombos ? [{ id: '__combos__', label: 'Combos 🔥', icon: 'takeout_dining' }] : [];
+  const categoryTabs: Categoria[] = [{ id: 'all', label: 'Todos', icon: 'apps' }, ...comboTab, ...categoriasEfectivas];
 
   const filtered = activeCategory === 'all'
     ? products
-    : products.filter((p) => {
-        const pc = (p.category || '').toLowerCase().trim();
-        const cat = categoriasEfectivas.find((c) => c.id === activeCategory);
-        if (!cat) return pc === activeCategory.toLowerCase().trim();
-        return pc === cat.id.toLowerCase().trim() || pc === cat.label.toLowerCase().trim();
-      });
+    : activeCategory === '__combos__'
+      ? products.filter((p) => p.esCombo)
+      : products.filter((p) => {
+          const pc = (p.category || '').toLowerCase().trim();
+          const cat = categoriasEfectivas.find((c) => c.id === activeCategory);
+          if (!cat) return pc === activeCategory.toLowerCase().trim();
+          return pc === cat.id.toLowerCase().trim() || pc === cat.label.toLowerCase().trim();
+        });
 
   /** Categorias con una foto real del catalogo, para las tarjetas del inicio. */
   const categoriasConFoto = (limite = 3) =>

@@ -50,6 +50,8 @@ interface Product {
   presentaciones?: { label: string; price: number }[] | null;
   /** true = es un servicio (se reserva/consulta, no se agrega al carrito). Decide si sale en el toggle "Servicios" del Market. */
   es_servicio?: boolean | null;
+  /** true = es un combo o paquete promocional con sello propio y presencia en Promociones. */
+  es_combo?: boolean | null;
 }
 
 type TabId = 'inicio' | 'products' | 'orders' | 'pos' | 'metrics' | 'stores';
@@ -440,6 +442,7 @@ function AdminDashboard({ user }: { user: User }) {
     ofertaHasta: '',
     presentaciones: [] as { label: string; price: string }[],
     esServicio: false,
+    esCombo: false,
   });
 
   // Tiendas de terrenos: "Subcategoría" pasa a ser el área, y aparece un campo para la ubicación (enlace de Maps).
@@ -464,6 +467,7 @@ function AdminDashboard({ user }: { user: User }) {
       ofertaHasta: '',
       presentaciones: [],
       esServicio: false,
+      esCombo: false,
     });
     setFotos([]);
   };
@@ -525,9 +529,11 @@ function AdminDashboard({ user }: { user: User }) {
     const base = 'id,name,store,price,category,subcategory,stock,status,image,description,created_at';
     let { data, error } = await supabase
       .from('products')
-      .select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio`)
+      .select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio,es_combo`)
       .in('store', slugs)
       .order('created_at', { ascending: false });
+    // Si el SQL de "es_combo" aún no se corrió, se pide sin esa columna.
+    if (error) ({ data, error } = await supabase.from('products').select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio`).in('store', slugs).order('created_at', { ascending: false }) as any);
     // Si el SQL de "fotos extra" (galería) aún no se corrió, se pide sin esa columna.
     if (error) ({ data, error } = await supabase.from('products').select(`${base},${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio`).in('store', slugs).order('created_at', { ascending: false }) as any);
     // Si el SQL de "es_servicio" aún no se corrió, se pide sin esa columna.
@@ -1112,6 +1118,10 @@ function AdminDashboard({ user }: { user: User }) {
       const camposServicio = newProduct.esServicio || productoPrevio?.es_servicio
         ? { es_servicio: newProduct.esServicio }
         : {};
+      // Combo: la columna solo se manda si está marcado o si el producto ya la tenía (para poder destildarla).
+      const camposCombo = newProduct.esCombo || productoPrevio?.es_combo
+        ? { es_combo: newProduct.esCombo }
+        : {};
       // Igual que arriba: solo se manda si hay más de una foto o si el producto ya tenía galería (para poder achicarla a una sola).
       const camposFotos = urlsFotos.length > 1 || (productoPrevio?.images?.length ?? 0) > 0
         ? { images: urlsFotos.length > 1 ? urlsFotos : null }
@@ -1130,6 +1140,7 @@ function AdminDashboard({ user }: { user: User }) {
           ...camposOferta,
           ...camposPres,
           ...camposServicio,
+          ...camposCombo,
           ...camposFotos,
           // Sin módulo de inventario no se toca el stock guardado (por si lo vuelven a prender).
           ...(tiendaTiene(newProduct.store, 'inventario') ? { stock: finalStock } : {}),
@@ -1166,6 +1177,7 @@ function AdminDashboard({ user }: { user: User }) {
             ...camposOferta,
             ...camposPres,
             ...camposServicio,
+            ...camposCombo,
             ...camposFotos,
             stock: finalStock,
             status: finalStatus,
@@ -1210,6 +1222,7 @@ function AdminDashboard({ user }: { user: User }) {
       ofertaHasta: product.oferta_hasta ? product.oferta_hasta.slice(0, 10) : '',
       presentaciones: leerPresentaciones(product.presentaciones).map((x) => ({ label: x.label, price: String(x.price) })),
       esServicio: product.es_servicio === true,
+      esCombo: product.es_combo === true,
     });
     setFotos(
       product.images?.length ? product.images.map((url) => ({ url })) : product.image ? [{ url: product.image }] : []
@@ -1929,7 +1942,14 @@ function AdminDashboard({ user }: { user: User }) {
                                       )}
                                     </div>
                                     <div>
-                                      <p className="font-bold text-gray-900">{p.name}</p>
+                                      <p className="font-bold text-gray-900 flex items-center gap-1.5">
+                                        {p.name}
+                                        {p.es_combo && (
+                                          <span className="bg-amber-100 text-amber-800 text-[10px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase">
+                                            🔥 Combo
+                                          </span>
+                                        )}
+                                      </p>
                                       {p.subcategory && (
                                         <span className="text-xs font-medium text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-100 mt-1 inline-block">
                                           {p.subcategory}
@@ -2014,7 +2034,14 @@ function AdminDashboard({ user }: { user: User }) {
                             {/* Details */}
                             <div className="flex flex-col flex-1 min-w-0 py-0.5">
                               <div className="flex justify-between items-start gap-2">
-                                <h3 className="font-bold text-gray-900 text-[13px] leading-tight line-clamp-2">{p.name}</h3>
+                                <h3 className="font-bold text-gray-900 text-[13px] leading-tight line-clamp-2">
+                                  {p.es_combo && (
+                                    <span className="bg-amber-100 text-amber-800 text-[9px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase mr-1 inline-block align-middle">
+                                      🔥 Combo
+                                    </span>
+                                  )}
+                                  {p.name}
+                                </h3>
                                 <span className="font-bold text-primary text-[13px] whitespace-nowrap">
                                   {precioOfertaVigente(p) !== null ? (
                                     <>S/ {precioOfertaVigente(p)!.toFixed(2)} <span className="text-[10px] font-medium text-gray-400 line-through">S/ {Number(p.price).toFixed(2)}</span></>
@@ -3185,6 +3212,27 @@ function AdminDashboard({ user }: { user: User }) {
                     <span className="block text-xs text-gray-500 mt-0.5">Ej. un corte, una consulta, una reserva. Aparece marcado como servicio en tu tienda y en BogaHub.</span>
                   </span>
                 </label>
+
+                {/* Combo / Pack: solo si la tienda tiene el módulo 'promociones' activo (o si es superadmin) */}
+                {(tiendaTiene(newProduct.store, 'promociones') || esSuperadmin) && (
+                  <label className="flex items-center gap-3 rounded-xl border border-dashed border-amber-300 bg-amber-50/60 p-4 cursor-pointer hover:bg-amber-50/90 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={newProduct.esCombo}
+                      onChange={(e) => setNewProduct({ ...newProduct, esCombo: e.target.checked })}
+                      className="w-5 h-5 accent-amber-600 shrink-0"
+                    />
+                    <span>
+                      <span className="block text-sm font-bold text-amber-950 flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-[18px] text-amber-600">takeout_dining</span>
+                        🔥 Es un Combo / Pack
+                      </span>
+                      <span className="block text-xs text-amber-800/80 mt-0.5">
+                        Ideal para paquetes de comida (pollerías, combos familiares) o packs. Se destaca en tu carta con sello especial y aparece en Promociones de BogaHub.
+                      </span>
+                    </span>
+                  </label>
+                )}
 
                 {/* Disponibilidad e Inventario (solo con el módulo de inventario) */}
                 {tiendaTiene(newProduct.store, 'inventario') && (
