@@ -75,6 +75,7 @@ ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS facebook TEXT;
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS instagram TEXT;
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS tiktok TEXT;
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS external_url TEXT;
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS hide_hero_text BOOLEAN DEFAULT false;
 
 CREATE INDEX IF NOT EXISTS stores_slug_idx ON public.stores (slug);
 CREATE INDEX IF NOT EXISTS stores_user_id_idx ON public.stores (user_id);
