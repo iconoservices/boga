@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { leerMisPedidos, PedidoLocal } from '@/lib/pedidos';
 import { CLAVE_REABRIR_MODAL, setAuthCookie } from '@/lib/authCookies';
 import { useFavoritos } from '@/lib/useFavoritos';
+import { supabase } from '@/lib/supabase';
 
 interface Props {
   storeSlug: string;
@@ -49,6 +50,18 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
   const [ubicando, setUbicando] = useState(false);
   const [ubicMsg, setUbicMsg] = useState('');
   const [misPedidos, setMisPedidos] = useState<PedidoLocal[]>([]);
+
+  // ¿Esta cuenta es dueña de alguna tienda? Igual que "Tu tienda" en el perfil de BogaHub:
+  // un acceso directo a su panel, sin tener que pasar por "Acceso staff".
+  const [tiendasPropias, setTiendasPropias] = useState<string[]>([]);
+  useEffect(() => {
+    if (!user?.id) { setTiendasPropias([]); return; }
+    let vivo = true;
+    supabase.from('stores').select('name').eq('user_id', user.id).then(({ data }) => {
+      if (vivo) setTiendasPropias((data || []).map((x: any) => x.name));
+    });
+    return () => { vivo = false; };
+  }, [user?.id]);
 
   // Sincronizar datos si el usuario de Supabase / Google está conectado
   useEffect(() => {
@@ -499,6 +512,24 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
                     Crear cuenta
                   </button>
                 </div>
+              )}
+
+              {user && tiendasPropias.length > 0 && (
+                <Link
+                  href="/admin"
+                  className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-primary to-primary-container text-white shadow-md shadow-primary/20 active:scale-[0.98] transition-all"
+                >
+                  <span className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[20px]">storefront</span>
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[9px] font-bold uppercase tracking-wider text-white/70 leading-tight">Administra tu tienda</span>
+                    <span className="block text-xs font-bold truncate leading-tight mt-0.5">
+                      {tiendasPropias.length === 1 ? tiendasPropias[0] : `${tiendasPropias[0]} y ${tiendasPropias.length - 1} más`}
+                    </span>
+                  </span>
+                  <span className="material-symbols-outlined text-white/70 text-[20px] shrink-0">chevron_right</span>
+                </Link>
               )}
 
               <form onSubmit={handleSubmitDatos} className="flex flex-col gap-3">
