@@ -196,6 +196,11 @@ export default function RackTemplate({ store, initialProductId }: Props) {
                 </>
               )}
 
+              {store.hideHeroText && store.tagline && (
+                <p className="text-center text-sm font-semibold mb-4 leading-snug" style={{ color: t.onSurfaceVariant }}>
+                  {store.tagline}
+                </p>
+              )}
               <div className="flex flex-col min-[420px]:flex-row gap-3">
                 <button
                   onClick={() => irAlCatalogo()}
@@ -225,7 +230,7 @@ export default function RackTemplate({ store, initialProductId }: Props) {
             style={{ background: t.surfaceContainer, borderColor: `${t.outlineVariant}40` }}
           >
             {[
-              { icon: 'local_shipping', label: 'Delivery Lima' },
+              { icon: 'local_shipping', label: store.entrega === 'recojo' ? 'Recojo en tienda' : store.entrega === 'delivery' ? 'Delivery' : 'Delivery y recojo' },
               { icon: 'build', label: 'Instalación incluida' },
               { icon: 'verified', label: 'Garantía real' },
             ].map((item) => (
