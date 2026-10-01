@@ -173,7 +173,7 @@ function ExploreContenido() {
           };
           newSectionsProducts[macroCat].push(item);
           // Las ofertas también salen en la fila de Promos
-          if (enOferta && macroCat !== 'Combos & Promos') newSectionsProducts['Combos & Promos'].push(item);
+          if ((enOferta || p.es_combo === true) && macroCat !== 'Combos & Promos') newSectionsProducts['Combos & Promos'].push(item);
         });
 
         // Mezcla para que cada fila se vea variada: se baraja y se intercalan las tiendas
