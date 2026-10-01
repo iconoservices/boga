@@ -408,6 +408,7 @@ function AdminDashboard({ user }: { user: User }) {
   const [storeHeroPreview, setStoreHeroPreview] = useState<string | null>(null);
   const [storeCategories, setStoreCategories] = useState<{ name: string; icon: string; href: string }[]>([]);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [editandoCats, setEditandoCats] = useState(false);
   // null = no tocar el color: se deja el que ya tenia (de la plantilla o de
   // un preset elegido antes). Con un id, ese preset pisa el primary al guardar.
   // 'logo' es dinamico: el color sale de logoTheme (extraido de una imagen),
@@ -3162,9 +3163,12 @@ function AdminDashboard({ user }: { user: User }) {
                         const tienda = Object.values(stores).find((s) => s.slug === newProduct.store);
                         if (!tienda) return;
                         // Ya existe con ese mismo nombre (mismo enlace): no se duplica, solo se selecciona.
-                        const existente = tienda.categories.find((c) => c.href === href);
+                        // Se compara por nombre (no por enlace): "Racks" y "Racks para TV" son categorías distintas.
+                        const existente = tienda.categories.find((c) => c.name.trim().toLowerCase() === nombre.toLowerCase());
                         if (existente) { setNewProduct({ ...newProduct, category: existente.name }); return; }
-                        const categoriasNuevas = [...tienda.categories, { name: nombre, icon: iconForCategory(nombre), href }];
+                        let hrefUnico = href || 'categoria';
+                        for (let n = 2; tienda.categories.some((c) => c.href === hrefUnico); n++) hrefUnico = `${href || 'categoria'}-${n}`;
+                        const categoriasNuevas = [...tienda.categories, { name: nombre, icon: iconForCategory(nombre), href: hrefUnico }];
                         const { error } = await supabase.from('stores').update({ categories: categoriasNuevas }).eq('slug', newProduct.store);
                         if (error) { alert('No se pudo crear la categoría: ' + error.message); return; }
                         setDbStores((prev) => prev.map((s: any) => s.slug === newProduct.store ? { ...s, categories: categoriasNuevas } : s));
@@ -3179,6 +3183,68 @@ function AdminDashboard({ user }: { user: User }) {
                       ))}
                       <option value="__nueva__">+ Nueva categoría...</option>
                     </select>
+                    <button
+                      type="button"
+                      onClick={() => setEditandoCats((v) => !v)}
+                      className="mt-2 text-xs font-bold text-gray-500 hover:text-black flex items-center gap-1"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">edit</span>
+                      {editandoCats ? 'Cerrar edición de categorías' : 'Editar categorías'}
+                    </button>
+                    {editandoCats && (() => {
+                      const tienda = Object.values(stores).find((s) => s.slug === newProduct.store);
+                      if (!tienda) return null;
+                      const guardarCats = async (lista: typeof tienda.categories) => {
+                        const { error } = await supabase.from('stores').update({ categories: lista }).eq('slug', newProduct.store);
+                        if (error) { alert('No se pudo guardar: ' + error.message); return false; }
+                        setDbStores((prev) => prev.map((x: any) => x.slug === newProduct.store ? { ...x, categories: lista } : x));
+                        return true;
+                      };
+                      return (
+                        <div className="mt-2 rounded-md border border-gray-200 bg-gray-50 p-2 space-y-1.5">
+                          {tienda.categories.map((cat) => {
+                            const usados = products.filter((p) => p.store === newProduct.store && p.category === cat.name).length;
+                            return (
+                              <div key={cat.href} className="flex items-center gap-2 text-sm">
+                                <span className="flex-1 font-semibold text-gray-700 truncate">{cat.name} <span className="text-xs font-normal text-gray-400">({usados})</span></span>
+                                <button
+                                  type="button"
+                                  title="Cambiar nombre"
+                                  className="w-7 h-7 rounded-full hover:bg-gray-200 flex items-center justify-center"
+                                  onClick={async () => {
+                                    const nuevo = window.prompt('Nuevo nombre de la categoría', cat.name)?.trim();
+                                    if (!nuevo || nuevo === cat.name) return;
+                                    if (tienda.categories.some((c) => c.name.toLowerCase() === nuevo.toLowerCase() && c.href !== cat.href)) { alert('Ya existe una categoría con ese nombre.'); return; }
+                                    const lista = tienda.categories.map((c) => c.href === cat.href ? { ...c, name: nuevo, icon: iconForCategory(nuevo) } : c);
+                                    if (!(await guardarCats(lista))) return;
+                                    if (usados > 0) {
+                                      const { error } = await supabase.from('products').update({ category: nuevo }).eq('store', newProduct.store).eq('category', cat.name);
+                                      if (error) { alert('La categoría cambió, pero no se pudieron mover los productos: ' + error.message); return; }
+                                      setProducts((prev) => prev.map((p) => p.store === newProduct.store && p.category === cat.name ? { ...p, category: nuevo } : p));
+                                    }
+                                    if (newProduct.category === cat.name) setNewProduct((np) => ({ ...np, category: nuevo }));
+                                  }}
+                                >
+                                  <span className="material-symbols-outlined text-[16px]">edit</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  title={usados > 0 ? 'Tiene productos: muévelos antes de borrarla' : 'Borrar categoría'}
+                                  disabled={usados > 0}
+                                  className="w-7 h-7 rounded-full hover:bg-red-100 text-red-600 flex items-center justify-center disabled:opacity-30 disabled:hover:bg-transparent"
+                                  onClick={async () => {
+                                    if (!window.confirm(`¿Borrar la categoría "${cat.name}"?`)) return;
+                                    await guardarCats(tienda.categories.filter((c) => c.href !== cat.href));
+                                  }}
+                                >
+                                  <span className="material-symbols-outlined text-[16px]">delete</span>
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">{esTerreno ? 'Área del terreno' : 'Subcategoría (Ej: Entradas)'}</label>
@@ -3458,8 +3524,9 @@ function AdminDashboard({ user }: { user: User }) {
                       const name = newCategoryName.trim();
                       if (!name) return;
                       const href = name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-                      if (storeCategories.some(c => c.href === href)) { setNewCategoryName(''); return; }
-                      setStoreCategories(prev => [...prev, { name, icon: iconForCategory(name), href }]);
+                      if (storeCategories.some(c => c.name.trim().toLowerCase() === name.toLowerCase())) { setNewCategoryName(''); return; }
+                      let hu = href || 'categoria'; for (let n = 2; storeCategories.some(c => c.href === hu); n++) hu = `${href || 'categoria'}-${n}`;
+                      setStoreCategories(prev => [...prev, { name, icon: iconForCategory(name), href: hu }]);
                       setNewCategoryName('');
                     }}
                     placeholder="Ej: Bebidas"
@@ -3471,8 +3538,9 @@ function AdminDashboard({ user }: { user: User }) {
                       const name = newCategoryName.trim();
                       if (!name) return;
                       const href = name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-                      if (storeCategories.some(c => c.href === href)) { setNewCategoryName(''); return; }
-                      setStoreCategories(prev => [...prev, { name, icon: iconForCategory(name), href }]);
+                      if (storeCategories.some(c => c.name.trim().toLowerCase() === name.toLowerCase())) { setNewCategoryName(''); return; }
+                      let hu = href || 'categoria'; for (let n = 2; storeCategories.some(c => c.href === hu); n++) hu = `${href || 'categoria'}-${n}`;
+                      setStoreCategories(prev => [...prev, { name, icon: iconForCategory(name), href: hu }]);
                       setNewCategoryName('');
                     }}
                     className="px-4 py-2.5 bg-black text-white rounded-md font-bold text-sm hover:bg-gray-800 transition-colors"
