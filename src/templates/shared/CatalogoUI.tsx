@@ -258,7 +258,7 @@ export function ProductModal({
         <span className={`material-symbols-outlined ${ICON.md}`}>close</span>
       </button>
 
-      <div className="w-full h-64 md:h-[420px] relative">
+      <div className="w-full aspect-square md:aspect-auto md:h-[420px] relative">
         <img className="w-full h-full object-cover" alt={producto.name} src={fotos[fotoActiva] ?? producto.image} />
         {fotos.length > 1 && (
           <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2 px-4 flex-wrap">
