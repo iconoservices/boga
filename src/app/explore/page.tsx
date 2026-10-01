@@ -163,7 +163,7 @@ function ExploreContenido() {
             price: `S/ ${p.price.toFixed(2)}`,
             priceNum: p.price,
             original: p.price_anterior > 0 ? `S/ ${Number(p.price_anterior).toFixed(2)}` : undefined,
-            badge: enOferta ? 'Oferta' : 'Nuevo',
+            badge: p.es_combo === true ? 'Combo' : enOferta ? 'Oferta' : 'Nuevo',
             img: p.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80',
             status: p.status || 'Activo',
             store: storeDef?.name || p.store,
