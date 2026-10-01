@@ -81,7 +81,7 @@ export default function RackTemplate({ store, initialProductId }: Props) {
         className="sticky top-0 z-50 px-5 md:px-6 h-16 flex items-center justify-between border-b"
         style={{ background: `${t.background}F0`, backdropFilter: 'blur(16px)', borderColor: `${t.outlineVariant}60` }}
       >
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-3 min-w-0 max-w-[calc(100%-8.5rem)] md:max-w-none">
           {store.logoImage ? (
             <img src={store.logoImage} alt={store.name} className="w-9 h-9 rounded-lg object-cover shrink-0" />
           ) : (
