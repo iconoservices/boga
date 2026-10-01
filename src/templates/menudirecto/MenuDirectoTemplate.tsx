@@ -80,7 +80,7 @@ export default function MenuDirectoTemplate({ store, initialProductId }: Props) 
                 De borde a borde, sin padding ni esquinas redondeadas, igual que
                 el hero de Pollería: es el banner que carga el comercio, tiene que
                 verse entero y sin filtro negro encima. El texto va debajo. */}
-            <section className="relative w-full h-44 md:h-60 overflow-hidden">
+            <section className="relative w-full aspect-video md:aspect-auto md:h-60 overflow-hidden">
               <img className="w-full h-full object-cover" alt={store.heroAlt} src={store.heroImage} />
               <StoreFloatingActions store={store} />
             </section>
