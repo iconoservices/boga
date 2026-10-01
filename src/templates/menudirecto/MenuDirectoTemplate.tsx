@@ -8,7 +8,7 @@ import StoreHeader from '../shared/StoreHeader';
 import { useCatalogo } from '../shared/useCatalogo';
 import { TXT, ICON } from '../shared/tokens';
 import {
-  CategoryChips, ProductGrid, ProductModal, CartPanel, ContactPanel, BottomNav, StoreFooter,
+  CategoryChips, CombosCarrusel, ProductGrid, ProductModal, CartPanel, ContactPanel, BottomNav, StoreFooter,
 } from '../shared/CatalogoUI';
 
 interface Props {
@@ -112,6 +112,17 @@ export default function MenuDirectoTemplate({ store, initialProductId }: Props) 
               active={c.activeCategory}
               onSelect={c.setActiveCategory}
             />
+
+            {c.activeCategory === 'all' && c.combosYOfertas && c.combosYOfertas.length > 0 && (
+              <CombosCarrusel
+                t={t}
+                productos={c.combosYOfertas}
+                titulo={c.comboLabel}
+                onSelect={c.abrirProducto}
+                onAdd={c.addToCart}
+                onVerMas={() => c.setActiveCategory('__combos__')}
+              />
+            )}
 
             <div className="px-5 md:px-6">
               <h2 className={`${TXT.title} font-black uppercase italic tracking-tighter mb-4`} style={{ color: t.onSurface }}>

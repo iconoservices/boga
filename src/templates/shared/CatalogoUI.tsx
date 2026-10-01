@@ -179,6 +179,120 @@ export function ProductGrid({
 }
 
 /* ════════════════════════════════════════════
+   CARRUSEL DE COMBOS Y OFERTAS (Primera fila destacada)
+   ════════════════════════════════════════════ */
+
+export function CombosCarrusel({
+  t,
+  productos,
+  onSelect,
+  onAdd,
+  onVerMas,
+  titulo,
+}: {
+  t: StoreTheme;
+  productos: Producto[];
+  onSelect: (p: Producto) => void;
+  onAdd: (p: Producto) => void;
+  onVerMas?: () => void;
+  titulo?: string;
+}) {
+  if (!productos || productos.length === 0) return null;
+
+  const tieneCombos = productos.some((p) => p.esCombo);
+  const tieneOfertas = productos.some((p) => Boolean(p.priceAnterior) && p.priceAnterior! > p.price);
+  const encabezado = titulo || (tieneCombos && tieneOfertas
+    ? 'Combos & Ofertas'
+    : tieneCombos
+      ? 'Combos de la Casa'
+      : 'Ofertas del Día');
+
+  return (
+    <section className="mb-6 animate-fade-in">
+      <div className="px-5 md:px-6 flex items-center justify-between gap-3 mb-3">
+        <h3 className={`${TXT.lead} font-black uppercase italic tracking-tight flex items-center gap-1.5`} style={{ color: t.onSurface }}>
+          <span className="text-amber-500">🔥</span> {encabezado}
+        </h3>
+        {onVerMas && (
+          <button
+            onClick={onVerMas}
+            className={`${TXT.small} font-bold flex items-center gap-0.5 hover:underline active:scale-95 transition-transform`}
+            style={{ color: t.primary }}
+          >
+            Ver todos <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+          </button>
+        )}
+      </div>
+
+      <div
+        className="flex gap-3 overflow-x-auto hide-scrollbar px-5 md:px-6 pb-2 snap-x"
+        style={{ scrollbarWidth: 'none' }}
+      >
+        {productos.map((product) => {
+          const pct = product.priceAnterior && product.priceAnterior > product.price
+            ? `-${Math.round((1 - product.price / product.priceAnterior) * 100)}%`
+            : null;
+
+          return (
+            <div
+              key={product.id}
+              onClick={() => onSelect(product)}
+              className="w-[170px] sm:w-[195px] shrink-0 snap-start rounded-2xl overflow-hidden group relative cursor-pointer border shadow-sm hover:shadow-md transition-all duration-300 flex flex-col"
+              style={{ background: t.surface, borderColor: `${t.outlineVariant}40` }}
+            >
+              <div className="aspect-[4/3] overflow-hidden relative bg-black/5">
+                <img
+                  src={product.images?.[0] || product.image}
+                  alt={product.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
+                />
+                <div className="absolute top-2 left-2 z-10 flex flex-col gap-1 items-start">
+                  {product.esCombo && (
+                    <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow-sm flex items-center gap-0.5">
+                      <span>🔥</span> COMBO
+                    </span>
+                  )}
+                  {pct && (
+                    <span className="bg-primary text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow-sm" style={{ background: t.primary }}>
+                      {pct}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-3 flex flex-col flex-1">
+                <h4 className={`font-bold ${TXT.body} leading-tight mb-1 line-clamp-2`} style={{ color: t.onSurface }}>
+                  {product.name}
+                </h4>
+                <p className={`${TXT.micro} mb-2 line-clamp-2 flex-1`} style={{ color: t.onSurfaceVariant }}>
+                  {product.desc || (product.presentaciones?.length ? product.presentaciones.map((x) => x.label).join(' · ') : '')}
+                </p>
+                <div className="flex justify-between items-center mt-auto pt-1 border-t" style={{ borderColor: `${t.outlineVariant}25` }}>
+                  <div className="flex flex-col">
+                    <span className={`font-extrabold ${TXT.lead}`} style={{ color: t.primary }}>
+                      {soles(product.price)}
+                    </span>
+                    {product.priceAnterior && product.priceAnterior > product.price && (
+                      <span className={`${TXT.micro} font-medium line-through`} style={{ color: t.onSurfaceVariant }}>
+                        {soles(product.priceAnterior)}
+                      </span>
+                    )}
+                  </div>
+                  {!product.esServicio && (
+                    <AddButton t={t} nombre={product.name} onAdd={() => onAdd(product)} />
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+/* ════════════════════════════════════════════
    MODAL DE PRODUCTO
    ════════════════════════════════════════════ */
 

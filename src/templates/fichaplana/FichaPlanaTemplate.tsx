@@ -8,7 +8,7 @@ import StoreHeader from '../shared/StoreHeader';
 import { useCatalogo } from '../shared/useCatalogo';
 import { TXT, ICON, estrellasDe } from '../shared/tokens';
 import {
-  CategoryChips, ProductGrid, ProductModal, CartPanel, ContactPanel, BottomNav, StoreFooter,
+  CategoryChips, CombosCarrusel, ProductGrid, ProductModal, CartPanel, ContactPanel, BottomNav, StoreFooter,
 } from '../shared/CatalogoUI';
 
 interface Props {
@@ -265,6 +265,17 @@ export default function FichaPlanaTemplate({ store, initialProductId }: Props) {
               active={c.activeCategory}
               onSelect={c.setActiveCategory}
             />
+
+            {c.activeCategory === 'all' && c.combosYOfertas && c.combosYOfertas.length > 0 && (
+              <CombosCarrusel
+                t={t}
+                productos={c.combosYOfertas}
+                titulo={c.comboLabel}
+                onSelect={c.abrirProducto}
+                onAdd={c.addToCart}
+                onVerMas={() => c.setActiveCategory('__combos__')}
+              />
+            )}
 
             <section className="px-5 md:px-6 pb-8">
               <ProductGrid

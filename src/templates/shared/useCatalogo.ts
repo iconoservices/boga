@@ -220,14 +220,25 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
         .filter(Boolean)
         .map((c) => ({ id: c, label: c.charAt(0).toUpperCase() + c.slice(1), icon: iconForCategory(c) }));
 
-  const tieneCombos = products.some((p) => p.esCombo);
-  const comboTab: Categoria[] = tieneCombos ? [{ id: '__combos__', label: 'Combos 🔥', icon: 'takeout_dining' }] : [];
+  const combosYOfertas = useMemo(() => {
+    return products.filter((p) => p.esCombo || (Boolean(p.priceAnterior) && p.priceAnterior! > p.price));
+  }, [products]);
+
+  const tieneCombos = combosYOfertas.some((p) => p.esCombo);
+  const tieneOfertas = combosYOfertas.some((p) => Boolean(p.priceAnterior) && p.priceAnterior! > p.price);
+  const comboLabel = tieneCombos && tieneOfertas
+    ? 'Combos & Ofertas 🔥'
+    : tieneCombos
+      ? 'Combos 🔥'
+      : 'Ofertas 🔥';
+
+  const comboTab: Categoria[] = combosYOfertas.length > 0 ? [{ id: '__combos__', label: comboLabel, icon: 'takeout_dining' }] : [];
   const categoryTabs: Categoria[] = [{ id: 'all', label: 'Todos', icon: 'apps' }, ...comboTab, ...categoriasEfectivas];
 
   const filtered = activeCategory === 'all'
     ? products
     : activeCategory === '__combos__'
-      ? products.filter((p) => p.esCombo)
+      ? combosYOfertas
       : products.filter((p) => {
           const pc = (p.category || '').toLowerCase().trim();
           const cat = categoriasEfectivas.find((c) => c.id === activeCategory);
@@ -272,6 +283,8 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
     detalle,
     abrirProducto,
     cerrarProducto,
+    combosYOfertas,
+    comboLabel,
   };
 }
 
