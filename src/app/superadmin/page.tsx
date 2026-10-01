@@ -265,13 +265,15 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       : categoriasDePlantilla(tienda?.template as string, catsPlantilla)
     ) || [];
 
-    const existente = categoriasBase.find(c => c.href === href || c.name.toLowerCase() === nombre.toLowerCase());
+    const existente = categoriasBase.find(c => c.name.trim().toLowerCase() === nombre.toLowerCase());
     if (existente) {
       setNewStoreProduct(prev => ({ ...prev, category: existente.name }));
       return;
     }
 
-    const nuevaCat = { name: nombre, icon: iconForCategory(nombre), href };
+    let hrefUnico = href || 'categoria';
+    for (let n = 2; categoriasBase.some(c => c.href === hrefUnico); n++) hrefUnico = `${href || 'categoria'}-${n}`;
+    const nuevaCat = { name: nombre, icon: iconForCategory(nombre), href: hrefUnico };
     const categoriasNuevas = [...categoriasBase, nuevaCat];
 
     const { error } = await supabase.from('stores').update({ categories: categoriasNuevas }).eq('slug', productsStoreSlug);
