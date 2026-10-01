@@ -31,6 +31,7 @@ const FichaPlanaTemplate = dynamic(() => import('@/templates/fichaplana/FichaPla
 const VeterinariaTemplate = dynamic(() => import('@/templates/veterinaria/VeterinariaTemplate'));
 const TerrenosPortalTemplate = dynamic(() => import('@/templates/terrenos/TerrenosPortalTemplate'));
 const TerrenosCampoTemplate = dynamic(() => import('@/templates/terrenos/TerrenosCampoTemplate'));
+const RackTemplate = dynamic(() => import('@/templates/rack/RackTemplate'));
 
 interface Props {
   store: StoreConfig;
@@ -161,6 +162,8 @@ export default function StoreRenderer({ store: initialStore, initialProductId }:
       return <TerrenosPortalTemplate store={store} initialProductId={initialProductId} />;
     case 'terreno2':
       return <TerrenosCampoTemplate store={store} initialProductId={initialProductId} />;
+    case 'rack':
+      return <RackTemplate store={store} initialProductId={initialProductId} />;
     default:
       return (
         <div className="flex items-center justify-center min-h-screen">
