@@ -22,6 +22,7 @@ import { moduloActivo, STOCK_BAJO, type ModuloId } from '@/lib/modulos';
 import { fechaLima, hoyLima } from '@/lib/fechaLima';
 import { moverStock, registrarMovimientos, stockIlimitado } from '@/lib/stock';
 import PedidosTab, { type Pedido } from '@/components/admin/PedidosTab';
+import CategoriasTab from '@/components/admin/CategoriasTab';
 import HistorialStock from '@/components/admin/HistorialStock';
 import LoyverseSyncModal from '@/components/admin/LoyverseSyncModal';
 import MiPlan from '@/components/admin/MiPlan';
@@ -54,7 +55,7 @@ interface Product {
   es_combo?: boolean | null;
 }
 
-type TabId = 'inicio' | 'products' | 'orders' | 'pos' | 'metrics' | 'stores';
+type TabId = 'inicio' | 'products' | 'categories' | 'orders' | 'pos' | 'metrics' | 'stores';
 
 // Orden canónico de la navegación. La sidebar de escritorio, la barra inferior
 // móvil, el menú Perfil y las tarjetas de "Gestión" del Inicio se arman TODAS
@@ -62,6 +63,7 @@ type TabId = 'inicio' | 'products' | 'orders' | 'pos' | 'metrics' | 'stores';
 const NAV_TABS: { id: TabId; label: string; icon: string; sub: string; inBottomBar: boolean }[] = [
   { id: 'inicio',   label: 'Inicio',       icon: 'home',          sub: 'Resumen de tu carta',        inBottomBar: true },
   { id: 'products', label: 'Productos',    icon: 'inventory_2',   sub: 'Añade o modifica ítems',     inBottomBar: true },
+  { id: 'categories', label: 'Categorías', icon: 'category',     sub: 'Ordena los rubros de tu carta', inBottomBar: false },
   { id: 'orders',   label: 'Pedidos',      icon: 'receipt_long',  sub: 'Gestiona los pedidos',       inBottomBar: true },
   { id: 'pos',      label: 'Vender (POS)', icon: 'point_of_sale', sub: 'Caja rápida en el local',    inBottomBar: true },
   { id: 'metrics',  label: 'Métricas',     icon: 'bar_chart',     sub: 'Rendimiento del negocio',    inBottomBar: false },
@@ -409,7 +411,6 @@ function AdminDashboard({ user }: { user: User }) {
   const [storeHeroPreview, setStoreHeroPreview] = useState<string | null>(null);
   const [storeCategories, setStoreCategories] = useState<{ name: string; icon: string; href: string }[]>([]);
   const [newCategoryName, setNewCategoryName] = useState('');
-  const [editandoCats, setEditandoCats] = useState(false);
   // null = no tocar el color: se deja el que ya tenia (de la plantilla o de
   // un preset elegido antes). Con un id, ese preset pisa el primary al guardar.
   // 'logo' es dinamico: el color sale de logoTheme (extraido de una imagen),
@@ -1439,14 +1440,14 @@ function AdminDashboard({ user }: { user: User }) {
         <header className={`hidden md:flex flex-col md:flex-row md:items-center justify-between gap-4 ${activeTab === 'pos' ? 'mb-2' : 'mb-6'}`}>
           <div>
             <h1 className={`${activeTab === 'pos' ? 'text-lg font-black' : 'text-2xl font-extrabold'} text-gray-900 tracking-tight`}>
-              {activeTab === 'inicio' ? 'Inicio' : activeTab === 'products' ? 'Gestión de Productos' : activeTab === 'orders' ? 'Gestión de Pedidos' : activeTab === 'stores' ? 'Mis Tiendas' : activeTab === 'pos' ? 'Caja Rápida (POS)' : 'Métricas y Rendimiento'}
+              {activeTab === 'inicio' ? 'Inicio' : activeTab === 'products' ? 'Gestión de Productos' : activeTab === 'categories' ? 'Categorías' : activeTab === 'orders' ? 'Gestión de Pedidos' : activeTab === 'stores' ? 'Mis Tiendas' : activeTab === 'pos' ? 'Caja Rápida (POS)' : 'Métricas y Rendimiento'}
               {(activeTab === 'pos' || activeTab === 'inicio') && stores[focusedStore] && (
                 <span className="ml-2 text-gray-400 font-semibold">· {stores[focusedStore].name}</span>
               )}
             </h1>
             {activeTab !== 'pos' && activeTab !== 'inicio' && (
               <p className="text-gray-500 text-sm font-medium mt-1">
-                {activeTab === 'products' ? (inventarioOn ? 'Administra el inventario de tus tiendas.' : 'Administra la carta de tus tiendas.') : activeTab === 'orders' ? 'Gestiona los pedidos de tus clientes.' : activeTab === 'stores' ? 'Administra la información de tus sucursales.' : 'Analiza el rendimiento de tu negocio.'}
+                {activeTab === 'products' ? (inventarioOn ? 'Administra el inventario de tus tiendas.' : 'Administra la carta de tus tiendas.') : activeTab === 'categories' ? 'Crea, ordena y renombra los rubros de tu carta.' : activeTab === 'orders' ? 'Gestiona los pedidos de tus clientes.' : activeTab === 'stores' ? 'Administra la información de tus sucursales.' : 'Analiza el rendimiento de tu negocio.'}
               </p>
             )}
           </div>
@@ -2103,6 +2104,33 @@ function AdminDashboard({ user }: { user: User }) {
         })()}
           </>
         )}
+
+        {activeTab === 'categories' && (() => {
+          const tienda = stores[focusedStore];
+          if (!tienda) return <p className="text-sm text-gray-400">No hay una tienda seleccionada.</p>;
+          const conteos: Record<string, number> = {};
+          products.filter((p) => p.store === tienda.slug).forEach((p) => { conteos[p.category] = (conteos[p.category] || 0) + 1; });
+          return (
+            <CategoriasTab
+              key={tienda.slug}
+              nombreTienda={tienda.name}
+              categorias={tienda.categories}
+              conteos={conteos}
+              onGuardar={async (lista) => {
+                const { error } = await supabase.from('stores').update({ categories: lista }).eq('slug', tienda.slug);
+                if (error) { alert('No se pudo guardar: ' + error.message); return false; }
+                setDbStores((prev) => prev.map((x: any) => x.slug === tienda.slug ? { ...x, categories: lista } : x));
+                return true;
+              }}
+              onRenombrarProductos={async (viejo, nuevo) => {
+                const { error } = await supabase.from('products').update({ category: nuevo }).eq('store', tienda.slug).eq('category', viejo);
+                if (error) { alert('La categoría cambió, pero no se pudieron mover los productos: ' + error.message); return false; }
+                setProducts((prev) => prev.map((p) => p.store === tienda.slug && p.category === viejo ? { ...p, category: nuevo } : p));
+                return true;
+              }}
+            />
+          );
+        })()}
 
         {activeTab === 'orders' && (
           <PedidosTab
@@ -3186,66 +3214,12 @@ function AdminDashboard({ user }: { user: User }) {
                     </select>
                     <button
                       type="button"
-                      onClick={() => setEditandoCats((v) => !v)}
+                      onClick={() => { setIsModalOpen(false); setActiveTab('categories'); }}
                       className="mt-2 text-xs font-bold text-gray-500 hover:text-black flex items-center gap-1"
                     >
-                      <span className="material-symbols-outlined text-[16px]">edit</span>
-                      {editandoCats ? 'Cerrar edición de categorías' : 'Editar categorías'}
+                      <span className="material-symbols-outlined text-[16px]">category</span>
+                      Administrar categorías
                     </button>
-                    {editandoCats && (() => {
-                      const tienda = Object.values(stores).find((s) => s.slug === newProduct.store);
-                      if (!tienda) return null;
-                      const guardarCats = async (lista: typeof tienda.categories) => {
-                        const { error } = await supabase.from('stores').update({ categories: lista }).eq('slug', newProduct.store);
-                        if (error) { alert('No se pudo guardar: ' + error.message); return false; }
-                        setDbStores((prev) => prev.map((x: any) => x.slug === newProduct.store ? { ...x, categories: lista } : x));
-                        return true;
-                      };
-                      return (
-                        <div className="mt-2 rounded-md border border-gray-200 bg-gray-50 p-2 space-y-1.5">
-                          {tienda.categories.map((cat) => {
-                            const usados = products.filter((p) => p.store === newProduct.store && p.category === cat.name).length;
-                            return (
-                              <div key={cat.href} className="flex items-center gap-2 text-sm">
-                                <span className="flex-1 font-semibold text-gray-700 truncate">{cat.name} <span className="text-xs font-normal text-gray-400">({usados})</span></span>
-                                <button
-                                  type="button"
-                                  title="Cambiar nombre"
-                                  className="w-7 h-7 rounded-full hover:bg-gray-200 flex items-center justify-center"
-                                  onClick={async () => {
-                                    const nuevo = window.prompt('Nuevo nombre de la categoría', cat.name)?.trim();
-                                    if (!nuevo || nuevo === cat.name) return;
-                                    if (tienda.categories.some((c) => c.name.toLowerCase() === nuevo.toLowerCase() && c.href !== cat.href)) { alert('Ya existe una categoría con ese nombre.'); return; }
-                                    const lista = tienda.categories.map((c) => c.href === cat.href ? { ...c, name: nuevo, icon: iconForCategory(nuevo) } : c);
-                                    if (!(await guardarCats(lista))) return;
-                                    if (usados > 0) {
-                                      const { error } = await supabase.from('products').update({ category: nuevo }).eq('store', newProduct.store).eq('category', cat.name);
-                                      if (error) { alert('La categoría cambió, pero no se pudieron mover los productos: ' + error.message); return; }
-                                      setProducts((prev) => prev.map((p) => p.store === newProduct.store && p.category === cat.name ? { ...p, category: nuevo } : p));
-                                    }
-                                    if (newProduct.category === cat.name) setNewProduct((np) => ({ ...np, category: nuevo }));
-                                  }}
-                                >
-                                  <span className="material-symbols-outlined text-[16px]">edit</span>
-                                </button>
-                                <button
-                                  type="button"
-                                  title={usados > 0 ? 'Tiene productos: muévelos antes de borrarla' : 'Borrar categoría'}
-                                  disabled={usados > 0}
-                                  className="w-7 h-7 rounded-full hover:bg-red-100 text-red-600 flex items-center justify-center disabled:opacity-30 disabled:hover:bg-transparent"
-                                  onClick={async () => {
-                                    if (!window.confirm(`¿Borrar la categoría "${cat.name}"?`)) return;
-                                    await guardarCats(tienda.categories.filter((c) => c.href !== cat.href));
-                                  }}
-                                >
-                                  <span className="material-symbols-outlined text-[16px]">delete</span>
-                                </button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      );
-                    })()}
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">{esTerreno ? 'Área del terreno' : 'Subcategoría (Ej: Entradas)'}</label>
