@@ -61,6 +61,11 @@ export interface StoreConfig {
   showDemoProducts?: boolean;
   /** True solo en /preview/<plantilla>: los productos salen de los de demo editables (lib/demoPlantilla.ts). */
   demoDePlantilla?: boolean;
+  /**
+   * Si es true, oculta el título/texto superpuesto en el banner (hero). Útil para tiendas que
+   * prefieren una foto limpia sin texto encima — el nombre ya está en el header.
+   */
+  hideHeroText?: boolean;
 }
 
 // Las tiendas viven en Supabase, no aca. Cada consumidor las carga por su lado:

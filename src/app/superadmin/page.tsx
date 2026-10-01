@@ -387,7 +387,33 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('mobile');
   const [previewZoom, setPreviewZoom] = useState(60);
   const [editingStore, setEditingStore] = useState<any | null>(null);
-  const [storeForm, setStoreForm] = useState({
+  const [storeForm, setStoreForm] = useState<{
+    slug: string;
+    name: string;
+    tagline: string;
+    marketplaceCategory: string;
+    template: any;
+    location: string;
+    emoji: string;
+    tier: string;
+    active: boolean;
+    whatsapp: string;
+    zona: string;
+    direccion: string;
+    horario: string;
+    rating: string;
+    metodosPago: string[];
+    entrega: 'delivery' | 'recojo' | 'ambos';
+    facebook: string;
+    instagram: string;
+    tiktok: string;
+    externalUrl: string;
+    subdominioActivo: boolean;
+    pushActivo: boolean;
+    modulos: Modulos;
+    ownerEmail: string;
+    hideHeroText?: boolean;
+  }>({
     slug: '',
     name: '',
     tagline: '',
@@ -411,7 +437,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       subdominioActivo: false,
       pushActivo: false,
       modulos: { pos: false, inventario: false, google: false, marca_blanca: false, marketplace: true } as Modulos,
-    ownerEmail: ''
+    ownerEmail: '',
+    hideHeroText: false
   });
   // Para saber si storeForm.ownerEmail realmente cambio al guardar (y no
   // reasignar la tienda en cada edicion solo porque el campo llega precargado).
@@ -1060,6 +1087,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       tiktok: storeForm.tiktok || null,
       external_url: storeForm.externalUrl || null,
       subdominio_activo: !!storeForm.subdominioActivo,
+      hide_hero_text: !!storeForm.hideHeroText,
       push_activo: !!storeForm.pushActivo,
       modulos: {
         ...(storeForm.modulos || {}),

@@ -141,6 +141,7 @@ export default function Home() {
           }
 
           const enOferta = p.price_anterior > 0 && p.price_anterior > p.price;
+          const esCombo = p.es_combo === true;
           const item = {
             id: p.id,
             slug: p.store,
@@ -148,12 +149,13 @@ export default function Home() {
             price: `S/ ${p.price.toFixed(2)}`,
             original: p.price_anterior > 0 ? `S/ ${Number(p.price_anterior).toFixed(2)}` : undefined,
             rubro: macroCat,
-            badge: enOferta ? 'Oferta' : 'Nuevo',
+            badge: esCombo ? 'Combo' : enOferta ? 'Oferta' : 'Nuevo',
+            esCombo,
             img: p.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80'
           };
           if (newSectionsProducts[macroCat]) newSectionsProducts[macroCat].push(item);
-          // Promos y Combos: junta las ofertas de todas las categorías, como un filtro más
-          if (enOferta && macroCat !== 'Combos & Promos') newSectionsProducts['Combos & Promos'].push(item);
+          // Promos y Combos: junta ofertas Y combos de todas las categorías
+          if ((enOferta || esCombo) && macroCat !== 'Combos & Promos') newSectionsProducts['Combos & Promos'].push(item);
         });
 
         setSections(prev => {
@@ -682,7 +684,10 @@ export default function Home() {
                       >
                         <span className="material-symbols-outlined text-[18px] text-secondary" style={isFav ? { fontVariationSettings: "'FILL' 1" } : {}}>favorite</span>
                       </button>
-                      <div className="absolute top-2 left-2 bg-primary text-white text-[10px] font-black px-2 py-0.5 rounded-lg">{p.badge}</div>
+                      <div className={`absolute top-2 left-2 text-white text-[10px] font-black px-2 py-0.5 rounded-lg ${
+                        p.esCombo ? 'bg-gradient-to-r from-amber-500 to-orange-500' :
+                        p.badge === 'Oferta' ? 'bg-red-500' : 'bg-primary'
+                      }`}>{p.esCombo ? '🔥 Combo' : p.badge}</div>
                     </div>
                     <div className="p-3 flex flex-col flex-1 justify-between">
                       <div>

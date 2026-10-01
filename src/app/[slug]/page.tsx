@@ -107,6 +107,7 @@ export default async function StorePage({ params, searchParams }: Props) {
         latitud: undefined,
         longitud: undefined,
         mostrarUbicacion: false,
+        hideHeroText: false,
       };
     } else {
       notFound();

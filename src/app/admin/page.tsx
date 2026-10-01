@@ -388,7 +388,7 @@ function AdminDashboard({ user }: { user: User }) {
   const [isStoreEditorOpen, setIsStoreEditorOpen] = useState(false);
   const [editingStoreSlug, setEditingStoreSlug] = useState<string | null>(null);
   const [isStoreSaving, setIsStoreSaving] = useState(false);
-  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '', show_demo_products: false, zona: '', direccion: '', horario: '', rating: '', metodos_pago: [] as string[], facebook: '', instagram: '', tiktok: '', latitud: null as number | null, longitud: null as number | null, mostrar_ubicacion: false, entrega: 'ambos' as 'delivery' | 'recojo' | 'ambos' });
+  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '', show_demo_products: false, hide_hero_text: false, zona: '', direccion: '', horario: '', rating: '', metodos_pago: [] as string[], facebook: '', instagram: '', tiktok: '', latitud: null as number | null, longitud: null as number | null, mostrar_ubicacion: false, entrega: 'ambos' as 'delivery' | 'recojo' | 'ambos' });
   // Constructor de horario a golpe de clic: arma el texto de storeForm.horario a partir de los días
   // y la hora elegidos, en vez de que el dueño tenga que escribirlo a mano. El campo de texto sigue
   // ahí para ajustarlo o escribir algo distinto (ej. "Cerramos los feriados").
@@ -748,6 +748,7 @@ function AdminDashboard({ user }: { user: User }) {
       marketplace_category: dbData?.marketplace_category || config?.marketplaceCategory || '',
       whatsapp: dbData?.whatsapp || '',
       show_demo_products: dbData?.show_demo_products ?? false,
+      hide_hero_text: dbData?.hide_hero_text === true || config?.hideHeroText === true,
       zona: dbData?.zona || config?.zona || '',
       direccion: dbData?.direccion || config?.direccion || '',
       horario: dbData?.horario || config?.horario || '',
@@ -827,6 +828,7 @@ function AdminDashboard({ user }: { user: User }) {
         marketplace_category: storeForm.marketplace_category,
         whatsapp: storeForm.whatsapp || null,
         show_demo_products: storeForm.show_demo_products,
+        hide_hero_text: storeForm.hide_hero_text,
         zona: storeForm.zona || null,
         direccion: storeForm.direccion || null,
         horario: storeForm.horario || null,
@@ -873,7 +875,7 @@ function AdminDashboard({ user }: { user: User }) {
       // en vez de perder todo el guardado. Paso exactamente esto con `whatsapp`:
       // el panel quedo sin poder guardar NADA de ninguna tienda hasta correr la
       // migracion. Columnas opcionales porque llegaron despues del lanzamiento.
-      const columnasOpcionales = ['show_demo_products', 'zona', 'direccion', 'horario', 'rating', 'metodos_pago', 'categories', 'facebook', 'instagram', 'tiktok', 'latitud', 'longitud', 'mostrar_ubicacion'];
+      const columnasOpcionales = ['show_demo_products', 'hide_hero_text', 'zona', 'direccion', 'horario', 'rating', 'metodos_pago', 'categories', 'facebook', 'instagram', 'tiktok', 'latitud', 'longitud', 'mostrar_ubicacion'];
       const columnasFaltantes: string[] = [];
       let faltante = columnasOpcionales.find((col) => col in upsertData && new RegExp(col).test(error?.message || ''));
       while (error && faltante) {
@@ -3335,6 +3337,13 @@ function AdminDashboard({ user }: { user: User }) {
             <div className="p-6 overflow-y-auto flex-1 custom-scrollbar space-y-6">
               {/* Hero Image Upload */}
               <div id="editor-portada" className="scroll-mt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-bold text-gray-700">Foto de Portada</label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={storeForm.hide_hero_text} onChange={e => setStoreForm({ ...storeForm, hide_hero_text: e.target.checked })} className="w-4 h-4 rounded text-black focus:ring-black border-gray-300 accent-black" />
+                    <span className="text-xs font-semibold text-gray-600">Ocultar texto sobre banner (Modo Flyer)</span>
+                  </label>
+                </div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Foto de Portada</label>
                 <input type="file" ref={storeHeroInputRef} onChange={e => { if (e.target.files?.[0]) { setStoreHeroFile(e.target.files[0]); setStoreHeroPreview(URL.createObjectURL(e.target.files[0])); }}} accept="image/*" className="sr-only" />
                 <div

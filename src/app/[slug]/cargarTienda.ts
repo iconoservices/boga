@@ -106,6 +106,7 @@ async function cargarTienda(slug: string) {
         latitud: typeof dbStore.latitud === 'number' ? dbStore.latitud : undefined,
         longitud: typeof dbStore.longitud === 'number' ? dbStore.longitud : undefined,
         mostrarUbicacion: dbStore.mostrar_ubicacion === true,
+        hideHeroText: dbStore.hide_hero_text === true,
       };
     }
   } catch (err) {

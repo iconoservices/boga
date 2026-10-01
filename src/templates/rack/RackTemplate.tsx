@@ -136,33 +136,37 @@ export default function RackTemplate({ store, initialProductId }: Props) {
               src={store.heroImage}
               alt={store.heroAlt || store.name}
               className="w-full h-full object-cover"
-              style={{ filter: 'brightness(0.55)' }}
+              style={{ filter: store.hideHeroText ? 'brightness(0.7)' : 'brightness(0.55)' }}
             />
-            {/* Gradiente doble: oscurece abajo y a la derecha para el texto */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
+            {/* Gradiente: más sutil si no hay texto, para que la foto se vea limpia */}
+            <div className={`absolute inset-0 ${store.hideHeroText ? 'bg-gradient-to-t from-black/50 to-transparent' : 'bg-gradient-to-t from-black/90 via-black/40 to-transparent'}`} />
+            {!store.hideHeroText && <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />}
 
             <div className="absolute inset-0 flex flex-col justify-end px-6 pb-8 md:pb-12">
-              {/* Badge de categoría */}
-              <span
-                className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest mb-3 w-fit px-3 py-1.5 rounded-full border"
-                style={{ color: t.primary, borderColor: `${t.primary}50`, background: `${t.primary}15` }}
-              >
-                <span className={`material-symbols-outlined text-[12px]`}>tv</span>
-                Racks · Soportes · Instalación
-              </span>
+              {!store.hideHeroText && (
+                <>
+                  {/* Badge de categoría */}
+                  <span
+                    className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest mb-3 w-fit px-3 py-1.5 rounded-full border"
+                    style={{ color: t.primary, borderColor: `${t.primary}50`, background: `${t.primary}15` }}
+                  >
+                    <span className="material-symbols-outlined text-[12px]">tv</span>
+                    Racks · Soportes · Instalación
+                  </span>
 
-              <h2
-                className="font-black uppercase italic leading-none mb-4 drop-shadow-lg"
-                style={{ fontSize: 'clamp(2rem, 7vw, 3.5rem)', color: '#ffffff' }}
-              >
-                Tu TV<br />
-                <span style={{ color: t.primary }}>merece más.</span>
-              </h2>
+                  <h2
+                    className="font-black uppercase italic leading-none mb-4 drop-shadow-lg"
+                    style={{ fontSize: 'clamp(2rem, 7vw, 3.5rem)', color: '#ffffff' }}
+                  >
+                    Tu TV<br />
+                    <span style={{ color: t.primary }}>merece más.</span>
+                  </h2>
 
-              <p className="text-white/80 font-medium mb-6 max-w-sm text-sm md:text-base leading-relaxed">
-                {store.tagline || 'Racks, soportes y muebles para armar el espacio perfecto.'}
-              </p>
+                  <p className="text-white/80 font-medium mb-6 max-w-sm text-sm md:text-base leading-relaxed">
+                    {store.tagline || 'Racks, soportes y muebles para armar el espacio perfecto.'}
+                  </p>
+                </>
+              )}
 
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
