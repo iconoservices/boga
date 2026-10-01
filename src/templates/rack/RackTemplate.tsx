@@ -62,7 +62,7 @@ export default function RackTemplate({ store, initialProductId }: Props) {
 
   return (
     <main
-      className="min-h-screen flex flex-col max-w-3xl mx-auto relative"
+      className="min-h-screen flex flex-col max-w-3xl mx-auto relative pb-24 md:pb-0 overflow-x-hidden"
       style={{ background: t.background, color: t.onBackground, fontFamily: t.fontBody }}
     >
       {/* ─── MODALES ─── */}
@@ -81,9 +81,9 @@ export default function RackTemplate({ store, initialProductId }: Props) {
         className="sticky top-0 z-50 px-5 md:px-6 h-16 flex items-center justify-between border-b"
         style={{ background: `${t.background}F0`, backdropFilter: 'blur(16px)', borderColor: `${t.outlineVariant}60` }}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           {store.logoImage ? (
-            <img src={store.logoImage} alt={store.name} className="w-9 h-9 rounded-lg object-cover" />
+            <img src={store.logoImage} alt={store.name} className="w-9 h-9 rounded-lg object-cover shrink-0" />
           ) : (
             <div
               className="w-9 h-9 rounded-lg flex items-center justify-center font-black text-sm"
@@ -92,12 +92,12 @@ export default function RackTemplate({ store, initialProductId }: Props) {
               {iniciales}
             </div>
           )}
-          <div>
-            <h1 className="font-extrabold uppercase italic leading-tight text-sm" style={{ color: t.onBackground }}>
+          <div className="min-w-0">
+            <h1 className="font-extrabold uppercase italic leading-tight text-sm truncate" style={{ color: t.onBackground }}>
               {store.name}
             </h1>
             {store.tagline && (
-              <p className="text-[10px] font-medium leading-tight" style={{ color: t.onSurfaceVariant }}>
+              <p className="text-[10px] font-medium leading-tight truncate" style={{ color: t.onSurfaceVariant }}>
                 {store.tagline}
               </p>
             )}
@@ -131,18 +131,28 @@ export default function RackTemplate({ store, initialProductId }: Props) {
         <div className="animate-fade-in">
 
           {/* HERO */}
-          <section className="relative h-[52vh] md:h-[60vh] overflow-hidden">
-            <img
-              src={store.heroImage}
-              alt={store.heroAlt || store.name}
-              className="w-full h-full object-cover"
-              style={{ filter: store.hideHeroText ? 'brightness(0.7)' : 'brightness(0.55)' }}
-            />
-            {/* Gradiente: más sutil si no hay texto, para que la foto se vea limpia */}
-            <div className={`absolute inset-0 ${store.hideHeroText ? 'bg-gradient-to-t from-black/50 to-transparent' : 'bg-gradient-to-t from-black/90 via-black/40 to-transparent'}`} />
-            {!store.hideHeroText && <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />}
+          {/* Con el texto oculto, el comercio carga un banner propio (con su arte y
+              textos): se muestra entero, sin filtro oscuro ni recorte, y los botones
+              van debajo. Con texto, es el hero clásico sobre la foto. */}
+          <section className={store.hideHeroText ? 'relative' : 'relative h-[60vh] min-h-[380px] max-h-[560px] md:h-[60vh] overflow-hidden'}>
+            {store.hideHeroText ? (
+              <div className="relative w-full aspect-video overflow-hidden">
+                <img src={store.heroImage} alt={store.heroAlt || store.name} className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              <>
+                <img
+                  src={store.heroImage}
+                  alt={store.heroAlt || store.name}
+                  className="w-full h-full object-cover"
+                  style={{ filter: 'brightness(0.55)' }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
+              </>
+            )}
 
-            <div className="absolute inset-0 flex flex-col justify-end px-6 pb-8 md:pb-12">
+            <div className={store.hideHeroText ? 'flex flex-col px-5 pt-4 pb-5' : 'absolute inset-0 flex flex-col justify-end px-5 md:px-6 pb-8 md:pb-12'}>
               {!store.hideHeroText && (
                 <>
                   {/* Badge de categoría */}
@@ -168,10 +178,10 @@ export default function RackTemplate({ store, initialProductId }: Props) {
                 </>
               )}
 
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col min-[420px]:flex-row gap-3">
                 <button
                   onClick={() => irAlCatalogo()}
-                  className="px-8 py-3 rounded-full font-bold text-sm uppercase transition-all hover:brightness-110 hover:scale-105 active:scale-95 flex items-center justify-center gap-2 w-full sm:w-auto shadow-lg"
+                  className="px-6 py-3.5 rounded-full font-bold text-sm uppercase transition-all hover:brightness-110 active:scale-95 flex items-center justify-center gap-2 w-full min-[420px]:flex-1 sm:flex-none sm:px-8 shadow-lg"
                   style={{ background: t.primary, color: t.onPrimary, boxShadow: `0 8px 20px ${t.primary}50` }}
                 >
                   <span className={`material-symbols-outlined ${ICON.sm}`} style={{ fontVariationSettings: "'FILL' 1" }}>grid_view</span>
@@ -179,7 +189,10 @@ export default function RackTemplate({ store, initialProductId }: Props) {
                 </button>
                 <button
                   onClick={() => setActiveTab('contacto')}
-                  className="px-8 py-3 rounded-full font-bold text-sm uppercase transition-all bg-white/10 backdrop-blur border border-white/30 text-white hover:bg-white/20 active:scale-95 flex items-center justify-center gap-2 w-full sm:w-auto"
+                  className="px-6 py-3.5 rounded-full font-bold text-sm uppercase transition-all border active:scale-95 flex items-center justify-center gap-2 w-full min-[420px]:flex-1 sm:flex-none sm:px-8"
+                  style={store.hideHeroText
+                    ? { borderColor: `${t.primary}80`, color: t.primary, background: `${t.primary}10` }
+                    : { borderColor: 'rgba(255,255,255,0.3)', color: '#fff', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)' }}
                 >
                   <span className={`material-symbols-outlined ${ICON.sm}`}>chat</span>
                   Consultar
