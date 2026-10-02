@@ -573,15 +573,18 @@ export function CartPanel({
   ].filter(Boolean) as string[];
 
   return (
-    <div className="animate-fade-in px-5 py-8 max-w-[600px] mx-auto text-center space-y-6">
-      <div
-        className="w-20 h-20 mx-auto rounded-full flex items-center justify-center shadow-inner"
-        style={{ backgroundColor: `${t.primary}15` }}
-      >
-        <span className={`material-symbols-outlined ${ICON.xl}`} style={{ color: t.primary }}>
-          shopping_cart_checkout
-        </span>
-      </div>
+    <div className={`animate-fade-in px-5 ${cartItems.length === 0 ? 'py-8' : 'py-5'} max-w-[600px] mx-auto text-center space-y-6`}>
+      {/* El círculo grande solo acompaña al carrito vacío: con productos ocupaba el primer pantallazo sin aportar nada. */}
+      {cartItems.length === 0 && (
+        <div
+          className="w-20 h-20 mx-auto rounded-full flex items-center justify-center shadow-inner"
+          style={{ backgroundColor: `${t.primary}15` }}
+        >
+          <span className={`material-symbols-outlined ${ICON.xl}`} style={{ color: t.primary }}>
+            shopping_cart_checkout
+          </span>
+        </div>
+      )}
 
       {cartItems.length === 0 ? (
         <div className="space-y-4">
