@@ -164,6 +164,7 @@ export default function StoreRenderer({ store: initialStore, initialProductId }:
     case 'terreno2':
       return <TerrenosCampoTemplate store={store} initialProductId={initialProductId} />;
     case 'rack':
+    case 'hogar':
       return <RackTemplate store={store} initialProductId={initialProductId} />;
     case 'uniformes':
       return <UniformesTemplate store={store} initialProductId={initialProductId} />;

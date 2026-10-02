@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
-import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
+import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import CustomerAccountButton from '@/components/CustomerAccountButton';
 import { useCatalogo } from '../shared/useCatalogo';
@@ -233,8 +233,10 @@ export default function RackTemplate({ store, initialProductId }: Props) {
           >
             {[
               { icon: 'local_shipping', label: store.entrega === 'recojo' ? 'Recojo en tienda' : store.entrega === 'delivery' ? 'Delivery' : 'Delivery y recojo' },
-              { icon: 'build', label: 'Instalación incluida' },
-              { icon: 'verified', label: 'Garantía real' },
+              // Instalación y garantía son promesas de la demo: en una tienda real no se afirman por ella.
+              ...(store.slug === 'rack'
+                ? [{ icon: 'build', label: 'Instalación incluida' }, { icon: 'verified', label: 'Garantía real' }]
+                : tieneWhatsApp(store) ? [{ icon: 'chat', label: 'Pedidos por WhatsApp' }] : []),
             ].map((item) => (
               <div key={item.icon} className="flex flex-col items-center gap-1 text-center">
                 <span
