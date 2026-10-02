@@ -38,6 +38,31 @@ const cloudflare = () => {
 
 type Resultado = { ok: boolean; detalle: string[] };
 
+type RegistroDns = { id: string; type: string; name: string; content: string };
+
+// Todos los registros A / AAAA / CNAME que existen con ese nombre exacto (no solo CNAME): un registro
+// viejo de otro tipo deja el subdominio a medias (p. ej. con IPv6 y sin IPv4) y antes no se veía.
+async function registrosDe(cf: { token: string; zone: string }, dominio: string): Promise<RegistroDns[]> {
+  const out: RegistroDns[] = [];
+  for (const type of ['CNAME', 'A', 'AAAA']) {
+    const r = await fetch(
+      `https://api.cloudflare.com/client/v4/zones/${cf.zone}/dns_records?type=${type}&name=${encodeURIComponent(dominio)}`,
+      { headers: { Authorization: `Bearer ${cf.token}` } },
+    );
+    const j = await r.json().catch(() => ({}));
+    for (const x of j?.result || []) out.push({ id: x.id, type: x.type, name: x.name, content: x.content });
+  }
+  return out;
+}
+
+async function borrarRegistro(cf: { token: string; zone: string }, id: string): Promise<boolean> {
+  const r = await fetch(`https://api.cloudflare.com/client/v4/zones/${cf.zone}/dns_records/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${cf.token}` },
+  });
+  return r.ok;
+}
+
 export async function activarSubdominio(slug: string): Promise<Resultado> {
   const detalle: string[] = [];
   const v = vercel();
@@ -60,27 +85,36 @@ export async function activarSubdominio(slug: string): Promise<Resultado> {
     detalle.push(`Vercel: ${jv?.error?.message || rv.status}`);
   }
 
-  // 2) Cloudflare (CNAME con proxy)
-  const rc = await fetch(`https://api.cloudflare.com/client/v4/zones/${cf.zone}/dns_records`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${cf.token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      type: 'CNAME',
-      name: slug,
-      content: process.env.VERCEL_CNAME_TARGET || 'cname.vercel-dns.com',
-      proxied: true,
-      ttl: 1,
-      comment: 'Subdominio de tienda (plan de pago) — creado desde el superadmin',
-    }),
-  });
-  const jc = await rc.json().catch(() => ({}));
-  const yaExiste = (jc?.errors || []).some((e: { code: number }) => e.code === 81053 || e.code === 81057 || e.code === 81058);
-  if (jc?.success || yaExiste) {
-    detalle.push(`Cloudflare: DNS de ${dominio} listo.`);
-  } else {
-    ok = false;
-    detalle.push(`Cloudflare: ${jc?.errors?.[0]?.message || rc.status}`);
+  // 2) Cloudflare (CNAME con proxy). Primero se revisa lo que ya haya con ese nombre:
+  //    - un CNAME al destino correcto se deja tal cual;
+  //    - cualquier otro registro (A, AAAA o un CNAME distinto) estorba y se borra, porque deja el
+  //      subdominio a medias y Cloudflare no deja crear el CNAME encima.
+  const destino = process.env.VERCEL_CNAME_TARGET || 'cname.vercel-dns.com';
+  const previos = await registrosDe(cf, dominio);
+  let cnameListo = false;
+  for (const rec of previos) {
+    if (rec.type === 'CNAME' && rec.content === destino && !cnameListo) { cnameListo = true; continue; }
+    if (await borrarRegistro(cf, rec.id)) detalle.push(`Cloudflare: se quitó un registro ${rec.type} viejo de ${dominio}.`);
+    else { ok = false; detalle.push(`Cloudflare: no se pudo quitar un registro ${rec.type} viejo de ${dominio}.`); }
   }
+  if (!cnameListo) {
+    const rc = await fetch(`https://api.cloudflare.com/client/v4/zones/${cf.zone}/dns_records`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${cf.token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'CNAME',
+        name: slug,
+        content: destino,
+        proxied: true,
+        ttl: 1,
+        comment: 'Subdominio de tienda (plan de pago) — creado desde el superadmin',
+      }),
+    });
+    const jc = await rc.json().catch(() => ({}));
+    if (jc?.success) cnameListo = true;
+    else { ok = false; detalle.push(`Cloudflare: ${jc?.errors?.[0]?.message || rc.status}`); }
+  }
+  if (cnameListo) detalle.push(`Cloudflare: DNS de ${dominio} listo.`);
   return { ok, detalle };
 }
 
@@ -99,17 +133,8 @@ export async function desactivarSubdominio(slug: string): Promise<Resultado> {
   if (rv.ok || rv.status === 404) detalle.push(`Vercel: ${dominio} quitado.`);
   else { ok = false; detalle.push(`Vercel: ${rv.status}`); }
 
-  const lista = await fetch(
-    `https://api.cloudflare.com/client/v4/zones/${cf.zone}/dns_records?type=CNAME&name=${encodeURIComponent(dominio)}`,
-    { headers: { Authorization: `Bearer ${cf.token}` } },
-  );
-  const jl = await lista.json().catch(() => ({}));
-  for (const rec of jl?.result || []) {
-    const rd = await fetch(`https://api.cloudflare.com/client/v4/zones/${cf.zone}/dns_records/${rec.id}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${cf.token}` },
-    });
-    if (!rd.ok) { ok = false; detalle.push(`Cloudflare: no se pudo borrar el DNS (${rd.status}).`); }
+  for (const rec of await registrosDe(cf, dominio)) {
+    if (!(await borrarRegistro(cf, rec.id))) { ok = false; detalle.push(`Cloudflare: no se pudo borrar el DNS ${rec.type} (${rec.id}).`); }
   }
   if (ok) detalle.push(`Cloudflare: DNS de ${dominio} quitado.`);
   return { ok, detalle };
