@@ -84,12 +84,15 @@ export default function MenuDirectoTemplate({ store, initialProductId }: Props) 
             {/* En pantalla grande, si hay combos u ofertas, el banner queda a la izquierda y a su derecha va una
                 tarjeta de plato (rota sola si hay más de una). En celular sigue como siempre: banner y, abajo, el carrusel. */}
             <div className="lg:flex lg:items-stretch">
-              <section className={`relative w-full aspect-video md:aspect-auto md:h-60 ${tienePromos ? 'lg:flex-1 lg:min-w-0 lg:h-80' : ''} overflow-hidden`}>
-                <img className="w-full h-full object-cover" alt={store.heroAlt} src={store.heroImage} />
+              {/* El banner del comercio suele ser 16:9: en pantalla ancha se muestra ENTERO (object-contain) y los
+                  costados que sobran se rellenan con la misma imagen desenfocada, en vez de recortarlo en una franja. */}
+              <section className={`relative w-full aspect-video md:aspect-auto md:h-[clamp(260px,32vw,460px)] ${tienePromos ? 'lg:flex-1 lg:min-w-0' : ''} overflow-hidden`}>
+                <img aria-hidden className="hidden md:block absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-70" alt="" src={store.heroImage} />
+                <img className="relative w-full h-full object-cover md:object-contain" alt={store.heroAlt} src={store.heroImage} />
                 <StoreFloatingActions store={store} />
               </section>
               {tienePromos && (
-                <div className="hidden lg:block w-[360px] shrink-0 h-80 p-3">
+                <div className="hidden lg:block w-[360px] shrink-0 h-[clamp(260px,32vw,460px)] p-3">
                   <PromoLateral
                     t={t}
                     productos={c.combosYOfertas}
