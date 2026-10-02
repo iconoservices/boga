@@ -137,7 +137,7 @@ function ExploreContenido() {
           if (esServicio || catTienda.includes('servicio') || tiene('servicio')) return 'Servicios';
           if (tiene('reloj', 'ropa', 'vestido', 'blusa', 'polo', 'pantal', 'short', 'falda', 'camisa', 'camiseta', 'uniforme', 'buzo', 'casaca', 'zapat', 'zapatill', 'sandal', 'calzado', 'cartera', 'mochila', 'morral', 'bolso', 'lentes', 'collar', 'arete', 'anillo', 'pulsera', 'joya', 'accesorio', 'enteriz', 'conjunto', 'gorra', 'cinturon', 'cinturón')) return 'Moda';
           if (tiene('celular', 'audífono', 'audifono', 'cargador', 'cable', 'parlante', 'laptop', 'tablet', 'teclado', 'mouse', 'usb', 'cámara', 'camara', 'smart', 'bluetooth', 'tecnolog', 'electr', 'televis', 'rack', 'soporte', 'pedestal', ' tv')) return 'Tecnología';
-          if (tiene('hogar', 'decorac', 'lámpara', 'lampara', 'mueble', 'menaje', 'sábana', 'sabana', 'cortina', 'limpieza')) return 'Hogar';
+          if (tiene('hogar', 'lavader', 'fregader', 'acero inox', 'decorac', 'lámpara', 'lampara', 'mueble', 'menaje', 'sábana', 'sabana', 'cortina', 'limpieza')) return 'Hogar';
           if (tiene('salud', 'medic', 'suplement', 'vitamin', 'cuidado', 'crema', 'shampoo', 'perfum', 'maquill', 'belleza', 'uñas', 'unas')) return 'Salud';
           if (tiene('cerveza', 'licor', 'vino', 'pisco', 'cóctel', 'coctel', 'gaseosa', 'jugo', 'bebida', 'café', 'cafe', 'refresco')) return 'Bebidas';
           if (tiene('pollo', 'pizza', 'hamburg', 'menú', 'menu', 'almuerzo', 'desayuno', 'combo', 'comida', 'cocina', 'plato', 'sandwich', 'sándwich', 'postre', 'torta', 'ceviche', 'juane')) return 'Comida';
