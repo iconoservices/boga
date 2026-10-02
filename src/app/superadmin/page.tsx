@@ -1019,7 +1019,19 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       ? [getTemplate(editingStore.template as string)?.categories ?? [], categoriasDePlantilla(editingStore.template as string, catsPlantilla)].map(nombres)
       : [];
     const sinPersonalizar = categoriasActuales.length === 0 || deLaPlantillaAnterior.includes(nombres(categoriasActuales));
-    const categoriesList = sinPersonalizar ? (categoriasDePlantilla(templateKey, catsPlantilla).length ? categoriasDePlantilla(templateKey, catsPlantilla) : categoriasActuales) : categoriasActuales;
+    let categoriesList = sinPersonalizar ? (categoriasDePlantilla(templateKey, catsPlantilla).length ? categoriasDePlantilla(templateKey, catsPlantilla) : categoriasActuales) : categoriasActuales;
+    // Al cambiar de plantilla, las categorías EN USO (con productos) nunca se pierden: si la plantilla nueva no las trae,
+    // se conservan al final. Sin esto los productos quedaban con una categoría que ya no existe y salían sin agrupar.
+    if (editingStore && sinPersonalizar && categoriesList !== categoriasActuales) {
+      const { data: prods } = await supabase.from('products').select('category').eq('store', editingStore.slug);
+      const enUso = Array.from(new Set((prods || []).map((x: any) => x.category).filter(Boolean))) as string[];
+      const yaEsta = (n: string) => categoriesList.some((c) => c.name.trim().toLowerCase() === n.trim().toLowerCase());
+      const faltan = enUso.filter((n) => !yaEsta(n));
+      if (faltan.length) {
+        const extra = faltan.map((n) => categoriasActuales.find((c) => c.name === n) || { name: n, icon: iconForCategory(n), href: n.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'categoria' });
+        categoriesList = [...categoriesList, ...extra.filter((c) => !categoriesList.some((x) => x.href === c.href))];
+      }
+    }
 
     // En paralelo: son subidas independientes, esperarlas en fila duplica lo
     // que tarda guardar cuando se cambian logo y portada a la vez.
