@@ -99,7 +99,7 @@ export async function proxy(request: NextRequest) {
     const { pathname, search } = request.nextUrl;
     const primero = pathname.split('/')[1] || '';
     const esArchivo = /\.[a-z0-9]+$/i.test(pathname);
-    const esInterno = primero === 'api' || primero === '_next';
+    const esInterno = primero === 'api' || primero === '_next' || primero === 'admin';   // /admin: el panel se abre en la propia tienda, sin saltar al sitio principal
     if (pathname === '/') return NextResponse.rewrite(new URL(`/${tiendaDominio}${search}`, request.url));
     if (esArchivo || esInterno || primero === tiendaDominio) return NextResponse.next();
     return NextResponse.rewrite(new URL(`/${tiendaDominio}${pathname}${search}`, request.url));
@@ -112,7 +112,7 @@ export async function proxy(request: NextRequest) {
     if (!(await subdominioActivo(tienda))) return NextResponse.redirect(`${SITIO}/${tienda}?desde=app`);   // sin plan de pago (la tienda muestra un aviso)
     const primero = pathname.split('/')[1] || '';
     const esArchivo = /\.[a-z0-9]+$/i.test(pathname);
-    const esInterno = primero === 'api' || primero === '_next';
+    const esInterno = primero === 'api' || primero === '_next' || primero === 'admin';   // /admin: el panel se abre en la propia tienda, sin saltar al sitio principal
     if (pathname === '/') return NextResponse.rewrite(new URL(`/${tienda}${search}`, request.url));   // portada = la tienda
     if (esArchivo || esInterno || primero === tienda) return NextResponse.next();                     // /<tienda>/… y recursos
     return NextResponse.redirect(`${SITIO}${pathname}${search}`);                                     // lo demás: al sitio principal
