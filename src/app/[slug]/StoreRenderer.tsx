@@ -32,6 +32,7 @@ const VeterinariaTemplate = dynamic(() => import('@/templates/veterinaria/Veteri
 const TerrenosPortalTemplate = dynamic(() => import('@/templates/terrenos/TerrenosPortalTemplate'));
 const TerrenosCampoTemplate = dynamic(() => import('@/templates/terrenos/TerrenosCampoTemplate'));
 const RackTemplate = dynamic(() => import('@/templates/rack/RackTemplate'));
+const UniformesTemplate = dynamic(() => import('@/templates/uniformes/UniformesTemplate'));
 
 interface Props {
   store: StoreConfig;
@@ -164,6 +165,8 @@ export default function StoreRenderer({ store: initialStore, initialProductId }:
       return <TerrenosCampoTemplate store={store} initialProductId={initialProductId} />;
     case 'rack':
       return <RackTemplate store={store} initialProductId={initialProductId} />;
+    case 'uniformes':
+      return <UniformesTemplate store={store} initialProductId={initialProductId} />;
     default:
       return (
         <div className="flex items-center justify-center min-h-screen">
