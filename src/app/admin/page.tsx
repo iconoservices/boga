@@ -1533,6 +1533,17 @@ function AdminDashboard({ user }: { user: User }) {
           const deMes = validas.filter(o => fechaLima(o.created_at).slice(0, 7) === hoy.slice(0, 7));
           const ventasMes = deMes.reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0);
           const pendientes = inicioOrders.filter(o => o.status === 'Pendiente');
+          // Pedidos por atender en las OTRAS tiendas que administra: el globito del menú cuenta todas, y sin
+          // este aviso parecía que esta tienda tenía pedidos cuando en realidad eran de otra.
+          const otrasPendientes = (() => {
+            const porTienda: Record<string, number> = {};
+            orders.forEach(o => {
+              if (o.status !== 'Pendiente' || o.store === inicioStore.slug) return;
+              if (managedSlugs && !managedSlugs.includes(o.store)) return;
+              porTienda[o.store] = (porTienda[o.store] || 0) + 1;
+            });
+            return Object.entries(porTienda).map(([slug, n]) => ({ nombre: stores[slug]?.name || slug, n }));
+          })();
           const misProductos = products.filter(p => p.store === inicioStore.slug);
 
           // ── "Completa tu tienda": lo que falta para vender bien, con un toque para arreglarlo ──
@@ -1625,8 +1636,13 @@ function AdminDashboard({ user }: { user: User }) {
                   <div className="min-w-0 flex-1">
                     <p className="font-bold text-gray-900 text-sm">Todo al día</p>
                     <p className="text-[11px] text-gray-500">No tienes pedidos por atender. Cuando llegue uno, aparece aquí.</p>
+                    {otrasPendientes.length > 0 && (
+                      <p className="text-[11px] font-semibold text-orange-700 mt-1">
+                        Pendientes en otras tiendas: {otrasPendientes.map(x => `${x.nombre} (${x.n})`).join(', ')}
+                      </p>
+                    )}
                   </div>
-                  <button onClick={() => setActiveTab('orders')} className="text-xs font-bold text-[var(--tienda-color)] shrink-0">Ver pedidos</button>
+                  <button onClick={() => { if (otrasPendientes.length > 0) setSelectedStore('all'); setActiveTab('orders'); }} className="text-xs font-bold text-[var(--tienda-color)] shrink-0">Ver pedidos</button>
                 </div>
               ) : (
                 <>
