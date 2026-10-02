@@ -90,10 +90,11 @@ export default function MenuDirectoTemplate({ store, initialProductId }: Props) 
                   costados que sobran se rellenan con la misma imagen desenfocada, en vez de recortarlo en una franja. */}
               <section className={`relative w-full aspect-video md:aspect-auto md:h-[clamp(260px,32vw,460px)] ${tienePromos ? 'lg:flex-1 lg:min-w-0' : ''}`}>
                 <img className="relative w-full h-full object-cover md:object-contain" alt={store.heroAlt} src={store.heroImage} />
-                <StoreFloatingActions store={store} />
+                {/* Con la tarjeta de promo (escritorio) los botones van al borde derecho de toda la franja, más abajo. */}
+                <div className={tienePromos ? 'lg:hidden' : ''}><StoreFloatingActions store={store} /></div>
               </section>
               {tienePromos && (
-                <div className="relative hidden lg:block w-[360px] shrink-0 h-[clamp(260px,32vw,460px)] p-3">
+                <div className="relative hidden lg:block w-[432px] shrink-0 h-[clamp(260px,32vw,460px)] py-3 pl-3 pr-[72px]">
                   <PromoLateral
                     t={t}
                     productos={c.combosYOfertas}
@@ -102,6 +103,9 @@ export default function MenuDirectoTemplate({ store, initialProductId }: Props) 
                     onAdd={c.addToCart}
                   />
                 </div>
+              )}
+              {tienePromos && (
+                <div className="hidden lg:block"><StoreFloatingActions store={store} /></div>
               )}
             </div>
 
