@@ -133,6 +133,8 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|manifest.json|pwa-icon.png|sw.js|workbox-.*).*)',
+    // Sin /api ni archivos (imágenes, íconos, fuentes…): en esas rutas el proxy solo dejaba pasar, y
+    // correrlo en cada una gastaba CPU de Vercel para nada (era ~55 % del CPU activo).
+    '/((?!api/|_next/|favicon.ico|manifest.json|sw.js|workbox-.*|.*\\.[a-zA-Z0-9]+$).*)',
   ],
 };
