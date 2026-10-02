@@ -110,12 +110,21 @@ body {
   min-height: max(884px, 100dvh);
 }
 
+/* El panel del dueño mide exactamente la pantalla (h-screen) y se desplaza por dentro: con el mínimo de
+   884px el documento quedaba más alto que la ventana (celular girado, ventana baja) y todo el panel
+   subía al hacer scroll, despegándose del borde de abajo. */
+body:has([data-admin-root]) { min-height: 100dvh; }
+
 /* Sidebar persistente (solo escritorio). MarketTabs pone data-sidebar en <html>
    al montar y lo empuja el contenido; en móvil no aplica (es overlay). */
 body { transition: padding-left 0.2s ease; }
 @media (min-width: 1024px) {
   html[data-sidebar='rail'] body { padding-left: 56px; }  /* solo íconos (por defecto) */
   html[data-sidebar='open'] body { padding-left: 248px; } /* expandido */
+
+  /* Dentro de una tienda con dirección propia (<tienda>.bogahub.app) no hay barra lateral de BogaHub:
+     sin esto la portada ("/") heredaba su margen y la página quedaba corrida a la derecha. */
+  html[data-tienda] body { padding-left: 0 !important; }
 
   /* El riel expandido ya trae las etiquetas de cada sección — con el riel
      colapsado (solo íconos) esta barra es la única navegación con texto,

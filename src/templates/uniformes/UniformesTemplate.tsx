@@ -64,9 +64,12 @@ export default function UniformesTemplate({ store, initialProductId }: Props) {
   }, [c.categoriasEfectivas, c.products]);
 
   return (
+    // El fondo de la plantilla cubre TODA la pantalla; el contenido va centrado con un ancho máximo
+    // (antes en escritorio se veía una columna oscura con márgenes blancos a los lados).
+    <div className="min-h-screen w-full" style={{ background: t.background }}>
     <main
-      className="min-h-screen flex flex-col mx-auto w-full relative pb-24 md:pb-0 overflow-x-hidden md:max-w-6xl md:shadow-[0_0_80px_rgba(0,0,0,0.5)]"
-      style={{ background: t.background, color: t.onBackground, fontFamily: t.fontBody }}
+      className="min-h-screen flex flex-col mx-auto w-full relative pb-24 md:pb-0 overflow-x-hidden md:max-w-6xl md:border-x"
+      style={{ background: t.background, color: t.onBackground, fontFamily: t.fontBody, borderColor: `${t.outlineVariant}50` }}
     >
       {/* ─── MODALES ─── */}
       {selectedProduct && (
@@ -501,5 +504,6 @@ export default function UniformesTemplate({ store, initialProductId }: Props) {
         }}
       />
     </main>
+    </div>
   );
 }

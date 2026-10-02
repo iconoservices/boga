@@ -1368,6 +1368,7 @@ function AdminDashboard({ user }: { user: User }) {
 
   return (
     <div
+      data-admin-root
       className="min-h-screen md:h-screen md:overflow-hidden bg-[#f8f9fa] font-['Outfit'] flex flex-col md:flex-row"
       // Todo el rojo fijo del panel (bg-[var(--tienda-color)], text-[var(--tienda-color)]...) ahora
       // toma la marca de la tienda que se está viendo; sin tienda (o sin color propio) cae al rojo de BogaHub.

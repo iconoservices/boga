@@ -38,7 +38,7 @@ export default function MarketTabs() {
 
   useEffect(() => {
     const el = document.documentElement;
-    if (!showSidebar) {
+    if (!showSidebar || el.dataset.tienda) {
       delete el.dataset.sidebar;
       return;
     }
