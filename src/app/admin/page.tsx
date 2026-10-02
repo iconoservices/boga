@@ -367,6 +367,11 @@ function AdminDashboard({ user }: { user: User }) {
     return `${siteOrigin}/${slug}`;
   };
   const inicioUrl = inicioStore ? urlDeTienda(inicioStore.slug) : '';
+  // Producto "sin categoría": no tiene o tiene una que ya no existe en su tienda. A los clientes solo les sale
+  // bajo "Todos", sin sección propia, así que conviene que el dueño lo vea y lo arregle.
+  const sinCategoria = (p: Product) =>
+    !p.category?.trim() ||
+    !stores[p.store]?.categories?.some((c) => c.name.trim().toLowerCase() === p.category.trim().toLowerCase());
   const inicioOrders = inicioStore ? orders.filter(o => o.store === inicioStore.slug) : [];
   const compartirCarta = async () => {
     if (typeof navigator === 'undefined') return;
@@ -1772,7 +1777,7 @@ function AdminDashboard({ user }: { user: User }) {
                 const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                                       p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
                                       (p.subcategory || '').toLowerCase().includes(searchQuery.toLowerCase());
-                const matchesCategory = selectedFilterCategory === 'all' || p.category === selectedFilterCategory;
+                const matchesCategory = selectedFilterCategory === 'all' || (selectedFilterCategory === '__sin__' ? sinCategoria(p) : p.category === selectedFilterCategory);
                 return matchesSearch && matchesCategory;
               });
 
@@ -1885,6 +1890,19 @@ function AdminDashboard({ user }: { user: User }) {
                           >
                             Todos
                           </button>
+                          {storeFiltered.some(sinCategoria) && (
+                            <button
+                              onClick={() => setSelectedFilterCategory('__sin__')}
+                              className={`px-4 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap uppercase tracking-wider transition-colors border flex items-center gap-1 ${
+                                selectedFilterCategory === '__sin__'
+                                  ? 'bg-amber-500 text-white border-transparent'
+                                  : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
+                              }`}
+                            >
+                              <span className="material-symbols-outlined text-[14px]">warning</span>
+                              Sin categoría ({storeFiltered.filter(sinCategoria).length})
+                            </button>
+                          )}
                           {availableCategories.map(cat => (
                             <button 
                               key={cat}
@@ -1972,9 +1990,16 @@ function AdminDashboard({ user }: { user: User }) {
                                   </td>
                                 )}
                                 <td className="p-3">
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
-                                    {p.category}
-                                  </span>
+                                  {sinCategoria(p) ? (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200" title="Este producto no tiene una categoría válida: a tus clientes solo les sale en Todos">
+                                      <span className="material-symbols-outlined text-[13px]">warning</span>
+                                      Sin categoría
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
+                                      {p.category}
+                                    </span>
+                                  )}
                                 </td>
                                 {inventarioOn && <td className="p-3">{celdaStock(p)}</td>}
                                 <td className="p-3">
@@ -2060,9 +2085,16 @@ function AdminDashboard({ user }: { user: User }) {
                               </div>
                               
                               <div className="flex items-center gap-1.5 flex-wrap mt-1">
-                                <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider truncate">
-                                  {p.category} {p.subcategory ? `• ${p.subcategory}` : ''}
-                                </span>
+                                {sinCategoria(p) ? (
+                                  <span className="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 uppercase font-bold tracking-wider flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-[12px]">warning</span>
+                                    Sin categoría
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider truncate">
+                                    {p.category} {p.subcategory ? `• ${p.subcategory}` : ''}
+                                  </span>
+                                )}
                                 {tiendaTiene(p.store, 'inventario') && (
                                   <>
                                     <span className="text-[10px] text-gray-300">•</span>
@@ -3482,7 +3514,11 @@ function AdminDashboard({ user }: { user: User }) {
                       {cat.name}
                       <button
                         type="button"
-                        onClick={() => setStoreCategories(prev => prev.filter((_, i) => i !== idx))}
+                        onClick={() => {
+                          const usados = products.filter(p => p.store === editingStoreSlug && p.category === cat.name).length;
+                          if (usados > 0) { alert(`"${cat.name}" tiene ${usados} producto${usados !== 1 ? 's' : ''}. Pásalos a otra categoría desde la pestaña Categorías antes de quitarla.`); return; }
+                          setStoreCategories(prev => prev.filter((_, i) => i !== idx));
+                        }}
                         className="w-5 h-5 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
                         aria-label={`Quitar ${cat.name}`}
                       >

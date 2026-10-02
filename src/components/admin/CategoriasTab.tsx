@@ -29,6 +29,8 @@ export default function CategoriasTab({ nombreTienda, categorias, conteos, onGua
   const [borrador, setBorrador] = useState('');
   const [ocupado, setOcupado] = useState(false);
   const [aviso, setAviso] = useState('');
+  const [moviendo, setMoviendo] = useState<string | null>(null); // href de la categoría que se quiere borrar teniendo productos
+  const [destino, setDestino] = useState('');
 
   const existeNombre = (n: string, exceptoHref?: string) =>
     categorias.some((c) => c.href !== exceptoHref && c.name.trim().toLowerCase() === n.trim().toLowerCase());
@@ -75,6 +77,17 @@ export default function CategoriasTab({ nombreTienda, categorias, conteos, onGua
     setOcupado(false);
   };
 
+  // Borrar una categoría que tiene productos: primero se pasan todos a otra y recién ahí se quita.
+  const moverYBorrar = async (cat: Categoria) => {
+    if (!destino) return;
+    setOcupado(true);
+    const ok = await onRenombrarProductos(cat.name, destino);
+    if (ok) await onGuardar(categorias.filter((c) => c.href !== cat.href));
+    setOcupado(false);
+    setMoviendo(null);
+    setDestino('');
+  };
+
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
       <div>
@@ -113,7 +126,8 @@ export default function CategoriasTab({ nombreTienda, categorias, conteos, onGua
         {categorias.map((cat, idx) => {
           const usados = conteos[cat.name] ?? 0;
           return (
-            <div key={cat.href} className="flex items-center gap-2 px-3 py-2.5">
+            <div key={cat.href} className="px-3 py-2.5">
+            <div className="flex items-center gap-2">
               <div className="flex flex-col shrink-0">
                 <button
                   type="button"
@@ -169,13 +183,49 @@ export default function CategoriasTab({ nombreTienda, categorias, conteos, onGua
               </button>
               <button
                 type="button"
-                title={usados > 0 ? 'Tiene productos: cámbialos de categoría antes de borrarla' : 'Borrar categoría'}
-                disabled={ocupado || usados > 0}
-                onClick={() => borrar(cat)}
+                title={usados > 0 ? 'Tiene productos: te dejo pasarlos a otra categoría y borrarla' : 'Borrar categoría'}
+                disabled={ocupado}
+                onClick={() => { if (usados > 0) { setMoviendo(moviendo === cat.href ? null : cat.href); setDestino(''); } else borrar(cat); }}
                 className="w-8 h-8 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent shrink-0"
               >
                 <span className="material-symbols-outlined text-[18px]">delete</span>
               </button>
+            </div>
+            {moviendo === cat.href && (
+              <div className="mt-2 ml-8 rounded-lg border border-amber-200 bg-amber-50 p-3 flex flex-col gap-2">
+                {categorias.length < 2 ? (
+                  <p className="text-xs font-semibold text-amber-900">
+                    Para borrar &quot;{cat.name}&quot; necesitas otra categoría a donde pasar sus {usados} producto{usados !== 1 ? 's' : ''}. Crea una arriba y vuelve a intentarlo.
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-xs font-semibold text-amber-900">
+                      &quot;{cat.name}&quot; tiene {usados} producto{usados !== 1 ? 's' : ''}. ¿A qué categoría los pasamos?
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <select
+                        value={destino}
+                        onChange={(e) => setDestino(e.target.value)}
+                        className="flex-1 min-w-0 px-3 py-2 bg-white border border-amber-200 rounded-md text-sm font-semibold focus:outline-none focus:border-black"
+                      >
+                        <option value="">Elige la categoría…</option>
+                        {categorias.filter((c) => c.href !== cat.href).map((c) => (
+                          <option key={c.href} value={c.name}>{c.name}</option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        disabled={!destino || ocupado}
+                        onClick={() => moverYBorrar(cat)}
+                        className="px-4 py-2 bg-black text-white rounded-md text-sm font-bold hover:bg-gray-800 disabled:opacity-40"
+                      >
+                        Mover y borrar
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
             </div>
           );
         })}
