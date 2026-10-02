@@ -459,6 +459,7 @@ export default function RackTemplate({ store, initialProductId }: Props) {
           onIrAlMenu={() => setActiveTab('catalogo')}
           whatsappVisible={c.whatsappVisible}
           entregaDisponible={store.entrega}
+          catalogo
         />
       )}
 
@@ -466,6 +467,7 @@ export default function RackTemplate({ store, initialProductId }: Props) {
       {activeTab === 'contacto' && (
         <ContactPanel
           t={t}
+          catalogo
           telefonoVisible={c.telefonoVisible}
           direccionVisible={store.direccion}
           horarioVisible={store.horario}

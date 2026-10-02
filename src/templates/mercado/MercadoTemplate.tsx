@@ -373,6 +373,7 @@ export default function MercadoTemplate({ store, initialProductId }: MercadoTemp
         {pestana === 'contacto' && (
           <ContactPanel
             t={t}
+            catalogo
             telefonoVisible={c.telefonoVisible}
             direccionVisible={store.direccion}
             horarioVisible={store.horario}

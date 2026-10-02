@@ -814,9 +814,11 @@ export function CartPanel({
    ════════════════════════════════════════════ */
 
 export function ContactPanel({
-  t, telefonoVisible, direccionVisible, horarioVisible, facebookVisible, instagramVisible, tiktokVisible, onEnviar,
+  t, telefonoVisible, direccionVisible, horarioVisible, facebookVisible, instagramVisible, tiktokVisible, onEnviar, catalogo,
 }: {
   t: StoreTheme;
+  /** Tienda de catálogo (no de comida): el texto no habla de "mesa" ni de "eventos". */
+  catalogo?: boolean;
   telefonoVisible: string | null;
   direccionVisible?: string | null;
   horarioVisible?: string | null;
@@ -840,8 +842,9 @@ export function ContactPanel({
       <div className="space-y-6">
         <h3 className="font-black text-2xl uppercase italic" style={{ color: t.primary }}>¡Visítanos o Escríbenos!</h3>
         <p className={`${TXT.body} leading-relaxed`} style={{ color: t.onSurfaceVariant }}>
-          Estamos listos para llevarte la mejor experiencia a tu mesa. Si tienes dudas, eventos especiales o pedidos
-          corporativos, ponte en contacto.
+          {catalogo
+            ? 'Cuéntanos qué necesitas y te respondemos por WhatsApp. Si tienes dudas, medidas especiales o pedidos grandes, ponte en contacto.'
+            : 'Estamos listos para llevarte la mejor experiencia a tu mesa. Si tienes dudas, eventos especiales o pedidos corporativos, ponte en contacto.'}
         </p>
         <div className="space-y-4">
           {[
