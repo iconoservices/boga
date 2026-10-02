@@ -238,15 +238,8 @@ export default function RackTemplate({ store, initialProductId }: Props) {
           >
             {[
               { icon: 'local_shipping', label: store.entrega === 'recojo' ? 'Recojo en tienda' : store.entrega === 'delivery' ? 'Delivery' : 'Delivery y recojo' },
-              // Instalación y garantía son promesas de la demo: en una tienda real no se afirman por ella.
-              // Para el resto se usan datos reales de la tienda (zona, medios de pago, WhatsApp), los que haya.
-              ...(store.slug === 'rack'
-                ? [{ icon: 'build', label: 'Instalación incluida' }, { icon: 'verified', label: 'Garantía real' }]
-                : [
-                    store.zona ? { icon: 'location_on', label: store.zona.split(/[-–,]/)[0].trim() } : null,
-                    (store.metodosPago?.length ?? 0) > 0 ? { icon: 'payments', label: store.metodosPago!.slice(0, 2).join(' · ') } : null,
-                    tieneWhatsApp(store) ? { icon: 'chat', label: 'Pedidos por WhatsApp' } : null,
-                  ].filter((x): x is { icon: string; label: string } => x !== null).slice(0, 2)),
+              { icon: 'build', label: 'Instalación incluida' },
+              { icon: 'verified', label: 'Garantía real' },
             ].map((item) => (
               <div key={item.icon} className="flex flex-col items-center gap-1 text-center">
                 <span
