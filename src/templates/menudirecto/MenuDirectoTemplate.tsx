@@ -8,7 +8,7 @@ import StoreHeader from '../shared/StoreHeader';
 import { useCatalogo } from '../shared/useCatalogo';
 import { TXT, ICON } from '../shared/tokens';
 import {
-  CategoryChips, CombosCarrusel, ProductGrid, ProductModal, CartPanel, ContactPanel, BottomNav, StoreFooter,
+  CategoryChips, CombosCarrusel, PromoLateral, ProductGrid, ProductModal, CartPanel, ContactPanel, BottomNav, StoreFooter,
 } from '../shared/CatalogoUI';
 
 interface Props {
@@ -32,6 +32,7 @@ export default function MenuDirectoTemplate({ store, initialProductId }: Props) 
 
   const [activeTab, setActiveTab] = useState('menu');
   const selectedProduct = c.detalle;
+  const tienePromos = !!c.combosYOfertas && c.combosYOfertas.length > 0;
 
   const TABS = [
     { id: 'menu', label: 'Menú' },
@@ -80,10 +81,25 @@ export default function MenuDirectoTemplate({ store, initialProductId }: Props) 
                 De borde a borde, sin padding ni esquinas redondeadas, igual que
                 el hero de Pollería: es el banner que carga el comercio, tiene que
                 verse entero y sin filtro negro encima. El texto va debajo. */}
-            <section className="relative w-full aspect-video md:aspect-auto md:h-60 overflow-hidden">
-              <img className="w-full h-full object-cover" alt={store.heroAlt} src={store.heroImage} />
-              <StoreFloatingActions store={store} />
-            </section>
+            {/* En pantalla grande, si hay combos u ofertas, el banner queda a la izquierda y a su derecha va una
+                tarjeta de plato (rota sola si hay más de una). En celular sigue como siempre: banner y, abajo, el carrusel. */}
+            <div className="lg:flex lg:items-stretch">
+              <section className={`relative w-full aspect-video md:aspect-auto md:h-60 ${tienePromos ? 'lg:flex-1 lg:min-w-0 lg:h-80' : ''} overflow-hidden`}>
+                <img className="w-full h-full object-cover" alt={store.heroAlt} src={store.heroImage} />
+                <StoreFloatingActions store={store} />
+              </section>
+              {tienePromos && (
+                <div className="hidden lg:block w-[360px] shrink-0 h-80 p-3">
+                  <PromoLateral
+                    t={t}
+                    productos={c.combosYOfertas}
+                    titulo={c.comboLabel}
+                    onSelect={c.abrirProducto}
+                    onAdd={c.addToCart}
+                  />
+                </div>
+              )}
+            </div>
 
             {/* El nombre y el lema ya salen en el encabezado (StoreHeader, que trae el h1): aquí no se repiten.
                 Solo queda la ubicación y el horario, si la tienda los cargó. */}
@@ -113,15 +129,18 @@ export default function MenuDirectoTemplate({ store, initialProductId }: Props) 
               onSelect={c.setActiveCategory}
             />
 
-            {c.activeCategory === 'all' && c.combosYOfertas && c.combosYOfertas.length > 0 && (
-              <CombosCarrusel
-                t={t}
-                productos={c.combosYOfertas}
-                titulo={c.comboLabel}
-                onSelect={c.abrirProducto}
-                onAdd={c.addToCart}
-                onVerMas={() => c.setActiveCategory('__combos__')}
-              />
+            {c.activeCategory === 'all' && tienePromos && (
+              // En escritorio ya van a la derecha del banner: el carrusel queda solo para celular y tablet.
+              <div className="lg:hidden">
+                <CombosCarrusel
+                  t={t}
+                  productos={c.combosYOfertas}
+                  titulo={c.comboLabel}
+                  onSelect={c.abrirProducto}
+                  onAdd={c.addToCart}
+                  onVerMas={() => c.setActiveCategory('__combos__')}
+                />
+              </div>
             )}
 
             <div className="px-5 md:px-6">

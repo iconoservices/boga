@@ -28,6 +28,10 @@ export interface DemoProduct {
   description?: string;
   /** Medidas con su precio (100 g / 250 g / 1 kg…). `price` es la más barata. Ver lib/presentaciones.ts. */
   presentaciones?: { label: string; price: number }[];
+  /** Solo para la demo: así se ven los combos y las ofertas de la plantilla. */
+  esCombo?: boolean;
+  /** Solo para la demo: precio normal tachado (oferta). */
+  priceAnterior?: number;
 }
 
 export interface TemplateConfig {
@@ -885,6 +889,8 @@ const TEMPLATES: Record<string, TemplateConfig> = {
       { name: 'Lomo Saltado', price: 32.00, category: 'Al Plato', image: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400&q=80', description: 'Con papas fritas y arroz graneado' },
       { name: 'Piqueo para 2', price: 45.00, category: 'Para Compartir', image: 'https://images.unsplash.com/photo-1610614819513-58e34989848b?w=400&q=80', description: 'Alitas, tequeños y papas rústicas' },
       { name: 'Limonada Frozen', price: 9.50, category: 'Bebidas', image: 'https://images.unsplash.com/photo-1625943553852-781c6dd46faa?w=400&q=80', description: 'Jarra de medio litro bien helada' },
+      { name: 'Combo Burger + Papas + Gaseosa', price: 24.90, category: 'Hamburguesas', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&q=80', description: 'Hamburguesa clásica, papas fritas y gaseosa personal', esCombo: true },
+      { name: 'Piqueo para 2 + Jarra', price: 49.00, category: 'Para Compartir', image: 'https://images.unsplash.com/photo-1610614819513-58e34989848b?w=400&q=80', description: 'Alitas, tequeños, papas rústicas y una jarra de limonada', esCombo: true, priceAnterior: 58.00 },
     ],
     zona: 'Miraflores',
     direccion: 'Av. Fuego y Brasa 1995, Miraflores, Lima',

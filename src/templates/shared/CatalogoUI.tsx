@@ -813,6 +813,100 @@ export function CartPanel({
 }
 
 /* ════════════════════════════════════════════
+   PROMO LATERAL (escritorio): una tarjeta de plato a la derecha del banner.
+   Con más de un combo u oferta va rotando sola; se pausa al pasar el mouse.
+   ════════════════════════════════════════════ */
+
+export function PromoLateral({
+  t, productos, onSelect, onAdd, titulo,
+}: {
+  t: StoreTheme;
+  productos: Producto[];
+  onSelect: (p: Producto) => void;
+  onAdd: (p: Producto) => void;
+  titulo?: string;
+}) {
+  const [indice, setIndice] = React.useState(0);
+  const [pausa, setPausa] = React.useState(false);
+  const n = productos?.length ?? 0;
+
+  React.useEffect(() => {
+    if (n < 2 || pausa) return;
+    const id = window.setInterval(() => setIndice((i) => (i + 1) % n), 5000);
+    return () => window.clearInterval(id);
+  }, [n, pausa]);
+
+  if (n === 0) return null;
+  const p = productos[indice % n];
+  const pct = p.priceAnterior && p.priceAnterior > p.price
+    ? `-${Math.round((1 - p.price / p.priceAnterior) * 100)}%`
+    : null;
+
+  return (
+    <div
+      className="h-full rounded-2xl overflow-hidden border shadow-sm flex flex-col"
+      style={{ background: t.surface, borderColor: `${t.outlineVariant}60` }}
+      onMouseEnter={() => setPausa(true)}
+      onMouseLeave={() => setPausa(false)}
+    >
+      <div className="px-4 pt-3 pb-2 flex items-center justify-between gap-2">
+        <span className={`${TXT.small} font-black uppercase italic tracking-tight flex items-center gap-1`} style={{ color: t.onSurface }}>
+          <span className="text-amber-500">🔥</span> {titulo || 'Promo del día'}
+        </span>
+        {n > 1 && (
+          <div className="flex items-center gap-1">
+            {productos.map((_, k) => (
+              <button
+                key={k}
+                onClick={() => setIndice(k)}
+                aria-label={`Ver promo ${k + 1}`}
+                className="h-1.5 rounded-full transition-all"
+                style={{ width: k === indice % n ? 16 : 6, background: k === indice % n ? t.primary : `${t.outlineVariant}` }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="relative flex-1 min-h-0 cursor-pointer group" onClick={() => onSelect(p)}>
+        <img
+          key={p.id}
+          src={p.images?.[0] || p.image}
+          alt={p.name}
+          className="absolute inset-0 w-full h-full object-cover animate-fade-in group-hover:scale-105 transition-transform duration-500"
+        />
+        <div className="absolute top-2 left-2 z-10 flex flex-col gap-1 items-start">
+          {p.esCombo && (
+            <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow-sm">🔥 COMBO</span>
+          )}
+          {pct && (
+            <span className="text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow-sm" style={{ background: t.primary }}>{pct}</span>
+          )}
+        </div>
+      </div>
+
+      <div className="px-4 py-3 flex items-center gap-3">
+        <div className="min-w-0 flex-1 cursor-pointer" onClick={() => onSelect(p)}>
+          <p className={`font-bold ${TXT.body} leading-tight line-clamp-2`} style={{ color: t.onSurface }}>{p.name}</p>
+          <p className="mt-0.5 flex items-baseline gap-1.5">
+            <span className={`font-black ${TXT.body}`} style={{ color: t.primary }}>{soles(p.price)}</span>
+            {pct && p.priceAnterior && <span className={`${TXT.micro} line-through`} style={{ color: t.onSurfaceVariant }}>{soles(p.priceAnterior)}</span>}
+          </p>
+        </div>
+        <button
+          onClick={() => onAdd(p)}
+          aria-label={`Agregar ${p.name}`}
+          className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 active:scale-90 transition-all shadow-md"
+          style={{ background: t.primary, color: t.onPrimary }}
+        >
+          <span className={`material-symbols-outlined ${ICON.md}`}>add</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════
    PESTAÑA: CONTACTO
    ════════════════════════════════════════════ */
 

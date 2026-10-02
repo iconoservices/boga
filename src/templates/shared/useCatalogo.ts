@@ -82,6 +82,8 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
             image: p.image,
             extra: p.subcategory ? { area: String(p.subcategory) } : undefined,
             presentaciones: p.presentaciones,
+            esCombo: p.esCombo,
+            priceAnterior: p.priceAnterior,
           }))
         : [];
 
