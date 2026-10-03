@@ -1546,7 +1546,13 @@ function AdminDashboard({ user }: { user: User }) {
               <span className="material-symbols-outlined text-gray-400 text-[28px]">storefront</span>
             </div>
             <h3 className="font-bold text-gray-900">Todavía no tienes ninguna carta</h3>
-            <p className="text-gray-500 text-sm mt-1">El equipo de BogaHub te asigna tu tienda a este correo ({user.email}). Escríbenos y la dejamos lista.</p>
+            <p className="text-gray-500 text-sm mt-1">Las tiendas ya no se reclaman solas: el equipo de BogaHub la asigna a tu correo.</p>
+            <p className="text-gray-700 text-sm mt-3 font-semibold">Tu correo: {user.email}</p>
+            <p className="text-gray-500 text-sm mt-3">Escríbenos por WhatsApp con ese correo y el nombre de tu negocio. Apenas la asignemos, recarga esta página y ya la ves.</p>
+            <div className="mt-5 flex flex-col sm:flex-row gap-2 justify-center">
+              <button onClick={() => window.location.reload()} className="px-4 py-2.5 bg-[var(--tienda-color)] text-white font-bold rounded-md text-sm">Ya me la asignaron, recargar</button>
+              <button onClick={async () => { await signOut(); router.replace('/login'); }} className="px-4 py-2.5 border border-gray-200 text-gray-600 font-bold rounded-md text-sm">Entrar con otro correo</button>
+            </div>
           </div>
         )}
 
@@ -4165,37 +4171,35 @@ function AdminDashboard({ user }: { user: User }) {
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-between gap-3 sticky bottom-0">
+            {/* Footer: en celular "Guardar" va arriba y a todo el ancho; Cancelar y Resetear debajo, a mitades */}
+            <div className="p-4 sm:p-6 border-t border-gray-100 bg-gray-50/90 backdrop-blur grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-3 sticky bottom-0 pb-[max(1rem,env(safe-area-inset-bottom))]">
+              <button
+                onClick={handleStoreSave}
+                disabled={isStoreSaving}
+                className="order-1 sm:order-3 col-span-2 flex items-center justify-center gap-2 px-8 py-3.5 bg-[var(--tienda-color)] text-white rounded-xl sm:rounded-md font-bold shadow-lg shadow-[var(--tienda-color)]/20 hover:shadow-[var(--tienda-color)]/30 transition-all active:scale-[0.98] disabled:opacity-70"
+              >
+                {isStoreSaving ? (
+                  <>
+                    <span className="material-symbols-outlined animate-spin text-[20px]">refresh</span>
+                    Guardando...
+                  </>
+                ) : 'Guardar Cambios'}
+              </button>
+              <button
+                onClick={() => setIsStoreEditorOpen(false)}
+                disabled={isStoreSaving}
+                className="order-2 sm:order-2 sm:ml-auto px-6 py-3 rounded-xl sm:rounded-md font-bold text-gray-600 bg-white border border-gray-200 sm:border-transparent sm:bg-transparent hover:bg-gray-200 transition-colors disabled:opacity-50 text-sm"
+              >
+                Cancelar
+              </button>
               <button
                 onClick={handleStoreReset}
                 disabled={isStoreSaving}
-                className="flex items-center gap-1.5 px-4 py-3.5 rounded-md font-bold text-[#8c0009] hover:bg-[#8c0009]/8 transition-colors disabled:opacity-50 text-sm"
+                className="order-3 sm:order-1 flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl sm:rounded-md font-bold text-[#8c0009] bg-white border border-[#8c0009]/20 sm:border-transparent sm:bg-transparent hover:bg-[#8c0009]/8 transition-colors disabled:opacity-50 text-sm"
               >
                 <span className="material-symbols-outlined text-[18px]">restart_alt</span>
                 Resetear
               </button>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setIsStoreEditorOpen(false)}
-                  disabled={isStoreSaving}
-                  className="px-6 py-3.5 rounded-md font-bold text-gray-600 hover:bg-gray-200 transition-colors disabled:opacity-50"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleStoreSave}
-                  disabled={isStoreSaving}
-                  className="flex items-center gap-2 px-8 py-3.5 bg-[var(--tienda-color)] text-white rounded-md font-bold shadow-lg shadow-[var(--tienda-color)]/20 hover:shadow-[var(--tienda-color)]/30 transition-all hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0"
-                >
-                  {isStoreSaving ? (
-                    <>
-                      <span className="material-symbols-outlined animate-spin text-[20px]">refresh</span>
-                      Guardando...
-                    </>
-                  ) : 'Guardar Cambios'}
-                </button>
-              </div>
             </div>
           </div>
         </div>
