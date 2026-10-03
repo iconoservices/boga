@@ -102,6 +102,38 @@ export function ordenarPresentaciones<T extends { label: string }>(lista: T[]): 
     .map((o) => o.x);
 }
 
+/** Cuántas unidades es una presentación ("12 unidades" -> 12, "docena" -> 12, "1" -> 1). null si no son unidades. */
+export function unidadesDe(label: string): number | null {
+  const t = label.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+  if (t === 'docena') return 12;
+  if (t === 'media docena') return 6;
+  if (t === 'par') return 2;
+  const m = t.match(/^(\d+)\s*(unidad|unidades|und|u)?$/);
+  if (m) return parseInt(m[1], 10);
+  // Empaques con cantidad: "Bolsa x 60 unidades", "Caja x 12", "Paquete x 6".
+  const x = t.match(/^(?:bolsa|caja|paquete|pack|cartón|carton|jaba|saco)\s*x\s*(\d+)(?:\s*(?:unidad|unidades|und|u))?$/);
+  return x ? parseInt(x[1], 10) : null;
+}
+
+/**
+ * Ahorro automático por cantidad: toma el precio de "1 unidad" como base y, para las demás presentaciones en
+ * unidades, calcula cuánto se ahorra frente a comprar esa cantidad suelta y cuánto sale cada una.
+ * Solo devuelve las que realmente salen más baratas.
+ */
+export function ahorroPorCantidad(pres: Presentacion[]): Record<string, { ahorro: number; porUnidad: number }> {
+  const out: Record<string, { ahorro: number; porUnidad: number }> = {};
+  const base = pres.find((p) => unidadesDe(p.label) === 1);
+  if (!base) return out;
+  for (const p of pres) {
+    const n = unidadesDe(p.label);
+    if (n === null || n <= 1) continue;
+    const suelto = base.price * n;
+    const ahorro = Math.round((suelto - p.price) * 100) / 100;
+    if (ahorro > 0.009) out[p.label] = { ahorro, porUnidad: Math.round((p.price / n) * 100) / 100 };
+  }
+  return out;
+}
+
 export type TipoPresentacion = 'ropa' | 'calzado' | 'bebida' | 'unidades' | 'peso';
 
 export function tipoPresentacionDe(categoria: unknown, template?: unknown): TipoPresentacion {

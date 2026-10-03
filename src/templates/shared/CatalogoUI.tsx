@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { guardarCliente, leerCliente, normalizarCelular } from '@/lib/cliente';
 import type { StoreTheme } from '@/lib/templates.config';
-import type { Presentacion } from '@/lib/presentaciones';
+import { ahorroPorCantidad, type Presentacion } from '@/lib/presentaciones';
 import { TXT, ICON, soles, type Producto, type Categoria } from './tokens';
 import { AddButton, CartBadge, EVENTO_VER_PEDIDO } from './AddFeedback';
 
@@ -313,6 +313,7 @@ export function ProductModal({
   /** Un servicio no se agrega al carrito: este botón manda directo a WhatsApp. */
   onConsultar?: (p: Producto) => void;
 }) {
+  const ahorros = React.useMemo(() => ahorroPorCantidad(producto?.presentaciones ?? []), [producto]);
   const [agregado, setAgregado] = React.useState(false);
   // Cuántas unidades se agregan de una vez (como en cualquier tienda: − 1 +).
   const [cantidad, setCantidad] = React.useState(1);
@@ -424,6 +425,7 @@ export function ProductModal({
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {producto.presentaciones.map((x) => {
                 const activa = medida?.label === x.label;
+                const ahorro = ahorros[x.label];
                 return (
                   <button
                     key={x.label}
@@ -438,6 +440,11 @@ export function ProductModal({
                       {x.promo && <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-orange-500 text-white shrink-0">🔥 PROMO</span>}
                     </span>
                     <span className={`block font-bold ${TXT.body}`} style={{ color: t.primary }}>{soles(x.price)}</span>
+                    {ahorro && (
+                      <span className="block text-[10px] font-bold leading-tight mt-0.5 text-green-700">
+                        Ahorras {soles(ahorro.ahorro)} · {soles(ahorro.porUnidad)} c/u
+                      </span>
+                    )}
                   </button>
                 );
               })}
