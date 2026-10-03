@@ -358,6 +358,13 @@ function AdminDashboard({ user }: { user: User }) {
     try { return localStorage.getItem('boga_admin_color') || ''; } catch { return ''; }
   });
   const colorPanel = inicioStore?.theme?.primary || colorGuardado || '#52525b';
+  // WhatsApp del asesor de BogaHub (lo edita el superadmin en Paquetes): para pedir que le asignen la tienda.
+  const [waAsesor, setWaAsesor] = useState('');
+  useEffect(() => {
+    let vivo = true;
+    fetch('/api/contacto').then(r => (r.ok ? r.json() : null)).then(d => { if (vivo && d?.whatsapp) setWaAsesor(d.whatsapp); }).catch(() => {});
+    return () => { vivo = false; };
+  }, []);
   useEffect(() => {
     const c = inicioStore?.theme?.primary;
     if (c) { try { localStorage.setItem('boga_admin_color', c); } catch { /* sin storage: no se recuerda */ } }
@@ -1552,6 +1559,15 @@ function AdminDashboard({ user }: { user: User }) {
             <p className="text-gray-700 text-sm mt-3 font-semibold">Tu correo: {user.email}</p>
             <p className="text-gray-500 text-sm mt-3">Escríbenos por WhatsApp con ese correo y el nombre de tu negocio. Apenas la asignemos, recarga esta página y ya la ves.</p>
             <div className="mt-5 flex flex-col sm:flex-row gap-2 justify-center">
+              {waAsesor && (
+                <a
+                  href={`https://wa.me/${waAsesor}?text=${encodeURIComponent(`Hola, quiero que me asignen mi tienda en BogaHub. Mi correo es ${user.email}. Mi negocio se llama: `)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="px-4 py-2.5 bg-[#25D366] text-white font-bold rounded-md text-sm inline-flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-[18px]">chat</span>Escribir por WhatsApp
+                </a>
+              )}
               <button onClick={() => window.location.reload()} className="px-4 py-2.5 bg-[var(--tienda-color)] text-white font-bold rounded-md text-sm">Ya me la asignaron, recargar</button>
               <button onClick={async () => { await signOut(); router.replace('/login'); }} className="px-4 py-2.5 border border-gray-200 text-gray-600 font-bold rounded-md text-sm">Entrar con otro correo</button>
             </div>
