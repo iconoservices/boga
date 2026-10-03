@@ -194,7 +194,7 @@ export default function MercadoTemplate({ store, initialProductId }: MercadoTemp
         </div>
       </header>
 
-      <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-6 mt-4 px-4 lg:px-6">
+      <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-4 mt-3 px-4 lg:px-6">
         {pestana === 'inicio' && (
           <>
             {/* ── BANNERS ── */}
@@ -229,7 +229,7 @@ export default function MercadoTemplate({ store, initialProductId }: MercadoTemp
               </div>
 
               {banners.length > 1 && (
-                <div className="flex justify-center gap-1.5 mt-2">
+                <div className="flex justify-center gap-1.5 mt-1.5">
                   {banners.map((_, i) => (
                     <button
                       key={i}
@@ -249,22 +249,23 @@ export default function MercadoTemplate({ store, initialProductId }: MercadoTemp
 
             {/* ── CATEGORIAS ── */}
             {categorias.length > 0 && (
-              <section className="flex flex-col gap-3">
+              <section className="flex flex-col gap-2">
                 <h3 className="font-bold text-lg" style={{ fontFamily: t.fontHeadline }}>Explorar Categorías</h3>
-                <div className="grid grid-cols-4 lg:grid-cols-8 gap-2">
+                {/* Etiquetas compactas (ícono + nombre en una línea): ocupan poco alto y se deslizan de lado si son muchas. */}
+                <div className="flex gap-2 overflow-x-auto hide-scrollbar -mx-4 px-4 lg:mx-0 lg:px-0 lg:flex-wrap pb-0.5" style={{ scrollbarWidth: 'none' }}>
                   <button
                     onClick={() => c.setActiveCategory('all')}
                     aria-label="Ver todas las categorías"
                     aria-pressed={c.activeCategory === 'all'}
-                    className="flex flex-col items-center justify-center gap-1 py-2.5 px-1 rounded-lg transition-all active:scale-95"
+                    className="shrink-0 flex items-center gap-1.5 py-1.5 pl-2.5 pr-3.5 rounded-full transition-all active:scale-95"
                     style={{
                       background: c.activeCategory === 'all' ? t.primary : t.surface,
                       color: c.activeCategory === 'all' ? t.onPrimary : t.onSurface,
                       border: `1px solid ${c.activeCategory === 'all' ? t.primary : t.outlineVariant}`,
                     }}
                   >
-                    <span className="material-symbols-outlined text-[22px]">grid_view</span>
-                    <span className="text-[10px] font-semibold leading-tight text-center">Todas</span>
+                    <span className="material-symbols-outlined text-[18px]">grid_view</span>
+                    <span className="text-xs font-semibold whitespace-nowrap">Todas</span>
                   </button>
 
                   {categorias.map((cat) => {
@@ -275,15 +276,15 @@ export default function MercadoTemplate({ store, initialProductId }: MercadoTemp
                         onClick={() => c.setActiveCategory(cat.id)}
                         aria-label={`Filtrar por ${cat.label}`}
                         aria-pressed={activa}
-                        className="flex flex-col items-center justify-center gap-1 py-2.5 px-1 rounded-lg transition-all active:scale-95"
+                        className="shrink-0 flex items-center gap-1.5 py-1.5 pl-2.5 pr-3.5 rounded-full transition-all active:scale-95"
                         style={{
                           background: activa ? t.primary : t.surface,
                           color: activa ? t.onPrimary : t.onSurface,
                           border: `1px solid ${activa ? t.primary : t.outlineVariant}`,
                         }}
                       >
-                        {cat.icon && <span className="material-symbols-outlined text-[22px]">{cat.icon}</span>}
-                        <span className="text-[10px] font-semibold leading-tight text-center line-clamp-2">{cat.label}</span>
+                        {cat.icon && <span className="material-symbols-outlined text-[18px]">{cat.icon}</span>}
+                        <span className="text-xs font-semibold whitespace-nowrap">{cat.label}</span>
                       </button>
                     );
                   })}
