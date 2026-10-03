@@ -44,7 +44,7 @@ export const UNIDADES_DE_MEDIDA: { id: ModoMedida; label: string; icono: string;
   { id: 'volumen', label: 'Volumen (ml, litros)', icono: 'water_drop', ayuda: 'Ej. 1/4 litro, galón', sugeridas: ['250 ml', '500 ml', '1/4 litro', '1/2 litro', '1 litro', '2 litros', '5 litros', 'Galón', 'Balde'] },
   { id: 'longitud', label: 'Longitud (m, cm)', icono: 'straighten', ayuda: 'Ej. 1 metro, rollo', sugeridas: ['10 cm', '50 cm', '1 metro', '2 metros', '5 metros', '10 metros', 'Rollo'] },
   { id: 'tamano', label: 'Tamaño o porción', icono: 'aspect_ratio', ayuda: 'Ej. personal, familiar', sugeridas: ['Personal', 'Pequeño', 'Mediano', 'Grande', 'Familiar', 'Jumbo', 'Media porción', 'Porción'] },
-  { id: 'empaque', label: 'Caja, saco o jaba', icono: 'package_2', ayuda: 'Ej. caja x 12, saco, ciento', sugeridas: ['Caja x 6', 'Caja x 12', 'Caja x 24', 'Caja x 48', 'Cartón', 'Jaba', 'Saco', 'Ciento', 'Millar'] },
+  { id: 'empaque', label: 'Caja, bolsa o saco', icono: 'package_2', ayuda: 'Ej. caja x 12, bolsa x 60, saco, ciento', sugeridas: ['Caja x 6', 'Caja x 12', 'Caja x 24', 'Caja x 48', 'Bolsa', 'Bolsa x 12', 'Bolsa x 60', 'Paquete', 'Paquete x 6', 'Cartón', 'Jaba', 'Saco', 'Ciento', 'Millar'] },
   { id: 'otra', label: 'Otra', icono: 'edit', ayuda: 'Escribe tu propia medida', sugeridas: [] },
 ];
 
