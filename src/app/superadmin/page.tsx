@@ -439,7 +439,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     tiktok: '',
     externalUrl: '',
       subdominioActivo: false,
-      pushActivo: false,
+      pushActivo: true, // por defecto activas en tiendas nuevas
       modulos: { pos: false, inventario: false, google: false, marca_blanca: false, marketplace: true } as Modulos,
     ownerEmail: '',
     hideHeroText: true
@@ -592,7 +592,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       tiktok: '',
       externalUrl: '',
       subdominioActivo: false,
-      pushActivo: false,
+      pushActivo: true, // por defecto activas en tiendas nuevas
       modulos: { pos: false, inventario: false, google: false, marca_blanca: false, marketplace: true } as Modulos,
       // El correo de la solicitud: asi al guardar la tienda ya queda asignada
       // a quien la pidio, sin tener que ir despues a mano a "Usuarios".
@@ -818,7 +818,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       tiktok: '',
       externalUrl: '',
       subdominioActivo: false,
-      pushActivo: false,
+      pushActivo: true, // por defecto activas en tiendas nuevas
       modulos: { pos: false, inventario: false, google: false, marca_blanca: false, marketplace: true } as Modulos,
       ownerEmail: '',
       hideHeroText: true // por defecto el banner va limpio; el dueño decide si le suma textos
@@ -2324,6 +2324,36 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                             Vas a renombrar /{editingStore.slug} → /{storeForm.slug}. Los links viejos con el slug anterior dejan de funcionar.
                           </p>
                         )}
+                        <div className="mt-2 p-3 bg-[#f0f7ff] rounded-lg border border-[#0058be]/20">
+                          <label className="flex items-start gap-3 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={!!storeForm.subdominioActivo}
+                              onChange={(e) => setStoreForm(prev => ({ ...prev, subdominioActivo: e.target.checked }))}
+                              className="mt-0.5 w-4 h-4 accent-[#0058be]"
+                            />
+                            <span>
+                              <span className="block text-xs font-black text-[#191b23]">Subdominio propio (plan de pago)</span>
+                              <span className="block text-[10px] text-[#727785] font-semibold mt-0.5">
+                                Activa <strong>{storeForm.slug || 'tu-tienda'}.bogahub.app</strong>. Apagado, esa dirección redirige a bogahub.app/{storeForm.slug || 'tu-tienda'}.
+                              </span>
+                            </span>
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const url = `https://${storeForm.slug || 'tu-tienda'}.bogahub.app`;
+                              navigator.clipboard?.writeText(url).then(() => {
+                                setSubdominioCopiado(true);
+                                setTimeout(() => setSubdominioCopiado(false), 1800);
+                              });
+                            }}
+                            className="mt-3 flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#0058be]/30 text-[#0058be] rounded-md font-bold text-[11px] hover:bg-[#f2f3fd] transition-colors"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">{subdominioCopiado ? 'check' : 'content_copy'}</span>
+                            {subdominioCopiado ? 'Link copiado' : 'Copiar link'}
+                          </button>
+                        </div>
                       </div>
 
                       <div>
@@ -2704,38 +2734,14 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                     </div>
                   </section>
 
-                  <section className="p-4 bg-[#f0f7ff] rounded-lg border border-[#0058be]/20">
-                    <label className="flex items-start gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={!!storeForm.subdominioActivo}
-                        onChange={(e) => setStoreForm(prev => ({ ...prev, subdominioActivo: e.target.checked }))}
-                        className="mt-0.5 w-4 h-4 accent-[#0058be]"
-                      />
-                      <span>
-                        <span className="block text-xs font-black text-[#191b23]">Subdominio propio (plan de pago)</span>
-                        <span className="block text-[10px] text-[#727785] font-semibold mt-0.5">
-                          Activa <strong>{storeForm.slug || 'tu-tienda'}.bogahub.app</strong>. Apagado, esa dirección redirige a bogahub.app/{storeForm.slug || 'tu-tienda'}.
-                        </span>
-                      </span>
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const url = `https://${storeForm.slug || 'tu-tienda'}.bogahub.app`;
-                        navigator.clipboard?.writeText(url).then(() => {
-                          setSubdominioCopiado(true);
-                          setTimeout(() => setSubdominioCopiado(false), 1800);
-                        });
-                      }}
-                      className="mt-3 flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#0058be]/30 text-[#0058be] rounded-md font-bold text-[11px] hover:bg-[#f2f3fd] transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-[14px]">{subdominioCopiado ? 'check' : 'content_copy'}</span>
-                      {subdominioCopiado ? 'Link copiado' : 'Copiar link'}
-                    </button>
-                  </section>
 
-                  <section className="p-4 bg-[#f0f7ff] rounded-lg border border-[#0058be]/20 space-y-2">
+                  {/* Plan, dominio, notificaciones y módulos: todo junto en un solo cuadro (antes eran cuatro cuadros sueltos). */}
+                  <div className="rounded-xl border border-[#0058be]/25 bg-[#f6faff] p-3 space-y-3">
+                    <div className="flex items-center gap-2 px-1">
+                      <span className="material-symbols-outlined text-[#0058be] text-[16px]">workspace_premium</span>
+                      <h3 className="text-[10px] font-black text-[#424754] uppercase tracking-widest">Plan, notificaciones y módulos</h3>
+                    </div>
+                  <section className="p-3 bg-white rounded-lg border border-[#0058be]/15 space-y-2">
                     <div className="flex items-center gap-2">
                       <span className="material-symbols-outlined text-[18px] text-[#0058be]">language</span>
                       <span className="block text-xs font-black text-[#191b23]">Dominio propio personalizado (.com / .pe)</span>
@@ -2763,7 +2769,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                     />
                   </section>
 
-                  <section className="p-4 bg-[#f0f7ff] rounded-lg border border-[#0058be]/20">
+                  <section className="p-3 bg-white rounded-lg border border-[#0058be]/15">
                     <label className="flex items-start gap-3 cursor-pointer">
                       <input
                         type="checkbox"
@@ -2781,7 +2787,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                   </section>
 
                   {/* Selector rápido de Planes Comerciales */}
-                  <section className="p-4 bg-gradient-to-br from-[#f0f7ff] to-[#e6efff] rounded-lg border border-[#0058be]/30 space-y-2.5">
+                  <section className="p-3 bg-gradient-to-br from-[#f0f7ff] to-[#e6efff] rounded-lg border border-[#0058be]/25 space-y-2.5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
                         <span className="material-symbols-outlined text-[18px] text-[#0058be]">auto_fix_high</span>
@@ -2827,7 +2833,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                     </div>
                   </section>
 
-                  <section className="p-4 bg-[#f0f7ff] rounded-lg border border-[#0058be]/20">
+                  <section className="p-3 bg-white rounded-lg border border-[#0058be]/15">
                     <span className="block text-xs font-black text-[#191b23]">Módulos del negocio</span>
                     <span className="block text-[10px] text-[#727785] font-semibold mt-0.5 mb-3">
                       Lo que ve el dueño en su panel. Con todo apagado queda solo la carta (nivel base).
@@ -2853,7 +2859,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                         </label>
                       ))}
                     </div>
-                  </section>
+                  </section>                  </div>
+
                 </div>
 
                 {/* Footer Buttons */}
@@ -2965,7 +2972,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           tiktok: '',
                           externalUrl: '',
       subdominioActivo: false,
-      pushActivo: false,
+      pushActivo: true,
       modulos: { pos: false, inventario: false, google: false, marca_blanca: false, marketplace: true } as Modulos,
                           ownerEmail: ''
                         });
