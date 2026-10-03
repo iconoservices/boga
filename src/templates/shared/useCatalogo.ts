@@ -113,10 +113,11 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
   const subtotal = cartItems.reduce((n, l) => n + l.precio * l.qty, 0);
 
   // Con presentaciones, quien llama elige la medida (el modal del producto); si no llega ninguna, va la primera.
-  const addToCart = (p: Producto, pres?: Presentacion) => {
+  const addToCart = (p: Producto, pres?: Presentacion, cantidad = 1) => {
     const medida = pres ?? p.presentaciones?.[0];
     const clave = claveLinea(p.id, medida?.label);
-    setCart((c) => ({ ...c, [clave]: (c[clave] ?? 0) + 1 }));
+    const n = Math.max(1, Math.floor(cantidad) || 1);
+    setCart((c) => ({ ...c, [clave]: (c[clave] ?? 0) + n }));
     avisarAgregado(medida ? nombreConPresentacion(p.name, medida.label) : p.name);
   };
   // `clave` es el id del producto (igual que siempre) o, con presentacion, "id|medida".

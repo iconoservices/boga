@@ -304,13 +304,15 @@ export function ProductModal({
   /** Catalogo completo de la tienda: de aca salen los "Tambien te puede interesar". */
   productos?: Producto[];
   onClose: () => void;
-  onAdd: (p: Producto, pres?: Presentacion) => void;
+  onAdd: (p: Producto, pres?: Presentacion, cantidad?: number) => void;
   /** Para poder tocar un sugerido y que el modal cambie al producto elegido. */
   onSelect?: (p: Producto) => void;
   /** Un servicio no se agrega al carrito: este botón manda directo a WhatsApp. */
   onConsultar?: (p: Producto) => void;
 }) {
   const [agregado, setAgregado] = React.useState(false);
+  // Cuántas unidades se agregan de una vez (como en cualquier tienda: − 1 +).
+  const [cantidad, setCantidad] = React.useState(1);
   // Medida elegida cuando el producto tiene presentaciones (por defecto la primera, la más chica).
   const [medida, setMedida] = React.useState<Presentacion | null>(null);
   // Foto que se ve arriba, cuando el producto tiene más de una.
@@ -324,6 +326,7 @@ export function ProductModal({
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setAgregado(false);
+    setCantidad(1);
     setMedida(producto?.presentaciones?.[0] ?? null);
     setFotoActiva(0);
     contenedor.current?.scrollTo({ top: 0 });
@@ -450,13 +453,37 @@ export function ProductModal({
         className="fixed bottom-0 left-0 right-0 p-4 flex justify-center"
         style={{ background: `${t.surface}F5`, backdropFilter: 'blur(12px)', borderTop: `1px solid ${t.outlineVariant}40` }}
       >
-        <div className="w-full max-w-2xl flex items-center justify-between gap-4 px-1">
-          <span className="font-black text-xl" style={{ color: t.primary }}>
-            {soles(medida?.price ?? producto.price)}
-            {!medida && producto.priceAnterior && (
+        <div className="w-full max-w-2xl flex items-center justify-between gap-2 sm:gap-4 px-1">
+          <span className="font-black text-lg sm:text-xl shrink-0" style={{ color: t.primary }}>
+            {soles((medida?.price ?? producto.price) * (producto.esServicio ? 1 : cantidad))}
+            {!medida && cantidad === 1 && producto.priceAnterior && (
               <span className="ml-2 text-sm font-medium line-through" style={{ color: t.onSurfaceVariant }}>{soles(producto.priceAnterior)}</span>
             )}
           </span>
+          {!producto.esServicio && (
+            <div className="flex items-center gap-1 shrink-0 rounded-full border p-0.5" style={{ borderColor: `${t.outlineVariant}`, background: t.surface }}>
+              <button
+                type="button"
+                aria-label="Menos"
+                disabled={cantidad <= 1}
+                onClick={() => setCantidad((n) => Math.max(1, n - 1))}
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center active:scale-90 transition-transform disabled:opacity-30"
+                style={{ background: `${t.primary}15`, color: t.primary }}
+              >
+                <span className={`material-symbols-outlined ${ICON.sm}`}>remove</span>
+              </button>
+              <span className="min-w-[1.5rem] text-center font-black text-sm tabular-nums" style={{ color: t.onSurface }}>{cantidad}</span>
+              <button
+                type="button"
+                aria-label="Más"
+                onClick={() => setCantidad((n) => Math.min(99, n + 1))}
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center active:scale-90 transition-transform"
+                style={{ background: t.primary, color: t.onPrimary }}
+              >
+                <span className={`material-symbols-outlined ${ICON.sm}`}>add</span>
+              </button>
+            </div>
+          )}
           {producto.esServicio ? (
             <button
               onClick={() => onConsultar?.(producto)}
@@ -470,12 +497,12 @@ export function ProductModal({
               onClick={() => {
                 // El modal se queda abierto: abajo hay sugeridos y el cliente
                 // puede seguir agregando o mirando mas platos sin salir de aca.
-                onAdd(producto, medida ?? undefined);
+                onAdd(producto, medida ?? undefined, cantidad);
                 setAgregado(true);
                 if (cierre.current) clearTimeout(cierre.current);
                 cierre.current = setTimeout(() => setAgregado(false), 1200);
               }}
-              className={`px-6 py-2.5 rounded-full font-bold ${TXT.body} flex items-center gap-1.5 transition-[background-color,transform] active:scale-95 ${agregado ? 'add-btn-pop' : ''}`}
+              className={`px-3 sm:px-6 py-2.5 rounded-full font-bold ${TXT.body} flex items-center gap-1 sm:gap-1.5 shrink-0 transition-[background-color,transform] active:scale-95 ${agregado ? 'add-btn-pop' : ''}`}
               style={{ background: agregado ? '#16a34a' : t.primary, color: agregado ? '#fff' : t.onPrimary }}
             >
               <span className={`material-symbols-outlined ${ICON.sm}`}>{agregado ? 'check' : 'add'}</span>
