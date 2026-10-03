@@ -1178,6 +1178,25 @@ function AdminDashboard({ user }: { user: User }) {
 
         if (dbError) throw dbError;
 
+        // Se ve el cambio de inmediato en la lista, sin esperar a volver a pedirla.
+        setProducts((prev) => prev.map((x) => x.id !== editingProductId ? x : {
+          ...x,
+          name: newProduct.name,
+          store: newProduct.store,
+          price: precioNormal,
+          category: newProduct.category,
+          subcategory: newProduct.subcategory,
+          image: finalImageUrl,
+          description: descripcionFinal,
+          status: finalStatus,
+          ...(tiendaTiene(newProduct.store, 'inventario') ? { stock: finalStock as number } : {}),
+          ...camposOferta,
+          ...camposPres,
+          ...camposServicio,
+          ...camposCombo,
+          ...camposFotos,
+        } as Product));
+
         // Con inventario, un cambio de stock hecho a mano queda como "ajuste" en el historial.
         if (tiendaTiene(newProduct.store, 'inventario')) {
           const antes = products.find(x => x.id === editingProductId);
@@ -1290,7 +1309,8 @@ function AdminDashboard({ user }: { user: User }) {
         const { error } = await supabase.from('products').delete().eq('id', id);
         if (error) throw error;
         if (tiendaDelProducto) refrescarTienda(tiendaDelProducto);
-        await fetchProducts();
+        setProducts((prev) => prev.filter((p) => p.id !== id));
+        fetchProducts(undefined, true);
       } catch (error: any) {
         alert('Error al eliminar: ' + error.message);
       } finally {
