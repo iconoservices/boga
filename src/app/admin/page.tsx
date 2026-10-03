@@ -28,7 +28,7 @@ import LoyverseSyncModal from '@/components/admin/LoyverseSyncModal';
 import MiPlan from '@/components/admin/MiPlan';
 import CobroOnline from '@/components/admin/CobroOnline';
 import { COLS_OFERTA, precioOfertaVigente, porcentajeOferta } from '@/lib/ofertas';
-import { COL_PRESENTACIONES, presentacionesSugeridas, textosPresentacion, leerPresentaciones, precioDesde, tipoPresentacionDe, UNIDADES_DE_MEDIDA, type ModoMedida } from '@/lib/presentaciones';
+import { COL_PRESENTACIONES, presentacionesSugeridas, textosPresentacion, leerPresentaciones, precioDesde, tipoPresentacionDe, UNIDADES_DE_MEDIDA, completarMedida, ordenarPresentaciones, type ModoMedida } from '@/lib/presentaciones';
 
 interface Product {
   id: string;
@@ -1113,7 +1113,8 @@ function AdminDashboard({ user }: { user: User }) {
       // oferta o si el producto tenía una que se está quitando (así guardar un producto normal no depende del SQL).
       // Presentaciones (100 g / 250 g / 1 kg…): filas con etiqueta y precio válidos. Si hay, `price` guarda la más barata
       // ("Desde S/ …") y no se usa oferta (cada medida ya tiene su precio).
-      const presLimpias = leerPresentaciones(newProduct.presentaciones.map((x) => ({ label: x.label, price: parseFloat(x.price) })));
+      // Se guardan de menor a mayor cantidad (1 unidad, 2, 3, 12…), sin importar el orden en que se escribieron.
+      const presLimpias = ordenarPresentaciones(leerPresentaciones(newProduct.presentaciones.map((x) => ({ label: x.label, price: parseFloat(x.price) }))));
       if (newProduct.presentaciones.some((x) => (x.label.trim() || x.price.trim()) && !(x.label.trim() && parseFloat(x.price) > 0))) {
         throw new Error('Cada presentación necesita un nombre (ej. 250 g) y un precio mayor a 0. Completa o quita las filas vacías.');
       }
@@ -3168,6 +3169,11 @@ function AdminDashboard({ user }: { user: User }) {
                                 maxLength={30}
                                 onChange={(e) => setNewProduct({...newProduct, presentaciones: newProduct.presentaciones.map((y, j) => j === i ? { ...y, label: e.target.value } : y)})}
                                 placeholder={infoPres.ejemploLabel}
+                                // Si escribe solo el número, se completa con la unidad elegida: "12" -> "12 unidades".
+                                onBlur={(e) => {
+                                  const completo = completarMedida(e.target.value, usaModo ? modo : null);
+                                  if (completo !== e.target.value) setNewProduct((prev) => ({ ...prev, presentaciones: prev.presentaciones.map((y, j) => j === i ? { ...y, label: completo } : y) }));
+                                }}
                                 className="flex-1 min-w-0 px-3 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
                               />
                               <div className="relative w-32 shrink-0">
@@ -3232,7 +3238,7 @@ function AdminDashboard({ user }: { user: User }) {
                         <p className="text-[11px] text-gray-500 font-medium mt-2">
                           {medidaElegida.id === 'otra'
                             ? <>Escribe tu propia medida con <strong>+ Otra</strong> y ponle su precio.</>
-                            : <>{medidaElegida.ayuda}. Toca un atajo o escribe otra medida con <strong>+ Otra</strong>.</>}
+                            : <>{medidaElegida.ayuda}. Toca un atajo, o escribe solo el número en una fila y se completa con la unidad.</>}
                         </p>
                       )}
 

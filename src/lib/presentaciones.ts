@@ -48,6 +48,59 @@ export const UNIDADES_DE_MEDIDA: { id: ModoMedida; label: string; icono: string;
   { id: 'otra', label: 'Otra', icono: 'edit', ayuda: 'Escribe tu propia medida', sugeridas: [] },
 ];
 
+/**
+ * Completa la medida con la unidad elegida cuando el dueño escribe SOLO el número: "12" -> "12 unidades",
+ * "250" -> "250 g", "1" -> "1 kg". Si ya escribió texto (o no hay unidad elegida), se deja tal cual.
+ */
+export function completarMedida(texto: string, modo: ModoMedida | null): string {
+  const t = texto.trim();
+  if (!modo || !/^\d+([.,]\d+)?$/.test(t)) return texto;
+  const n = parseFloat(t.replace(',', '.'));
+  switch (modo) {
+    case 'unidades': return `${t} ${n === 1 ? 'unidad' : 'unidades'}`;
+    case 'peso': return `${t} ${n <= 10 ? 'kg' : 'g'}`;
+    case 'volumen': return n <= 10 ? `${t} ${n === 1 ? 'litro' : 'litros'}` : `${t} ml`;
+    case 'longitud': return n <= 20 ? `${t} ${n === 1 ? 'metro' : 'metros'}` : `${t} cm`;
+    default: return texto;
+  }
+}
+
+/**
+ * Valor numérico de una medida para poder ordenarlas: "2 unidades" -> 2, "docena" -> 12, "1 kg" -> 1000 (g),
+ * "1/4 litro" -> 250 (ml), "500 ml" -> 500. Devuelve null si no se entiende ("Personal", "Caja x 12"…).
+ */
+export function valorDeMedida(label: string): number | null {
+  const t = label.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+  if (!t) return null;
+  if (/^media docena$/.test(t)) return 6;
+  if (/^docena$/.test(t)) return 12;
+  if (/^par$/.test(t)) return 2;
+  if (/^galon$/.test(t)) return 3785;
+  const fr = t.match(/^(\d+)\s*\/\s*(\d+)\s*(litro|litros|l|kg|kilo|kilos)$/);
+  const m = fr ? null : t.match(/^(\d+(?:[.,]\d+)?)\s*(unidad|unidades|und|u|g|gr|gramos|kg|kilo|kilos|ml|l|lt|litro|litros|cm|m|metro|metros)?$/);
+  let n: number, u: string;
+  if (fr) { n = parseInt(fr[1], 10) / parseInt(fr[2], 10); u = fr[3]; }
+  else if (m) { n = parseFloat(m[1].replace(',', '.')); u = m[2] ?? 'unidad'; }
+  else return null;
+  if (/^(kg|kilo|kilos)$/.test(u)) return n * 1000;
+  if (/^(l|lt|litro|litros)$/.test(u)) return n * 1000;
+  if (/^(m|metro|metros)$/.test(u)) return n * 100;
+  return n;
+}
+
+/**
+ * Ordena las presentaciones de menor a mayor cantidad. Si alguna no se entiende (por ejemplo "Personal"),
+ * se respeta el orden en que las escribió el dueño.
+ */
+export function ordenarPresentaciones<T extends { label: string }>(lista: T[]): T[] {
+  const valores = lista.map((x) => valorDeMedida(x.label));
+  if (lista.length < 2 || valores.some((v) => v === null)) return lista;
+  return lista
+    .map((x, i) => ({ x, v: valores[i] as number, i }))
+    .sort((a, b) => a.v - b.v || a.i - b.i)
+    .map((o) => o.x);
+}
+
 export type TipoPresentacion = 'ropa' | 'calzado' | 'bebida' | 'unidades' | 'peso';
 
 export function tipoPresentacionDe(categoria: unknown, template?: unknown): TipoPresentacion {
