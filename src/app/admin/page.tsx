@@ -3123,6 +3123,17 @@ function AdminDashboard({ user }: { user: User }) {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Descripción Corta</label>
+                  <textarea
+                    value={newProduct.desc}
+                    onChange={(e) => setNewProduct({...newProduct, desc: e.target.value})}
+                    placeholder="Breve descripción de los ingredientes o detalles..."
+                    rows={2}
+                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all resize-none"
+                  />
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">Precio (S/)</label>
@@ -3465,17 +3476,6 @@ function AdminDashboard({ user }: { user: User }) {
                     </span>
                   </div>
                 )}
-
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Descripción Corta</label>
-                  <textarea 
-                    value={newProduct.desc}
-                    onChange={(e) => setNewProduct({...newProduct, desc: e.target.value})}
-                    placeholder="Breve descripción de los ingredientes o detalles..."
-                    rows={2}
-                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all resize-none"
-                  />
-                </div>
 
                 {esTerreno && (
                   <div>
