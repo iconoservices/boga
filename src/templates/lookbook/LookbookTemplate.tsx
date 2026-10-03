@@ -1179,7 +1179,7 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
                   <div className="space-y-1.5 text-xs text-gray-600">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
-                      <span className="font-semibold text-gray-900">S/ {cartTotal.toFixed(2)}</span>
+                      <span className="font-semibold text-gray-900">S/ {(cartTotal + cartAhorro).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Coordinación de entrega</span>
