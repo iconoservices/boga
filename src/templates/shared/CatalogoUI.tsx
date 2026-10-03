@@ -321,6 +321,7 @@ export function ProductModal({
   const [medida, setMedida] = React.useState<Presentacion | null>(null);
   // Foto que se ve arriba, cuando el producto tiene más de una.
   const [fotoActiva, setFotoActiva] = React.useState(0);
+  const swipeFoto = React.useRef<number | null>(null);
   const cierre = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const contenedor = React.useRef<HTMLDivElement>(null);
 
@@ -384,10 +385,30 @@ export function ProductModal({
         <span className={`material-symbols-outlined ${ICON.md}`}>close</span>
       </button>
 
-      <div className="w-full aspect-square md:aspect-auto md:h-[420px] relative">
-        <img className="w-full h-full object-cover" alt={producto.name} src={fotos[fotoActiva] ?? producto.image} />
+      {/* Galería: la foto se ve ENTERA (contain, con la misma foto desenfocada de fondo), se puede deslizar a los lados y
+          las miniaturas van DEBAJO (antes tapaban la foto y la recortaban). */}
+      <div className="w-full">
+        <div
+          className="w-full aspect-square md:aspect-auto md:h-[420px] relative overflow-hidden touch-pan-y"
+          style={{ background: t.surfaceContainerLow }}
+          onTouchStart={(e) => { swipeFoto.current = e.touches[0].clientX; }}
+          onTouchEnd={(e) => {
+            if (swipeFoto.current === null || fotos.length < 2) return;
+            const dx = e.changedTouches[0].clientX - swipeFoto.current;
+            swipeFoto.current = null;
+            if (Math.abs(dx) > 40) setFotoActiva((i) => (dx < 0 ? (i + 1) % fotos.length : (i - 1 + fotos.length) % fotos.length));
+          }}
+        >
+          <img aria-hidden alt="" src={fotos[fotoActiva] ?? producto.image} className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-60" />
+          <img className="relative w-full h-full object-contain" alt={producto.name} src={fotos[fotoActiva] ?? producto.image} />
+          {fotos.length > 1 && (
+            <span className="absolute bottom-2 right-3 text-[11px] font-bold px-2 py-0.5 rounded-full bg-black/55 text-white">
+              {fotoActiva + 1} / {fotos.length}
+            </span>
+          )}
+        </div>
         {fotos.length > 1 && (
-          <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2 px-4 flex-wrap">
+          <div className="flex justify-center gap-2 px-4 pt-3 overflow-x-auto hide-scrollbar" style={{ scrollbarWidth: 'none' }}>
             {fotos.map((foto, i) => (
               <button
                 key={i}
@@ -395,10 +416,10 @@ export function ProductModal({
                 onClick={() => setFotoActiva(i)}
                 aria-label={`Ver foto ${i + 1} de ${producto.name}`}
                 aria-current={fotoActiva === i}
-                className="w-12 h-12 rounded-lg overflow-hidden border-2 shrink-0 transition-all active:scale-95"
-                style={{ borderColor: fotoActiva === i ? '#fff' : 'transparent', opacity: fotoActiva === i ? 1 : 0.7 }}
+                className="w-14 h-14 rounded-lg overflow-hidden border-2 shrink-0 transition-all active:scale-95"
+                style={{ borderColor: fotoActiva === i ? t.primary : `${t.outlineVariant}`, opacity: fotoActiva === i ? 1 : 0.75, background: t.surfaceContainerLow }}
               >
-                <img src={foto} className="w-full h-full object-cover" alt="" />
+                <img src={foto} className="w-full h-full object-contain" alt="" />
               </button>
             ))}
           </div>
