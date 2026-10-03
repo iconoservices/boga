@@ -1243,6 +1243,15 @@ function AdminDashboard({ user }: { user: User }) {
     setIsModalOpen(true);
   };
 
+  // Duplicar: abre el formulario con todo lo del producto (categoría, precio, presentaciones, oferta, combo…) pero como
+  // producto NUEVO y sin foto. Sirve para el mismo producto en otro color o sabor: solo cambian el nombre y la foto.
+  const handleDuplicate = (product: Product) => {
+    handleEdit(product);
+    setEditingProductId(null);
+    setNewProduct((prev) => ({ ...prev, name: `${product.name} (copia)`, image: '' }));
+    setFotos([]);
+  };
+
   const handleDelete = async (id: string, name: string) => {
     if (window.confirm(`¿Estás seguro de que deseas eliminar "${name}"? Esta acción no se puede deshacer.`)) {
       setIsDeleting(id);
@@ -2051,6 +2060,13 @@ function AdminDashboard({ user }: { user: User }) {
                                     >
                                       <span className="material-symbols-outlined text-[18px]">edit</span>
                                     </button>
+                                    <button
+                                      onClick={() => handleDuplicate(p)}
+                                      className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition-colors"
+                                      title="Duplicar (mismo producto en otro color o sabor)"
+                                    >
+                                      <span className="material-symbols-outlined text-[18px]">content_copy</span>
+                                    </button>
                                     <button 
                                       onClick={() => handleDelete(p.id, p.name)}
                                       disabled={isDeleting === p.id}
@@ -2138,6 +2154,9 @@ function AdminDashboard({ user }: { user: User }) {
                                 <div className="flex items-center gap-1">
                                   <button onClick={() => handleEdit(p)} className="p-1.5 text-gray-400 hover:text-black rounded-lg hover:bg-gray-100 transition-colors">
                                     <span className="material-symbols-outlined text-[16px]">edit</span>
+                                  </button>
+                                  <button onClick={() => handleDuplicate(p)} title="Duplicar" className="p-1.5 text-gray-400 hover:text-black rounded-lg hover:bg-gray-100 transition-colors">
+                                    <span className="material-symbols-outlined text-[16px]">content_copy</span>
                                   </button>
                                   <button onClick={() => handleDelete(p.id, p.name)} className="p-1.5 text-gray-400 hover:text-[#8c0009] rounded-lg hover:bg-[#8c0009]/8 transition-colors">
                                     <span className={`material-symbols-outlined text-[16px] ${isDeleting === p.id ? 'animate-spin' : ''}`}>
