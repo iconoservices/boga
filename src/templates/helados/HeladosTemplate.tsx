@@ -26,7 +26,9 @@ interface Props {
 export default function HeladosTemplate({ store, initialProductId }: Props) {
   const t = store.theme;
   // El texto "Tu antojo, bien frío" es de la demo: en una tienda real el banner del dueño va limpio, sin letras encima.
-  const limpio = store.hideHeroText === true || store.slug !== 'helados';
+  // Banner único y compacto, como en las plantillas de comida: la foto del comercio se ve entera y sin letras encima;
+  // el lema y los botones van debajo. (Antes la demo mostraba una portada grande y oscura con texto.)
+  const limpio = true;
   const c = useCatalogo(store, initialProductId);
   const [activeTab, setActiveTab] = useState<'inicio' | 'catalogo' | 'pedidos' | 'contacto'>('inicio');
   const selectedProduct = c.detalle;
@@ -156,8 +158,10 @@ export default function HeladosTemplate({ store, initialProductId }: Props) {
               van debajo. Con texto, es el hero clásico sobre la foto. */}
           <section className={limpio ? 'relative' : 'relative h-[60vh] min-h-[380px] max-h-[560px] md:h-[560px] md:max-h-none overflow-hidden'}>
             {limpio ? (
-              <div className="relative w-full aspect-video md:max-h-[600px] overflow-hidden">
-                <img src={store.heroImage} alt={store.heroAlt || store.name} className="w-full h-full object-cover" />
+              <div className="relative w-full aspect-video md:aspect-auto md:h-[clamp(260px,32vw,460px)] overflow-hidden" style={{ background: t.surfaceContainer }}>
+                {/* En pantalla ancha se ve ENTERO (contain) y los costados se rellenan con la misma foto desenfocada. */}
+                <img aria-hidden alt="" src={store.heroImage} className="hidden md:block absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-70" />
+                <img src={store.heroImage} alt={store.heroAlt || store.name} className="relative w-full h-full object-cover md:object-contain" />
                 <StoreFloatingActions store={store} />
               </div>
             ) : (
