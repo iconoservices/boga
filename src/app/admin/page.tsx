@@ -1632,6 +1632,12 @@ function AdminDashboard({ user }: { user: User }) {
               </div>
             </div>
 
+            {/* Acceso directo a la tienda: misma pestaña, así en la app instalada se puede volver con "atrás" */}
+            <a href={inicioUrl} className="flex items-center justify-center gap-2 bg-white border-2 border-[var(--tienda-color)] text-[var(--tienda-color)] rounded-xl py-3 font-extrabold text-sm shadow-sm hover:bg-[var(--tienda-color)]/5 active:scale-[0.99] transition">
+              <span className="material-symbols-outlined text-[20px]">storefront</span>
+              Ver mi tienda
+            </a>
+
             {/* Pantalla ancha: dos columnas (lo de hoy a la izquierda; completar y configurar a la derecha).
                 En celular y tablet es una sola columna en el mismo orden. */}
             <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-5 lg:items-start">
