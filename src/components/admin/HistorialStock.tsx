@@ -79,7 +79,7 @@ export default function HistorialStock({
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
               placeholder="Buscar producto…"
-              className="w-full h-10 pl-9 pr-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:outline-none focus:border-[#b8130e]"
+              className="w-full h-10 pl-9 pr-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:outline-none focus:border-[var(--tienda-color,#b8130e)]"
             />
           </div>
         </div>

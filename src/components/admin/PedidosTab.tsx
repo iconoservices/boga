@@ -134,7 +134,7 @@ export default function PedidosTab({
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             placeholder="Buscar cliente, celular o ID…"
-            className="w-full h-10 pl-9 pr-3 bg-white border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-[#b8130e] focus:border-transparent focus:outline-none"
+            className="w-full h-10 pl-9 pr-3 bg-white border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-[var(--tienda-color,#b8130e)] focus:border-transparent focus:outline-none"
           />
         </div>
         <div className="flex gap-2 overflow-x-auto hide-scrollbar">
@@ -143,7 +143,7 @@ export default function PedidosTab({
               key={f.id}
               onClick={() => setFiltro(f.id)}
               className={`px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
-                filtro === f.id ? 'bg-[#b8130e] text-white' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                filtro === f.id ? 'bg-[var(--tienda-color,#b8130e)] text-white' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
               }`}
             >
               {f.label}
@@ -175,7 +175,7 @@ export default function PedidosTab({
                   onClick={() => setAbierto(abierta ? null : o.id)}
                   className="w-full text-left p-4 flex flex-wrap items-center gap-x-4 gap-y-2 hover:bg-gray-50/60 transition-colors"
                 >
-                  <span className="text-[#b8130e] font-bold text-xs w-20 shrink-0">#{(o.codigo || o.id.slice(0, 8)).toUpperCase()}</span>
+                  <span className="text-[var(--tienda-color,#b8130e)] font-bold text-xs w-20 shrink-0">#{(o.codigo || o.id.slice(0, 8)).toUpperCase()}</span>
                   <span className="flex-1 min-w-[140px]">
                     <span className="block text-gray-900 font-extrabold text-sm">{o.customer_name || 'Cliente'}</span>
                     <span className="block text-gray-500 text-xs font-medium">
@@ -247,7 +247,7 @@ export default function PedidosTab({
                         {o.customer_address && (
                           <p className="text-gray-600 font-medium break-words mt-1.5">
                             {o.customer_address.split(/(https?:\/\/[^\s]+)/g).map((t, i) => /^https?:\/\//.test(t)
-                              ? <a key={i} href={t} target="_blank" rel="noopener noreferrer" className="text-[#b8130e] font-bold underline">Abrir en el mapa</a>
+                              ? <a key={i} href={t} target="_blank" rel="noopener noreferrer" className="text-[var(--tienda-color,#b8130e)] font-bold underline">Abrir en el mapa</a>
                               : <span key={i}>{t}</span>)}
                           </p>
                         )}
@@ -272,7 +272,7 @@ export default function PedidosTab({
 
                     {o.codigo && (
                       <a href={`/pedido/${o.codigo}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-3 hover:bg-gray-50 active:scale-[0.99] transition">
-                        <span className="w-10 h-10 rounded-full bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center shrink-0">
+                        <span className="w-10 h-10 rounded-full bg-[var(--tienda-color,#b8130e)]/10 text-[var(--tienda-color,#b8130e)] flex items-center justify-center shrink-0">
                           <span className="material-symbols-outlined text-[22px]">receipt_long</span>
                         </span>
                         <span className="min-w-0 flex-1">

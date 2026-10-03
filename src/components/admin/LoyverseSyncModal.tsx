@@ -173,7 +173,7 @@ export default function LoyverseSyncModal({
         {/* Cabecera */}
         <div className="p-5 border-b border-gray-100 flex items-center justify-between gap-3 bg-gradient-to-r from-red-50/50 via-white to-white">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center font-bold shadow-inner shrink-0">
+            <div className="w-11 h-11 rounded-xl bg-[var(--tienda-color,#b8130e)]/10 text-[var(--tienda-color,#b8130e)] flex items-center justify-center font-bold shadow-inner shrink-0">
               <span className="material-symbols-outlined text-[24px]">sync_alt</span>
             </div>
             <div>
@@ -213,7 +213,7 @@ export default function LoyverseSyncModal({
               <select
                 value={activeStoreSlug}
                 onChange={(e) => setActiveStoreSlug(e.target.value)}
-                className="h-10 px-3 bg-white border border-gray-300 rounded-lg text-xs font-bold text-gray-900 focus:outline-none focus:border-[#b8130e]"
+                className="h-10 px-3 bg-white border border-gray-300 rounded-lg text-xs font-bold text-gray-900 focus:outline-none focus:border-[var(--tienda-color,#b8130e)]"
               >
                 {allStores.map((st) => (
                   <option key={st.slug} value={st.slug}>
@@ -274,7 +274,7 @@ export default function LoyverseSyncModal({
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="block text-xs font-bold text-gray-800">
-                Ficha / Token de Acceso para <span className="text-[#b8130e]">{activeStore.name}</span>
+                Ficha / Token de Acceso para <span className="text-[var(--tienda-color,#b8130e)]">{activeStore.name}</span>
               </label>
               <button
                 type="button"
@@ -296,7 +296,7 @@ export default function LoyverseSyncModal({
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
                 placeholder={conectado ? 'Ficha guardada ✓ (por seguridad no se muestra). Pega otra solo si quieres cambiarla' : 'Pega aquí la ficha de acceso (ej. 914fceda139345c1aa314c563bb43e0b)'}
-                className={`w-full h-11 px-3.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono text-gray-800 focus:outline-none focus:border-[#b8130e] focus:bg-white transition-colors ${
+                className={`w-full h-11 px-3.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono text-gray-800 focus:outline-none focus:border-[var(--tienda-color,#b8130e)] focus:bg-white transition-colors ${
                   !showToken && token ? 'tracking-wider' : ''
                 }`}
                 style={!showToken && token ? ({ WebkitTextSecurity: 'disc' } as any) : undefined}
@@ -310,7 +310,7 @@ export default function LoyverseSyncModal({
                 type="button"
                 onClick={handleSaveToken}
                 disabled={isSavingToken || !token.trim()}
-                className="text-xs font-bold text-[#b8130e] hover:underline disabled:opacity-50 cursor-pointer"
+                className="text-xs font-bold text-[var(--tienda-color,#b8130e)] hover:underline disabled:opacity-50 cursor-pointer"
               >
                 {isSavingToken ? 'Guardando...' : 'Guardar token'}
               </button>
@@ -327,7 +327,7 @@ export default function LoyverseSyncModal({
                 type="checkbox"
                 checked={syncStock}
                 onChange={(e) => setSyncStock(e.target.checked)}
-                className="w-4 h-4 rounded text-[#b8130e] focus:ring-[#b8130e] cursor-pointer"
+                className="w-4 h-4 rounded text-[var(--tienda-color,#b8130e)] focus:ring-[var(--tienda-color,#b8130e)] cursor-pointer"
               />
               <span>Sincronizar Stock / Inventario en tiempo real</span>
             </label>
@@ -336,7 +336,7 @@ export default function LoyverseSyncModal({
                 type="checkbox"
                 checked={updatePrices}
                 onChange={(e) => setUpdatePrices(e.target.checked)}
-                className="w-4 h-4 rounded text-[#b8130e] focus:ring-[#b8130e] cursor-pointer"
+                className="w-4 h-4 rounded text-[var(--tienda-color,#b8130e)] focus:ring-[var(--tienda-color,#b8130e)] cursor-pointer"
               />
               <span>Actualizar precios si cambiaron en la tablet de Loyverse</span>
             </label>
@@ -359,7 +359,7 @@ export default function LoyverseSyncModal({
             type="button"
             onClick={handleSyncNow}
             disabled={isSyncing || (!token.trim() && !conectado)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#b8130e] text-white text-xs font-bold rounded-xl shadow-md shadow-[#b8130e]/20 hover:shadow-lg hover:shadow-[#b8130e]/30 transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+            className="flex items-center gap-2 px-5 py-2.5 bg-[var(--tienda-color,#b8130e)] text-white text-xs font-bold rounded-xl shadow-md shadow-[var(--tienda-color,#b8130e)]/20 hover:shadow-lg hover:shadow-[var(--tienda-color,#b8130e)]/30 transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
           >
             <span className={`material-symbols-outlined text-[18px] ${isSyncing ? 'animate-spin' : ''}`}>
               sync

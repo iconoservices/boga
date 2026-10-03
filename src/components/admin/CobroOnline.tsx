@@ -78,7 +78,7 @@ export default function CobroOnline({ slug }: { slug: string }) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-4">
       <div className="flex items-start gap-3">
-        <span className="w-10 h-10 rounded-lg bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center shrink-0">
+        <span className="w-10 h-10 rounded-lg bg-[var(--tienda-color,#b8130e)]/10 text-[var(--tienda-color,#b8130e)] flex items-center justify-center shrink-0">
           <span className="material-symbols-outlined text-[22px]">credit_card</span>
         </span>
         <div className="min-w-0 flex-1">
@@ -142,7 +142,7 @@ export default function CobroOnline({ slug }: { slug: string }) {
       )}
 
       <div className="flex flex-wrap gap-2">
-        <button type="button" disabled={guardando || !est.cifradoListo} onClick={() => guardar(false)} className="px-4 py-2.5 rounded-md bg-[#b8130e] text-white text-sm font-bold disabled:opacity-50">
+        <button type="button" disabled={guardando || !est.cifradoListo} onClick={() => guardar(false)} className="px-4 py-2.5 rounded-md bg-[var(--tienda-color,#b8130e)] text-white text-sm font-bold disabled:opacity-50">
           {guardando ? 'Guardando…' : 'Guardar'}
         </button>
         <button type="button" disabled={guardando || !est.cifradoListo || faltan} onClick={() => guardar(true)} className="px-4 py-2.5 rounded-md border border-gray-200 bg-white text-gray-800 text-sm font-bold disabled:opacity-50">
