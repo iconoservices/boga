@@ -407,7 +407,7 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
       {categoriasTienda.length > 0 && (
         <section className="bg-gray-50/60 py-4 sm:py-5 border-b border-gray-100">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
-            <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto pb-2 scrollbar-none">
+            <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto pt-2 pb-2 px-2 -mx-2 scrollbar-none">
               {/* Botón Todo */}
               <button
                 onClick={() => {
@@ -440,32 +440,35 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
 
               {/* Ofertas: va al principio (antes quedaba al final de la fila, fuera de pantalla en el celular) y solo si hay prendas en oferta */}
               {hayOfertas && (
-              <button
-                onClick={() => {
-                  setOnlyOffers(true);
-                  setActiveCategory('all');
-                }}
-                className="flex flex-col items-center gap-1.5 shrink-0 group cursor-pointer focus:outline-none"
-              >
-                <div
-                  className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0.5 transition-transform group-hover:scale-105 ${
-                    onlyOffers
-                      ? 'ring-2 ring-offset-2 ring-rose-600 bg-rose-600'
-                      : 'border border-rose-300 bg-rose-50'
-                  }`}
+                <button
+                  onClick={() => {
+                    setOnlyOffers(true);
+                    setActiveCategory('all');
+                  }}
+                  className="flex flex-col items-center gap-1.5 shrink-0 group cursor-pointer focus:outline-none"
                 >
                   <div
-                    className={`w-full h-full rounded-full flex items-center justify-center ${
-                      onlyOffers ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-600'
+                    className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0.5 transition-transform group-hover:scale-105 ${
+                      onlyOffers ? 'ring-2 ring-offset-2 ring-rose-600 bg-rose-600' : 'bg-gradient-to-br from-rose-500 to-orange-400 shadow-md shadow-rose-300/60'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-xl sm:text-2xl">local_fire_department</span>
+                    <div
+                      className={`w-full h-full rounded-full flex items-center justify-center ${
+                        onlyOffers ? 'bg-rose-600 text-white' : 'bg-rose-600 text-white'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-xl sm:text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>local_fire_department</span>
+                    </div>
+                    {/* Cuántas prendas están en oferta */}
+                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-white text-rose-600 text-[10px] font-black flex items-center justify-center shadow border border-rose-200">
+                      {allProducts.filter((prod) => prod.hasOffer).length}
+                    </span>
+                    {!onlyOffers && <span className="absolute inset-0 rounded-full ring-2 ring-rose-400/60 animate-ping" aria-hidden />}
                   </div>
-                </div>
-                <span className="text-[11px] font-bold tracking-wider text-rose-600 uppercase">
-                  Ofertas
-                </span>
-              </button>
+                  <span className="text-[11px] font-black tracking-wider text-rose-600 uppercase">
+                    Ofertas
+                  </span>
+                </button>
               )}
 
               {/* Categorías dinámicas de la tienda */}
