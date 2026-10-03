@@ -3195,6 +3195,20 @@ function AdminDashboard({ user }: { user: User }) {
                         </div>
                       )}
 
+                      {newProduct.presentaciones.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const precioSugerido = newProduct.presentaciones[newProduct.presentaciones.length - 1]?.price || newProduct.price || '';
+                            setNewProduct({ ...newProduct, presentaciones: [...newProduct.presentaciones, { label: '', price: precioSugerido }] });
+                          }}
+                          className="mt-2 w-full flex items-center justify-center gap-1.5 py-2.5 rounded-md border-2 border-dashed border-gray-300 text-sm font-bold text-gray-600 hover:border-black hover:text-black hover:bg-white transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">add</span>
+                          Agregar otra opción
+                        </button>
+                      )}
+
                       {usaModo && (
                         <div className="mt-3">
                           <p className="text-[11px] font-bold text-gray-500 mb-1.5">¿En qué unidad de medida lo vendes?</p>
