@@ -140,7 +140,7 @@ function ExploreContenido() {
           if (tiene('hogar', 'lavader', 'fregader', 'acero inox', 'decorac', 'lámpara', 'lampara', 'mueble', 'menaje', 'sábana', 'sabana', 'cortina', 'limpieza')) return 'Hogar';
           if (tiene('salud', 'medic', 'suplement', 'vitamin', 'cuidado', 'crema', 'shampoo', 'perfum', 'maquill', 'belleza', 'uñas', 'unas')) return 'Salud';
           if (tiene('cerveza', 'licor', 'vino', 'pisco', 'cóctel', 'coctel', 'gaseosa', 'jugo', 'bebida', 'café', 'cafe', 'refresco')) return 'Bebidas';
-          if (tiene('pollo', 'pizza', 'hamburg', 'menú', 'menu', 'almuerzo', 'desayuno', 'combo', 'comida', 'cocina', 'plato', 'sandwich', 'sándwich', 'postre', 'torta', 'ceviche', 'juane')) return 'Comida';
+          if (tiene('helad', 'sundae', 'gelato', 'barquillo', 'pollo', 'pizza', 'hamburg', 'menú', 'menu', 'almuerzo', 'desayuno', 'combo', 'comida', 'cocina', 'plato', 'sandwich', 'sándwich', 'postre', 'torta', 'ceviche', 'juane')) return 'Comida';
           if (tiene('fruta', 'verdura', 'carne', 'lácteo', 'lacteo', 'huevo', 'abarrote', 'condimento', 'especia', 'mercado')) return 'Mercado';
           // Sin pistas en el producto: manda la categoría de la tienda
           if (catTienda.includes('moda') || catTienda.includes('boutique')) return 'Moda';
