@@ -463,7 +463,6 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
                     <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-white text-rose-600 text-[10px] font-black flex items-center justify-center shadow border border-rose-200">
                       {allProducts.filter((prod) => prod.hasOffer).length}
                     </span>
-                    {!onlyOffers && <span className="absolute inset-0 rounded-full ring-2 ring-rose-400/60 animate-ping" aria-hidden />}
                   </div>
                   <span className="text-[11px] font-black tracking-wider text-rose-600 uppercase">
                     Ofertas
