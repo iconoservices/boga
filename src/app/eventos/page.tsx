@@ -51,6 +51,11 @@ type Evento = {
 export default function Eventos() {
   const { cartCount, setIsCartOpen } = useCart();
   const [cat, setCat] = useState<Cat | null>(null);
+  // Al elegir una categoría, la lista filtrada queda mucho más abajo de los íconos: se baja sola hasta ella
+  // para que se vea el resultado (antes parecía que el botón no hacía nada).
+  const irALaLista = () => {
+    setTimeout(() => document.getElementById('agenda-lista')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+  };
   const [slide, setSlide] = useState(0);
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [lugares, setLugares] = useState<Lugar[]>([]);
@@ -127,17 +132,18 @@ export default function Eventos() {
                   className="relative w-full h-full shrink-0 bg-surface-container-low cursor-pointer"
                 >
                   <Foto src={c.img} alt={c.titulo} className="absolute inset-0 w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-black/10" />
-                  <div className="absolute inset-0 flex flex-col justify-center gap-2 px-5 pt-5 pb-12 lg:p-10 max-w-[560px]">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                  {/* El texto va ABAJO y compacto: en el medio tapaba a la persona o el motivo de la foto. */}
+                  <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1.5 px-4 pb-4 pr-24 pt-16 lg:px-8 lg:pb-6 max-w-[760px]">
                     <div className="flex items-center gap-2">
-                      <div className="bg-white rounded-lg px-2.5 py-1 text-center shadow-md">
-                        <span className="block font-price-lg text-primary text-base leading-none">{c.dia}</span>
+                      <div className="bg-white rounded-lg px-2 py-0.5 text-center shadow-md">
+                        <span className="block font-price-lg text-primary text-sm leading-none">{c.dia}</span>
                         <span className="block font-label-md text-[9px] text-secondary uppercase">{c.mes}</span>
                       </div>
                       <span className="bg-primary text-white text-[10px] font-label-md px-2 py-1 rounded-full uppercase tracking-wider">Destacado</span>
                     </div>
-                    <h2 className="font-headline-lg text-white text-xl sm:text-4xl font-extrabold leading-[1.1] line-clamp-3">{c.titulo}</h2>
-                    <p className="text-white/80 font-body-md text-xs sm:text-sm line-clamp-1">{c.organiza}</p>
+                    <h2 className="font-headline-lg text-white text-base sm:text-xl lg:text-2xl font-extrabold leading-tight line-clamp-2">{c.titulo}</h2>
+                    <p className="text-white/80 font-body-md text-[11px] sm:text-xs line-clamp-1">{c.organiza}</p>
                     <div className="flex flex-wrap items-center gap-2 mt-1">
                       <span className="text-white/90 font-label-md text-[11px] flex items-center gap-1">
                         <span className="material-symbols-outlined text-[13px]">location_on</span>{c.lugar}
@@ -146,7 +152,7 @@ export default function Eventos() {
                     </div>
                     <button
                       onClick={(ev) => { ev.stopPropagation(); setEventoAbierto(c); }}
-                      className="w-fit mt-2 bg-primary text-white font-label-md text-[12px] px-4 py-2 rounded-full active:scale-95 transition-transform"
+                      className="w-fit mt-1 bg-primary text-white font-label-md text-[11px] px-3.5 py-1.5 rounded-full active:scale-95 transition-transform"
                     >
                       Ver más
                     </button>
@@ -214,7 +220,7 @@ export default function Eventos() {
             <h2 className="font-headline-lg text-on-surface text-base sm:text-lg font-bold">Explora por categoría</h2>
             <div className="flex gap-4 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-1 lg:grid lg:grid-cols-5 lg:gap-x-2 lg:gap-y-3.5 lg:overflow-visible" style={{ scrollbarWidth: 'none' }}>
               <button
-                onClick={() => setCat(null)}
+                onClick={() => { setCat(null); irALaLista(); }}
                 className="flex flex-col items-center gap-1.5 shrink-0 w-[68px] lg:w-auto group"
               >
                 <span className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
@@ -229,7 +235,7 @@ export default function Eventos() {
                 return (
                   <button
                     key={c.cat}
-                    onClick={() => setCat(active ? null : c.cat)}
+                    onClick={() => { setCat(active ? null : c.cat); irALaLista(); }}
                     className="flex flex-col items-center gap-1.5 shrink-0 w-[68px] lg:w-auto group"
                   >
                     <span className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
@@ -364,7 +370,7 @@ export default function Eventos() {
         </section>
 
         {/* Toda la agenda */}
-        <section className="flex flex-col gap-4">
+        <section id="agenda-lista" className="flex flex-col gap-4 scroll-mt-32">
           <h2 className="font-headline-lg text-on-surface">{cat ? cat : 'Toda la agenda'}</h2>
           {lista.length === 0 ? (
             <p className="text-secondary font-body-md text-sm py-8">No hay eventos en esta categoría por ahora.</p>
