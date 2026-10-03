@@ -28,7 +28,7 @@ import LoyverseSyncModal from '@/components/admin/LoyverseSyncModal';
 import MiPlan from '@/components/admin/MiPlan';
 import CobroOnline from '@/components/admin/CobroOnline';
 import { COLS_OFERTA, precioOfertaVigente, porcentajeOferta } from '@/lib/ofertas';
-import { COL_PRESENTACIONES, presentacionesSugeridas, textosPresentacion, leerPresentaciones, precioDesde, tipoPresentacionDe, PRESENTACIONES_SOLO_UNIDADES, PRESENTACIONES_SUGERIDAS_PESO, PRESENTACIONES_SUGERIDAS_VOLUMEN } from '@/lib/presentaciones';
+import { COL_PRESENTACIONES, presentacionesSugeridas, textosPresentacion, leerPresentaciones, precioDesde, tipoPresentacionDe, UNIDADES_DE_MEDIDA, type ModoMedida } from '@/lib/presentaciones';
 
 interface Product {
   id: string;
@@ -199,7 +199,7 @@ function AdminDashboard({ user }: { user: User }) {
   // "Crear y hacer otro igual": tras guardar, el formulario sigue abierto con lo mismo (categoría, precio, presentaciones…) y solo falta el nombre y la foto.
   const crearOtroRef = useRef(false);
   // Cómo vende el producto (para elegir primero y ver solo los atajos que corresponden): por unidades o por peso.
-  const [modoPres, setModoPres] = useState<'unidades' | 'peso' | 'volumen' | 'otra' | null>(null);
+  const [modoPres, setModoPres] = useState<ModoMedida | null>(null);
   const [avisoCreado, setAvisoCreado] = useState('');
   const storeLogoInputRef = useRef<HTMLInputElement>(null);
   const storeHeroInputRef = useRef<HTMLInputElement>(null);
@@ -3142,12 +3142,12 @@ function AdminDashboard({ user }: { user: User }) {
                   const infoPres = textosPresentacion(newProduct.category, storeObj?.template);
                   const tipoPres = tipoPresentacionDe(newProduct.category, storeObj?.template);
                   const usaModo = tipoPres === 'unidades' || tipoPres === 'peso';
-                  const modo = modoPres ?? (tipoPres === 'unidades' ? 'unidades' : 'peso');
+                  // Por defecto: bodega -> unidades; plantillas de comida -> tamaño o porción; el resto -> peso. Siempre se puede cambiar.
+                  const esDeComida = ['helados', 'menudirecto', 'polleria', 'iniciocatalogo', 'fichadigital', 'fichaplana'].includes(String(storeObj?.template));
+                  const modo: ModoMedida = modoPres ?? (tipoPres === 'unidades' ? 'unidades' : esDeComida ? 'tamano' : 'peso');
+                  const medidaElegida = UNIDADES_DE_MEDIDA.find((m) => m.id === modo);
                   const sugeridas = usaModo
-                    ? (modo === 'unidades' ? PRESENTACIONES_SOLO_UNIDADES
-                      : modo === 'peso' ? PRESENTACIONES_SUGERIDAS_PESO
-                      : modo === 'volumen' ? PRESENTACIONES_SUGERIDAS_VOLUMEN
-                      : [])
+                    ? (medidaElegida?.sugeridas ?? [])
                     : presentacionesSugeridas(newProduct.category, storeObj?.template);
                   return (
                     <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4">
@@ -3199,7 +3199,7 @@ function AdminDashboard({ user }: { user: User }) {
                         <div className="mt-3">
                           <p className="text-[11px] font-bold text-gray-500 mb-1.5">¿En qué unidad de medida lo vendes?</p>
                           <div className="inline-flex flex-wrap rounded-lg border border-gray-200 bg-white p-0.5">
-                            {([['unidades', 'Unidades', 'inventory_2'], ['peso', 'Peso (g, kg)', 'scale'], ['volumen', 'Volumen (ml, litros)', 'water_drop'], ['otra', 'Otra', 'straighten']] as const).map(([id, label, icono]) => (
+                            {UNIDADES_DE_MEDIDA.map(({ id, label, icono }) => (
                               <button
                                 key={id}
                                 type="button"
@@ -3214,9 +3214,11 @@ function AdminDashboard({ user }: { user: User }) {
                         </div>
                       )}
 
-                      {usaModo && modo === 'otra' && (
+                      {usaModo && medidaElegida && (
                         <p className="text-[11px] text-gray-500 font-medium mt-2">
-                          Escribe tu propia medida con <strong>+ Otra</strong> (por ejemplo: caja, balde, par, metro) y ponle su precio.
+                          {medidaElegida.id === 'otra'
+                            ? <>Escribe tu propia medida con <strong>+ Otra</strong> y ponle su precio.</>
+                            : <>{medidaElegida.ayuda}. Toca un atajo o escribe otra medida con <strong>+ Otra</strong>.</>}
                         </p>
                       )}
 

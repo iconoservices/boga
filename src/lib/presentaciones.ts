@@ -33,6 +33,21 @@ export const PRESENTACIONES_SUGERIDAS_VOLUMEN = ['250 ml', '500 ml', '1/4 litro'
 export const PRESENTACIONES_SOLO_UNIDADES = ['1 unidad', '2 unidades', '3 unidades', '6 unidades', '12 unidades', 'Docena', 'Paquete', 'Bolsa'];
 export const PRESENTACIONES_SUGERIDAS_UNIDADES = [...PRESENTACIONES_SOLO_UNIDADES, ...PRESENTACIONES_SUGERIDAS_PESO];
 
+/**
+ * Unidades de medida que el dueño puede elegir al armar las presentaciones de un producto.
+ * Cada una trae sus atajos; "otra" no trae ninguno (se escribe la medida a mano).
+ */
+export type ModoMedida = 'unidades' | 'peso' | 'volumen' | 'longitud' | 'tamano' | 'empaque' | 'otra';
+export const UNIDADES_DE_MEDIDA: { id: ModoMedida; label: string; icono: string; ayuda: string; sugeridas: string[] }[] = [
+  { id: 'unidades', label: 'Unidades', icono: 'inventory_2', ayuda: 'Ej. 1 unidad, 3 unidades, docena', sugeridas: ['1 unidad', '2 unidades', '3 unidades', '6 unidades', '12 unidades', 'Media docena', 'Docena', 'Par', 'Paquete', 'Bolsa'] },
+  { id: 'peso', label: 'Peso (g, kg)', icono: 'scale', ayuda: 'Ej. 100 g, 1 kg', sugeridas: ['50 g', '100 g', '250 g', '500 g', '1 kg', '2 kg', '5 kg', '10 kg'] },
+  { id: 'volumen', label: 'Volumen (ml, litros)', icono: 'water_drop', ayuda: 'Ej. 1/4 litro, galón', sugeridas: ['250 ml', '500 ml', '1/4 litro', '1/2 litro', '1 litro', '2 litros', '5 litros', 'Galón', 'Balde'] },
+  { id: 'longitud', label: 'Longitud (m, cm)', icono: 'straighten', ayuda: 'Ej. 1 metro, rollo', sugeridas: ['10 cm', '50 cm', '1 metro', '2 metros', '5 metros', '10 metros', 'Rollo'] },
+  { id: 'tamano', label: 'Tamaño o porción', icono: 'aspect_ratio', ayuda: 'Ej. personal, familiar', sugeridas: ['Personal', 'Pequeño', 'Mediano', 'Grande', 'Familiar', 'Jumbo', 'Media porción', 'Porción'] },
+  { id: 'empaque', label: 'Caja, saco o jaba', icono: 'package_2', ayuda: 'Ej. caja x 12, saco, ciento', sugeridas: ['Caja x 6', 'Caja x 12', 'Caja x 24', 'Caja x 48', 'Cartón', 'Jaba', 'Saco', 'Ciento', 'Millar'] },
+  { id: 'otra', label: 'Otra', icono: 'edit', ayuda: 'Escribe tu propia medida', sugeridas: [] },
+];
+
 export type TipoPresentacion = 'ropa' | 'calzado' | 'bebida' | 'unidades' | 'peso';
 
 export function tipoPresentacionDe(categoria: unknown, template?: unknown): TipoPresentacion {
