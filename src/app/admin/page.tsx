@@ -4389,21 +4389,34 @@ function AdminDashboard({ user }: { user: User }) {
               </button>
             </div>
             <div className="p-6 overflow-y-auto">
+              {/* Tiendas: tarjetas con logo en vez del selector nativo. Con una sola tienda no hace falta elegir. */}
               <div className="mb-6">
-                <label className="block text-sm font-bold text-gray-700 mb-2">Seleccionar Tienda</label>
-                <select
-                  value={selectedStore}
-                  onChange={(e) => {
-                    setSelectedStore(e.target.value);
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-900 px-4 py-3 rounded-md font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-black/5"
-                >
-                  <option value="all">Todas mis tiendas</option>
-                  {Object.values(stores).map(s => (
-                    <option key={s.slug} value={s.slug}>{s.name}</option>
-                  ))}
-                </select>
+                <p className="text-[11px] font-extrabold text-gray-400 uppercase tracking-widest mb-2">
+                  {Object.keys(stores).length > 1 ? 'Tus tiendas' : 'Tu tienda'}
+                </p>
+                <div className="flex flex-col gap-2">
+                  {(Object.keys(stores).length > 1 ? [{ slug: 'all', name: 'Todas mis tiendas', logo: '' }] : [])
+                    .concat(Object.values(stores).map(s => ({ slug: s.slug, name: s.name, logo: s.logoImage || '' })))
+                    .map(t => {
+                      const activa = t.slug === 'all' ? selectedStore === 'all' : (selectedStore === t.slug || (selectedStore === 'all' && Object.keys(stores).length === 1));
+                      return (
+                        <button
+                          key={t.slug}
+                          type="button"
+                          onClick={() => { setSelectedStore(t.slug); setIsMobileMenuOpen(false); }}
+                          className={`flex items-center gap-3 w-full text-left rounded-2xl border-2 px-3 py-2.5 transition active:scale-[0.99] ${activa ? 'border-[var(--tienda-color)] bg-[var(--tienda-color)]/5' : 'border-gray-100 bg-white hover:bg-gray-50'}`}
+                        >
+                          <span className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center shrink-0">
+                            {t.logo
+                              ? <img src={t.logo} alt="" className="w-full h-full object-cover" />
+                              : <span className="material-symbols-outlined text-gray-400 text-[20px]">{t.slug === 'all' ? 'apps' : 'storefront'}</span>}
+                          </span>
+                          <span className="min-w-0 flex-1 font-bold text-sm text-gray-900 truncate">{t.name}</span>
+                          {activa && <span className="material-symbols-outlined text-[var(--tienda-color)] text-[22px] shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>}
+                        </button>
+                      );
+                    })}
+                </div>
               </div>
 
               {/* Cuadros en vez de lista: más fáciles de tocar y se ve todo de un vistazo */}
