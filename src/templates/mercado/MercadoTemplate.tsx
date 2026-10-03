@@ -47,9 +47,10 @@ export default function MercadoTemplate({ store, initialProductId }: MercadoTemp
       // El banner del comercio trae su propio arte y textos: se muestra limpio, sin letras ni oscurecido encima.
       { titulo1: '', titulo2: '', sub: '', img: store.heroImage, limpio: true },
     ];
-    // Primero las promos (combos y ofertas): es lo que más mueve a comprar; si no hay, los primeros productos.
+    // Los banners destacados son SOLO las promos (combos y ofertas): es lo que más mueve a comprar. Recién si la tienda
+    // no tiene ninguna, se muestran los primeros productos para que el carrusel no quede vacío.
     const promos = c.combosYOfertas ?? [];
-    const destacados = [...promos, ...c.products.filter((p) => !promos.includes(p))].slice(0, 3);
+    const destacados = promos.length > 0 ? promos.slice(0, 4) : c.products.slice(0, 3);
     destacados.forEach((p) => {
       const enOferta = Boolean(p.priceAnterior) && p.priceAnterior! > p.price;
       base.push({
