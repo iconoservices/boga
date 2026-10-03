@@ -3418,6 +3418,16 @@ function AdminDashboard({ user }: { user: User }) {
                     </span>
                   </label>
                 )}
+                {/* Aviso: un producto con precios por cantidad (incluida 1 sola unidad) no es un combo. */}
+                {newProduct.esCombo && newProduct.presentaciones.some((x) => /^1\s*(unidad|und|u)?$/i.test(x.label.trim())) && (
+                  <div className="-mt-3 rounded-lg border border-amber-300 bg-amber-100/60 px-4 py-3 text-xs font-semibold text-amber-900 flex items-start gap-2">
+                    <span className="material-symbols-outlined text-[18px] text-amber-600 shrink-0">info</span>
+                    <span>
+                      Este producto tiene <strong>1 unidad</strong> entre sus opciones, así que se vende por cantidad: no es un combo. Un combo es un paquete fijo
+                      (por ejemplo "Escoba + recogedor"). Si lo dejas marcado, saldrá en Promociones con el precio de 1 unidad. Mejor desmárcalo.
+                    </span>
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Descripción Corta</label>
