@@ -3039,32 +3039,6 @@ function AdminDashboard({ user }: { user: User }) {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Descripción Corta</label>
-                  <textarea 
-                    value={newProduct.desc}
-                    onChange={(e) => setNewProduct({...newProduct, desc: e.target.value})}
-                    placeholder="Breve descripción de los ingredientes o detalles..."
-                    rows={2}
-                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all resize-none"
-                  />
-                </div>
-
-                {esTerreno && (
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Ubicación (enlace de Google Maps)</label>
-                    <input
-                      value={newProduct.ubicacion}
-                      onChange={(e) => setNewProduct({ ...newProduct, ubicacion: e.target.value })}
-                      placeholder="https://maps.app.goo.gl/…"
-                      className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
-                    />
-                    <p className="text-xs text-gray-500 mt-1.5">
-                      Abre el terreno en Google Maps, toca Compartir y copia el enlace. Aparece como &quot;Ver ubicación&quot; en la tarjeta.
-                    </p>
-                  </div>
-                )}
-
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">Precio (S/)</label>
@@ -3193,46 +3167,6 @@ function AdminDashboard({ user }: { user: User }) {
                   );
                 })()}
 
-                {/* Oferta: aparece en tu tienda con el precio anterior tachado y en la página Promos de BogaHub */}
-                {newProduct.presentaciones.length === 0 && (
-                <div className="rounded-xl border border-dashed border-primary/40 bg-primary/5 p-4">
-                  <p className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-primary text-[18px]">local_offer</span>
-                    ¿Está en oferta? <span className="font-medium text-gray-500">(opcional)</span>
-                  </p>
-                  <div className="grid grid-cols-2 gap-4 mt-3">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Precio en oferta (S/)</label>
-                      <input
-                        type="number"
-                        step="0.10"
-                        min="0"
-                        value={newProduct.precioOferta}
-                        onChange={(e) => setNewProduct({...newProduct, precioOferta: e.target.value})}
-                        placeholder="Déjalo vacío si no"
-                        className="w-full px-3 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Hasta el día</label>
-                      <input
-                        type="date"
-                        value={newProduct.ofertaHasta}
-                        onChange={(e) => setNewProduct({...newProduct, ofertaHasta: e.target.value})}
-                        className="w-full px-3 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
-                      />
-                    </div>
-                  </div>
-                  {newProduct.precioOferta && parseFloat(newProduct.precioOferta) > 0 && parseFloat(newProduct.price) > 0 && (
-                    <p className="text-xs mt-2 font-medium" style={{ color: parseFloat(newProduct.precioOferta) < parseFloat(newProduct.price) ? '#15803d' : '#b91c1c' }}>
-                      {parseFloat(newProduct.precioOferta) < parseFloat(newProduct.price)
-                        ? `Tus clientes verán S/ ${parseFloat(newProduct.precioOferta).toFixed(2)} y el precio normal tachado (${porcentajeOferta(parseFloat(newProduct.price), parseFloat(newProduct.precioOferta))}). Sin fecha, la oferta dura hasta que la quites.`
-                        : 'El precio en oferta tiene que ser menor al precio normal.'}
-                    </p>
-                  )}
-                </div>
-                )}
-
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">Categoría</label>
@@ -3294,6 +3228,46 @@ function AdminDashboard({ user }: { user: User }) {
                   </div>
                 </div>
 
+                {/* Oferta: aparece en tu tienda con el precio anterior tachado y en la página Promos de BogaHub */}
+                {newProduct.presentaciones.length === 0 && (
+                <div className="rounded-xl border border-dashed border-primary/40 bg-primary/5 p-4">
+                  <p className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-primary text-[18px]">local_offer</span>
+                    ¿Está en oferta? <span className="font-medium text-gray-500">(opcional)</span>
+                  </p>
+                  <div className="grid grid-cols-2 gap-4 mt-3">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Precio en oferta (S/)</label>
+                      <input
+                        type="number"
+                        step="0.10"
+                        min="0"
+                        value={newProduct.precioOferta}
+                        onChange={(e) => setNewProduct({...newProduct, precioOferta: e.target.value})}
+                        placeholder="Déjalo vacío si no"
+                        className="w-full px-3 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Hasta el día</label>
+                      <input
+                        type="date"
+                        value={newProduct.ofertaHasta}
+                        onChange={(e) => setNewProduct({...newProduct, ofertaHasta: e.target.value})}
+                        className="w-full px-3 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
+                      />
+                    </div>
+                  </div>
+                  {newProduct.precioOferta && parseFloat(newProduct.precioOferta) > 0 && parseFloat(newProduct.price) > 0 && (
+                    <p className="text-xs mt-2 font-medium" style={{ color: parseFloat(newProduct.precioOferta) < parseFloat(newProduct.price) ? '#15803d' : '#b91c1c' }}>
+                      {parseFloat(newProduct.precioOferta) < parseFloat(newProduct.price)
+                        ? `Tus clientes verán S/ ${parseFloat(newProduct.precioOferta).toFixed(2)} y el precio normal tachado (${porcentajeOferta(parseFloat(newProduct.price), parseFloat(newProduct.precioOferta))}). Sin fecha, la oferta dura hasta que la quites.`
+                        : 'El precio en oferta tiene que ser menor al precio normal.'}
+                    </p>
+                  )}
+                </div>
+                )}
+
                 {/* Servicio: se reserva o se consulta, no se "agrega al carrito" como un producto normal. Decide si la tienda aparece en el toggle "Servicios" de BogaHub. */}
                 <label className="flex items-center gap-3 rounded-xl border border-dashed border-gray-300 bg-gray-50/70 p-4 cursor-pointer">
                   <input
@@ -3330,6 +3304,32 @@ function AdminDashboard({ user }: { user: User }) {
                       </span>
                     </span>
                   </label>
+                )}
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Descripción Corta</label>
+                  <textarea 
+                    value={newProduct.desc}
+                    onChange={(e) => setNewProduct({...newProduct, desc: e.target.value})}
+                    placeholder="Breve descripción de los ingredientes o detalles..."
+                    rows={2}
+                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all resize-none"
+                  />
+                </div>
+
+                {esTerreno && (
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Ubicación (enlace de Google Maps)</label>
+                    <input
+                      value={newProduct.ubicacion}
+                      onChange={(e) => setNewProduct({ ...newProduct, ubicacion: e.target.value })}
+                      placeholder="https://maps.app.goo.gl/…"
+                      className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                    />
+                    <p className="text-xs text-gray-500 mt-1.5">
+                      Abre el terreno en Google Maps, toca Compartir y copia el enlace. Aparece como &quot;Ver ubicación&quot; en la tarjeta.
+                    </p>
+                  </div>
                 )}
 
                 {/* Disponibilidad e Inventario (solo con el módulo de inventario) */}
