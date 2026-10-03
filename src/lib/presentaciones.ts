@@ -12,7 +12,7 @@ export type Presentacion = { label: string; price: number };
 export const COL_PRESENTACIONES = 'presentaciones';
 
 /** Botones rápidos del formulario del dueño (productos por peso: especias, granos…). */
-export const PRESENTACIONES_SUGERIDAS_PESO = ['100 g', '250 g', '500 g', '1 kg'];
+export const PRESENTACIONES_SUGERIDAS_PESO = ['100 g', '250 g', '500 g', '1 kg', 'Unidad', 'Docena'];
 export const PRESENTACIONES_SUGERIDAS = PRESENTACIONES_SUGERIDAS_PESO;
 
 /** Botones rápidos para bebidas (tamaño de vaso): medidas de onzas y litros. */
@@ -27,7 +27,10 @@ export const PRESENTACIONES_SUGERIDAS_ROPA = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 
 /** Botones rápidos para calzado / calzados. */
 export const PRESENTACIONES_SUGERIDAS_CALZADO = ['35', '36', '37', '38', '39', '40', '41'];
 
-export type TipoPresentacion = 'ropa' | 'calzado' | 'bebida' | 'peso';
+/** Botones rápidos para bodegas y comerciales (por unidades, paquetes y también peso). */
+export const PRESENTACIONES_SUGERIDAS_UNIDADES = ['1 unidad', '2 unidades', '3 unidades', '6 unidades', '12 unidades', 'Docena', 'Paquete', 'Bolsa', '100 g', '250 g', '500 g', '1 kg'];
+
+export type TipoPresentacion = 'ropa' | 'calzado' | 'bebida' | 'unidades' | 'peso';
 
 export function tipoPresentacionDe(categoria: unknown, template?: unknown): TipoPresentacion {
   const c = typeof categoria === 'string'
@@ -57,6 +60,11 @@ export function tipoPresentacionDe(categoria: unknown, template?: unknown): Tipo
     return 'bebida';
   }
 
+  // Bodega / comercial: abarrotes, limpieza, higiene, hogar, snacks, lácteos, huevos… se venden por unidad, docena o paquete.
+  if (/abarrot|despensa|limpieza|higiene|hogar|snack|golosina|lacteo|huevo|bodega|detergente|cuidado personal|menaje/.test(c)) {
+    return 'unidades';
+  }
+
   return 'peso';
 }
 
@@ -69,6 +77,7 @@ export function presentacionesSugeridas(categoria: unknown, template?: unknown):
     case 'calzado': return PRESENTACIONES_SUGERIDAS_CALZADO;
     case 'ropa': return PRESENTACIONES_SUGERIDAS_ROPA;
     case 'bebida': return PRESENTACIONES_SUGERIDAS_BEBIDAS;
+    case 'unidades': return PRESENTACIONES_SUGERIDAS_UNIDADES;
     default: return PRESENTACIONES_SUGERIDAS_PESO;
   }
 }
@@ -103,10 +112,17 @@ export function textosPresentacion(categoria: unknown, template?: unknown): {
         icono: 'local_drink',
         ejemploLabel: 'Ej. 16 oz',
       };
+    case 'unidades':
+      return {
+        titulo: '¿Lo vendes por unidades, en paquete o por peso? (opcional)',
+        subtitulo: 'Ej. 1 unidad S/ 1, 3 unidades S/ 2, 12 unidades S/ 8, Bolsa x 60 S/ 38: cada una con su precio. Tu cliente elige al pedir.',
+        icono: 'inventory_2',
+        ejemploLabel: 'Ej. 3 unidades',
+      };
     default:
       return {
-        titulo: '¿Lo vendes por peso o en varios tamaños? (opcional)',
-        subtitulo: 'Ej. especias o abarrotes: 100 g, 250 g, 1 kg, cada uno con su precio. Tu cliente elige la medida al pedir.',
+        titulo: '¿Lo vendes por peso, por unidades o en varios tamaños? (opcional)',
+        subtitulo: 'Ej. especias: 100 g, 250 g, 1 kg; o 1 unidad, docena, paquete: cada uno con su precio. Tu cliente elige la medida al pedir.',
         icono: 'scale',
         ejemploLabel: 'Ej. 250 g',
       };

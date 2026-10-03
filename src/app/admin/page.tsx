@@ -196,6 +196,9 @@ function AdminDashboard({ user }: { user: User }) {
   const [nuevoVendedor, setNuevoVendedor] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // "Crear y hacer otro igual": tras guardar, el formulario sigue abierto con lo mismo (categoría, precio, presentaciones…) y solo falta el nombre y la foto.
+  const crearOtroRef = useRef(false);
+  const [avisoCreado, setAvisoCreado] = useState('');
   const storeLogoInputRef = useRef<HTMLInputElement>(null);
   const storeHeroInputRef = useRef<HTMLInputElement>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -1201,8 +1204,19 @@ function AdminDashboard({ user }: { user: User }) {
 
       // Éxito: se cierra el formulario ya (antes esperaba a volver a pedir TODA la lista) y se refresca en segundo plano.
       const tiendaGuardada = newProduct.store;
-      setIsModalOpen(false);
-      resetForm();
+      const seguir = crearOtroRef.current && !editingProductId;
+      crearOtroRef.current = false;
+      if (seguir) {
+        // Se queda abierto con los mismos datos: solo cambian el nombre y la foto del siguiente producto.
+        setAvisoCreado(newProduct.name);
+        setNewProduct((prev) => ({ ...prev, name: '', image: '' }));
+        setFotos([]);
+        document.getElementById('form-producto-dueno')?.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        setAvisoCreado('');
+        setIsModalOpen(false);
+        resetForm();
+      }
       refrescarTienda(tiendaGuardada);
       fetchProducts(undefined, true);
       
@@ -2947,16 +2961,30 @@ function AdminDashboard({ user }: { user: User }) {
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
-                  onClick={() => { if (!isSaving) { setIsModalOpen(false); resetForm(); } }}
+                  onClick={() => { if (!isSaving) { setIsModalOpen(false); setAvisoCreado(''); resetForm(); } }}
                   disabled={isSaving}
                   className="px-4 py-2.5 rounded-md font-bold text-sm text-gray-600 border border-gray-200 hover:bg-gray-100 transition-colors disabled:opacity-50"
                 >
                   Cancelar
                 </button>
+                {!editingProductId && (
+                  <button
+                    type="submit"
+                    form="form-producto-dueno"
+                    disabled={isSaving}
+                    onClick={() => { crearOtroRef.current = true; }}
+                    title="Guarda este producto y deja el formulario abierto con los mismos datos, para crear otro igual (otro color o sabor)"
+                    className="hidden sm:flex items-center gap-1.5 px-4 py-2.5 rounded-md font-bold text-sm text-[var(--tienda-color)] border border-[var(--tienda-color)]/40 hover:bg-[var(--tienda-color)]/5 transition-colors disabled:opacity-50"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">content_copy</span>
+                    Crear y hacer otro igual
+                  </button>
+                )}
                 <button
                   type="submit"
                   form="form-producto-dueno"
                   disabled={isSaving}
+                  onClick={() => { crearOtroRef.current = false; }}
                   className="flex items-center gap-2 px-5 py-2.5 bg-[var(--tienda-color)] text-white rounded-md font-bold text-sm shadow-md shadow-[var(--tienda-color)]/20 hover:bg-[#8f0f0b] transition-colors disabled:opacity-70"
                 >
                   {isSaving ? (
@@ -2972,6 +3000,13 @@ function AdminDashboard({ user }: { user: User }) {
                 </button>
               </div>
             </div>
+
+            {avisoCreado && (
+              <div className="px-6 md:px-8 py-2.5 bg-green-50 border-b border-green-200 text-sm font-semibold text-green-800 flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                «{avisoCreado}» creado. Escribe el nombre y sube la foto del siguiente.
+              </div>
+            )}
 
             <form id="form-producto-dueno" onSubmit={handleSave} className="p-6 md:p-8 overflow-y-auto flex-1 custom-scrollbar md:grid md:grid-cols-[300px_minmax(0,1fr)] md:gap-8 md:items-start">
               
