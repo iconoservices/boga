@@ -2,7 +2,7 @@
 
 import { useFavoritos } from '@/lib/useFavoritos';
 import { useCustomerSession } from '@/context/CustomerSessionContext';
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { pedirDatosCliente } from '@/components/pedirDatosCliente';
 import { StoreConfig } from '@/lib/stores.config';
 import { getDemoProducts } from '@/lib/templates.config';
@@ -174,45 +174,6 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
   }, [store.categories, allProducts]);
 
   const hayOfertas = allProducts.some((prod) => prod.hasOffer);
-
-  // ── Banner que gira: el banner de la tienda y, SOLO si hay prendas en oferta, esas ofertas. Sin ofertas, el banner
-  //    queda fijo (una sola imagen, sin puntos). Se desliza con el dedo y avanza solo cada 5 segundos. ──
-  const slidesBanner = useMemo(() => allProducts.filter((prod) => prod.hasOffer).slice(0, 5), [allProducts]);
-  const totalSlides = 1 + slidesBanner.length;
-  const bannerRef = useRef<HTMLDivElement>(null);
-  const bannerIdxRef = useRef(0);
-  const [bannerIdx, setBannerIdx] = useState(0);
-  const irABanner = useCallback((i: number) => {
-    const el = bannerRef.current;
-    if (!el) return;
-    el.scrollTo({ left: i * el.clientWidth, behavior: 'smooth' });
-    bannerIdxRef.current = i;
-    setBannerIdx(i);
-  }, []);
-  useEffect(() => {
-    if (totalSlides < 2) return;
-    const id = setInterval(() => irABanner((bannerIdxRef.current + 1) % totalSlides), 5000);
-    return () => clearInterval(id);
-  }, [irABanner, totalSlides]);
-  useEffect(() => {
-    const el = bannerRef.current;
-    if (!el) return;
-    let ticking = false;
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        const w = el.clientWidth;
-        if (w > 0) {
-          const i = Math.round(el.scrollLeft / w);
-          if (i !== bannerIdxRef.current) { bannerIdxRef.current = i; setBannerIdx(i); }
-        }
-        ticking = false;
-      });
-    };
-    el.addEventListener('scroll', onScroll, { passive: true });
-    return () => el.removeEventListener('scroll', onScroll);
-  }, []);
 
   // Filtrado
   const filteredProducts = useMemo(() => {
@@ -398,59 +359,11 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
         <div className="max-w-6xl mx-auto px-0 sm:px-4 sm:py-4">
           <div className="w-full overflow-hidden sm:rounded-3xl shadow-sm bg-gray-100 relative">
             <StoreFloatingActions store={store} />
-            <div
-              ref={bannerRef}
-              className="flex overflow-x-auto hide-scrollbar"
-              style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none', touchAction: 'pan-x pan-y' } as React.CSSProperties}
-            >
-              {/* Slide 1: el banner de la tienda, tal cual lo diseñó el dueño (sin textos encima). */}
-              <div className="shrink-0 w-full" style={{ scrollSnapAlign: 'start', flex: '0 0 100%' }}>
-                <img
-                  src={store.heroImage || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1600&q=85'}
-                  alt={store.heroAlt || store.name}
-                  className="w-full h-auto max-h-[500px] object-cover object-center block"
-                />
-              </div>
-              {/* Siguientes: solo las ofertas. Tocar abre la prenda. */}
-              {slidesBanner.map((prod) => (
-                <button
-                  key={prod.id}
-                  type="button"
-                  onClick={() => abrirProducto(prod)}
-                  className="relative shrink-0 w-full overflow-hidden text-left cursor-pointer bg-gray-100"
-                  style={{ scrollSnapAlign: 'start', flex: '0 0 100%' }}
-                  aria-label={`Ver ${prod.title}`}
-                >
-                  <div className="relative w-full aspect-[16/9] sm:aspect-[21/9] max-h-[500px]">
-                    <img aria-hidden alt="" src={prod.image} className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-60" />
-                    <img src={prod.image} alt={prod.title} className="relative w-full h-full object-contain" />
-                  </div>
-                  <div className="absolute inset-x-0 bottom-0 px-4 pb-3 pt-12 bg-gradient-to-t from-black/75 via-black/30 to-transparent">
-                    <span className="text-[10px] font-black tracking-widest uppercase text-white/80">🔥 Oferta</span>
-                    <p className="text-white font-extrabold text-base sm:text-xl leading-tight line-clamp-1">{prod.title}</p>
-                    <p className="text-white/90 text-xs sm:text-sm font-semibold">
-                      {prod.hasOffer
-                        ? <>Antes <span className="line-through opacity-80">S/ {prod.originalPrice.toFixed(2)}</span> · Ahora S/ {prod.price.toFixed(2)}</>
-                        : <>S/ {prod.price.toFixed(2)}</>}
-                    </p>
-                  </div>
-                </button>
-              ))}
-            </div>
-            {totalSlides > 1 && (
-              <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 pointer-events-none">
-                {Array.from({ length: totalSlides }).map((_, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => irABanner(i)}
-                    aria-label={`Ir al banner ${i + 1}`}
-                    className="pointer-events-auto rounded-full transition-all duration-300 shadow"
-                    style={{ width: bannerIdx === i ? 18 : 7, height: 7, background: bannerIdx === i ? '#fff' : 'rgba(255,255,255,0.55)' }}
-                  />
-                ))}
-              </div>
-            )}
+            <img
+              src={store.heroImage || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1600&q=85'}
+              alt={store.heroAlt || store.name}
+              className="w-full h-auto max-h-[500px] object-cover object-center block"
+            />
           </div>
         </div>
       </section>
