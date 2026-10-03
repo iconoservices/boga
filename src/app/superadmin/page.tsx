@@ -440,7 +440,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     externalUrl: '',
       subdominioActivo: false,
       pushActivo: true, // por defecto activas en tiendas nuevas
-      modulos: { pos: false, inventario: false, google: false, marca_blanca: false, marketplace: true } as Modulos,
+      modulos: { pos: false, inventario: false, google: false, marca_blanca: false, marketplace: true, promociones: true } as Modulos,
     ownerEmail: '',
     hideHeroText: true
   });
@@ -593,7 +593,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       externalUrl: '',
       subdominioActivo: false,
       pushActivo: true, // por defecto activas en tiendas nuevas
-      modulos: { pos: false, inventario: false, google: false, marca_blanca: false, marketplace: true } as Modulos,
+      modulos: { pos: false, inventario: false, google: false, marca_blanca: false, marketplace: true, promociones: true } as Modulos,
       // El correo de la solicitud: asi al guardar la tienda ya queda asignada
       // a quien la pidio, sin tener que ir despues a mano a "Usuarios".
       ownerEmail: req.email || '',
@@ -819,7 +819,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       externalUrl: '',
       subdominioActivo: false,
       pushActivo: true, // por defecto activas en tiendas nuevas
-      modulos: { pos: false, inventario: false, google: false, marca_blanca: false, marketplace: true } as Modulos,
+      modulos: { pos: false, inventario: false, google: false, marca_blanca: false, marketplace: true, promociones: true } as Modulos,
       ownerEmail: '',
       hideHeroText: true // por defecto el banner va limpio; el dueño decide si le suma textos
     });
@@ -1866,20 +1866,20 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       <div className="fixed inset-0 z-[200] flex flex-col bg-[#f2f4f8] overflow-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
 
           {/* Topbar */}
-          <header className="h-16 bg-white border-b border-[#ecedf7] flex items-center justify-between px-6 shrink-0 shadow-xs z-10">
+          <header className="h-16 bg-white border-b border-[#ecedf7] flex items-center justify-between px-3 md:px-6 shrink-0 shadow-xs z-10">
             {/* Left: Back Arrow & Titles */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 md:gap-4 min-w-0">
               <button onClick={() => setShowStoreModal(false)} className="w-10 h-10 rounded-full flex items-center justify-center text-[#191b23] hover:bg-[#f2f3fd] transition-colors -ml-2">
                 <span className="material-symbols-outlined">arrow_back</span>
               </button>
-              <div className="border-l border-[#ecedf7] pl-4">
-                <h1 className="text-sm font-black text-[#191b23]">Store Customizer</h1>
-                <p className="text-[10px] text-[#727785] font-bold mt-0.5">{storeForm.name || 'Store Name'}</p>
+              <div className="border-l border-[#ecedf7] pl-3 md:pl-4 min-w-0">
+                <h1 className="text-sm font-black text-[#191b23] truncate">Store Customizer</h1>
+                <p className="text-[10px] text-[#727785] font-bold mt-0.5 truncate">{storeForm.name || 'Store Name'}</p>
               </div>
             </div>
 
             {/* Center: Device Selector */}
-            <div className="flex items-center gap-4 absolute left-1/2 -translate-x-1/2">
+            <div className="hidden md:flex items-center gap-4 absolute left-1/2 -translate-x-1/2">
               <div className="flex gap-1 bg-[#f2f4f8] p-1 rounded-md">
                 {[
                   { id: 'desktop', icon: 'desktop_windows' },
@@ -1935,7 +1935,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
             </div>
 
             {/* Right: User actions */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 md:gap-4 shrink-0">
               {/* Abre la tienda REAL en otra pestaña con lo último guardado (?preview=true salta la caché). Para ver cambios
                   sin guardar está la vista previa del teléfono de la derecha. */}
               <a
@@ -1944,11 +1944,11 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                 rel="noopener noreferrer"
                 aria-disabled={!storeForm.slug}
                 title="Abrir la tienda en otra pestaña (con lo último que guardaste)"
-                className={`text-[10px] font-bold flex items-center gap-1.5 border-r border-[#ecedf7] pr-4 transition-colors ${storeForm.slug ? 'text-[#0058be] hover:underline' : 'text-[#727785] pointer-events-none'}`}
+                className={`text-[10px] font-bold flex items-center gap-1.5 md:border-r border-[#ecedf7] md:pr-4 transition-colors ${storeForm.slug ? 'text-[#0058be] hover:underline' : 'text-[#727785] pointer-events-none'}`}
               >
                 <span className="material-symbols-outlined text-[16px]">visibility</span>
-                Ver tienda
-                <span className="material-symbols-outlined text-[13px]">open_in_new</span>
+                <span className="hidden sm:inline">Ver tienda</span>
+                <span className="material-symbols-outlined text-[13px] hidden sm:inline">open_in_new</span>
               </a>
               <button
                 type="button"
@@ -1963,10 +1963,10 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                 <span className="material-symbols-outlined text-[14px]">{saving ? 'progress_activity' : guardadoOk ? 'check' : 'publish'}</span>
                 {saving ? 'Guardando...' : guardadoOk ? '¡Guardado!' : 'Publish Changes'}
               </button>
-              <div className="w-8 h-8 rounded-md border border-[#c2c6d6]/60 flex items-center justify-center bg-white cursor-pointer hover:bg-[#f2f3fd] transition-colors text-[#545f73]">
+              <div className="hidden md:flex w-8 h-8 rounded-md border border-[#c2c6d6]/60 flex items-center justify-center bg-white cursor-pointer hover:bg-[#f2f3fd] transition-colors text-[#545f73]">
                 <span className="material-symbols-outlined text-[18px]">notifications</span>
               </div>
-              <div className="w-8 h-8 rounded-md bg-[#0058be]/10 border border-[#0058be]/20 flex items-center justify-center text-xs font-bold text-[#0058be]">
+              <div className="hidden md:flex w-8 h-8 rounded-md bg-[#0058be]/10 border border-[#0058be]/20 flex items-center justify-center text-xs font-bold text-[#0058be]">
                 UA
               </div>
             </div>
@@ -1975,7 +1975,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
           {/* Sub-Editor Split Pane */}
           <div className="flex-1 flex flex-row-reverse overflow-hidden min-h-0">
             {/* RIGHT: Live Preview Canvas (Visually on Right due to flex-row-reverse) */}
-            <div className="flex-1 flex flex-col overflow-hidden relative">
+            <div className="hidden md:flex flex-1 flex-col overflow-hidden relative">
               {/* Canvas viewport container */}
               <div className="flex-1 overflow-auto bg-[#f2f4f8] flex justify-center py-6 px-2">
                 <div
@@ -2115,9 +2115,9 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
             </div>
 
             {/* LEFT: Config Panel */}
-            <aside className="w-[360px] shrink-0 bg-white border-r border-[#ecedf7] flex flex-col overflow-hidden">
+            <aside className="w-full md:w-[360px] md:shrink-0 bg-white md:border-r border-[#ecedf7] flex flex-col overflow-hidden">
               {/* Header */}
-              <div className="p-6 border-b border-[#ecedf7] bg-white shrink-0">
+              <div className="p-4 md:p-6 border-b border-[#ecedf7] bg-white shrink-0">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-[#0058be] text-[18px]">tune</span>
                   <h2 className="font-bold text-sm text-[#191b23]">Configuración</h2>
@@ -2129,8 +2129,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
 
               {/* Form Scroll Container */}
               <form onSubmit={handleSaveStore} className="flex-1 overflow-y-auto min-h-0 flex flex-col justify-between">
-                <div className="p-6 space-y-6">
-                  
+                <div className="p-4 md:p-6 space-y-6">
+
                   {/* COMPLETITUD DE LA TIENDA — calculado en vivo, antes decia "75%" fijo
                       sin importar la tienda. */}
                   <div className="border border-[#ecedf7] bg-[#f8fafc] rounded-lg p-4 shadow-sm">
@@ -2973,7 +2973,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           externalUrl: '',
       subdominioActivo: false,
       pushActivo: true,
-      modulos: { pos: false, inventario: false, google: false, marca_blanca: false, marketplace: true } as Modulos,
+      modulos: { pos: false, inventario: false, google: false, marca_blanca: false, marketplace: true, promociones: true } as Modulos,
                           ownerEmail: ''
                         });
                         setOriginalOwnerEmail('');
