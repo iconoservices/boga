@@ -12,7 +12,7 @@ export type Presentacion = { label: string; price: number };
 export const COL_PRESENTACIONES = 'presentaciones';
 
 /** Botones rápidos del formulario del dueño (productos por peso: especias, granos…). */
-export const PRESENTACIONES_SUGERIDAS_PESO = ['100 g', '250 g', '500 g', '1 kg', 'Unidad', 'Docena'];
+export const PRESENTACIONES_SUGERIDAS_PESO = ['100 g', '250 g', '500 g', '1 kg'];
 export const PRESENTACIONES_SUGERIDAS = PRESENTACIONES_SUGERIDAS_PESO;
 
 /** Botones rápidos para bebidas (tamaño de vaso): medidas de onzas y litros. */
@@ -28,7 +28,8 @@ export const PRESENTACIONES_SUGERIDAS_ROPA = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 
 export const PRESENTACIONES_SUGERIDAS_CALZADO = ['35', '36', '37', '38', '39', '40', '41'];
 
 /** Botones rápidos para bodegas y comerciales (por unidades, paquetes y también peso). */
-export const PRESENTACIONES_SUGERIDAS_UNIDADES = ['1 unidad', '2 unidades', '3 unidades', '6 unidades', '12 unidades', 'Docena', 'Paquete', 'Bolsa', '100 g', '250 g', '500 g', '1 kg'];
+export const PRESENTACIONES_SOLO_UNIDADES = ['1 unidad', '2 unidades', '3 unidades', '6 unidades', '12 unidades', 'Docena', 'Paquete', 'Bolsa'];
+export const PRESENTACIONES_SUGERIDAS_UNIDADES = [...PRESENTACIONES_SOLO_UNIDADES, ...PRESENTACIONES_SUGERIDAS_PESO];
 
 export type TipoPresentacion = 'ropa' | 'calzado' | 'bebida' | 'unidades' | 'peso';
 

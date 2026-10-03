@@ -28,7 +28,7 @@ import LoyverseSyncModal from '@/components/admin/LoyverseSyncModal';
 import MiPlan from '@/components/admin/MiPlan';
 import CobroOnline from '@/components/admin/CobroOnline';
 import { COLS_OFERTA, precioOfertaVigente, porcentajeOferta } from '@/lib/ofertas';
-import { COL_PRESENTACIONES, presentacionesSugeridas, textosPresentacion, leerPresentaciones, precioDesde } from '@/lib/presentaciones';
+import { COL_PRESENTACIONES, presentacionesSugeridas, textosPresentacion, leerPresentaciones, precioDesde, tipoPresentacionDe, PRESENTACIONES_SOLO_UNIDADES, PRESENTACIONES_SUGERIDAS_PESO } from '@/lib/presentaciones';
 
 interface Product {
   id: string;
@@ -198,6 +198,8 @@ function AdminDashboard({ user }: { user: User }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   // "Crear y hacer otro igual": tras guardar, el formulario sigue abierto con lo mismo (categoría, precio, presentaciones…) y solo falta el nombre y la foto.
   const crearOtroRef = useRef(false);
+  // Cómo vende el producto (para elegir primero y ver solo los atajos que corresponden): por unidades o por peso.
+  const [modoPres, setModoPres] = useState<'unidades' | 'peso' | null>(null);
   const [avisoCreado, setAvisoCreado] = useState('');
   const storeLogoInputRef = useRef<HTMLInputElement>(null);
   const storeHeroInputRef = useRef<HTMLInputElement>(null);
@@ -460,6 +462,7 @@ function AdminDashboard({ user }: { user: User }) {
   const esTerreno = ['terreno1', 'terreno2'].includes(String((stores as any)[newProduct.store]?.template ?? ''));
 
   const resetForm = () => {
+    setModoPres(null);
     setEditingProductId(null);
     setNewProduct({
       name: '',
@@ -3137,6 +3140,12 @@ function AdminDashboard({ user }: { user: User }) {
                 {(() => {
                   const storeObj = Object.values(stores).find(s => s.slug === newProduct.store);
                   const infoPres = textosPresentacion(newProduct.category, storeObj?.template);
+                  const tipoPres = tipoPresentacionDe(newProduct.category, storeObj?.template);
+                  const usaModo = tipoPres === 'unidades' || tipoPres === 'peso';
+                  const modo = modoPres ?? (tipoPres === 'unidades' ? 'unidades' : 'peso');
+                  const sugeridas = usaModo
+                    ? (modo === 'unidades' ? PRESENTACIONES_SOLO_UNIDADES : PRESENTACIONES_SUGERIDAS_PESO)
+                    : presentacionesSugeridas(newProduct.category, storeObj?.template);
                   return (
                     <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4">
                       <p className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
@@ -3183,8 +3192,27 @@ function AdminDashboard({ user }: { user: User }) {
                         </div>
                       )}
 
+                      {usaModo && (
+                        <div className="mt-3">
+                          <p className="text-[11px] font-bold text-gray-500 mb-1.5">¿Cómo lo vendes?</p>
+                          <div className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5">
+                            {([['unidades', 'Por unidades', 'inventory_2'], ['peso', 'Por peso', 'scale']] as const).map(([id, label, icono]) => (
+                              <button
+                                key={id}
+                                type="button"
+                                onClick={() => setModoPres(id)}
+                                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-bold transition-colors ${modo === id ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                              >
+                                <span className="material-symbols-outlined text-[16px]">{icono}</span>
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       <div className="flex flex-wrap gap-2 mt-3">
-                        {presentacionesSugeridas(newProduct.category, storeObj?.template).filter((l) => !newProduct.presentaciones.some((x) => x.label.trim().toLowerCase() === l.toLowerCase())).map((l) => (
+                        {sugeridas.filter((l) => !newProduct.presentaciones.some((x) => x.label.trim().toLowerCase() === l.toLowerCase())).map((l) => (
                           <button
                             key={l}
                             type="button"
