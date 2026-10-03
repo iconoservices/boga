@@ -115,6 +115,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
   const [search, setSearch] = useState('');
+  // Orden de la lista: 'recientes' (por defecto: la última tienda agregada arriba), 'antiguas' o 'az'.
+  const [orden, setOrden] = useState<'recientes' | 'antiguas' | 'az'>('recientes');
   
   // Lista de plantillas para el selector de "Estructura de Página" del
   // formulario de tienda. La gestión completa (overrides, destacadas, etc.)
@@ -665,9 +667,11 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   React.useEffect(() => {
     const fetchDbStores = async () => {
       try {
+        // Más nuevas primero: antes no había orden y la lista cambiaba sola al editar una tienda.
         const { data, error } = await supabase
           .from('stores')
-          .select('*');
+          .select('*')
+          .order('created_at', { ascending: false });
           
         if (error) throw error;
         
@@ -765,10 +769,16 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
   }, []);
 
   const storeList = Object.values(stores);
-  const filtered = storeList.filter((s) =>
+  const filtradas = storeList.filter((s) =>
     s.name.toLowerCase().includes(search.toLowerCase()) ||
     s.slug.toLowerCase().includes(search.toLowerCase())
   );
+  // storeList ya viene de la base en orden "más nuevas primero".
+  const filtered = orden === 'antiguas'
+    ? [...filtradas].reverse()
+    : orden === 'az'
+      ? [...filtradas].sort((a, b) => a.name.localeCompare(b.name, 'es'))
+      : filtradas;
 
   const activeCount = storeList.filter(s => activeStores[s.slug]).length;
   const pausedCount = storeList.length - activeCount;
@@ -1443,6 +1453,16 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                     onChange={(e) => setSearch(e.target.value)}
                     className="flex-1 min-w-0 bg-transparent border-none outline-none text-xs font-semibold text-[#191b23] placeholder-[#c2c6d6]"
                   />
+                  <select
+                    value={orden}
+                    onChange={(e) => setOrden(e.target.value as 'recientes' | 'antiguas' | 'az')}
+                    aria-label="Ordenar tiendas"
+                    className="shrink-0 bg-[#f2f3fd] border border-[#c2c6d6] rounded-md px-2 py-1 text-[11px] font-bold text-[#191b23] outline-none cursor-pointer"
+                  >
+                    <option value="recientes">Más nuevas primero</option>
+                    <option value="antiguas">Más antiguas primero</option>
+                    <option value="az">Nombre A–Z</option>
+                  </select>
                 </div>
               </div>
 
