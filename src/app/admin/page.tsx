@@ -239,14 +239,7 @@ function AdminDashboard({ user }: { user: User }) {
   );
   const managedSlugs = myStoreSlugs.length > 0 ? myStoreSlugs : null;
 
-  // Si todavia no tiene ninguna tienda propia, ofrecer reclamar una sin dueño.
-  useEffect(() => {
-    if (myStoreSlugs.length === 0 && dbStores.length > 0 && !isStorePickerOpen && !comoSlug) {
-      setPickerDraft([]);
-      setIsStorePickerOpen(true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [myStoreSlugs.length, dbStores.length, comoSlug]);
+  // Ya no se ofrece "reclamar" una tienda sin dueño: las tiendas las asigna el equipo de BogaHub (superadmin).
 
   const claimStores = async (slugs: string[]) => {
     if (slugs.length === 0) return;
@@ -359,6 +352,16 @@ function AdminDashboard({ user }: { user: User }) {
   const inicioDb = dbStores.find((s: any) => s.slug === focusedStore);
   const inicioActiva = (inicioDb?.status ?? 'active') === 'active';
   const inicioNombre = (user.user_metadata?.name as string | undefined)?.split(' ')[0];
+  // Color de la marca del panel. Antes del primer dato de la tienda salía el rojo de BogaHub un instante;
+  // ahora se usa el último color que tuvo este navegador, y si no hay, un gris neutro (ya no hay rojo por defecto).
+  const [colorGuardado] = useState<string>(() => {
+    try { return localStorage.getItem('boga_admin_color') || ''; } catch { return ''; }
+  });
+  const colorPanel = inicioStore?.theme?.primary || colorGuardado || '#52525b';
+  useEffect(() => {
+    const c = inicioStore?.theme?.primary;
+    if (c) { try { localStorage.setItem('boga_admin_color', c); } catch { /* sin storage: no se recuerda */ } }
+  }, [inicioStore?.theme?.primary]);
   // Con subdominio propio activo, el link/QR/compartir apuntan ahí en vez de a bogahub.app/<tienda>
   // (mismo criterio que el QR de abajo, que sí lo revisaba — este no, y por eso quedaban distintos).
   // Una sola función para todos los lados (ver tienda, QR, compartir): subdominio si lo tiene activo, ruta si no.
@@ -1402,7 +1405,7 @@ function AdminDashboard({ user }: { user: User }) {
       className="min-h-screen md:h-screen md:overflow-hidden bg-[#f8f9fa] font-['Outfit'] flex flex-col md:flex-row"
       // Todo el rojo fijo del panel (bg-[var(--tienda-color)], text-[var(--tienda-color)]...) ahora
       // toma la marca de la tienda que se está viendo; sin tienda (o sin color propio) cae al rojo de BogaHub.
-      style={{ '--tienda-color': inicioStore?.theme?.primary || '#b8130e' } as React.CSSProperties}
+      style={{ '--tienda-color': colorPanel } as React.CSSProperties}
     >
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
@@ -1505,13 +1508,6 @@ function AdminDashboard({ user }: { user: User }) {
                   <option key={s.slug} value={s.slug}>{s.name}</option>
                 ))}
               </select>
-              <button
-                onClick={() => { setPickerDraft([]); setIsStorePickerOpen(true); }}
-                title="Reclamar otra tienda"
-                className={`bg-white border border-gray-200 text-gray-500 hover:text-gray-900 hover:border-gray-300 rounded-md shadow-sm transition-colors flex items-center justify-center shrink-0 ${activeTab === 'pos' ? 'w-9 h-9' : 'w-11 h-11'}`}
-              >
-                <span className="material-symbols-outlined text-[18px]">checklist</span>
-              </button>
             </div>
             {/* Cada pestaña muestra solo su accion principal */}
             {activeTab === 'pos' ? (
@@ -1550,13 +1546,7 @@ function AdminDashboard({ user }: { user: User }) {
               <span className="material-symbols-outlined text-gray-400 text-[28px]">storefront</span>
             </div>
             <h3 className="font-bold text-gray-900">Todavía no tienes ninguna carta</h3>
-            <p className="text-gray-500 text-sm mt-1">Reclama la que te creó el equipo de BogaHub para empezar.</p>
-            <button
-              onClick={() => { setPickerDraft([]); setIsStorePickerOpen(true); }}
-              className="mt-5 px-4 py-2.5 bg-[var(--tienda-color)] text-white font-bold rounded-md text-sm"
-            >
-              Reclamar mi carta
-            </button>
+            <p className="text-gray-500 text-sm mt-1">El equipo de BogaHub te asigna tu tienda a este correo ({user.email}). Escríbenos y la dejamos lista.</p>
           </div>
         )}
 
@@ -4404,93 +4394,58 @@ function AdminDashboard({ user }: { user: User }) {
                     <option key={s.slug} value={s.slug}>{s.name}</option>
                   ))}
                 </select>
-                <button
-                  onClick={() => { setPickerDraft([]); setIsStorePickerOpen(true); setIsMobileMenuOpen(false); }}
-                  className="mt-2 text-xs font-bold text-gray-500 hover:text-gray-900 flex items-center gap-1.5 transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[15px]">checklist</span>
-                  Reclamar otra tienda
-                </button>
               </div>
 
-              <div className="space-y-2 border-t border-gray-100 pt-6">
-                {/* Secciones que no entran en la barra inferior, en el mismo orden */}
-                {navTabs.filter(t => !t.inBottomBar).map(t => (
-                  <button
-                    key={t.id}
-                    onClick={() => { setActiveTab(t.id); setIsMobileMenuOpen(false); }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-md font-semibold transition-colors ${activeTab === t.id ? 'bg-[var(--tienda-color)] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
-                  >
-                    <span className="material-symbols-outlined text-[20px]">{t.icon}</span>
-                    {t.label}
-                  </button>
-                ))}
-
-                {inicioStore && (
-                  <>
-                    <button
-                      onClick={() => { setPickerDraft([]); setIsStorePickerOpen(true); setIsMobileMenuOpen(false); }}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-md font-semibold transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-[20px]">menu_book</span>
-                      Mis cartas
-                    </button>
-                    {inicioDb?.push_activo && (
-                      <a href="/admin/notificaciones" className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-md font-semibold transition-colors">
-                        <span className="material-symbols-outlined text-[20px]">notifications</span>
-                        Notificaciones
-                      </a>
+              {/* Cuadros en vez de lista: más fáciles de tocar y se ve todo de un vistazo */}
+              {(() => {
+                const cuadro = 'aspect-square rounded-2xl flex flex-col items-center justify-center gap-2 p-2 text-center text-[12px] font-bold leading-tight transition active:scale-95';
+                const normal = `${cuadro} bg-gray-50 border border-gray-100 text-gray-700 hover:bg-gray-100`;
+                const destacado = `${cuadro} bg-[var(--tienda-color)] text-white shadow-md`;
+                const suave = `${cuadro} bg-[var(--tienda-color)]/10 text-[var(--tienda-color)]`;
+                const ico = (n: string) => <span className="material-symbols-outlined text-[28px]">{n}</span>;
+                return (
+                  <div className="grid grid-cols-3 gap-3 border-t border-gray-100 pt-6">
+                    {/* Misma pestaña (no _blank): en la app instalada es la forma de regresar a la tienda desde donde se entró */}
+                    {inicioStore && (
+                      <a href={inicioUrl} className={destacado}>{ico('storefront')}Volver a mi tienda</a>
                     )}
-                    <a href={inicioUrl} target="_blank" rel="noopener noreferrer" className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-md font-semibold transition-colors">
-                      <span className="material-symbols-outlined text-[20px]">open_in_new</span>
-                      Ver enlace de mi carta
-                    </a>
+                    {/* Secciones que no entran en la barra inferior, en el mismo orden */}
+                    {navTabs.filter(t => !t.inBottomBar).map(t => (
+                      <button
+                        key={t.id}
+                        onClick={() => { setActiveTab(t.id); setIsMobileMenuOpen(false); }}
+                        className={activeTab === t.id ? destacado : normal}
+                      >
+                        {ico(t.icon)}{t.label}
+                      </button>
+                    ))}
+                    {inicioStore && (
+                      <>
+                        <a href={inicioUrl} target="_blank" rel="noopener noreferrer" className={normal}>{ico('open_in_new')}Ver enlace de mi carta</a>
+                        <button onClick={() => { openStoreEditor(inicioStore.slug, 'datos'); setIsMobileMenuOpen(false); }} className={normal}>
+                          {ico('edit')}Editar perfil
+                        </button>
+                      </>
+                    )}
+                    <Link href="/" className={normal}>{ico('arrow_back')}Volver a BogaHub</Link>
                     <button
-                      onClick={() => { openStoreEditor(inicioStore.slug, 'datos'); setIsMobileMenuOpen(false); }}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-md font-semibold transition-colors"
+                      onClick={() => {
+                        if (typeof window !== 'undefined') {
+                          localStorage.removeItem('bogadash_pwa_stats');
+                          window.location.reload();
+                        }
+                      }}
+                      className={suave}
                     >
-                      <span className="material-symbols-outlined text-[20px]">edit</span>
-                      Editar perfil
+                      {ico('install_mobile')}Instalar App
                     </button>
-                  </>
-                )}
-
-                {/* Misma pestaña (no _blank): en la app instalada es la forma de regresar a la tienda desde donde se entró */}
-                {inicioStore && (
-                  <a href={inicioUrl} className="w-full flex items-center gap-3 px-4 py-3 text-[var(--tienda-color)] bg-[var(--tienda-color)]/5 hover:bg-[var(--tienda-color)]/10 rounded-md font-bold transition-colors">
-                    <span className="material-symbols-outlined text-[20px]">storefront</span>
-                    Volver a mi tienda
-                  </a>
-                )}
-                <Link href="/" className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-md font-semibold transition-colors">
-                  <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-                  Volver a BogaHub
-                </Link>
-                
-                <button 
-                  onClick={() => {
-                    if (typeof window !== 'undefined') {
-                      localStorage.removeItem('bogadash_pwa_stats');
-                      window.location.reload();
-                    }
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-[var(--tienda-color)] bg-[var(--tienda-color)]/5 hover:bg-[var(--tienda-color)]/10 rounded-md font-bold transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[20px]">install_mobile</span>
-                  Instalar App
-                </button>
-
-                <div className="pt-2 mt-2 border-t border-gray-100">
-                  <p className="px-4 text-[11px] text-gray-400 font-semibold truncate">{user.email}</p>
-                  <button
-                    onClick={async () => { await signOut(); router.replace('/login'); }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-md font-semibold transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-[20px]">logout</span>
-                    Cerrar sesión
-                  </button>
-                </div>
-              </div>
+                    <button onClick={async () => { await signOut(); router.replace('/login'); }} className={`${normal} text-red-600`}>
+                      {ico('logout')}Cerrar sesión
+                    </button>
+                    <p className="col-span-3 text-center text-[11px] text-gray-400 font-semibold truncate">{user.email}</p>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>

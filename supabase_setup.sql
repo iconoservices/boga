@@ -312,14 +312,13 @@ CREATE POLICY "stores: solo superadmin crea"
 ON public.stores FOR INSERT
 WITH CHECK (public.is_superadmin());
 
--- UPDATE: el dueño, el superadmin, o cualquiera logueado sobre una tienda
--- SIN dueño (para el flujo de "reclamar mi tienda" en /admin). El WITH CHECK
--- impide que al reclamar se le ponga un user_id ajeno.
+-- UPDATE: el dueño, el superadmin o el admin de la tienda. Ya NO se puede "reclamar"
+-- una tienda sin dueño: las asigna el superadmin. (El WITH CHECK
+-- además impide poner un user_id ajeno.)
 CREATE POLICY "stores: dueño o superadmin edita"
 ON public.stores FOR UPDATE
 USING (
   auth.uid() = user_id
-  OR user_id IS NULL
   OR public.is_superadmin()
   OR public.es_admin_de(slug)
 )

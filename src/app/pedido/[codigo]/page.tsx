@@ -38,6 +38,13 @@ type RepartidorBoga = { id: string; nombre: string; placa: string | null };
 type Repartidor = { id: string; nombre: string; tel: string | null; placa: string | null; token: string | null; visto: string | null };
 
 const ESTADOS = ['Pendiente', 'Preparando', 'Enviado', 'Entregado', 'Cancelado'];
+const BOTON_ESTADO: Record<string, { icono: string; solido: string; borde: string; texto: string }> = {
+  Pendiente: { icono: 'schedule', solido: 'bg-orange-500', borde: 'border-orange-200', texto: 'text-orange-600' },
+  Preparando: { icono: 'skillet', solido: 'bg-amber-500', borde: 'border-amber-200', texto: 'text-amber-600' },
+  Enviado: { icono: 'local_shipping', solido: 'bg-green-600', borde: 'border-green-200', texto: 'text-green-600' },
+  Entregado: { icono: 'check_circle', solido: 'bg-blue-600', borde: 'border-blue-200', texto: 'text-blue-600' },
+  Cancelado: { icono: 'cancel', solido: 'bg-red-600', borde: 'border-red-200', texto: 'text-red-500' },
+};
 const color = (e: string) =>
   e === 'Entregado' ? 'bg-blue-50 text-blue-700 border-blue-200'
   : e === 'Cancelado' ? 'bg-red-50 text-red-700 border-red-200'
@@ -290,17 +297,26 @@ export default function PedidoPage({ params }: { params: Promise<{ codigo: strin
               </div>
             )}
 
-            <div className="bg-surface-container-lowest border border-surface-container-highest rounded-2xl p-4">
-              <ul className="flex flex-col gap-2">
+            {/* El recibo: lo central de la página */}
+            <div className="bg-surface-container-lowest border border-surface-container-highest rounded-2xl shadow-sm overflow-hidden">
+              <div className="px-5 pt-5 pb-3 text-center">
+                <span className="material-symbols-outlined text-primary text-[28px]">receipt_long</span>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-secondary mt-1">Recibo de tu pedido</p>
+              </div>
+              <ul className="flex flex-col gap-3 px-5 py-4 border-y border-dashed border-surface-container-highest">
                 {p.items.map((i, k) => (
-                  <li key={k} className="flex justify-between gap-3 text-sm">
-                    <span>{i.quantity}× {i.name}</span>
-                    <span className="font-bold">S/ {(i.price * i.quantity).toFixed(2)}</span>
+                  <li key={k} className="flex items-start justify-between gap-3 text-sm">
+                    <span className="flex items-start gap-2.5 min-w-0">
+                      <span className="shrink-0 min-w-[26px] h-[26px] rounded-md bg-primary/10 text-primary text-xs font-extrabold flex items-center justify-center">{i.quantity}×</span>
+                      <span className="font-semibold leading-snug break-words">{i.name}</span>
+                    </span>
+                    <span className="font-bold shrink-0">S/ {(i.price * i.quantity).toFixed(2)}</span>
                   </li>
                 ))}
               </ul>
-              <p className="flex justify-between border-t border-surface-container-highest mt-3 pt-3 font-extrabold">
-                <span>Total</span><span>S/ {p.total.toFixed(2)}</span>
+              <p className="flex items-baseline justify-between px-5 py-4">
+                <span className="text-sm font-bold uppercase tracking-wide text-secondary">Total</span>
+                <span className="text-2xl font-black">S/ {p.total.toFixed(2)}</span>
               </p>
             </div>
 
@@ -314,10 +330,14 @@ export default function PedidoPage({ params }: { params: Promise<{ codigo: strin
                 <p className="text-[10px] font-bold uppercase tracking-wide text-primary mb-1">Solo tú ves esto · datos del cliente</p>
                 <p className="font-bold">{p.cliente.nombre || 'Cliente'}</p>
                 {p.cliente.telefono && (
-                  <p className="flex items-center gap-2">
-                    {p.cliente.telefono}
-                    {wa(p.cliente.telefono) && <a href={wa(p.cliente.telefono)} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">WhatsApp</a>}
-                  </p>
+                  <div className="flex items-center gap-3 mt-1">
+                    <span className="text-base font-bold">{p.cliente.telefono}</span>
+                    {wa(p.cliente.telefono) && (
+                      <a href={wa(p.cliente.telefono)} target="_blank" rel="noopener noreferrer" aria-label="Escribir por WhatsApp" title="Escribir por WhatsApp" className="w-11 h-11 rounded-full bg-[#25D366] flex items-center justify-center shadow-sm active:scale-95 transition">
+                        <svg viewBox="0 0 24 24" className="w-6 h-6 fill-white" aria-hidden="true"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.08 1.76-.72 2-1.41.25-.7.25-1.29.17-1.41-.07-.12-.27-.2-.57-.35zM12.04 21.8h-.01a9.9 9.9 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.9-9.88 2.64 0 5.12 1.03 6.99 2.9a9.82 9.82 0 0 1 2.9 6.99c0 5.45-4.44 9.88-9.9 9.88zM20.52 3.45A11.8 11.8 0 0 0 12.04 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.54 0 11.89-5.34 11.89-11.89 0-3.18-1.24-6.16-3.48-8.4z"/></svg>
+                      </a>
+                    )}
+                  </div>
                 )}
                 {p.cliente.direccion && (
                   <p className="text-secondary break-words">
@@ -328,13 +348,20 @@ export default function PedidoPage({ params }: { params: Promise<{ codigo: strin
                 )}
 
                 <p className="text-[10px] font-bold uppercase tracking-wide text-secondary mt-3 mb-1.5">Estado del pedido</p>
-                <div className="flex flex-wrap gap-2">
-                  {ESTADOS.map((e) => (
-                    <button key={e} type="button" disabled={ocupado || p.estado === e} onClick={() => cambiar(e)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-bold border disabled:cursor-default ${p.estado === e ? color(e) : 'bg-white text-secondary border-surface-container-highest disabled:opacity-50'}`}>
-                      {e}
-                    </button>
-                  ))}
+                <div className="grid grid-cols-2 gap-2">
+                  {ESTADOS.map((e) => {
+                    const activo = p.estado === e;
+                    const v = BOTON_ESTADO[e] ?? BOTON_ESTADO.Pendiente;
+                    return (
+                      <button key={e} type="button" disabled={ocupado || activo} onClick={() => cambiar(e)}
+                        className={`flex flex-col items-center justify-center gap-1 min-h-[64px] rounded-xl border-2 text-xs font-extrabold transition active:scale-95 disabled:cursor-default ${
+                          activo ? `${v.solido} border-transparent text-white shadow-md` : `bg-white ${v.borde} ${v.texto} disabled:opacity-50`
+                        } ${e === 'Cancelado' ? 'col-span-2 min-h-[44px]' : ''}`}>
+                        <span className="material-symbols-outlined text-[24px]">{v.icono}</span>
+                        {e}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {gestionaRepartidor && (

@@ -42,6 +42,15 @@ const estilo = (estado: string) => {
   return { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200', dot: 'bg-orange-500' };
 };
 
+// Botones grandes del cambio de estado: el activo va relleno y con su color, los demás con ícono y borde suave.
+const BOTON_ESTADO: Record<(typeof ESTADOS)[number], { icono: string; solido: string; borde: string; texto: string }> = {
+  Pendiente: { icono: 'schedule', solido: 'bg-orange-500', borde: 'border-orange-200', texto: 'text-orange-600' },
+  Preparando: { icono: 'skillet', solido: 'bg-amber-500', borde: 'border-amber-200', texto: 'text-amber-600' },
+  Enviado: { icono: 'local_shipping', solido: 'bg-green-600', borde: 'border-green-200', texto: 'text-green-600' },
+  Entregado: { icono: 'check_circle', solido: 'bg-blue-600', borde: 'border-blue-200', texto: 'text-blue-600' },
+  Cancelado: { icono: 'cancel', solido: 'bg-red-600', borde: 'border-red-200', texto: 'text-red-500' },
+};
+
 const itemsDe = (o: Pedido) => {
   if (Array.isArray(o.items)) return o.items;
   if (typeof o.items === 'string') { try { const v = JSON.parse(o.items); return Array.isArray(v) ? v : []; } catch { return []; } }
@@ -192,22 +201,52 @@ export default function PedidosTab({
 
                 {abierta && (
                   <div className="border-t border-gray-100 p-4 flex flex-col gap-4 bg-gray-50/40">
+                    {o.status === 'Cancelado' ? (
+                      <p className="text-xs font-semibold text-red-600">Pedido cancelado. Si llevaba stock, ya se devolvió al inventario.</p>
+                    ) : (
+                      <div>
+                        <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-2">¿En qué va este pedido?</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          {ESTADOS.map((e) => {
+                            const activo = o.status === e || (e === 'Preparando' && o.status === 'Listo');
+                            const v = BOTON_ESTADO[e];
+                            return (
+                              <button
+                                key={e}
+                                type="button"
+                                disabled={ocupado === o.id || activo}
+                                onClick={() => {
+                                  if (e === 'Cancelado' && !window.confirm('¿Cancelar este pedido? Si llevaba stock, se devuelve al inventario.')) return;
+                                  cambiarEstado(o, e);
+                                }}
+                                className={`flex flex-col items-center justify-center gap-1 min-h-[64px] rounded-xl border-2 text-xs font-extrabold transition active:scale-95 disabled:cursor-default ${
+                                  activo ? `${v.solido} border-transparent text-white shadow-md` : `bg-white ${v.borde} ${v.texto} hover:bg-gray-50 disabled:opacity-50`
+                                } ${e === 'Cancelado' ? 'col-span-2 sm:col-span-1 min-h-[44px] sm:min-h-[64px]' : ''}`}
+                              >
+                                <span className="material-symbols-outlined text-[24px]">{v.icono}</span>
+                                {e}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="text-sm">
                         <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-1">Cliente</p>
                         <p className="font-bold text-gray-900">{o.customer_name || 'Cliente'}</p>
                         {o.customer_phone && (
-                          <p className="text-gray-600 font-medium flex items-center gap-2">
-                            {o.customer_phone}
+                          <div className="flex items-center gap-3 mt-1.5">
+                            <span className="text-gray-700 font-bold text-base">{o.customer_phone}</span>
                             {tel && (
-                              <a href={tel} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] font-bold text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5 hover:bg-green-100">
-                                <span className="material-symbols-outlined text-[13px]">chat</span>WhatsApp
+                              <a href={tel} target="_blank" rel="noopener noreferrer" aria-label="Escribir por WhatsApp" title="Escribir por WhatsApp" className="w-11 h-11 rounded-full bg-[#25D366] flex items-center justify-center shadow-sm hover:brightness-95 active:scale-95 transition">
+                                <svg viewBox="0 0 24 24" className="w-6 h-6 fill-white" aria-hidden="true"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.08 1.76-.72 2-1.41.25-.7.25-1.29.17-1.41-.07-.12-.27-.2-.57-.35zM12.04 21.8h-.01a9.9 9.9 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.9-9.88 2.64 0 5.12 1.03 6.99 2.9a9.82 9.82 0 0 1 2.9 6.99c0 5.45-4.44 9.88-9.9 9.88zM20.52 3.45A11.8 11.8 0 0 0 12.04 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.54 0 11.89-5.34 11.89-11.89 0-3.18-1.24-6.16-3.48-8.4z"/></svg>
                               </a>
                             )}
-                          </p>
+                          </div>
                         )}
                         {o.customer_address && (
-                          <p className="text-gray-600 font-medium break-words">
+                          <p className="text-gray-600 font-medium break-words mt-1.5">
                             {o.customer_address.split(/(https?:\/\/[^\s]+)/g).map((t, i) => /^https?:\/\//.test(t)
                               ? <a key={i} href={t} target="_blank" rel="noopener noreferrer" className="text-[#b8130e] font-bold underline">Abrir en el mapa</a>
                               : <span key={i}>{t}</span>)}
@@ -233,38 +272,18 @@ export default function PedidosTab({
                     </div>
 
                     {o.codigo && (
-                      <a href={`/pedido/${o.codigo}`} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-[#b8130e] hover:underline self-start">
-                        Ver la página del pedido (la que recibió el cliente)
+                      <a href={`/pedido/${o.codigo}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-3 hover:bg-gray-50 active:scale-[0.99] transition">
+                        <span className="w-10 h-10 rounded-full bg-[#b8130e]/10 text-[#b8130e] flex items-center justify-center shrink-0">
+                          <span className="material-symbols-outlined text-[22px]">receipt_long</span>
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-extrabold text-gray-900 leading-tight">Ver el recibo del cliente</span>
+                          <span className="block text-[11px] text-gray-500 leading-snug">Lo mismo que le llegó a él, con el seguimiento</span>
+                        </span>
+                        <span className="material-symbols-outlined text-gray-300 text-[20px] shrink-0">chevron_right</span>
                       </a>
                     )}
 
-                    {o.status === 'Cancelado' ? (
-                      <p className="text-xs font-semibold text-red-600">Pedido cancelado. Si llevaba stock, ya se devolvió al inventario.</p>
-                    ) : (
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mr-1">Estado</span>
-                        {ESTADOS.map((e) => {
-                          const activo = o.status === e || (e === 'Preparando' && o.status === 'Listo');
-                          const s = estilo(e);
-                          return (
-                            <button
-                              key={e}
-                              type="button"
-                              disabled={ocupado === o.id || activo}
-                              onClick={() => {
-                                if (e === 'Cancelado' && !window.confirm('¿Cancelar este pedido? Si llevaba stock, se devuelve al inventario.')) return;
-                                cambiarEstado(o, e);
-                              }}
-                              className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors disabled:cursor-default ${
-                                activo ? `${s.bg} ${s.text} ${s.border}` : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50 disabled:opacity-50'
-                              }`}
-                            >
-                              {e}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
