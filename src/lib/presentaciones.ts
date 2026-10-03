@@ -28,6 +28,8 @@ export const PRESENTACIONES_SUGERIDAS_ROPA = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 
 export const PRESENTACIONES_SUGERIDAS_CALZADO = ['35', '36', '37', '38', '39', '40', '41'];
 
 /** Botones rápidos para bodegas y comerciales (por unidades, paquetes y también peso). */
+/** Atajos para productos que se venden por volumen (litros, mililitros, galón). */
+export const PRESENTACIONES_SUGERIDAS_VOLUMEN = ['250 ml', '500 ml', '1/4 litro', '1/2 litro', '1 litro', '2 litros', 'Galón'];
 export const PRESENTACIONES_SOLO_UNIDADES = ['1 unidad', '2 unidades', '3 unidades', '6 unidades', '12 unidades', 'Docena', 'Paquete', 'Bolsa'];
 export const PRESENTACIONES_SUGERIDAS_UNIDADES = [...PRESENTACIONES_SOLO_UNIDADES, ...PRESENTACIONES_SUGERIDAS_PESO];
 

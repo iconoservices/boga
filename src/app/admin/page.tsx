@@ -28,7 +28,7 @@ import LoyverseSyncModal from '@/components/admin/LoyverseSyncModal';
 import MiPlan from '@/components/admin/MiPlan';
 import CobroOnline from '@/components/admin/CobroOnline';
 import { COLS_OFERTA, precioOfertaVigente, porcentajeOferta } from '@/lib/ofertas';
-import { COL_PRESENTACIONES, presentacionesSugeridas, textosPresentacion, leerPresentaciones, precioDesde, tipoPresentacionDe, PRESENTACIONES_SOLO_UNIDADES, PRESENTACIONES_SUGERIDAS_PESO } from '@/lib/presentaciones';
+import { COL_PRESENTACIONES, presentacionesSugeridas, textosPresentacion, leerPresentaciones, precioDesde, tipoPresentacionDe, PRESENTACIONES_SOLO_UNIDADES, PRESENTACIONES_SUGERIDAS_PESO, PRESENTACIONES_SUGERIDAS_VOLUMEN } from '@/lib/presentaciones';
 
 interface Product {
   id: string;
@@ -199,7 +199,7 @@ function AdminDashboard({ user }: { user: User }) {
   // "Crear y hacer otro igual": tras guardar, el formulario sigue abierto con lo mismo (categoría, precio, presentaciones…) y solo falta el nombre y la foto.
   const crearOtroRef = useRef(false);
   // Cómo vende el producto (para elegir primero y ver solo los atajos que corresponden): por unidades o por peso.
-  const [modoPres, setModoPres] = useState<'unidades' | 'peso' | null>(null);
+  const [modoPres, setModoPres] = useState<'unidades' | 'peso' | 'volumen' | 'otra' | null>(null);
   const [avisoCreado, setAvisoCreado] = useState('');
   const storeLogoInputRef = useRef<HTMLInputElement>(null);
   const storeHeroInputRef = useRef<HTMLInputElement>(null);
@@ -3144,7 +3144,10 @@ function AdminDashboard({ user }: { user: User }) {
                   const usaModo = tipoPres === 'unidades' || tipoPres === 'peso';
                   const modo = modoPres ?? (tipoPres === 'unidades' ? 'unidades' : 'peso');
                   const sugeridas = usaModo
-                    ? (modo === 'unidades' ? PRESENTACIONES_SOLO_UNIDADES : PRESENTACIONES_SUGERIDAS_PESO)
+                    ? (modo === 'unidades' ? PRESENTACIONES_SOLO_UNIDADES
+                      : modo === 'peso' ? PRESENTACIONES_SUGERIDAS_PESO
+                      : modo === 'volumen' ? PRESENTACIONES_SUGERIDAS_VOLUMEN
+                      : [])
                     : presentacionesSugeridas(newProduct.category, storeObj?.template);
                   return (
                     <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4">
@@ -3194,9 +3197,9 @@ function AdminDashboard({ user }: { user: User }) {
 
                       {usaModo && (
                         <div className="mt-3">
-                          <p className="text-[11px] font-bold text-gray-500 mb-1.5">¿Cómo lo vendes?</p>
-                          <div className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5">
-                            {([['unidades', 'Por unidades', 'inventory_2'], ['peso', 'Por peso', 'scale']] as const).map(([id, label, icono]) => (
+                          <p className="text-[11px] font-bold text-gray-500 mb-1.5">¿En qué unidad de medida lo vendes?</p>
+                          <div className="inline-flex flex-wrap rounded-lg border border-gray-200 bg-white p-0.5">
+                            {([['unidades', 'Unidades', 'inventory_2'], ['peso', 'Peso (g, kg)', 'scale'], ['volumen', 'Volumen (ml, litros)', 'water_drop'], ['otra', 'Otra', 'straighten']] as const).map(([id, label, icono]) => (
                               <button
                                 key={id}
                                 type="button"
@@ -3209,6 +3212,12 @@ function AdminDashboard({ user }: { user: User }) {
                             ))}
                           </div>
                         </div>
+                      )}
+
+                      {usaModo && modo === 'otra' && (
+                        <p className="text-[11px] text-gray-500 font-medium mt-2">
+                          Escribe tu propia medida con <strong>+ Otra</strong> (por ejemplo: caja, balde, par, metro) y ponle su precio.
+                        </p>
                       )}
 
                       <div className="flex flex-wrap gap-2 mt-3">
