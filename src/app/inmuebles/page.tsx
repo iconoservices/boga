@@ -63,7 +63,7 @@ export default function Inmuebles() {
     <>
       <AppHeader cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
 
-      <main className="max-w-[1200px] mx-auto px-container-margin lg:px-6 w-full pt-5 flex flex-col gap-6 pb-14">
+      <main className="max-w-[1440px] mx-auto px-container-margin lg:px-6 w-full pt-5 flex flex-col gap-6 pb-14">
 
         {/* Encabezado + Pestañas en una fila */}
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3 lg:gap-4 border-b border-surface-container-high pb-0">

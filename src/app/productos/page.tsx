@@ -30,7 +30,7 @@ export default async function MostradorPage() {
     <div className="min-h-screen bg-background text-on-background font-body-md overflow-x-hidden">
       <AppHeader />
 
-      <main className="max-w-[1200px] mx-auto px-container-margin pt-5 md:pt-8 pb-16 md:pb-24">
+      <main className="max-w-[1440px] mx-auto px-container-margin pt-5 md:pt-8 pb-16 md:pb-24">
         <section className="text-center max-w-[620px] mx-auto mb-8 md:mb-10">
           <span className="font-label-md text-label-md text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full">Soluciones</span>
           <h1 className="font-headline-lg text-on-background text-3xl md:text-5xl font-extrabold tracking-tight leading-[1.05] mt-4">

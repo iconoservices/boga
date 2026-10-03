@@ -106,7 +106,7 @@ export default function Viajes() {
     <>
       <AppHeader cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
 
-      <main className="max-w-[1200px] mx-auto px-container-margin lg:px-6 w-full pt-5 flex flex-col gap-6 pb-14">
+      <main className="max-w-[1440px] mx-auto px-container-margin lg:px-6 w-full pt-5 flex flex-col gap-6 pb-14">
 
         <ViajesCabecera
           activo={filtro}
