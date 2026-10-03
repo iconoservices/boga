@@ -173,6 +173,8 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
     }));
   }, [store.categories, allProducts]);
 
+  const hayOfertas = allProducts.some((prod) => prod.hasOffer);
+
   // Filtrado
   const filteredProducts = useMemo(() => {
     return allProducts.filter((prod) => {
@@ -436,6 +438,36 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
                 </span>
               </button>
 
+              {/* Ofertas: va al principio (antes quedaba al final de la fila, fuera de pantalla en el celular) y solo si hay prendas en oferta */}
+              {hayOfertas && (
+              <button
+                onClick={() => {
+                  setOnlyOffers(true);
+                  setActiveCategory('all');
+                }}
+                className="flex flex-col items-center gap-1.5 shrink-0 group cursor-pointer focus:outline-none"
+              >
+                <div
+                  className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0.5 transition-transform group-hover:scale-105 ${
+                    onlyOffers
+                      ? 'ring-2 ring-offset-2 ring-rose-600 bg-rose-600'
+                      : 'border border-rose-300 bg-rose-50'
+                  }`}
+                >
+                  <div
+                    className={`w-full h-full rounded-full flex items-center justify-center ${
+                      onlyOffers ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-600'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-xl sm:text-2xl">local_fire_department</span>
+                  </div>
+                </div>
+                <span className="text-[11px] font-bold tracking-wider text-rose-600 uppercase">
+                  Ofertas
+                </span>
+              </button>
+              )}
+
               {/* Categorías dinámicas de la tienda */}
               {categoriasTienda.map((cat) => {
                 const isActive = activeCategory === cat.id && !onlyOffers;
@@ -474,33 +506,6 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
                 );
               })}
 
-              {/* Botón Ofertas */}
-              <button
-                onClick={() => {
-                  setOnlyOffers(true);
-                  setActiveCategory('all');
-                }}
-                className="flex flex-col items-center gap-1.5 shrink-0 group cursor-pointer focus:outline-none"
-              >
-                <div
-                  className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full p-0.5 transition-transform group-hover:scale-105 ${
-                    onlyOffers
-                      ? 'ring-2 ring-offset-2 ring-rose-600 bg-rose-600'
-                      : 'border border-rose-300 bg-rose-50'
-                  }`}
-                >
-                  <div
-                    className={`w-full h-full rounded-full flex items-center justify-center ${
-                      onlyOffers ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-600'
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-xl sm:text-2xl">local_fire_department</span>
-                  </div>
-                </div>
-                <span className="text-[11px] font-bold tracking-wider text-rose-600 uppercase">
-                  Ofertas
-                </span>
-              </button>
             </div>
           </div>
         </section>
