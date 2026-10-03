@@ -365,6 +365,9 @@ export default function MercadoTemplate({ store, initialProductId }: MercadoTemp
                         <div>
                           <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: t.onSurfaceVariant }}>{nombreCategoria(p.category)}</span>
                           <h4 className="font-bold text-sm line-clamp-2 mt-0.5" style={{ fontFamily: t.fontHeadline }}>{p.name}</h4>
+                          {p.presentaciones?.some((x) => x.promo) && (
+                            <span className="mt-1 inline-block w-fit text-[9px] font-black px-1.5 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-orange-500 text-white">🔥 Promos por cantidad</span>
+                          )}
                           {p.presentaciones && p.presentaciones.length > 0 && (
                             <p className="text-[10px] mt-1 leading-tight" style={{ color: t.onSurfaceVariant }}>{p.presentaciones.map((x) => x.label).join(' · ')}</p>
                           )}

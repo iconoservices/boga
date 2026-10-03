@@ -453,7 +453,7 @@ function AdminDashboard({ user }: { user: User }) {
     ubicacion: '',
     precioOferta: '',
     ofertaHasta: '',
-    presentaciones: [] as { label: string; price: string }[],
+    presentaciones: [] as { label: string; price: string; promo?: boolean }[],
     esServicio: false,
     esCombo: false,
   });
@@ -1114,7 +1114,7 @@ function AdminDashboard({ user }: { user: User }) {
       // Presentaciones (100 g / 250 g / 1 kg…): filas con etiqueta y precio válidos. Si hay, `price` guarda la más barata
       // ("Desde S/ …") y no se usa oferta (cada medida ya tiene su precio).
       // Se guardan de menor a mayor cantidad (1 unidad, 2, 3, 12…), sin importar el orden en que se escribieron.
-      const presLimpias = ordenarPresentaciones(leerPresentaciones(newProduct.presentaciones.map((x) => ({ label: x.label, price: parseFloat(x.price) }))));
+      const presLimpias = ordenarPresentaciones(leerPresentaciones(newProduct.presentaciones.map((x) => ({ label: x.label, price: parseFloat(x.price), promo: x.promo === true }))));
       if (newProduct.presentaciones.some((x) => (x.label.trim() || x.price.trim()) && !(x.label.trim() && parseFloat(x.price) > 0))) {
         throw new Error('Cada presentación necesita un nombre (ej. 250 g) y un precio mayor a 0. Completa o quita las filas vacías.');
       }
@@ -1251,7 +1251,7 @@ function AdminDashboard({ user }: { user: User }) {
       ubicacion: (product.description || '').match(RE_MAPS)?.[0] ?? '',
       precioOferta: product.precio_oferta ? String(product.precio_oferta) : '',
       ofertaHasta: product.oferta_hasta ? product.oferta_hasta.slice(0, 10) : '',
-      presentaciones: leerPresentaciones(product.presentaciones).map((x) => ({ label: x.label, price: String(x.price) })),
+      presentaciones: leerPresentaciones(product.presentaciones).map((x) => ({ label: x.label, price: String(x.price), promo: x.promo === true })),
       esServicio: product.es_servicio === true,
       esCombo: product.es_combo === true,
     });
@@ -3188,6 +3188,17 @@ function AdminDashboard({ user }: { user: User }) {
                                   className="w-full pl-9 pr-2 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
                                 />
                               </div>
+                              <button
+                                type="button"
+                                aria-label={x.promo ? 'Quitar la marca de promo' : 'Marcar como promo'}
+                                title={x.promo ? 'Promo: toca para quitar la marca' : 'Marcar esta opción como promo (precio por cantidad)'}
+                                aria-pressed={x.promo === true}
+                                onClick={() => setNewProduct({...newProduct, presentaciones: newProduct.presentaciones.map((y, j) => j === i ? { ...y, promo: !y.promo } : y)})}
+                                className={`h-10 shrink-0 px-2.5 rounded-md border flex items-center justify-center gap-1 text-xs font-bold transition-colors ${x.promo ? 'bg-amber-50 border-amber-300 text-amber-700' : 'bg-white border-gray-200 text-gray-400 hover:text-amber-600 hover:border-amber-300'}`}
+                              >
+                                <span className="text-[15px] leading-none" style={{ filter: x.promo ? 'none' : 'grayscale(1)', opacity: x.promo ? 1 : 0.7 }}>🔥</span>
+                                <span className="hidden sm:inline">Promo</span>
+                              </button>
                               <button
                                 type="button"
                                 aria-label="Quitar opción"

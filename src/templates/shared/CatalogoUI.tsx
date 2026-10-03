@@ -157,6 +157,9 @@ export function ProductGrid({
             <p className={`${TXT.micro} mb-2 line-clamp-2 flex-1`} style={{ color: t.onSurfaceVariant }}>
               {product.presentaciones?.length ? product.presentaciones.map((x) => x.label).join(' · ') : product.desc}
             </p>
+            {product.presentaciones?.some((x) => x.promo) && (
+              <span className="mb-1.5 w-fit text-[10px] font-black px-1.5 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-orange-500 text-white">🔥 Promos por cantidad</span>
+            )}
             <div className="flex justify-between items-center mt-auto">
               <span className={`font-extrabold ${TXT.lead}`} style={{ color: t.primary }}>
                 {product.presentaciones?.length ? <span className={`block ${TXT.micro} font-semibold`} style={{ color: t.onSurfaceVariant }}>Desde</span> : null}
@@ -430,7 +433,10 @@ export function ProductModal({
                     className="rounded-xl px-3 py-2.5 text-left border-2 transition-colors active:scale-[0.98]"
                     style={{ borderColor: activa ? t.primary : `${t.outlineVariant}80`, background: activa ? `${t.primary}14` : t.surface, color: t.onSurface }}
                   >
-                    <span className={`block font-extrabold ${TXT.body}`}>{x.label}</span>
+                    <span className={`flex items-center justify-between gap-1 font-extrabold ${TXT.body}`}>
+                      {x.label}
+                      {x.promo && <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-orange-500 text-white shrink-0">🔥 PROMO</span>}
+                    </span>
                     <span className={`block font-bold ${TXT.body}`} style={{ color: t.primary }}>{soles(x.price)}</span>
                   </button>
                 );

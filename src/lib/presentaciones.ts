@@ -6,7 +6,8 @@
 // cliente elige una al pedir. El pedido manda solo la ETIQUETA elegida; el servidor busca el precio en la base
 // (nunca se confía en el precio del cliente).
 
-export type Presentacion = { label: string; price: number };
+/** `promo`: el dueño la marcó con 🔥 (precio por cantidad / paquete en promoción). */
+export type Presentacion = { label: string; price: number; promo?: boolean };
 
 /** Nombre de la columna en `products`. */
 export const COL_PRESENTACIONES = 'presentaciones';
@@ -210,7 +211,7 @@ export function leerPresentaciones(v: unknown): Presentacion[] {
     const price = Number((x as Presentacion)?.price);
     if (!label || !(price > 0) || vistas.has(label.toLowerCase())) continue;
     vistas.add(label.toLowerCase());
-    out.push({ label, price: Math.round(price * 100) / 100 });
+    out.push({ label, price: Math.round(price * 100) / 100, ...((x as Presentacion)?.promo === true ? { promo: true } : {}) });
     if (out.length >= 12) break;
   }
   // De menor a mayor precio (100 g, 250 g, 1 kg): así las ve el cliente sin importar en qué orden se cargaron.
