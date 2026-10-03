@@ -1488,6 +1488,9 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                         if (!store.marketplaceCategory || store.marketplaceCategory === 'General') missingFields.push({ field: 'categoría', label: 'Categoría en el marketplace' });
                         if (!store.template || store.template === 'default') missingFields.push({ field: 'template', label: 'Plantilla visual (usa default)' });
                         if (!details.location || details.location === '—') missingFields.push({ field: 'location', label: 'Ubicación / dirección' });
+                        // Sin WhatsApp los pedidos de la carta no le llegan al dueño: es lo que más urge revisar.
+                        const sinWhatsapp = !(store.whatsapp || '').replace(/\D/g, '');
+                        if (sinWhatsapp) missingFields.push({ field: 'whatsapp', label: 'WhatsApp de pedidos (sin él, los pedidos no le llegan)' });
                         const isIncomplete = missingFields.length > 0;
 
                         let tierBadgeClass = "bg-[#e0e3e5] text-[#444749]";
@@ -1507,6 +1510,12 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                                 <div>
                                   <div className="flex items-center gap-1.5">
                                     <p className="font-bold text-xs text-[#191b23]">{store.name}</p>
+                                    {sinWhatsapp && (
+                                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 text-[8px] font-bold uppercase tracking-wide border border-red-200" title="Esta tienda no tiene número de WhatsApp: los pedidos no le llegan al dueño">
+                                        <span className="material-symbols-outlined text-[10px]">chat_error</span>
+                                        Sin WhatsApp
+                                      </span>
+                                    )}
                                     {isIncomplete && (
                                       <button
                                         onClick={(e) => { e.stopPropagation(); setDiagnosticStore(store); setShowDiagnosticModal(true); }}
@@ -3324,6 +3333,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         { ok: !!(ds.marketplaceCategory && ds.marketplaceCategory !== 'General'), label: 'Categoría en marketplace', hint: 'Elige una categoría específica para aparecer en explorar' },
         { ok: !!(ds.template && ds.template !== 'default'), label: 'Plantilla visual',  hint: 'Selecciona una plantilla que no sea "default" para personalizar' },
         { ok: !!dDetails.location && dDetails.location !== '—', label: 'Ubicación / dirección', hint: 'Indica la ubicación física de tu tienda' },
+        { ok: !!(ds.whatsapp || '').replace(/\D/g, ''), label: 'WhatsApp de pedidos', hint: 'Sin este número, los pedidos de la carta no le llegan al dueño' },
       ];
       const missingCount = issues.filter(i => !i.ok).length;
       return (
