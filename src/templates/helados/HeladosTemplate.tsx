@@ -158,10 +158,11 @@ export default function HeladosTemplate({ store, initialProductId }: Props) {
               van debajo. Con texto, es el hero clásico sobre la foto. */}
           <section className={limpio ? 'relative' : 'relative h-[60vh] min-h-[380px] max-h-[560px] md:h-[560px] md:max-h-none overflow-hidden'}>
             {limpio ? (
-              <div className="relative w-full aspect-video md:aspect-auto md:h-[clamp(260px,32vw,460px)] overflow-hidden" style={{ background: t.surfaceContainer }}>
-                {/* En pantalla ancha se ve ENTERO (contain) y los costados se rellenan con la misma foto desenfocada. */}
+              <div className="relative w-full md:h-[clamp(260px,32vw,460px)] overflow-hidden" style={{ background: t.surfaceContainer }}>
+                {/* La portada se adapta a su propia proporción: en celular ocupa el alto que necesite (no se recorta);
+                    en pantalla ancha va entera (contain) y los costados se rellenan con la misma foto desenfocada. */}
                 <img aria-hidden alt="" src={store.heroImage} className="hidden md:block absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-70" />
-                <img src={store.heroImage} alt={store.heroAlt || store.name} className="relative w-full h-full object-cover md:object-contain" />
+                <img src={store.heroImage} alt={store.heroAlt || store.name} className="relative block w-full h-auto md:h-full md:object-contain" />
                 <StoreFloatingActions store={store} />
               </div>
             ) : (
@@ -209,25 +210,37 @@ export default function HeladosTemplate({ store, initialProductId }: Props) {
                   {store.tagline}
                 </p>
               )}
-              <div className="flex flex-col min-[420px]:flex-row gap-3">
+              {/* Accesos rápidos: la carta por categorías, en una fila que se desliza (más útil y más compacta que un botón gigante). */}
+              <div className="flex gap-2 overflow-x-auto hide-scrollbar -mx-5 px-5 md:mx-0 md:px-0 md:flex-wrap pb-0.5" style={{ scrollbarWidth: 'none' }}>
                 <button
                   onClick={() => irAlCatalogo()}
-                  className="px-6 py-3.5 rounded-full font-bold text-sm uppercase transition-all hover:brightness-110 active:scale-95 flex items-center justify-center gap-2 w-full min-[420px]:flex-1 sm:flex-none sm:px-8 md:flex-none shadow-lg"
-                  style={{ background: t.primary, color: t.onPrimary, boxShadow: `0 8px 20px ${t.primary}50` }}
+                  className="shrink-0 flex items-center gap-1.5 py-2 pl-3 pr-4 rounded-full text-xs font-bold shadow-sm active:scale-95 transition-transform"
+                  style={{ background: t.primary, color: t.onPrimary }}
                 >
-                  <span className={`material-symbols-outlined ${ICON.sm}`} style={{ fontVariationSettings: "'FILL' 1" }}>grid_view</span>
-                  Ver sabores
+                  <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>icecream</span>
+                  Toda la carta
                 </button>
+                {c.categoriasEfectivas.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => irAlCatalogo(cat.id)}
+                    className="shrink-0 flex items-center gap-1.5 py-2 pl-3 pr-4 rounded-full text-xs font-bold border active:scale-95 transition-transform"
+                    style={{ background: t.surface, color: t.onSurface, borderColor: `${t.outlineVariant}` }}
+                  >
+                    {cat.icon && <span className="material-symbols-outlined text-[16px]" style={{ color: t.primary }}>{cat.icon}</span>}
+                    <span className="whitespace-nowrap">{cat.label}</span>
+                  </button>
+                ))}
               </div>
             </div>
           </section>
 
           {/* CÓMO PEDIR: un uniforme se cotiza, así que se explica el camino en 3 pasos */}
           <div
-            className="px-5 md:px-8 py-5 border-y"
+            className="px-5 md:px-8 py-3 border-y"
             style={{ background: t.surfaceContainer, borderColor: `${t.outlineVariant}40` }}
           >
-            <p className="text-[10px] font-black uppercase tracking-widest mb-3 text-center" style={{ color: t.onSurfaceVariant }}>
+            <p className="text-[10px] font-black uppercase tracking-widest mb-2 text-center" style={{ color: t.onSurfaceVariant }}>
               Así de fácil es pedir
             </p>
             <div className="grid grid-cols-3 gap-2 md:gap-6">
@@ -236,9 +249,9 @@ export default function HeladosTemplate({ store, initialProductId }: Props) {
                 { n: '2', icon: 'cookie', label: 'Tamaño y toppings' },
                 { n: '3', icon: 'delivery_dining', label: 'Pide por WhatsApp' },
               ].map((paso) => (
-                <div key={paso.n} className="flex flex-col items-center gap-1.5 text-center">
+                <div key={paso.n} className="flex flex-col items-center gap-1 text-center">
                   <span
-                    className="relative w-11 h-11 rounded-full flex items-center justify-center"
+                    className="relative w-9 h-9 rounded-full flex items-center justify-center"
                     style={{ background: `${t.primary}1f`, color: t.primary }}
                   >
                     <span className={`material-symbols-outlined ${ICON.md}`} style={{ fontVariationSettings: "'FILL' 1" }}>{paso.icon}</span>
@@ -249,14 +262,14 @@ export default function HeladosTemplate({ store, initialProductId }: Props) {
                       {paso.n}
                     </span>
                   </span>
-                  <span className="text-[11px] font-bold leading-tight" style={{ color: t.onSurface }}>{paso.label}</span>
+                  <span className="text-[10px] font-bold leading-tight" style={{ color: t.onSurface }}>{paso.label}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* SECCIONES POR CATEGORÍA */}
-          <div className="py-8 space-y-10">
+          <div className="py-5 space-y-7">
             {c.cargando ? (
               <div className="flex justify-center py-16">
                 <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: `${t.primary}40`, borderTopColor: t.primary }} />
@@ -289,7 +302,7 @@ export default function HeladosTemplate({ store, initialProductId }: Props) {
                           </span>
                         )}
                         <h3
-                          className={`font-black uppercase italic tracking-tight ${TXT.title}`}
+                          className="font-extrabold tracking-tight text-lg leading-tight truncate"
                           style={{ color: t.onBackground }}
                         >
                           {sec.label}
