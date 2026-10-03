@@ -527,13 +527,13 @@ function AdminDashboard({ user }: { user: User }) {
     return () => clearTimeout(t);
   }, [isStoreEditorOpen, storeEditorSection]);
 
-  const fetchProducts = async (slugs: string[] = myStoreSlugs) => {
+  const fetchProducts = async (slugs: string[] = myStoreSlugs, enSilencio = false) => {
     if (slugs.length === 0) {
       setProducts([]);
       if (dbStores.length > 0) setIsLoading(false);   // ya cargaron las tiendas y no hay ninguna propia
       return;
     }
-    setIsLoading(true);
+    if (!enSilencio) setIsLoading(true);
     const base = 'id,name,store,price,category,subcategory,stock,status,image,description,created_at';
     let { data, error } = await supabase
       .from('products')
@@ -1175,7 +1175,7 @@ function AdminDashboard({ user }: { user: User }) {
           }
         }
       } else {
-        const { error: dbError } = await supabase.from('products').insert([
+        const { data: creado, error: dbError } = await supabase.from('products').insert([
           {
             name: newProduct.name,
             store: newProduct.store,
@@ -1192,16 +1192,19 @@ function AdminDashboard({ user }: { user: User }) {
             stock: finalStock,
             status: finalStatus,
           }
-        ]);
+        ]).select().single();
 
         if (dbError) throw dbError;
+        // Aparece en la lista de inmediato, sin esperar a que se vuelva a pedir todo.
+        if (creado) setProducts((prev) => [creado as Product, ...prev.filter((x) => x.id !== (creado as Product).id)]);
       }
 
-      // Éxito: Limpiar formulario y recargar
-      refrescarTienda(newProduct.store);
-      await fetchProducts();
+      // Éxito: se cierra el formulario ya (antes esperaba a volver a pedir TODA la lista) y se refresca en segundo plano.
+      const tiendaGuardada = newProduct.store;
       setIsModalOpen(false);
       resetForm();
+      refrescarTienda(tiendaGuardada);
+      fetchProducts(undefined, true);
       
     } catch (error: any) {
       console.error('Error saving product:', error);
