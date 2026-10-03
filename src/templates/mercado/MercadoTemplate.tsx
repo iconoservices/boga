@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
-import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
+import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import { useCatalogo } from '@/templates/shared/useCatalogo';
 import { AddedToast } from '@/templates/shared/AddFeedback';
-import { ProductModal, CartPanel, ContactPanel, BottomNav } from '@/templates/shared/CatalogoUI';
+import { ProductModal, CartPanel, ContactPanel, BottomNav, CombosCarrusel } from '@/templates/shared/CatalogoUI';
 import type { Producto } from '@/templates/shared/tokens';
 
 interface MercadoTemplateProps {
@@ -45,16 +45,20 @@ export default function MercadoTemplate({ store, initialProductId }: MercadoTemp
     const base = [
       { titulo1: 'BIENVENIDO A', titulo2: store.name.toUpperCase(), sub: store.tagline || 'Todo lo que necesitas, en un solo lugar', img: store.heroImage },
     ];
-    c.products.slice(0, 2).forEach((p) => {
+    // Primero las promos (combos y ofertas): es lo que más mueve a comprar; si no hay, los primeros productos.
+    const promos = c.combosYOfertas ?? [];
+    const destacados = [...promos, ...c.products.filter((p) => !promos.includes(p))].slice(0, 3);
+    destacados.forEach((p) => {
+      const enOferta = Boolean(p.priceAnterior) && p.priceAnterior! > p.price;
       base.push({
-        titulo1: 'DESTACADO',
-        titulo2: p.name.toUpperCase().slice(0, 22),
-        sub: `Desde S/ ${p.price.toFixed(2)}`,
+        titulo1: p.esCombo ? 'COMBO' : enOferta ? 'OFERTA' : 'DESTACADO',
+        titulo2: p.name.toUpperCase().slice(0, 28),
+        sub: enOferta ? `Antes S/ ${p.priceAnterior!.toFixed(2)} · Ahora S/ ${p.price.toFixed(2)}` : `Desde S/ ${p.price.toFixed(2)}`,
         img: p.image,
       });
     });
     return base;
-  }, [c.products, store.name, store.tagline, store.heroImage]);
+  }, [c.products, c.combosYOfertas, store.name, store.tagline, store.heroImage]);
 
   const sliderRef = useRef<HTMLDivElement>(null);
   const [bannerIdx, setBannerIdx] = useState(0);
@@ -138,6 +142,17 @@ export default function MercadoTemplate({ store, initialProductId }: MercadoTemp
             </button>
 
             <div className="flex items-center gap-2 shrink-0">
+              {tieneWhatsApp(store) && (
+                <button
+                  onClick={() => enviarPedidoPorWhatsApp(store, `Hola ${store.name}, quiero hacer una consulta. ¿Me pueden ayudar?`)}
+                  aria-label="Consultar por WhatsApp"
+                  className="h-9 px-3 rounded-full flex items-center gap-1.5 text-white text-xs font-bold shadow-sm active:scale-95 transition-transform"
+                  style={{ background: '#25D366' }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.14-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.07 2.88 1.21 3.08.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.08 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35M12.05 21.78h-.01a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.89-9.88 2.64 0 5.12 1.03 6.99 2.9a9.82 9.82 0 0 1 2.89 6.99c0 5.45-4.44 9.88-9.88 9.88M20.52 3.45A11.8 11.8 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.89 0-3.18-1.24-6.17-3.48-8.41" /></svg>
+                  <span className="hidden sm:inline">WhatsApp</span>
+                </button>
+              )}
               {/* Escritorio: pestañas en el encabezado (en celular van abajo, tipo app). El carrito no es un botón aparte:
                   es el icono de "Pedidos", con su contador. */}
               <nav className="hidden md:flex items-center gap-1">
@@ -268,6 +283,19 @@ export default function MercadoTemplate({ store, initialProductId }: MercadoTemp
               </section>
             )}
 
+            {/* ── COMBOS Y OFERTAS ── solo en "Todas" y sin búsqueda: es una vitrina, no un filtro */}
+            {c.activeCategory === 'all' && !busqueda && c.combosYOfertas && c.combosYOfertas.length > 0 && (
+              <div className="-mx-4 lg:-mx-6">
+                <CombosCarrusel
+                  t={t}
+                  productos={c.combosYOfertas}
+                  titulo={c.comboLabel}
+                  onSelect={c.abrirProducto}
+                  onAdd={agregarRapido}
+                />
+              </div>
+            )}
+
             {/* ── PRODUCTOS ── */}
             <section className="flex flex-col gap-3">
               <div className="flex justify-between items-end">
@@ -308,6 +336,16 @@ export default function MercadoTemplate({ store, initialProductId }: MercadoTemp
                       style={{ background: t.surface, border: `1px solid ${t.outlineVariant}` }}
                     >
                       <div className="relative aspect-square overflow-hidden p-3" style={{ background: t.surfaceContainerLow }}>
+                        <div className="absolute top-2 left-2 z-10 flex flex-col gap-1 items-start">
+                          {p.esCombo && (
+                            <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-sm">🔥 COMBO</span>
+                          )}
+                          {p.priceAnterior && p.priceAnterior > p.price && (
+                            <span className="text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-sm" style={{ background: t.primary }}>
+                              -{Math.round((1 - p.price / p.priceAnterior) * 100)}%
+                            </span>
+                          )}
+                        </div>
                         <img
                           src={p.image}
                           alt={p.name}
