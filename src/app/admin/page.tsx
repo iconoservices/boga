@@ -369,7 +369,9 @@ function AdminDashboard({ user }: { user: User }) {
     if (dbStores.find((x: any) => x.slug === slug)?.subdominio_activo === true) {
       try {
         const u = new URL(siteOrigin);
-        return `${u.protocol}//${slug}.${u.host}`;
+        // En local (localhost) el subdominio <tienda>.localhost no lo atiende el proxy y cae en el inicio de BogaHub:
+        // allá se usa la ruta normal /<tienda>.
+        if (u.hostname !== 'localhost' && u.hostname !== '127.0.0.1') return `${u.protocol}//${slug}.${u.host}`;
       } catch { /* siteOrigin vacío en el primer render del servidor: cae al de abajo */ }
     }
     return `${siteOrigin}/${slug}`;
