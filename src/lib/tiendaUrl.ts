@@ -12,6 +12,9 @@
 const BASE = (process.env.NEXT_PUBLIC_TIENDAS_URL || '').replace(/\/$/, '');
 
 export function hrefTienda(slug: string, externalUrl?: string | null): string {
+  // En desarrollo (npm run dev) las tiendas con subdominio propio (<tienda>.bogahub.app) se abren en el mismo localhost:
+  // antes los enlaces te sacaban a producción y no se podía probar nada. En producción no cambia.
+  if (externalUrl && process.env.NODE_ENV === 'development' && /^https?:\/\/[a-z0-9-]+\.bogahub\.app/i.test(externalUrl)) return `/${slug}`;
   if (externalUrl) return externalUrl;
   return BASE ? `${BASE}/${slug}` : `/${slug}`;
 }
