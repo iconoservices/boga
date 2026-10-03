@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
 import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
+import CustomerAccountButton from '@/components/CustomerAccountButton';
 import { useCatalogo } from '@/templates/shared/useCatalogo';
 import { AddedToast } from '@/templates/shared/AddFeedback';
 import { ProductModal, CartPanel, ContactPanel, BottomNav, CombosCarrusel } from '@/templates/shared/CatalogoUI';
@@ -42,8 +43,9 @@ export default function MercadoTemplate({ store, initialProductId }: MercadoTemp
 
   // ── Banners: se arman con las mejores imagenes del catalogo ──
   const banners = React.useMemo(() => {
-    const base = [
-      { titulo1: 'BIENVENIDO A', titulo2: store.name.toUpperCase(), sub: store.tagline || 'Todo lo que necesitas, en un solo lugar', img: store.heroImage },
+    const base: { titulo1: string; titulo2: string; sub: string; img: string; limpio?: boolean }[] = [
+      // El banner del comercio trae su propio arte y textos: se muestra limpio, sin letras ni oscurecido encima.
+      { titulo1: '', titulo2: '', sub: '', img: store.heroImage, limpio: true },
     ];
     // Primero las promos (combos y ofertas): es lo que más mueve a comprar; si no hay, los primeros productos.
     const promos = c.combosYOfertas ?? [];
@@ -153,6 +155,7 @@ export default function MercadoTemplate({ store, initialProductId }: MercadoTemp
                   <span className="hidden sm:inline">WhatsApp</span>
                 </button>
               )}
+              <CustomerAccountButton variant="encabezado" background={`${t.primary}15`} color={t.primary} />
               {/* Escritorio: pestañas en el encabezado (en celular van abajo, tipo app). El carrito no es un botón aparte:
                   es el icono de "Pedidos", con su contador. */}
               <nav className="hidden md:flex items-center gap-1">
@@ -207,15 +210,20 @@ export default function MercadoTemplate({ store, initialProductId }: MercadoTemp
                 {banners.map((b, i) => (
                   <div
                     key={i}
-                    className="relative aspect-[21/9] lg:aspect-[21/6] overflow-hidden shrink-0 w-full"
-                    style={{ scrollSnapAlign: 'start', flex: '0 0 100%' }}
+                    className="relative aspect-video lg:aspect-auto lg:h-[clamp(260px,30vw,420px)] overflow-hidden shrink-0 w-full"
+                    style={{ scrollSnapAlign: 'start', flex: '0 0 100%', background: t.surfaceContainer }}
                   >
-                    <img alt="" src={b.img} className="absolute inset-0 w-full h-full object-cover" />
-                    <div className="absolute inset-0 flex flex-col justify-center p-6 lg:px-12" style={{ background: 'linear-gradient(to right, rgba(0,0,0,.78), rgba(0,0,0,.35), transparent)' }}>
-                      <span className="text-white/70 text-[10px] lg:text-xs font-bold tracking-widest uppercase">{b.titulo1}</span>
-                      <h2 className="text-white font-black text-xl lg:text-4xl leading-tight mt-1" style={{ fontFamily: t.fontHeadline }}>{b.titulo2}</h2>
-                      <p className="text-white/80 text-xs lg:text-base mt-1.5 max-w-md">{b.sub}</p>
-                    </div>
+                    {/* La imagen se ve ENTERA (contain); lo que sobra a los lados se rellena con la misma imagen desenfocada. */}
+                    <img aria-hidden alt="" src={b.img} className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-70" />
+                    <img alt={b.limpio ? store.name : b.titulo2} src={b.img} className="relative w-full h-full object-contain" />
+                    {!b.limpio && (
+                      /* Promos y productos destacados: el texto va ABAJO, compacto, para no tapar la foto. */
+                      <div className="absolute inset-x-0 bottom-0 flex flex-col gap-0.5 px-4 pb-3 pt-14 lg:px-10 lg:pb-5" style={{ background: 'linear-gradient(to top, rgba(0,0,0,.82), rgba(0,0,0,.35) 60%, transparent)' }}>
+                        <span className="text-white/75 text-[10px] font-bold tracking-widest uppercase">{b.titulo1}</span>
+                        <h2 className="text-white font-black text-base lg:text-2xl leading-tight line-clamp-1" style={{ fontFamily: t.fontHeadline }}>{b.titulo2}</h2>
+                        <p className="text-white/85 text-[11px] lg:text-sm">{b.sub}</p>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
