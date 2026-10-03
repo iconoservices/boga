@@ -2,7 +2,7 @@
 
 import { useFavoritos } from '@/lib/useFavoritos';
 import { useCustomerSession } from '@/context/CustomerSessionContext';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { pedirDatosCliente } from '@/components/pedirDatosCliente';
 import { StoreConfig } from '@/lib/stores.config';
 import { getDemoProducts } from '@/lib/templates.config';
@@ -44,6 +44,9 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
   const [searchQuery, setSearchQuery] = useState('');
   const [onlyOffers, setOnlyOffers] = useState(false);
   const [onlyFavs, setOnlyFavs] = useState(false);
+  // Aviso al agregar a la bolsa (antes la bolsa se abría sola y cortaba la compra).
+  const [avisoBolsa, setAvisoBolsa] = useState<{ titulo: string; talla?: string; image: string } | null>(null);
+  const avisoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Favoritos ligados a la cuenta: sin sesión se abre el modal de entrar / crear cuenta
   const { esFavorito, alternar: alternarFav } = useFavoritos();
   const { setModalAbierto: abrirModalCuenta } = useCustomerSession();
@@ -218,7 +221,9 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
       }
       return [...prev, { product, quantity: qty, size, unitPrice: finalPrice }];
     });
-    setIsCartOpen(true);
+    setAvisoBolsa({ titulo: product.title, talla: size, image: product.image });
+    if (avisoTimer.current) clearTimeout(avisoTimer.current);
+    avisoTimer.current = setTimeout(() => setAvisoBolsa(null), 3500);
   };
 
   const removeFromCart = (productId: string, size?: string) => {
@@ -240,6 +245,11 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
 
   const cartTotal = cart.reduce((acc, item) => acc + (item.unitPrice ?? item.product.price) * item.quantity, 0);
   const cartItemsCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const cartAhorro = cart.reduce((acc, item) => {
+    const normal = item.product.originalPrice || item.product.price;
+    const pagado = item.unitPrice ?? item.product.price;
+    return acc + Math.max(0, normal - pagado) * item.quantity;
+  }, 0);
 
   // WhatsApp checkout
   const sendCartToWhatsApp = async () => {
@@ -1019,6 +1029,29 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
         ))}
       </nav>
 
+      {/* Aviso al agregar: se queda unos segundos y deja seguir comprando o ir a la bolsa. */}
+      {avisoBolsa && !isCartOpen && (
+        <div className="fixed left-3 right-3 bottom-20 md:left-auto md:right-6 md:bottom-6 md:w-96 z-[45] animate-fade-in">
+          <div className="flex items-center gap-3 rounded-2xl bg-gray-900 text-white p-2.5 pr-3 shadow-2xl">
+            <img src={avisoBolsa.image} alt="" className="w-11 h-14 rounded-lg object-cover object-top shrink-0 bg-gray-700" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-black uppercase tracking-wider text-emerald-300 flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                Agregado a tu bolsa
+              </p>
+              <p className="text-xs font-semibold truncate">{avisoBolsa.titulo}{avisoBolsa.talla ? ` · ${avisoBolsa.talla}` : ''}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => { setAvisoBolsa(null); setIsCartOpen(true); }}
+              className="shrink-0 px-3 py-2 rounded-full bg-white text-gray-900 text-[11px] font-black uppercase tracking-wide active:scale-95 transition-transform cursor-pointer"
+            >
+              Ver bolsa
+            </button>
+          </div>
+        </div>
+      )}
+
       {isCartOpen && (
         <div className="fixed inset-0 z-50 overflow-hidden">
           <div
@@ -1026,9 +1059,10 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
             className="absolute inset-0 bg-black/60 backdrop-blur-2xs transition-opacity"
           />
 
-          <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
-            <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col">
-              <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+          <div className="absolute inset-x-0 bottom-0 md:inset-y-0 md:left-auto md:right-0 flex md:max-w-full md:pl-10">
+            <div className="w-full md:w-screen md:max-w-md bg-white shadow-2xl flex flex-col max-h-[88vh] md:max-h-none rounded-t-3xl md:rounded-none overflow-hidden">
+              <div className="md:hidden pt-2.5 pb-1 flex justify-center"><span className="w-10 h-1 rounded-full bg-gray-300" /></div>
+              <div className="px-5 py-4 md:p-5 border-b border-gray-100 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-xl text-gray-900">shopping_bag</span>
                   <h3
@@ -1059,6 +1093,23 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
                     <p className="text-xs text-gray-500 max-w-xs mx-auto">
                       Explora el catálogo y elige tus prendas favoritas para agregarlas a la bolsa.
                     </p>
+                    <div className="flex flex-col items-center gap-2 pt-3">
+                      <button
+                        onClick={() => { setIsCartOpen(false); setOnlyOffers(false); setOnlyFavs(false); document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+                        className="px-6 py-2.5 rounded-full text-white text-xs font-bold uppercase tracking-wider active:scale-95 transition-transform cursor-pointer"
+                        style={{ backgroundColor: theme.primary || '#18181b' }}
+                      >
+                        Ver prendas
+                      </button>
+                      {hayOfertas && (
+                        <button
+                          onClick={() => { setIsCartOpen(false); setOnlyOffers(true); setActiveCategory('all'); document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+                          className="px-6 py-2.5 rounded-full border border-rose-300 text-rose-600 text-xs font-bold uppercase tracking-wider active:scale-95 transition-transform cursor-pointer"
+                        >
+                          🔥 Ver ofertas
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   cart.map((item, idx) => {
@@ -1134,6 +1185,12 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
                       <span>Coordinación de entrega</span>
                       <span className="font-medium text-emerald-600">Por WhatsApp</span>
                     </div>
+                    {cartAhorro > 0.009 && (
+                      <div className="flex justify-between text-emerald-700 font-bold">
+                        <span>🔥 Ahorras con tus ofertas</span>
+                        <span>- S/ {cartAhorro.toFixed(2)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-sm font-extrabold text-gray-900 pt-2 border-t border-gray-200">
                       <span>Total</span>
                       <span>S/ {cartTotal.toFixed(2)}</span>
@@ -1146,6 +1203,13 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
                   >
                     <span className="material-symbols-outlined text-lg">chat</span>
                     <span>Enviar Pedido por WhatsApp</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsCartOpen(false)}
+                    className="w-full text-center text-xs font-bold text-gray-500 hover:text-gray-800 py-1 cursor-pointer"
+                  >
+                    Seguir comprando
                   </button>
 
                   <p className="text-[10px] text-gray-400 text-center">
