@@ -42,13 +42,13 @@ const estilo = (estado: string) => {
   return { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200', dot: 'bg-orange-500' };
 };
 
-// Botones grandes del cambio de estado: el activo va relleno y con su color, los demás con ícono y borde suave.
-const BOTON_ESTADO: Record<(typeof ESTADOS)[number], { icono: string; solido: string; borde: string; texto: string }> = {
-  Pendiente: { icono: 'schedule', solido: 'bg-orange-500', borde: 'border-orange-200', texto: 'text-orange-600' },
-  Preparando: { icono: 'skillet', solido: 'bg-amber-500', borde: 'border-amber-200', texto: 'text-amber-600' },
-  Enviado: { icono: 'local_shipping', solido: 'bg-green-600', borde: 'border-green-200', texto: 'text-green-600' },
-  Entregado: { icono: 'check_circle', solido: 'bg-blue-600', borde: 'border-blue-200', texto: 'text-blue-600' },
-  Cancelado: { icono: 'cancel', solido: 'bg-red-600', borde: 'border-red-200', texto: 'text-red-500' },
+// Botones del cambio de estado: todos neutros con su ícono; solo el activo se rellena con el color de la tienda.
+const ICONO_ESTADO: Record<(typeof ESTADOS)[number], string> = {
+  Pendiente: 'schedule',
+  Preparando: 'skillet',
+  Enviado: 'local_shipping',
+  Entregado: 'check_circle',
+  Cancelado: 'cancel',
 };
 
 const itemsDe = (o: Pedido) => {
@@ -206,11 +206,10 @@ export default function PedidosTab({
                     ) : (
                       <div>
                         <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-2">¿En qué va este pedido?</p>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                           {ESTADOS.map((e) => {
                             const activo = o.status === e || (e === 'Preparando' && o.status === 'Listo');
-                            const v = BOTON_ESTADO[e];
-                            return (
+                                                        return (
                               <button
                                 key={e}
                                 type="button"
@@ -220,10 +219,10 @@ export default function PedidosTab({
                                   cambiarEstado(o, e);
                                 }}
                                 className={`flex flex-col items-center justify-center gap-1 min-h-[64px] rounded-xl border-2 text-xs font-extrabold transition active:scale-95 disabled:cursor-default ${
-                                  activo ? `${v.solido} border-transparent text-white shadow-md` : `bg-white ${v.borde} ${v.texto} hover:bg-gray-50 disabled:opacity-50`
+                                  activo ? 'bg-[var(--tienda-color)] border-transparent text-white shadow-md' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-50'
                                 } ${e === 'Cancelado' ? 'col-span-2 sm:col-span-1 min-h-[44px] sm:min-h-[64px]' : ''}`}
                               >
-                                <span className="material-symbols-outlined text-[24px]">{v.icono}</span>
+                                <span className="material-symbols-outlined text-[24px]">{ICONO_ESTADO[e]}</span>
                                 {e}
                               </button>
                             );

@@ -38,12 +38,8 @@ type RepartidorBoga = { id: string; nombre: string; placa: string | null };
 type Repartidor = { id: string; nombre: string; tel: string | null; placa: string | null; token: string | null; visto: string | null };
 
 const ESTADOS = ['Pendiente', 'Preparando', 'Enviado', 'Entregado', 'Cancelado'];
-const BOTON_ESTADO: Record<string, { icono: string; solido: string; borde: string; texto: string }> = {
-  Pendiente: { icono: 'schedule', solido: 'bg-orange-500', borde: 'border-orange-200', texto: 'text-orange-600' },
-  Preparando: { icono: 'skillet', solido: 'bg-amber-500', borde: 'border-amber-200', texto: 'text-amber-600' },
-  Enviado: { icono: 'local_shipping', solido: 'bg-green-600', borde: 'border-green-200', texto: 'text-green-600' },
-  Entregado: { icono: 'check_circle', solido: 'bg-blue-600', borde: 'border-blue-200', texto: 'text-blue-600' },
-  Cancelado: { icono: 'cancel', solido: 'bg-red-600', borde: 'border-red-200', texto: 'text-red-500' },
+const ICONO_ESTADO: Record<string, string> = {
+  Pendiente: 'schedule', Preparando: 'skillet', Enviado: 'local_shipping', Entregado: 'check_circle', Cancelado: 'cancel',
 };
 const color = (e: string) =>
   e === 'Entregado' ? 'bg-blue-50 text-blue-700 border-blue-200'
@@ -348,16 +344,15 @@ export default function PedidoPage({ params }: { params: Promise<{ codigo: strin
                 )}
 
                 <p className="text-[10px] font-bold uppercase tracking-wide text-secondary mt-3 mb-1.5">Estado del pedido</p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                   {ESTADOS.map((e) => {
                     const activo = p.estado === e;
-                    const v = BOTON_ESTADO[e] ?? BOTON_ESTADO.Pendiente;
                     return (
                       <button key={e} type="button" disabled={ocupado || activo} onClick={() => cambiar(e)}
                         className={`flex flex-col items-center justify-center gap-1 min-h-[64px] rounded-xl border-2 text-xs font-extrabold transition active:scale-95 disabled:cursor-default ${
-                          activo ? `${v.solido} border-transparent text-white shadow-md` : `bg-white ${v.borde} ${v.texto} disabled:opacity-50`
-                        } ${e === 'Cancelado' ? 'col-span-2 min-h-[44px]' : ''}`}>
-                        <span className="material-symbols-outlined text-[24px]">{v.icono}</span>
+                          activo ? 'bg-primary border-transparent text-white shadow-md' : 'bg-white border-surface-container-highest text-secondary disabled:opacity-50'
+                        } ${e === 'Cancelado' ? 'col-span-2 sm:col-span-1 min-h-[44px] sm:min-h-[64px]' : ''}`}>
+                        <span className="material-symbols-outlined text-[24px]">{ICONO_ESTADO[e]}</span>
                         {e}
                       </button>
                     );
