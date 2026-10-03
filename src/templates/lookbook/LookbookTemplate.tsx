@@ -43,6 +43,7 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [onlyOffers, setOnlyOffers] = useState(false);
+  const [onlyFavs, setOnlyFavs] = useState(false);
   // Favoritos ligados a la cuenta: sin sesión se abre el modal de entrar / crear cuenta
   const { esFavorito, alternar: alternarFav } = useFavoritos();
   const { setModalAbierto: abrirModalCuenta } = useCustomerSession();
@@ -190,9 +191,10 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
         prod.title.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
         prod.category.toLowerCase().includes(searchQuery.toLowerCase().trim());
       const matchOffer = !onlyOffers || prod.hasOffer;
-      return matchCategory && matchSearch && matchOffer;
+      const matchFav = !onlyFavs || esFavorito(store.slug, prod.id);
+      return matchCategory && matchSearch && matchOffer && matchFav;
     });
-  }, [allProducts, activeCategory, searchQuery, onlyOffers, categoriasTienda]);
+  }, [allProducts, activeCategory, searchQuery, onlyOffers, onlyFavs, esFavorito, store.slug, categoriasTienda]);
 
   // Wishlist toggle
   const toggleWishlist = (product: ProductItem, e: React.MouseEvent) => {
@@ -287,7 +289,7 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
         color: theme.onBackground || '#18181b',
         fontFamily: theme.fontBody || "'Plus Jakarta Sans', sans-serif",
       }}
-      className="min-h-screen flex flex-col selection:bg-black selection:text-white"
+      className="min-h-screen flex flex-col selection:bg-black selection:text-white pb-16 md:pb-0"
     >
       {/* Google Fonts */}
       <link
@@ -522,7 +524,7 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
               className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900"
               style={{ fontFamily: theme.fontHeadline || "'Outfit', sans-serif" }}
             >
-              {onlyOffers ? 'Prendas con Descuento' : activeCategory === 'all' ? 'Nuestra Colección' : `Colección ${activeCategory}`}
+              {onlyFavs ? 'Mis favoritas' : onlyOffers ? 'Prendas con Descuento' : activeCategory === 'all' ? 'Nuestra Colección' : `Colección ${activeCategory}`}
             </h2>
             <p className="text-xs text-gray-500 mt-1">
               {filteredProducts.length} prenda{filteredProducts.length === 1 ? '' : 's'} disponible{filteredProducts.length === 1 ? '' : 's'}
@@ -550,6 +552,16 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
                 </button>
               )}
             </div>
+
+            {onlyFavs && (
+              <button
+                onClick={() => setOnlyFavs(false)}
+                className="px-3 py-2 rounded-full bg-gray-900 text-white text-xs font-bold hover:bg-gray-700 cursor-pointer flex items-center gap-1 shrink-0"
+              >
+                <span>Favoritas</span>
+                <span className="material-symbols-outlined text-xs">close</span>
+              </button>
+            )}
 
             {onlyOffers && (
               <button
@@ -973,6 +985,40 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
       )}
 
       {/* ── BOLSA DE COMPRAS (DRAWER) ───────────────────────────────── */}
+      {/* ── BARRA INFERIOR (solo celular): lo que más se usa, al alcance del pulgar ── */}
+      <nav
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 h-16 flex items-stretch bg-white/95 backdrop-blur border-t border-gray-200"
+        aria-label="Navegación de la tienda"
+      >
+        {([
+          { id: 'inicio', icon: 'home', label: 'Inicio', activo: !onlyFavs && !onlyOffers && activeCategory === 'all' && !isCartOpen,
+            on: () => { setOnlyFavs(false); setOnlyOffers(false); setActiveCategory('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); } },
+          { id: 'favoritos', icon: 'favorite', label: 'Favoritos', activo: onlyFavs,
+            on: () => { setOnlyFavs(true); setOnlyOffers(false); setActiveCategory('all'); document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); } },
+          { id: 'bolsa', icon: 'shopping_bag', label: 'Bolsa', activo: isCartOpen, badge: cartItemsCount, on: () => setIsCartOpen(true) },
+          { id: 'contacto', icon: 'chat', label: 'Contacto', activo: false,
+            on: () => { if (tieneWhatsApp(store)) enviarPedidoPorWhatsApp(store, `Hola ${store.name}, quisiera hacerles una consulta.`); else document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' }); } },
+        ] as const).map((b) => (
+          <button
+            key={b.id}
+            type="button"
+            onClick={b.on}
+            className="relative flex-1 flex flex-col items-center justify-center gap-0.5 active:scale-95 transition-transform cursor-pointer"
+            style={{ color: b.activo ? (theme.primary || '#18181b') : '#6b7280' }}
+          >
+            <span className="relative">
+              <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: b.activo ? "'FILL' 1" : "'FILL' 0" }}>{b.icon}</span>
+              {'badge' in b && b.badge > 0 && (
+                <span className="absolute -top-1 -right-2 min-w-[16px] h-4 px-1 rounded-full text-[9px] font-black text-white flex items-center justify-center" style={{ background: theme.primary || '#18181b' }}>
+                  {b.badge}
+                </span>
+              )}
+            </span>
+            <span className="text-[10px] font-bold">{b.label}</span>
+          </button>
+        ))}
+      </nav>
+
       {isCartOpen && (
         <div className="fixed inset-0 z-50 overflow-hidden">
           <div
