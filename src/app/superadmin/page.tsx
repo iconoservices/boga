@@ -1630,7 +1630,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                                   className="material-symbols-outlined text-[18px] text-[#545f73] hover:text-[#0058be] transition-colors p-1 hover:bg-[#e6e7f2] rounded"
                                   title="Cargar Productos"
                                 >
-                                  restaurant_menu
+                                  inventory_2
                                 </button>
                                 <button
                                   onClick={() => {
