@@ -70,12 +70,15 @@ export default function PedidosTab({
   nombreTienda,
   mostrarTienda,
   cambiarEstado,
+  eliminar,
   ocupado,
 }: {
   pedidos: Pedido[];
   nombreTienda: (slug: string) => string;
   mostrarTienda: boolean;
   cambiarEstado: (pedido: Pedido, estado: string) => void;
+  /** Borra el pedido para siempre. Solo se ofrece en pedidos ya cancelados (ej. pedidos de prueba). */
+  eliminar: (pedido: Pedido) => void;
   ocupado: string | null;
 }) {
   const [filtro, setFiltro] = useState<(typeof FILTROS)[number]['id']>('all');
@@ -202,7 +205,20 @@ export default function PedidosTab({
                 {abierta && (
                   <div className="border-t border-gray-100 p-4 flex flex-col gap-4 bg-gray-50/40">
                     {o.status === 'Cancelado' ? (
-                      <p className="text-xs font-semibold text-red-600">Pedido cancelado. Si llevaba stock, ya se devolvió al inventario.</p>
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="text-xs font-semibold text-red-600">Pedido cancelado. Si llevaba stock, ya se devolvió al inventario.</p>
+                        <button
+                          type="button"
+                          disabled={ocupado === o.id}
+                          onClick={() => {
+                            if (window.confirm('¿Eliminar este pedido para siempre? Sirve para limpiar pedidos de prueba. No se puede deshacer.')) eliminar(o);
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-red-200 bg-white text-red-600 text-xs font-extrabold hover:bg-red-50 active:scale-95 transition disabled:opacity-50"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">delete</span>
+                          Eliminar pedido
+                        </button>
+                      </div>
                     ) : (
                       <div>
                         <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-2">¿En qué va este pedido?</p>
