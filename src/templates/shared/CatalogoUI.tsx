@@ -231,7 +231,7 @@ export function CombosCarrusel({
       </div>
 
       <div
-        className="flex gap-3 overflow-x-auto hide-scrollbar px-5 md:px-6 pb-2 snap-x"
+        className="flex gap-3 overflow-x-auto hide-scrollbar px-5 md:px-6 pb-2 snap-x scroll-px-5 md:scroll-px-6"
         style={{ scrollbarWidth: 'none' }}
       >
         {productos.map((product) => {
