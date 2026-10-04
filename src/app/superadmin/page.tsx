@@ -41,6 +41,7 @@ const PORTAL_POR_PLANTILLA: Record<string, string> = {
   atelier: 'Moda', lookbook: 'Moda', uniformes: 'Moda',
   flores: 'Regalos y Detalles', detalles: 'Regalos y Detalles',
   veterinaria: 'Salud y Bienestar',
+  gas: 'Servicios',
   rack: 'Hogar', hogar: 'Hogar',
 };
 

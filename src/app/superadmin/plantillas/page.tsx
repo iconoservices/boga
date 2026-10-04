@@ -121,6 +121,11 @@ const TEMPLATE_PRESENTATION: Record<string, { category?: string; description: st
     description: 'Estilo portal de tierras: portada a sangre con título en serif, barra de búsqueda grande y grilla de fotos con el precio bien visible. Consulta por WhatsApp.',
     previewUrl: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&q=80',
   },
+  gas: {
+    category: 'Negocios',
+    description: 'Distribuidora de gas: portada con pedido rápido por WhatsApp, balones y accesorios SIN precios (el cliente consulta), zonas de reparto y consejos de seguridad.',
+    previewUrl: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80',
+  },
   veterinaria: {
     category: 'Salud',
     description: 'Veterinaria y pet shop: portada, ficha del local, tienda de productos y una Cartilla digital de mascota con semáforo de vacunas y botón de cita por WhatsApp.',

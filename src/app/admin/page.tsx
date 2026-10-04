@@ -472,6 +472,8 @@ function AdminDashboard({ user }: { user: User }) {
 
   // Tiendas de terrenos: "Subcategoría" pasa a ser el área, y aparece un campo para la ubicación (enlace de Maps).
   const esTerreno = ['terreno1', 'terreno2'].includes(String((stores as any)[newProduct.store]?.template ?? ''));
+  // Gas: los productos se publican sin precio (el cliente consulta por WhatsApp).
+  const precioOpcional = (stores as any)[newProduct.store]?.template === 'gas';
 
   const resetForm = () => {
     setModoPres(null);
@@ -1149,7 +1151,7 @@ function AdminDashboard({ user }: { user: User }) {
         throw new Error('Cada presentación necesita un nombre (ej. 250 g) y un precio mayor a 0. Completa o quita las filas vacías.');
       }
       const hayPres = presLimpias.length > 0;
-      const precioNormal = hayPres ? precioDesde(presLimpias) : parseFloat(newProduct.price);
+      const precioNormal = hayPres ? precioDesde(presLimpias) : (precioOpcional ? (parseFloat(newProduct.price) || 0) : parseFloat(newProduct.price));
       const precioOfertaNum = hayPres ? 0 : parseFloat(newProduct.precioOferta);
       const hayOferta = !hayPres && newProduct.precioOferta.trim() !== '' && precioOfertaNum > 0;
       if (hayOferta && !(precioOfertaNum < precioNormal)) throw new Error('El precio en oferta debe ser menor al precio normal.');
@@ -3174,11 +3176,28 @@ function AdminDashboard({ user }: { user: User }) {
                   />
                 </div>
 
+                {/* Servicio: se reserva o se consulta, no se "agrega al carrito" como un producto normal. Decide si la tienda aparece en el toggle "Servicios" de BogaHub. */}
+                <label className="flex items-center gap-3 rounded-xl border border-dashed border-gray-300 bg-gray-50/70 p-4 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={newProduct.esServicio}
+                    onChange={(e) => setNewProduct({ ...newProduct, esServicio: e.target.checked })}
+                    className="w-5 h-5 accent-[var(--tienda-color)] shrink-0"
+                  />
+                  <span>
+                    <span className="block text-sm font-bold text-gray-800 flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[18px] text-gray-500">handyman</span>
+                      Es un servicio, no un producto
+                    </span>
+                    <span className="block text-xs text-gray-500 mt-0.5">Ej. un corte, una consulta, una reserva. En tu tienda no tendrá carrito: el cliente te consulta por WhatsApp.</span>
+                  </span>
+                </label>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Precio (S/)</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Precio (S/){precioOpcional && <span className="font-medium text-gray-400"> · opcional, no se muestra</span>}</label>
                     <input
-                      required={newProduct.presentaciones.length === 0}
+                      required={newProduct.presentaciones.length === 0 && !precioOpcional}
                       disabled={newProduct.presentaciones.length > 0}
                       type="number"
                       step="0.10"
@@ -3468,23 +3487,6 @@ function AdminDashboard({ user }: { user: User }) {
                   )}
                 </div>
                 )}
-
-                {/* Servicio: se reserva o se consulta, no se "agrega al carrito" como un producto normal. Decide si la tienda aparece en el toggle "Servicios" de BogaHub. */}
-                <label className="flex items-center gap-3 rounded-xl border border-dashed border-gray-300 bg-gray-50/70 p-4 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={newProduct.esServicio}
-                    onChange={(e) => setNewProduct({ ...newProduct, esServicio: e.target.checked })}
-                    className="w-5 h-5 accent-[var(--tienda-color)] shrink-0"
-                  />
-                  <span>
-                    <span className="block text-sm font-bold text-gray-800 flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-[18px] text-gray-500">handyman</span>
-                      Es un servicio, no un producto
-                    </span>
-                    <span className="block text-xs text-gray-500 mt-0.5">Ej. un corte, una consulta, una reserva. Aparece marcado como servicio en tu tienda y en BogaHub.</span>
-                  </span>
-                </label>
 
                 {/* Combo / Pack: solo si la tienda tiene el módulo 'promociones' activo (o si es superadmin) */}
                 {(tiendaTiene(newProduct.store, 'promociones') || esSuperadmin) && (

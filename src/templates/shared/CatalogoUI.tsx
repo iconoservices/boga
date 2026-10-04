@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { guardarCliente, leerCliente, normalizarCelular } from '@/lib/cliente';
 import type { StoreTheme } from '@/lib/templates.config';
 import { ahorroPorCantidad, type Presentacion } from '@/lib/presentaciones';
-import { TXT, ICON, soles, type Producto, type Categoria } from './tokens';
+import { TXT, ICON, soles, soloConsulta, type Producto, type Categoria } from './tokens';
 import { AddButton, CartBadge, EVENTO_VER_PEDIDO } from './AddFeedback';
 
 /* ════════════════════════════════════════════
@@ -163,13 +163,13 @@ export function ProductGrid({
             <div className="flex justify-between items-center mt-auto">
               <span className={`font-extrabold ${TXT.lead}`} style={{ color: t.primary }}>
                 {product.presentaciones?.length ? <span className={`block ${TXT.micro} font-semibold`} style={{ color: t.onSurfaceVariant }}>Desde</span> : null}
-                {soles(product.price)}
-                {product.priceAnterior && (
+                {product.sinPrecio ? <span className={`${TXT.small} font-bold`}>Consultar precio</span> : soles(product.price)}
+                {!product.sinPrecio && product.priceAnterior && (
                   <span className={`block ${TXT.micro} font-medium line-through`} style={{ color: t.onSurfaceVariant }}>{soles(product.priceAnterior)}</span>
                 )}
               </span>
               {/* Un servicio no se "agrega": se consulta desde su ficha (el tap en la tarjeta ya la abre). */}
-              {!product.esServicio && (
+              {!soloConsulta(product) && (
                 // Con medidas, el "+" agrega la más chica (la del precio "Desde"); para otra medida se toca el producto.
                 <AddButton t={t} nombre={product.name} onAdd={() => onAdd(product)} />
               )}
@@ -277,15 +277,15 @@ export function CombosCarrusel({
                 <div className="flex justify-between items-center mt-auto pt-1 border-t" style={{ borderColor: `${t.outlineVariant}25` }}>
                   <div className="flex flex-col">
                     <span className={`font-extrabold ${TXT.lead}`} style={{ color: t.primary }}>
-                      {soles(product.price)}
+                      {product.sinPrecio ? 'Consultar precio' : soles(product.price)}
                     </span>
-                    {product.priceAnterior && product.priceAnterior > product.price && (
+                    {!product.sinPrecio && product.priceAnterior && product.priceAnterior > product.price && (
                       <span className={`${TXT.micro} font-medium line-through`} style={{ color: t.onSurfaceVariant }}>
                         {soles(product.priceAnterior)}
                       </span>
                     )}
                   </div>
-                  {!product.esServicio && (
+                  {!soloConsulta(product) && (
                     <AddButton t={t} nombre={product.name} onAdd={() => onAdd(product)} />
                   )}
                 </div>
@@ -492,12 +492,12 @@ export function ProductModal({
       >
         <div className="w-full max-w-2xl flex items-center justify-between gap-2 sm:gap-4 px-1">
           <span className="font-black text-lg sm:text-xl shrink-0" style={{ color: t.primary }}>
-            {soles((medida?.price ?? producto.price) * (producto.esServicio ? 1 : cantidad))}
-            {!medida && cantidad === 1 && producto.priceAnterior && (
+            {producto.sinPrecio ? 'Consultar precio' : soles((medida?.price ?? producto.price) * (producto.esServicio ? 1 : cantidad))}
+            {!producto.sinPrecio && !medida && cantidad === 1 && producto.priceAnterior && (
               <span className="ml-2 text-sm font-medium line-through" style={{ color: t.onSurfaceVariant }}>{soles(producto.priceAnterior)}</span>
             )}
           </span>
-          {!producto.esServicio && (
+          {!soloConsulta(producto) && (
             <div className="flex items-center gap-1 shrink-0 rounded-full border p-0.5" style={{ borderColor: `${t.outlineVariant}`, background: t.surface }}>
               <button
                 type="button"
@@ -521,7 +521,7 @@ export function ProductModal({
               </button>
             </div>
           )}
-          {producto.esServicio ? (
+          {soloConsulta(producto) ? (
             <button
               onClick={() => onConsultar?.(producto)}
               className={`px-6 py-2.5 rounded-full font-bold ${TXT.body} flex items-center gap-1.5 active:scale-95 bg-[#25D366] text-white`}
@@ -953,18 +953,18 @@ export function PromoLateral({
         <div className="min-w-0 flex-1 cursor-pointer" onClick={() => onSelect(p)}>
           <p className={`font-bold ${TXT.body} leading-tight line-clamp-2`} style={{ color: t.onSurface }}>{p.name}</p>
           <p className="mt-0.5 flex items-baseline gap-1.5">
-            <span className={`font-black ${TXT.body}`} style={{ color: t.primary }}>{soles(p.price)}</span>
+            <span className={`font-black ${TXT.body}`} style={{ color: t.primary }}>{p.sinPrecio ? 'Consultar precio' : soles(p.price)}</span>
             {pct && p.priceAnterior && <span className={`${TXT.micro} line-through`} style={{ color: t.onSurfaceVariant }}>{soles(p.priceAnterior)}</span>}
           </p>
         </div>
-        <button
+        {!soloConsulta(p) && <button
           onClick={() => onAdd(p)}
           aria-label={`Agregar ${p.name}`}
           className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 active:scale-90 transition-all shadow-md"
           style={{ background: t.primary, color: t.onPrimary }}
         >
           <span className={`material-symbols-outlined ${ICON.md}`}>add</span>
-        </button>
+        </button>}
       </div>
     </div>
   );

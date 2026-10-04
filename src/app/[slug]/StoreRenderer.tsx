@@ -30,6 +30,7 @@ const DetallesTemplate = dynamic(() => import('@/templates/detalles/DetallesTemp
 const FloresTemplate = dynamic(() => import('@/templates/flores/FloresTemplate'));
 const FichaPlanaTemplate = dynamic(() => import('@/templates/fichaplana/FichaPlanaTemplate'));
 const VeterinariaTemplate = dynamic(() => import('@/templates/veterinaria/VeterinariaTemplate'));
+const GasTemplate = dynamic(() => import('@/templates/gas/GasTemplate'));
 const TerrenosPortalTemplate = dynamic(() => import('@/templates/terrenos/TerrenosPortalTemplate'));
 const TerrenosCampoTemplate = dynamic(() => import('@/templates/terrenos/TerrenosCampoTemplate'));
 const RackTemplate = dynamic(() => import('@/templates/rack/RackTemplate'));
@@ -163,6 +164,8 @@ export default function StoreRenderer({ store: initialStore, initialProductId }:
       return <FichaPlanaTemplate store={store} initialProductId={initialProductId} />;
     case 'veterinaria':
       return <VeterinariaTemplate store={store} initialProductId={initialProductId} />;
+    case 'gas':
+      return <GasTemplate store={store} initialProductId={initialProductId} />;
     case 'terreno1':
       return <TerrenosPortalTemplate store={store} initialProductId={initialProductId} />;
     case 'terreno2':

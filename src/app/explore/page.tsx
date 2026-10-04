@@ -99,7 +99,7 @@ function ExploreContenido() {
         const formattedProducts = filteredData.map((p: any) => {
           return {
             title: p.name,
-            price: `S/ ${p.price.toFixed(2)}`,
+            price: p.price > 0 ? `S/ ${p.price.toFixed(2)}` : 'Consultar',
             original: p.price_anterior > 0 ? `S/ ${Number(p.price_anterior).toFixed(2)}` : undefined,
             slug: p.store,
             image: p.image || 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80',
@@ -160,7 +160,7 @@ function ExploreContenido() {
           const item = {
             id: p.id,
             name: p.name,
-            price: `S/ ${p.price.toFixed(2)}`,
+            price: p.price > 0 ? `S/ ${p.price.toFixed(2)}` : 'Consultar',
             priceNum: p.price,
             original: p.price_anterior > 0 ? `S/ ${Number(p.price_anterior).toFixed(2)}` : undefined,
             badge: p.es_combo === true ? 'Combo' : enOferta ? 'Oferta' : 'Nuevo',

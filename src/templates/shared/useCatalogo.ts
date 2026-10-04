@@ -25,6 +25,8 @@ type LineaCarrito = { clave: string; producto: Producto; pres?: Presentacion; qt
  */
 export function useCatalogo(store: StoreConfig, initialProductId?: string) {
   const demoPermitido = store.showDemoProducts === true;
+  // Distribuidoras de gas: ningún producto muestra precio, se consulta por WhatsApp. En las demás plantillas, solo el producto con precio 0.
+  const sinPrecioTodo = store.template === 'gas';
 
   const [products, setProducts] = useState<Producto[]>([]);
   // Falso cuando ya llego la respuesta del catalogo (para mostrar esqueletos en vez de "sin productos" mientras carga).
@@ -66,6 +68,7 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
             extra: p.subcategory ? { area: String(p.subcategory) } : undefined,
             presentaciones: Array.isArray(p.presentaciones) && p.presentaciones.length ? p.presentaciones : undefined,
             esServicio: p.es_servicio === true,
+            sinPrecio: sinPrecioTodo || !(Number(p.price) > 0),
             esCombo: p.es_combo === true,
           }))
         : [];
@@ -84,6 +87,7 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
             presentaciones: p.presentaciones,
             esCombo: p.esCombo,
             priceAnterior: p.priceAnterior,
+            sinPrecio: sinPrecioTodo || !(p.price > 0),
           }))
         : [];
 
@@ -92,7 +96,7 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
     };
 
     cargar();
-  }, [store.slug, store.template, store.heroImage, demoPermitido, categorias]);
+  }, [store.slug, store.template, store.heroImage, demoPermitido, categorias, sinPrecioTodo]);
 
   // ── Carrito derivado ──
   const cartItems = useMemo<LineaCarrito[]>(() => {
