@@ -12,20 +12,20 @@ import SuperadminSubheader from '@/components/SuperadminSubheader';
 
 // Plantillas con botón de pedido por WhatsApp implementado en su código.
 const TEMPLATES_WITH_WHATSAPP = new Set([
-  'polleria', 'estilosmirka', 'sweetkittynails', 'mercado', 'condimentos', 'menudirecto', 'iniciocatalogo', 'flores', 'floreria', 'detalles',
+  'polleria', 'estilosmirka', 'sweetkittynails', 'mercado', 'condimentos', 'menudirecto', 'iniciocatalogo', 'flores', 'detalles',
   'fichadigital', 'fichaplana', 'veterinaria', 'terreno1', 'terreno2',
 ]);
 
 // Plantillas que montan <StoreFloatingActions/> (compartir + instalar PWA).
 const TEMPLATES_WITH_SHARE_INSTALL = new Set([
   'polleria', 'estilosmirka', 'mercado', 'condimentos', 'sunset', 'natura', 'amazonia', 'sweetkittynails',
-  'menudirecto', 'iniciocatalogo', 'flores', 'floreria', 'detalles', 'fichadigital', 'fichaplana', 'veterinaria', 'terreno1', 'terreno2',
+  'menudirecto', 'iniciocatalogo', 'flores', 'detalles', 'fichadigital', 'fichaplana', 'veterinaria', 'terreno1', 'terreno2',
 ]);
 
 const META: Record<string, { emoji: string }> = {
   sunset: { emoji: '🥂' }, delva: { emoji: '🌿' }, natura: { emoji: '🪴' },
   amazonia: { emoji: '🏺' }, veterinaria: { emoji: '🐶' }, terreno1: { emoji: '🏡' }, terreno2: { emoji: '🌄' }, estilosmirka: { emoji: '👗' }, sweetkittynails: { emoji: '💅' },
-  menudirecto: { emoji: '🍔' }, iniciocatalogo: { emoji: '🔥' }, flores: { emoji: '🌸' }, detalles: { emoji: '🧼' }, floreria: { emoji: '💐' },
+  menudirecto: { emoji: '🍔' }, iniciocatalogo: { emoji: '🔥' }, flores: { emoji: '🌸' }, detalles: { emoji: '🧼' },
 };
 
 function getTemplateChecks(templateId: string): boolean[] {

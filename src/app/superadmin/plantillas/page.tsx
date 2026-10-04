@@ -92,14 +92,10 @@ const TEMPLATE_PRESENTATION: Record<string, { category?: string; description: st
   },
   flores: {
     category: 'Comercio',
-    description: 'Estilo delicado en tonos rosa con categorías para ramos, arreglos, plantas y detalles. Pensado para florerías y regalos.',
-    previewUrl: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=600&q=80',
-  },
-  floreria: {
-    category: 'Comercio',
     description: 'Florería con carrito y pedido por WhatsApp: ramos, arreglos, plantas y regalos, una vitrina de fechas especiales (San Valentín, Día de la Madre) y un botón de asesoría para quien no sabe qué regalar.',
     previewUrl: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=600&q=80',
   },
+
   detalles: {
     category: 'Comercio',
     description: 'Para manualidades y detalles hechos a mano (jabones, velas, adornos en MDF, cerámica al frío): la línea de siempre más una vitrina "De temporada" para ediciones limitadas, y botón de pedido personalizado por WhatsApp.',

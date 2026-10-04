@@ -46,7 +46,6 @@ const META: Record<string, { emoji: string; cat: string }> = {
   iniciocatalogo: { emoji: '🔥', cat: 'Restaurantes' },
   flores: { emoji: '🌸', cat: 'Comercio' },
   detalles: { emoji: '🧼', cat: 'Comercio' },
-  floreria: { emoji: '💐', cat: 'Comercio' },
 };
 
 const CATEGORY_ICONS: Record<string, string> = {
