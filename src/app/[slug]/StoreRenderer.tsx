@@ -28,6 +28,7 @@ const InicioCatalogoTemplate = dynamic(() => import('@/templates/iniciocatalogo/
 const FloresTemplate = dynamic(() => import('@/templates/flores/FloresTemplate'));
 const FichaDigitalTemplate = dynamic(() => import('@/templates/fichadigital/FichaDigitalTemplate'));
 const DetallesTemplate = dynamic(() => import('@/templates/detalles/DetallesTemplate'));
+const FloreriaTemplate = dynamic(() => import('@/templates/floreria/FloreriaTemplate'));
 const FichaPlanaTemplate = dynamic(() => import('@/templates/fichaplana/FichaPlanaTemplate'));
 const VeterinariaTemplate = dynamic(() => import('@/templates/veterinaria/VeterinariaTemplate'));
 const TerrenosPortalTemplate = dynamic(() => import('@/templates/terrenos/TerrenosPortalTemplate'));
@@ -157,6 +158,8 @@ export default function StoreRenderer({ store: initialStore, initialProductId }:
       return <FloresTemplate store={store} initialProductId={initialProductId} />;
     case 'fichadigital':
       return <FichaDigitalTemplate store={store} initialProductId={initialProductId} />;
+    case 'floreria':
+      return <FloreriaTemplate store={store} initialProductId={initialProductId} />;
     case 'detalles':
       return <DetallesTemplate store={store} initialProductId={initialProductId} />;
     case 'fichaplana':

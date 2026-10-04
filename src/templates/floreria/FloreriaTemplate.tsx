@@ -16,21 +16,19 @@ interface Props {
   initialProductId?: string;
 }
 
-/** `href` de la categoría donde el dueño pone las ediciones limitadas (Día de los enamorados, Navidad…). */
-const TEMPORADA = 'temporada';
+/** `href` de la categoría de fechas especiales (San Valentín, Día de la Madre, Navidad…): arriba sale como vitrina. */
+const TEMPORADA = 'fechas';
 
 /**
- * Plantilla "Detalles".
+ * Plantilla "Florería".
  *
- * Para quien vende manualidades y detalles hechos a mano (jabones, velas, adornos en MDF, cerámica al frío):
- *  · la línea de siempre va en sus categorías normales;
- *  · lo de temporada (un diseño que no se repite el próximo año) va en la categoría "De temporada", que arriba
- *    se muestra como vitrina de edición limitada y, pasada la fecha, el dueño la vacía o la oculta;
- *  · como casi todo se hace a pedido, hay un botón de "pídelo a tu gusto" que abre WhatsApp.
+ * Ramos, arreglos, plantas y regalos. Lo de una fecha especial (San Valentín, Día de la Madre) va en la categoría
+ * "Fechas especiales", que arriba se muestra como vitrina; el resto, en sus categorías de siempre.
+ * Como mucha gente no sabe qué regalar, hay un botón de asesoría que abre WhatsApp con la ocasión y el presupuesto.
  *
  * Comparte motor (catálogo, carrito, WhatsApp, ofertas, combos, medidas) con las demás plantillas del motor compartido.
  */
-export default function DetallesTemplate({ store, initialProductId }: Props) {
+export default function FloreriaTemplate({ store, initialProductId }: Props) {
   const t = store.theme;
   const c = useCatalogo(store, initialProductId);
 
@@ -67,7 +65,8 @@ export default function DetallesTemplate({ store, initialProductId }: Props) {
   const pedirPersonalizado = () =>
     enviarPedidoPorWhatsApp(
       store,
-      `Hola ${store.name}, quiero hacer un pedido personalizado. Me gustaría algo así: `,
+      `Hola ${store.name}, necesito un arreglo para regalar. Es para: (ocasión y persona)
+Presupuesto aproximado: `,
     );
 
   return (
@@ -131,11 +130,11 @@ export default function DetallesTemplate({ store, initialProductId }: Props) {
                   className="w-full flex items-center gap-3 rounded-2xl px-4 py-3.5 text-left active:scale-[0.99] transition-transform"
                   style={{ background: t.primaryContainer, color: t.onSurface, border: `1px dashed ${t.primary}` }}
                 >
-                  <span className="material-symbols-outlined shrink-0" style={{ color: t.primary }}>brush</span>
+                  <span className="material-symbols-outlined shrink-0" style={{ color: t.primary }}>redeem</span>
                   <span className="flex-1 min-w-0">
-                    <span className="block text-sm font-black">¿Lo quieres a tu gusto?</span>
+                    <span className="block text-sm font-black">¿No sabes qué regalar?</span>
                     <span className="block text-xs" style={{ color: t.onSurfaceVariant }}>
-                      Hacemos detalles personalizados: cuéntanos qué imaginas.
+                      Cuéntanos la ocasión y tu presupuesto, y te armamos el arreglo ideal.
                     </span>
                   </span>
                   <span className="material-symbols-outlined shrink-0" style={{ color: t.primary }}>chat</span>
@@ -155,7 +154,7 @@ export default function DetallesTemplate({ store, initialProductId }: Props) {
               <CombosCarrusel
                 t={t}
                 productos={deTemporada}
-                titulo="De temporada · edición limitada"
+                titulo="Para esta fecha especial"
                 onSelect={c.abrirProducto}
                 onAdd={c.addToCart}
                 onVerMas={() => c.setActiveCategory(TEMPORADA)}
@@ -177,7 +176,7 @@ export default function DetallesTemplate({ store, initialProductId }: Props) {
             <div className="px-5 md:px-6">
               <h2 className={`${TXT.title} font-black tracking-tight mb-4`} style={{ color: t.onSurface, fontFamily: t.fontHeadline }}>
                 {c.activeCategory === 'all'
-                  ? 'Nuestras creaciones'
+                  ? 'Nuestros arreglos'
                   : c.categoryTabs.find((x) => x.id === c.activeCategory)?.label}
               </h2>
             </div>
