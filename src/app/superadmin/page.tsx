@@ -1523,8 +1523,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                 </div>
                 
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
+                  <table className="w-full text-left border-collapse block md:table">
+                    <thead className="hidden md:table-header-group">
                       <tr className="bg-white border-b border-[#ecedf7]">
                         <th className="px-5 py-3 text-[10px] font-bold text-[#424754] uppercase tracking-wider">Tienda</th>
                         <th className="px-5 py-3 text-[10px] font-bold text-[#424754] uppercase tracking-wider">Plan y cobro</th>
@@ -1532,7 +1532,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                         <th className="px-5 py-3 text-[10px] font-bold text-[#424754] uppercase tracking-wider text-right">Acciones</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#ecedf7]">
+                    <tbody className="block md:table-row-group divide-y divide-[#ecedf7]">
                       {filtered.map((store) => {
                         const meta = storeMeta[store.slug] || { emoji: '🏪', cat: 'Tienda' };
                         const details = storeDetails[store.slug] || { location: '—', date: 'Hoy', icon: 'storefront' };
@@ -1563,8 +1563,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                         }
 
                         return (
-                          <tr key={store.slug} className={`hover:bg-[#f2f3fd]/40 transition-colors ${isIncomplete ? 'bg-amber-50/40' : ''}`}>
-                            <td className="px-5 py-3">
+                          <tr key={store.slug} className={`flex flex-col gap-2 p-4 md:p-0 md:table-row hover:bg-[#f2f3fd]/40 transition-colors ${isIncomplete ? 'bg-amber-50/40' : ''}`}>
+                            <td className="block md:table-cell md:px-5 md:py-3">
                               <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0 border border-[#c2c6d6]/60 bg-[#f9f9ff]">
                                   {meta.emoji}
@@ -1599,7 +1599,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                                 </div>
                               </div>
                             </td>
-                            <td className="px-5 py-3 whitespace-nowrap">
+                            <td className="block md:table-cell md:px-5 md:py-3 md:whitespace-nowrap">
                               {(() => {
                                 const alcance = nivelAlcance({ modulos: store.modulos, subdominio_activo: store.subdominioActivo });
                                 const sub = cobroDatos?.subs[store.slug];
@@ -1630,7 +1630,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                                 );
                               })()}
                             </td>
-                            <td className="px-5 py-3">
+                            <td className="block md:table-cell md:px-5 md:py-3">
                               {storeOn ? (
                                 <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold">
                                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
@@ -1643,8 +1643,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                                 </span>
                               )}
                             </td>
-                            <td className="px-5 py-3 text-right">
-                              <div className="flex items-center justify-end gap-1.5">
+                            <td className="block md:table-cell md:px-5 md:py-3 md:text-right border-t border-[#ecedf7] pt-2 md:border-0 md:pt-3">
+                              <div className="flex flex-wrap items-center justify-start md:justify-end gap-1.5">
                                 <button
                                   onClick={() => handleTogglePausaTienda(store)}
                                   disabled={togglingStoreSlug === store.slug}
