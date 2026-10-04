@@ -21,7 +21,8 @@ import { cargarCategoriasPersonalizadas, categoriasDePlantilla, type CategoriaPl
 import { filasAPresentaciones, leerPresentaciones, plantillaAceptaPresentaciones, plantillaEsPorPeso, precioDesde, textosPresentacion, type FilaPresentacion } from '@/lib/presentaciones';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import type { StoreTheme } from '@/lib/templates.config';
-import { MODULOS, moduloActivo, enMarketplace, conMarcaBlanca, PLANES_PRESETS, type PlanPreset, type Modulos } from '@/lib/modulos';
+import { MODULOS, moduloActivo, enMarketplace, conMarcaBlanca, PLANES_PRESETS, estadoCobro, nivelAlcance, pasosDeTienda, precioSugerido, type PlanPreset, type Modulos, type TipoCobro } from '@/lib/modulos';
+import { hoyLima } from '@/lib/fechaLima';
 import { iconForCategory } from '@/templates/shared/tokens';
 
 // Correos con acceso al superadmin. A diferencia de /admin (donde cualquier
@@ -42,6 +43,15 @@ const PORTAL_POR_PLANTILLA: Record<string, string> = {
   veterinaria: 'Salud y Bienestar',
   rack: 'Hogar', hogar: 'Hogar',
 };
+
+const COBRO_UI: Record<TipoCobro, { texto: (d: number | null) => string; clase: string; icono: string }> = {
+  sin_costo: { texto: () => 'Sin costo', clase: 'bg-slate-100 text-slate-600 border-slate-200', icono: 'remove' },
+  sin_pagos: { texto: () => 'Sin pagos aún', clase: 'bg-amber-50 text-amber-800 border-amber-200', icono: 'hourglass_empty' },
+  vencido: { texto: (d) => `Vencido hace ${Math.abs(d ?? 0)} d`, clase: 'bg-red-50 text-red-700 border-red-200', icono: 'error' },
+  por_vencer: { texto: (d) => (d === 0 ? 'Vence hoy' : `Vence en ${d} d`), clase: 'bg-amber-50 text-amber-800 border-amber-200', icono: 'schedule' },
+  al_dia: { texto: () => 'Al día', clase: 'bg-emerald-50 text-emerald-700 border-emerald-200', icono: 'check_circle' },
+};
+const ALCANCE_NOMBRE = { carta: 'Carta', app: 'App', app_google: 'App + Google' } as const;
 
 const META: Record<string, { emoji: string; cat: string }> = {
   sunset:   { emoji: '🥂', cat: 'Bar & Café' },
@@ -788,6 +798,26 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     s.slug.toLowerCase().includes(search.toLowerCase())
   );
   // storeList ya viene de la base en orden "más nuevas primero".
+  // Cobro de cada tienda (lo mismo que calcula la pestaña Cobros, en solo lectura).
+  type SubCobro = { monto_mensual: number | null; vence: string | null; descuento_hasta?: string | null };
+  const [cobroDatos, setCobroDatos] = React.useState<{ precios: Record<string, number>; subs: Record<string, SubCobro> } | null>(null);
+  React.useEffect(() => {
+    let vivo = true;
+    (async () => {
+      const [pr, su] = await Promise.all([
+        supabase.from('plan_precios').select('clave,monto'),
+        supabase.from('store_suscripciones').select('store,monto_mensual,vence,descuento_hasta'),
+      ]);
+      if (!vivo || pr.error || su.error) return;
+      const precios: Record<string, number> = {};
+      (pr.data ?? []).forEach((r: { clave: string; monto: number }) => { precios[r.clave] = Number(r.monto) || 0; });
+      const subs: Record<string, SubCobro> = {};
+      (su.data ?? []).forEach((r: SubCobro & { store: string }) => { subs[r.store] = r; });
+      setCobroDatos({ precios, subs });
+    })();
+    return () => { vivo = false; };
+  }, []);
+
   const filtered = orden === 'antiguas'
     ? [...filtradas].reverse()
     : orden === 'az'
@@ -1496,10 +1526,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-white border-b border-[#ecedf7]">
-                        <th className="px-5 py-3 text-[10px] font-bold text-[#424754] uppercase tracking-wider">Nombre de la Tienda</th>
-                        <th className="px-5 py-3 text-[10px] font-bold text-[#424754] uppercase tracking-wider">Categoría</th>
-                        <th className="px-5 py-3 text-[10px] font-bold text-[#424754] uppercase tracking-wider">Ubicación</th>
-                        <th className="px-5 py-3 text-[10px] font-bold text-[#424754] uppercase tracking-wider">Paquete</th>
+                        <th className="px-5 py-3 text-[10px] font-bold text-[#424754] uppercase tracking-wider">Tienda</th>
+                        <th className="px-5 py-3 text-[10px] font-bold text-[#424754] uppercase tracking-wider">Plan y cobro</th>
                         <th className="px-5 py-3 text-[10px] font-bold text-[#424754] uppercase tracking-wider">Estado</th>
                         <th className="px-5 py-3 text-[10px] font-bold text-[#424754] uppercase tracking-wider text-right">Acciones</th>
                       </tr>
@@ -1560,22 +1588,47 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                                       </button>
                                     )}
                                   </div>
-                                  <p className="text-[9px] text-[#424754] font-semibold tracking-wide">/{store.slug}</p>
+                                  <p className="text-[10px] text-[#727785] font-semibold tracking-wide flex flex-wrap items-center gap-x-1.5">
+                                    <span>/{store.slug}</span>
+                                    <span aria-hidden>·</span>
+                                    {store.marketplaceCategory && store.marketplaceCategory !== 'General'
+                                      ? <span>{store.marketplaceCategory}</span>
+                                      : <span className="text-amber-600 italic">Sin categoría</span>}
+                                    {details.location && details.location !== '—' && (<><span aria-hidden>·</span><span>{details.location}</span></>)}
+                                  </p>
                                 </div>
                               </div>
                             </td>
-                            <td className="px-5 py-3 text-xs text-[#191b23] font-medium">
-                              {store.marketplaceCategory && store.marketplaceCategory !== 'General'
-                                ? store.marketplaceCategory
-                                : <span className="text-amber-600 italic text-[10px] font-semibold">Sin categoría</span>}
-                            </td>
-                            <td className="px-5 py-3 text-xs text-[#191b23] font-medium">
-                              {details.location && details.location !== '—' ? details.location : <span className="text-[#727785] italic text-[10px]">Sin ubicación</span>}
-                            </td>
-                            <td className="px-5 py-3">
-                              <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-tight ${tierBadgeClass}`}>
-                                {tier}
-                              </span>
+                            <td className="px-5 py-3 whitespace-nowrap">
+                              {(() => {
+                                const alcance = nivelAlcance({ modulos: store.modulos, subdominio_activo: store.subdominioActivo });
+                                const sub = cobroDatos?.subs[store.slug];
+                                const hoyL = hoyLima();
+                                const sugerido = cobroDatos ? precioSugerido(pasosDeTienda({ modulos: store.modulos, subdominio_activo: store.subdominioActivo }), cobroDatos.precios) : 0;
+                                const conDescuento = sub?.monto_mensual != null && (!sub.descuento_hasta || sub.descuento_hasta >= hoyL);
+                                const monto = conDescuento ? (sub!.monto_mensual as number) : sugerido;
+                                const cobro = cobroDatos ? estadoCobro(sub?.vence, monto, hoyL) : null;
+                                return (
+                                  <div className="flex flex-col gap-1 items-start">
+                                    <span className="text-xs font-bold text-[#191b23]">
+                                      {ALCANCE_NOMBRE[alcance]}
+                                      {cobroDatos && monto > 0 && <span className="ml-1.5 text-[#727785] font-semibold">S/ {monto.toLocaleString('es-PE', { maximumFractionDigits: 2 })}/mes</span>}
+                                    </span>
+                                    {cobro ? (
+                                      <Link
+                                        href="/superadmin/cobros"
+                                        title={sub?.vence ? `Pagado hasta ${sub.vence}. Ver en Cobros` : 'Ver en Cobros'}
+                                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold hover:brightness-95 transition ${COBRO_UI[cobro.tipo].clase}`}
+                                      >
+                                        <span className="material-symbols-outlined text-[12px]">{COBRO_UI[cobro.tipo].icono}</span>
+                                        {COBRO_UI[cobro.tipo].texto(cobro.dias)}
+                                      </Link>
+                                    ) : (
+                                      <span className="text-[10px] text-[#727785]">—</span>
+                                    )}
+                                  </div>
+                                );
+                              })()}
                             </td>
                             <td className="px-5 py-3">
                               {storeOn ? (
@@ -1654,6 +1707,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                                 >
                                   {storeAdmin ? 'manage_accounts' : 'person_add'}
                                 </button>
+                                <span className="w-px h-5 bg-[#e6e7f2] mx-1" aria-hidden />
                                 <button
                                   onClick={async () => {
                                     setDeletingStoreSlug(store.slug);
