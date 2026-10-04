@@ -45,6 +45,7 @@ const META: Record<string, { emoji: string; cat: string }> = {
   menudirecto: { emoji: '🍔', cat: 'Restaurantes' },
   iniciocatalogo: { emoji: '🔥', cat: 'Restaurantes' },
   flores: { emoji: '🌸', cat: 'Comercio' },
+  detalles: { emoji: '🧼', cat: 'Comercio' },
 };
 
 const CATEGORY_ICONS: Record<string, string> = {

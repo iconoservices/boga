@@ -273,7 +273,7 @@ export const claveLinea = (id: string, label?: string) => (label ? `${id}|${labe
 const PLANTILLAS_CON_PRESENTACIONES = [
   'condimentos', 'mercado', 'estilosmirka', 'mirkavisual', 'atelier', 'lookbook', 'discoteca', 'cartelera',
   // las del motor compartido (templates/shared): el modal del producto trae el selector de medida
-  'default', 'menudirecto', 'polleria', 'iniciocatalogo', 'fichadigital', 'fichaplana', 'veterinaria',
+  'default', 'menudirecto', 'polleria', 'iniciocatalogo', 'fichadigital', 'fichaplana', 'veterinaria', 'detalles',
 ];
 
 export const plantillaAceptaPresentaciones = (template: unknown) => PLANTILLAS_CON_PRESENTACIONES.includes(String(template));

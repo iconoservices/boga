@@ -95,6 +95,11 @@ const TEMPLATE_PRESENTATION: Record<string, { category?: string; description: st
     description: 'Estilo delicado en tonos rosa con categorías para ramos, arreglos, plantas y detalles. Pensado para florerías y regalos.',
     previewUrl: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=600&q=80',
   },
+  detalles: {
+    category: 'Comercio',
+    description: 'Para manualidades y detalles hechos a mano (jabones, velas, adornos en MDF, cerámica al frío): la línea de siempre más una vitrina "De temporada" para ediciones limitadas, y botón de pedido personalizado por WhatsApp.',
+    previewUrl: 'https://images.unsplash.com/photo-1600857062241-98e5dba7f214?w=600&q=80',
+  },
   fichadigital: {
     category: 'Restaurantes',
     description: 'Ficha de negocio tipo reemplazo del PDF de carta: portada superpuesta con logo, horario y dirección, categorías en círculo y menú debajo. Pedido por WhatsApp o llamada en un toque.',
