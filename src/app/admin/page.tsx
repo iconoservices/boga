@@ -625,9 +625,9 @@ function AdminDashboard({ user }: { user: User }) {
     setPedidoOcupado(null);
   };
 
-  // Borra un pedido para siempre (solo desde la pestaña Pedidos y solo si ya está cancelado: sirve para limpiar pedidos de prueba).
+  // Borra un pedido para siempre. Solo el superadmin y solo si ya está cancelado: sirve para limpiar pedidos de prueba.
   const eliminarPedido = async (o: Pedido) => {
-    if (o.status !== 'Cancelado') return;
+    if (o.status !== 'Cancelado' || !esSuperadmin) return;
     setPedidoOcupado(o.id);
     const { error } = await supabase.from('orders').delete().eq('id', o.id);
     setPedidoOcupado(null);
@@ -2295,6 +2295,7 @@ function AdminDashboard({ user }: { user: User }) {
             mostrarTienda={selectedStore === 'all' && Object.keys(stores).length > 1}
             cambiarEstado={cambiarEstadoPedido}
             eliminar={eliminarPedido}
+            puedeEliminar={esSuperadmin}
             ocupado={pedidoOcupado}
           />
         )}

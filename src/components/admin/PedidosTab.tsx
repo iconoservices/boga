@@ -71,6 +71,7 @@ export default function PedidosTab({
   mostrarTienda,
   cambiarEstado,
   eliminar,
+  puedeEliminar = false,
   ocupado,
 }: {
   pedidos: Pedido[];
@@ -79,6 +80,8 @@ export default function PedidosTab({
   cambiarEstado: (pedido: Pedido, estado: string) => void;
   /** Borra el pedido para siempre. Solo se ofrece en pedidos ya cancelados (ej. pedidos de prueba). */
   eliminar: (pedido: Pedido) => void;
+  /** Solo el superadmin: el dueño de la tienda no borra su historial de ventas (se cancela, no se borra). */
+  puedeEliminar?: boolean;
   ocupado: string | null;
 }) {
   const [filtro, setFiltro] = useState<(typeof FILTROS)[number]['id']>('all');
@@ -207,6 +210,7 @@ export default function PedidosTab({
                     {o.status === 'Cancelado' ? (
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <p className="text-xs font-semibold text-red-600">Pedido cancelado. Si llevaba stock, ya se devolvió al inventario.</p>
+                        {puedeEliminar && (
                         <button
                           type="button"
                           disabled={ocupado === o.id}
@@ -218,6 +222,7 @@ export default function PedidosTab({
                           <span className="material-symbols-outlined text-[16px]">delete</span>
                           Eliminar pedido
                         </button>
+                        )}
                       </div>
                     ) : (
                       <div>

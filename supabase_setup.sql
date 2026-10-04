@@ -385,11 +385,11 @@ USING (
   OR public.es_admin_de(orders.store)
 );
 
+-- Borrar pedidos: SOLO el superadmin (el dueño cancela, no borra su historial de ventas).
 CREATE POLICY "orders: dueño o superadmin borra"
 ON public.orders FOR DELETE
 USING (
   public.is_superadmin()
-  OR public.es_admin_de(orders.store)
 );
 
 -- ============================================================
