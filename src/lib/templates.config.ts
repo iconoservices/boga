@@ -990,7 +990,7 @@ const TEMPLATES: Record<string, TemplateConfig> = {
     id: 'detalles',
     name: 'Detalles Hechos a Mano',
     category: 'Comercio',
-    heroImage: 'https://images.unsplash.com/photo-1600857062241-98e5dba7f214?w=1200&q=80',
+    heroImage: 'https://images.unsplash.com/photo-1546552768-9e3a94b38a59?w=1200&q=80',
     heroAlt: 'Jabones artesanales y velas hechos a mano',
     theme: {
       primary: '#b4536a',
@@ -1021,10 +1021,10 @@ const TEMPLATES: Record<string, TemplateConfig> = {
     ],
     demoProducts: [
       { name: 'Pack Día de los Enamorados', price: 45.00, category: 'San Valentín', image: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=600&q=80', description: 'Jabón en forma de corazón + vela aromática. Diseño solo de esta temporada.' },
-      { name: 'Jabón Corazón de Rosas', price: 12.00, category: 'San Valentín', image: 'https://images.unsplash.com/photo-1600857062241-98e5dba7f214?w=600&q=80', description: 'Edición limitada, hecho a mano con pétalos de rosa.' },
-      { name: 'Jabón de Lavanda', price: 8.00, category: 'Jabones', image: 'https://images.unsplash.com/photo-1600857062241-98e5dba7f214?w=600&q=80', description: 'Jabón artesanal de glicerina con aroma a lavanda.' },
-      { name: 'Jabón Temático de Animalitos', price: 10.00, category: 'Jabones', image: 'https://images.unsplash.com/photo-1600857062241-98e5dba7f214?w=600&q=80', description: 'Ideal para souvenirs y cumpleaños. Se hace por pedido.' },
-      { name: 'Vela Aromática de Soya', price: 18.00, category: 'Velas', image: 'https://images.unsplash.com/photo-1602874801007-bd458bb1b8b6?w=600&q=80', description: 'Vela temática en frasco, aroma vainilla.' },
+      { name: 'Jabón Corazón de Rosas', price: 12.00, category: 'San Valentín', image: 'https://images.unsplash.com/photo-1546552768-9e3a94b38a59?w=600&q=80', description: 'Edición limitada, hecho a mano con pétalos de rosa.' },
+      { name: 'Jabón de Lavanda', price: 8.00, category: 'Jabones', image: 'https://images.unsplash.com/photo-1546552768-9e3a94b38a59?w=600&q=80', description: 'Jabón artesanal de glicerina con aroma a lavanda.' },
+      { name: 'Jabón Temático de Animalitos', price: 10.00, category: 'Jabones', image: 'https://images.unsplash.com/photo-1546552768-9e3a94b38a59?w=600&q=80', description: 'Ideal para souvenirs y cumpleaños. Se hace por pedido.' },
+      { name: 'Vela Aromática de Soya', price: 18.00, category: 'Velas', image: 'https://images.unsplash.com/photo-1613068431228-8cb6a1e92573?w=600&q=80', description: 'Vela temática en frasco, aroma vainilla.' },
       { name: 'Adorno en MDF Personalizado', price: 15.00, category: 'Adornos en MDF', image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=600&q=80', description: 'Pintado a mano, con el nombre que tú quieras.' },
       { name: 'Figura de Cerámica al Frío', price: 22.00, category: 'Cerámica al frío', image: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=600&q=80', description: 'Modelada y pintada a mano, pieza única.' },
     ],

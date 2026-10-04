@@ -99,7 +99,7 @@ const TEMPLATE_PRESENTATION: Record<string, { category?: string; description: st
   detalles: {
     category: 'Comercio',
     description: 'Para manualidades y detalles hechos a mano (jabones, velas, adornos en MDF, cerámica al frío): la línea de siempre más una categoría de temporada que el dueño crea con la fecha (San Valentín, Navidad…), y botón de pedido personalizado por WhatsApp.',
-    previewUrl: 'https://images.unsplash.com/photo-1600857062241-98e5dba7f214?w=600&q=80',
+    previewUrl: 'https://images.unsplash.com/photo-1546552768-9e3a94b38a59?w=600&q=80',
   },
   fichadigital: {
     category: 'Restaurantes',
