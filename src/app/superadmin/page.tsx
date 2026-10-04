@@ -1616,7 +1616,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                                   className="material-symbols-outlined text-[18px] text-[#545f73] hover:text-[#0058be] transition-colors p-1 hover:bg-[#e6e7f2] rounded"
                                   title="Ver el panel como lo ve su dueño"
                                 >
-                                  manage_accounts
+                                  space_dashboard
                                 </Link>
                                 <button
                                   onClick={() => handleOpenEditStore(store)}
@@ -1652,7 +1652,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                                   className="material-symbols-outlined text-[18px] text-[#545f73] hover:text-[#0058be] transition-colors p-1 hover:bg-[#e6e7f2] rounded"
                                   title={storeAdmin ? 'Editar Administrador' : 'Asignar Administrador'}
                                 >
-                                  manage_accounts
+                                  {storeAdmin ? 'manage_accounts' : 'person_add'}
                                 </button>
                                 <button
                                   onClick={async () => {
