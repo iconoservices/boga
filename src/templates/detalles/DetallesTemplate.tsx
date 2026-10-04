@@ -16,16 +16,13 @@ interface Props {
   initialProductId?: string;
 }
 
-/** `href` de la categoría donde el dueño pone las ediciones limitadas (Día de los enamorados, Navidad…). */
-const TEMPORADA = 'temporada';
-
 /**
  * Plantilla "Detalles".
  *
  * Para quien vende manualidades y detalles hechos a mano (jabones, velas, adornos en MDF, cerámica al frío):
- *  · la línea de siempre va en sus categorías normales;
- *  · lo de temporada (un diseño que no se repite el próximo año) va en la categoría "De temporada", que arriba
- *    se muestra como vitrina de edición limitada y, pasada la fecha, el dueño la vacía o la oculta;
+ *  · en "Todo" salen primero los combos y ofertas y después una fila por categoría, en el orden de la tienda;
+ *  · lo de temporada (San Valentín, Navidad…) es una categoría más: el dueño la crea con el nombre de la fecha,
+ *    la sube al principio mientras dura y la borra después;
  *  · como casi todo se hace a pedido, hay un botón de "pídelo a tu gusto" que abre WhatsApp.
  *
  * Comparte motor (catálogo, carrito, WhatsApp, ofertas, combos, medidas) con las demás plantillas del motor compartido.
@@ -42,13 +39,6 @@ export default function DetallesTemplate({ store, initialProductId }: Props) {
     { id: 'pedidos', label: 'Pedidos' },
     { id: 'contacto', label: 'Contacto' },
   ];
-
-  const deTemporada = c.products.filter((p) => p.category === TEMPORADA && !p.esServicio);
-  const tieneTemporada = deTemporada.length > 0;
-  // Con la vitrina de temporada arriba, en "Todo" no se repiten en la grilla.
-  const paraGrilla = c.activeCategory === 'all' && tieneTemporada
-    ? c.filtered.filter((p) => p.category !== TEMPORADA)
-    : c.filtered;
 
   const compartir = () => {
     if (navigator.share) {
@@ -150,23 +140,11 @@ export default function DetallesTemplate({ store, initialProductId }: Props) {
               onSelect={c.setActiveCategory}
             />
 
-            {/* Vitrina de temporada: edición limitada, solo en "Todo". */}
-            {c.activeCategory === 'all' && tieneTemporada && (
+            {/* Combos y ofertas (módulo Promociones), siempre primero. */}
+            {c.activeCategory === 'all' && c.combosYOfertas && c.combosYOfertas.length > 0 && (
               <CombosCarrusel
                 t={t}
-                productos={deTemporada}
-                titulo="De temporada · edición limitada"
-                onSelect={c.abrirProducto}
-                onAdd={c.addToCart}
-                onVerMas={() => c.setActiveCategory(TEMPORADA)}
-              />
-            )}
-
-            {/* Combos y ofertas normales (el módulo Promociones), sin repetir lo que ya salió en la vitrina de temporada. */}
-            {c.activeCategory === 'all' && c.combosYOfertas && c.combosYOfertas.filter((p) => p.category !== TEMPORADA).length > 0 && (
-              <CombosCarrusel
-                t={t}
-                productos={c.combosYOfertas.filter((p) => p.category !== TEMPORADA)}
+                productos={c.combosYOfertas}
                 titulo={c.comboLabel}
                 onSelect={c.abrirProducto}
                 onAdd={c.addToCart}
@@ -174,23 +152,41 @@ export default function DetallesTemplate({ store, initialProductId }: Props) {
               />
             )}
 
-            <div className="px-5 md:px-6">
-              <h2 className={`${TXT.title} font-black tracking-tight mb-4`} style={{ color: t.onSurface, fontFamily: t.fontHeadline }}>
-                {c.activeCategory === 'all'
-                  ? 'Nuestras creaciones'
-                  : c.categoryTabs.find((x) => x.id === c.activeCategory)?.label}
-              </h2>
-            </div>
+            {/* En "Todo": una fila por categoría, en el orden de la tienda (cada una con su "Ver todos"). Al elegir un chip se ve la grilla completa. */}
+            {c.activeCategory === 'all' && c.categoryTabs
+              .filter((x) => x.id !== 'all')
+              .map((cat) => (
+                <CombosCarrusel
+                  key={cat.id}
+                  t={t}
+                  productos={c.products.filter((p) => p.category === cat.id)}
+                  titulo={cat.label}
+                  icono=""
+                  onSelect={c.abrirProducto}
+                  onAdd={c.addToCart}
+                  onVerMas={() => c.setActiveCategory(cat.id)}
+                />
+              ))}
 
-            <section className="px-5 md:px-6 pb-8">
-              <ProductGrid
-                t={t}
-                productos={paraGrilla}
-                onSelect={c.abrirProducto}
-                onAdd={c.addToCart}
-                onVerTodo={() => c.setActiveCategory('all')}
-              />
-            </section>
+            {c.activeCategory !== 'all' && (
+              <>
+                <div className="px-5 md:px-6">
+                  <h2 className={`${TXT.title} font-black tracking-tight mb-4`} style={{ color: t.onSurface, fontFamily: t.fontHeadline }}>
+                    {c.categoryTabs.find((x) => x.id === c.activeCategory)?.label}
+                  </h2>
+                </div>
+
+                <section className="px-5 md:px-6 pb-8">
+                  <ProductGrid
+                    t={t}
+                    productos={c.filtered}
+                    onSelect={c.abrirProducto}
+                    onAdd={c.addToCart}
+                    onVerTodo={() => c.setActiveCategory('all')}
+                  />
+                </section>
+              </>
+            )}
           </div>
         )}
 

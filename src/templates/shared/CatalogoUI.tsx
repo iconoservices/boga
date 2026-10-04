@@ -192,6 +192,7 @@ export function CombosCarrusel({
   onAdd,
   onVerMas,
   titulo,
+  icono = '🔥',
 }: {
   t: StoreTheme;
   productos: Producto[];
@@ -199,6 +200,8 @@ export function CombosCarrusel({
   onAdd: (p: Producto) => void;
   onVerMas?: () => void;
   titulo?: string;
+  /** Emoji delante del título (por defecto 🔥, para combos y ofertas). Vacío = sin emoji, para filas de categoría. */
+  icono?: string;
 }) {
   if (!productos || productos.length === 0) return null;
 
@@ -214,7 +217,7 @@ export function CombosCarrusel({
     <section className="mb-6 animate-fade-in">
       <div className="px-5 md:px-6 flex items-center justify-between gap-3 mb-3">
         <h3 className={`${TXT.lead} font-black uppercase italic tracking-tight flex items-center gap-1.5`} style={{ color: t.onSurface }}>
-          <span className="text-amber-500">🔥</span> {encabezado}
+          {icono && <span className="text-amber-500">{icono}</span>} {encabezado}
         </h3>
         {onVerMas && (
           <button

@@ -30,6 +30,19 @@ import { iconForCategory } from '@/templates/shared/tokens';
 // es lo que decide el acceso. La lista vive en src/lib/superadmin.ts y tiene
 // que coincidir con public.is_superadmin() en supabase_setup.sql (RLS).
 
+// Categoría del portal (/market y /explore) que se sugiere al elegir una plantilla. Es solo un punto de partida:
+// si la tienda todavía no tiene categoría, se llena sola; si ya tiene una, no se toca. Siempre se puede cambiar a mano.
+const PORTAL_POR_PLANTILLA: Record<string, string> = {
+  default: 'Restaurantes', menudirecto: 'Restaurantes', iniciocatalogo: 'Restaurantes', polleria: 'Restaurantes',
+  fichadigital: 'Restaurantes', fichaplana: 'Restaurantes', helados: 'Restaurantes', sunset: 'Restaurantes',
+  mercado: 'Mercado', condimentos: 'Mercado', natura: 'Mercado', amazonia: 'Mercado',
+  estilosmirka: 'Moda y Belleza', mirkavisual: 'Moda y Belleza', sweetkittynails: 'Moda y Belleza',
+  atelier: 'Moda', lookbook: 'Moda', uniformes: 'Moda',
+  flores: 'Regalos y Detalles', detalles: 'Regalos y Detalles',
+  veterinaria: 'Salud y Bienestar',
+  rack: 'Hogar', hogar: 'Hogar',
+};
+
 const META: Record<string, { emoji: string; cat: string }> = {
   sunset:   { emoji: '🥂', cat: 'Bar & Café' },
   delva:    { emoji: '🌿', cat: 'Mercado' },
@@ -2485,7 +2498,11 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                         return (
                           <div
                             key={t.id}
-                            onClick={() => setStoreForm(prev => ({ ...prev, template: t.id as any }))}
+                            onClick={() => setStoreForm(prev => ({
+                              ...prev,
+                              template: t.id as any,
+                              marketplaceCategory: (!prev.marketplaceCategory || prev.marketplaceCategory === 'General') && PORTAL_POR_PLANTILLA[t.id] ? PORTAL_POR_PLANTILLA[t.id] : prev.marketplaceCategory,
+                            }))}
                             className={`rounded-lg overflow-hidden border-2 cursor-pointer transition-all flex flex-col ${
                               isSelected
                                 ? 'border-[#0058be] bg-[#0058be]/5 ring-2 ring-[#0058be]/10 shadow-xs'
@@ -2527,6 +2544,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           <option value="Servicios">Servicios</option>
                           <option value="Tecnología">Tecnología</option>
                           <option value="Hogar">Hogar</option>
+                          <option value="Regalos y Detalles">Regalos y Detalles</option>
                         </select>
                       </div>
 

@@ -3872,6 +3872,8 @@ function AdminDashboard({ user }: { user: User }) {
                   <option value="Moda">Moda</option>
                   <option value="Servicios">Servicios</option>
                   <option value="Tecnología">Tecnología</option>
+                  <option value="Hogar">Hogar</option>
+                  <option value="Regalos y Detalles">Regalos y Detalles</option>
                 </select>
               </div>
 
