@@ -928,6 +928,28 @@ function AdminDashboard({ user }: { user: User }) {
     }
   };
 
+  // Reiniciar el DISEÑO: vuelve a los colores y las categorías de la plantilla. La tienda NO se borra: se queda con su
+  // nombre, logo, portada, WhatsApp, módulos, dueño y productos. (Antes este botón borraba la fila entera de la tienda.)
+  const handleStoreReset = async () => {
+    if (!editingStoreSlug) return;
+    if (!window.confirm('¿Reiniciar el diseño? Los colores y las categorías vuelven a los de la plantilla. Tu nombre, logo, portada, WhatsApp y productos NO se tocan.')) return;
+    setIsStoreSaving(true);
+    try {
+      const { error } = await supabase
+        .from('stores')
+        .update({ theme: {}, categories: [], hide_hero_text: false })
+        .eq('slug', editingStoreSlug);
+      if (error) throw error;
+      refrescarTienda(editingStoreSlug);
+      await fetchStores();
+      setIsStoreEditorOpen(false);
+    } catch (err: any) {
+      alert('Error al reiniciar: ' + err.message);
+    } finally {
+      setIsStoreSaving(false);
+    }
+  };
+
   const toggleStatus = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === 'Activo' ? 'Agotado' : 'Activo';
     setProducts(prev => prev.map(p => p.id === id ? { ...p, status: newStatus } : p));
@@ -4200,7 +4222,7 @@ function AdminDashboard({ user }: { user: User }) {
               </div>
             </div>
 
-            {/* Footer: en celular "Guardar" va arriba y a todo el ancho; Cancelar debajo */}
+            {/* Footer: en celular "Guardar" va arriba y a todo el ancho; Cancelar y Reiniciar diseño debajo, a mitades */}
             <div className="p-4 sm:p-6 border-t border-gray-100 bg-gray-50/90 backdrop-blur grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-3 sticky bottom-0 pb-[max(1rem,env(safe-area-inset-bottom))]">
               <button
                 onClick={handleStoreSave}
@@ -4220,6 +4242,14 @@ function AdminDashboard({ user }: { user: User }) {
                 className="order-2 sm:order-2 sm:ml-auto px-6 py-3 rounded-xl sm:rounded-md font-bold text-gray-600 bg-white border border-gray-200 sm:border-transparent sm:bg-transparent hover:bg-gray-200 transition-colors disabled:opacity-50 text-sm"
               >
                 Cancelar
+              </button>
+              <button
+                onClick={handleStoreReset}
+                disabled={isStoreSaving}
+                className="order-3 sm:order-1 flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl sm:rounded-md font-bold text-gray-600 bg-white border border-gray-200 sm:border-transparent sm:bg-transparent hover:bg-gray-200 transition-colors disabled:opacity-50 text-sm"
+              >
+                <span className="material-symbols-outlined text-[18px]">restart_alt</span>
+                Reiniciar diseño
               </button>
             </div>
           </div>
