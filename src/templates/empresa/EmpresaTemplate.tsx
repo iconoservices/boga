@@ -174,7 +174,7 @@ export default function EmpresaTemplate({ store, initialProductId }: Props) {
             ) : (
             <section className="relative w-full md:h-[540px] overflow-hidden" style={{ background: t.secondary }}>
               <img className="block w-full h-auto md:absolute md:inset-0 md:h-full md:object-cover" alt={store.heroAlt} src={store.heroImage} />
-              <div className="hidden md:block absolute inset-0" style={{ background: `linear-gradient(to right, ${t.secondary}ee 0%, ${t.secondary}99 50%, ${t.secondary}33 100%), linear-gradient(to top, ${t.secondary}cc 0%, transparent 60%)` }} />
+              <div className="hidden md:block absolute inset-0" style={{ background: `linear-gradient(to right, ${t.secondary}f5 0%, ${t.secondary}e0 45%, ${t.secondary}66 75%, ${t.secondary}33 100%), linear-gradient(to top, ${t.secondary}e6 0%, transparent 65%)` }} />
               <StoreFloatingActions store={store} />
               <div className="relative pt-6 md:pt-0 md:absolute md:inset-x-0 md:bottom-0 px-5 md:px-10 pb-7 md:pb-10 max-w-6xl md:mx-auto flex flex-col md:flex-row md:items-end md:justify-between gap-6">
                 <div className="max-w-2xl">
@@ -191,12 +191,12 @@ export default function EmpresaTemplate({ store, initialProductId }: Props) {
                   </div>
 
                   {/* Titular: el lema en grande, en blanco */}
-                  <h1 className="font-black uppercase leading-[1.05] tracking-tight text-3xl sm:text-4xl md:text-5xl text-white drop-shadow-lg line-clamp-4">
+                  <h1 className="font-black uppercase leading-[1.05] tracking-tight text-3xl sm:text-4xl md:text-4xl lg:text-5xl text-white drop-shadow-lg">
                     {titular}
                   </h1>
 
                   {perfil?.nosotros && (
-                    <p className={`${TXT.body} md:text-base leading-relaxed text-white/90 mt-4 max-w-xl line-clamp-3`}>{perfil.nosotros}</p>
+                    <p className={`${TXT.body} md:text-base leading-relaxed text-white/90 mt-4 max-w-xl`}>{perfil.nosotros}</p>
                   )}
                 </div>
 
