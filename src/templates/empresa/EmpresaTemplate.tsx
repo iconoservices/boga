@@ -38,6 +38,61 @@ const PASOS = [
   { icon: 'construction', titulo: 'Ejecutamos la obra', texto: 'Fabricación y montaje en taller o en tu local.' },
 ];
 
+/** Punto de color que sigue al mouse por toda la página (con retraso suave) y crece sobre links y botones. Solo con mouse. */
+function PuntoCursor({ color }: { color: string }) {
+  const ref = React.useRef<HTMLSpanElement>(null);
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el || !window.matchMedia('(hover: hover) and (pointer: fine)').matches || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    let x = -100, y = -100, px = -100, py = -100, escala = 1, raf = 0;
+    const mover = (e: MouseEvent) => {
+      x = e.clientX; y = e.clientY;
+      el.style.opacity = '1';
+      escala = (e.target as HTMLElement | null)?.closest?.('a,button,[role="button"],summary,input,select,textarea') ? 2.4 : 1;
+    };
+    const salir = () => { el.style.opacity = '0'; };
+    const tick = () => {
+      px += (x - px) * 0.18; py += (y - py) * 0.18;
+      el.style.transform = `translate(${px - 8}px, ${py - 8}px) scale(${escala})`;
+      raf = requestAnimationFrame(tick);
+    };
+    window.addEventListener('mousemove', mover);
+    document.documentElement.addEventListener('mouseleave', salir);
+    raf = requestAnimationFrame(tick);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('mousemove', mover); document.documentElement.removeEventListener('mouseleave', salir); };
+  }, []);
+  return (
+    <span
+      ref={ref}
+      aria-hidden="true"
+      className="pointer-events-none fixed left-0 top-0 z-[60] w-4 h-4 rounded-full opacity-0 transition-opacity duration-300"
+      style={{ background: color, boxShadow: `0 0 14px ${color}` }}
+    />
+  );
+}
+
+/** Aparece suave (sube y se desvanece) cuando entra en pantalla. Sin movimiento si el equipo pide menos animación. */
+function Aparece({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const [visto, setVisto] = useState(false);
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === 'undefined' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setVisto(true); return; }
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisto(true); io.disconnect(); } }, { threshold: 0.15 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <div
+      ref={ref}
+      className={className}
+      style={{ opacity: visto ? 1 : 0, transform: visto ? 'none' : 'translateY(28px)', transition: `opacity .7s ease ${delay}ms, transform .7s ease ${delay}ms` }}
+    >
+      {children}
+    </div>
+  );
+}
+
 /** Encabezado de una sección de "Nosotros": una línea chica arriba y el título. */
 function TituloSeccion({ t, kicker, titulo, accion }: { t: StoreConfig['theme']; kicker: string; titulo: string; accion?: React.ReactNode }) {
   return (
@@ -238,6 +293,7 @@ export default function EmpresaTemplate({ store, initialProductId, initialTab }:
 
   return (
     <div className="min-h-screen" style={{ background: t.background, color: t.onBackground, fontFamily: t.fontBody }}>
+      <PuntoCursor color={t.primary} />
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
@@ -568,83 +624,127 @@ export default function EmpresaTemplate({ store, initialProductId, initialTab }:
 
         {activeTab === 'nosotros' && perfil && (
           <div className="animate-fade-in">
-            {/* ══ CABECERA: quiénes somos + foto del equipo ══ */}
-            <section className="py-10 md:py-14" style={{ background: t.secondary }}>
-              <div className="max-w-7xl mx-auto px-5 md:px-10 grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 items-center">
-                <div className="lg:col-span-3">
-                  <p className={`${TXT.micro} font-extrabold uppercase tracking-widest text-white/70`}>Nosotros</p>
-                  <h2 className="font-black text-3xl md:text-4xl leading-tight text-white mt-1">{store.name}</h2>
-                  {perfil.nosotros && (
-                    <p className="text-base md:text-lg leading-relaxed text-white/90 mt-4">{perfil.nosotros}</p>
-                  )}
-                  <div className="flex flex-col sm:flex-row gap-3 mt-6">
-                    {c.whatsappVisible && (
-                      <button onClick={() => cotizar()} className={`px-6 py-3 rounded-xl font-bold ${TXT.body} bg-white active:scale-95 transition-all`} style={{ color: t.secondary }}>
-                        Pedir cotización
-                      </button>
-                    )}
-                    {perfil.brochure && (
-                      <a href={perfil.brochure} target="_blank" rel="noopener noreferrer" className={`px-6 py-3 rounded-xl font-bold ${TXT.body} flex items-center justify-center gap-2 border-2 border-white/80 text-white hover:bg-white/10 active:scale-95 transition-all`}>
-                        <span className={`material-symbols-outlined ${ICON.md}`}>picture_as_pdf</span>
-                        Descargar brochure
-                      </a>
-                    )}
-                  </div>
-                </div>
-                {perfil.equipoFoto && (
-                  <figure className="lg:col-span-2">
-                    <img src={perfil.equipoFoto} alt={`Equipo de ${store.name}`} className="w-full aspect-[4/3] rounded-2xl object-cover shadow-2xl" />
-                    {perfil.equipoTexto && <figcaption className={`${TXT.small} mt-2 font-semibold text-white/80`}>{perfil.equipoTexto}</figcaption>}
-                  </figure>
-                )}
-                {!perfil.equipoFoto && (filas.length > 0 || perfil.email) && (
-                  <aside className="lg:col-span-2 rounded-2xl p-6 bg-white/10 border border-white/20 backdrop-blur-sm">
-                    <p className={`${TXT.micro} font-extrabold uppercase tracking-widest text-white/70 mb-3`}>Datos de contacto</p>
-                    <dl className="space-y-3">
-                      {[...filas, ...(perfil.email ? [{ label: 'Correo', valor: perfil.email }] : [])].map((f) => (
-                        <div key={f.label}>
-                          <dt className={`${TXT.micro} font-bold uppercase tracking-wider text-white/60`}>{f.label}</dt>
-                          <dd className={`${TXT.body} font-semibold text-white`}>{f.valor}</dd>
+            {/* ══ CABECERA: fotos superpuestas + quiénes somos + misión/visión + viñetas ══ */}
+            {(() => {
+              const fotoGrande = perfil.equipoFoto || obras[0];
+              const fotoChica = perfil.equipoFoto ? obras[0] : obras[1];
+              const valores = (perfil.politicas ?? []).slice(0, 2).map((p, i) => ({ t: p.titulo, icon: i === 0 ? 'workspace_premium' : 'verified_user', v: p.texto }));
+              const datos = [...filas, ...(perfil.email ? [{ label: 'Correo', valor: perfil.email }] : [])];
+              return (
+                <section className="py-10 md:py-14">
+                  <div className="max-w-7xl mx-auto px-5 md:px-10 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+                    {fotoGrande ? (
+                      <Aparece className="relative pb-16 pr-10 sm:pr-16">
+                        <img src={fotoGrande} alt={`Equipo de ${store.name}`} className="w-full aspect-[4/5] object-cover rounded-3xl shadow-xl" />
+                        {fotoChica && (
+                          <img src={fotoChica} alt="" className="absolute right-0 top-[18%] w-[58%] aspect-[4/5] object-cover rounded-2xl shadow-2xl border-4 border-white transition-transform duration-500 hover:-translate-y-2 hover:-rotate-1" />
+                        )}
+                        {store.logoImage && (
+                          <span className="absolute left-[44%] bottom-0 w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-white border-4 flex items-center justify-center p-3 shadow-xl transition-transform duration-500 hover:rotate-12 hover:scale-110" style={{ borderColor: t.primary }}>
+                            <img src={store.logoImage} alt="" className="max-w-full max-h-full object-contain" />
+                          </span>
+                        )}
+                        {perfil.equipoTexto && <p className={`${TXT.small} mt-3 font-semibold`} style={{ color: t.onSurfaceVariant }}>{perfil.equipoTexto}</p>}
+                      </Aparece>
+                    ) : datos.length > 0 ? (
+                      <aside className="rounded-3xl p-6 md:p-8" style={{ background: t.secondary }}>
+                        <p className={`${TXT.micro} font-extrabold uppercase tracking-widest text-white/70 mb-3`}>Datos de contacto</p>
+                        <dl className="space-y-3">
+                          {datos.map((f) => (
+                            <div key={f.label}>
+                              <dt className={`${TXT.micro} font-bold uppercase tracking-wider text-white/60`}>{f.label}</dt>
+                              <dd className={`${TXT.body} font-semibold text-white`}>{f.valor}</dd>
+                            </div>
+                          ))}
+                        </dl>
+                      </aside>
+                    ) : null}
+
+                    <Aparece delay={150} className={fotoGrande || datos.length > 0 ? '' : 'lg:col-span-2 max-w-3xl'}>
+                      <p className={`${TXT.micro} font-extrabold uppercase tracking-widest flex items-center gap-2`} style={{ color: t.onSurface }}>
+                        <span className="w-2 h-2 inline-block" style={{ background: t.primary }} />Nosotros
+                      </p>
+                      <h2 className="font-black text-3xl md:text-5xl leading-tight mt-2" style={{ color: t.onSurface }}>{store.name}</h2>
+                      {perfil.nosotros && (
+                        <p className="text-base md:text-lg leading-relaxed mt-4 whitespace-pre-line" style={{ color: t.onSurfaceVariant }}>{perfil.nosotros}</p>
+                      )}
+
+                      {valores.length > 0 && (
+                        <div className="mt-6 rounded-2xl p-5 md:p-6 grid grid-cols-1 sm:grid-cols-2 gap-5" style={{ background: t.surfaceContainer, borderLeft: `5px solid ${t.primary}` }}>
+                          {valores.map((x) => (
+                            <div key={x.t} className="group/valor flex items-start gap-4">
+                              <span className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover/valor:scale-110 group-hover/valor:-rotate-6" style={{ background: t.primary, color: t.onPrimary }}>
+                                <span className={`material-symbols-outlined ${ICON.lg}`}>{x.icon}</span>
+                              </span>
+                              <div>
+                                <p className="font-extrabold text-lg" style={{ color: t.onSurface }}>{x.t}</p>
+                                <p className={`${TXT.small} leading-relaxed mt-1 line-clamp-3`} style={{ color: t.onSurfaceVariant }}>{x.v}</p>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </dl>
-                  </aside>
-                )}
-              </div>
-            </section>
+                      )}
 
-            <div className="max-w-7xl mx-auto px-5 md:px-10 py-10 md:py-12 space-y-12">
-              {/* ══ MISIÓN Y VISIÓN ══ */}
-              {(perfil.mision || perfil.vision) && (
-                <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[{ t: 'Nuestra misión', icon: 'flag', v: perfil.mision }, { t: 'Nuestra visión', icon: 'visibility', v: perfil.vision }]
-                    .filter((x) => x.v)
-                    .map((x) => (
-                      <div key={x.t} className="p-6 rounded-2xl" style={{ background: t.surface, border: `1px solid ${t.outlineVariant}60`, borderLeft: `4px solid ${t.primary}` }}>
-                        <p className="font-extrabold text-lg flex items-center gap-2 mb-2" style={{ color: t.primary }}>
-                          <span className={`material-symbols-outlined ${ICON.lg}`}>{x.icon}</span>{x.t}
-                        </p>
-                        <p className={`${TXT.body} leading-relaxed`} style={{ color: t.onSurfaceVariant }}>{x.v}</p>
+                      <div className="flex flex-col sm:flex-row gap-3 mt-7">
+                        {c.whatsappVisible && (
+                          <button onClick={() => cotizar()} className={`px-6 py-3 rounded-xl font-bold ${TXT.body} active:scale-95 transition-all flex items-center justify-center gap-2`} style={{ background: t.primary, color: t.onPrimary }}>
+                            Pedir cotización
+                            <span className={`material-symbols-outlined ${ICON.md}`}>arrow_forward</span>
+                          </button>
+                        )}
+                        {perfil.brochure && (
+                          <a href={perfil.brochure} target="_blank" rel="noopener noreferrer" className={`px-6 py-3 rounded-xl font-bold ${TXT.body} flex items-center justify-center gap-2 border-2 active:scale-95 transition-all`} style={{ borderColor: t.primary, color: t.primary }}>
+                            <span className={`material-symbols-outlined ${ICON.md}`}>picture_as_pdf</span>
+                            Descargar brochure
+                          </a>
+                        )}
                       </div>
-                    ))}
-                </section>
-              )}
-
-              {/* ══ SECTORES ══ */}
-              {perfil.sectores && perfil.sectores.length > 0 && (
-                <section>
-                  <TituloSeccion t={t} kicker="A quién servimos" titulo="Sectores que atendemos" />
-                  <div className="flex flex-wrap gap-3">
-                    {perfil.sectores.map((sec) => (
-                      <span key={sec} className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl ${TXT.body} font-bold`} style={{ background: t.surface, border: `1px solid ${t.outlineVariant}60`, color: t.onSurface }}>
-                        <span className={`material-symbols-outlined ${ICON.md}`} style={{ color: t.primary }}>check_circle</span>
-                        {sec}
-                      </span>
-                    ))}
+                    </Aparece>
                   </div>
                 </section>
-              )}
+              );
+            })()}
 
+            {/* ══ MISIÓN · VISIÓN · SECTORES: tres tarjetas sobre el color de la plantilla ══ */}
+            {(perfil.mision || perfil.vision || (perfil.sectores?.length ?? 0) > 0) && (
+              <section className="py-12 md:py-16" style={{ background: t.secondary }}>
+                <div className="max-w-7xl mx-auto px-5 md:px-10 grid grid-cols-1 md:grid-cols-3 gap-5">
+                  {[
+                    { titulo: 'Nuestra misión', texto: perfil.mision, tags: [] as string[] },
+                    { titulo: 'Nuestra visión', texto: perfil.vision, tags: [] as string[] },
+                    { titulo: 'Sectores que atendemos', texto: '', tags: perfil.sectores ?? [] },
+                  ]
+                    .filter((x) => x.texto || x.tags.length > 0)
+                    .map((x, i) => (
+                      <Aparece key={x.titulo} delay={i * 130} className="h-full">
+                      <article
+                        className="group relative overflow-hidden rounded-2xl p-6 md:p-7 flex flex-col h-full transition-transform duration-300 hover:-translate-y-1.5"
+                        style={{ background: '#ffffff12', border: '1px solid #ffffff20' }}
+                      >
+                        {obras[i + 2] && (
+                          <div className="overflow-hidden rounded-xl mb-5">
+                            <img src={obras[i + 2]} alt="" className="w-full h-36 object-cover transition-transform duration-700 group-hover:scale-110" />
+                          </div>
+                        )}
+                        <h3 className="font-extrabold text-xl text-white flex items-center gap-2">
+                          <span className="w-2 h-2 inline-block" style={{ background: t.primary }} />{x.titulo}
+                        </h3>
+                        {x.texto && <p className={`${TXT.body} leading-relaxed text-white/80 mt-3 whitespace-pre-line`}>{x.texto}</p>}
+                        {x.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-4">
+                            {x.tags.map((tag) => (
+                              <span key={tag} className={`px-4 py-2 rounded-lg ${TXT.small} font-semibold text-white transition-colors hover:bg-white/30`} style={{ background: '#ffffff1f' }}>{tag}</span>
+                            ))}
+                          </div>
+                        )}
+                      </article>
+                      </Aparece>
+                    ))}
+                </div>
+              </section>
+            )}
+
+            <div className="max-w-7xl mx-auto px-5 md:px-10 pb-10 md:pb-12 space-y-12">
               {/* ══ CLIENTES ══ */}
               {perfil.clientes && perfil.clientes.length > 0 && (
                 <section>

@@ -73,6 +73,7 @@ import InstalarBogaPrompt from '@/components/InstalarBogaPrompt';
 import HomeFloatingActions from '@/components/HomeFloatingActions';
 import { RUTAS_HUB } from '@/lib/rutasHub';
 import MetaPixelTracker from '@/components/MetaPixelTracker';
+import SplashInicial from '@/components/SplashInicial';
 
 export default function RootLayout({
   children,
@@ -164,6 +165,8 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-background text-on-background font-body-md min-h-screen overflow-x-hidden">
+        <SplashInicial />
+        <noscript><style>{`.boga-splash{display:none}`}</style></noscript>
         <AuthProvider>
           <StoreSettingsProvider>
             <DemoProvider>
