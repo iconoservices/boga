@@ -176,8 +176,8 @@ export default function EmpresaTemplate({ store, initialProductId }: Props) {
               <img className="block w-full h-auto md:absolute md:inset-0 md:h-full md:object-cover" alt={store.heroAlt} src={store.heroImage} />
               <div className="hidden md:block absolute inset-0" style={{ background: `linear-gradient(to right, ${t.secondary}f5 0%, ${t.secondary}e0 45%, ${t.secondary}66 75%, ${t.secondary}33 100%), linear-gradient(to top, ${t.secondary}e6 0%, transparent 65%)` }} />
               <StoreFloatingActions store={store} />
-              <div className="relative pt-6 md:pt-0 md:absolute md:inset-x-0 md:bottom-0 px-5 md:px-10 pb-7 md:pb-9 max-w-6xl md:mx-auto flex flex-col md:flex-row md:items-end md:justify-between gap-5 md:gap-8">
-                <div className="max-w-3xl">
+              <div className="relative pt-6 md:pt-0 md:absolute md:inset-x-0 md:bottom-0 px-5 md:px-10 pb-7 md:pb-9 max-w-[88rem] md:mx-auto flex flex-col md:flex-row md:items-end md:justify-between gap-5 md:gap-8">
+                <div className="max-w-4xl">
                   {/* Etiqueta: logo + rubro */}
                   <div className="flex items-center gap-2.5 mb-4">
                     {store.logoImage ? (
@@ -196,7 +196,7 @@ export default function EmpresaTemplate({ store, initialProductId }: Props) {
                   </h1>
 
                   {perfil?.nosotros && (
-                    <p className={`${TXT.body} md:text-base leading-relaxed text-white/90 mt-3 max-w-2xl`}>{perfil.nosotros}</p>
+                    <p className={`${TXT.body} md:text-base leading-relaxed text-white/90 mt-3 max-w-3xl`}>{perfil.nosotros}</p>
                   )}
                 </div>
 
