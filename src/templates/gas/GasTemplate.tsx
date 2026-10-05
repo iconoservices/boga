@@ -290,19 +290,6 @@ export default function GasTemplate({ store, initialProductId }: Props) {
         cartCount={0}
       />
 
-      {/* WhatsApp flotante: sobre la barra inferior en móvil, abajo a la derecha en escritorio. */}
-      {c.whatsappVisible && (
-        <button
-          onClick={() => consultar()}
-          aria-label="Escríbenos por WhatsApp"
-          title="Escríbenos por WhatsApp"
-          className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-xl active:scale-95 transition-all"
-          style={{ background: '#25D366', color: '#ffffff' }}
-        >
-          <IconoWhatsApp className="w-7 h-7" />
-        </button>
-      )}
-
       <ProductModal
         t={t}
         producto={c.detalle}
