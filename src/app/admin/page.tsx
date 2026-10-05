@@ -787,6 +787,9 @@ function AdminDashboard({ user }: { user: User }) {
     doc.save(`Boleta_${storeName.replace(/\s+/g, '_')}_${String(venta.id).substring(0, 8)}.pdf`);
   };
 
+  // El editor de tienda habla el idioma de la plantilla: una empresa de servicios no "vende", "cotiza".
+  const editEmpresa = editingStoreSlug ? stores[editingStoreSlug]?.template === 'empresa' : false;
+
   const openStoreEditor = (slug: string, section: string | null = null) => {
     const config = stores[slug];
     const dbData = dbStores.find((s: any) => s.slug === slug);
@@ -3680,7 +3683,7 @@ function AdminDashboard({ user }: { user: User }) {
                   <label className="block text-sm font-bold text-gray-700">Foto de Portada</label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" checked={storeForm.hide_hero_text} onChange={e => setStoreForm({ ...storeForm, hide_hero_text: e.target.checked })} className="w-4 h-4 rounded text-black focus:ring-black border-gray-300 accent-black" />
-                    <span className="text-xs font-semibold text-gray-600">Ocultar texto sobre banner (Modo Flyer)</span>
+                    <span className="text-xs font-semibold text-gray-600">{editEmpresa ? 'Mi banner ya trae el texto: mostrarlo entero, sin titular encima' : 'Ocultar texto sobre banner (Modo Flyer)'}</span>
                   </label>
                 </div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Foto de Portada</label>
@@ -3895,25 +3898,25 @@ function AdminDashboard({ user }: { user: User }) {
 
               {/* Name */}
               <div id="editor-datos" className="scroll-mt-4">
-                <label className="block text-sm font-bold text-gray-700 mb-2">Nombre de la Tienda</label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">{editEmpresa ? 'Nombre de la empresa' : 'Nombre de la Tienda'}</label>
                 <input
                   type="text"
                   value={storeForm.name}
                   onChange={e => setStoreForm({...storeForm, name: e.target.value})}
                   className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
-                  placeholder="Ej: Sunset Lounge"
+                  placeholder={editEmpresa ? 'Ej: S.E.L. Perú' : 'Ej: Sunset Lounge'}
                 />
               </div>
 
               {/* Tagline */}
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Slogan / Descripción Corta</label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">{editEmpresa ? 'Lema (el titular de tu portada)' : 'Slogan / Descripción Corta'}</label>
                 <input
                   type="text"
                   value={storeForm.tagline}
                   onChange={e => setStoreForm({...storeForm, tagline: e.target.value})}
                   className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
-                  placeholder="Ej: Bar & Café"
+                  placeholder={editEmpresa ? 'Ej: Fabricación y montaje de estructuras metálicas' : 'Ej: Bar & Café'}
                 />
               </div>
 
@@ -3942,7 +3945,7 @@ function AdminDashboard({ user }: { user: User }) {
 
               {/* WhatsApp de pedidos */}
               <div id="editor-avisos" className="scroll-mt-4">
-                <label className="block text-sm font-bold text-gray-700 mb-2">WhatsApp de Pedidos</label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">{editEmpresa ? 'WhatsApp de cotizaciones' : 'WhatsApp de Pedidos'}</label>
                 <input
                   type="tel"
                   inputMode="numeric"
@@ -3952,7 +3955,7 @@ function AdminDashboard({ user }: { user: User }) {
                   placeholder="51987654321"
                 />
                 <p className="text-xs text-gray-500 mt-1.5">
-                  Con código de país y sin espacios ni signos. Es el número al que te llegan los pedidos de tu tienda.
+                  Con código de país y sin espacios ni signos. {editEmpresa ? 'Es el número al que te escriben para pedir una cotización.' : 'Es el número al que te llegan los pedidos de tu tienda.'}
                 </p>
                 {!storeForm.whatsapp && (
                   <p className="text-xs text-[#8c0009] font-semibold mt-1.5 flex items-center gap-1">
@@ -3962,6 +3965,7 @@ function AdminDashboard({ user }: { user: User }) {
                 )}
               </div>
 
+              {!editEmpresa && (<>
               {/* Metodos de pago: solo informativos, el pago se coordina por WhatsApp */}
               <div id="editor-pagos" className="scroll-mt-4">
                 <label className="block text-sm font-bold text-gray-700 mb-1">Métodos de Pago que Aceptas</label>
@@ -4038,6 +4042,8 @@ function AdminDashboard({ user }: { user: User }) {
                   })}
                 </div>
               </div>
+
+              </>)}
 
               {/* Cobro online (Izipay): solo con el módulo «pasarela_pago» prendido por el superadmin */}
               {editingStoreSlug && dbStores.find((s: any) => s.slug === editingStoreSlug)?.modulos?.pasarela_pago === true && (
