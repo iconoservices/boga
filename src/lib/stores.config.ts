@@ -66,6 +66,8 @@ export interface StoreConfig {
    * prefieren una foto limpia sin texto encima — el nombre ya está en el header.
    */
   hideHeroText?: boolean;
+  /** Plantilla "empresa": presentación, políticas, clientes y correo. Ver lib/perfilEmpresa.ts. */
+  perfilEmpresa?: import('./perfilEmpresa').PerfilEmpresa;
 }
 
 // Las tiendas viven en Supabase, no aca. Cada consumidor las carga por su lado:

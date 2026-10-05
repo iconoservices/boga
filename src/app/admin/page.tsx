@@ -8,6 +8,8 @@ import { type StoreConfig } from '@/lib/stores.config';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { QRCodeSVG } from 'qrcode.react';
+import PerfilEmpresaEditor from './PerfilEmpresaEditor';
+import { normalizarPerfilEmpresa, type PerfilEmpresa } from '@/lib/perfilEmpresa';
 import { useAuth } from '@/context/AuthContext';
 import type { User } from '@supabase/supabase-js';
 import { COLOR_PRESETS, getColorPreset } from '@/lib/colorPresets';
@@ -349,6 +351,8 @@ function AdminDashboard({ user }: { user: User }) {
 
   // Datos derivados para la pestaña Inicio (una sola carta).
   const inicioStore = stores[focusedStore];
+  // Tiendas de tipo "empresa" (plantilla de servicios): el catálogo se llama "servicios", no "productos".
+  const esEmpresa = stores[focusedStore]?.template === 'empresa';
   const inicioDb = dbStores.find((s: any) => s.slug === focusedStore);
   const inicioActiva = (inicioDb?.status ?? 'active') === 'active';
   const inicioNombre = (user.user_metadata?.name as string | undefined)?.split(' ')[0];
@@ -413,7 +417,7 @@ function AdminDashboard({ user }: { user: User }) {
   const [isStoreEditorOpen, setIsStoreEditorOpen] = useState(false);
   const [editingStoreSlug, setEditingStoreSlug] = useState<string | null>(null);
   const [isStoreSaving, setIsStoreSaving] = useState(false);
-  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '', show_demo_products: false, hide_hero_text: false, zona: '', direccion: '', horario: '', rating: '', metodos_pago: [] as string[], facebook: '', instagram: '', tiktok: '', latitud: null as number | null, longitud: null as number | null, mostrar_ubicacion: false, entrega: 'ambos' as 'delivery' | 'recojo' | 'ambos' });
+  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '', show_demo_products: false, hide_hero_text: false, zona: '', direccion: '', horario: '', rating: '', metodos_pago: [] as string[], facebook: '', instagram: '', tiktok: '', latitud: null as number | null, longitud: null as number | null, mostrar_ubicacion: false, entrega: 'ambos' as 'delivery' | 'recojo' | 'ambos', perfil_empresa: {} as PerfilEmpresa });
   // Constructor de horario a golpe de clic: arma el texto de storeForm.horario a partir de los días
   // y la hora elegidos, en vez de que el dueño tenga que escribirlo a mano. El campo de texto sigue
   // ahí para ajustarlo o escribir algo distinto (ej. "Cerramos los feriados").
@@ -473,7 +477,9 @@ function AdminDashboard({ user }: { user: User }) {
   // Tiendas de terrenos: "Subcategoría" pasa a ser el área, y aparece un campo para la ubicación (enlace de Maps).
   const esTerreno = ['terreno1', 'terreno2'].includes(String((stores as any)[newProduct.store]?.template ?? ''));
   // Gas: los productos se publican sin precio (el cliente consulta por WhatsApp).
-  const precioOpcional = (stores as any)[newProduct.store]?.template === 'gas';
+  // Vocabulario del formulario: según la tienda a la que se asigna el ítem.
+  const formEmpresa = (stores as any)[newProduct.store]?.template === 'empresa';
+  const precioOpcional = (stores as any)[newProduct.store]?.template === 'gas' || (stores as any)[newProduct.store]?.template === 'empresa';
 
   const resetForm = () => {
     setModoPres(null);
@@ -802,6 +808,7 @@ function AdminDashboard({ user }: { user: User }) {
       longitud: typeof dbData?.longitud === 'number' ? dbData.longitud : null,
       mostrar_ubicacion: dbData?.mostrar_ubicacion === true,
       entrega: dbData?.entrega === 'delivery' || dbData?.entrega === 'recojo' ? dbData.entrega : 'ambos',
+      perfil_empresa: normalizarPerfilEmpresa(dbData?.perfil_empresa) ?? {},
     });
     // El constructor de horario arranca en blanco: no intenta adivinar los días/hora desde el texto libre que ya tenía.
     setHorarioBloques([BLOQUE_VACIO]);
@@ -882,6 +889,9 @@ function AdminDashboard({ user }: { user: User }) {
         categories: storeCategories,
         status: 'active',
       };
+      // Perfil de empresa: solo se manda en tiendas con esa plantilla o que ya tenían uno (así guardar otra tienda no depende del SQL).
+      const tienePerfilEmpresa = stores[editingStoreSlug]?.template === 'empresa' || !!dbStores.find((x: any) => x.slug === editingStoreSlug)?.perfil_empresa;
+      if (tienePerfilEmpresa) upsertData.perfil_empresa = normalizarPerfilEmpresa(storeForm.perfil_empresa);
       // Ubicación: solo se manda si la tienda tiene o tuvo una (así, sin correr el SQL, guardar la tienda no avisa nada).
       const tuvoUbicacion = typeof dbStores.find((x: any) => x.slug === editingStoreSlug)?.latitud === 'number';
       if (storeForm.latitud != null || tuvoUbicacion) {
@@ -916,7 +926,7 @@ function AdminDashboard({ user }: { user: User }) {
       // en vez de perder todo el guardado. Paso exactamente esto con `whatsapp`:
       // el panel quedo sin poder guardar NADA de ninguna tienda hasta correr la
       // migracion. Columnas opcionales porque llegaron despues del lanzamiento.
-      const columnasOpcionales = ['show_demo_products', 'hide_hero_text', 'zona', 'direccion', 'horario', 'rating', 'metodos_pago', 'categories', 'facebook', 'instagram', 'tiktok', 'latitud', 'longitud', 'mostrar_ubicacion'];
+      const columnasOpcionales = ['show_demo_products', 'hide_hero_text', 'zona', 'direccion', 'horario', 'rating', 'metodos_pago', 'categories', 'facebook', 'instagram', 'tiktok', 'latitud', 'longitud', 'mostrar_ubicacion', 'perfil_empresa'];
       const columnasFaltantes: string[] = [];
       let faltante = columnasOpcionales.find((col) => col in upsertData && new RegExp(col).test(error?.message || ''));
       while (error && faltante) {
@@ -1475,7 +1485,7 @@ function AdminDashboard({ user }: { user: User }) {
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md font-semibold transition-colors ${activeTab === t.id ? 'bg-[var(--tienda-color)] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
             >
               <span className="material-symbols-outlined text-[20px]">{t.icon}</span>
-              {t.label}
+              {t.id === 'products' && esEmpresa ? 'Servicios' : t.label}
               {t.id === 'orders' && pedidosPendientes > 0 && (
                 <span className="ml-auto min-w-[20px] h-5 px-1.5 rounded-full bg-orange-500 text-white text-[11px] font-black flex items-center justify-center">{pedidosPendientes}</span>
               )}
@@ -1534,14 +1544,14 @@ function AdminDashboard({ user }: { user: User }) {
         <header className={`hidden md:flex flex-col md:flex-row md:items-center justify-between gap-4 ${activeTab === 'pos' ? 'mb-2' : 'mb-6'}`}>
           <div>
             <h1 className={`${activeTab === 'pos' ? 'text-lg font-black' : 'text-2xl font-extrabold'} text-gray-900 tracking-tight`}>
-              {activeTab === 'inicio' ? 'Inicio' : activeTab === 'products' ? 'Gestión de Productos' : activeTab === 'categories' ? 'Categorías' : activeTab === 'orders' ? 'Gestión de Pedidos' : activeTab === 'stores' ? 'Mis Tiendas' : activeTab === 'pos' ? 'Caja Rápida (POS)' : 'Métricas y Rendimiento'}
+              {activeTab === 'inicio' ? 'Inicio' : activeTab === 'products' ? (esEmpresa ? 'Gestión de Servicios' : 'Gestión de Productos') : activeTab === 'categories' ? 'Categorías' : activeTab === 'orders' ? 'Gestión de Pedidos' : activeTab === 'stores' ? 'Mis Tiendas' : activeTab === 'pos' ? 'Caja Rápida (POS)' : 'Métricas y Rendimiento'}
               {(activeTab === 'pos' || activeTab === 'inicio') && stores[focusedStore] && (
                 <span className="ml-2 text-gray-400 font-semibold">· {stores[focusedStore].name}</span>
               )}
             </h1>
             {activeTab !== 'pos' && activeTab !== 'inicio' && (
               <p className="text-gray-500 text-sm font-medium mt-1">
-                {activeTab === 'products' ? (inventarioOn ? 'Administra el inventario de tus tiendas.' : 'Administra la carta de tus tiendas.') : activeTab === 'categories' ? 'Crea, ordena y renombra los rubros de tu carta.' : activeTab === 'orders' ? 'Gestiona los pedidos de tus clientes.' : activeTab === 'stores' ? 'Administra la información de tus sucursales.' : 'Analiza el rendimiento de tu negocio.'}
+                {activeTab === 'products' ? (esEmpresa ? 'Administra los servicios de tu empresa.' : inventarioOn ? 'Administra el inventario de tus tiendas.' : 'Administra la carta de tus tiendas.') : activeTab === 'categories' ? 'Crea, ordena y renombra los rubros de tu carta.' : activeTab === 'orders' ? 'Gestiona los pedidos de tus clientes.' : activeTab === 'stores' ? 'Administra la información de tus sucursales.' : 'Analiza el rendimiento de tu negocio.'}
               </p>
             )}
           </div>
@@ -1639,7 +1649,7 @@ function AdminDashboard({ user }: { user: User }) {
           // ── "Completa tu tienda": lo que falta para vender bien, con un toque para arreglarlo ──
           const tareas = [
             { ok: !!inicioStore.logoImage, icon: 'add_photo_alternate', titulo: 'Sube tu logo', sub: 'Tus clientes te reconocen al instante', ir: () => openStoreEditor(inicioStore.slug, 'portada') },
-            { ok: misProductos.length >= 3, icon: 'inventory_2', titulo: 'Carga al menos 3 productos', sub: `Tienes ${misProductos.length}`, ir: () => { resetForm(); setNewProduct(prev => ({ ...prev, store: inicioStore.slug })); setIsModalOpen(true); } },
+            { ok: misProductos.length >= 3, icon: 'inventory_2', titulo: esEmpresa ? 'Carga al menos 3 servicios' : 'Carga al menos 3 productos', sub: `Tienes ${misProductos.length}`, ir: () => { resetForm(); setNewProduct(prev => ({ ...prev, store: inicioStore.slug })); setIsModalOpen(true); } },
             { ok: !!inicioStore.whatsapp, icon: 'chat', titulo: 'Agrega tu WhatsApp de pedidos', sub: 'Sin él, los pedidos no llegan a ti', ir: () => openStoreEditor(inicioStore.slug, 'avisos') },
             { ok: !!inicioStore.horario, icon: 'schedule', titulo: 'Define tu horario', sub: 'Para que sepan cuándo atiendes', ir: () => openStoreEditor(inicioStore.slug, 'horario') },
             { ok: (inicioStore.metodosPago?.length ?? 0) > 0, icon: 'payments', titulo: 'Elige cómo te pagan', sub: 'Efectivo, Yape, tarjeta…', ir: () => openStoreEditor(inicioStore.slug, 'pagos') },
@@ -1767,7 +1777,7 @@ function AdminDashboard({ user }: { user: User }) {
               <p className={titulo}>Acciones rápidas</p>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { icon: 'add_circle', t: 'Agregar producto', s: 'Súbelo con su foto y precio', on: () => { resetForm(); setNewProduct(prev => ({ ...prev, store: inicioStore.slug })); setIsModalOpen(true); } },
+                  { icon: 'add_circle', t: esEmpresa ? 'Agregar servicio' : 'Agregar producto', s: esEmpresa ? 'Súbelo con su foto y descripción' : 'Súbelo con su foto y precio', on: () => { resetForm(); setNewProduct(prev => ({ ...prev, store: inicioStore.slug })); setIsModalOpen(true); } },
                   ...(posOn ? [{ icon: 'point_of_sale', t: 'Nueva venta', s: 'Caja rápida en el local', on: () => setActiveTab('pos') }] : []),
                   { icon: 'share', t: 'Compartir mi tienda', s: 'Envía tu enlace por WhatsApp', on: compartirCarta },
                   { icon: 'qr_code_2', t: 'Código QR', s: 'Para tus mesas o tu puerta', on: () => { setSelectedStore(inicioStore.slug); setIsQRModalOpen(true); } },
@@ -2035,14 +2045,14 @@ function AdminDashboard({ user }: { user: User }) {
                 
                 <div className="overflow-x-auto">
                   {isLoading ? (
-                    <div className="p-8 text-center text-gray-400">Cargando productos...</div>
+                    <div className="p-8 text-center text-gray-400">esEmpresa ? 'Cargando servicios...' : 'Cargando productos...'</div>
                   ) : filteredProducts.length === 0 ? (
                     <div className="p-12 flex flex-col items-center justify-center text-center">
                       <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
                         <span className="material-symbols-outlined text-3xl text-gray-400">inventory_2</span>
                       </div>
-                      <h3 className="text-lg font-bold text-gray-900 mb-1">No hay productos</h3>
-                      <p className="text-gray-500 text-sm max-w-sm">No se encontraron productos para esta tienda. Empieza añadiendo el primero.</p>
+                      <h3 className="text-lg font-bold text-gray-900 mb-1">{esEmpresa ? 'No hay servicios' : 'No hay productos'}</h3>
+                      <p className="text-gray-500 text-sm max-w-sm">{esEmpresa ? 'No se encontraron servicios para esta tienda. Empieza añadiendo el primero.' : 'No se encontraron productos para esta tienda. Empieza añadiendo el primero.'}</p>
                       <button 
                         onClick={() => { resetForm(); setIsModalOpen(true); }}
                         className="mt-6 px-4 py-2 bg-[var(--tienda-color)] text-white font-semibold rounded-lg hover:bg-[#8f0f0b] transition-colors"
@@ -2057,7 +2067,7 @@ function AdminDashboard({ user }: { user: User }) {
                         <table className="w-full text-left border-collapse min-w-[800px]">
                           <thead>
                             <tr className="bg-[#f8f9fa] text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-100">
-                              <th className="p-3 font-bold w-1/3">Producto</th>
+                              <th className="p-3 font-bold w-1/3">{esEmpresa ? 'Servicio' : 'Producto'}</th>
                               {selectedStore === 'all' && <th className="p-3 font-bold">Tienda</th>}
                               <th className="p-3 font-bold">Categoría</th>
                               {inventarioOn && <th className="p-3 font-bold">Stock</th>}
@@ -3029,7 +3039,7 @@ function AdminDashboard({ user }: { user: User }) {
             {/* Mismo formato que el formulario de productos del superadmin: las acciones van ARRIBA y fijas (no hay que bajar
                 hasta el final del formulario) y en escritorio la foto queda a la izquierda y los campos a la derecha. */}
             <div className="px-6 py-4 md:px-8 border-b border-gray-100 flex justify-between items-center gap-3 bg-white sticky top-0 z-10">
-              <h2 className="text-xl md:text-2xl font-extrabold text-gray-900 tracking-tight truncate">{editingProductId ? 'Editar Producto' : 'Añadir Producto'}</h2>
+              <h2 className="text-xl md:text-2xl font-extrabold text-gray-900 tracking-tight truncate">{editingProductId ? (formEmpresa ? 'Editar Servicio' : 'Editar Producto') : (formEmpresa ? 'Añadir Servicio' : 'Añadir Producto')}</h2>
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
@@ -3067,7 +3077,7 @@ function AdminDashboard({ user }: { user: User }) {
                   ) : editingProductId ? (
                     'Guardar Cambios'
                   ) : (
-                    'Crear Producto'
+                    (formEmpresa ? 'Crear Servicio' : 'Crear Producto')
                   )}
                 </button>
               </div>
@@ -3154,7 +3164,7 @@ function AdminDashboard({ user }: { user: User }) {
 
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Nombre del Producto</label>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">{formEmpresa ? 'Nombre del Servicio' : 'Nombre del Producto'}</label>
                   <input 
                     required
                     type="text" 
@@ -3621,7 +3631,7 @@ function AdminDashboard({ user }: { user: User }) {
             <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
               <div>
                 <h2 className="text-xl font-extrabold text-gray-900">Editar Tienda</h2>
-                <p className="text-sm text-gray-500 mt-0.5 font-medium">{stores[editingStoreSlug]?.name}</p>
+                <p className="text-sm text-gray-500 mt-0.5 font-medium">{stores[editingStoreSlug]?.name} <span className="text-gray-400">· {editingStoreSlug} · plantilla {stores[editingStoreSlug]?.template}</span></p>
               </div>
               <button
                 onClick={() => setIsStoreEditorOpen(false)}
@@ -4176,6 +4186,10 @@ function AdminDashboard({ user }: { user: User }) {
               </div>
 
               {/* Redes sociales: opcional, se muestran como links en la ficha de contacto */}
+              {stores[editingStoreSlug ?? '']?.template === 'empresa' && (
+                <PerfilEmpresaEditor perfil={storeForm.perfil_empresa} onChange={(perfil_empresa) => setStoreForm(prev => ({ ...prev, perfil_empresa }))} />
+              )}
+
               <div id="editor-redes" className="space-y-4 pt-2 border-t border-gray-100 scroll-mt-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Redes sociales (opcional)</label>
@@ -4395,7 +4409,7 @@ function AdminDashboard({ user }: { user: User }) {
               <span className="absolute top-0.5 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-orange-500 text-white text-[10px] font-black flex items-center justify-center">{pedidosPendientes}</span>
             )}
             <span className="material-symbols-outlined text-[22px]">{t.icon}</span>
-            <span className="text-[10px] font-bold">{t.id === 'pos' ? 'Vender' : t.label}</span>
+            <span className="text-[10px] font-bold">{t.id === 'pos' ? 'Vender' : t.id === 'products' && esEmpresa ? 'Servicios' : t.label}</span>
           </button>
         ))}
         <button
@@ -4501,7 +4515,7 @@ function AdminDashboard({ user }: { user: User }) {
                         onClick={() => { setActiveTab(t.id); setIsMobileMenuOpen(false); }}
                         className={activeTab === t.id ? destacado : normal}
                       >
-                        {ico(t.icon)}{t.label}
+                        {ico(t.icon)}{t.id === 'products' && esEmpresa ? 'Servicios' : t.label}
                       </button>
                     ))}
                     {inicioStore && (

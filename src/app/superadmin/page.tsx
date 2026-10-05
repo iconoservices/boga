@@ -42,6 +42,7 @@ const PORTAL_POR_PLANTILLA: Record<string, string> = {
   flores: 'Regalos y Detalles', detalles: 'Regalos y Detalles',
   veterinaria: 'Salud y Bienestar',
   gas: 'Servicios',
+  empresa: 'Servicios',
   rack: 'Hogar', hogar: 'Hogar',
 };
 

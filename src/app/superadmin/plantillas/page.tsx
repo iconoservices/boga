@@ -121,6 +121,11 @@ const TEMPLATE_PRESENTATION: Record<string, { category?: string; description: st
     description: 'Estilo portal de tierras: portada a sangre con título en serif, barra de búsqueda grande y grilla de fotos con el precio bien visible. Consulta por WhatsApp.',
     previewUrl: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&q=80',
   },
+  empresa: {
+    category: 'Negocios',
+    description: 'Empresa de servicios (metalmecánica, construcción, talleres): portada con cotización por WhatsApp, servicios sin precio, galería de obras y contacto. Pensada para clientes que cotizan, no compran por carrito.',
+    previewUrl: '/sel/portada.jpg',
+  },
   gas: {
     category: 'Negocios',
     description: 'Distribuidora de gas: portada con pedido rápido por WhatsApp, balones y accesorios SIN precios (el cliente consulta), zonas de reparto y consejos de seguridad.',

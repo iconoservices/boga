@@ -1923,3 +1923,9 @@ CREATE POLICY "favoritos: el dueño escribe"
 ON public.favoritos FOR ALL
 USING (auth.uid() = user_id)
 WITH CHECK (auth.uid() = user_id);
+
+-- ============================================================
+-- PERFIL DE EMPRESA (plantilla "empresa": quiénes somos, misión/visión, políticas, clientes, correo)
+-- Un solo JSONB por tienda. Ver src/lib/perfilEmpresa.ts.
+-- ============================================================
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS perfil_empresa JSONB;

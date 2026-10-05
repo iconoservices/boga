@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { CLAVE_REABRIR_MODAL, getAuthCookie, deleteAuthCookie } from '@/lib/authCookies';
 
@@ -29,7 +29,14 @@ const CLAVE_CLIENTE_LOCAL = 'boga_cliente_datos';
 export function CustomerSessionProvider({ children }: { children: React.ReactNode }) {
   const [cliente, setCliente] = useState<DatosCliente | null>(null);
   const [modalAbierto, setModalAbierto] = useState(false);
-  const [cuentaEnEncabezado, setCuentaEnEncabezado] = useState(false);
+  // Cuántos botones de cuenta hay montados en el encabezado (el compartido monta uno de escritorio y otro de móvil).
+  // Es un contador y no un sí/no: si uno se desmonta mientras el otro sigue, el botón flotante no debe reaparecer.
+  const [botonesEnEncabezado, setBotonesEnEncabezado] = useState(0);
+  const cuentaEnEncabezado = botonesEnEncabezado > 0;
+  const setCuentaEnEncabezado = useCallback(
+    (v: boolean) => setBotonesEnEncabezado((n) => Math.max(0, n + (v ? 1 : -1))),
+    [],
+  );
 
   // Cargar datos guardados del cliente
   useEffect(() => {

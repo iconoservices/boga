@@ -26,7 +26,7 @@ type LineaCarrito = { clave: string; producto: Producto; pres?: Presentacion; qt
 export function useCatalogo(store: StoreConfig, initialProductId?: string) {
   const demoPermitido = store.showDemoProducts === true;
   // Distribuidoras de gas: ningún producto muestra precio, se consulta por WhatsApp. En las demás plantillas, solo el producto con precio 0.
-  const sinPrecioTodo = store.template === 'gas';
+  const sinPrecioTodo = store.template === 'gas' || store.template === 'empresa';
 
   const [products, setProducts] = useState<Producto[]>([]);
   // Falso cuando ya llego la respuesta del catalogo (para mostrar esqueletos en vez de "sin productos" mientras carga).

@@ -1,3 +1,4 @@
+import { normalizarPerfilEmpresa } from '@/lib/perfilEmpresa';
 import { getTemplate } from '@/lib/templates.config';
 import type { StoreTheme } from '@/lib/templates.config';
 import { temaDesdePaleta } from '@/lib/paleta';
@@ -107,6 +108,7 @@ async function cargarTienda(slug: string) {
         longitud: typeof dbStore.longitud === 'number' ? dbStore.longitud : undefined,
         mostrarUbicacion: dbStore.mostrar_ubicacion === true,
         hideHeroText: dbStore.hide_hero_text === true,
+        perfilEmpresa: normalizarPerfilEmpresa(dbStore.perfil_empresa) ?? undefined,
       };
     }
   } catch (err) {

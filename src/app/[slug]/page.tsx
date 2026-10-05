@@ -108,6 +108,7 @@ export default async function StorePage({ params, searchParams }: Props) {
         longitud: undefined,
         mostrarUbicacion: false,
         hideHeroText: false,
+        perfilEmpresa: undefined,
       };
     } else {
       notFound();
