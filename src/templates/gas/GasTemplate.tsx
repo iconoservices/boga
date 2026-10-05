@@ -7,12 +7,15 @@ import StoreFloatingActions from '@/components/StoreFloatingActions';
 import IconoWhatsApp from '../shared/IconoWhatsApp';
 import StoreHeader from '../shared/StoreHeader';
 import { useCatalogo } from '../shared/useCatalogo';
+import { useTabRuta } from '../shared/useTabRuta';
 import { TXT, ICON } from '../shared/tokens';
 import { CategoryChips, ProductGrid, ProductModal, ContactPanel, BottomNav, StoreFooter } from '../shared/CatalogoUI';
 
 interface Props {
   store: StoreConfig;
   initialProductId?: string;
+  /** Pestaña con la que abre (desde /<tienda>/<sección>). */
+  initialTab?: string;
 }
 
 const PASOS = [
@@ -33,11 +36,11 @@ const SEGURIDAD = [
  * (el motor compartido oculta el precio y el carrito cuando store.template === 'gas',
  * ver useCatalogo). Pestañas: Inicio (pedido rápido, cómo pedir, seguridad), Productos y Contacto.
  */
-export default function GasTemplate({ store, initialProductId }: Props) {
+export default function GasTemplate({ store, initialProductId, initialTab }: Props) {
   const t = store.theme;
   const limpio = store.hideHeroText === true;
   const c = useCatalogo(store, initialProductId);
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useTabRuta(store.slug, 'home', initialTab);
 
   const TABS = [
     { id: 'home', label: 'Inicio' },

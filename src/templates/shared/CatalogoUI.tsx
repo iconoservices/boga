@@ -994,11 +994,13 @@ export function PromoLateral({
    ════════════════════════════════════════════ */
 
 export function ContactPanel({
-  t, telefonoVisible, direccionVisible, horarioVisible, facebookVisible, instagramVisible, tiktokVisible, onEnviar, catalogo,
+  t, telefonoVisible, direccionVisible, horarioVisible, facebookVisible, instagramVisible, tiktokVisible, onEnviar, catalogo, tarjeta,
 }: {
   t: StoreTheme;
   /** Tienda de catálogo (no de comida): el texto no habla de "mesa" ni de "eventos". */
   catalogo?: boolean;
+  /** Reemplaza al formulario "Déjanos un mensaje" (p. ej. el de cotización de las empresas). */
+  tarjeta?: React.ReactNode;
   telefonoVisible: string | null;
   direccionVisible?: string | null;
   horarioVisible?: string | null;
@@ -1069,6 +1071,7 @@ export function ContactPanel({
         )}
       </div>
 
+      {tarjeta ?? (
       <div className="p-6 rounded-3xl border shadow-sm space-y-4" style={{ background: t.surface, borderColor: `${t.outlineVariant}40` }}>
         <h4 className={`font-bold ${TXT.lead} uppercase`} style={{ color: t.onSurface }}>Déjanos un Mensaje</h4>
         {/* El mensaje se abre en el WhatsApp de la tienda. Antes era un alert de mentira. */}
@@ -1133,6 +1136,7 @@ export function ContactPanel({
           </button>
         </form>
       </div>
+      )}
     </div>
   );
 }

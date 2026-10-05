@@ -6,6 +6,7 @@ import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import StoreHeader from '../shared/StoreHeader';
 import { useCatalogo } from '../shared/useCatalogo';
+import { useTabRuta } from '../shared/useTabRuta';
 import { TXT, ICON } from '../shared/tokens';
 import {
   CategoryChips, CombosCarrusel, ProductGrid, ProductModal, CartPanel, ContactPanel, BottomNav, StoreFooter,
@@ -14,6 +15,8 @@ import {
 interface Props {
   store: StoreConfig;
   initialProductId?: string;
+  /** Pestaña con la que abre (desde /<tienda>/<sección>). */
+  initialTab?: string;
 }
 
 /**
@@ -27,11 +30,11 @@ interface Props {
  * A diferencia del Menú Directo, aca el Menú NO lleva banner propio: el hero
  * del inicio ya cumple esa funcion y repetirlo mostraba la misma foto dos veces.
  */
-export default function InicioCatalogoTemplate({ store, initialProductId }: Props) {
+export default function InicioCatalogoTemplate({ store, initialProductId, initialTab }: Props) {
   const t = store.theme;
   const c = useCatalogo(store, initialProductId);
 
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useTabRuta(store.slug, 'home', initialTab);
   const selectedProduct = c.detalle;
 
   const TABS = [

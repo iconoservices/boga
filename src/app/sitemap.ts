@@ -4,6 +4,7 @@ import { getNotasPublicadas } from '@/lib/revista.data';
 import { supabase } from '@/lib/supabase';
 import { getEmpleosActivos, slugEmpleo } from '@/lib/chamba.data';
 import { PRODUCTOS_MOSTRADOR } from '@/lib/productos';
+import { RUTAS_PLANTILLA } from '@/lib/rutasTienda';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app';
 
@@ -48,13 +49,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Cada tienda activa como URL propia e indexable (antes solo se descubrían
   // por los links internos de /market y /explore, nunca por el sitemap).
-  const { data: activeStores } = await supabase.from('stores').select('slug,subdominio_activo').eq('status', 'active');
+  const { data: activeStores } = await supabase.from('stores').select('slug,subdominio_activo,template').eq('status', 'active');
   const tiendas: MetadataRoute.Sitemap = (activeStores ?? []).map((s) => ({
     // Una tienda con subdominio propio activo se lista en su propia dirección (es la oficial: ver canonical)
     url: s.subdominio_activo ? `https://${s.slug}.${new URL(SITE_URL).host}` : `${SITE_URL}/${s.slug}`,
     changeFrequency: 'weekly',
     priority: 0.7,
   }));
+
+  // Las pestañas con dirección propia (/<tienda>/servicios, /obras, /nosotros…), solo las que se indexan (el carrito no).
+  const secciones: MetadataRoute.Sitemap = (activeStores ?? []).flatMap((s) =>
+    Object.entries(RUTAS_PLANTILLA[s.template ?? '']?.secciones ?? {})
+      .filter(([, def]) => def.indexar !== false)
+      .map(([id]) => ({
+        url: s.subdominio_activo ? `https://${s.slug}.${new URL(SITE_URL).host}/${s.slug}/${id}` : `${SITE_URL}/${s.slug}/${id}`,
+        changeFrequency: 'weekly' as const,
+        priority: 0.6,
+      })),
+  );
 
   // Cada producto disponible, en su página propia (/<tienda>/producto/<id>).
   const tiendaPorSlug = new Map((activeStores ?? []).map((t) => [t.slug, t]));
@@ -91,5 +103,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.4,
   }));
 
-  return [...rutasFijas, ...tiendas, ...fichasTienda, ...notas, ...empleos, ...fichasProductos];
+  return [...rutasFijas, ...tiendas, ...secciones, ...fichasTienda, ...notas, ...empleos, ...fichasProductos];
 }

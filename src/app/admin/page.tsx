@@ -1677,6 +1677,7 @@ function AdminDashboard({ user }: { user: User }) {
             { ok: !!(pe?.mision || pe?.vision), icon: 'flag', titulo: 'Agrega misión y visión', sub: 'Qué buscan y hacia dónde van', ir: irPerfil },
             { ok: (pe?.politicas?.length ?? 0) > 0, icon: 'verified_user', titulo: 'Agrega tus políticas', sub: 'Calidad, seguridad, ambiental…', ir: irPerfil },
             { ok: (pe?.clientes?.length ?? 0) > 0, icon: 'groups', titulo: 'Lista tus clientes', sub: 'Las empresas que confían en ti', ir: irPerfil },
+            { ok: (pe?.obras?.length ?? 0) >= 3, icon: 'photo_library', titulo: 'Sube fotos de tus obras', sub: `Tienes ${pe?.obras?.length ?? 0}. Con 3 o más se ve profesional`, ir: irPerfil },
             { ok: !!inicioStore.whatsapp, icon: 'chat', titulo: 'Agrega tu WhatsApp de cotizaciones', sub: 'Sin él, no te pueden escribir', ir: () => openStoreEditor(inicioStore.slug, 'avisos') },
             { ok: !!pe?.email, icon: 'mail', titulo: 'Agrega tu correo', sub: 'Para cotizaciones por correo', ir: irPerfil },
             { ok: !!inicioStore.horario, icon: 'schedule', titulo: 'Define tu horario', sub: 'Para que sepan cuándo atiendes', ir: () => openStoreEditor(inicioStore.slug, 'horario') },
@@ -4239,7 +4240,7 @@ function AdminDashboard({ user }: { user: User }) {
 
               {/* Redes sociales: opcional, se muestran como links en la ficha de contacto */}
               {stores[editingStoreSlug ?? '']?.template === 'empresa' && (
-                <PerfilEmpresaEditor perfil={storeForm.perfil_empresa} onChange={(perfil_empresa) => setStoreForm(prev => ({ ...prev, perfil_empresa }))} />
+                <PerfilEmpresaEditor slug={editingStoreSlug ?? ''} perfil={storeForm.perfil_empresa} onChange={(perfil_empresa) => setStoreForm(prev => ({ ...prev, perfil_empresa }))} />
               )}
 
               <div id="editor-redes" className="space-y-4 pt-2 border-t border-gray-100 scroll-mt-4">

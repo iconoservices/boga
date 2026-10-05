@@ -6,6 +6,7 @@ import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import StoreHeader from '../shared/StoreHeader';
 import { useCatalogo } from '../shared/useCatalogo';
+import { useTabRuta } from '../shared/useTabRuta';
 import { TXT, ICON, estrellasDe } from '../shared/tokens';
 import CartillaMascota from './CartillaMascota';
 import {
@@ -15,6 +16,8 @@ import {
 interface Props {
   store: StoreConfig;
   initialProductId?: string;
+  /** Pestaña con la que abre (desde /<tienda>/<sección>). */
+  initialTab?: string;
 }
 
 /**
@@ -30,11 +33,11 @@ interface Props {
  * resto (categorías en círculo, buscador, listado) es igual. Comparte motor
  * (catálogo, carrito, WhatsApp) con las demás plantillas de comida.
  */
-export default function VeterinariaTemplate({ store, initialProductId }: Props) {
+export default function VeterinariaTemplate({ store, initialProductId, initialTab }: Props) {
   const t = store.theme;
   const c = useCatalogo(store, initialProductId);
 
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useTabRuta(store.slug, 'home', initialTab);
   const selectedProduct = c.detalle;
   const [busqueda, setBusqueda] = useState('');
   const [categoriaHome, setCategoriaHome] = useState('all');

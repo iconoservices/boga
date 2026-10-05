@@ -6,6 +6,7 @@ import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import StoreHeader from '../shared/StoreHeader';
 import { useCatalogo } from '../shared/useCatalogo';
+import { useTabRuta } from '../shared/useTabRuta';
 import ReservaModal from '../shared/ReservaModal';
 import { TXT, ICON, soles, type Producto } from '../shared/tokens';
 import { CategoryChips, ProductGrid, ProductModal, CartPanel, ContactPanel, BottomNav, StoreFooter } from '../shared/CatalogoUI';
@@ -13,6 +14,8 @@ import { CategoryChips, ProductGrid, ProductModal, CartPanel, ContactPanel, Bott
 interface Props {
   store: StoreConfig;
   initialProductId?: string;
+  /** Pestaña con la que abre (desde /<tienda>/<sección>). */
+  initialTab?: string;
 }
 
 const PASOS = [
@@ -27,10 +30,10 @@ const PASOS = [
  * (esmaltes, cremas) van aparte, con carrito, y solo aparecen si la tienda los tiene.
  * Servicio = fila de `products` con es_servicio = true; la duración se anota en subcategory.
  */
-export default function BellezaTemplate({ store, initialProductId }: Props) {
+export default function BellezaTemplate({ store, initialProductId, initialTab }: Props) {
   const t = store.theme;
   const c = useCatalogo(store, initialProductId);
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useTabRuta(store.slug, 'home', initialTab);
   const [reservando, setReservando] = useState<Producto | null>(null);
 
   const servicios = c.products.filter((p) => p.esServicio);

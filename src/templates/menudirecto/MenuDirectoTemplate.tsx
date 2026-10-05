@@ -6,6 +6,7 @@ import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import StoreHeader from '../shared/StoreHeader';
 import { useCatalogo } from '../shared/useCatalogo';
+import { useTabRuta } from '../shared/useTabRuta';
 import { TXT, ICON } from '../shared/tokens';
 import {
   CategoryChips, CombosCarrusel, PromoLateral, ProductGrid, ProductModal, CartPanel, ContactPanel, BottomNav, StoreFooter,
@@ -14,6 +15,8 @@ import {
 interface Props {
   store: StoreConfig;
   initialProductId?: string;
+  /** Pestaña con la que abre (desde /<tienda>/<sección>). */
+  initialTab?: string;
 }
 
 /**
@@ -26,11 +29,11 @@ interface Props {
  * Comparte motor (catalogo, carrito, WhatsApp) y componentes con las demas
  * plantillas de comida; aca solo cambia como se arma la pantalla.
  */
-export default function MenuDirectoTemplate({ store, initialProductId }: Props) {
+export default function MenuDirectoTemplate({ store, initialProductId, initialTab }: Props) {
   const t = store.theme;
   const c = useCatalogo(store, initialProductId);
 
-  const [activeTab, setActiveTab] = useState('menu');
+  const [activeTab, setActiveTab] = useTabRuta(store.slug, 'menu', initialTab);
   const selectedProduct = c.detalle;
   const tienePromos = !!c.combosYOfertas && c.combosYOfertas.length > 0;
 

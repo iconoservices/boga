@@ -6,6 +6,7 @@ import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import StoreHeader from '../shared/StoreHeader';
 import { useCatalogo } from '../shared/useCatalogo';
+import { useTabRuta } from '../shared/useTabRuta';
 import { TXT, ICON, estrellasDe, inicialesDe } from '../shared/tokens';
 import {
   CategoryChips, CombosCarrusel, ProductGrid, ProductModal, CartPanel, ContactPanel, BottomNav, StoreFooter,
@@ -14,6 +15,8 @@ import {
 interface PolleriaTemplateProps {
   store: StoreConfig;
   initialProductId?: string;
+  /** Pestaña con la que abre (desde /<tienda>/<sección>). */
+  initialTab?: string;
 }
 
 /**
@@ -25,11 +28,11 @@ interface PolleriaTemplateProps {
  * entrada estan "Menú Directo" e "Inicio con Catálogo", que comparten este
  * mismo motor.
  */
-export default function PolleriaTemplate({ store, initialProductId }: PolleriaTemplateProps) {
+export default function PolleriaTemplate({ store, initialProductId, initialTab }: PolleriaTemplateProps) {
   const t = store.theme;
   const c = useCatalogo(store, initialProductId);
 
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useTabRuta(store.slug, 'home', initialTab);
   const selectedProduct = c.detalle;
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);

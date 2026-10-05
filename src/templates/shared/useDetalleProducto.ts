@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /**
  * Sincroniza el modal de "detalle de producto" con la URL /<tienda>/producto/<id>:
@@ -17,6 +17,8 @@ export function useDetalleProducto<P extends { id: string | number }>(
 ) {
   const [seleccionado, setSeleccionado] = useState<P | null>(null);
   const [inicialAplicado, setInicialAplicado] = useState(false);
+  // Dirección desde la que se abrió el detalle (/<tienda>, /<tienda>/servicios…): al cerrar se vuelve ahí.
+  const rutaPrevia = useRef<string | null>(null);
 
   // Entrada directa a /<tienda>/producto/<id> (el link de Google): abrir ese
   // producto ni bien está en la lista cargada, sin tocar el historial (ya estamos
@@ -37,13 +39,15 @@ export function useDetalleProducto<P extends { id: string | number }>(
 
   const abrir = (producto: P) => {
     setSeleccionado(producto);
+    if (!window.location.pathname.includes('/producto/')) rutaPrevia.current = window.location.pathname;
     window.history.pushState(null, '', `/${slug}/producto/${producto.id}`);
   };
 
   const cerrar = () => {
     setSeleccionado(null);
-    if (window.location.pathname !== `/${slug}`) {
-      window.history.pushState(null, '', `/${slug}`);
+    const destino = rutaPrevia.current && !rutaPrevia.current.includes('/producto/') ? rutaPrevia.current : `/${slug}`;
+    if (window.location.pathname !== destino) {
+      window.history.pushState(null, '', destino);
     }
   };
 

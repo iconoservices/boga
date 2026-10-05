@@ -6,13 +6,17 @@ import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import StoreHeader from '../shared/StoreHeader';
 import { useCatalogo } from '../shared/useCatalogo';
+import { useTabRuta } from '../shared/useTabRuta';
 import { TXT, ICON, inicialesDe } from '../shared/tokens';
 import type { PerfilEmpresa } from '@/lib/perfilEmpresa';
+import FormularioCotizacion from './FormularioCotizacion';
 import { CategoryChips, ProductGrid, ProductModal, ContactPanel, BottomNav, StoreFooter } from '../shared/CatalogoUI';
 
 interface Props {
   store: StoreConfig;
   initialProductId?: string;
+  /** Pestaña con la que abre (desde /<tienda>/<sección>). */
+  initialTab?: string;
 }
 
 // Solo para la vista previa de la plantilla (/preview/empresa): una tienda real muestra lo que cargó en su admin.
@@ -25,6 +29,7 @@ const PERFIL_DEMO: PerfilEmpresa = {
     { titulo: 'Política de seguridad y salud', texto: 'Generar condiciones de trabajo seguras y cumplir con la normativa vigente y los estándares de nuestros clientes.' },
   ],
   clientes: ['Cliente de ejemplo S.A.C.', 'Empresa de ejemplo E.I.R.L.'],
+  sectores: ['Petroleras', 'Gasíferas', 'Minería', 'Construcción'],
 };
 
 const PASOS = [
@@ -49,26 +54,31 @@ function IconoWhatsApp({ className }: { className?: string }) {
  * de las fotos de los mismos servicios que carga el comercio, no de un campo aparte.
  * Pestañas: Inicio, Servicios, Obras, Contacto.
  */
-export default function EmpresaTemplate({ store, initialProductId }: Props) {
+export default function EmpresaTemplate({ store, initialProductId, initialTab }: Props) {
   const t = store.theme;
   const c = useCatalogo(store, initialProductId);
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useTabRuta(store.slug, 'home', initialTab);
   const [foto, setFoto] = useState<string | null>(null);
   const perfil = store.perfilEmpresa ?? (store.demoDePlantilla ? PERFIL_DEMO : undefined);
-  const hayNosotros = !!(perfil && (perfil.nosotros || perfil.mision || perfil.vision || perfil.politicas?.length || perfil.clientes?.length));
+  const hayNosotros = !!(perfil && (perfil.nosotros || perfil.mision || perfil.vision || perfil.politicas?.length || perfil.clientes?.length || perfil.sectores?.length || perfil.equipoFoto));
+
+  // Galería de obras: las fotos que el comercio subió para eso (aparte de las de cada servicio).
+  // Solo la vista previa de la plantilla usa las fotos de los servicios de ejemplo, para que se vea llena.
+  const obras = useMemo(() => {
+    if (perfil?.obras?.length) return perfil.obras;
+    if (!store.demoDePlantilla) return [];
+    const todas = c.products.flatMap((p) => (p.images?.length ? p.images : [p.image]));
+    return [...new Set(todas.filter(Boolean))].slice(0, 18);
+  }, [perfil?.obras, store.demoDePlantilla, c.products]);
 
   const TABS = [
     { id: 'home', label: 'Inicio' },
     { id: 'servicios', label: 'Servicios' },
-    { id: 'obras', label: 'Obras' },
+    ...(obras.length > 0 ? [{ id: 'obras', label: 'Obras' }] : []),
     ...(hayNosotros ? [{ id: 'nosotros', label: 'Nosotros' }] : []),
     { id: 'contacto', label: 'Contacto' },
   ];
 
-  const obras = useMemo(() => {
-    const todas = c.products.flatMap((p) => (p.images?.length ? p.images : [p.image]));
-    return [...new Set(todas.filter(Boolean))].slice(0, 18);
-  }, [c.products]);
 
   const irA = (tab: string, cat?: string) => {
     setActiveTab(tab);
@@ -245,6 +255,34 @@ export default function EmpresaTemplate({ store, initialProductId }: Props) {
               </section>
             )}
 
+            {/* ══ SECTORES Y BROCHURE ══ */}
+            {(perfil?.sectores?.length || perfil?.brochure) && (
+              <section className="px-5 md:px-6 pt-8 max-w-3xl md:mx-auto">
+                {perfil?.sectores && perfil.sectores.length > 0 && (
+                  <div className="mb-4">
+                    <p className={`${TXT.micro} font-extrabold uppercase tracking-wider mb-2`} style={{ color: t.onSurfaceVariant }}>Sectores que atendemos</p>
+                    <div className="flex flex-wrap gap-2">
+                      {perfil.sectores.map((sec) => (
+                        <span key={sec} className={`px-3 py-1.5 rounded-full ${TXT.small} font-bold`} style={{ background: t.secondaryContainer, color: t.secondary }}>{sec}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {perfil?.brochure && (
+                  <a
+                    href={perfil.brochure}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`inline-flex items-center gap-2 px-5 py-3 rounded-xl font-bold ${TXT.body} border-2 active:scale-95 transition-all`}
+                    style={{ borderColor: t.primary, color: t.primary }}
+                  >
+                    <span className={`material-symbols-outlined ${ICON.md}`}>picture_as_pdf</span>
+                    Descargar brochure
+                  </a>
+                )}
+              </section>
+            )}
+
             {/* ══ SERVICIOS ══ */}
             {categorias.length > 0 && (
               <section className="px-5 md:px-6 pt-8 max-w-3xl md:mx-auto">
@@ -346,6 +384,12 @@ export default function EmpresaTemplate({ store, initialProductId }: Props) {
             {perfil.nosotros && (
               <p className={`${TXT.body} leading-relaxed`} style={{ color: t.onSurfaceVariant }}>{perfil.nosotros}</p>
             )}
+            {perfil.equipoFoto && (
+              <figure>
+                <img src={perfil.equipoFoto} alt={`Equipo de ${store.name}`} className="w-full rounded-2xl object-cover max-h-[420px]" />
+                {perfil.equipoTexto && <figcaption className={`${TXT.small} mt-2 font-semibold`} style={{ color: t.onSurfaceVariant }}>{perfil.equipoTexto}</figcaption>}
+              </figure>
+            )}
             {(perfil.mision || perfil.vision) && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[{ t: 'Misión', icon: 'flag', v: perfil.mision }, { t: 'Visión', icon: 'visibility', v: perfil.vision }]
@@ -358,6 +402,16 @@ export default function EmpresaTemplate({ store, initialProductId }: Props) {
                       <p className={TXT.small} style={{ color: t.onSurfaceVariant }}>{x.v}</p>
                     </div>
                   ))}
+              </div>
+            )}
+            {perfil.sectores && perfil.sectores.length > 0 && (
+              <div>
+                <h3 className={`${TXT.title} font-black mb-3`} style={{ color: t.onSurface }}>Sectores que atendemos</h3>
+                <div className="flex flex-wrap gap-2">
+                  {perfil.sectores.map((sec) => (
+                    <span key={sec} className={`px-3 py-1.5 rounded-full ${TXT.small} font-bold`} style={{ background: t.secondaryContainer, color: t.secondary }}>{sec}</span>
+                  ))}
+                </div>
               </div>
             )}
             {perfil.politicas && perfil.politicas.length > 0 && (
@@ -379,12 +433,32 @@ export default function EmpresaTemplate({ store, initialProductId }: Props) {
             {perfil.clientes && perfil.clientes.length > 0 && (
               <div>
                 <h3 className={`${TXT.title} font-black mb-3`} style={{ color: t.onSurface }}>Empresas que confían en nosotros</h3>
-                <div className="flex flex-wrap gap-2">
-                  {perfil.clientes.map((cl) => (
+                {/* Con logo: tarjeta con el logo; sin logo: el nombre en texto */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {perfil.clientes.filter((cl) => perfil.clienteLogos?.[cl]).map((cl) => (
+                    <div key={cl} className="h-20 rounded-2xl flex items-center justify-center p-3" style={{ background: t.surface, border: `1px solid ${t.outlineVariant}60` }}>
+                      <img src={perfil.clienteLogos![cl]} alt={cl} title={cl} className="max-w-full max-h-full object-contain" />
+                    </div>
+                  ))}
+                </div>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {perfil.clientes.filter((cl) => !perfil.clienteLogos?.[cl]).map((cl) => (
                     <span key={cl} className={`px-3 py-1.5 rounded-full ${TXT.small} font-bold`} style={{ background: t.secondaryContainer, color: t.secondary }}>{cl}</span>
                   ))}
                 </div>
               </div>
+            )}
+            {perfil.brochure && (
+              <a
+                href={perfil.brochure}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`inline-flex items-center gap-2 px-5 py-3 rounded-xl font-bold ${TXT.body} border-2 active:scale-95 transition-all`}
+                style={{ borderColor: t.primary, color: t.primary }}
+              >
+                <span className={`material-symbols-outlined ${ICON.md}`}>picture_as_pdf</span>
+                Descargar brochure
+              </a>
             )}
           </div>
         )}
@@ -393,6 +467,7 @@ export default function EmpresaTemplate({ store, initialProductId }: Props) {
           <ContactPanel
             t={t}
             catalogo
+            tarjeta={<FormularioCotizacion t={t} servicios={c.products.map((x) => x.name)} onEnviar={(msg) => cotizar(`Hola ${store.name}. ${msg}`)} />}
             telefonoVisible={c.telefonoVisible}
             direccionVisible={store.direccion}
             horarioVisible={store.horario}
@@ -419,7 +494,7 @@ export default function EmpresaTemplate({ store, initialProductId }: Props) {
         tabs={[
           { id: 'home', icon: 'home', label: 'Inicio' },
           { id: 'servicios', icon: 'construction', label: 'Servicios' },
-          { id: 'obras', icon: 'photo_library', label: 'Obras' },
+          ...(obras.length > 0 ? [{ id: 'obras', icon: 'photo_library', label: 'Obras' }] : []),
           ...(hayNosotros ? [{ id: 'nosotros', icon: 'business_center', label: 'Nosotros' }] : []),
           { id: 'contacto', icon: 'chat', label: 'Contacto' },
         ]}
