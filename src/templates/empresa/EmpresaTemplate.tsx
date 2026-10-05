@@ -552,7 +552,19 @@ export default function EmpresaTemplate({ store, initialProductId, initialTab }:
 
         {activeTab === 'servicios' && (
           <div className="animate-fade-in">
-            <CabeceraPestana t={t} kicker="Servicios" titulo="Lo que hacemos" frase="Toca un servicio para ver el detalle y pedir su cotización." />
+            {/* ══ BANNER: foto de fondo con título y ruta "Inicio / Servicios" ══ */}
+            <section className="relative overflow-hidden" style={{ background: t.secondary }}>
+              {store.heroImage && <img src={store.heroImage} alt="" className="absolute inset-0 w-full h-full object-cover" />}
+              <div className="absolute inset-0" style={{ background: `${t.secondary}b3` }} />
+              <div className="relative max-w-7xl mx-auto px-5 md:px-10 py-16 md:py-24 text-center">
+                <h2 className="font-black text-4xl md:text-6xl leading-tight text-white">Nuestros Servicios</h2>
+                <p className={`${TXT.body} text-white/90 mt-4 flex items-center justify-center gap-2`}>
+                  <button onClick={() => irA('home')} className="hover:underline">Inicio</button>
+                  <span aria-hidden="true">/</span>
+                  <span className="font-semibold">Servicios</span>
+                </p>
+              </div>
+            </section>
             <div className="max-w-7xl mx-auto px-5 md:px-10 py-10 md:py-12 space-y-10">
               {/* Filtro por categoría: una sola fila que se desliza de lado y queda fija bajo el encabezado al bajar */}
               {c.categoryTabs.length > 1 && (
@@ -590,9 +602,33 @@ export default function EmpresaTemplate({ store, initialProductId, initialTab }:
                   )}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {c.filtered.map((prod) => (
-                    <TarjetaServicio key={prod.id} t={t} prod={prod} onAbrir={() => c.abrirProducto(prod)} onCotizar={() => cotizar(`Hola ${store.name}, quiero cotizar "${prod.name}".`)} conWhatsApp={c.whatsappVisible} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {c.filtered.map((prod, i) => (
+                    <Aparece key={prod.id} delay={(i % 4) * 100} className="h-full">
+                      <button
+                        onClick={() => c.abrirProducto(prod)}
+                        className="group w-full h-full text-left rounded-2xl p-6 flex flex-col transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl active:scale-[0.98]"
+                        style={{ background: t.surface, border: `1px solid ${t.outlineVariant}80` }}
+                      >
+                        <div className="flex items-start justify-between gap-4 pb-4 border-b" style={{ borderColor: `${t.outlineVariant}80` }}>
+                          <h3 className="font-extrabold text-lg leading-snug" style={{ color: t.onSurface }}>{prod.name}</h3>
+                          <span className="font-black text-lg shrink-0 transition-colors" style={{ color: t.primary }}>{String(i + 1).padStart(2, '0')}.</span>
+                        </div>
+                        {/* Respaldo: sin descripción sale una frase genérica; sin foto, un bloque con ícono. */}
+                        <p className={`${TXT.small} leading-relaxed mt-4 line-clamp-3`} style={{ color: t.onSurfaceVariant }}>
+                          {prod.desc || 'Solicita tu cotización para este servicio.'}
+                        </p>
+                        <div className="mt-auto pt-5">
+                          <div className="aspect-[4/3] overflow-hidden rounded-xl flex items-center justify-center" style={{ background: t.surfaceContainer }}>
+                            {prod.image ? (
+                              <img src={prod.image} alt={prod.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                            ) : (
+                              <span className={`material-symbols-outlined ${ICON.xl}`} style={{ color: `${t.onSurfaceVariant}80` }}>construction</span>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    </Aparece>
                   ))}
                 </div>
               )}
