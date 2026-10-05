@@ -1,5 +1,6 @@
 "use client";
 
+import { DOMINIO_BASE } from '@/lib/authCookies';
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -158,7 +159,13 @@ function AdminDashboard({ user }: { user: User }) {
   const router = useRouter();
   // El QR y los links a las tiendas apuntan al dominio real donde corre la app
   // (antes estaba escrito 'https://boga.com' fijo, que no es el dominio en uso).
-  const siteOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+  // Origen del sitio principal: si el panel se abrió desde <tienda>.bogahub.app, hay que volver a bogahub.app;
+  // con el origen tal cual, el link de la tienda salía duplicado (<tienda>.<tienda>.bogahub.app).
+  const siteOrigin = (() => {
+    if (typeof window === 'undefined') return '';
+    const { protocol, hostname, origin } = window.location;
+    return hostname === DOMINIO_BASE || hostname.endsWith('.' + DOMINIO_BASE) ? `${protocol}//${DOMINIO_BASE}` : origin;
+  })();
   const [selectedStore, setSelectedStore] = useState<string>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
