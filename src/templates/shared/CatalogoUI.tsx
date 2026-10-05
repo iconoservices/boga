@@ -107,7 +107,7 @@ function FotoTarjeta({ product }: { product: Producto }) {
    ════════════════════════════════════════════ */
 
 export function ProductGrid({
-  t, productos, onSelect, onAdd, onVerTodo, catalogo, servicios,
+  t, productos, onSelect, onAdd, onVerTodo, catalogo, servicios, onConsultar,
 }: {
   t: StoreTheme;
   productos: Producto[];
@@ -118,6 +118,8 @@ export function ProductGrid({
   catalogo?: boolean;
   /** Empresa de servicios: los textos hablan de "servicios" en vez de platos o productos. */
   servicios?: boolean;
+  /** Si se pasa, los productos sin precio muestran un botón de WhatsApp en la tarjeta (ej. distribuidora de gas). */
+  onConsultar?: (p: Producto) => void;
 }) {
   // Antes una categoria sin productos dejaba la pantalla en blanco.
   if (productos.length === 0) {
@@ -162,6 +164,16 @@ export function ProductGrid({
             {product.presentaciones?.some((x) => x.promo) && (
               <span className="mb-1.5 w-fit text-[10px] font-black px-1.5 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-orange-500 text-white">🔥 Promos por cantidad</span>
             )}
+            {onConsultar && product.sinPrecio ? (
+              <button
+                onClick={(e) => { e.stopPropagation(); onConsultar(product); }}
+                className={`mt-auto w-full flex items-center justify-center gap-1.5 py-2.5 rounded-full font-extrabold ${TXT.small} active:scale-95 transition-all`}
+                style={{ background: '#25D366', color: '#ffffff' }}
+              >
+                <span className={`material-symbols-outlined ${ICON.sm}`}>chat</span>
+                Consultar precio
+              </button>
+            ) : (
             <div className="flex justify-between items-center mt-auto">
               <span className={`font-extrabold ${TXT.lead}`} style={{ color: t.primary }}>
                 {product.presentaciones?.length ? <span className={`block ${TXT.micro} font-semibold`} style={{ color: t.onSurfaceVariant }}>Desde</span> : null}
@@ -176,6 +188,7 @@ export function ProductGrid({
                 <AddButton t={t} nombre={product.name} onAdd={() => onAdd(product)} />
               )}
             </div>
+            )}
           </div>
         </div>
       ))}

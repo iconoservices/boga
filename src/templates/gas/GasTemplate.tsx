@@ -141,15 +141,26 @@ export default function GasTemplate({ store, initialProductId }: Props) {
                 </div>
                 <div className="flex gap-3 overflow-x-auto px-5 md:px-6 scroll-px-5 md:scroll-px-6 pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
                   {c.products.slice(0, 10).map((p) => (
-                    <button
+                    <div
                       key={p.id}
-                      onClick={() => c.abrirProducto(p)}
-                      className="snap-start shrink-0 w-36 rounded-2xl overflow-hidden text-left active:scale-[0.98] transition-all"
+                      className="shrink-0 w-36 rounded-2xl overflow-hidden"
                       style={{ background: t.surface, border: `1px solid ${t.outlineVariant}60` }}
                     >
-                      <img src={p.image} alt={p.name} className="w-full aspect-[5/4] object-contain bg-white p-1.5" />
-                      <p className={`${TXT.small} font-extrabold p-2.5 line-clamp-2`} style={{ color: t.onSurface }}>{p.name}</p>
-                    </button>
+                      <button onClick={() => c.abrirProducto(p)} className="snap-start block w-full text-left active:opacity-80 transition-all">
+                        <img src={p.image} alt={p.name} className="w-full aspect-[5/4] object-contain bg-white p-1.5" />
+                        <p className={`${TXT.small} font-extrabold px-2.5 pt-2 line-clamp-2`} style={{ color: t.onSurface }}>{p.name}</p>
+                      </button>
+                      {c.whatsappVisible && (
+                        <button
+                          onClick={() => consultar(`Hola ${store.name}, quiero consultar el precio de "${p.name}".`)}
+                          className={`mx-2.5 mt-2 mb-2.5 w-[calc(100%-1.25rem)] flex items-center justify-center gap-1.5 py-2 rounded-full font-extrabold ${TXT.small} active:scale-95 transition-all`}
+                          style={{ background: '#25D366', color: '#ffffff' }}
+                        >
+                          <span className={`material-symbols-outlined ${ICON.sm}`}>chat</span>
+                          Consultar
+                        </button>
+                      )}
+                    </div>
                   ))}
                   <div className="shrink-0 w-2" aria-hidden />
                 </div>
@@ -235,7 +246,8 @@ export default function GasTemplate({ store, initialProductId }: Props) {
             </div>
             <CategoryChips t={t} tabs={c.categoryTabs} active={c.activeCategory} onSelect={c.setActiveCategory} />
             <section className="px-5 md:px-6 pb-8">
-              <ProductGrid t={t} productos={c.filtered} onSelect={c.abrirProducto} onAdd={c.addToCart} onVerTodo={() => c.setActiveCategory('all')} catalogo />
+              <ProductGrid t={t} productos={c.filtered} onSelect={c.abrirProducto} onAdd={c.addToCart} onVerTodo={() => c.setActiveCategory('all')} catalogo
+                onConsultar={c.whatsappVisible ? (p) => consultar(`Hola ${store.name}, quiero consultar el precio de "${p.name}".`) : undefined} />
             </section>
           </div>
         )}
