@@ -2593,7 +2593,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
 
                     <div className="space-y-3">
                       <div>
-                        <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Categoría del Portal</label>
+                        <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Rubro del Portal</label>
                         <select
                           value={storeForm.marketplaceCategory}
                           onChange={(e) => setStoreForm(prev => ({ ...prev, marketplaceCategory: e.target.value }))}
@@ -3452,7 +3452,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         { ok: !!ds.name,         label: 'Nombre de tienda',     hint: 'Agrega un nombre para identificar la tienda' },
         { ok: !!ds.slug,         label: 'Slug / URL',           hint: 'Define un slug único para la URL de la tienda' },
         { ok: !!ds.tagline,      label: 'Frase corta (tagline)', hint: 'Una frase breve que describa tu negocio' },
-        { ok: !!(ds.marketplaceCategory && ds.marketplaceCategory !== 'General'), label: 'Categoría en marketplace', hint: 'Elige una categoría específica para aparecer en explorar' },
+        { ok: !!(ds.marketplaceCategory && ds.marketplaceCategory !== 'General'), label: 'Rubro en marketplace', hint: 'Elige un rubro específico para aparecer en explorar' },
         { ok: !!(ds.template && ds.template !== 'default'), label: 'Plantilla visual',  hint: 'Selecciona una plantilla que no sea "default" para personalizar' },
         { ok: !!dDetails.location && dDetails.location !== '—', label: 'Ubicación / dirección', hint: 'Indica la ubicación física de tu tienda' },
         { ok: !!(ds.whatsapp || '').replace(/\D/g, ''), label: 'WhatsApp de pedidos', hint: 'Sin este número, los pedidos de la carta no le llegan al dueño' },

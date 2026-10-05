@@ -65,7 +65,7 @@ type TabId = 'inicio' | 'products' | 'categories' | 'orders' | 'pos' | 'metrics'
 const NAV_TABS: { id: TabId; label: string; icon: string; sub: string; inBottomBar: boolean }[] = [
   { id: 'inicio',   label: 'Inicio',       icon: 'home',          sub: 'Resumen de tu carta',        inBottomBar: true },
   { id: 'products', label: 'Productos',    icon: 'inventory_2',   sub: 'Añade o modifica ítems',     inBottomBar: true },
-  { id: 'categories', label: 'Categorías', icon: 'category',     sub: 'Ordena los rubros de tu carta', inBottomBar: false },
+  { id: 'categories', label: 'Categorías', icon: 'category',     sub: 'Ordena las categorías de tu negocio', inBottomBar: false },
   { id: 'orders',   label: 'Pedidos',      icon: 'receipt_long',  sub: 'Gestiona los pedidos',       inBottomBar: true },
   { id: 'pos',      label: 'Vender (POS)', icon: 'point_of_sale', sub: 'Caja rápida en el local',    inBottomBar: true },
   { id: 'metrics',  label: 'Métricas',     icon: 'bar_chart',     sub: 'Rendimiento del negocio',    inBottomBar: false },
@@ -1557,7 +1557,7 @@ function AdminDashboard({ user }: { user: User }) {
             </h1>
             {activeTab !== 'pos' && activeTab !== 'inicio' && (
               <p className="text-gray-500 text-sm font-medium mt-1">
-                {activeTab === 'products' ? (esEmpresa ? 'Administra los servicios de tu empresa.' : inventarioOn ? 'Administra el inventario de tus tiendas.' : 'Administra la carta de tus tiendas.') : activeTab === 'categories' ? 'Crea, ordena y renombra los rubros de tu carta.' : activeTab === 'orders' ? 'Gestiona los pedidos de tus clientes.' : activeTab === 'stores' ? 'Administra la información de tus sucursales.' : 'Analiza el rendimiento de tu negocio.'}
+                {activeTab === 'products' ? (esEmpresa ? 'Administra los servicios de tu empresa.' : inventarioOn ? 'Administra el inventario de tus tiendas.' : 'Administra la carta de tus tiendas.') : activeTab === 'categories' ? 'Crea, ordena y renombra las categorías de tu negocio.' : activeTab === 'orders' ? 'Gestiona los pedidos de tus clientes.' : activeTab === 'stores' ? 'Administra la información de tus sucursales.' : 'Analiza el rendimiento de tu negocio.'}
               </p>
             )}
           </div>
@@ -1852,7 +1852,7 @@ function AdminDashboard({ user }: { user: User }) {
               <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden divide-y divide-gray-100">
                 {[
                   { icon: 'palette', t: esEmpresa ? 'Personaliza tu página' : 'Personaliza tu tienda', s: esEmpresa ? 'Logo, portada, perfil de la empresa, horario y contacto' : 'Logo, portada, datos, horario y pagos', on: () => openStoreEditor(inicioStore.slug) },
-                  { icon: 'category', t: 'Categorías', s: 'Crea y ordena los rubros de tu carta', on: () => setActiveTab('categories') },
+                  { icon: 'category', t: 'Categorías', s: 'Crea y ordena las categorías de tu negocio', on: () => setActiveTab('categories') },
                   { icon: 'notifications', t: 'Avisos de pedidos', s: 'WhatsApp y correo donde los recibes', on: () => openStoreEditor(inicioStore.slug, 'avisos') },
                   ...(inicioDb?.push_activo ? [{ icon: 'campaign', t: 'Notificaciones a clientes', s: 'Envía avisos a quienes instalaron tu app', on: () => router.push('/admin/notificaciones') }] : []),
                   { icon: 'picture_as_pdf', t: 'Exportar catálogo en PDF', s: 'Descarga tu carta para compartirla', on: () => { setSelectedStore(inicioStore.slug); setIsPDFModalOpen(true); } },
@@ -3201,7 +3201,7 @@ function AdminDashboard({ user }: { user: User }) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Descripción Corta</label>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">{formEmpresa ? 'Descripción del servicio' : 'Descripción Corta'}</label>
                   <textarea
                     value={newProduct.desc}
                     onChange={(e) => setNewProduct({...newProduct, desc: e.target.value})}
@@ -3211,6 +3211,7 @@ function AdminDashboard({ user }: { user: User }) {
                   />
                 </div>
 
+                {!formEmpresa && (<>
                 {/* Servicio: se reserva o se consulta, no se "agrega al carrito" como un producto normal. Decide si la tienda aparece en el toggle "Servicios" de BogaHub. */}
                 <div>
                   <div className="grid grid-cols-2 gap-2">
@@ -3236,6 +3237,7 @@ function AdminDashboard({ user }: { user: User }) {
                     <p className="text-xs text-gray-500 mt-2">Ej. un corte, una consulta, una reserva. En tu tienda no tendrá carrito: el cliente te consulta por WhatsApp.</p>
                   )}
                 </div>
+                </>)}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -3277,6 +3279,7 @@ function AdminDashboard({ user }: { user: User }) {
                   </div>
                 </div>
 
+                {!formEmpresa && (<>
                 {/* Presentaciones: tallas, tamaños de vaso, medidas o peso con su precio */}
                 {(() => {
                   const storeObj = Object.values(stores).find(s => s.slug === newProduct.store);
@@ -3431,6 +3434,7 @@ function AdminDashboard({ user }: { user: User }) {
                   );
                 })()}
 
+                </>)}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">Categoría</label>
@@ -3474,6 +3478,7 @@ function AdminDashboard({ user }: { user: User }) {
                       Administrar categorías
                     </button>
                   </div>
+                  {!formEmpresa && (
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">{esTerreno ? 'Área del terreno' : 'Subcategoría (Ej: Entradas)'}</label>
                     <input 
@@ -3490,8 +3495,10 @@ function AdminDashboard({ user }: { user: User }) {
                       ))}
                     </datalist>
                   </div>
+                  )}
                 </div>
 
+                {!formEmpresa && (<>
                 {/* Oferta: aparece en tu tienda con el precio anterior tachado y en la página Promos de BogaHub */}
                 {newProduct.presentaciones.length === 0 && (
                 <div className="rounded-xl border border-dashed border-primary/40 bg-primary/5 p-4">
@@ -3578,6 +3585,7 @@ function AdminDashboard({ user }: { user: User }) {
                   </div>
                 )}
 
+                </>)}
                 {/* Disponibilidad e Inventario (solo con el módulo de inventario) */}
                 {tiendaTiene(newProduct.store, 'inventario') && (
                 <div className="bg-gray-50/70 border border-gray-200/80 rounded-xl p-4 space-y-4">
@@ -3922,8 +3930,8 @@ function AdminDashboard({ user }: { user: User }) {
 
               {/* Category */}
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Categoría en el Marketplace</label>
-                <p className="text-xs text-gray-500 mb-2">Decide en qué sección de Explorar aparece tu tienda.</p>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Rubro de tu negocio</label>
+                <p className="text-xs text-gray-500 mb-2">Decide en qué sección de Explorar aparece tu negocio.</p>
                 <select
                   value={storeForm.marketplace_category}
                   onChange={e => setStoreForm({...storeForm, marketplace_category: e.target.value})}
