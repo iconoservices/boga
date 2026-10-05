@@ -1212,7 +1212,7 @@ const TEMPLATES: Record<string, TemplateConfig> = {
     zona: 'Pucallpa - Ucayali',
     direccion: 'Manantay, Pucallpa',
     horario: 'Lunes a Sábado: 8:00 AM – 6:00 PM',
-    whatsapp: '51981868116',
+    whatsapp: '51987654321',
   },
   gas: {
     id: 'gas',

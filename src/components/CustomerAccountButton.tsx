@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useCustomerSession } from '@/context/CustomerSessionContext';
 import { useAuth } from '@/context/AuthContext';
 
@@ -30,7 +30,17 @@ export default function CustomerAccountButton({ variant = 'flotante', color, bac
     return () => setCuentaEnEncabezado(false);
   }, [enEncabezado, setCuentaEnEncabezado]);
 
-  if (!enEncabezado && cuentaEnEncabezado) return null;
+  // El botón flotante es el respaldo de las plantillas sin botón en su encabezado. La plantilla se carga después
+  // (import dinámico) y recién ahí su encabezado avisa que ya tiene el suyo: sin esta espera, al recargar el flotante
+  // se veía un instante encima del definitivo. Se muestra tras una pausa corta.
+  const [flotanteListo, setFlotanteListo] = useState(false);
+  useEffect(() => {
+    if (enEncabezado) return;
+    const id = setTimeout(() => setFlotanteListo(true), 1800);
+    return () => clearTimeout(id);
+  }, [enEncabezado]);
+
+  if (!enEncabezado && (cuentaEnEncabezado || !flotanteListo)) return null;
 
   if (enEncabezado) {
     return (

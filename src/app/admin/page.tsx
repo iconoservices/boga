@@ -3209,21 +3209,30 @@ function AdminDashboard({ user }: { user: User }) {
                 </div>
 
                 {/* Servicio: se reserva o se consulta, no se "agrega al carrito" como un producto normal. Decide si la tienda aparece en el toggle "Servicios" de BogaHub. */}
-                <label className="flex items-center gap-3 rounded-xl border border-dashed border-gray-300 bg-gray-50/70 p-4 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={newProduct.esServicio}
-                    onChange={(e) => setNewProduct({ ...newProduct, esServicio: e.target.checked })}
-                    className="w-5 h-5 accent-[var(--tienda-color)] shrink-0"
-                  />
-                  <span>
-                    <span className="block text-sm font-bold text-gray-800 flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-[18px] text-gray-500">handyman</span>
-                      Es un servicio, no un producto
-                    </span>
-                    <span className="block text-xs text-gray-500 mt-0.5">Ej. un corte, una consulta, una reserva. En tu tienda no tendrá carrito: el cliente te consulta por WhatsApp.</span>
-                  </span>
-                </label>
+                <div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {([
+                      { v: false, icon: 'inventory_2', label: 'Producto' },
+                      { v: true, icon: 'handyman', label: 'Servicio' },
+                    ] as const).map((o) => {
+                      const activo = !!newProduct.esServicio === o.v;
+                      return (
+                        <button
+                          key={o.label}
+                          type="button"
+                          onClick={() => setNewProduct({ ...newProduct, esServicio: o.v })}
+                          className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 font-bold text-sm transition-all ${activo ? 'border-[var(--tienda-color)] bg-[var(--tienda-color)]/10 text-gray-900' : 'border-gray-200 bg-gray-50 text-gray-500'}`}
+                        >
+                          <span className="material-symbols-outlined text-[20px]">{o.icon}</span>
+                          {o.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {newProduct.esServicio && (
+                    <p className="text-xs text-gray-500 mt-2">Ej. un corte, una consulta, una reserva. En tu tienda no tendrá carrito: el cliente te consulta por WhatsApp.</p>
+                  )}
+                </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>

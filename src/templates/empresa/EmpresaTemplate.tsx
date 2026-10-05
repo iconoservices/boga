@@ -134,11 +134,49 @@ export default function EmpresaTemplate({ store, initialProductId }: Props) {
         {activeTab === 'home' && (
           <div className="animate-fade-in">
             {/* ══ PORTADA ══ */}
-            <section className="relative w-full min-h-[520px] md:min-h-0 md:h-[540px] overflow-hidden">
-              <img className="w-full h-full object-cover" alt={store.heroAlt} src={store.heroImage} />
-              <div className="absolute inset-0" style={{ background: `linear-gradient(to right, ${t.secondary}ee 0%, ${t.secondary}99 50%, ${t.secondary}33 100%), linear-gradient(to top, ${t.secondary}cc 0%, transparent 60%)` }} />
+            {store.hideHeroText ? (
+              <>
+                {/* Portada limpia: el comercio sube un banner ya diseñado (con su logo y textos); se ve entero, sin texto encima. */}
+                <section className="relative w-full" style={{ background: t.secondary }}>
+                  <img className="w-full h-auto block" alt={store.heroAlt} src={store.heroImage} />
+                  <StoreFloatingActions store={store} />
+                </section>
+                <section className="px-5 md:px-10 py-4 flex flex-col sm:flex-row sm:justify-center gap-3" style={{ background: t.surface, borderBottom: `1px solid ${t.outlineVariant}40` }}>
+                  <button
+                    onClick={() => irA('servicios')}
+                    className={`px-6 py-3 rounded-xl font-bold ${TXT.body} md:text-base active:scale-95 transition-all`}
+                    style={{ background: t.primary, color: t.onPrimary }}
+                  >
+                    Ver servicios
+                  </button>
+                  {c.whatsappVisible && (
+                    <button
+                      onClick={() => cotizar()}
+                      className={`px-6 py-3 rounded-xl font-bold ${TXT.body} md:text-base flex items-center justify-center gap-2 active:scale-95 transition-all`}
+                      style={{ background: '#25D366', color: '#ffffff' }}
+                    >
+                      Cotiza por WhatsApp
+                      <IconoWhatsApp className="w-5 h-5" />
+                    </button>
+                  )}
+                  {perfil?.email && (
+                    <button
+                      onClick={cotizarPorCorreo}
+                      className={`px-6 py-3 rounded-xl font-bold ${TXT.body} md:text-base flex items-center justify-center gap-2 border-2 active:scale-95 transition-all`}
+                      style={{ borderColor: t.primary, color: t.primary }}
+                    >
+                      Cotizar por correo
+                      <span className={`material-symbols-outlined ${ICON.md}`}>mail</span>
+                    </button>
+                  )}
+                </section>
+              </>
+            ) : (
+            <section className="relative w-full md:h-[540px] overflow-hidden" style={{ background: t.secondary }}>
+              <img className="block w-full h-auto md:absolute md:inset-0 md:h-full md:object-cover" alt={store.heroAlt} src={store.heroImage} />
+              <div className="hidden md:block absolute inset-0" style={{ background: `linear-gradient(to right, ${t.secondary}ee 0%, ${t.secondary}99 50%, ${t.secondary}33 100%), linear-gradient(to top, ${t.secondary}cc 0%, transparent 60%)` }} />
               <StoreFloatingActions store={store} />
-              <div className="absolute inset-x-0 bottom-0 px-5 md:px-10 pb-7 md:pb-10 max-w-6xl md:mx-auto flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+              <div className="relative pt-6 md:pt-0 md:absolute md:inset-x-0 md:bottom-0 px-5 md:px-10 pb-7 md:pb-10 max-w-6xl md:mx-auto flex flex-col md:flex-row md:items-end md:justify-between gap-6">
                 <div className="max-w-2xl">
                   {/* Etiqueta: logo + rubro */}
                   <div className="flex items-center gap-2.5 mb-4">
@@ -192,6 +230,7 @@ export default function EmpresaTemplate({ store, initialProductId }: Props) {
                 </div>
               </div>
             </section>
+            )}
 
             {/* ══ FICHA ══ */}
             {filas.length > 0 && (
@@ -280,7 +319,7 @@ export default function EmpresaTemplate({ store, initialProductId }: Props) {
             </div>
             <CategoryChips t={t} tabs={c.categoryTabs} active={c.activeCategory} onSelect={c.setActiveCategory} />
             <section className="px-5 md:px-6 pb-8">
-              <ProductGrid t={t} productos={c.filtered} onSelect={c.abrirProducto} onAdd={c.addToCart} onVerTodo={() => c.setActiveCategory('all')} />
+              <ProductGrid t={t} productos={c.filtered} onSelect={c.abrirProducto} onAdd={c.addToCart} onVerTodo={() => c.setActiveCategory('all')} servicios />
             </section>
           </div>
         )}

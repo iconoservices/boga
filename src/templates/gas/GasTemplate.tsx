@@ -34,6 +34,7 @@ const SEGURIDAD = [
  */
 export default function GasTemplate({ store, initialProductId }: Props) {
   const t = store.theme;
+  const limpio = store.hideHeroText === true;
   const c = useCatalogo(store, initialProductId);
   const [activeTab, setActiveTab] = useState('home');
 
@@ -90,25 +91,58 @@ export default function GasTemplate({ store, initialProductId }: Props) {
         {activeTab === 'home' && (
           <div className="animate-fade-in">
             {/* ══ PORTADA ══ */}
-            <section className="relative w-full h-[42vh] md:h-[380px] overflow-hidden">
-              <img className="w-full h-full object-cover" alt={store.heroAlt} src={store.heroImage} />
-              <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${t.secondary}ee 0%, ${t.secondary}55 55%, transparent 100%)` }} />
-              <StoreFloatingActions store={store} />
-              <div className="absolute bottom-0 left-0 right-0 px-5 md:px-8 pb-6 max-w-3xl md:mx-auto">
-                <h1 className="font-black text-2xl md:text-4xl leading-tight text-white">{store.name}</h1>
-                <p className={`${TXT.body} font-semibold text-white/90 mt-1`}>{store.tagline || 'Gas a domicilio, rápido y seguro'}</p>
-                {c.whatsappVisible && (
-                  <button
-                    onClick={() => consultar()}
-                    className={`mt-4 w-full md:w-auto md:px-8 flex items-center justify-center gap-2 py-3.5 rounded-full font-extrabold ${TXT.lead} shadow-lg active:scale-95 transition-all`}
-                    style={{ background: '#25D366', color: '#ffffff' }}
-                  >
-                    <span className={`material-symbols-outlined ${ICON.md}`}>chat</span>
-                    Pedir mi balón por WhatsApp
-                  </button>
-                )}
+            {/* Con hideHeroText el banner va limpio (la imagen del dueño ya trae sus letras); si no, nombre + mensaje encima */}
+            {limpio ? (
+              <section className="relative w-full">
+                <img className="w-full h-auto md:h-[380px] md:object-cover block" alt={store.heroAlt} src={store.heroImage} />
+                <StoreFloatingActions store={store} />
+              </section>
+            ) : (
+              <section className="relative w-full h-[42vh] md:h-[380px] overflow-hidden">
+                <img className="w-full h-full object-cover" alt={store.heroAlt} src={store.heroImage} />
+                <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${t.secondary}ee 0%, ${t.secondary}55 55%, transparent 100%)` }} />
+                <StoreFloatingActions store={store} />
+                <div className="absolute bottom-0 left-0 right-0 px-5 md:px-8 pb-6 max-w-3xl md:mx-auto">
+                  <h1 className="font-black text-2xl md:text-4xl leading-tight text-white">{store.name}</h1>
+                  <p className={`${TXT.body} font-semibold text-white/90 mt-1`}>{store.tagline || 'Gas a domicilio, rápido y seguro'}</p>
+                </div>
+              </section>
+            )}
+            {c.whatsappVisible && (
+              <div className="px-5 md:px-8 pt-4 max-w-3xl md:mx-auto">
+                <button
+                  onClick={() => consultar()}
+                  className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-full font-extrabold ${TXT.lead} shadow-lg active:scale-95 transition-all`}
+                  style={{ background: '#25D366', color: '#ffffff' }}
+                >
+                  <span className={`material-symbols-outlined ${ICON.md}`}>chat</span>
+                  Pedir mi balón por WhatsApp
+                </button>
               </div>
-            </section>
+            )}
+
+            {/* ══ CARRUSEL DE PRODUCTOS ══ */}
+            {c.products.length > 0 && (
+              <section className="pt-8 max-w-3xl md:mx-auto">
+                <div className="flex items-center justify-between px-5 md:px-6 mb-3">
+                  <h2 className={`${TXT.title} font-black`} style={{ color: t.onSurface }}>Nuestros productos</h2>
+                  <button onClick={() => irAProductos()} className={`${TXT.small} font-bold`} style={{ color: t.primary }}>Ver todos</button>
+                </div>
+                <div className="flex gap-3 overflow-x-auto px-5 md:px-6 pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
+                  {c.products.slice(0, 10).map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => c.abrirProducto(p)}
+                      className="snap-start shrink-0 w-36 rounded-2xl overflow-hidden text-left active:scale-[0.98] transition-all"
+                      style={{ background: t.surface, border: `1px solid ${t.outlineVariant}60` }}
+                    >
+                      <img src={p.image} alt={p.name} className="w-full h-28 object-cover" />
+                      <p className={`${TXT.small} font-extrabold p-2.5 line-clamp-2`} style={{ color: t.onSurface }}>{p.name}</p>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* ══ FICHA ══ */}
             {filas.length > 0 && (
@@ -189,7 +223,7 @@ export default function GasTemplate({ store, initialProductId }: Props) {
             </div>
             <CategoryChips t={t} tabs={c.categoryTabs} active={c.activeCategory} onSelect={c.setActiveCategory} />
             <section className="px-5 md:px-6 pb-8">
-              <ProductGrid t={t} productos={c.filtered} onSelect={c.abrirProducto} onAdd={c.addToCart} onVerTodo={() => c.setActiveCategory('all')} />
+              <ProductGrid t={t} productos={c.filtered} onSelect={c.abrirProducto} onAdd={c.addToCart} onVerTodo={() => c.setActiveCategory('all')} catalogo />
             </section>
           </div>
         )}

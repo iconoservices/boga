@@ -2559,6 +2559,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                             onClick={() => setStoreForm(prev => ({
                               ...prev,
                               template: t.id as any,
+                              // La portada de "empresa" lleva titular y botones encima: el banner limpio (por defecto en las demás) la dejaría sin texto.
+                              ...(t.id === 'empresa' ? { hideHeroText: false } : {}),
                               // La categoría se acompaña a la plantilla mientras sea la que se puso sola: vacía, 'General' o la de la plantilla anterior.
                               // Si la eligió a mano (otra distinta), se respeta. Antes solo se llenaba si estaba vacía y quedaba pegada al cambiar de plantilla.
                               marketplaceCategory: PORTAL_POR_PLANTILLA[t.id] && (!prev.marketplaceCategory || prev.marketplaceCategory === 'General' || prev.marketplaceCategory === PORTAL_POR_PLANTILLA[prev.template as string])
@@ -3360,18 +3362,30 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                   />
                 </div>
               </div>
-              <label className="flex items-center gap-2.5 rounded-lg border border-dashed border-[#c2c6d6] bg-[#f8fafc] px-3 py-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={newStoreProduct.esServicio}
-                  onChange={(e) => setNewStoreProduct(prev => ({ ...prev, esServicio: e.target.checked }))}
-                  className="w-4 h-4 accent-[#0058be] shrink-0"
-                />
-                <span>
-                  <span className="block text-xs font-bold text-[#191b23]">Es un servicio, no un producto</span>
-                  <span className="block text-[10px] text-[#727785] font-semibold">Ej. un corte, una consulta, una reserva. Aparece marcado como servicio en su tienda y en BogaHub.</span>
-                </span>
-              </label>
+              <div>
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { v: false, icon: 'inventory_2', label: 'Producto' },
+                    { v: true, icon: 'handyman', label: 'Servicio' },
+                  ] as const).map((o) => {
+                    const activo = !!newStoreProduct.esServicio === o.v;
+                    return (
+                      <button
+                        key={o.label}
+                        type="button"
+                        onClick={() => setNewStoreProduct(prev => ({ ...prev, esServicio: o.v }))}
+                        className={`flex items-center justify-center gap-1.5 py-2 rounded-lg border-2 text-xs font-bold transition-all ${activo ? 'border-[#0058be] bg-[#0058be]/10 text-[#191b23]' : 'border-[#ecedf7] bg-[#f8fafc] text-[#727785]'}`}
+                      >
+                        <span className="material-symbols-outlined text-[16px]">{o.icon}</span>
+                        {o.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {newStoreProduct.esServicio && (
+                  <p className="text-[10px] text-[#727785] font-semibold mt-1.5">Ej. un corte, una consulta, una reserva. Aparece marcado como servicio en su tienda y en BogaHub.</p>
+                )}
+              </div>
               <div>
                 <label className="block text-[10px] font-bold text-[#545f73] mb-1">Descripción (opcional)</label>
                 <textarea
