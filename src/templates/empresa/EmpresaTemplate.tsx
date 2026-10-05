@@ -770,11 +770,11 @@ export default function EmpresaTemplate({ store, initialProductId, initialTab }:
           onClick={() => cotizar()}
           aria-label="Escríbenos por WhatsApp"
           title="Escríbenos por WhatsApp"
-          className="group flex fixed bottom-20 md:bottom-6 right-4 md:right-6 z-50 items-center h-14 pl-[14px] pr-[14px] rounded-full shadow-xl active:scale-95 transition-all"
+          className="group flex fixed bottom-20 md:bottom-6 right-4 md:right-6 z-50 items-center h-14 pl-[14px] pr-[14px] md:pl-6 rounded-full shadow-xl active:scale-95 hover:brightness-95 transition-all"
           style={{ background: '#25D366', color: '#ffffff' }}
         >
-          {/* Solo el icono; al pasar el mouse se despliega el texto hacia la izquierda. */}
-          <span className={`${TXT.body} font-extrabold whitespace-nowrap max-w-0 opacity-0 overflow-hidden transition-all duration-300 md:group-hover:max-w-[200px] md:group-hover:opacity-100 md:group-hover:mr-3 md:group-focus-visible:max-w-[200px] md:group-focus-visible:opacity-100 md:group-focus-visible:mr-3`}>
+          {/* Escritorio: abierto siempre, con el texto. Celular: solo el icono (ahí el pedido ya está a un toque en la portada). */}
+          <span className={`${TXT.body} font-extrabold whitespace-nowrap hidden md:inline md:mr-3`}>
             Cotiza por WhatsApp
           </span>
           <IconoWhatsApp className="w-7 h-7" />
