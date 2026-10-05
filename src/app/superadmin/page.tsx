@@ -2557,7 +2557,11 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                             onClick={() => setStoreForm(prev => ({
                               ...prev,
                               template: t.id as any,
-                              marketplaceCategory: (!prev.marketplaceCategory || prev.marketplaceCategory === 'General') && PORTAL_POR_PLANTILLA[t.id] ? PORTAL_POR_PLANTILLA[t.id] : prev.marketplaceCategory,
+                              // La categoría se acompaña a la plantilla mientras sea la que se puso sola: vacía, 'General' o la de la plantilla anterior.
+                              // Si la eligió a mano (otra distinta), se respeta. Antes solo se llenaba si estaba vacía y quedaba pegada al cambiar de plantilla.
+                              marketplaceCategory: PORTAL_POR_PLANTILLA[t.id] && (!prev.marketplaceCategory || prev.marketplaceCategory === 'General' || prev.marketplaceCategory === PORTAL_POR_PLANTILLA[prev.template as string])
+                                ? PORTAL_POR_PLANTILLA[t.id]
+                                : prev.marketplaceCategory,
                             }))}
                             className={`rounded-lg overflow-hidden border-2 cursor-pointer transition-all flex flex-col ${
                               isSelected

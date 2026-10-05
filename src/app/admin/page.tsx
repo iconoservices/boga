@@ -273,6 +273,7 @@ function AdminDashboard({ user }: { user: User }) {
           logoImage: s.logo_image || undefined,
           whatsapp: s.whatsapp || undefined,
           horario: s.horario || undefined,
+          perfilEmpresa: normalizarPerfilEmpresa(s.perfil_empresa) ?? undefined,
           metodosPago: s.metodos_pago || undefined,
           facebook: s.facebook || undefined,
           instagram: s.instagram || undefined,
@@ -338,7 +339,7 @@ function AdminDashboard({ user }: { user: User }) {
   const posOn = algunaTiene('pos');
   const inventarioOn = algunaTiene('inventario');
   // Pedidos es para todos: los pedidos de la carta ahora se registran. Caja y Métricas de ventas son del módulo de ventas.
-  const navTabs = NAV_TABS.filter(t => !['pos', 'metrics'].includes(t.id) || posOn);
+  const navTabsBase = NAV_TABS.filter(t => !['pos', 'metrics'].includes(t.id) || posOn);
 
   const focusedStore = selectedStore === 'all'
     ? ((activeTab === 'pos' ? Object.keys(stores).find(k => tiendaTiene(k, 'pos')) : undefined) ?? Object.keys(stores)[0] ?? '')
@@ -353,6 +354,8 @@ function AdminDashboard({ user }: { user: User }) {
   const inicioStore = stores[focusedStore];
   // Tiendas de tipo "empresa" (plantilla de servicios): el catálogo se llama "servicios", no "productos".
   const esEmpresa = stores[focusedStore]?.template === 'empresa';
+  // Una empresa no tiene pedidos ni caja: el cliente cotiza por WhatsApp y no queda nada que gestionar aquí.
+  const navTabs = esEmpresa ? navTabsBase.filter(t => t.id !== 'orders') : navTabsBase;
   const inicioDb = dbStores.find((s: any) => s.slug === focusedStore);
   const inicioActiva = (inicioDb?.status ?? 'active') === 'active';
   const inicioNombre = (user.user_metadata?.name as string | undefined)?.split(' ')[0];
@@ -1511,7 +1514,7 @@ function AdminDashboard({ user }: { user: User }) {
           {inicioStore && (
             <a href={inicioUrl} className="flex items-center gap-3 px-4 py-3 text-[var(--tienda-color)] hover:text-gray-900 font-bold transition-colors">
               <span className="material-symbols-outlined text-[20px]">storefront</span>
-              Volver a mi tienda
+              {esEmpresa ? 'Volver a mi página' : 'Volver a mi tienda'}
             </a>
           )}
           <Link href="/" className="flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-gray-900 font-semibold transition-colors">
@@ -1647,13 +1650,28 @@ function AdminDashboard({ user }: { user: User }) {
           const misProductos = products.filter(p => p.store === inicioStore.slug);
 
           // ── "Completa tu tienda": lo que falta para vender bien, con un toque para arreglarlo ──
-          const tareas = [
+          const tareasTienda = [
             { ok: !!inicioStore.logoImage, icon: 'add_photo_alternate', titulo: 'Sube tu logo', sub: 'Tus clientes te reconocen al instante', ir: () => openStoreEditor(inicioStore.slug, 'portada') },
             { ok: misProductos.length >= 3, icon: 'inventory_2', titulo: esEmpresa ? 'Carga al menos 3 servicios' : 'Carga al menos 3 productos', sub: `Tienes ${misProductos.length}`, ir: () => { resetForm(); setNewProduct(prev => ({ ...prev, store: inicioStore.slug })); setIsModalOpen(true); } },
             { ok: !!inicioStore.whatsapp, icon: 'chat', titulo: 'Agrega tu WhatsApp de pedidos', sub: 'Sin él, los pedidos no llegan a ti', ir: () => openStoreEditor(inicioStore.slug, 'avisos') },
             { ok: !!inicioStore.horario, icon: 'schedule', titulo: 'Define tu horario', sub: 'Para que sepan cuándo atiendes', ir: () => openStoreEditor(inicioStore.slug, 'horario') },
             { ok: (inicioStore.metodosPago?.length ?? 0) > 0, icon: 'payments', titulo: 'Elige cómo te pagan', sub: 'Efectivo, Yape, tarjeta…', ir: () => openStoreEditor(inicioStore.slug, 'pagos') },
           ];
+          const pe = inicioStore.perfilEmpresa;
+          const irPerfil = () => openStoreEditor(inicioStore.slug, 'empresa');
+          const tareasEmpresa = [
+            { ok: !!inicioStore.logoImage, icon: 'add_photo_alternate', titulo: 'Sube tu logo', sub: 'Tus clientes te reconocen al instante', ir: () => openStoreEditor(inicioStore.slug, 'portada') },
+            { ok: !!inicioStore.tagline?.trim(), icon: 'title', titulo: 'Escribe tu lema', sub: 'Es el titular grande de tu portada', ir: () => openStoreEditor(inicioStore.slug, 'datos') },
+            { ok: misProductos.length >= 3, icon: 'construction', titulo: 'Carga al menos 3 servicios', sub: `Tienes ${misProductos.length}`, ir: () => { resetForm(); setNewProduct(prev => ({ ...prev, store: inicioStore.slug })); setIsModalOpen(true); } },
+            { ok: !!pe?.nosotros, icon: 'business_center', titulo: 'Cuenta quiénes son', sub: 'La presentación de tu empresa', ir: irPerfil },
+            { ok: !!(pe?.mision || pe?.vision), icon: 'flag', titulo: 'Agrega misión y visión', sub: 'Qué buscan y hacia dónde van', ir: irPerfil },
+            { ok: (pe?.politicas?.length ?? 0) > 0, icon: 'verified_user', titulo: 'Agrega tus políticas', sub: 'Calidad, seguridad, ambiental…', ir: irPerfil },
+            { ok: (pe?.clientes?.length ?? 0) > 0, icon: 'groups', titulo: 'Lista tus clientes', sub: 'Las empresas que confían en ti', ir: irPerfil },
+            { ok: !!inicioStore.whatsapp, icon: 'chat', titulo: 'Agrega tu WhatsApp de cotizaciones', sub: 'Sin él, no te pueden escribir', ir: () => openStoreEditor(inicioStore.slug, 'avisos') },
+            { ok: !!pe?.email, icon: 'mail', titulo: 'Agrega tu correo', sub: 'Para cotizaciones por correo', ir: irPerfil },
+            { ok: !!inicioStore.horario, icon: 'schedule', titulo: 'Define tu horario', sub: 'Para que sepan cuándo atiendes', ir: () => openStoreEditor(inicioStore.slug, 'horario') },
+          ];
+          const tareas = esEmpresa ? tareasEmpresa : tareasTienda;
           const hechas = tareas.filter(t => t.ok).length;
           const faltan = tareas.filter(t => !t.ok);
 
@@ -1703,14 +1721,15 @@ function AdminDashboard({ user }: { user: User }) {
             {/* Acceso directo a la tienda: misma pestaña, así en la app instalada se puede volver con "atrás" */}
             <a href={inicioUrl} className="flex items-center justify-center gap-2 bg-white border-2 border-[var(--tienda-color)] text-[var(--tienda-color)] rounded-xl py-3 font-extrabold text-sm shadow-sm hover:bg-[var(--tienda-color)]/5 active:scale-[0.99] transition">
               <span className="material-symbols-outlined text-[20px]">storefront</span>
-              Ver mi tienda
+              {esEmpresa ? 'Ver mi página' : 'Ver mi tienda'}
             </a>
 
             {/* Pantalla ancha: dos columnas (lo de hoy a la izquierda; completar y configurar a la derecha).
                 En celular y tablet es una sola columna en el mismo orden. */}
             <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-5 lg:items-start">
             <div className="flex flex-col gap-4">
-            {/* Hoy: lo que importa de un vistazo */}
+            {/* Hoy: lo que importa de un vistazo (una empresa no tiene ventas ni pedidos que mostrar) */}
+            {!esEmpresa && (<>
             <div>
               <p className={titulo}>Hoy</p>
               <div className="grid grid-cols-3 gap-2.5">
@@ -1772,6 +1791,8 @@ function AdminDashboard({ user }: { user: User }) {
               )}
             </div>
 
+            </>)}
+
             {/* Acciones rápidas: lo que más se hace, a un toque */}
             <div>
               <p className={titulo}>Acciones rápidas</p>
@@ -1779,7 +1800,7 @@ function AdminDashboard({ user }: { user: User }) {
                 {[
                   { icon: 'add_circle', t: esEmpresa ? 'Agregar servicio' : 'Agregar producto', s: esEmpresa ? 'Súbelo con su foto y descripción' : 'Súbelo con su foto y precio', on: () => { resetForm(); setNewProduct(prev => ({ ...prev, store: inicioStore.slug })); setIsModalOpen(true); } },
                   ...(posOn ? [{ icon: 'point_of_sale', t: 'Nueva venta', s: 'Caja rápida en el local', on: () => setActiveTab('pos') }] : []),
-                  { icon: 'share', t: 'Compartir mi tienda', s: 'Envía tu enlace por WhatsApp', on: compartirCarta },
+                  { icon: 'share', t: esEmpresa ? 'Compartir mi página' : 'Compartir mi tienda', s: 'Envía tu enlace por WhatsApp', on: compartirCarta },
                   { icon: 'qr_code_2', t: 'Código QR', s: 'Para tus mesas o tu puerta', on: () => { setSelectedStore(inicioStore.slug); setIsQRModalOpen(true); } },
                   ...(inicioDb?.push_activo ? [{ icon: 'notifications', t: 'Notificaciones', s: 'Avisa a tus clientes de una oferta', on: () => { window.location.href = '/admin/notificaciones'; } }] : []),
                 ].map(a => (
@@ -1799,7 +1820,7 @@ function AdminDashboard({ user }: { user: User }) {
               <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
                 <div className="px-4 pt-3 pb-3">
                   <div className="flex items-center justify-between">
-                    <p className="font-bold text-gray-900 text-sm">Completa tu tienda</p>
+                    <p className="font-bold text-gray-900 text-sm">{esEmpresa ? 'Completa tu página' : 'Completa tu tienda'}</p>
                     <span className="text-xs font-bold text-gray-500">{hechas} de {tareas.length}</span>
                   </div>
                   <div className="h-1.5 rounded-full bg-gray-100 mt-2 overflow-hidden">
@@ -1823,10 +1844,10 @@ function AdminDashboard({ user }: { user: User }) {
 
             {/* Configuración y herramientas: lista compacta (lo de gestión ya está en el menú, no se repite) */}
             <div>
-              <p className={titulo}>Configura tu tienda</p>
+              <p className={titulo}>{esEmpresa ? 'Configura tu página' : 'Configura tu tienda'}</p>
               <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden divide-y divide-gray-100">
                 {[
-                  { icon: 'palette', t: 'Personaliza tu tienda', s: 'Logo, portada, datos, horario y pagos', on: () => openStoreEditor(inicioStore.slug) },
+                  { icon: 'palette', t: esEmpresa ? 'Personaliza tu página' : 'Personaliza tu tienda', s: esEmpresa ? 'Logo, portada, perfil de la empresa, horario y contacto' : 'Logo, portada, datos, horario y pagos', on: () => openStoreEditor(inicioStore.slug) },
                   { icon: 'category', t: 'Categorías', s: 'Crea y ordena los rubros de tu carta', on: () => setActiveTab('categories') },
                   { icon: 'notifications', t: 'Avisos de pedidos', s: 'WhatsApp y correo donde los recibes', on: () => openStoreEditor(inicioStore.slug, 'avisos') },
                   ...(inicioDb?.push_activo ? [{ icon: 'campaign', t: 'Notificaciones a clientes', s: 'Envía avisos a quienes instalaron tu app', on: () => router.push('/admin/notificaciones') }] : []),
@@ -1845,7 +1866,7 @@ function AdminDashboard({ user }: { user: User }) {
                 <a href={inicioUrl} target="_blank" rel="noopener noreferrer" className={fila}>
                   <span className={icono}><span className="material-symbols-outlined text-[20px]">open_in_new</span></span>
                   <span className="min-w-0 flex-1">
-                    <span className="block font-bold text-gray-900 text-sm leading-tight">Ver mi tienda</span>
+                    <span className="block font-bold text-gray-900 text-sm leading-tight">{esEmpresa ? 'Ver mi página' : 'Ver mi tienda'}</span>
                     <span className="block text-[11px] text-gray-500 leading-snug">Tal como la ven tus clientes</span>
                   </span>
                   <span className="material-symbols-outlined text-gray-300 text-[20px] shrink-0">chevron_right</span>
@@ -4506,7 +4527,7 @@ function AdminDashboard({ user }: { user: User }) {
                   <div className="grid grid-cols-3 gap-3 border-t border-gray-100 pt-6">
                     {/* Misma pestaña (no _blank): en la app instalada es la forma de regresar a la tienda desde donde se entró */}
                     {inicioStore && (
-                      <a href={inicioUrl} className={destacado}>{ico('storefront')}Volver a mi tienda</a>
+                      <a href={inicioUrl} className={destacado}>{ico('storefront')}{esEmpresa ? 'Volver a mi página' : 'Volver a mi tienda'}</a>
                     )}
                     {/* Secciones que no entran en la barra inferior, en el mismo orden */}
                     {navTabs.filter(t => !t.inBottomBar).map(t => (
