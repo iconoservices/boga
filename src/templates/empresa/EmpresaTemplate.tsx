@@ -38,12 +38,12 @@ const PASOS = [
   { icon: 'construction', titulo: 'Ejecutamos la obra', texto: 'Fabricación y montaje en taller o en tu local.' },
 ];
 
-/** Punto de color que sigue al mouse por toda la página (con retraso suave) y crece sobre links y botones. Solo con mouse. */
+/** Punto de color que sigue al mouse por toda la página (con retraso suave) y crece sobre links y botones. Solo con mouse (no en celular). */
 function PuntoCursor({ color }: { color: string }) {
   const ref = React.useRef<HTMLSpanElement>(null);
   React.useEffect(() => {
     const el = ref.current;
-    if (!el || !window.matchMedia('(hover: hover) and (pointer: fine)').matches || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!el || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
     let x = -100, y = -100, px = -100, py = -100, escala = 1, raf = 0;
     const mover = (e: MouseEvent) => {
       x = e.clientX; y = e.clientY;
@@ -71,13 +71,13 @@ function PuntoCursor({ color }: { color: string }) {
   );
 }
 
-/** Aparece suave (sube y se desvanece) cuando entra en pantalla. Sin movimiento si el equipo pide menos animación. */
+/** Aparece suave (sube y se desvanece) cuando entra en pantalla. */
 function Aparece({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
   const ref = React.useRef<HTMLDivElement>(null);
   const [visto, setVisto] = useState(false);
   React.useEffect(() => {
     const el = ref.current;
-    if (!el || typeof IntersectionObserver === 'undefined' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setVisto(true); return; }
+    if (!el || typeof IntersectionObserver === 'undefined') { setVisto(true); return; }
     const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisto(true); io.disconnect(); } }, { threshold: 0.15 });
     io.observe(el);
     return () => io.disconnect();
@@ -86,7 +86,7 @@ function Aparece({ children, delay = 0, className = '' }: { children: React.Reac
     <div
       ref={ref}
       className={className}
-      style={{ opacity: visto ? 1 : 0, transform: visto ? 'none' : 'translateY(28px)', transition: `opacity .7s ease ${delay}ms, transform .7s ease ${delay}ms` }}
+      style={{ opacity: visto ? 1 : 0, transform: visto ? 'none' : 'translateY(var(--aparece-y, 28px))', transition: `opacity .7s ease ${delay}ms, transform .7s ease ${delay}ms` }}
     >
       {children}
     </div>
