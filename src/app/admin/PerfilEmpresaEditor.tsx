@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type TextareaHTMLAttributes } from 'react';
 import type { PerfilEmpresa, PoliticaEmpresa } from '@/lib/perfilEmpresa';
 import { uploadFile } from '@/lib/uploadClient';
+import { comprimirPdf } from '@/lib/comprimirPdf';
 
 const campo = 'w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-md text-sm font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all';
 // `relative`: el input de archivo oculto (sr-only) se posiciona dentro de su botón. Sin esto, al abrir el selector el navegador
@@ -11,6 +12,29 @@ const boton = 'relative inline-flex items-center gap-1.5 text-xs font-bold text-
 const etiqueta = 'block text-sm font-bold text-gray-700 mb-2';
 // El servidor de subida admite cuerpos de unos 4 MB: un PDF más pesado se pega como enlace.
 const MAX_PDF_MB = 4;
+
+/**
+ * Caja de texto que crece con lo que escribes (sin barra lateral). `rows` es el alto mínimo.
+ * Dentro de una sección cerrada el alto medido es 0: un ResizeObserver lo vuelve a ajustar cuando la sección se abre.
+ */
+function AreaAuto(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const ajustar = () => {
+    const el = ref.current;
+    if (!el || el.offsetParent === null) return;   // oculto (sección cerrada): no hay nada que medir
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight + 2}px`;
+  };
+  useLayoutEffect(ajustar, [props.value]);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const obs = new ResizeObserver(ajustar);
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  return <textarea ref={ref} {...props} className={`${props.className ?? ''} overflow-hidden`} />;
+}
 
 /**
  * Una sección plegable del perfil: icono, título, qué es, y una etiqueta de estado (✓ listo / vacío / "3 fotos").
@@ -64,6 +88,9 @@ export default function PerfilEmpresaEditor({
 }) {
   const [subiendo, setSubiendo] = useState<string | null>(null);
   const [error, setError] = useState('');
+  // Mensaje de lo que se está haciendo con el PDF ("Optimizando… página 3 de 9") y aviso de cuánto se redujo.
+  const [progresoPdf, setProgresoPdf] = useState('');
+  const [avisoPdf, setAvisoPdf] = useState('');
 
   const politicas = perfil.politicas ?? [];
   const clientes = perfil.clientes ?? [];
@@ -104,14 +131,35 @@ export default function PerfilEmpresaEditor({
     subir('obras', Array.from(lista ?? []).slice(0, cupo), (urls) => set({ obras: [...obras, ...urls] }));
   };
 
-  const subirPdf = (lista: FileList | null) => {
+  const subirPdf = async (lista: FileList | null) => {
     const f = lista?.[0];
     if (!f) return;
-    if (f.size > MAX_PDF_MB * 1024 * 1024) {
-      setError(`El PDF pesa ${(f.size / 1024 / 1024).toFixed(1)} MB y el máximo es ${MAX_PDF_MB} MB. Comprímelo (por ejemplo en ilovepdf.com) o súbelo a Google Drive y pega el enlace en el campo de abajo.`);
-      return;
+    setError('');
+    setAvisoPdf('');
+    const limite = MAX_PDF_MB * 1024 * 1024;
+    const mb = (n: number) => (n / 1024 / 1024).toFixed(1);
+    let archivo = f;
+    if (f.size > limite) {
+      // Pesa más de lo que admite el servidor: se optimiza en el navegador (cada página se vuelve a guardar más liviana).
+      setSubiendo('brochure');
+      try {
+        // un poco por debajo del tope, para que el envío no quede justo
+        const r = await comprimirPdf(f, limite * 0.95, setProgresoPdf);
+        archivo = r.archivo;
+        setAvisoPdf(`PDF optimizado: de ${mb(r.antes)} MB a ${mb(r.despues)} MB.`);
+      } catch (e: any) {
+        setProgresoPdf('');
+        setSubiendo(null);
+        setError(
+          e?.message === 'demasiado-pesado'
+            ? `El PDF pesa ${mb(f.size)} MB y ni optimizado llega a ${MAX_PDF_MB} MB. Súbelo a Google Drive y pega el enlace en el campo de abajo.`
+            : 'No se pudo optimizar ese PDF. Súbelo a Google Drive y pega el enlace en el campo de abajo.'
+        );
+        return;
+      }
+      setProgresoPdf('');
     }
-    subir('brochure', [f], ([url]) => set({ brochure: url }));
+    subir('brochure', [archivo], ([url]) => set({ brochure: url }));
   };
 
   return (
@@ -134,16 +182,16 @@ export default function PerfilEmpresaEditor({
       <Seccion icono="badge" titulo="Presentación" ayuda="Quiénes somos, misión y visión" estado={`${presentacionLista} de 3`} listo={presentacionLista === 3} abierta>
         <div>
           <label className={etiqueta}>Quiénes somos</label>
-          <textarea rows={3} maxLength={1500} value={perfil.nosotros ?? ''} onChange={(e) => set({ nosotros: e.target.value })} placeholder="Qué hace tu empresa, desde cuándo y para quién trabajas." className={`${campo} resize-none`} />
+          <AreaAuto rows={3} maxLength={1500} value={perfil.nosotros ?? ''} onChange={(e) => set({ nosotros: e.target.value })} placeholder="Qué hace tu empresa, desde cuándo y para quién trabajas." className={`${campo} resize-none`} />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={etiqueta}>Misión</label>
-            <textarea rows={4} maxLength={800} value={perfil.mision ?? ''} onChange={(e) => set({ mision: e.target.value })} placeholder="Qué hacen y para quién." className={`${campo} resize-none`} />
+            <AreaAuto rows={4} maxLength={800} value={perfil.mision ?? ''} onChange={(e) => set({ mision: e.target.value })} placeholder="Qué hacen y para quién." className={`${campo} resize-none`} />
           </div>
           <div>
             <label className={etiqueta}>Visión</label>
-            <textarea rows={4} maxLength={800} value={perfil.vision ?? ''} onChange={(e) => set({ vision: e.target.value })} placeholder="Hacia dónde van." className={`${campo} resize-none`} />
+            <AreaAuto rows={4} maxLength={800} value={perfil.vision ?? ''} onChange={(e) => set({ vision: e.target.value })} placeholder="Hacia dónde van." className={`${campo} resize-none`} />
           </div>
         </div>
       </Seccion>
@@ -151,7 +199,7 @@ export default function PerfilEmpresaEditor({
       {/* 2 ─ Sectores */}
       <Seccion icono="factory" titulo="Sectores que atiendes" ayuda="Petroleras, minería, construcción…" estado={sectores.length ? `${sectores.length}` : 'Vacío'} listo={sectores.length > 0}>
         <p className="text-xs text-gray-500 -mt-1">Uno por línea.</p>
-        <textarea
+        <AreaAuto
           rows={4}
           value={(perfil.sectores ?? []).join('\n')}
           onChange={(e) => set({ sectores: e.target.value.split('\n') })}
@@ -212,7 +260,7 @@ export default function PerfilEmpresaEditor({
       {/* 5 ─ Clientes */}
       <Seccion icono="handshake" titulo="Clientes principales" ayuda="Nombres y, si quieres, su logo" estado={nombresClientes.length ? `${nombresClientes.length}` : 'Vacío'} listo={nombresClientes.length > 0}>
         <p className="text-xs text-gray-500 -mt-1">Uno por línea.</p>
-        <textarea
+        <AreaAuto
           rows={4}
           value={clientes.join('\n')}
           onChange={(e) => set({ clientes: e.target.value.split('\n') })}
@@ -220,8 +268,10 @@ export default function PerfilEmpresaEditor({
           className={`${campo} resize-none`}
         />
         {nombresClientes.length > 0 && (
-          <div className="space-y-2">
-            <p className="text-xs font-bold text-gray-700">Logos <span className="font-medium text-gray-500">(opcional: sin logo, sale el nombre en texto)</span></p>
+          <div>
+            <p className="text-xs font-bold text-gray-700 mb-2">Logos <span className="font-medium text-gray-500">(opcional: sin logo, sale el nombre en texto)</span></p>
+            {/* Dos por fila en pantallas anchas: con muchos clientes, una columna ocupaba demasiado alto */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {nombresClientes.map((nombre) => (
               <div key={nombre} className="flex items-center gap-3 rounded-lg border border-gray-200 p-2">
                 <div className="w-14 h-10 rounded bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden shrink-0">
@@ -237,6 +287,7 @@ export default function PerfilEmpresaEditor({
                 </label>
               </div>
             ))}
+            </div>
           </div>
         )}
       </Seccion>
@@ -252,7 +303,7 @@ export default function PerfilEmpresaEditor({
                   <span className="material-symbols-outlined text-[18px]">delete</span>
                 </button>
               </div>
-              <textarea rows={4} maxLength={1500} value={p.texto} onChange={(e) => setPolitica(i, { texto: e.target.value })} placeholder="Texto de la política" className={`${campo} resize-none`} />
+              <AreaAuto rows={4} maxLength={1500} value={p.texto} onChange={(e) => setPolitica(i, { texto: e.target.value })} placeholder="Texto de la política" className={`${campo} resize-none`} />
             </div>
           ))}
           {politicas.length < 8 && (
@@ -265,7 +316,7 @@ export default function PerfilEmpresaEditor({
 
       {/* 7 ─ Brochure */}
       <Seccion icono="picture_as_pdf" titulo="Brochure (PDF)" ayuda='Prende el botón "Descargar brochure"' estado={perfil.brochure ? 'Cargado' : 'Vacío'} listo={!!perfil.brochure}>
-        <p className="text-xs text-gray-500 -mt-1">Sube el PDF (hasta {MAX_PDF_MB} MB) o pega un enlace, por ejemplo de Google Drive.</p>
+        <p className="text-xs text-gray-500 -mt-1">Sube el PDF o pega un enlace, por ejemplo de Google Drive. Si pesa más de {MAX_PDF_MB} MB, se optimiza solo.</p>
         {perfil.brochure && (
           <div className="flex items-center gap-2 text-xs">
             <span className="material-symbols-outlined text-[18px] text-gray-500">picture_as_pdf</span>
@@ -275,9 +326,10 @@ export default function PerfilEmpresaEditor({
         )}
         <label className={`${boton} ${subiendo === 'brochure' ? 'opacity-50 pointer-events-none' : ''}`}>
           <span className="material-symbols-outlined text-[16px]">upload_file</span>
-          {subiendo === 'brochure' ? 'Subiendo…' : '+ Subir PDF'}
+          {subiendo === 'brochure' ? (progresoPdf || 'Subiendo…') : '+ Subir PDF'}
           <input type="file" accept="application/pdf" className="sr-only" onChange={(e) => { subirPdf(e.target.files); e.target.value = ''; }} />
         </label>
+        {avisoPdf && <p className="text-xs text-green-700 font-medium">{avisoPdf}</p>}
         <input
           type="url"
           value={perfil.brochure ?? ''}

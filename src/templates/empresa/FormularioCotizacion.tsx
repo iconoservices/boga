@@ -25,8 +25,11 @@ export default function FormularioCotizacion({
   };
 
   return (
-    <div className="p-6 rounded-3xl border shadow-sm space-y-4" style={{ background: t.surface, borderColor: `${t.outlineVariant}40` }}>
-      <h4 className={`font-bold ${TXT.lead} uppercase`} style={{ color: t.onSurface }}>Pide tu cotización</h4>
+    <div className="p-6 md:p-8 rounded-3xl border shadow-sm space-y-4" style={{ background: t.surface, borderColor: `${t.outlineVariant}40` }}>
+      <div>
+        <p className={`${TXT.micro} font-extrabold uppercase tracking-widest`} style={{ color: t.primary }}>Cotización</p>
+        <h4 className="font-black text-xl md:text-2xl mt-0.5" style={{ color: t.onSurface }}>Pide tu cotización</h4>
+      </div>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -43,6 +46,7 @@ export default function FormularioCotizacion({
         }}
         className="space-y-3.5"
       >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
         <div>
           <label htmlFor="cot-nombre" className={etiqueta} style={{ color: t.onSurfaceVariant }}>Tu nombre</label>
           <input id="cot-nombre" name="nombre" type="text" required className={clase} style={estilo} {...foco} />
@@ -51,6 +55,8 @@ export default function FormularioCotizacion({
           <label htmlFor="cot-empresa" className={etiqueta} style={{ color: t.onSurfaceVariant }}>Tu empresa <span className="font-medium normal-case">(opcional)</span></label>
           <input id="cot-empresa" name="empresa" type="text" className={clase} style={estilo} {...foco} />
         </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
         <div>
           <label htmlFor="cot-telefono" className={etiqueta} style={{ color: t.onSurfaceVariant }}>Tu teléfono</label>
           <input id="cot-telefono" name="telefono" type="tel" required className={clase} style={estilo} {...foco} />
@@ -63,9 +69,10 @@ export default function FormularioCotizacion({
             <option value="Otro / no estoy seguro">Otro / no estoy seguro</option>
           </select>
         </div>
+        </div>
         <div>
           <label htmlFor="cot-detalle" className={etiqueta} style={{ color: t.onSurfaceVariant }}>Cuéntanos tu proyecto</label>
-          <textarea id="cot-detalle" name="detalle" rows={3} required placeholder="Medidas, materiales, ubicación, plazos…" className={clase} style={estilo} {...foco} />
+          <textarea id="cot-detalle" name="detalle" rows={5} required placeholder="Medidas, materiales, ubicación, plazos…" className={clase} style={estilo} {...foco} />
         </div>
         <button
           type="submit"
