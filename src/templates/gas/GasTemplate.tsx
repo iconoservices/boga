@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
 import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
+import IconoWhatsApp from '../shared/IconoWhatsApp';
 import StoreHeader from '../shared/StoreHeader';
 import { useCatalogo } from '../shared/useCatalogo';
 import { TXT, ICON } from '../shared/tokens';
@@ -103,7 +104,7 @@ export default function GasTemplate({ store, initialProductId }: Props) {
                     className={`absolute bottom-3 right-3 flex items-center gap-2 pl-3.5 pr-4 py-2.5 rounded-full font-extrabold ${TXT.small} text-white backdrop-blur-md active:scale-95 transition-all`}
                     style={{ background: 'rgba(0,0,0,0.35)', border: '1.5px solid rgba(255,255,255,0.55)' }}
                   >
-                    <span className={`material-symbols-outlined ${ICON.md}`}>chat</span>
+                    <IconoWhatsApp className="w-5 h-5" />
                     Pedir por WhatsApp
                   </button>
                 )}
@@ -126,7 +127,7 @@ export default function GasTemplate({ store, initialProductId }: Props) {
                   className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-full font-extrabold ${TXT.lead} shadow-lg active:scale-95 transition-all`}
                   style={{ background: '#25D366', color: '#ffffff' }}
                 >
-                  <span className={`material-symbols-outlined ${ICON.md}`}>chat</span>
+                  <IconoWhatsApp className="w-5 h-5" />
                   Pedir mi balón por WhatsApp
                 </button>
               </div>
@@ -156,7 +157,7 @@ export default function GasTemplate({ store, initialProductId }: Props) {
                           className={`mx-2.5 mt-2 mb-2.5 w-[calc(100%-1.25rem)] flex items-center justify-center gap-1.5 py-2 rounded-full font-extrabold ${TXT.small} active:scale-95 transition-all`}
                           style={{ background: '#25D366', color: '#ffffff' }}
                         >
-                          <span className={`material-symbols-outlined ${ICON.sm}`}>chat</span>
+                          <IconoWhatsApp className="w-4 h-4" />
                           Consultar
                         </button>
                       )}
@@ -288,6 +289,19 @@ export default function GasTemplate({ store, initialProductId }: Props) {
         onSelect={setActiveTab}
         cartCount={0}
       />
+
+      {/* WhatsApp flotante: sobre la barra inferior en móvil, abajo a la derecha en escritorio. */}
+      {c.whatsappVisible && (
+        <button
+          onClick={() => consultar()}
+          aria-label="Escríbenos por WhatsApp"
+          title="Escríbenos por WhatsApp"
+          className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-xl active:scale-95 transition-all"
+          style={{ background: '#25D366', color: '#ffffff' }}
+        >
+          <IconoWhatsApp className="w-7 h-7" />
+        </button>
+      )}
 
       <ProductModal
         t={t}

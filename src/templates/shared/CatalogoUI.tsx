@@ -1,5 +1,6 @@
 'use client';
 
+import IconoWhatsApp from './IconoWhatsApp';
 import React, { useEffect } from 'react';
 import { guardarCliente, leerCliente, normalizarCelular } from '@/lib/cliente';
 import type { StoreTheme } from '@/lib/templates.config';
@@ -170,7 +171,7 @@ export function ProductGrid({
                 className={`mt-auto w-full flex items-center justify-center gap-1.5 py-2.5 rounded-full font-extrabold ${TXT.small} active:scale-95 transition-all`}
                 style={{ background: '#25D366', color: '#ffffff' }}
               >
-                <span className={`material-symbols-outlined ${ICON.sm}`}>chat</span>
+                <IconoWhatsApp className="w-4 h-4" />
                 Consultar precio
               </button>
             ) : (
