@@ -97,6 +97,29 @@ function TarjetaServicio({
   );
 }
 
+/**
+ * Clientes: una sola cuadrícula, todas las tarjetas del mismo tamaño y en el orden de la lista. Con logo se ve el logo;
+ * sin logo, su nombre con un icono. (Antes los que no tenían logo no salían en el Inicio.)
+ */
+function ClientesGrilla({ t, clientes, logos }: { t: StoreConfig['theme']; clientes: string[]; logos?: Record<string, string> }) {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+      {clientes.map((cl) => (
+        <div key={cl} className="h-24 rounded-2xl flex items-center justify-center p-4 text-center" style={{ background: t.surface, border: `1px solid ${t.outlineVariant}60` }}>
+          {logos?.[cl] ? (
+            <img src={logos[cl]} alt={cl} title={cl} className="max-w-full max-h-full object-contain" />
+          ) : (
+            <div className="flex flex-col items-center gap-1 min-w-0">
+              <span className={`material-symbols-outlined ${ICON.md}`} style={{ color: t.primary }}>domain</span>
+              <span className={`${TXT.small} font-bold leading-tight line-clamp-2`} style={{ color: t.onSurface }}>{cl}</span>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /** Cabecera azul de cada pestaña: línea chica, título y una frase. */
 function CabeceraPestana({ t, kicker, titulo, frase }: { t: StoreConfig['theme']; kicker: string; titulo: string; frase: string }) {
   return (
@@ -438,17 +461,11 @@ export default function EmpresaTemplate({ store, initialProductId, initialTab }:
                 </section>
               )}
 
-              {/* ══ CLIENTES (solo los que tienen logo) ══ */}
-              {perfil?.clientes && perfil.clientes.some((cl) => perfil.clienteLogos?.[cl]) && (
+              {/* ══ CLIENTES ══ */}
+              {perfil?.clientes && perfil.clientes.length > 0 && (
                 <section>
                   <TituloSeccion t={t} kicker="Confían en nosotros" titulo="Empresas con las que trabajamos" />
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                    {perfil.clientes.filter((cl) => perfil.clienteLogos?.[cl]).map((cl) => (
-                      <div key={cl} className="h-24 rounded-2xl flex items-center justify-center p-4" style={{ background: t.surface, border: `1px solid ${t.outlineVariant}60` }}>
-                        <img src={perfil.clienteLogos![cl]} alt={cl} title={cl} className="max-w-full max-h-full object-contain" />
-                      </div>
-                    ))}
-                  </div>
+                  <ClientesGrilla t={t} clientes={perfil.clientes} logos={perfil.clienteLogos} />
                 </section>
               )}
 
@@ -632,25 +649,7 @@ export default function EmpresaTemplate({ store, initialProductId, initialTab }:
               {perfil.clientes && perfil.clientes.length > 0 && (
                 <section>
                   <TituloSeccion t={t} kicker="Confían en nosotros" titulo="Empresas con las que trabajamos" />
-                  {perfil.clientes.some((cl) => perfil.clienteLogos?.[cl]) && (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                      {perfil.clientes.filter((cl) => perfil.clienteLogos?.[cl]).map((cl) => (
-                        <div key={cl} className="h-24 rounded-2xl flex items-center justify-center p-4" style={{ background: t.surface, border: `1px solid ${t.outlineVariant}60` }}>
-                          <img src={perfil.clienteLogos![cl]} alt={cl} title={cl} className="max-w-full max-h-full object-contain" />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {perfil.clientes.some((cl) => !perfil.clienteLogos?.[cl]) && (
-                    <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 ${perfil.clientes.some((cl) => perfil.clienteLogos?.[cl]) ? 'mt-3' : ''}`}>
-                      {perfil.clientes.filter((cl) => !perfil.clienteLogos?.[cl]).map((cl) => (
-                        <div key={cl} className={`flex items-center gap-3 px-4 py-3 rounded-xl ${TXT.body} font-bold`} style={{ background: t.surface, border: `1px solid ${t.outlineVariant}60`, color: t.onSurface }}>
-                          <span className={`material-symbols-outlined ${ICON.md}`} style={{ color: t.primary }}>domain</span>
-                          {cl}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <ClientesGrilla t={t} clientes={perfil.clientes} logos={perfil.clienteLogos} />
                 </section>
               )}
 
