@@ -118,7 +118,6 @@ export default function EmpresaTemplate({ store, initialProductId }: Props) {
         active={activeTab}
         onSelect={setActiveTab}
         cartCount={0}
-        onCarrito={() => cotizar()}
         ctaLabel="Cotizar"
         nombreRecto
         menuDe={{

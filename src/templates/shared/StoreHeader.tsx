@@ -26,7 +26,8 @@ export default function StoreHeader({
   active: string;
   onSelect: (id: string) => void;
   cartCount: number;
-  onCarrito: () => void;
+  /** Sin esta función no hay carrito en el encabezado (empresas de servicios: se cotiza, no se compra). */
+  onCarrito?: () => void;
   ctaLabel?: string;
   onCta: () => void;
   /** Nombre en letra recta en vez de cursiva (más sobrio: empresas de servicios). */
@@ -42,7 +43,7 @@ export default function StoreHeader({
   // fondo del menu llegaba al carrito con el scroll abajo y no veia los items ni el formulario.
   const alInicio = () => window.scrollTo({ top: 0 });
   const seleccionar = (id: string) => { onSelect(id); alInicio(); };
-  const irAlCarrito = () => { onCarrito(); alInicio(); };
+  const irAlCarrito = () => { onCarrito?.(); alInicio(); };
   const [isScrolled, setIsScrolled] = useState(false);
   const iniciales = inicialesDe(store.name);
 
@@ -146,17 +147,19 @@ export default function StoreHeader({
             >
               {ctaLabel}
             </button>
-            <button
-              onClick={irAlCarrito}
-              className="relative w-10 h-10 rounded-full flex items-center justify-center transition-all"
-              style={{ background: `${t.primary}15`, color: t.primary }}
-              aria-label={`Ver pedido (${cartCount})`}
-            >
-              <span className={`material-symbols-outlined ${ICON.md}`} style={{ fontVariationSettings: "'FILL' 1" }}>
-                shopping_cart
-              </span>
-              <CartBadge t={t} count={cartCount} className="absolute -top-1 -right-1 min-w-4 h-4 px-1 text-[9px]" />
-            </button>
+            {onCarrito && (
+              <button
+                onClick={irAlCarrito}
+                className="relative w-10 h-10 rounded-full flex items-center justify-center transition-all"
+                style={{ background: `${t.primary}15`, color: t.primary }}
+                aria-label={`Ver pedido (${cartCount})`}
+              >
+                <span className={`material-symbols-outlined ${ICON.md}`} style={{ fontVariationSettings: "'FILL' 1" }}>
+                  shopping_cart
+                </span>
+                <CartBadge t={t} count={cartCount} className="absolute -top-1 -right-1 min-w-4 h-4 px-1 text-[9px]" />
+              </button>
+            )}
             <CustomerAccountButton variant="encabezado" background={`${t.primary}15`} color={t.primary} />
           </div>
         </div>
@@ -182,7 +185,7 @@ export default function StoreHeader({
       </header>
 
       {/* En Pedidos el aviso sobra: ya se ve el carrito. */}
-      {active !== 'pedidos' && <AddedToast t={t} onVerPedido={irAlCarrito} />}
+      {onCarrito && active !== 'pedidos' && <AddedToast t={t} onVerPedido={irAlCarrito} />}
     </>
   );
 }
