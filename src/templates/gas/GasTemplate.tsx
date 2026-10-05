@@ -68,7 +68,8 @@ export default function GasTemplate({ store, initialProductId }: Props) {
     ...(store.zona ? [{ label: 'Zona de reparto', valor: store.zona }] : []),
   ];
 
-  const categorias = c.categoriasConFoto(6);
+  // Mientras carga el catálogo no hay fotos reales: mostrar las tarjetas con la portada de relleno se ve como un error.
+  const categorias = c.cargando ? [] : c.categoriasConFoto(6);
 
   return (
     <div className="min-h-screen" style={{ background: t.background, color: t.onBackground, fontFamily: t.fontBody }}>
@@ -128,7 +129,7 @@ export default function GasTemplate({ store, initialProductId }: Props) {
                   <h2 className={`${TXT.title} font-black`} style={{ color: t.onSurface }}>Nuestros productos</h2>
                   <button onClick={() => irAProductos()} className={`${TXT.small} font-bold`} style={{ color: t.primary }}>Ver todos</button>
                 </div>
-                <div className="flex gap-3 overflow-x-auto px-5 md:px-6 pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
+                <div className="flex gap-3 overflow-x-auto px-5 md:px-6 scroll-px-5 md:scroll-px-6 pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
                   {c.products.slice(0, 10).map((p) => (
                     <button
                       key={p.id}
@@ -136,10 +137,11 @@ export default function GasTemplate({ store, initialProductId }: Props) {
                       className="snap-start shrink-0 w-36 rounded-2xl overflow-hidden text-left active:scale-[0.98] transition-all"
                       style={{ background: t.surface, border: `1px solid ${t.outlineVariant}60` }}
                     >
-                      <img src={p.image} alt={p.name} className="w-full h-28 object-cover" />
+                      <img src={p.image} alt={p.name} className="w-full aspect-square object-contain bg-white p-2" />
                       <p className={`${TXT.small} font-extrabold p-2.5 line-clamp-2`} style={{ color: t.onSurface }}>{p.name}</p>
                     </button>
                   ))}
+                  <div className="shrink-0 w-2" aria-hidden />
                 </div>
               </section>
             )}
@@ -170,7 +172,7 @@ export default function GasTemplate({ store, initialProductId }: Props) {
                       className="flex items-center gap-3 p-3 rounded-2xl border text-left active:scale-[0.98] transition-all"
                       style={{ background: t.surface, borderColor: `${t.outlineVariant}60` }}
                     >
-                      <img src={cat.image} alt="" className="w-14 h-14 rounded-xl object-cover shrink-0" />
+                      <img src={cat.image} alt="" className="w-14 h-14 rounded-xl object-contain bg-white shrink-0" />
                       <span className={`${TXT.body} font-extrabold`} style={{ color: t.onSurface }}>{cat.label}</span>
                       <span className={`material-symbols-outlined ${ICON.md} ml-auto`} style={{ color: t.onSurfaceVariant }}>chevron_right</span>
                     </button>
