@@ -1,19 +1,36 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { RUTAS_DE_BOGAHUB } from '@/lib/rutasBoga';
 
-// Pantalla de carga con el logo de Boga. Viene en el HTML del servidor, así que
-// se ve desde el primer paint (antes de que cargue/hidrate la página) y se
-// desvanece apenas la app está lista. En tiendas con subdominio no se muestra
-// (ver html[data-tienda] en globals.css): ahí no va el logo de Boga.
-export default function SplashInicial() {
+interface Tienda {
+  nombre: string;
+  logo?: string;
+  /** Color de fondo y color de acento: los de la plantilla de la tienda. */
+  fondo: string;
+  acento: string;
+}
+
+// Pantalla de carga. Viene en el HTML del servidor, así que se ve desde el primer paint (antes de
+// que cargue/hidrate la página) y se desvanece apenas la app está lista; una vez por sesión.
+//  - Sin `tienda`: la de BogaHub (logo de Boga), solo en las páginas de BogaHub. En una tienda (ruta
+//    /<tienda> o su subdominio) no sale: ahí va la de la propia tienda (ver html[data-tienda] en globals.css).
+//  - Con `tienda`: el logo y los colores de esa tienda.
+export default function SplashInicial({ tienda }: { tienda?: Tienda }) {
+  const pathname = usePathname() || '/';
+  const primero = pathname.split('/')[1] ?? '';
+  const esDeBoga = primero === '' || RUTAS_DE_BOGAHUB.has(primero);
   const [fase, setFase] = useState<'visible' | 'saliendo' | 'fuera'>('visible');
+  const activo = tienda ? true : esDeBoga;
+  const clave = tienda ? `boga_splash_${tienda.nombre}` : 'boga_splash';
 
   useEffect(() => {
-    // Una vez por sesión: si ya se vio, se quita sin animación.
+    if (!activo) return;
+    // Una vez por sesión (y no dentro de la vista previa del admin): si ya se vio, se quita sin animación.
     try {
-      if (sessionStorage.getItem('boga_splash')) { setFase('fuera'); return; }
-      sessionStorage.setItem('boga_splash', '1');
+      if (sessionStorage.getItem(clave) || (tienda && window.parent !== window)) { setFase('fuera'); return; }
+      sessionStorage.setItem(clave, '1');
     } catch {}
     const salir = () => setFase('saliendo');
     // Mínimo ~400 ms para que el logo no parpadee, y espera a que cargue todo.
@@ -25,7 +42,7 @@ export default function SplashInicial() {
     // Tope de seguridad: nunca dejar la pantalla tapada más de 3 s.
     const tope = setTimeout(salir, 3000);
     return () => { clearTimeout(tope); if (t) clearTimeout(t); };
-  }, []);
+  }, [activo, clave, tienda]);
 
   useEffect(() => {
     if (fase !== 'saliendo') return;
@@ -33,16 +50,34 @@ export default function SplashInicial() {
     return () => clearTimeout(t);
   }, [fase]);
 
-  if (fase === 'fuera') return null;
+  if (!activo || fase === 'fuera') return null;
+
+  const clases = ['boga-splash', tienda ? 'boga-splash--tienda' : '', fase === 'saliendo' ? 'boga-splash--out' : ''].filter(Boolean).join(' ');
+
+  const acento = tienda ? tienda.acento : '#B8130E';
 
   return (
     <div
-      id="boga-splash"
+      id={tienda ? 'tienda-splash' : 'boga-splash'}
       aria-hidden="true"
-      className={fase === 'saliendo' ? 'boga-splash boga-splash--out' : 'boga-splash'}
+      className={clases}
+      style={{ ...(tienda ? { background: tienda.fondo } : {}), ['--splash-acento' as string]: acento }}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo-mark.svg" alt="" width={96} height={96} className="boga-splash__logo" />
+      <div className="boga-splash__box">
+        <span className="boga-splash__anillo" />
+        {tienda ? (
+          tienda.logo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={tienda.logo} alt="" className="boga-splash__logo" style={{ width: 96, height: 96, objectFit: 'contain' }} />
+          ) : (
+            <span className="boga-splash__logo" style={{ color: acento, fontWeight: 900, fontSize: 22, textAlign: 'center', padding: '0 16px' }}>{tienda.nombre}</span>
+          )
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src="/logo-mark.svg" alt="" width={72} height={72} className="boga-splash__logo" />
+        )}
+      </div>
+      <span className="boga-splash__barra"><i /></span>
     </div>
   );
 }

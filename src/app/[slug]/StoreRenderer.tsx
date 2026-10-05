@@ -48,6 +48,8 @@ interface Props {
   initialTab?: string;
 }
 
+import SplashInicial from '@/components/SplashInicial';
+
 export default function StoreRenderer({ store: initialStore, initialProductId, initialTab }: Props) {
   const [store, setStore] = useState<StoreConfig>(initialStore);
 
@@ -205,6 +207,7 @@ export default function StoreRenderer({ store: initialStore, initialProductId, i
           content_ids: [store.slug],
         }}
       />
+      <SplashInicial tienda={{ nombre: store.name, logo: store.logoImage, fondo: store.theme.background, acento: store.theme.primary }} />
       <AvisoTiendaMovida nombre={store.name} />
       <PedidoEnviadoSheet />
       <CustomerSessionModal storeSlug={store.slug} storeName={store.name} />
