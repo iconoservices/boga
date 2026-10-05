@@ -1929,3 +1929,39 @@ WITH CHECK (auth.uid() = user_id);
 -- Un solo JSONB por tienda. Ver src/lib/perfilEmpresa.ts.
 -- ============================================================
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS perfil_empresa JSONB;
+
+-- ============================================================
+-- RESERVAS DE SERVICIOS (salón de uñas y similares)
+-- Vista aparte del carrito: el cliente reserva fecha y hora de un servicio
+-- (producto con es_servicio = true). Escribe SOLO el servidor (/api/reservas, llave de servicio);
+-- el dueño las ve y las confirma/cancela desde /admin/reservas.
+-- El índice único evita la doble reserva: una hora ocupada (no cancelada) no se puede tomar otra vez.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.reservas (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  store       TEXT NOT NULL,
+  codigo      TEXT NOT NULL,
+  servicio_id TEXT,
+  servicio    TEXT NOT NULL,
+  precio      NUMERIC,
+  fecha       DATE NOT NULL,
+  hora        TEXT NOT NULL,                 -- 'HH:MM' en 24 h
+  nombre      TEXT NOT NULL,
+  telefono    TEXT NOT NULL,
+  nota        TEXT,
+  estado      TEXT NOT NULL DEFAULT 'pendiente'  -- pendiente | confirmada | cancelada | atendida
+);
+CREATE INDEX IF NOT EXISTS reservas_store_fecha_idx ON public.reservas (store, fecha);
+CREATE UNIQUE INDEX IF NOT EXISTS reservas_hora_unica_idx
+  ON public.reservas (store, fecha, hora) WHERE estado <> 'cancelada';
+
+ALTER TABLE public.reservas ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "reservas: dueño o superadmin ve"       ON public.reservas;
+DROP POLICY IF EXISTS "reservas: dueño o superadmin actualiza" ON public.reservas;
+CREATE POLICY "reservas: dueño o superadmin ve"
+ON public.reservas FOR SELECT
+USING (public.is_superadmin() OR public.es_admin_de(store));
+CREATE POLICY "reservas: dueño o superadmin actualiza"
+ON public.reservas FOR UPDATE
+USING (public.is_superadmin() OR public.es_admin_de(store));

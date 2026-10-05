@@ -7,6 +7,8 @@ import { StoreConfig } from '@/lib/stores.config';
 import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { debeMostrarDemo } from '@/lib/demo';
 import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
+import { HORAS_RESERVA, horaLegible } from '@/lib/reservas';
+import { hoyLima } from '@/lib/fechaLima';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 
 interface SweetKittyNailsTemplateProps {
@@ -14,12 +16,12 @@ interface SweetKittyNailsTemplateProps {
 }
 
 const MOCK_SERVICES = [
-  { id: 'manicura-gel', title: 'Manicura Gel Semi-Permanente Glossy', price: 55.00, duration: '45 min', category: 'manicura', image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&q=80', description: 'Esmaltado semipermanente de alta duración con marcas importadas y curado LED. Incluye limado de uñas, perfilado morfológico y cuidado intensivo de cutículas.' },
-  { id: 'acrilicas-esculpidas', title: 'Uñas Acrílicas Esculpidas Premium', price: 120.00, duration: '120 min', category: 'acrilicas', image: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=400&q=80', description: 'Esculpido profesional con acrílico de alta calidad. Elige tu forma preferida (coffin, stiletto, almendrada o cuadrada), largo y esmaltado semipermanente de tu elección.' },
-  { id: 'nailart-3d', title: 'Nail Art 3D & Pedrería Fina (x Mano)', price: 40.00, duration: '30 min', category: 'nailart', image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&q=80', description: 'Diseño artístico tridimensional hecho a mano alzada. Incluye cristales Swarovsky genuinos, efectos holográficos, glitter encapsulado y stickers kawaii.' },
-  { id: 'jelly-spa', title: 'Pedicura Jelly Spa Relajante & Exfoliante', price: 85.00, duration: '60 min', category: 'pedicura', image: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=400&q=80', description: 'Baño de pies con gelatina termoterapéutica aromática, exfoliación profunda de sales marinas, mascarilla hidratante, masaje con aceites calientes y esmaltado.' },
-  { id: 'kapping-gel', title: 'Kapping Gel Fortalecedor Protector', price: 80.00, duration: '60 min', category: 'manicura', image: 'https://images.unsplash.com/photo-1522337094846-8a81113521f0?w=400&q=80', description: 'Aplicación de una fina capa de gel protector directamente sobre tu uña natural para proporcionarle dureza, resistencia y evitar roturas o escamaciones.' },
-  { id: 'retiro-nutricion', title: 'Retiro Seguro de Acrílico + Nutrición Coco', price: 30.00, duration: '30 min', category: 'manicura', image: 'https://images.unsplash.com/photo-1607875934601-e4129caf24e8?w=400&q=80', description: 'Retiro profesional libre de daños mecánicos empleando removedores especializados. Finaliza con pulido suave, base endurecedora y aceites de argán y coco.' }
+  { id: 'demo-manicura-gel', title: 'Manicura Gel Semi-Permanente Glossy', price: 55.00, duration: '45 min', category: 'manicura', image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&q=80', description: 'Esmaltado semipermanente de alta duración con marcas importadas y curado LED. Incluye limado de uñas, perfilado morfológico y cuidado intensivo de cutículas.' },
+  { id: 'demo-acrilicas-esculpidas', title: 'Uñas Acrílicas Esculpidas Premium', price: 120.00, duration: '120 min', category: 'acrilicas', image: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=400&q=80', description: 'Esculpido profesional con acrílico de alta calidad. Elige tu forma preferida (coffin, stiletto, almendrada o cuadrada), largo y esmaltado semipermanente de tu elección.' },
+  { id: 'demo-nailart-3d', title: 'Nail Art 3D & Pedrería Fina (x Mano)', price: 40.00, duration: '30 min', category: 'nailart', image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&q=80', description: 'Diseño artístico tridimensional hecho a mano alzada. Incluye cristales Swarovsky genuinos, efectos holográficos, glitter encapsulado y stickers kawaii.' },
+  { id: 'demo-jelly-spa', title: 'Pedicura Jelly Spa Relajante & Exfoliante', price: 85.00, duration: '60 min', category: 'pedicura', image: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=400&q=80', description: 'Baño de pies con gelatina termoterapéutica aromática, exfoliación profunda de sales marinas, mascarilla hidratante, masaje con aceites calientes y esmaltado.' },
+  { id: 'demo-kapping-gel', title: 'Kapping Gel Fortalecedor Protector', price: 80.00, duration: '60 min', category: 'manicura', image: 'https://images.unsplash.com/photo-1522337094846-8a81113521f0?w=400&q=80', description: 'Aplicación de una fina capa de gel protector directamente sobre tu uña natural para proporcionarle dureza, resistencia y evitar roturas o escamaciones.' },
+  { id: 'demo-retiro-nutricion', title: 'Retiro Seguro de Acrílico + Nutrición Coco', price: 30.00, duration: '30 min', category: 'manicura', image: 'https://images.unsplash.com/photo-1607875934601-e4129caf24e8?w=400&q=80', description: 'Retiro profesional libre de daños mecánicos empleando removedores especializados. Finaliza con pulido suave, base endurecedora y aceites de argán y coco.' }
 ];
 
 const MOCK_PRODUCTS = [
@@ -27,12 +29,6 @@ const MOCK_PRODUCTS = [
   { id: 'crema-velvet', title: 'Crema de Manos Velvet Silk Nutritiva', price: 38.00, originalPrice: 38.00, hasOffer: false, category: 'manicura', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?w=400&q=80', rating: 4.9, reviews: 26, description: 'Hidratación ultra profunda que deja la piel con tacto aterciopelado sin sensación grasa.' },
   { id: 'esmalte-glossy', title: 'Esmalte Gel Sweet Kitty Glossy Pink Edition', price: 22.00, originalPrice: 30.00, hasOffer: true, category: 'nailart', image: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=400&q=80', rating: 4.8, reviews: 19, description: 'Tono rosa icónico con brillo de larga duración y resistencia a rayaduras.' },
   { id: 'kit-limas', title: 'Kit de Limas Profesionales Zebra 100/180 x3', price: 15.00, originalPrice: 15.00, hasOffer: false, category: 'acrilicas', image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&q=80', rating: 4.7, reviews: 11, description: 'Limas de grano profesional de larga duración ideales para dar forma a acrílico o uña natural.' }
-];
-
-const STYLISTS = [
-  { id: 'kitty', name: 'Kitty (Fundadora & Master Artist)', role: 'Especialista en Acrílicos y Arte 3D', avatar: 'https://images.unsplash.com/photo-1594744803329-e58b31de215f?w=150&q=80' },
-  { id: 'mia', name: 'Mia Chang', role: 'Especialista en Manicura Gel & Kapping', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&q=80' },
-  { id: 'sofia', name: 'Sofía López', role: 'Experta en Jelly Spa & Diseños Kawaii', avatar: 'https://images.unsplash.com/photo-1594744803329-e58b31de215f?w=150&q=80' }
 ];
 
 const STORIES = [
@@ -51,60 +47,65 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
   const [cart, setCart] = useState<{ product: any; quantity: number }[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   
-  // Dynamic Products from Supabase
-  const [supabaseProducts, setSupabaseProducts] = useState<any[]>([]);
+  // Lo que la tienda cargó en su panel: servicios (es_servicio) y productos salen de la misma tabla.
+  const [dbItems, setDbItems] = useState<any[]>([]);
 
   // Booking Modal State
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<any>(null);
-  const [selectedStylist, setSelectedStylist] = useState<any>(STYLISTS[0]);
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');
+  const [horasOcupadas, setHorasOcupadas] = useState<string[]>([]);
   const [clientName, setClientName] = useState('');
   const [clientPhone, setClientPhone] = useState('');
   const [clientNote, setClientNote] = useState('');
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [bookingCode, setBookingCode] = useState('');
+  const [enviandoReserva, setEnviandoReserva] = useState(false);
+
+  // Las categorías del panel se guardan por nombre ("Manicura Gel"); el chip filtra por su href ("manicura").
+  const hrefDeCategoria = (nombre: string) =>
+    store.categories?.find((c) => c.name === nombre)?.href ?? (nombre || '').toLowerCase();
 
   useEffect(() => {
-    const fetchSupabaseProducts = async () => {
-      try {
-        const data = await fetchProductosDeTienda(store.slug);
-        const error = null;
-        
-        if (data && !error && data.length > 0) {
-          const formatted = data.map((p) => ({
-            id: p.id,
-            title: p.name,
-            price: p.price,
-            originalPrice: p.price_anterior > 0 ? Number(p.price_anterior) : p.price,
-            hasOffer: p.price_anterior > 0,
-            category: p.category ? p.category.toLowerCase() : 'manicura',
-            image: p.image || 'https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?w=400&q=80',
-            rating: 4.9,
-            reviews: 8,
-            description: p.description || 'Producto exclusivo de Sweet Kitty Nails.'
-          }));
-          setSupabaseProducts(formatted);
-        }
-      } catch (err) {
-        console.error('Error fetching Supabase products:', err);
-      }
-    };
-
-    fetchSupabaseProducts();
-  }, []);
+    let vivo = true;
+    fetchProductosDeTienda(store.slug).then((data) => {
+      if (!vivo || !data) return;
+      setDbItems(data.map((p) => ({
+        id: String(p.id),
+        title: p.name,
+        price: Number(p.price) || 0,
+        originalPrice: Number(p.price_anterior) > 0 ? Number(p.price_anterior) : Number(p.price) || 0,
+        hasOffer: Number(p.price_anterior) > 0,
+        esServicio: p.es_servicio === true,
+        category: hrefDeCategoria(p.category),
+        // Un servicio no tiene "subcategoría": ahí el dueño anota cuánto dura ("45 min").
+        duration: p.es_servicio === true && p.subcategory ? String(p.subcategory) : '',
+        image: p.image || store.heroImage,
+        rating: 4.9,
+        reviews: 8,
+        description: p.description || '',
+      })));
+    }).catch(() => {});
+    return () => { vivo = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.slug]);
 
   const theme = store.theme;
   // Los de ejemplo solo se ven mientras la tienda no cargo los suyos (lib/demo.ts).
-  // Ademas antes preguntaba por el slug fijo 'sweetkittynails', asi que cualquier
-  // otra tienda con esta plantilla ignoraba su propia configuracion.
-  const allProducts = debeMostrarDemo(store, supabaseProducts.length)
-    ? [...supabaseProducts, ...MOCK_PRODUCTS]
-    : supabaseProducts;
+  const conDemo = debeMostrarDemo(store, dbItems.length);
+  const allServices = conDemo ? [...dbItems.filter((p) => p.esServicio), ...MOCK_SERVICES] : dbItems.filter((p) => p.esServicio);
+  const allProducts = conDemo ? [...dbItems.filter((p) => !p.esServicio), ...MOCK_PRODUCTS] : dbItems.filter((p) => !p.esServicio);
+  const itemsActivos = activeTab === 'servicios' ? allServices : allProducts;
+
+  // Chips: las categorías de la tienda que tienen algo en esta pestaña (una vacía parece un error).
+  const categoriasChips = (store.categories?.length
+    ? store.categories.map((c) => ({ id: c.href, label: c.name }))
+    : [...new Set(itemsActivos.map((i) => i.category))].filter(Boolean).map((c) => ({ id: c, label: c.charAt(0).toUpperCase() + c.slice(1) }))
+  ).filter((c) => itemsActivos.some((i) => i.category === c.id));
 
   // Filtering Logic
-  const filteredServices = MOCK_SERVICES.filter((srv) => {
+  const filteredServices = allServices.filter((srv) => {
     const matchCat = activeCategory === 'all' || srv.category === activeCategory;
     const matchSearch = srv.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                         srv.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -157,25 +158,57 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
 
   // Booking Handlers
   const handleOpenBooking = (service?: any) => {
-    if (service) {
-      setSelectedService(service);
-    } else {
-      setSelectedService(MOCK_SERVICES[0]);
-    }
+    setSelectedService(service ?? allServices[0] ?? null);
     setBookingSuccess(false);
     setIsBookingOpen(true);
   };
 
-  const submitBooking = (e: React.FormEvent) => {
+  // Horas ya tomadas ese día (el servidor solo devuelve las horas, nunca datos de otras clientas).
+  useEffect(() => {
+    if (!isBookingOpen || !bookingDate) { setHorasOcupadas([]); return; }
+    let vivo = true;
+    fetch(`/api/reservas?store=${encodeURIComponent(store.slug)}&fecha=${bookingDate}`)
+      .then((r) => r.json())
+      .then((d) => { if (vivo) setHorasOcupadas(Array.isArray(d?.ocupadas) ? d.ocupadas : []); })
+      .catch(() => { if (vivo) setHorasOcupadas([]); });
+    return () => { vivo = false; };
+  }, [isBookingOpen, bookingDate, store.slug]);
+
+  const submitBooking = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!clientName || !clientPhone || !bookingDate || !bookingTime) {
+    if (!selectedService || !clientName || !clientPhone || !bookingDate || !bookingTime) {
       alert('Por favor complete los campos requeridos.');
       return;
     }
-
-    const code = 'SKN-' + Math.floor(100000 + Math.random() * 900000);
-    setBookingCode(code);
+    setEnviandoReserva(true);
+    let codigo = '';
+    // Los servicios de ejemplo no existen en la base: no se guarda nada, solo se arma el mensaje.
+    if (!String(selectedService.id).startsWith('demo-')) {
+      try {
+        const r = await fetch('/api/reservas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ store: store.slug, servicioId: selectedService.id, fecha: bookingDate, hora: bookingTime, nombre: clientName, telefono: clientPhone, nota: clientNote }),
+        });
+        const d = await r.json().catch(() => ({} as { ok?: boolean; codigo?: string; motivo?: string }));
+        if (d.ok && d.codigo) codigo = d.codigo;
+        else if (d.motivo === 'ocupada') {
+          setHorasOcupadas((h) => [...h, bookingTime]);
+          setBookingTime('');
+          setEnviandoReserva(false);
+          alert('Esa hora acaba de ser reservada por otra persona. Elige otra, por favor.');
+          return;
+        } else if (d.motivo === 'limite') {
+          setEnviandoReserva(false);
+          alert('Demasiados intentos seguidos. Espera unos minutos.');
+          return;
+        }
+        // Cualquier otro fallo (ej. el SQL de reservas sin correr): la solicitud igual sale por WhatsApp.
+      } catch { /* sin conexión al registro: la solicitud igual sale por WhatsApp */ }
+    }
+    setBookingCode(codigo);
     setBookingSuccess(true);
+    setEnviandoReserva(false);
   };
 
   // WhatsApp integrations
@@ -195,16 +228,24 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
   const sendBookingToWhatsApp = () => {
     enviarPedidoPorWhatsApp(
       store,
-      `*Nueva Reserva en ${store.name}*\n` +
-      `-------------------------\n` +
-      `*Código:* ${bookingCode}\n` +
-      `*Servicio:* ${selectedService.title}\n` +
-      `*Precio:* S/ ${selectedService.price.toFixed(2)}\n` +
-      `*Fecha:* ${bookingDate}\n` +
-      `*Hora:* ${bookingTime}\n` +
-      `*Nail Artist:* ${selectedStylist.name}\n` +
-      `*Cliente:* ${clientName}\n` +
-      `*Teléfono:* ${clientPhone}\n` +
+      `*Solicitud de reserva en ${store.name}*
+` +
+      `-------------------------
+` +
+      (bookingCode ? `*Código:* ${bookingCode}
+` : '') +
+      `*Servicio:* ${selectedService.title}
+` +
+      (selectedService.price > 0 ? `*Precio:* S/ ${selectedService.price.toFixed(2)}
+` : '') +
+      `*Fecha:* ${bookingDate}
+` +
+      `*Hora:* ${horaLegible(bookingTime)}
+` +
+      `*Cliente:* ${clientName}
+` +
+      `*Teléfono:* ${clientPhone}
+` +
       `*Nota:* ${clientNote || 'Ninguna'}`
     );
   };
@@ -341,14 +382,14 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
               className={`px-5 py-2.5 rounded-lg text-xs font-bold cursor-pointer transition-all flex items-center gap-1.5 ${activeTab === 'servicios' ? 'bg-white shadow text-pink-700 font-extrabold' : 'text-gray-500 hover:text-pink-700'}`}
             >
               <span className="material-symbols-outlined text-sm">dry_cleaning</span>
-              Servicios de Manicura
+              Servicios
             </button>
             <button
               onClick={() => { setActiveTab('productos'); setActiveCategory('all'); }}
               className={`px-5 py-2.5 rounded-lg text-xs font-bold cursor-pointer transition-all flex items-center gap-1.5 ${activeTab === 'productos' ? 'bg-white shadow text-pink-700 font-extrabold' : 'text-gray-500 hover:text-pink-700'}`}
             >
               <span className="material-symbols-outlined text-sm">shopping_bag</span>
-              Productos de Cuidado
+              Productos
             </button>
           </div>
 
@@ -368,12 +409,7 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
 
         {/* Category Ribbon */}
         <div className="flex gap-2 overflow-x-auto pb-4 mb-6 hide-scrollbar" style={{ scrollbarWidth: 'none' }}>
-          {[
-            { id: 'all', label: '✨ Mostrar Todo' },
-            { id: 'manicura', label: '💅 Manicura & Gel' },
-            { id: 'acrilicas', label: '🖌️ Uñas Acrílicas' },
-            { id: 'nailart', label: '🎨 Nail Art 3D' },
-            { id: 'pedicura', label: '💆‍♀️ Pedicura Jelly Spa' }
+          {[{ id: 'all', label: '✨ Mostrar Todo' }, ...categoriasChips.map((c) => ({ id: c.id, label: c.label }))
           ].map((cat) => (
             <button
               key={cat.id}
@@ -397,7 +433,7 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
             {filteredServices.length === 0 ? (
               <div className="text-center py-16 opacity-50 bg-white rounded-3xl border border-pink-100 shadow-sm">
                 <span className="material-symbols-outlined text-4xl mb-2 text-pink-300">search_off</span>
-                <p className="font-bold text-gray-600">No se encontraron servicios de manicura.</p>
+                <p className="font-bold text-gray-600">Aún no hay servicios para mostrar.</p>
               </div>
             ) : (
               <div className="grid md:grid-cols-2 gap-6">
@@ -405,9 +441,11 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
                   <div key={srv.id} className="bg-white rounded-3xl p-5 shadow-sm border border-pink-50 flex flex-col md:flex-row gap-5 hover:shadow-md transition-shadow group">
                     <div className="w-full md:w-36 h-36 rounded-2xl overflow-hidden shrink-0 bg-pink-50 relative">
                       <img src={srv.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={srv.title} />
-                      <span className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 backdrop-blur-sm rounded-full text-[9px] font-bold text-white flex items-center gap-0.5">
-                        <span className="material-symbols-outlined text-[10px]">schedule</span> {srv.duration}
-                      </span>
+                      {srv.duration && (
+                        <span className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 backdrop-blur-sm rounded-full text-[9px] font-bold text-white flex items-center gap-0.5">
+                          <span className="material-symbols-outlined text-[10px]">schedule</span> {srv.duration}
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex-1 flex flex-col justify-between">
@@ -422,7 +460,7 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
 
                       <div className="flex items-center justify-between border-t border-pink-50 pt-3 mt-3">
                         <span className="font-black text-xl" style={{ color: theme.primary }}>
-                          S/ {srv.price.toFixed(2)}
+                          {srv.price > 0 ? `S/ ${srv.price.toFixed(2)}` : 'Consultar'}
                         </span>
                         <button
                           onClick={() => handleOpenBooking(srv)}
@@ -623,7 +661,7 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
             {/* Header */}
             <div className="p-5 border-b border-pink-100 flex items-center justify-between sticky top-0 bg-white z-20">
               <h3 className="text-xl font-bold text-gray-900" style={{ fontFamily: theme.fontHeadline }}>
-                {bookingSuccess ? '¡Confirmación de Cita Sweet!' : 'Reservar Cita Sweet Kitty'}
+                {bookingSuccess ? '¡Solicitud enviada!' : 'Reservar Cita Sweet Kitty'}
               </h3>
               <button 
                 onClick={() => setIsBookingOpen(false)}
@@ -642,11 +680,13 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
                 
                 <div className="space-y-2">
                   <h4 className="text-2xl font-black text-gray-800" style={{ fontFamily: theme.fontHeadline }}>
-                    ¡Tu cita está agendada!
+                    ¡Casi lista tu cita!
                   </h4>
-                  <p className="text-xs text-gray-400 uppercase tracking-widest font-black">
-                    CÓDIGO DE RESERVA: <span style={{ color: theme.primary }}>{bookingCode}</span>
-                  </p>
+                  {bookingCode && (
+                    <p className="text-xs text-gray-400 uppercase tracking-widest font-black">
+                      CÓDIGO DE RESERVA: <span style={{ color: theme.primary }}>{bookingCode}</span>
+                    </p>
+                  )}
                 </div>
 
                 {/* Reservation Summary */}
@@ -657,15 +697,11 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
                   </div>
                   <div className="flex justify-between border-b border-pink-50 pb-1.5">
                     <span className="text-pink-400 font-medium">Precio:</span>
-                    <span className="font-bold text-pink-600">S/ {selectedService?.price.toFixed(2)}</span>
+                    <span className="font-bold text-pink-600">{selectedService?.price > 0 ? `S/ ${selectedService.price.toFixed(2)}` : 'A consultar'}</span>
                   </div>
                   <div className="flex justify-between border-b border-pink-50 pb-1.5">
                     <span className="text-pink-400 font-medium">Fecha & Hora:</span>
-                    <span className="font-bold text-gray-800">{bookingDate} a las {bookingTime}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-pink-50 pb-1.5">
-                    <span className="text-pink-400 font-medium">Nail Artist:</span>
-                    <span className="font-bold text-gray-800">{selectedStylist?.name}</span>
+                    <span className="font-bold text-gray-800">{bookingDate} a las {horaLegible(bookingTime)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-pink-400 font-medium">Cliente:</span>
@@ -674,7 +710,7 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
                 </div>
 
                 <p className="text-xs text-gray-500 leading-relaxed px-4">
-                  ¡Qué emoción! Te esperamos 10 minutos antes en nuestro salón para consentir tus uñas y hacer magia. 💖
+                  Para terminar, avísanos por WhatsApp: ahí te confirmamos tu hora. Te esperamos 10 minutos antes. 💖
                 </p>
 
                 <div className="flex flex-col gap-2 pt-4">
@@ -683,7 +719,7 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
                     className="w-full py-3 rounded-full text-xs font-black uppercase text-white shadow-md flex items-center justify-center gap-1.5 hover:brightness-105 active:scale-95 transition-all cursor-pointer bg-[#25D366]"
                   >
                     <span className="material-symbols-outlined text-[18px]">chat</span>
-                    Notificar a Kitty por WhatsApp
+                    Enviar por WhatsApp
                   </button>
                   <button 
                     onClick={() => setIsBookingOpen(false)}
@@ -702,52 +738,33 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
                   <select
                     value={selectedService?.id || ''}
                     onChange={(e) => {
-                      const s = MOCK_SERVICES.find(item => item.id === e.target.value);
+                      const s = allServices.find(item => item.id === e.target.value);
                       if (s) setSelectedService(s);
                     }}
                     className="w-full border border-pink-200 rounded-xl p-2.5 bg-white text-xs font-semibold text-gray-800 focus:outline-none"
                   >
-                    {MOCK_SERVICES.map((srv) => (
-                      <option key={srv.id} value={srv.id}>{srv.title} - S/ {srv.price.toFixed(2)} ({srv.duration})</option>
+                    {allServices.map((srv) => (
+                      <option key={srv.id} value={srv.id}>{srv.title}{srv.price > 0 ? ` - S/ ${srv.price.toFixed(2)}` : ''}{srv.duration ? ` (${srv.duration})` : ''}</option>
                     ))}
                   </select>
-                </div>
-
-                {/* Step 2: Select Stylist */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-pink-400 uppercase tracking-wider block">2. Selecciona tu Nail Artist Favorita</label>
-                  <div className="grid grid-cols-3 gap-2.5">
-                    {STYLISTS.map((sty) => (
-                      <div 
-                        key={sty.id}
-                        onClick={() => setSelectedStylist(sty)}
-                        className={`border rounded-2xl p-2.5 text-center cursor-pointer transition-all ${selectedStylist.id === sty.id ? 'border-2 shadow-sm bg-pink-50/20' : 'border-pink-100 hover:bg-pink-50/10'}`}
-                        style={{ borderColor: selectedStylist.id === sty.id ? theme.primary : undefined }}
-                      >
-                        <img src={sty.avatar} className="w-10 h-10 rounded-full mx-auto object-cover border border-pink-100" alt={sty.name} />
-                        <h4 className="text-[10px] font-black text-gray-900 mt-1.5 leading-snug truncate">{sty.name}</h4>
-                        <p className="text-[8px] text-pink-400 mt-0.5 truncate">{sty.role}</p>
-                      </div>
-                    ))}
-                  </div>
                 </div>
 
                 {/* Step 3: Date and Time */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-pink-400 uppercase tracking-wider block">3. Selecciona una Fecha</label>
+                    <label className="text-xs font-bold text-pink-400 uppercase tracking-wider block">2. Selecciona una Fecha</label>
                     <input 
                       type="date" 
                       value={bookingDate}
-                      onChange={(e) => setBookingDate(e.target.value)}
+                      onChange={(e) => { setBookingDate(e.target.value); setBookingTime(''); }}
                       required
-                      min={new Date().toISOString().split('T')[0]}
+                      min={hoyLima()}
                       className="w-full border border-pink-200 rounded-xl p-2.5 bg-white text-xs font-semibold text-gray-800 focus:outline-none"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-pink-400 uppercase tracking-wider block">4. Selecciona un Horario</label>
+                    <label className="text-xs font-bold text-pink-400 uppercase tracking-wider block">3. Selecciona un Horario</label>
                     <select
                       value={bookingTime}
                       onChange={(e) => setBookingTime(e.target.value)}
@@ -755,8 +772,8 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
                       className="w-full border border-pink-200 rounded-xl p-2.5 bg-white text-xs font-semibold text-gray-800 focus:outline-none"
                     >
                       <option value="">Selecciona hora...</option>
-                      {['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM', '06:00 PM', '07:00 PM'].map((t) => (
-                        <option key={t} value={t}>{t}</option>
+                      {HORAS_RESERVA.map((t) => (
+                        <option key={t} value={t} disabled={horasOcupadas.includes(t)}>{horaLegible(t)}{horasOcupadas.includes(t) ? ' · ocupada' : ''}</option>
                       ))}
                     </select>
                   </div>
@@ -764,7 +781,7 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
 
                 {/* Step 4: Contact Info */}
                 <div className="space-y-3 pt-2 border-t border-pink-100">
-                  <label className="text-xs font-bold text-pink-400 uppercase tracking-wider block">5. Tus Datos de Contacto</label>
+                  <label className="text-xs font-bold text-pink-400 uppercase tracking-wider block">4. Tus Datos de Contacto</label>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
@@ -801,10 +818,11 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
                 {/* Submit button */}
                 <button
                   type="submit"
-                  className="w-full py-3.5 rounded-full text-xs font-black uppercase tracking-wider text-white shadow-xl cursor-pointer hover:brightness-105 active:scale-95 transition-all mt-4"
+                  disabled={enviandoReserva || !selectedService}
+                  className="w-full py-3.5 disabled:opacity-60 rounded-full text-xs font-black uppercase tracking-wider text-white shadow-xl cursor-pointer hover:brightness-105 active:scale-95 transition-all mt-4"
                   style={{ background: `linear-gradient(135deg, ${theme.primary}, #ff4f7b)` }}
                 >
-                  Confirmar Reserva Sweet Kitty
+                  {enviandoReserva ? 'Reservando…' : 'Reservar mi hora'}
                 </button>
               </form>
             )}
