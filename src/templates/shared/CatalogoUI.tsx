@@ -107,7 +107,7 @@ function FotoTarjeta({ product }: { product: Producto }) {
    ════════════════════════════════════════════ */
 
 export function ProductGrid({
-  t, productos, onSelect, onAdd, onVerTodo, catalogo,
+  t, productos, onSelect, onAdd, onVerTodo, catalogo, servicios,
 }: {
   t: StoreTheme;
   productos: Producto[];
@@ -116,16 +116,18 @@ export function ProductGrid({
   onVerTodo?: () => void;
   /** Tienda de catálogo (no de comida): cambia los textos de "platos" y "menú". */
   catalogo?: boolean;
+  /** Empresa de servicios: los textos hablan de "servicios" en vez de platos o productos. */
+  servicios?: boolean;
 }) {
   // Antes una categoria sin productos dejaba la pantalla en blanco.
   if (productos.length === 0) {
     return (
       <div className="py-16 text-center">
         <span className={`material-symbols-outlined ${ICON.xl} mb-3 block`} style={{ color: `${t.onSurfaceVariant}80` }}>
-          restaurant_menu
+          {servicios ? 'construction' : 'restaurant_menu'}
         </span>
         <p className={`font-bold ${TXT.body}`} style={{ color: t.onSurface }}>
-          {catalogo ? 'Todavía no hay productos en esta categoría' : 'Todavía no hay platos en esta categoría'}
+          {servicios ? 'Todavía no hay servicios en esta categoría' : catalogo ? 'Todavía no hay productos en esta categoría' : 'Todavía no hay platos en esta categoría'}
         </p>
         {onVerTodo && (
           <button
@@ -133,7 +135,7 @@ export function ProductGrid({
             className={`mt-4 px-6 py-2.5 rounded-full font-bold ${TXT.small} uppercase active:scale-95 transition-all`}
             style={{ background: t.primary, color: t.onPrimary }}
           >
-            {catalogo ? 'Ver todo el catálogo' : 'Ver todo el menú'}
+            {servicios ? 'Ver todos los servicios' : catalogo ? 'Ver todo el catálogo' : 'Ver todo el menú'}
           </button>
         )}
       </div>
@@ -303,7 +305,7 @@ export function CombosCarrusel({
    ════════════════════════════════════════════ */
 
 export function ProductModal({
-  t, producto, productos = [], onClose, onAdd, onSelect, onConsultar,
+  t, producto, productos = [], onClose, onAdd, onSelect, onConsultar, textoConsultar,
 }: {
   t: StoreTheme;
   producto: Producto | null;
@@ -315,6 +317,8 @@ export function ProductModal({
   onSelect?: (p: Producto) => void;
   /** Un servicio no se agrega al carrito: este botón manda directo a WhatsApp. */
   onConsultar?: (p: Producto) => void;
+  /** Texto del botón de los servicios (por defecto «Consultar por WhatsApp»; los salones ponen «Reservar cita»). */
+  textoConsultar?: { texto: string; icono: string };
 }) {
   const ahorros = React.useMemo(() => ahorroPorCantidad(producto?.presentaciones ?? []), [producto]);
   const [agregado, setAgregado] = React.useState(false);
@@ -525,9 +529,10 @@ export function ProductModal({
             <button
               onClick={() => onConsultar?.(producto)}
               className={`px-6 py-2.5 rounded-full font-bold ${TXT.body} flex items-center gap-1.5 active:scale-95 bg-[#25D366] text-white`}
+              style={textoConsultar ? { background: t.primary, color: t.onPrimary } : undefined}
             >
-              <span className={`material-symbols-outlined ${ICON.sm}`}>chat</span>
-              Consultar por WhatsApp
+              <span className={`material-symbols-outlined ${ICON.sm}`}>{textoConsultar?.icono ?? 'chat'}</span>
+              {textoConsultar?.texto ?? 'Consultar por WhatsApp'}
             </button>
           ) : (
             <button

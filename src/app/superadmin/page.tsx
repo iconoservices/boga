@@ -42,6 +42,7 @@ const PORTAL_POR_PLANTILLA: Record<string, string> = {
   flores: 'Regalos y Detalles', detalles: 'Regalos y Detalles',
   veterinaria: 'Salud y Bienestar',
   gas: 'Servicios',
+  belleza: 'Moda y Belleza',
   empresa: 'Servicios',
   rack: 'Hogar', hogar: 'Hogar',
 };
@@ -67,6 +68,7 @@ const META: Record<string, { emoji: string; cat: string }> = {
   discoteca:    { emoji: '🪩', cat: 'Nocturno' },
   cartelera:    { emoji: '🎟️', cat: 'Nocturno' },
   sweetkittynails: { emoji: '💅', cat: 'Beauty' },
+  belleza: { emoji: '💇', cat: 'Beauty' },
   menudirecto: { emoji: '🍔', cat: 'Restaurantes' },
   iniciocatalogo: { emoji: '🔥', cat: 'Restaurantes' },
   flores: { emoji: '🌸', cat: 'Comercio' },

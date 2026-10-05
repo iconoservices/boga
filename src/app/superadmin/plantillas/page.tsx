@@ -126,6 +126,11 @@ const TEMPLATE_PRESENTATION: Record<string, { category?: string; description: st
     description: 'Empresa de servicios (metalmecánica, construcción, talleres): portada con cotización por WhatsApp, servicios sin precio, galería de obras y contacto. Pensada para clientes que cotizan, no compran por carrito.',
     previewUrl: '/sel/portada.jpg',
   },
+  belleza: {
+    category: 'Salud',
+    description: 'Salón de belleza (uñas, cabello, cejas y pestañas): carta de servicios con precio y duración, reserva de cita con fecha y hora, y productos aparte si los hay.',
+    previewUrl: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&q=80',
+  },
   gas: {
     category: 'Negocios',
     description: 'Distribuidora de gas: portada con pedido rápido por WhatsApp, balones y accesorios SIN precios (el cliente consulta), zonas de reparto y consejos de seguridad.',

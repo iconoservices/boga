@@ -32,6 +32,8 @@ export interface DemoProduct {
   esCombo?: boolean;
   /** Solo para la demo: precio normal tachado (oferta). */
   priceAnterior?: number;
+  /** Solo para la demo: es un servicio (se reserva, no va al carrito). En `subcategory` va cuánto dura ("45 min"). */
+  esServicio?: boolean;
 }
 
 export interface TemplateConfig {
@@ -1255,6 +1257,53 @@ const TEMPLATES: Record<string, TemplateConfig> = {
     direccion: 'Av. Centenario 456',
     horario: 'Lunes a Sábado: 7:00 AM – 8:00 PM',
     rating: 4.7,
+    whatsapp: '51987654321',
+  },
+  belleza: {
+    id: 'belleza',
+    name: 'Salón de Belleza',
+    category: 'Moda y Belleza',
+    heroImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1200&q=80',
+    heroAlt: 'Salón de belleza con sillón de peluquería y espejos',
+    theme: {
+      primary: '#c2577a',
+      onPrimary: '#ffffff',
+      primaryContainer: '#9d3f60',
+      secondary: '#3b2433',
+      secondaryContainer: '#f6e3ea',
+      background: '#fdf7f8',
+      surface: '#ffffff',
+      surfaceContainer: '#f7eaee',
+      surfaceContainerLow: '#fdf7f8',
+      surfaceContainerLowest: '#ffffff',
+      surfaceContainerHigh: '#f1dde4',
+      onBackground: '#2b1a24',
+      onSurface: '#2b1a24',
+      onSurfaceVariant: '#7a5a68',
+      outlineVariant: '#ead3dc',
+      fontHeadline: "'Plus Jakarta Sans', sans-serif",
+      fontBody: "'Plus Jakarta Sans', sans-serif",
+      fontLabel: "'Plus Jakarta Sans', sans-serif",
+    },
+    categories: [
+      { name: 'Uñas', icon: 'brush', href: 'unas' },
+      { name: 'Cabello', icon: 'content_cut', href: 'cabello' },
+      { name: 'Cejas y pestañas', icon: 'visibility', href: 'cejas' },
+      { name: 'Productos', icon: 'shopping_bag', href: 'productos' },
+    ],
+    // Los servicios llevan la duración en subcategory; el cliente los reserva (fecha y hora), no los agrega al carrito.
+    demoProducts: [
+      { name: 'Manicura en gel', price: 45, category: 'Uñas', subcategory: '60 min', esServicio: true, image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&q=80', description: 'Esmaltado semipermanente con limado y cuidado de cutículas' },
+      { name: 'Pedicura spa', price: 60, category: 'Uñas', subcategory: '75 min', esServicio: true, image: 'https://images.unsplash.com/photo-1610992015732-2449b76344bc?w=400&q=80', description: 'Exfoliación, masaje de pies y esmaltado' },
+      { name: 'Corte y peinado', price: 40, category: 'Cabello', subcategory: '45 min', esServicio: true, image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&q=80', description: 'Corte a tu estilo con lavado y secado' },
+      { name: 'Tinte y brillo', price: 120, category: 'Cabello', subcategory: '2 h', esServicio: true, image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&q=80', description: 'Color completo con tratamiento de brillo' },
+      { name: 'Diseño de cejas', price: 25, category: 'Cejas y pestañas', subcategory: '30 min', esServicio: true, image: 'https://images.unsplash.com/photo-1522337094846-8a81113521f0?w=400&q=80', description: 'Perfilado y diseño según la forma de tu rostro' },
+      { name: 'Aceite de cutículas', price: 18, category: 'Productos', image: 'https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?w=400&q=80', description: 'Nutre y suaviza, con vitamina E' },
+    ],
+    zona: 'Pucallpa - Ucayali',
+    direccion: 'Jr. Tarapacá 321',
+    horario: 'Lunes a Sábado: 9:00 AM – 7:00 PM',
+    rating: 4.8,
     whatsapp: '51987654321',
   },
   terreno1: {

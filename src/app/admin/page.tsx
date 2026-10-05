@@ -1800,7 +1800,7 @@ function AdminDashboard({ user }: { user: User }) {
                 {[
                   { icon: 'add_circle', t: esEmpresa ? 'Agregar servicio' : 'Agregar producto', s: esEmpresa ? 'Súbelo con su foto y descripción' : 'Súbelo con su foto y precio', on: () => { resetForm(); setNewProduct(prev => ({ ...prev, store: inicioStore.slug })); setIsModalOpen(true); } },
                   ...(posOn ? [{ icon: 'point_of_sale', t: 'Nueva venta', s: 'Caja rápida en el local', on: () => setActiveTab('pos') }] : []),
-                  ...(inicioStore?.template === 'sweetkittynails' ? [{ icon: 'event_available', t: 'Reservas', s: 'Citas que piden tus clientas', on: () => router.push('/admin/reservas') }] : []),
+                  ...((inicioStore?.template === 'sweetkittynails' || inicioStore?.template === 'belleza') ? [{ icon: 'event_available', t: 'Reservas', s: 'Citas que piden tus clientas', on: () => router.push('/admin/reservas') }] : []),
                   { icon: 'share', t: esEmpresa ? 'Compartir mi página' : 'Compartir mi tienda', s: 'Envía tu enlace por WhatsApp', on: compartirCarta },
                   { icon: 'qr_code_2', t: 'Código QR', s: 'Para tus mesas o tu puerta', on: () => { setSelectedStore(inicioStore.slug); setIsQRModalOpen(true); } },
                   ...(inicioDb?.push_activo ? [{ icon: 'notifications', t: 'Notificaciones', s: 'Avisa a tus clientes de una oferta', on: () => { window.location.href = '/admin/notificaciones'; } }] : []),
