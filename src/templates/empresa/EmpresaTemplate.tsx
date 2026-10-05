@@ -176,7 +176,7 @@ export default function EmpresaTemplate({ store, initialProductId }: Props) {
               <img className="block w-full h-auto md:absolute md:inset-0 md:h-full md:object-cover" alt={store.heroAlt} src={store.heroImage} />
               <div className="hidden md:block absolute inset-0" style={{ background: `linear-gradient(to right, ${t.secondary}f5 0%, ${t.secondary}e0 45%, ${t.secondary}66 75%, ${t.secondary}33 100%), linear-gradient(to top, ${t.secondary}e6 0%, transparent 65%)` }} />
               <StoreFloatingActions store={store} />
-              <div className="relative pt-6 md:pt-0 md:absolute md:inset-x-0 md:bottom-0 px-5 md:px-10 pb-7 md:pb-9 max-w-6xl md:mx-auto flex flex-col gap-5 md:gap-6">
+              <div className="relative pt-6 md:pt-0 md:absolute md:inset-x-0 md:bottom-0 px-5 md:px-10 pb-7 md:pb-9 max-w-6xl md:mx-auto flex flex-col md:flex-row md:items-end md:justify-between gap-5 md:gap-8">
                 <div className="max-w-3xl">
                   {/* Etiqueta: logo + rubro */}
                   <div className="flex items-center gap-2.5 mb-4">
@@ -201,7 +201,7 @@ export default function EmpresaTemplate({ store, initialProductId }: Props) {
                 </div>
 
                 {/* Botones: uno blanco y otro con borde, con el logo real de WhatsApp */}
-                <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+                <div className="flex flex-col sm:flex-row md:flex-col gap-3 shrink-0 md:w-64">
                   <button
                     onClick={() => irA('servicios')}
                     className={`px-6 py-3 rounded-xl font-bold ${TXT.body} md:text-base bg-white shadow-lg active:scale-95 transition-all`}
