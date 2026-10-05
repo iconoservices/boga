@@ -770,7 +770,7 @@ export default function EmpresaTemplate({ store, initialProductId, initialTab }:
           onClick={() => cotizar()}
           aria-label="Escríbenos por WhatsApp"
           title="Escríbenos por WhatsApp"
-          className="group flex fixed bottom-20 md:bottom-6 right-4 md:right-6 z-50 items-center h-14 pl-[14px] pr-[14px] rounded-full shadow-xl active:scale-95 transition-all"
+          className="group flex fixed bottom-20 md:bottom-auto md:top-[60%] right-4 md:right-6 z-50 items-center h-14 pl-[14px] pr-[14px] rounded-full shadow-xl active:scale-95 transition-all"
           style={{ background: '#25D366', color: '#ffffff' }}
         >
           {/* Solo el icono; al pasar el mouse se despliega el texto hacia la izquierda. */}
