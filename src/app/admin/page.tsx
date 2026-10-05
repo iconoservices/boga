@@ -3676,7 +3676,7 @@ function AdminDashboard({ user }: { user: User }) {
       {isStoreEditorOpen && editingStoreSlug && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => !isStoreSaving && setIsStoreEditorOpen(false)} />
-          <div className="relative bg-white w-[90vw] md:w-[560px] rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="relative bg-white w-[94vw] md:w-[820px] lg:w-[900px] rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[94vh] md:h-[92vh]">
             {/* Header */}
             <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
               <div>
@@ -3692,7 +3692,7 @@ function AdminDashboard({ user }: { user: User }) {
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto flex-1 custom-scrollbar space-y-6">
+            <div className="p-6 md:p-8 overflow-y-auto flex-1 custom-scrollbar space-y-8">
               {/* Hero Image Upload */}
               <div id="editor-portada" className="scroll-mt-4">
                 <div className="flex items-center justify-between mb-2">

@@ -65,7 +65,7 @@ export default function PerfilEmpresaEditor({
   };
 
   return (
-    <div id="editor-empresa" className="space-y-6 pt-2 border-t border-gray-100 scroll-mt-4">
+    <div id="editor-empresa" className="space-y-8 pt-4 border-t border-gray-100 scroll-mt-4">
       <div>
         <h3 className="text-sm font-black text-gray-900 flex items-center gap-1.5">
           <span className="material-symbols-outlined text-[18px]">business_center</span>
@@ -130,7 +130,7 @@ export default function PerfilEmpresaEditor({
       <div>
         <label className="block text-sm font-bold text-gray-700 mb-2">Políticas</label>
         <p className="text-xs text-gray-500 -mt-1 mb-2">Calidad, seguridad, ambiental… Cada una con su título.</p>
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {politicas.map((p, i) => (
             <div key={i} className="rounded-lg border border-gray-200 p-3 space-y-2 bg-gray-50/60">
               <div className="flex gap-2">
@@ -143,7 +143,7 @@ export default function PerfilEmpresaEditor({
             </div>
           ))}
           {politicas.length < 8 && (
-            <button type="button" onClick={() => set({ politicas: [...politicas, { titulo: '', texto: '' }] })} className={boton}>
+            <button type="button" onClick={() => set({ politicas: [...politicas, { titulo: '', texto: '' }] })} className={`${boton} md:col-span-2 justify-self-start`}>
               + Agregar política
             </button>
           )}
@@ -160,8 +160,8 @@ export default function PerfilEmpresaEditor({
           className={`${campo} resize-none`}
         />
         {nombresClientes.length > 0 && (
-          <div className="mt-3 space-y-2">
-            <p className="text-xs text-gray-500">Logo de cada cliente (opcional). Si no hay logo, sale su nombre en texto.</p>
+          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
+            <p className="text-xs text-gray-500 md:col-span-2">Logo de cada cliente (opcional). Si no hay logo, sale su nombre en texto.</p>
             {nombresClientes.map((nombre) => (
               <div key={nombre} className="flex items-center gap-3 rounded-lg border border-gray-200 p-2">
                 <div className="w-14 h-10 rounded bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden shrink-0">
@@ -185,7 +185,7 @@ export default function PerfilEmpresaEditor({
         <label className="block text-sm font-bold text-gray-700 mb-2">Obras realizadas (fotos)</label>
         <p className="text-xs text-gray-500 -mt-1 mb-2">Fotos de trabajos terminados. Salen en la pestaña "Obras", aparte de la foto de cada servicio. Hasta 24.</p>
         {obras.length > 0 && (
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 mb-3">
             {obras.map((url, i) => (
               <div key={url + i} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200">
                 <img src={url} alt="" className="w-full h-full object-cover" />
@@ -205,6 +205,7 @@ export default function PerfilEmpresaEditor({
         )}
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
       <div>
         <label className="block text-sm font-bold text-gray-700 mb-2">Brochure (PDF)</label>
         <p className="text-xs text-gray-500 -mt-1 mb-2">Si lo pones, aparece el botón "Descargar brochure". Sube el PDF (hasta {MAX_PDF_MB} MB) o pega un enlace.</p>
@@ -233,6 +234,7 @@ export default function PerfilEmpresaEditor({
         <label className="block text-sm font-bold text-gray-700 mb-2">Correo para cotizaciones</label>
         <input type="email" value={perfil.email ?? ''} onChange={(e) => set({ email: e.target.value })} placeholder="ventas@tuempresa.com" className={campo} />
         <p className="text-xs text-gray-500 mt-1">Si lo pones, aparece un botón "Cotizar por correo" junto al de WhatsApp.</p>
+      </div>
       </div>
 
       {error && <p className="text-xs text-red-600 font-medium">{error}</p>}
