@@ -168,8 +168,8 @@ export function ProductGrid({
             {onConsultar && product.sinPrecio ? (
               <button
                 onClick={(e) => { e.stopPropagation(); onConsultar(product); }}
-                className={`mt-auto w-full flex items-center justify-center gap-1.5 py-2.5 rounded-full font-extrabold ${TXT.small} active:scale-95 transition-all`}
-                style={{ background: '#25D366', color: '#ffffff' }}
+                className={`mt-auto w-full flex items-center justify-center gap-1.5 py-2 rounded-full font-bold ${TXT.small} active:scale-95 transition-all`}
+                style={{ background: '#25D36622', color: '#0e7a3c', border: '1px solid #25D36666' }}
               >
                 <IconoWhatsApp className="w-4 h-4" />
                 Consultar precio
