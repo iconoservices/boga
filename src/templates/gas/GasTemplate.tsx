@@ -97,6 +97,16 @@ export default function GasTemplate({ store, initialProductId }: Props) {
               <section className="relative w-full">
                 <img className="w-full h-auto md:h-[380px] md:object-cover block" alt={store.heroAlt} src={store.heroImage} />
                 <StoreFloatingActions store={store} />
+                {c.whatsappVisible && (
+                  <button
+                    onClick={() => consultar()}
+                    className={`absolute bottom-3 right-3 flex items-center gap-2 pl-3.5 pr-4 py-2.5 rounded-full font-extrabold ${TXT.small} text-white backdrop-blur-md active:scale-95 transition-all`}
+                    style={{ background: 'rgba(0,0,0,0.35)', border: '1.5px solid rgba(255,255,255,0.55)' }}
+                  >
+                    <span className={`material-symbols-outlined ${ICON.md}`}>chat</span>
+                    Pedir por WhatsApp
+                  </button>
+                )}
               </section>
             ) : (
               <section className="relative w-full h-[42vh] md:h-[380px] overflow-hidden">
@@ -109,8 +119,8 @@ export default function GasTemplate({ store, initialProductId }: Props) {
                 </div>
               </section>
             )}
-            {c.whatsappVisible && (
-              <div className="px-5 md:px-8 pt-4 max-w-3xl md:mx-auto">
+            {!limpio && c.whatsappVisible && (
+              <div className="px-5 md:px-8 pt-3 max-w-3xl md:mx-auto">
                 <button
                   onClick={() => consultar()}
                   className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-full font-extrabold ${TXT.lead} shadow-lg active:scale-95 transition-all`}
@@ -124,7 +134,7 @@ export default function GasTemplate({ store, initialProductId }: Props) {
 
             {/* ══ CARRUSEL DE PRODUCTOS ══ */}
             {c.products.length > 0 && (
-              <section className="pt-8 max-w-3xl md:mx-auto">
+              <section className="pt-5 max-w-3xl md:mx-auto">
                 <div className="flex items-center justify-between px-5 md:px-6 mb-3">
                   <h2 className={`${TXT.title} font-black`} style={{ color: t.onSurface }}>Nuestros productos</h2>
                   <button onClick={() => irAProductos()} className={`${TXT.small} font-bold`} style={{ color: t.primary }}>Ver todos</button>
@@ -137,7 +147,7 @@ export default function GasTemplate({ store, initialProductId }: Props) {
                       className="snap-start shrink-0 w-36 rounded-2xl overflow-hidden text-left active:scale-[0.98] transition-all"
                       style={{ background: t.surface, border: `1px solid ${t.outlineVariant}60` }}
                     >
-                      <img src={p.image} alt={p.name} className="w-full aspect-square object-contain bg-white p-2" />
+                      <img src={p.image} alt={p.name} className="w-full aspect-[5/4] object-contain bg-white p-1.5" />
                       <p className={`${TXT.small} font-extrabold p-2.5 line-clamp-2`} style={{ color: t.onSurface }}>{p.name}</p>
                     </button>
                   ))}
@@ -162,7 +172,7 @@ export default function GasTemplate({ store, initialProductId }: Props) {
 
             {/* ══ CATEGORÍAS ══ */}
             {categorias.length > 0 && (
-              <section className="px-5 md:px-6 pt-8 max-w-3xl md:mx-auto">
+              <section className="px-5 md:px-6 pt-5 max-w-3xl md:mx-auto">
                 <h2 className={`${TXT.title} font-black mb-4`} style={{ color: t.onSurface }}>¿Qué necesitas?</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {categorias.map((cat) => (
@@ -182,7 +192,7 @@ export default function GasTemplate({ store, initialProductId }: Props) {
             )}
 
             {/* ══ CÓMO PEDIR ══ */}
-            <section className="px-5 md:px-6 pt-10 max-w-3xl md:mx-auto">
+            <section className="px-5 md:px-6 pt-5 max-w-3xl md:mx-auto">
               <h2 className={`${TXT.title} font-black mb-4`} style={{ color: t.onSurface }}>Así de fácil</h2>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {PASOS.map((p, i) => (
@@ -198,7 +208,7 @@ export default function GasTemplate({ store, initialProductId }: Props) {
             </section>
 
             {/* ══ SEGURIDAD ══ */}
-            <section className="px-5 md:px-6 pt-10 max-w-3xl md:mx-auto">
+            <section className="px-5 md:px-6 pt-5 max-w-3xl md:mx-auto">
               <div className="p-5 rounded-2xl" style={{ background: t.secondaryContainer }}>
                 <h2 className={`${TXT.title} font-black mb-3 flex items-center gap-2`} style={{ color: t.secondary }}>
                   <span className={`material-symbols-outlined ${ICON.md}`}>health_and_safety</span>
