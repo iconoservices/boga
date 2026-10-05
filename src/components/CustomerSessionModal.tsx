@@ -8,6 +8,7 @@ import { leerMisPedidos, PedidoLocal } from '@/lib/pedidos';
 import { CLAVE_REABRIR_MODAL, setAuthCookie } from '@/lib/authCookies';
 import { useFavoritos } from '@/lib/useFavoritos';
 import { supabase } from '@/lib/supabase';
+import { useEsSuperadmin } from '@/lib/superadmin';
 
 interface Props {
   storeSlug: string;
@@ -54,6 +55,7 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
   // ¿Esta cuenta es dueña de alguna tienda? Igual que "Tu tienda" en el perfil de BogaHub:
   // un acceso directo a su panel, sin tener que pasar por "Acceso staff".
   const [tiendasPropias, setTiendasPropias] = useState<string[]>([]);
+  const { esSuperadmin } = useEsSuperadmin();
   useEffect(() => {
     if (!user?.id) { setTiendasPropias([]); return; }
     let vivo = true;
@@ -527,6 +529,22 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
                     <span className="block text-xs font-bold truncate leading-tight mt-0.5">
                       {tiendasPropias.length === 1 ? tiendasPropias[0] : `${tiendasPropias[0]} y ${tiendasPropias.length - 1} más`}
                     </span>
+                  </span>
+                  <span className="material-symbols-outlined text-white/70 text-[20px] shrink-0">chevron_right</span>
+                </Link>
+              )}
+
+              {user && esSuperadmin && (
+                <Link
+                  href="/superadmin"
+                  className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-slate-800 to-slate-600 text-white shadow-md active:scale-[0.98] transition-all"
+                >
+                  <span className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[9px] font-bold uppercase tracking-wider text-white/70 leading-tight">Panel general</span>
+                    <span className="block text-xs font-bold truncate leading-tight mt-0.5">Superadmin</span>
                   </span>
                   <span className="material-symbols-outlined text-white/70 text-[20px] shrink-0">chevron_right</span>
                 </Link>
