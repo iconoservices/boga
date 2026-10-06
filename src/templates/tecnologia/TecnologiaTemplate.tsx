@@ -5,6 +5,7 @@ import { StoreConfig } from '@/lib/stores.config';
 import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import StoreHeader from '../shared/StoreHeader';
+import BannerSlider from '../shared/BannerSlider';
 import { useCatalogo } from '../shared/useCatalogo';
 import { useTabRuta } from '../shared/useTabRuta';
 import { TXT, ICON, soles, type Producto } from '../shared/tokens';
@@ -27,49 +28,6 @@ const PORTADA_DE_FABRICA = '/templates/tecnologia-portada.svg';
 type Tema = StoreConfig['theme'];
 
 const descuento = (p: Producto) => (p.priceAnterior && p.priceAnterior > p.price ? porcentajeOferta(p.priceAnterior, p.price) : '');
-
-/** Carrusel de banners con puntos (y avance solo cada 5 s). Un solo banner no lleva puntos ni avanza. */
-function BannerSlider({ slides }: { slides: { key: string; contenido: React.ReactNode }[] }) {
-  const pista = useRef<HTMLDivElement>(null);
-  const [activo, setActivo] = useState(0);
-  const pausa = useRef(false);
-
-  useEffect(() => {
-    if (slides.length < 2) return;
-    const id = setInterval(() => {
-      const el = pista.current;
-      if (!el || pausa.current) return;
-      const siguiente = (Math.round(el.scrollLeft / el.clientWidth) + 1) % slides.length;
-      el.scrollTo({ left: siguiente * el.clientWidth, behavior: 'smooth' });
-    }, 5000);
-    return () => clearInterval(id);
-  }, [slides.length]);
-
-  return (
-    <div className="relative">
-      <div
-        ref={pista}
-        className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar"
-        onScroll={(e) => setActivo(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}
-        onPointerDown={() => { pausa.current = true; }}
-        onPointerUp={() => { pausa.current = false; }}
-        onMouseEnter={() => { pausa.current = true; }}
-        onMouseLeave={() => { pausa.current = false; }}
-      >
-        {slides.map((sl) => (
-          <div key={sl.key} className="w-full shrink-0 snap-center">{sl.contenido}</div>
-        ))}
-      </div>
-      {slides.length > 1 && (
-        <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 pointer-events-none">
-          {slides.map((sl, i) => (
-            <span key={sl.key} className="h-1.5 rounded-full transition-all" style={{ width: i === activo ? 18 : 6, background: i === activo ? '#fff' : 'rgba(255,255,255,0.55)', boxShadow: '0 0 2px rgba(0,0,0,0.5)' }} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 /** Cuenta regresiva hasta el fin de una oferta (último día, hora de Perú). Se arma ya en el navegador (usa la hora actual). */
 function CuentaRegresiva({ t, hasta }: { t: Tema; hasta: string }) {
@@ -231,10 +189,10 @@ export default function TecnologiaTemplate({ store, initialProductId, initialTab
                 <button
                   type="button"
                   onClick={() => c.abrirProducto(p)}
-                  className="w-full h-[220px] md:h-[clamp(240px,30vw,430px)] grid grid-cols-2 items-center text-left"
+                  className="relative overflow-hidden w-full h-[220px] md:h-[clamp(240px,30vw,430px)] grid grid-cols-2 grid-rows-1 items-center text-left"
                   style={{ background: `linear-gradient(135deg, ${t.secondary}, ${t.primary})`, color: '#fff' }}
                 >
-                  <span className="p-5 md:p-10 flex flex-col gap-2">
+                  <span className="p-5 md:p-10 flex flex-col gap-2 min-w-0">
                     <span className="self-start text-[11px] font-black px-2 py-0.5 rounded-md bg-white/20">{p.esCombo ? '🔥 COMBO' : 'OFERTA'} {descuento(p)}</span>
                     <span className="text-lg md:text-3xl font-bold leading-tight line-clamp-3" style={{ fontFamily: t.fontHeadline }}>{p.name}</span>
                     <span className="text-xl md:text-2xl font-black">
@@ -242,8 +200,8 @@ export default function TecnologiaTemplate({ store, initialProductId, initialTab
                     </span>
                     <span className="self-start text-xs font-bold px-3 py-1.5 rounded-full bg-white" style={{ color: t.primary }}>Ver producto</span>
                   </span>
-                  <span className="h-full flex items-center justify-center p-4">
-                    <img src={p.image} alt="" className="max-h-full max-w-full object-contain drop-shadow-xl" />
+                  <span className="relative h-full min-h-0">
+                    <img src={p.image} alt="" className="absolute inset-0 w-full h-full object-contain p-4 drop-shadow-xl" />
                   </span>
                 </button>
               ),

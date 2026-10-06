@@ -15,6 +15,8 @@ import StoreFloatingActions from '@/components/StoreFloatingActions';
 import CustomerAccountButton from '@/components/CustomerAccountButton';
 import { useDetalleProducto } from '../shared/useDetalleProducto';
 import { leerPresentaciones } from '@/lib/presentaciones';
+import { porcentajeOferta } from '@/lib/ofertas';
+import BannerSlider from '../shared/BannerSlider';
 
 interface LookbookTemplateProps {
   store: StoreConfig;
@@ -183,6 +185,47 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
   }, [store.categories, allProducts]);
 
   const hayOfertas = allProducts.some((prod) => prod.hasOffer);
+
+  // Banners que rotan: primero el de la dueña (se ve entero, sin texto encima) y después, solos, hasta 3 de sus prendas con más descuento.
+  const slidesPortada = [
+    {
+      key: 'portada',
+      contenido: (
+        <img
+          src={store.heroImage || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1600&q=85'}
+          alt={store.heroAlt || store.name}
+          className="w-full h-auto max-h-[500px] object-cover object-center block"
+        />
+      ),
+    },
+    ...allProducts
+      .filter((prod) => prod.hasOffer)
+      .sort((x, y) => y.originalPrice / (y.price || 1) - x.originalPrice / (x.price || 1))
+      .slice(0, 3)
+      .map((prod) => ({
+        key: `oferta-${prod.id}`,
+        contenido: (
+          <button
+            type="button"
+            onClick={() => abrirProducto(prod)}
+            className="relative overflow-hidden w-full h-full min-h-[220px] grid grid-cols-2 grid-rows-1 items-stretch text-left text-white"
+            style={{ background: `linear-gradient(135deg, ${theme.primary || '#18181b'}, ${theme.secondary || theme.primary || '#18181b'})` }}
+          >
+            <span className="p-5 md:p-10 flex flex-col justify-center gap-2 min-w-0">
+              <span className="self-start text-[11px] font-black px-2 py-0.5 rounded-md bg-white/25 tracking-wider">🔥 OFERTA {porcentajeOferta(prod.originalPrice, prod.price)}</span>
+              <span className="text-lg md:text-3xl font-bold leading-tight line-clamp-3" style={{ fontFamily: theme.fontHeadline || "'Outfit', sans-serif" }}>{prod.title}</span>
+              <span className="text-xl md:text-2xl font-black">
+                S/ {prod.price.toFixed(2)} <span className="text-sm font-medium line-through opacity-75">S/ {prod.originalPrice.toFixed(2)}</span>
+              </span>
+              <span className="self-start text-xs font-bold px-4 py-2 rounded-full bg-white" style={{ color: theme.primary || '#18181b' }}>Ver prenda</span>
+            </span>
+            <span className="relative min-h-0">
+              <img src={prod.image} alt={prod.title} className="absolute inset-0 w-full h-full object-cover object-top" />
+            </span>
+          </button>
+        ),
+      })),
+  ];
 
   // Filtrado
   const filteredProducts = useMemo(() => {
@@ -376,11 +419,7 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
         <div className="max-w-6xl mx-auto px-0 sm:px-4 sm:py-4">
           <div className="w-full overflow-hidden sm:rounded-3xl shadow-sm bg-gray-100 relative">
             <StoreFloatingActions store={store} />
-            <img
-              src={store.heroImage || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1600&q=85'}
-              alt={store.heroAlt || store.name}
-              className="w-full h-auto max-h-[500px] object-cover object-center block"
-            />
+            <BannerSlider slides={slidesPortada} />
           </div>
         </div>
       </section>
