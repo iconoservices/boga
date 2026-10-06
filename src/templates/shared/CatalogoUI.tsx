@@ -440,8 +440,10 @@ export function ProductModal({
   const precioTexto = producto.sinPrecio ? 'Consultar precio' : soles((medida?.price ?? producto.price) * (producto.esServicio ? 1 : cantidad));
   // Precios en otras monedas de lo que está elegido (la medida, o el producto) y por la cantidad.
   const otrosPrecios = producto.sinPrecio ? '' : textoOtrosPrecios(medida ? medida.preciosMoneda : producto.preciosMoneda, producto.esServicio ? 1 : cantidad);
-  const enOferta = !producto.sinPrecio && !medida && cantidad === 1 && !!producto.priceAnterior && producto.priceAnterior > producto.price;
+  // La oferta sigue marcada con más de una unidad: el precio anterior tachado se multiplica igual que el precio (2 unidades → 2 × el anterior).
+  const enOferta = !producto.sinPrecio && !medida && !!producto.priceAnterior && producto.priceAnterior > producto.price;
   const pctOferta = enOferta ? Math.round((1 - producto.price / producto.priceAnterior!) * 100) : 0;
+  const anteriorTotal = enOferta ? producto.priceAnterior! * (producto.esServicio ? 1 : cantidad) : 0;
 
   const controlCantidad = !soloConsulta(producto) ? (
     <div className="flex items-center gap-1 shrink-0 rounded-full border p-0.5" style={{ borderColor: `${t.outlineVariant}`, background: t.surface }}>
@@ -584,7 +586,7 @@ export function ProductModal({
               <IgvTag t={t} p={producto} className="self-center" />
               {enOferta && (
                 <>
-                  <span className="text-lg font-medium line-through" style={{ color: t.onSurfaceVariant }}>{soles(producto.priceAnterior!)}</span>
+                  <span className="text-lg font-medium line-through" style={{ color: t.onSurfaceVariant }}>{soles(anteriorTotal)}</span>
                   <span className="text-xs font-black px-2 py-1 rounded-md bg-red-100 text-red-700">-{pctOferta}%</span>
                 </>
               )}
@@ -663,7 +665,7 @@ export function ProductModal({
             {precioTexto}
             {producto.conIgv && !producto.sinPrecio && <span className="block text-[10px] font-semibold leading-none mt-0.5" style={{ color: t.onSurfaceVariant }}>IGV incluido</span>}
             {enOferta && (
-              <span className="ml-2 text-sm font-medium line-through" style={{ color: t.onSurfaceVariant }}>{soles(producto.priceAnterior!)}</span>
+              <span className="ml-2 text-sm font-medium line-through" style={{ color: t.onSurfaceVariant }}>{soles(anteriorTotal)}</span>
             )}
             {otrosPrecios && (
               <span className="block text-xs font-semibold" style={{ color: t.onSurfaceVariant }}>{otrosPrecios}</span>
