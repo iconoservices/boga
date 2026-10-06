@@ -71,30 +71,6 @@ function BannerSlider({ slides }: { slides: { key: string; contenido: React.Reac
   );
 }
 
-/** Tarjeta destacada de un grupo ("Lo último", "Ofertas"): un producto, su descuento y un botón para ver todo el grupo. */
-function TarjetaDestacada({ t, titulo, producto, onAbrir, onVerTodo }: { t: Tema; titulo: string; producto: Producto; onAbrir: () => void; onVerTodo: () => void }) {
-  const dto = descuento(producto);
-  return (
-    <div className="w-[46%] min-w-[150px] sm:w-56 shrink-0 rounded-2xl p-3 flex flex-col gap-2 shadow-sm" style={{ background: t.surface, border: `1px solid ${t.outlineVariant}` }}>
-      <p className={`${TXT.body} font-bold`} style={{ color: t.onSurface, fontFamily: t.fontHeadline }}>{titulo}</p>
-      <button type="button" onClick={onAbrir} className="relative text-left active:scale-[0.98] transition-transform" aria-label={`Ver ${producto.name}`}>
-        {dto && <span className="absolute top-0 right-0 z-10 text-[11px] font-black px-1.5 py-0.5 rounded-md bg-green-100 text-green-700">{dto}</span>}
-        <img src={producto.image} alt="" className="w-full aspect-square object-contain rounded-xl" style={{ background: t.surfaceContainerLow }} />
-        <p className={`${TXT.small} font-semibold line-clamp-2 mt-2 min-h-[2.4em]`} style={{ color: t.onSurfaceVariant }}>{producto.name}</p>
-        <p className={`${TXT.lead} font-extrabold`} style={{ color: t.onSurface }}>
-          {producto.sinPrecio ? 'Consultar' : soles(producto.price)}
-          {!producto.sinPrecio && producto.priceAnterior && producto.priceAnterior > producto.price && (
-            <span className={`block ${TXT.micro} font-medium line-through`} style={{ color: t.onSurfaceVariant }}>{soles(producto.priceAnterior)}</span>
-          )}
-        </p>
-      </button>
-      <button type="button" onClick={onVerTodo} className={`mt-auto w-full py-2 rounded-lg ${TXT.small} font-bold active:scale-95 transition-transform`} style={{ background: t.primaryContainer, color: t.primary }}>
-        Ver todo
-      </button>
-    </div>
-  );
-}
-
 /** Cuenta regresiva hasta el fin de una oferta (último día, hora de Perú). Se arma ya en el navegador (usa la hora actual). */
 function CuentaRegresiva({ t, hasta }: { t: Tema; hasta: string }) {
   const [resta, setResta] = useState<number | null>(null);
@@ -226,15 +202,11 @@ export default function TecnologiaTemplate({ store, initialProductId, initialTab
         {/* ─── INICIO ─── (cada bloque solo aparece si hay contenido para él) */}
         {activeTab === 'home' && (() => {
           const ofertas = [...(c.combosYOfertas ?? [])];
-          const mejorOferta = [...ofertas].sort((x, y) => (y.priceAnterior ?? 0) / (y.price || 1) - (x.priceAnterior ?? 0) / (x.price || 1))[0];
-          // "Lo último": el cargado más recientemente (si la tienda no trae la fecha, el último de la lista).
-          const masNuevo = c.products.some((p) => p.creado)
-            ? [...c.products].filter((p) => p.creado).sort((x, y) => String(y.creado).localeCompare(String(x.creado)))[0]
-            : c.products[c.products.length - 1];
-          const destacadas = [
-            masNuevo ? { titulo: 'Lo último', producto: masNuevo, ver: () => ir('catalogo') } : null,
-            mejorOferta ? { titulo: 'Ofertas', producto: mejorOferta, ver: () => ir('catalogo', '__combos__') } : null,
-          ].filter(Boolean) as { titulo: string; producto: Producto; ver: () => void }[];
+          // "Lo último": los cargados más recientemente (si la tienda no trae la fecha, los últimos de la lista).
+          const ultimos = (c.products.some((p) => p.creado)
+            ? [...c.products].filter((p) => p.creado).sort((x, y) => String(y.creado).localeCompare(String(x.creado)))
+            : [...c.products].reverse()
+          ).slice(0, 8);
           // La oferta que termina primero marca la cuenta regresiva (solo si el dueño le puso fecha de fin).
           const fin = ofertas.map((p) => p.ofertaHasta).filter((f): f is string => !!f).sort()[0];
 
@@ -289,13 +261,17 @@ export default function TecnologiaTemplate({ store, initialProductId, initialTab
                 </div>
               )}
 
-              {destacadas.length > 0 && (
-                <section className="px-5 md:px-6 pt-5">
-                  <div className="flex gap-3 overflow-x-auto hide-scrollbar">
-                    {destacadas.map((d) => (
-                      <TarjetaDestacada key={d.titulo} t={t} titulo={d.titulo} producto={d.producto} onAbrir={() => c.abrirProducto(d.producto)} onVerTodo={d.ver} />
-                    ))}
+              {ultimos.length > 0 && (
+                <section className="pt-6">
+                  <div className="px-5 md:px-6 flex items-center justify-between gap-3 mb-3">
+                    <h2 className={`${TXT.lead} font-bold tracking-tight`} style={{ color: t.onSurface, fontFamily: t.fontHeadline }}>Lo último</h2>
+                    <button onClick={() => ir('catalogo')} className={`${TXT.small} font-bold flex items-center gap-0.5 hover:underline active:scale-95 transition-transform`} style={{ color: t.primary }}>
+                      Ver todos <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                    </button>
                   </div>
+                  <FilaDeslizable t={t}>
+                    <ProductGrid t={t} productos={ultimos} onSelect={c.abrirProducto} onAdd={c.addToCart} carrusel />
+                  </FilaDeslizable>
                 </section>
               )}
 

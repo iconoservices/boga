@@ -26,6 +26,7 @@ export const RUTAS_PLANTILLA: Record<string, RutasPlantilla> = {
     inicial: 'home',
     secciones: { servicios: { titulo: 'Servicios' }, obras: { titulo: 'Obras realizadas' }, nosotros: { titulo: 'Nosotros' }, contacto },
   },
+  academia: { inicial: 'home', secciones: { grupos: { titulo: 'Grupos y horarios' }, alumnos: { titulo: 'Alumnos y padres', indexar: false }, contacto } },
   gas: { inicial: 'home', secciones: { productos: { titulo: 'Productos' }, contacto } },
   belleza: { inicial: 'home', secciones: { servicios: { titulo: 'Servicios' }, productos: { titulo: 'Productos' }, pedidos, contacto } },
   polleria: { inicial: 'home', secciones: { menu: { titulo: 'Carta y precios' }, pedidos, contacto } },

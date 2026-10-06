@@ -4,7 +4,7 @@
 // el editor de tienda del superadmin (los interruptores) y la página de Paquetes
 // (la tabla de niveles). Si se agrega un módulo, se agrega acá y en NIVELES.
 
-export type ModuloId = 'pos' | 'inventario' | 'google' | 'marca_blanca' | 'marketplace' | 'loyverse' | 'dominio_propio' | 'pasarela_pago' | 'promociones';
+export type ModuloId = 'pos' | 'inventario' | 'google' | 'marca_blanca' | 'marketplace' | 'loyverse' | 'dominio_propio' | 'pasarela_pago' | 'promociones' | 'academia';
 export type Modulos = Partial<Record<ModuloId, boolean>> & {
   // (La ficha de Loyverse y su merchant_id ya NO viven aquí: `stores.modulos` es público. Ver lib/loyverseServidor.ts.)
   loyverse_last_sync?: string;
@@ -34,6 +34,12 @@ export const MODULOS: { id: ModuloId; label: string; icon: string; desc: string;
     label: 'Promociones & Combos',
     icon: 'loyalty',
     desc: 'Permite al negocio crear Combos y Packs con etiqueta especial, pestaña propia en la carta y aparición en Promociones de BogaHub.',
+  },
+  {
+    id: 'academia',
+    label: 'Academia: alumnos y asistencia con QR',
+    icon: 'school',
+    desc: 'Carnet digital con QR por alumno, asistencia que toma el profesor con la cámara y enlace privado para que el padre vea si llegó. Se prende solo (no viene incluido por defecto).',
   },
   {
     id: 'google',
@@ -175,6 +181,9 @@ export const LIMITES: string[] = [
   'Google: falta conectar el feed en tu cuenta de Merchant Center (la cuenta de Boga) para que empiece a mostrar productos.',
 ];
 
+/** ¿Tiene el módulo de alumnos y asistencia? Solo si el superadmin lo prendió (las tiendas anteriores NO lo traen). */
+export const moduloAcademia = (modulos: Modulos | null | undefined) => modulos?.academia === true;
+
 /** ¿Sale la tienda en el marketplace (/market, /explore)? Sí, salvo que el superadmin lo apague. */
 export const enMarketplace = (modulos: Modulos | null | undefined) => modulos?.marketplace !== false;
 
@@ -195,6 +204,7 @@ export const PASOS_PRECIO: { clave: string; etiqueta: string; ayuda: string }[] 
   { clave: 'extra:dominio_propio', etiqueta: 'Dominio propio', ayuda: 'Se suma al conectar un dominio propio personalizado (.com / .pe).' },
   { clave: 'extra:loyverse', etiqueta: 'Loyverse POS', ayuda: 'Se suma al sincronizar con el punto de venta Loyverse.' },
   { clave: 'extra:pasarela_pago', etiqueta: 'Pasarela propia', ayuda: 'Se suma al habilitar pasarela de pago online para la tienda.' },
+  { clave: 'extra:academia', etiqueta: 'Academia (alumnos + QR)', ayuda: 'Se suma al activar el carnet con QR y la asistencia de alumnos.' },
   { clave: 'extra:promociones', etiqueta: 'Promociones & Combos', ayuda: 'Se suma al activar el módulo de combos y promociones comerciales.' },
 ];
 
@@ -294,6 +304,7 @@ export function pasosDeTienda(t: { modulos?: Modulos | null; subdominio_activo?:
   if (moduloActivo(t.modulos, 'loyverse')) pasos.push('extra:loyverse');
   if (moduloActivo(t.modulos, 'pasarela_pago')) pasos.push('extra:pasarela_pago');
   if (moduloActivo(t.modulos, 'promociones')) pasos.push('extra:promociones');
+  if (moduloAcademia(t.modulos)) pasos.push('extra:academia');
   return pasos;
 }
 

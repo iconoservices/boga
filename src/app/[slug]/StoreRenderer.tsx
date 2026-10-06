@@ -35,6 +35,7 @@ const FichaPlanaTemplate = dynamic(() => import('@/templates/fichaplana/FichaPla
 const VeterinariaTemplate = dynamic(() => import('@/templates/veterinaria/VeterinariaTemplate'));
 const EmpresaTemplate = dynamic(() => import('@/templates/empresa/EmpresaTemplate'));
 const GasTemplate = dynamic(() => import('@/templates/gas/GasTemplate'));
+const AcademiaTemplate = dynamic(() => import('@/templates/academia/AcademiaTemplate'));
 const BellezaTemplate = dynamic(() => import('@/templates/belleza/BellezaTemplate'));
 const TerrenosPortalTemplate = dynamic(() => import('@/templates/terrenos/TerrenosPortalTemplate'));
 const TerrenosCampoTemplate = dynamic(() => import('@/templates/terrenos/TerrenosCampoTemplate'));
@@ -193,6 +194,8 @@ export default function StoreRenderer({ store: initialStore, initialProductId, i
       return <EmpresaTemplate store={store} initialProductId={initialProductId} initialTab={initialTab} />;
     case 'belleza':
       return <BellezaTemplate store={store} initialProductId={initialProductId} initialTab={initialTab} />;
+    case 'academia':
+      return <AcademiaTemplate store={store} initialProductId={initialProductId} initialTab={initialTab} />;
     case 'gas':
       return <GasTemplate store={store} initialProductId={initialProductId} initialTab={initialTab} />;
     case 'terreno1':

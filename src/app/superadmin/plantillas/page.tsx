@@ -141,6 +141,11 @@ const TEMPLATE_PRESENTATION: Record<string, { category?: string; description: st
     description: 'Salón de belleza (uñas, cabello, cejas y pestañas): carta de servicios con precio y duración, reserva de cita con fecha y hora, y productos aparte si los hay.',
     previewUrl: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&q=80',
   },
+  academia: {
+    category: 'Negocios',
+    description: 'Academia deportiva o de enseñanza: grupos por edad con sus horarios, inscripción por WhatsApp, y acceso para padres (ver si su hijo llegó, carnet con QR) y profesores (tomar asistencia). Se instala como app.',
+    previewUrl: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&q=80',
+  },
   gas: {
     category: 'Negocios',
     description: 'Distribuidora de gas: portada con pedido rápido por WhatsApp, balones y accesorios SIN precios (el cliente consulta), zonas de reparto y consejos de seguridad.',

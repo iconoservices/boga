@@ -21,7 +21,7 @@ import { useEsSuperadmin } from '@/lib/superadmin';
 import type { StoreTheme } from '@/lib/templates.config';
 import { getTemplate } from '@/lib/templates.config';
 import { iconForCategory } from '@/templates/shared/tokens';
-import { moduloActivo, STOCK_BAJO, type ModuloId } from '@/lib/modulos';
+import { moduloActivo, moduloAcademia, STOCK_BAJO, type ModuloId } from '@/lib/modulos';
 import { fechaLima, hoyLima } from '@/lib/fechaLima';
 import { moverStock, registrarMovimientos, stockIlimitado } from '@/lib/stock';
 import PedidosTab, { type Pedido } from '@/components/admin/PedidosTab';
@@ -367,8 +367,9 @@ function AdminDashboard({ user }: { user: User }) {
   const inicioStore = stores[focusedStore];
   // Tiendas de tipo "empresa" (plantilla de servicios): el catálogo se llama "servicios", no "productos".
   const esEmpresa = stores[focusedStore]?.template === 'empresa';
+  const esAcademia = stores[focusedStore]?.template === 'academia';
   // Una empresa no tiene pedidos ni caja: el cliente cotiza por WhatsApp y no queda nada que gestionar aquí.
-  const navTabs = esEmpresa ? navTabsBase.filter(t => t.id !== 'orders') : navTabsBase;
+  const navTabs = (esEmpresa || esAcademia) ? navTabsBase.filter(t => t.id !== 'orders') : navTabsBase;
   const inicioDb = dbStores.find((s: any) => s.slug === focusedStore);
   const inicioActiva = (inicioDb?.status ?? 'active') === 'active';
   const inicioNombre = (user.user_metadata?.name as string | undefined)?.split(' ')[0];
@@ -519,7 +520,7 @@ function AdminDashboard({ user }: { user: User }) {
   // Orden: el cambio que escribió el dueño en su tienda, luego el que escribe aquí, y si no hay ninguno, el de hoy.
   const tasaDe = (m: { codigo: string; tasa?: number }): number | undefined =>
     m.tasa ?? (Number(String(tasasLocales[m.codigo] ?? '').replace(',', '.')) || undefined) ?? cambioHoy?.tasas[m.codigo];
-  const precioOpcional = (stores as any)[newProduct.store]?.template === 'gas' || (stores as any)[newProduct.store]?.template === 'empresa';
+  const precioOpcional = (stores as any)[newProduct.store]?.template === 'gas' || (stores as any)[newProduct.store]?.template === 'academia' || (stores as any)[newProduct.store]?.template === 'empresa';
 
   const resetForm = () => {
     setModoPres(null);
@@ -1554,7 +1555,7 @@ function AdminDashboard({ user }: { user: User }) {
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md font-semibold transition-colors ${activeTab === t.id ? 'bg-[var(--tienda-color)] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
             >
               <span className="material-symbols-outlined text-[20px]">{t.icon}</span>
-              {t.id === 'products' && esEmpresa ? 'Servicios' : t.label}
+              {t.id === 'products' && esEmpresa ? 'Servicios' : t.id === 'products' && esAcademia ? 'Grupos' : t.label}
               {t.id === 'orders' && pedidosPendientes > 0 && (
                 <span className="ml-auto min-w-[20px] h-5 px-1.5 rounded-full bg-orange-500 text-white text-[11px] font-black flex items-center justify-center">{pedidosPendientes}</span>
               )}
@@ -1613,14 +1614,14 @@ function AdminDashboard({ user }: { user: User }) {
         <header className={`hidden md:flex flex-col md:flex-row md:items-center justify-between gap-4 ${activeTab === 'pos' ? 'mb-2' : 'mb-6'}`}>
           <div>
             <h1 className={`${activeTab === 'pos' ? 'text-lg font-black' : 'text-2xl font-extrabold'} text-gray-900 tracking-tight`}>
-              {activeTab === 'inicio' ? 'Inicio' : activeTab === 'products' ? (esEmpresa ? 'Gestión de Servicios' : 'Gestión de Productos') : activeTab === 'categories' ? 'Categorías' : activeTab === 'orders' ? 'Gestión de Pedidos' : activeTab === 'stores' ? 'Mis Tiendas' : activeTab === 'pos' ? 'Caja Rápida (POS)' : 'Métricas y Rendimiento'}
+              {activeTab === 'inicio' ? 'Inicio' : activeTab === 'products' ? (esEmpresa ? 'Gestión de Servicios' : esAcademia ? 'Grupos y horarios' : 'Gestión de Productos') : activeTab === 'categories' ? 'Categorías' : activeTab === 'orders' ? 'Gestión de Pedidos' : activeTab === 'stores' ? 'Mis Tiendas' : activeTab === 'pos' ? 'Caja Rápida (POS)' : 'Métricas y Rendimiento'}
               {(activeTab === 'pos' || activeTab === 'inicio') && stores[focusedStore] && (
                 <span className="ml-2 text-gray-400 font-semibold">· {stores[focusedStore].name}</span>
               )}
             </h1>
             {activeTab !== 'pos' && activeTab !== 'inicio' && (
               <p className="text-gray-500 text-sm font-medium mt-1">
-                {activeTab === 'products' ? (esEmpresa ? 'Administra los servicios de tu empresa.' : inventarioOn ? 'Administra el inventario de tus tiendas.' : 'Administra la carta de tus tiendas.') : activeTab === 'categories' ? 'Crea, ordena y renombra las categorías de tu negocio.' : activeTab === 'orders' ? 'Gestiona los pedidos de tus clientes.' : activeTab === 'stores' ? 'Administra la información de tus sucursales.' : 'Analiza el rendimiento de tu negocio.'}
+                {activeTab === 'products' ? (esEmpresa ? 'Administra los servicios de tu empresa.' : esAcademia ? 'Los grupos de tu academia: nombre, horario (una línea por día) y mensualidad opcional.' : inventarioOn ? 'Administra el inventario de tus tiendas.' : 'Administra la carta de tus tiendas.') : activeTab === 'categories' ? 'Crea, ordena y renombra las categorías de tu negocio.' : activeTab === 'orders' ? 'Gestiona los pedidos de tus clientes.' : activeTab === 'stores' ? 'Administra la información de tus sucursales.' : 'Analiza el rendimiento de tu negocio.'}
               </p>
             )}
           </div>
@@ -1865,8 +1866,9 @@ function AdminDashboard({ user }: { user: User }) {
               <p className={titulo}>Acciones rápidas</p>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { icon: 'add_circle', t: esEmpresa ? 'Agregar servicio' : 'Agregar producto', s: esEmpresa ? 'Súbelo con su foto y descripción' : 'Súbelo con su foto y precio', on: () => { resetForm(); setNewProduct(prev => ({ ...prev, store: inicioStore.slug })); setIsModalOpen(true); } },
+                  { icon: 'add_circle', t: esEmpresa ? 'Agregar servicio' : esAcademia ? 'Agregar grupo' : 'Agregar producto', s: esEmpresa ? 'Súbelo con su foto y descripción' : 'Súbelo con su foto y precio', on: () => { resetForm(); setNewProduct(prev => ({ ...prev, store: inicioStore.slug })); setIsModalOpen(true); } },
                   ...(posOn ? [{ icon: 'point_of_sale', t: 'Nueva venta', s: 'Caja rápida en el local', on: () => setActiveTab('pos') }] : []),
+                  ...(moduloAcademia(inicioDb?.modulos) ? [{ icon: 'school', t: 'Alumnos', s: 'Carnet con QR y asistencia', on: () => router.push('/admin/alumnos') }] : []),
                   ...((inicioStore?.template === 'sweetkittynails' || inicioStore?.template === 'belleza') ? [{ icon: 'event_available', t: 'Reservas', s: 'Citas que piden tus clientas', on: () => router.push('/admin/reservas') }] : []),
                   { icon: 'share', t: esEmpresa ? 'Compartir mi página' : 'Compartir mi tienda', s: 'Envía tu enlace por WhatsApp', on: compartirCarta },
                   { icon: 'qr_code_2', t: 'Código QR', s: 'Para tus mesas o tu puerta', on: () => { setSelectedStore(inicioStore.slug); setIsQRModalOpen(true); } },
@@ -3343,6 +3345,47 @@ function AdminDashboard({ user }: { user: User }) {
                   </div>
                 </div>
 
+                {/* Oferta: aparece en tu tienda con el precio anterior tachado y en la página Promos de BogaHub */}
+                {!formEmpresa && newProduct.presentaciones.length === 0 && (
+                <div className="mt-5 rounded-xl border border-dashed border-primary/40 bg-primary/5 p-4">
+                  <p className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-primary text-[18px]">local_offer</span>
+                    ¿Está en oferta? <span className="font-medium text-gray-500">(opcional)</span>
+                  </p>
+                  <div className="grid grid-cols-2 gap-4 mt-3">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Precio en oferta (S/)</label>
+                      <input
+                        type="number"
+                        step="0.10"
+                        min="0"
+                        value={newProduct.precioOferta}
+                        onChange={(e) => setNewProduct({...newProduct, precioOferta: e.target.value})}
+                        placeholder="Déjalo vacío si no"
+                        className="w-full px-3 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Hasta el día</label>
+                      <input
+                        type="date"
+                        value={newProduct.ofertaHasta}
+                        onChange={(e) => setNewProduct({...newProduct, ofertaHasta: e.target.value})}
+                        className="w-full px-3 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
+                      />
+                    </div>
+                  </div>
+                  {newProduct.precioOferta && parseFloat(newProduct.precioOferta) > 0 && parseFloat(newProduct.price) > 0 && (
+                    <p className="text-xs mt-2 font-medium" style={{ color: parseFloat(newProduct.precioOferta) < parseFloat(newProduct.price) ? '#15803d' : '#b91c1c' }}>
+                      {parseFloat(newProduct.precioOferta) < parseFloat(newProduct.price)
+                        ? `Tus clientes verán S/ ${parseFloat(newProduct.precioOferta).toFixed(2)} y el precio normal tachado (${porcentajeOferta(parseFloat(newProduct.price), parseFloat(newProduct.precioOferta))}). Sin fecha, la oferta dura hasta que la quites.`
+                        : 'El precio en oferta tiene que ser menor al precio normal.'}
+                    </p>
+                  )}
+                </div>
+                )}
+
+
                 {/* Precio en otras monedas: solo si la tienda activó alguna (Editar tienda → Monedas) y el producto tiene un solo precio.
                     El cambio de la tienda solo SUGIERE el monto; se puede aceptar o escribir otro a mano. */}
                 {(() => {
@@ -3698,46 +3741,6 @@ function AdminDashboard({ user }: { user: User }) {
                 </div>
 
                 {!formEmpresa && (<>
-                {/* Oferta: aparece en tu tienda con el precio anterior tachado y en la página Promos de BogaHub */}
-                {newProduct.presentaciones.length === 0 && (
-                <div className="rounded-xl border border-dashed border-primary/40 bg-primary/5 p-4">
-                  <p className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-primary text-[18px]">local_offer</span>
-                    ¿Está en oferta? <span className="font-medium text-gray-500">(opcional)</span>
-                  </p>
-                  <div className="grid grid-cols-2 gap-4 mt-3">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Precio en oferta (S/)</label>
-                      <input
-                        type="number"
-                        step="0.10"
-                        min="0"
-                        value={newProduct.precioOferta}
-                        onChange={(e) => setNewProduct({...newProduct, precioOferta: e.target.value})}
-                        placeholder="Déjalo vacío si no"
-                        className="w-full px-3 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Hasta el día</label>
-                      <input
-                        type="date"
-                        value={newProduct.ofertaHasta}
-                        onChange={(e) => setNewProduct({...newProduct, ofertaHasta: e.target.value})}
-                        className="w-full px-3 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
-                      />
-                    </div>
-                  </div>
-                  {newProduct.precioOferta && parseFloat(newProduct.precioOferta) > 0 && parseFloat(newProduct.price) > 0 && (
-                    <p className="text-xs mt-2 font-medium" style={{ color: parseFloat(newProduct.precioOferta) < parseFloat(newProduct.price) ? '#15803d' : '#b91c1c' }}>
-                      {parseFloat(newProduct.precioOferta) < parseFloat(newProduct.price)
-                        ? `Tus clientes verán S/ ${parseFloat(newProduct.precioOferta).toFixed(2)} y el precio normal tachado (${porcentajeOferta(parseFloat(newProduct.price), parseFloat(newProduct.precioOferta))}). Sin fecha, la oferta dura hasta que la quites.`
-                        : 'El precio en oferta tiene que ser menor al precio normal.'}
-                    </p>
-                  )}
-                </div>
-                )}
-
                 {/* Combo / Pack: solo si la tienda tiene el módulo 'promociones' activo (o si es superadmin) */}
                 {(tiendaTiene(newProduct.store, 'promociones') || esSuperadmin) && (
                   <label className="flex items-center gap-3 rounded-xl border border-dashed border-amber-300 bg-amber-50/60 p-4 cursor-pointer hover:bg-amber-50/90 transition-colors">
@@ -4724,7 +4727,7 @@ function AdminDashboard({ user }: { user: User }) {
               <span className="absolute top-0.5 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-orange-500 text-white text-[10px] font-black flex items-center justify-center">{pedidosPendientes}</span>
             )}
             <span className="material-symbols-outlined text-[22px]">{t.icon}</span>
-            <span className="text-[10px] font-bold">{t.id === 'pos' ? 'Vender' : t.id === 'products' && esEmpresa ? 'Servicios' : t.label}</span>
+            <span className="text-[10px] font-bold">{t.id === 'pos' ? 'Vender' : t.id === 'products' && esEmpresa ? 'Servicios' : t.id === 'products' && esAcademia ? 'Grupos' : t.label}</span>
           </button>
         ))}
         <button
@@ -4830,7 +4833,7 @@ function AdminDashboard({ user }: { user: User }) {
                         onClick={() => { setActiveTab(t.id); setIsMobileMenuOpen(false); }}
                         className={activeTab === t.id ? destacado : normal}
                       >
-                        {ico(t.icon)}{t.id === 'products' && esEmpresa ? 'Servicios' : t.label}
+                        {ico(t.icon)}{t.id === 'products' && esEmpresa ? 'Servicios' : t.id === 'products' && esAcademia ? 'Grupos' : t.label}
                       </button>
                     ))}
                     {inicioStore && (

@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 
 type ResultadoValidacion = {
   ok: boolean;
-  resultado: 'valido' | 'ya_usado' | 'no_encontrado' | 'error';
+  resultado: 'valido' | 'ya_usado' | 'no_encontrado' | 'error' | 'sin_permiso';
   nombre?: string;
   telefono?: string;
   evento?: string;
@@ -54,15 +54,29 @@ function reproducirSonido(tipo: 'exito' | 'error') {
 export default function LectorQrPuerta({
   onValidado,
   pinStaff,
+  endpoint = '/api/eventos/validar',
+  cuerpoExtra,
+  cabeceras,
+  textos,
 }: {
   onValidado?: (r: ResultadoValidacion) => void;
   pinStaff?: string;
+  /** Ruta que valida el código leído. Por defecto la de entradas de eventos; academias usa la suya. */
+  endpoint?: string;
+  /** Campos que se mandan además del `token` (p. ej. la tienda). */
+  cuerpoExtra?: Record<string, unknown>;
+  /** Cabeceras extra (p. ej. la sesión del dueño). */
+  cabeceras?: Record<string, string>;
+  textos?: { ok?: string; error?: string; validando?: string; validados?: string; rechazados?: string };
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const html5ScannerRef = useRef<any>(null);
   const animFrameRef = useRef<number | null>(null);
   const procesandoRef = useRef(false);
+  // Endpoint, cuerpo y cabeceras van por ref: si fueran dependencias, un objeto nuevo en cada render reiniciaría la cámara.
+  const envioRef = useRef({ endpoint, cuerpoExtra, cabeceras });
+  envioRef.current = { endpoint, cuerpoExtra, cabeceras };
 
   const [modoLector, setModoLector] = useState<'nativo' | 'fallback' | 'iniciando'>('iniciando');
   const [torchActivo, setTorchActivo] = useState(false);
@@ -84,10 +98,11 @@ export default function LectorQrPuerta({
       setValidandoHttp(true);
 
       try {
-        const res = await fetch('/api/eventos/validar', {
+        const envio = envioRef.current;
+        const res = await fetch(envio.endpoint, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: token.trim(), pin: pinStaff }),
+          headers: { 'Content-Type': 'application/json', ...envio.cabeceras },
+          body: JSON.stringify({ token: token.trim(), pin: pinStaff, ...envio.cuerpoExtra }),
         });
         const data: ResultadoValidacion = await res.json();
 
@@ -254,14 +269,14 @@ export default function LectorQrPuerta({
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-xs font-bold text-emerald-400">
-              {contadorValidos} <span className="text-white/50 font-normal">validados</span>
+              {contadorValidos} <span className="text-white/50 font-normal">{textos?.validados ?? 'validados'}</span>
             </span>
           </div>
           {contadorRechazados > 0 && (
             <div className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
               <span className="text-xs font-bold text-red-400">
-                {contadorRechazados} <span className="text-white/50 font-normal">rechazados</span>
+                {contadorRechazados} <span className="text-white/50 font-normal">{textos?.rechazados ?? 'rechazados'}</span>
               </span>
             </div>
           )}
@@ -342,7 +357,7 @@ export default function LectorQrPuerta({
             <span className="material-symbols-outlined text-4xl animate-spin text-emerald-400">
               progress_activity
             </span>
-            <p className="text-xs font-bold text-white">Validando en puerta…</p>
+            <p className="text-xs font-bold text-white">{textos?.validando ?? 'Validando en puerta…'}</p>
           </div>
         )}
       </div>
@@ -366,7 +381,7 @@ export default function LectorQrPuerta({
 
           <div className="flex-1 min-w-0">
             <h3 className="font-extrabold text-base leading-tight">
-              {ultimoResultado.ok ? '✅ Pase Autorizado' : '❌ Entrada No Válida'}
+              {ultimoResultado.ok ? (textos?.ok ?? '✅ Pase Autorizado') : (textos?.error ?? '❌ Entrada No Válida')}
             </h3>
 
             {ultimoResultado.nombre && (

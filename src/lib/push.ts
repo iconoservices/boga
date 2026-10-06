@@ -151,3 +151,34 @@ export async function suscribirChofer(token: string): Promise<'ok' | 'denegado' 
   } catch (e) { ultimoMotivo = `sin conexión con el servidor: ${texto(e)}`; return 'error'; }
   return 'ok';
 }
+
+// ── Padres de una academia ──
+// El padre activa desde el carnet de su hijo el aviso "llegó a clase". Igual que el chofer: se suscribe con el
+// enlace privado (token) y el servidor guarda a qué alumno pertenece este celular (ver /api/academia/alumno).
+export async function suscribirAlumno(token: string): Promise<'ok' | 'denegado' | 'no-soportado' | 'error'> {
+  ultimoMotivo = '';
+  if (!pushDisponible()) { ultimoMotivo = 'este navegador no admite avisos'; return 'no-soportado'; }
+  let permiso: NotificationPermission;
+  try { permiso = await Notification.requestPermission(); } catch (e) { ultimoMotivo = `permiso: ${texto(e)}`; return 'error'; }
+  if (permiso !== 'granted') { ultimoMotivo = `permiso ${permiso}`; return 'denegado'; }
+
+  let reg: ServiceWorkerRegistration;
+  try { reg = await registro(); } catch (e) { ultimoMotivo = `service worker: ${texto(e)}`; return 'error'; }
+
+  let sub: PushSubscription;
+  try {
+    sub = (await reg.pushManager.getSubscription()) ??
+      (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: aBytes(CLAVE!) as BufferSource }));
+  } catch (e) { ultimoMotivo = `suscripción: ${texto(e)}`; return 'error'; }
+
+  try {
+    const res = await fetch('/api/academia/alumno', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ t: token, accion: 'suscribir', subscription: sub.toJSON() }),
+    });
+    if (!res.ok) { ultimoMotivo = `el servidor respondió ${res.status}`; return 'error'; }
+  } catch (e) { ultimoMotivo = `sin conexión con el servidor: ${texto(e)}`; return 'error'; }
+  try { localStorage.setItem(`boga_alumno_${token}`, '1'); } catch { /* sin almacenamiento */ }
+  return 'ok';
+}

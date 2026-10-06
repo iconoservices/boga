@@ -29,7 +29,7 @@ export default async function GeoTienda({ store }: { store: Tienda }) {
   const lista = productos.slice(0, 100);
   // Empresas de servicios y distribuidoras de gas no publican precio: se cotiza por WhatsApp. Sin esto, el rastreador leería "S/ 0.00".
   const empresa = store.template === 'empresa';
-  const sinPrecio = empresa || store.template === 'gas';
+  const sinPrecio = empresa || store.template === 'gas' || store.template === 'academia';
   const perfil = store.perfilEmpresa;
 
   const oferta = (p: (typeof lista)[number]) => ({
