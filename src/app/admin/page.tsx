@@ -29,7 +29,7 @@ import CategoriasTab from '@/components/admin/CategoriasTab';
 import HistorialStock from '@/components/admin/HistorialStock';
 import LoyverseSyncModal from '@/components/admin/LoyverseSyncModal';
 import MiPlan from '@/components/admin/MiPlan';
-import { MONEDAS_SUGERIDAS, normalizarMonedas, precioSugerido } from '@/lib/monedas';
+import { MONEDAS_SUGERIDAS, ejemploDeCambio, normalizarMonedas, precioSugerido } from '@/lib/monedas';
 import { COL_PRECIOS_MONEDA, normalizarPreciosMoneda, type PreciosMoneda } from '@/lib/preciosMoneda';
 import CobroOnline from '@/components/admin/CobroOnline';
 import { COLS_OFERTA, precioOfertaVigente, porcentajeOferta } from '@/lib/ofertas';
@@ -3353,25 +3353,37 @@ function AdminDashboard({ user }: { user: User }) {
                                   className="w-full pl-12 pr-2 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
                                 />
                               </div>
-                              {sugerido !== null && String(sugerido) !== valor && (
-                                <button
-                                  type="button"
-                                  onClick={() => setNewProduct({ ...newProduct, preciosMoneda: { ...newProduct.preciosMoneda, [m.codigo]: String(sugerido) } })}
-                                  className="px-3 py-2 rounded-full border border-gray-300 bg-white text-xs font-bold text-gray-600 hover:border-black transition-colors"
-                                  title="Calculado con el tipo de cambio de tu tienda; puedes escribir otro precio"
-                                >
-                                  Sugerido: {m.simbolo} {sugerido.toFixed(2)} · Usar
-                                </button>
-                              )}
+                              {/* Siempre visible: cuando cambia el tipo de cambio, con un toque se recalcula este precio. */}
+                              <button
+                                type="button"
+                                disabled={sugerido === null || String(sugerido) === valor}
+                                onClick={() => sugerido !== null && setNewProduct({ ...newProduct, preciosMoneda: { ...newProduct.preciosMoneda, [m.codigo]: String(sugerido) } })}
+                                className={`px-3 py-2 rounded-full border text-xs font-bold transition-colors ${
+                                  sugerido !== null && String(sugerido) === valor
+                                    ? 'border-green-300 bg-green-50 text-green-700'
+                                    : sugerido !== null
+                                      ? 'border-gray-300 bg-white text-gray-700 hover:border-black'
+                                      : 'border-gray-200 bg-gray-100 text-gray-400'
+                                } disabled:cursor-default`}
+                                title={sugerido === null
+                                  ? 'Escribe el precio en soles y el tipo de cambio de esta moneda para calcularlo'
+                                  : 'Calculado con el tipo de cambio de tu tienda; puedes escribir otro precio a mano'}
+                              >
+                                {sugerido === null
+                                  ? 'Aplicar precio sugerido'
+                                  : String(sugerido) === valor
+                                    ? `✓ Precio sugerido aplicado`
+                                    : `Aplicar precio sugerido: ${m.simbolo} ${sugerido.toFixed(2)}`}
+                              </button>
                               {!m.tasa && (
                                 <span className="flex items-center gap-1.5 text-xs text-gray-500">
-                                  Cambio: 1 {m.simbolo} = S/
+                                  ¿Cuántos soles vale 1 {m.simbolo}? S/
                                   <input
                                     type="text"
                                     inputMode="decimal"
                                     value={tasasLocales[m.codigo] ?? ''}
                                     onChange={(e) => setTasasLocales({ ...tasasLocales, [m.codigo]: e.target.value })}
-                                    placeholder="3.70"
+                                    placeholder={`ej. ${ejemploDeCambio(m.codigo)}`}
                                     aria-label={`Cuántos soles vale 1 ${m.simbolo}, para sugerirte el precio`}
                                     className="w-16 px-2 py-1.5 bg-white border border-gray-200 rounded-md text-xs font-medium focus:outline-none focus:border-black"
                                   />
@@ -3381,6 +3393,15 @@ function AdminDashboard({ user }: { user: User }) {
                           );
                         })}
                       </div>
+                      {monedasTienda.map((m) => {
+                        const tasa = tasaDe(m);
+                        return tasa && soles > 0 ? (
+                          <p key={`calc-${m.codigo}`} className="text-[11px] text-gray-500 mt-2">
+                            Con S/ {tasa} por cada {m.simbolo}: S/ {soles.toFixed(2)} ÷ {tasa} = <b>{m.simbolo} {(soles / tasa).toFixed(2)}</b>
+                            {tasa > 0 && soles / tasa < 0.5 ? ' — ¿seguro que el cambio es correcto? Es cuántos soles vale 1 ' + m.simbolo + ' (no el precio del producto).' : ''}
+                          </p>
+                        ) : null;
+                      })}
                       {monedasTienda.some((m) => !m.tasa) && (
                         <p className="text-[11px] text-gray-400 mt-2.5">Escribe el cambio para que te sugiera el precio. Para no escribirlo cada vez, guárdalo en <b>Editar tienda → Monedas</b>.</p>
                       )}
@@ -4215,7 +4236,7 @@ function AdminDashboard({ user }: { user: User }) {
                             ...storeForm,
                             monedas: storeForm.monedas.map((x, j) => (j === i ? { ...x, tasa: e.target.value } : x)),
                           })}
-                          placeholder="ej. 3.70"
+                          placeholder={`ej. ${ejemploDeCambio(m.codigo)}`}
                           className="w-28 px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0058be]"
                         />
                       </div>

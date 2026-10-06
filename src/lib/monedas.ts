@@ -20,15 +20,17 @@ export function precioSugerido(soles: number, m: Moneda): number | null {
 }
 
 /** Monedas que el dueño puede activar con un toque. */
-export const MONEDAS_SUGERIDAS: { codigo: string; simbolo: string; nombre: string }[] = [
-  { codigo: 'USD', simbolo: 'US$', nombre: 'Dólar' },
-  { codigo: 'MXN', simbolo: 'MX$', nombre: 'Peso mexicano' },
-  { codigo: 'EUR', simbolo: '€', nombre: 'Euro' },
-  { codigo: 'COP', simbolo: 'COL$', nombre: 'Peso colombiano' },
-  { codigo: 'CLP', simbolo: 'CL$', nombre: 'Peso chileno' },
-  { codigo: 'ARS', simbolo: 'AR$', nombre: 'Peso argentino' },
-  { codigo: 'BRL', simbolo: 'R$', nombre: 'Real' },
+export const MONEDAS_SUGERIDAS: { codigo: string; simbolo: string; nombre: string; /** Valor de ejemplo del cambio, solo como ayuda en el campo (no se usa para calcular). */ ejemplo: string }[] = [
+  { codigo: 'USD', simbolo: 'US$', nombre: 'Dólar' , ejemplo: '3.70' },
+  { codigo: 'MXN', simbolo: 'MX$', nombre: 'Peso mexicano' , ejemplo: '0.19' },
+  { codigo: 'EUR', simbolo: '€', nombre: 'Euro' , ejemplo: '4.00' },
+  { codigo: 'COP', simbolo: 'COL$', nombre: 'Peso colombiano' , ejemplo: '0.0009' },
+  { codigo: 'CLP', simbolo: 'CL$', nombre: 'Peso chileno' , ejemplo: '0.004' },
+  { codigo: 'ARS', simbolo: 'AR$', nombre: 'Peso argentino' , ejemplo: '0.004' },
+  { codigo: 'BRL', simbolo: 'R$', nombre: 'Real' , ejemplo: '0.65' },
 ];
+
+export const ejemploDeCambio = (codigo: string) => MONEDAS_SUGERIDAS.find((m) => m.codigo === codigo)?.ejemplo ?? '';
 
 export const simboloDe = (codigo: string) => MONEDAS_SUGERIDAS.find((m) => m.codigo === codigo)?.simbolo ?? codigo;
 
