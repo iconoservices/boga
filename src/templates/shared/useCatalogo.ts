@@ -11,6 +11,14 @@ import { soles, iconForCategory, iconoDeCategoria, type Producto, type Categoria
 import { avisarAgregado } from './AddFeedback';
 import { claveLinea, nombreConPresentacion, type Presentacion } from '@/lib/presentaciones';
 import { useDetalleProducto } from './useDetalleProducto';
+import { hoyLima } from '@/lib/fechaLima';
+
+/** AAAA-MM-DD de dentro de N días (hora de Perú). Solo para las demos de plantilla. */
+const diaDentroDe = (dias: number) => {
+  const d = new Date(`${hoyLima()}T12:00:00-05:00`);
+  d.setDate(d.getDate() + dias);
+  return d.toISOString().slice(0, 10);
+};
 
 /** Una línea del carrito: el mismo producto en dos medidas distintas son dos líneas. */
 type LineaCarrito = { clave: string; producto: Producto; pres?: Presentacion; qty: number; precio: number };
@@ -71,6 +79,8 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
             sinPrecio: sinPrecioTodo || !(Number(p.price) > 0),
             esCombo: p.es_combo === true,
             preciosMoneda: p.preciosMoneda && Object.keys(p.preciosMoneda).length ? p.preciosMoneda : undefined,
+            creado: typeof p.created_at === 'string' ? p.created_at : undefined,
+            ofertaHasta: typeof p.oferta_hasta === 'string' ? p.oferta_hasta : undefined,
           }))
         : [];
 
@@ -90,6 +100,7 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
             esCombo: p.esCombo,
             priceAnterior: p.priceAnterior,
             preciosMoneda: p.preciosMoneda,
+            ofertaHasta: p.ofertaDias ? diaDentroDe(p.ofertaDias) : undefined,
             sinPrecio: sinPrecioTodo || !(p.price > 0),
           }))
         : [];

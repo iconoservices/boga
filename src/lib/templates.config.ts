@@ -36,6 +36,8 @@ export interface DemoProduct {
   esServicio?: boolean;
   /** Solo para la demo: precio en otras monedas (ej. {"USD": 10}); así se ve cómo queda en la tienda. */
   preciosMoneda?: Record<string, number>;
+  /** Solo para la demo: la oferta termina dentro de N días (así la cuenta regresiva se ve siempre). */
+  ofertaDias?: number;
 }
 
 export interface TemplateConfig {
@@ -988,6 +990,50 @@ const TEMPLATES: Record<string, TemplateConfig> = {
     ],
     zona: 'Pucallpa',
     horario: 'Lunes a Domingo: 8:00 AM – 8:00 PM',
+    rating: 4.9,
+  },
+  tecnologia: {
+    id: 'tecnologia',
+    name: 'Tienda de Tecnología',
+    category: 'Comercio',
+    heroImage: '/templates/tecnologia-portada.svg',
+    heroAlt: 'Celulares, laptops y accesorios',
+    theme: {
+      primary: '#2563eb',
+      onPrimary: '#ffffff',
+      primaryContainer: '#dbe6ff',
+      secondary: '#0f172a',
+      secondaryContainer: '#e2e8f0',
+      background: '#f5f7fb',
+      surface: '#ffffff',
+      surfaceContainer: '#e9eef7',
+      surfaceContainerLow: '#f5f7fb',
+      surfaceContainerLowest: '#ffffff',
+      surfaceContainerHigh: '#dde4f0',
+      onBackground: '#0b1220',
+      onSurface: '#0b1220',
+      onSurfaceVariant: '#4b5870',
+      outlineVariant: '#d5dcea',
+      fontHeadline: "'Space Grotesk', sans-serif",
+      fontBody: "'Inter', sans-serif",
+      fontLabel: "'Inter', sans-serif",
+    },
+    categories: [
+      { name: 'Celulares', icon: 'smartphone', href: 'celulares' },
+      { name: 'Laptops', icon: 'laptop_mac', href: 'laptops' },
+      { name: 'Audio', icon: 'headphones', href: 'audio' },
+      { name: 'Gaming', icon: 'sports_esports', href: 'gaming' },
+      { name: 'Accesorios', icon: 'cable', href: 'accesorios' },
+    ],
+    demoProducts: [
+      { name: 'Smartphone 6.5" 50 MP', price: 899.00, category: 'Celulares', image: '/templates/tecnologia-celular.svg', description: 'Pantalla 6.5" AMOLED\nCámara principal 50 MP\nBatería 5000 mAh\nGarantía de 12 meses', presentaciones: [{ label: '128 GB', price: 899, preciosMoneda: { USD: 249 } }, { label: '256 GB', price: 1099, preciosMoneda: { USD: 299 } }] },
+      { name: 'Laptop 15.6" 16 GB RAM', price: 2499.00, priceAnterior: 2799.00, ofertaDias: 2, category: 'Laptops', image: '/templates/tecnologia-laptop.svg', description: 'Procesador de 8 núcleos\n16 GB RAM · SSD 512 GB\nPantalla Full HD 15.6"', preciosMoneda: { USD: 690 } },
+      { name: 'Audífonos Bluetooth con cancelación de ruido', price: 129.00, priceAnterior: 159.00, ofertaDias: 2, category: 'Audio', image: '/templates/tecnologia-audifonos.svg', description: 'Hasta 30 horas de batería\nMicrófono integrado' },
+      { name: 'Cargador rápido 30 W', price: 49.00, category: 'Accesorios', image: '/templates/tecnologia-cargador.svg', description: 'Carga rápida USB-C\nCompatible con celulares y tablets' },
+      { name: 'Audífonos Gamer con micrófono', price: 189.00, category: 'Gaming', image: '/templates/tecnologia-audifonos.svg', description: 'Sonido envolvente\nAlmohadillas acolchadas' },
+    ],
+    zona: 'Pucallpa',
+    horario: 'Lunes a Sábado: 9:00 AM – 8:00 PM',
     rating: 4.9,
   },
   bazar: {

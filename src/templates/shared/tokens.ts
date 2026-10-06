@@ -63,6 +63,10 @@ export interface Producto {
   esCombo?: boolean;
   /** Precio en otras monedas, escrito por el dueño: {"USD": 10, "MXN": 180}. `price` sigue siendo en soles. Ver lib/preciosMoneda.ts. */
   preciosMoneda?: Record<string, number>;
+  /** Cuándo se cargó el producto (ISO), para "Lo último". */
+  creado?: string;
+  /** Último día de la oferta vigente (AAAA-MM-DD, hora de Perú), si el dueño le puso fecha. */
+  ofertaHasta?: string;
 }
 
 export interface Categoria {

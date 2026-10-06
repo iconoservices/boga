@@ -96,6 +96,11 @@ const TEMPLATE_PRESENTATION: Record<string, { category?: string; description: st
     previewUrl: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=600&q=80',
   },
 
+  tecnologia: {
+    category: 'Comercio',
+    description: 'Para tiendas de tecnología (celulares, laptops, audio, gaming, accesorios): un Inicio con ofertas y una fila que se desliza por cada categoría, un botón para ir al Catálogo completo con todas las categorías y buscador, modelos con varias capacidades (128 GB / 256 GB), precios en otras monedas y pedido por WhatsApp.',
+    previewUrl: '/templates/tecnologia-portada.svg',
+  },
   bazar: {
     category: 'Comercio',
     description: 'Para bazares y tiendas de artesanías y ropa de la cultura amazónica: paleta de tierra y selva, franja con patrón inspirado en diseños shipibo, accesos compactos por categoría (Artesanías, Ropa, Recuerdos) y un botón de ayuda por WhatsApp para quien no sabe qué elegir. Carrito y pedido por WhatsApp.',

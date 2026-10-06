@@ -16,7 +16,8 @@ export async function GET(
 ) {
   const { slug } = await params;
   // Con precio de oferta (lib/ofertas.ts); si esas columnas aún no existen, cae a las de siempre.
-  const base = 'id,name,description,price,category,subcategory,image,status';
+  // created_at: para "Lo último" en las plantillas que lo muestran.
+  const base = 'id,name,description,price,category,subcategory,image,status,created_at';
   // Cada columna extra es opcional: si su SQL aún no se corrió, cae al conjunto anterior.
   let { data, error } = await supabase.from('products').select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio,es_combo,${COL_PRECIOS_MONEDA}`).eq('store', slug);
   if (error) ({ data, error } = await supabase.from('products').select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio,es_combo`).eq('store', slug) as any);
@@ -34,7 +35,11 @@ export async function GET(
 
   return NextResponse.json(
     {
-      products: ((data ?? []) as any[]).map(aplicarOferta).map((p: any) => {
+      products: ((data ?? []) as any[]).map((row: any) => {
+        // aplicarOferta quita oferta_hasta; si la oferta está vigente se conserva el día en que termina (cuenta regresiva de las plantillas que la muestran).
+        const r: any = aplicarOferta(row);
+        return r.price_anterior && row.oferta_hasta ? { ...r, oferta_hasta: String(row.oferta_hasta).slice(0, 10) } : r;
+      }).map((p: any) => {
         // Solo los productos con presentaciones llevan la lista (el resto queda como siempre).
         const { presentaciones, precios_moneda, ...resto } = p;
         const pres = leerPresentaciones(presentaciones);

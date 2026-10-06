@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-label="Cargador rápido">
+  <rect width="600" height="600" fill="#e9eef7"/>
+  <circle cx="300" cy="300" r="250" fill="#dbe6ff"/>
+  <rect x="215" y="190" width="170" height="200" rx="24" fill="#0f172a"/>
+  <rect x="250" y="140" width="22" height="60" rx="6" fill="#64748b"/>
+  <rect x="328" y="140" width="22" height="60" rx="6" fill="#64748b"/>
+  <path d="M312 232l-46 74h38l-12 58 54-82h-38Z" fill="#60a5fa"/>
+  <path d="M300 390v70c0 30 40 40 70 40h60" fill="none" stroke="#334155" stroke-width="14" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-label="Audífonos">
+  <rect width="600" height="600" fill="#e9eef7"/>
+  <circle cx="300" cy="300" r="250" fill="#dbe6ff"/>
+  <path d="M170 360V300a130 130 0 0 1 260 0v60" fill="none" stroke="#0f172a" stroke-width="26" stroke-linecap="round"/>
+  <rect x="130" y="320" width="76" height="150" rx="34" fill="#2563eb"/>
+  <rect x="394" y="320" width="76" height="150" rx="34" fill="#2563eb"/>
+  <rect x="148" y="346" width="40" height="98" rx="20" fill="#1e3a8a"/>
+  <rect x="412" y="346" width="40" height="98" rx="20" fill="#1e3a8a"/>
+</svg>
