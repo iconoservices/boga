@@ -35,7 +35,7 @@ export const RUTAS_PLANTILLA: Record<string, RutasPlantilla> = {
   menudirecto: { inicial: 'menu', secciones: { pedidos, contacto } },
   detalles: { inicial: 'menu', secciones: { pedidos, contacto } },
   flores: { inicial: 'menu', secciones: { pedidos, contacto } },
-  bazar: { inicial: 'menu', secciones: { pedidos, contacto } },
+  bazar: { inicial: 'menu', secciones: { catalogo: { titulo: 'Catálogo' }, pedidos, contacto } },
   tecnologia: { inicial: 'home', secciones: { catalogo: { titulo: 'Catálogo' }, pedidos, contacto } },
   veterinaria: {
     inicial: 'home',

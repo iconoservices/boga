@@ -176,7 +176,9 @@ export default function TecnologiaTemplate({ store, initialProductId, initialTab
   // La búsqueda ignora mayúsculas y acentos ("audifonos" encuentra "Audífonos").
   const sinAcentos = (x: string) => x.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
   const q = sinAcentos(busqueda.trim());
-  const resultados = c.filtered.filter((p) => !q || sinAcentos(`${p.name} ${p.desc}`).includes(q));
+  // Busca en el nombre, la descripción y el nombre de la categoría del producto.
+  const nombreCategoria = (id: string) => c.categoryTabs.find((x) => x.id === id)?.label ?? '';
+  const resultados = c.filtered.filter((p) => !q || sinAcentos(`${p.name} ${p.desc} ${nombreCategoria(p.category)}`).includes(q));
   const categorias = c.categoryTabs.filter((x) => x.id !== 'all' && x.id !== '__combos__');
   const hayPortada = store.heroImage !== PORTADA_DE_FABRICA || store.demoDePlantilla;
 

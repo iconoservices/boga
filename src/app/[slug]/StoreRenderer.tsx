@@ -60,6 +60,18 @@ export default function StoreRenderer({ store: initialStore, initialProductId, i
     setStore(initialStore);
   }, [initialStore]);
 
+  // Mensaje para quien abre la consola del navegador en una tienda (desarrolladores, curiosos, otros comercios):
+  // dice con qué está hecha y lleva a BogaHub. Es solo un texto; no hace nada más. No sale en vistas previas ni dentro del admin.
+  useEffect(() => {
+    if (store.demoDePlantilla || window.parent !== window) return;
+    console.log(
+      '%cBogaHub%c Esta tienda está hecha con BogaHub. ¿Quieres la tuya? https://bogahub.app/negocios?ref=consola',
+      'background:#B8130E;color:#fff;font-weight:900;padding:2px 8px;border-radius:4px',
+      'font-size:12px;font-weight:600',
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Asegurar que dentro de una tienda o preview no se muestre el marco/chat de BogaHub
   useEffect(() => {
     document.documentElement.dataset.tienda = '1';
