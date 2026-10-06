@@ -239,6 +239,8 @@ html[data-tienda] aside[aria-label="Plaza BogaHub"] { display: none !important; 
 }
 .boga-splash--out { opacity: 0; pointer-events: none; }
 html[data-tienda] .boga-splash:not(.boga-splash--tienda) { display: none; }
+/* App instalada (PWA): el sistema ya muestra su propio splash al abrir (fondo e ícono del manifiesto: ver app/manifest.json/route.ts), así que el nuestro no se repite. */
+@media (display-mode: standalone) { .boga-splash { display: none !important; } }
 .boga-splash__box {
   position: relative;
   width: 136px;
