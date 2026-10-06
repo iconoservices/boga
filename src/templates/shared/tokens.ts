@@ -1,3 +1,4 @@
+import { formatearPrecio } from '@/lib/monedas';
 /**
  * Escalas de diseño compartidas por las plantillas de comida.
  *
@@ -22,7 +23,8 @@ export const ICON = {
   xl: 'text-[32px]',
 } as const;
 
-export const soles = (n: number) => `S/ ${n.toFixed(2)}`;
+// Precio para mostrar: en soles, o convertido ("≈ US$ 8.10") si el cliente eligió otra moneda (lib/monedas.ts).
+export const soles = (n: number) => formatearPrecio(n);
 
 /** Un servicio o un producto sin precio no va al carrito: se consulta por WhatsApp. */
 export const soloConsulta = (p: { esServicio?: boolean; sinPrecio?: boolean }) => p.esServicio === true || p.sinPrecio === true;

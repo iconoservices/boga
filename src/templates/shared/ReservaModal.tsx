@@ -6,6 +6,7 @@ import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 import { HORAS_RESERVA, horaLegible } from '@/lib/reservas';
 import { hoyLima } from '@/lib/fechaLima';
 import { TXT, ICON, soles, type Producto } from './tokens';
+import { formatearSoles } from '@/lib/monedas';
 
 /**
  * Reservar un servicio: elige servicio, fecha y hora, deja su nombre y teléfono.
@@ -101,7 +102,7 @@ export default function ReservaModal({
       `-------------------------\n` +
       (codigo ? `*Código:* ${codigo}\n` : '') +
       `*Servicio:* ${servicio.name}\n` +
-      (servicio.price > 0 ? `*Precio:* ${soles(servicio.price)}\n` : '') +
+      (servicio.price > 0 ? `*Precio:* ${formatearSoles(servicio.price)}\n` : '') +
       `*Fecha:* ${fecha}\n` +
       `*Hora:* ${horaLegible(hora)}\n` +
       `*Cliente:* ${nombre}\n` +

@@ -29,6 +29,7 @@ import CategoriasTab from '@/components/admin/CategoriasTab';
 import HistorialStock from '@/components/admin/HistorialStock';
 import LoyverseSyncModal from '@/components/admin/LoyverseSyncModal';
 import MiPlan from '@/components/admin/MiPlan';
+import { MONEDAS_SUGERIDAS, normalizarMonedas } from '@/lib/monedas';
 import CobroOnline from '@/components/admin/CobroOnline';
 import { COLS_OFERTA, precioOfertaVigente, porcentajeOferta } from '@/lib/ofertas';
 import { COL_PRESENTACIONES, presentacionesSugeridas, textosPresentacion, leerPresentaciones, precioDesde, tipoPresentacionDe, UNIDADES_DE_MEDIDA, completarMedida, ordenarPresentaciones, type ModoMedida } from '@/lib/presentaciones';
@@ -427,7 +428,7 @@ function AdminDashboard({ user }: { user: User }) {
   const [isStoreEditorOpen, setIsStoreEditorOpen] = useState(false);
   const [editingStoreSlug, setEditingStoreSlug] = useState<string | null>(null);
   const [isStoreSaving, setIsStoreSaving] = useState(false);
-  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '', show_demo_products: false, hide_hero_text: false, zona: '', direccion: '', horario: '', rating: '', metodos_pago: [] as string[], facebook: '', instagram: '', tiktok: '', latitud: null as number | null, longitud: null as number | null, mostrar_ubicacion: false, entrega: 'ambos' as 'delivery' | 'recojo' | 'ambos', perfil_empresa: {} as PerfilEmpresa });
+  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '', show_demo_products: false, hide_hero_text: false, zona: '', direccion: '', horario: '', rating: '', metodos_pago: [] as string[], monedas: [] as { codigo: string; simbolo: string; tasa: string }[], facebook: '', instagram: '', tiktok: '', latitud: null as number | null, longitud: null as number | null, mostrar_ubicacion: false, entrega: 'ambos' as 'delivery' | 'recojo' | 'ambos', perfil_empresa: {} as PerfilEmpresa });
   // Constructor de horario a golpe de clic: arma el texto de storeForm.horario a partir de los días
   // y la hora elegidos, en vez de que el dueño tenga que escribirlo a mano. El campo de texto sigue
   // ahí para ajustarlo o escribir algo distinto (ej. "Cerramos los feriados").
@@ -814,6 +815,7 @@ function AdminDashboard({ user }: { user: User }) {
       horario: dbData?.horario || config?.horario || '',
       rating: dbData?.rating != null ? String(dbData.rating) : (config?.rating != null ? String(config.rating) : ''),
       metodos_pago: dbData?.metodos_pago || config?.metodosPago || [],
+      monedas: normalizarMonedas(dbData?.monedas).map((m) => ({ ...m, tasa: String(m.tasa) })),
       facebook: dbData?.facebook || config?.facebook || '',
       instagram: dbData?.instagram || config?.instagram || '',
       tiktok: dbData?.tiktok || config?.tiktok || '',
@@ -895,6 +897,12 @@ function AdminDashboard({ user }: { user: User }) {
         horario: storeForm.horario || null,
         rating: storeForm.rating !== '' ? Number(storeForm.rating) : null,
         metodos_pago: storeForm.metodos_pago.length ? storeForm.metodos_pago : null,
+        // Solo se manda si hay monedas válidas (o si tenía y las quitó): así, sin la columna en la base, no sale el aviso de "no se guardó" en tiendas que no usan monedas.
+        ...(() => {
+          const v = normalizarMonedas(storeForm.monedas.map((m) => ({ ...m, tasa: Number(String(m.tasa).replace(',', '.')) })));
+          const antes = dbStores.find((x: any) => x.slug === editingStoreSlug)?.monedas;
+          return v.length || antes != null ? { monedas: v.length ? v : null } : {};
+        })(),
         entrega: storeForm.entrega,
         facebook: storeForm.facebook || null,
         instagram: storeForm.instagram || null,
@@ -939,7 +947,7 @@ function AdminDashboard({ user }: { user: User }) {
       // en vez de perder todo el guardado. Paso exactamente esto con `whatsapp`:
       // el panel quedo sin poder guardar NADA de ninguna tienda hasta correr la
       // migracion. Columnas opcionales porque llegaron despues del lanzamiento.
-      const columnasOpcionales = ['show_demo_products', 'hide_hero_text', 'zona', 'direccion', 'horario', 'rating', 'metodos_pago', 'categories', 'facebook', 'instagram', 'tiktok', 'latitud', 'longitud', 'mostrar_ubicacion', 'perfil_empresa'];
+      const columnasOpcionales = ['show_demo_products', 'hide_hero_text', 'zona', 'direccion', 'horario', 'rating', 'metodos_pago', 'categories', 'facebook', 'instagram', 'tiktok', 'latitud', 'longitud', 'mostrar_ubicacion', 'perfil_empresa', 'monedas'];
       const columnasFaltantes: string[] = [];
       let faltante = columnasOpcionales.find((col) => col in upsertData && new RegExp(col).test(error?.message || ''));
       while (error && faltante) {
@@ -4031,6 +4039,58 @@ function AdminDashboard({ user }: { user: User }) {
                 </div>
                 {storeForm.metodos_pago.length === 0 && (
                   <p className="text-xs text-gray-400 mt-2">Si no eliges ninguno, tu tienda muestra solo Efectivo.</p>
+                )}
+
+                <label className="block text-sm font-bold text-gray-700 mt-6 mb-1">Monedas para tus clientes</label>
+                <p className="text-xs text-gray-500 mb-3">
+                  Tus precios siguen en soles. Si activas una moneda, tu cliente puede ver los precios convertidos (con «≈») tocando un selector en tu tienda.
+                  Tú escribes el tipo de cambio. El pedido y el cobro siguen siendo en soles.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {MONEDAS_SUGERIDAS.map((m) => {
+                    const activa = storeForm.monedas.some((x) => x.codigo === m.codigo);
+                    return (
+                      <button
+                        key={m.codigo}
+                        type="button"
+                        onClick={() => setStoreForm({
+                          ...storeForm,
+                          monedas: activa
+                            ? storeForm.monedas.filter((x) => x.codigo !== m.codigo)
+                            : [...storeForm.monedas, { codigo: m.codigo, simbolo: m.simbolo, tasa: '' }],
+                        })}
+                        className={`px-3 py-2 rounded-full border-2 text-xs font-bold transition-all ${activa ? 'border-[#0058be] bg-[#0058be]/10 text-[#0058be]' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'}`}
+                      >
+                        {activa && <span className="material-symbols-outlined text-[14px] align-middle mr-0.5">check</span>}
+                        {m.simbolo} · {m.nombre}
+                      </button>
+                    );
+                  })}
+                </div>
+                {storeForm.monedas.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {storeForm.monedas.map((m, i) => (
+                      <div key={m.codigo} className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-bold text-gray-700 w-28">1 {m.simbolo} =</span>
+                        <span className="text-sm font-bold text-gray-500">S/</span>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={m.tasa}
+                          onChange={(e) => setStoreForm({
+                            ...storeForm,
+                            monedas: storeForm.monedas.map((x, j) => (j === i ? { ...x, tasa: e.target.value } : x)),
+                          })}
+                          placeholder="ej. 3.70"
+                          className="w-28 px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0058be]"
+                        />
+                        {!(Number(String(m.tasa).replace(',', '.')) > 0) && (
+                          <span className="text-xs text-[#8c0009] font-semibold">Escribe cuántos soles vale 1 {m.simbolo}; sin eso no se muestra.</span>
+                        )}
+                      </div>
+                    ))}
+                    <p className="text-xs text-gray-400">Revisa tu cambio de vez en cuando: no se actualiza solo.</p>
+                  </div>
                 )}
 
                 <label className="block text-sm font-bold text-gray-700 mt-6 mb-1">¿Cómo entregas tus pedidos?</label>

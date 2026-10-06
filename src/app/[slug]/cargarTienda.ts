@@ -1,4 +1,5 @@
 import { normalizarPerfilEmpresa } from '@/lib/perfilEmpresa';
+import { normalizarMonedas } from '@/lib/monedas';
 import { getTemplate } from '@/lib/templates.config';
 import type { StoreTheme } from '@/lib/templates.config';
 import { temaDesdePaleta } from '@/lib/paleta';
@@ -97,6 +98,7 @@ async function cargarTienda(slug: string) {
         horario: dbStore.horario || undefined,
         rating: dbStore.rating ?? undefined,
         metodosPago: dbStore.metodos_pago || undefined,
+        monedas: normalizarMonedas(dbStore.monedas),
         entrega: (dbStore.entrega === 'delivery' || dbStore.entrega === 'recojo' ? dbStore.entrega : 'ambos') as 'delivery' | 'recojo' | 'ambos',
         facebook: dbStore.facebook || undefined,
         instagram: dbStore.instagram || undefined,

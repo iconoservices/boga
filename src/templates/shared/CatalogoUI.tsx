@@ -7,6 +7,8 @@ import type { StoreTheme } from '@/lib/templates.config';
 import { ahorroPorCantidad, type Presentacion } from '@/lib/presentaciones';
 import { TXT, ICON, soles, soloConsulta, type Producto, type Categoria } from './tokens';
 import { AddButton, CartBadge, EVENTO_VER_PEDIDO } from './AddFeedback';
+import { formatearSoles } from '@/lib/monedas';
+import { useMonedaActiva } from '@/lib/useMoneda';
 
 /* ════════════════════════════════════════════
    CHIPS DE CATEGORIA
@@ -596,6 +598,7 @@ export function CartPanel({
   /** Cómo entrega la tienda: 'ambos' deja elegir (de siempre); 'delivery'/'recojo' fuerza esa sola opción y esconde el selector. */
   entregaDisponible?: 'delivery' | 'recojo' | 'ambos';
 }) {
+  const monedaActiva = useMonedaActiva();
   const [pagando, setPagando] = React.useState(false);
   // «Usar mi ubicación»: en Pucallpa muchas direcciones son «jirón tal, frente al colegio»; con el punto del GPS el repartidor llega.
   // Se agrega a la dirección un enlace de Google Maps (la tienda lo abre con un toque). Solo se envía a la tienda, al confirmar.
@@ -747,6 +750,11 @@ export function CartPanel({
             <span className={`font-bold ${TXT.small} uppercase`} style={{ color: t.onSurfaceVariant }}>Total</span>
             <span className={`font-black ${TXT.title}`} style={{ color: t.primary }}>{soles(subtotal)}</span>
           </div>
+          {monedaActiva && (
+            <p className={`${TXT.micro} text-center -mt-2`} style={{ color: t.onSurfaceVariant }}>
+              Precio aproximado. Tu pedido y el cobro son en soles: {formatearSoles(subtotal)}.
+            </p>
+          )}
 
           <div className="space-y-3 pt-1">
             <div>

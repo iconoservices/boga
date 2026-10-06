@@ -1965,3 +1965,10 @@ USING (public.is_superadmin() OR public.es_admin_de(store));
 CREATE POLICY "reservas: dueño o superadmin actualiza"
 ON public.reservas FOR UPDATE
 USING (public.is_superadmin() OR public.es_admin_de(store));
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Monedas de la tienda: el cliente ve los precios en dólares, pesos mexicanos, etc. con el cambio que puso el dueño.
+-- Los productos siguen en soles (price); esto es solo para mostrar. Formato: [{"codigo":"USD","simbolo":"US$","tasa":3.7}]
+-- (tasa = cuántos soles vale 1 unidad). Sin correr esto la tienda funciona igual: el panel avisa que "monedas" no se guardó.
+-- ─────────────────────────────────────────────────────────────────────────────
+ALTER TABLE stores ADD COLUMN IF NOT EXISTS monedas JSONB;

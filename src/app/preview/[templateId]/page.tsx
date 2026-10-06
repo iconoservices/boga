@@ -57,6 +57,11 @@ export default async function PreviewPage({ params }: Props) {
     demoDePlantilla: true,
     // Aqui el demo ES el punto: es la vitrina de la plantilla (no es una tienda real).
     showDemoProducts: true,
+    // Vitrina: se muestra el selector de moneda con cambios de ejemplo (una tienda real usa los que escribe su dueño).
+    monedas: [
+      { codigo: 'USD', simbolo: 'US$', tasa: 3.7 },
+      { codigo: 'MXN', simbolo: 'MX$', tasa: 0.19 },
+    ],
   };
 
   return <StoreRenderer store={base} />;

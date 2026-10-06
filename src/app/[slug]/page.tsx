@@ -97,6 +97,7 @@ export default async function StorePage({ params, searchParams }: Props) {
         horario: undefined,
         rating: undefined,
         metodosPago: undefined,
+        monedas: [],
         entrega: 'ambos',
         facebook: undefined,
         instagram: undefined,

@@ -1,4 +1,5 @@
 import type { StoreTheme } from '@/lib/templates.config';
+import type { Moneda } from '@/lib/monedas';
 export type { StoreTheme } from '@/lib/templates.config';
 
 export const BOGA_DEFAULT_ICON = '/pwa-icon.png';
@@ -30,6 +31,8 @@ export interface StoreConfig {
   rating?: number;
   /** Metodos que el comercio acepta de verdad (ninguno se procesa en la app: el pago se coordina por WhatsApp). Si no cargo ninguno, se asume solo Efectivo. */
   metodosPago?: string[];
+  /** Otras monedas en las que el cliente puede ver los precios (con el cambio que puso el dueño). Los precios se guardan en soles. */
+  monedas?: Moneda[];
   /** Cómo entrega sus pedidos: solo delivery, solo recojo en el local, o deja elegir al cliente. Sin configurar, se asume 'ambos'. */
   entrega?: 'delivery' | 'recojo' | 'ambos';
   /** Links a sus redes: opcionales, cada uno se oculta si no lo cargo. */
