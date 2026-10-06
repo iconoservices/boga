@@ -376,6 +376,22 @@ export default function AcademiaTemplate({ store, initialProductId, initialTab }
         cartCount={0}
       />
 
+      {/* WhatsApp flotante: en móvil va encima de la barra inferior y solo con el icono; en escritorio se despliega al pasar el mouse. */}
+      {c.whatsappVisible && (
+        <button
+          onClick={() => inscribirme()}
+          aria-label="Inscríbete por WhatsApp"
+          title="Inscríbete por WhatsApp"
+          className="group flex fixed bottom-20 md:bottom-6 right-4 md:right-6 z-50 items-center h-14 pl-[14px] pr-[14px] rounded-full shadow-xl active:scale-95 transition-all"
+          style={{ background: '#25D366', color: '#ffffff' }}
+        >
+          <span className={`${TXT.body} font-extrabold whitespace-nowrap max-w-0 opacity-0 overflow-hidden transition-all duration-300 md:group-hover:max-w-[200px] md:group-hover:opacity-100 md:group-hover:mr-3 md:group-focus-visible:max-w-[200px] md:group-focus-visible:opacity-100 md:group-focus-visible:mr-3`}>
+            Inscríbete por WhatsApp
+          </span>
+          <IconoWhatsApp className="w-7 h-7" />
+        </button>
+      )}
+
       <ProductModal
         t={t}
         producto={c.detalle}
