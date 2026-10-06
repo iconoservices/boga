@@ -33,6 +33,7 @@ import { MONEDAS_SUGERIDAS, ejemploDeCambio, normalizarMonedas, precioSugerido }
 import { COL_PRECIOS_MONEDA, normalizarPreciosMoneda, type PreciosMoneda } from '@/lib/preciosMoneda';
 import { useCambioDeHoy } from '@/lib/useCambio';
 import CobroOnline from '@/components/admin/CobroOnline';
+import { normalizarIgv } from '@/lib/igv';
 import { COLS_OFERTA, precioOfertaVigente, porcentajeOferta } from '@/lib/ofertas';
 import { COL_PRESENTACIONES, presentacionesSugeridas, textosPresentacion, leerPresentaciones, precioDesde, tipoPresentacionDe, UNIDADES_DE_MEDIDA, completarMedida, ordenarPresentaciones, type ModoMedida } from '@/lib/presentaciones';
 
@@ -59,6 +60,8 @@ interface Product {
   es_servicio?: boolean | null;
   /** true = es un combo o paquete promocional con sello propio y presencia en Promociones. */
   es_combo?: boolean | null;
+  /** IGV incluido en el precio de este producto: 'con' | 'sin'; vacío = lo que diga la tienda. Ver lib/igv.ts. */
+  igv?: string | null;
   /** Precio del producto en otras monedas, escrito por el dueño: {"USD": 10, "MXN": 180}. El precio normal (price) es en soles. */
   precios_moneda?: PreciosMoneda | null;
 }
@@ -288,6 +291,7 @@ function AdminDashboard({ user }: { user: User }) {
           perfilEmpresa: normalizarPerfilEmpresa(s.perfil_empresa) ?? undefined,
           metodosPago: s.metodos_pago || undefined,
           monedas: normalizarMonedas(s.monedas),
+          igvIncluido: s.igv_incluido === true,
           facebook: s.facebook || undefined,
           instagram: s.instagram || undefined,
           tiktok: s.tiktok || undefined,
@@ -434,7 +438,7 @@ function AdminDashboard({ user }: { user: User }) {
   const [isStoreEditorOpen, setIsStoreEditorOpen] = useState(false);
   const [editingStoreSlug, setEditingStoreSlug] = useState<string | null>(null);
   const [isStoreSaving, setIsStoreSaving] = useState(false);
-  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '', show_demo_products: false, hide_hero_text: false, zona: '', direccion: '', horario: '', rating: '', metodos_pago: [] as string[], monedas: [] as { codigo: string; simbolo: string; tasa: string }[], facebook: '', instagram: '', tiktok: '', latitud: null as number | null, longitud: null as number | null, mostrar_ubicacion: false, entrega: 'ambos' as 'delivery' | 'recojo' | 'ambos', perfil_empresa: {} as PerfilEmpresa });
+  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '', show_demo_products: false, hide_hero_text: false, igv_incluido: false, zona: '', direccion: '', horario: '', rating: '', metodos_pago: [] as string[], monedas: [] as { codigo: string; simbolo: string; tasa: string }[], facebook: '', instagram: '', tiktok: '', latitud: null as number | null, longitud: null as number | null, mostrar_ubicacion: false, entrega: 'ambos' as 'delivery' | 'recojo' | 'ambos', perfil_empresa: {} as PerfilEmpresa });
   // Constructor de horario a golpe de clic: arma el texto de storeForm.horario a partir de los días
   // y la hora elegidos, en vez de que el dueño tenga que escribirlo a mano. El campo de texto sigue
   // ahí para ajustarlo o escribir algo distinto (ej. "Cerramos los feriados").
@@ -486,6 +490,7 @@ function AdminDashboard({ user }: { user: User }) {
     ubicacion: '',
     precioOferta: '',
     ofertaHasta: '',
+    igv: '' as '' | 'con' | 'sin',
     presentaciones: [] as { label: string; price: string; promo?: boolean; preciosMoneda?: Record<string, string> }[],
     preciosMoneda: {} as Record<string, string>,
     esServicio: false,
@@ -540,6 +545,7 @@ function AdminDashboard({ user }: { user: User }) {
       ubicacion: '',
       precioOferta: '',
       ofertaHasta: '',
+      igv: '',
       presentaciones: [],
       preciosMoneda: {},
       esServicio: false,
@@ -605,9 +611,11 @@ function AdminDashboard({ user }: { user: User }) {
     const base = 'id,name,store,price,category,subcategory,stock,status,image,description,created_at';
     let { data, error } = await supabase
       .from('products')
-      .select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio,es_combo,${COL_PRECIOS_MONEDA}`)
+      .select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio,es_combo,${COL_PRECIOS_MONEDA},igv`)
       .in('store', slugs)
       .order('created_at', { ascending: false });
+    // Si el SQL de "IGV incluido" aún no se corrió, se pide sin esa columna.
+    if (error) ({ data, error } = await supabase.from('products').select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio,es_combo,${COL_PRECIOS_MONEDA}`).in('store', slugs).order('created_at', { ascending: false }) as any);
     // Si el SQL de "precios en otras monedas" aún no se corrió, se pide sin esa columna.
     if (error) ({ data, error } = await supabase.from('products').select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio,es_combo`).in('store', slugs).order('created_at', { ascending: false }) as any);
     // Si el SQL de "es_combo" aún no se corrió, se pide sin esa columna.
@@ -843,6 +851,7 @@ function AdminDashboard({ user }: { user: User }) {
       whatsapp: dbData?.whatsapp || '',
       show_demo_products: dbData?.show_demo_products ?? false,
       hide_hero_text: dbData?.hide_hero_text === true || config?.hideHeroText === true,
+      igv_incluido: dbData?.igv_incluido === true,
       zona: dbData?.zona || config?.zona || '',
       direccion: dbData?.direccion || config?.direccion || '',
       horario: dbData?.horario || config?.horario || '',
@@ -925,6 +934,8 @@ function AdminDashboard({ user }: { user: User }) {
         whatsapp: storeForm.whatsapp || null,
         show_demo_products: storeForm.show_demo_products,
         hide_hero_text: storeForm.hide_hero_text,
+        // Solo se manda si está marcado o ya lo tenía (para poder destildarlo): sin el SQL, guardar una tienda que no lo usa no avisa nada.
+        ...(storeForm.igv_incluido || dbStores.find((x: any) => x.slug === editingStoreSlug)?.igv_incluido === true ? { igv_incluido: storeForm.igv_incluido } : {}),
         zona: storeForm.zona || null,
         direccion: storeForm.direccion || null,
         horario: storeForm.horario || null,
@@ -980,7 +991,7 @@ function AdminDashboard({ user }: { user: User }) {
       // en vez de perder todo el guardado. Paso exactamente esto con `whatsapp`:
       // el panel quedo sin poder guardar NADA de ninguna tienda hasta correr la
       // migracion. Columnas opcionales porque llegaron despues del lanzamiento.
-      const columnasOpcionales = ['show_demo_products', 'hide_hero_text', 'zona', 'direccion', 'horario', 'rating', 'metodos_pago', 'categories', 'facebook', 'instagram', 'tiktok', 'latitud', 'longitud', 'mostrar_ubicacion', 'perfil_empresa', 'monedas'];
+      const columnasOpcionales = ['igv_incluido', 'show_demo_products', 'hide_hero_text', 'zona', 'direccion', 'horario', 'rating', 'metodos_pago', 'categories', 'facebook', 'instagram', 'tiktok', 'latitud', 'longitud', 'mostrar_ubicacion', 'perfil_empresa', 'monedas'];
       const columnasFaltantes: string[] = [];
       let faltante = columnasOpcionales.find((col) => col in upsertData && new RegExp(col).test(error?.message || ''));
       while (error && faltante) {
@@ -1234,6 +1245,10 @@ function AdminDashboard({ user }: { user: User }) {
       const camposMoneda = hayPreciosMon || Object.keys(normalizarPreciosMoneda(productoPrevio?.precios_moneda)).length > 0
         ? { [COL_PRECIOS_MONEDA]: hayPreciosMon ? preciosMon : null }
         : {};
+      // IGV por producto: solo se manda si eligió 'con'/'sin' o si el producto ya tenía uno (para poder volver a "según la tienda").
+      const camposIgv = newProduct.igv || productoPrevio?.igv
+        ? { igv: newProduct.igv || null }
+        : {};
       // Igual que arriba: la columna solo se manda si está marcado o si el producto ya la tenía (para poder destildarla).
       const camposServicio = newProduct.esServicio || productoPrevio?.es_servicio
         ? { es_servicio: newProduct.esServicio }
@@ -1263,6 +1278,7 @@ function AdminDashboard({ user }: { user: User }) {
           ...camposServicio,
           ...camposCombo,
           ...camposFotos,
+          ...camposIgv,
           // Sin módulo de inventario no se toca el stock guardado (por si lo vuelven a prender).
           ...(tiendaTiene(newProduct.store, 'inventario') ? { stock: finalStock } : {}),
           status: finalStatus,
@@ -1288,6 +1304,7 @@ function AdminDashboard({ user }: { user: User }) {
           ...camposServicio,
           ...camposCombo,
           ...camposFotos,
+          ...camposIgv,
         } as Product));
 
         // Con inventario, un cambio de stock hecho a mano queda como "ajuste" en el historial.
@@ -1321,6 +1338,7 @@ function AdminDashboard({ user }: { user: User }) {
             ...camposServicio,
             ...camposCombo,
             ...camposFotos,
+            ...camposIgv,
             stock: finalStock,
             status: finalStatus,
           }
@@ -1374,6 +1392,7 @@ function AdminDashboard({ user }: { user: User }) {
       stockQuantity: hasFixedStock ? product.stock.toString() : '',
       status: product.status || 'Activo',
       ubicacion: (product.description || '').match(RE_MAPS)?.[0] ?? '',
+      igv: normalizarIgv(product.igv) ?? '',
       precioOferta: product.precio_oferta ? String(product.precio_oferta) : '',
       ofertaHasta: product.oferta_hasta ? product.oferta_hasta.slice(0, 10) : '',
       presentaciones: leerPresentaciones(product.presentaciones).map((x) => ({
@@ -3345,6 +3364,22 @@ function AdminDashboard({ user }: { user: User }) {
                   </div>
                 </div>
 
+                {/* IGV: por defecto sigue a la tienda (Personaliza tu tienda → «Mis precios incluyen IGV»); aquí se puede salir de eso. */}
+                {!formEmpresa && !precioOpcional && (
+                <div className="mt-5">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">IGV <span className="font-medium text-gray-400">· aviso junto al precio</span></label>
+                  <select
+                    value={newProduct.igv}
+                    onChange={(e) => setNewProduct({ ...newProduct, igv: e.target.value as '' | 'con' | 'sin' })}
+                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black transition-all"
+                  >
+                    <option value="">Según la tienda ({(stores as any)[newProduct.store]?.igvIncluido ? 'con IGV incluido' : 'sin aviso de IGV'})</option>
+                    <option value="con">Precio con IGV incluido</option>
+                    <option value="sin">Sin aviso de IGV</option>
+                  </select>
+                </div>
+                )}
+
                 {/* Oferta: aparece en tu tienda con el precio anterior tachado y en la página Promos de BogaHub */}
                 {!formEmpresa && newProduct.presentaciones.length === 0 && (
                 <div className="mt-5 rounded-xl border border-dashed border-primary/40 bg-primary/5 p-4">
@@ -4176,6 +4211,17 @@ function AdminDashboard({ user }: { user: User }) {
               </div>
 
               {!editEmpresa && (<>
+              {/* IGV: un solo ajuste para todo el catálogo; cada producto puede salirse de él. */}
+              <div className="scroll-mt-4">
+                <label className="flex items-start gap-3 cursor-pointer p-4 rounded-xl border border-gray-200 bg-white">
+                  <input type="checkbox" checked={storeForm.igv_incluido} onChange={e => setStoreForm({ ...storeForm, igv_incluido: e.target.checked })} className="mt-0.5 w-4 h-4 rounded text-black focus:ring-black border-gray-300 accent-black" />
+                  <span>
+                    <span className="block text-sm font-bold text-gray-700">Mis precios incluyen IGV</span>
+                    <span className="block text-xs text-gray-500 mt-0.5">Tu tienda muestra «IGV incluido» junto a cada precio, en el carrito y en el pedido por WhatsApp. En cada producto puedes quitarlo o ponerlo solo a ese.</span>
+                  </span>
+                </label>
+              </div>
+
               {/* Metodos de pago: solo informativos, el pago se coordina por WhatsApp */}
               <div id="editor-pagos" className="scroll-mt-4">
                 <label className="block text-sm font-bold text-gray-700 mb-1">Métodos de Pago que Aceptas</label>

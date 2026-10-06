@@ -10,6 +10,12 @@ import { TXT, ICON, soles, soloConsulta, type Producto, type Categoria } from '.
 import { AddButton, CartBadge, EVENTO_VER_PEDIDO } from './AddFeedback';
 import { useFavoritosTienda } from '@/context/FavoritosTiendaContext';
 
+/** Aviso chico "IGV incluido" junto a un precio. Solo si el producto lo incluye (lo marca la tienda o el producto) y muestra precio. */
+export function IgvTag({ t, p, className = '' }: { t: StoreTheme; p: Pick<Producto, 'conIgv' | 'sinPrecio'>; className?: string }) {
+  if (!p.conIgv || p.sinPrecio) return null;
+  return <span className={`block ${TXT.micro} font-semibold ${className}`} style={{ color: t.onSurfaceVariant }}>IGV incluido</span>;
+}
+
 /** Corazón de favoritos: guarda el producto en la cuenta del cliente (sin sesión le pide entrar). No se dibuja fuera de una tienda. */
 export function BotonFavorito({ producto, className = '', grande = false }: { producto: Producto; className?: string; grande?: boolean }) {
   const fav = useFavoritosTienda();
@@ -221,6 +227,7 @@ export function ProductGrid({
                   <span className={`block ${TXT.micro} font-medium line-through`} style={{ color: t.onSurfaceVariant }}>{soles(product.priceAnterior)}</span>
                 )}
                 <OtrosPrecios producto={product} t={t} className={TXT.micro} />
+                <IgvTag t={t} p={product} />
               </span>
               {/* Un servicio no se "agrega": se consulta desde su ficha (el tap en la tarjeta ya la abre). */}
               {!soloConsulta(product) && (
@@ -341,6 +348,7 @@ export function CombosCarrusel({
                       </span>
                     )}
                     <OtrosPrecios producto={product} t={t} className={TXT.micro} />
+                <IgvTag t={t} p={product} />
                   </div>
                   {!soloConsulta(product) && (
                     <AddButton t={t} nombre={product.name} onAdd={() => onAdd(product)} />
@@ -573,6 +581,7 @@ export function ProductModal({
             {/* Precio destacado (solo escritorio: en celular el precio va en la barra de abajo). */}
             <div className="hidden md:flex items-baseline gap-3 flex-wrap mt-4 pt-4 border-t" style={{ borderColor: `${t.outlineVariant}80` }}>
               <span className="text-4xl font-black" style={{ color: t.primary }}>{precioTexto}</span>
+              <IgvTag t={t} p={producto} className="self-center" />
               {enOferta && (
                 <>
                   <span className="text-lg font-medium line-through" style={{ color: t.onSurfaceVariant }}>{soles(producto.priceAnterior!)}</span>
@@ -652,6 +661,7 @@ export function ProductModal({
         <div className="w-full max-w-2xl flex items-center justify-between gap-2 sm:gap-4 px-1">
           <span className="font-black text-lg sm:text-xl shrink-0" style={{ color: t.primary }}>
             {precioTexto}
+            {producto.conIgv && !producto.sinPrecio && <span className="block text-[10px] font-semibold leading-none mt-0.5" style={{ color: t.onSurfaceVariant }}>IGV incluido</span>}
             {enOferta && (
               <span className="ml-2 text-sm font-medium line-through" style={{ color: t.onSurfaceVariant }}>{soles(producto.priceAnterior!)}</span>
             )}
@@ -808,7 +818,7 @@ export function CartPanel({
                     )}
                     {l.producto.name}{l.pres ? ` · ${l.pres.label}` : ''}
                   </p>
-                  <p className={TXT.micro} style={{ color: t.onSurfaceVariant }}>{soles(l.precio ?? l.producto.price)} c/u</p>
+                  <p className={TXT.micro} style={{ color: t.onSurfaceVariant }}>{soles(l.precio ?? l.producto.price)} c/u{l.producto.conIgv && !l.producto.sinPrecio ? ' · IGV incluido' : ''}</p>
                 </div>
                 {/* Total y controles apilados: en una sola fila el nombre quedaba en "Pa..." a 375px */}
                 <div className="flex flex-col items-end gap-1.5 shrink-0">
@@ -841,7 +851,10 @@ export function CartPanel({
 
           <div className="p-4 rounded-2xl flex justify-between items-center" style={{ background: t.surfaceContainer }}>
             <span className={`font-bold ${TXT.small} uppercase`} style={{ color: t.onSurfaceVariant }}>Total</span>
-            <span className={`font-black ${TXT.title}`} style={{ color: t.primary }}>{soles(subtotal)}</span>
+            <span className={`font-black ${TXT.title} text-right`} style={{ color: t.primary }}>
+              {soles(subtotal)}
+              {cartItems.length > 0 && cartItems.every((l) => l.producto.conIgv) && <span className={`block ${TXT.micro} font-semibold`} style={{ color: t.onSurfaceVariant }}>IGV incluido</span>}
+            </span>
           </div>
 
           <div className="space-y-3 pt-1">
@@ -1069,6 +1082,7 @@ export function PromoLateral({
           <p className={`font-bold ${TXT.body} leading-tight line-clamp-2`} style={{ color: t.onSurface }}>{p.name}</p>
           <p className="mt-0.5 flex items-baseline gap-1.5">
             <span className={`font-black ${TXT.body}`} style={{ color: t.primary }}>{p.sinPrecio ? 'Consultar precio' : soles(p.price)}</span>
+            {p.conIgv && !p.sinPrecio && <span className={`${TXT.micro} font-semibold`} style={{ color: t.onSurfaceVariant }}>IGV incl.</span>}
             {pct && p.priceAnterior && <span className={`${TXT.micro} line-through`} style={{ color: t.onSurfaceVariant }}>{soles(p.priceAnterior)}</span>}
           </p>
         </div>

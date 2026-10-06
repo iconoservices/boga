@@ -91,6 +91,7 @@ async function cargarTienda(slug: string) {
         logoImage: dbStore.logo_image || undefined,
         whatsapp: dbStore.whatsapp || undefined,
         modulos: dbStore.modulos ?? undefined,
+        igvIncluido: dbStore.igv_incluido === true,
         // Los productos de ejemplo solo salen si alguien los prendió (por defecto apagados).
         showDemoProducts: dbStore.show_demo_products ?? false,
         zona: dbStore.zona || undefined,

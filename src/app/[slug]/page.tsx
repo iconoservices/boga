@@ -91,6 +91,7 @@ export default async function StorePage({ params, searchParams }: Props) {
         logoImage: undefined,
         whatsapp: undefined,
         modulos: undefined,
+        igvIncluido: false,
         showDemoProducts: undefined,
         zona: undefined,
         direccion: undefined,

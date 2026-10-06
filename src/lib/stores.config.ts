@@ -57,6 +57,8 @@ export interface StoreConfig {
   mostrarUbicacion?: boolean;
   /** Módulos prendidos por el superadmin (POS, inventario). Ver src/lib/modulos.ts. */
   modulos?: import('./modulos').Modulos;
+  /** true = los precios de la tienda incluyen IGV (se avisa junto al precio). Cada producto puede salirse de esto. Ver lib/igv.ts. */
+  igvIncluido?: boolean;
   /**
    * Mostrar los productos de ejemplo de la plantilla mientras la tienda esta
    * vacia. Solo aplica si no cargo productos propios (ver lib/demo.ts).

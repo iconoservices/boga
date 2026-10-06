@@ -12,6 +12,7 @@ import { avisarAgregado } from './AddFeedback';
 import { claveLinea, nombreConPresentacion, type Presentacion } from '@/lib/presentaciones';
 import { useDetalleProducto } from './useDetalleProducto';
 import { hoyLima } from '@/lib/fechaLima';
+import { llevaIgv } from '@/lib/igv';
 
 /** AAAA-MM-DD de dentro de N días (hora de Perú). Solo para las demos de plantilla. */
 const diaDentroDe = (dias: number) => {
@@ -81,6 +82,7 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
             preciosMoneda: p.preciosMoneda && Object.keys(p.preciosMoneda).length ? p.preciosMoneda : undefined,
             creado: typeof p.created_at === 'string' ? p.created_at : undefined,
             ofertaHasta: typeof p.oferta_hasta === 'string' ? p.oferta_hasta : undefined,
+            conIgv: llevaIgv(p.igv, store.igvIncluido),
           }))
         : [];
 
@@ -102,6 +104,7 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
             preciosMoneda: p.preciosMoneda,
             ofertaHasta: p.ofertaDias ? diaDentroDe(p.ofertaDias) : undefined,
             sinPrecio: sinPrecioTodo || !(p.price > 0),
+            conIgv: llevaIgv(null, store.igvIncluido),
           }))
         : [];
 
@@ -110,7 +113,7 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
     };
 
     cargar();
-  }, [store.slug, store.template, store.heroImage, demoPermitido, categorias, sinPrecioTodo]);
+  }, [store.slug, store.template, store.heroImage, store.igvIncluido, demoPermitido, categorias, sinPrecioTodo]);
 
   // ── Carrito derivado ──
   const cartItems = useMemo<LineaCarrito[]>(() => {
@@ -197,15 +200,17 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
   };
 
   const confirmarPedido = (datos: { nombre: string; telefono: string; entrega: 'delivery' | 'recojo'; direccion: string }) => {
+    // Aviso de IGV: si todo lo pedido lo incluye va junto al total; si es mixto, se marca solo lo que sí lo incluye.
+    const todoConIgv = cartItems.length > 0 && cartItems.every((l) => l.producto.conIgv);
     const lineas = cartItems
-      .map((l) => `• ${l.qty}x ${l.producto.esCombo ? '🔥 [COMBO] ' : ''}${l.pres ? nombreConPresentacion(l.producto.name, l.pres.label) : l.producto.name} — ${soles(l.precio * l.qty)}`)
+      .map((l) => `• ${l.qty}x ${l.producto.esCombo ? '🔥 [COMBO] ' : ''}${l.pres ? nombreConPresentacion(l.producto.name, l.pres.label) : l.producto.name} — ${soles(l.precio * l.qty)}${!todoConIgv && l.producto.conIgv ? ' (IGV incl.)' : ''}`)
       .join('\n');
     const entregaTexto = datos.entrega === 'delivery'
       ? `Delivery a: ${datos.direccion}`
       : 'Recojo en tienda';
     enviarPedidoPorWhatsApp(
       store,
-      `¡Hola ${store.name}! Soy ${datos.nombre} (${datos.telefono}). Quiero hacer este pedido:\n\n${lineas}\n\nTotal: ${soles(subtotal)}\n\n${entregaTexto}`,
+      `¡Hola ${store.name}! Soy ${datos.nombre} (${datos.telefono}). Quiero hacer este pedido:\n\n${lineas}\n\nTotal: ${soles(subtotal)}${todoConIgv ? ' (IGV incluido)' : ''}\n\n${entregaTexto}`,
       {
         items: cartItems.map((l) => ({ id: l.producto.id, quantity: l.qty, pres: l.pres?.label })),
         cliente: { nombre: datos.nombre, telefono: datos.telefono, entrega: datos.entrega, direccion: datos.direccion },

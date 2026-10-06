@@ -19,7 +19,9 @@ export async function GET(
   // created_at: para "Lo último" en las plantillas que lo muestran.
   const base = 'id,name,description,price,category,subcategory,image,status,created_at';
   // Cada columna extra es opcional: si su SQL aún no se corrió, cae al conjunto anterior.
-  let { data, error } = await supabase.from('products').select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio,es_combo,${COL_PRECIOS_MONEDA}`).eq('store', slug);
+  // Primero con la columna `igv` (IGV incluido por producto); si su SQL aún no se corrió, cae al conjunto de siempre.
+  let { data, error } = await supabase.from('products').select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio,es_combo,${COL_PRECIOS_MONEDA},igv`).eq('store', slug);
+  if (error) ({ data, error } = await supabase.from('products').select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio,es_combo,${COL_PRECIOS_MONEDA}`).eq('store', slug) as any);
   if (error) ({ data, error } = await supabase.from('products').select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio,es_combo`).eq('store', slug) as any);
   if (error) ({ data, error } = await supabase.from('products').select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio`).eq('store', slug) as any);
   if (error) ({ data, error } = await supabase.from('products').select(`${base},${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio`).eq('store', slug) as any);

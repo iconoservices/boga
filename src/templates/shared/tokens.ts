@@ -67,6 +67,8 @@ export interface Producto {
   creado?: string;
   /** Último día de la oferta vigente (AAAA-MM-DD, hora de Perú), si el dueño le puso fecha. */
   ofertaHasta?: string;
+  /** true = su precio incluye IGV (lo marca la tienda o el propio producto; ver lib/igv.ts). */
+  conIgv?: boolean;
 }
 
 export interface Categoria {
