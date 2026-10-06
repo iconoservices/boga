@@ -151,6 +151,13 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `(function(){try{
               var host=window.location.hostname, base=${JSON.stringify(new URL(SITE_URL).host)};
+              // Splash de carga: si ya se vio en esta sesión, se oculta desde el primer instante (sin esto
+              // el HTML del servidor lo muestra un momento hasta que carga React, y parece un parpadeo).
+              var ss=window.sessionStorage, de=document.documentElement;
+              var esSub=host.length>base.length&&host.slice(-(base.length+1))==='.'+base&&host.split('.')[0]!=='www';
+              var slugT=esSub?host.split('.')[0]:window.location.pathname.split('/')[1];
+              if(ss.getItem('boga_splash'))de.dataset.splashBoga='1';
+              if(slugT&&ss.getItem('boga_splash_'+slugT))de.dataset.splashTienda='1';
               // <tienda>.bogahub.app: dentro de la tienda no va nada del "marco" de BogaHub
               // (barra de abajo, pie, barra lateral, chat). Ver .boga-chrome en globals.css.
               if(host.length>base.length&&host.slice(-(base.length+1))==='.'+base&&host.split('.')[0]!=='www'){

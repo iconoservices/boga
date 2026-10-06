@@ -6,6 +6,8 @@ import { RUTAS_DE_BOGAHUB } from '@/lib/rutasBoga';
 
 interface Tienda {
   nombre: string;
+  /** Identifica a la tienda para recordar que ya se vio (el script de layout.tsx usa el mismo nombre). */
+  slug: string;
   logo?: string;
   /** Color de fondo y color de acento: los de la plantilla de la tienda. */
   fondo: string;
@@ -23,7 +25,7 @@ export default function SplashInicial({ tienda }: { tienda?: Tienda }) {
   const esDeBoga = primero === '' || RUTAS_DE_BOGAHUB.has(primero);
   const [fase, setFase] = useState<'visible' | 'saliendo' | 'fuera'>('visible');
   const activo = tienda ? true : esDeBoga;
-  const clave = tienda ? `boga_splash_${tienda.nombre}` : 'boga_splash';
+  const clave = tienda ? `boga_splash_${tienda.slug}` : 'boga_splash';
 
   useEffect(() => {
     if (!activo) return;
@@ -32,16 +34,15 @@ export default function SplashInicial({ tienda }: { tienda?: Tienda }) {
       if (sessionStorage.getItem(clave) || (tienda && window.parent !== window)) { setFase('fuera'); return; }
       sessionStorage.setItem(clave, '1');
     } catch {}
-    const salir = () => setFase('saliendo');
-    // Mínimo ~400 ms para que el logo no parpadee, y espera a que cargue todo.
-    const inicio = Date.now();
-    const listo = () => setTimeout(salir, Math.max(0, 400 - (Date.now() - inicio)));
-    let t: ReturnType<typeof setTimeout> | undefined;
-    if (document.readyState === 'complete') t = listo();
-    else window.addEventListener('load', () => { t = listo(); }, { once: true });
+    const salir = () => setFase((f) => (f === 'visible' ? 'saliendo' : f));
+    // Solo aparece (por CSS) si la carga pasa de ~0,45 s. Si la página ya terminó antes, se quita sin mostrarse nunca;
+    // si ya apareció, se desvanece. `performance.now()` cuenta desde que se pidió la página.
+    const listo = () => (performance.now() < 450 ? setFase('fuera') : salir());
+    if (document.readyState === 'complete') listo();
+    else window.addEventListener('load', listo, { once: true });
     // Tope de seguridad: nunca dejar la pantalla tapada más de 3 s.
     const tope = setTimeout(salir, 3000);
-    return () => { clearTimeout(tope); if (t) clearTimeout(t); };
+    return () => { clearTimeout(tope); window.removeEventListener('load', listo); };
   }, [activo, clave, tienda]);
 
   useEffect(() => {
@@ -68,7 +69,7 @@ export default function SplashInicial({ tienda }: { tienda?: Tienda }) {
         {tienda ? (
           tienda.logo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={tienda.logo} alt="" className="boga-splash__logo" style={{ width: 96, height: 96, objectFit: 'contain' }} />
+            <img src={tienda.logo} alt="" className="boga-splash__logo" style={{ width: 96, height: 96, objectFit: 'contain', borderRadius: 9999, background: '#fff', padding: 8, boxSizing: 'border-box', boxShadow: '0 4px 16px rgba(0,0,0,0.12)' }} />
           ) : (
             <span className="boga-splash__logo" style={{ color: acento, fontWeight: 900, fontSize: 22, textAlign: 'center', padding: '0 16px' }}>{tienda.nombre}</span>
           )
