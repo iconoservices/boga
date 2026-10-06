@@ -236,10 +236,8 @@ html[data-tienda] aside[aria-label="Plaza BogaHub"] { display: none !important; 
   gap: 28px;
   background: #fff;
   transition: opacity 0.4s ease;
-  /* No se ve hasta pasados ~0,45 s: si la página carga rápido, ni aparece. */
-  animation: boga-splash-aparece 0.25s ease 0.45s both;
 }
-.boga-splash--out { animation: none; opacity: 0; pointer-events: none; }
+.boga-splash--out { opacity: 0; pointer-events: none; }
 html[data-tienda] .boga-splash:not(.boga-splash--tienda) { display: none; }
 html[data-splash-boga] #boga-splash, html[data-splash-tienda] #tienda-splash { display: none; }
 .boga-splash__box {
@@ -278,4 +276,3 @@ html[data-splash-boga] #boga-splash, html[data-splash-tienda] #tienda-splash { d
 @keyframes boga-splash-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
 @keyframes boga-splash-gira { to { transform: rotate(360deg); } }
 @keyframes boga-splash-barra { 0% { transform: translateX(-100%); } 100% { transform: translateX(320%); } }
-@keyframes boga-splash-aparece { from { opacity: 0; } to { opacity: 1; } }

@@ -35,9 +35,8 @@ export default function SplashInicial({ tienda }: { tienda?: Tienda }) {
       sessionStorage.setItem(clave, '1');
     } catch {}
     const salir = () => setFase((f) => (f === 'visible' ? 'saliendo' : f));
-    // Solo aparece (por CSS) si la carga pasa de ~0,45 s. Si la página ya terminó antes, se quita sin mostrarse nunca;
-    // si ya apareció, se desvanece. `performance.now()` cuenta desde que se pidió la página.
-    const listo = () => (performance.now() < 450 ? setFase('fuera') : salir());
+    // Está desde el primer instante (viene en el HTML del servidor) y se desvanece cuando la página terminó de cargar.
+    const listo = () => salir();
     if (document.readyState === 'complete') listo();
     else window.addEventListener('load', listo, { once: true });
     // Tope de seguridad: nunca dejar la pantalla tapada más de 3 s.
