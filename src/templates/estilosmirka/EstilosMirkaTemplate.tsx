@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { pedirDatosCliente } from '@/components/pedirDatosCliente';
 import { conMarcaBlanca } from '@/lib/modulos';
 import { StoreConfig } from '@/lib/stores.config';
+import OtrosPrecios, { preciosDeProducto } from '@/templates/shared/OtrosPrecios';
 import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
@@ -49,6 +50,7 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
             images: Array.isArray(p.images) && p.images.length > 1 ? p.images : undefined,
             description: p.description || 'Prenda exclusiva de Estilos Mirka.',
             presentaciones: leerPresentaciones(p.presentaciones),
+            preciosMoneda: p.preciosMoneda,
           }));
           setSupabaseProducts(formatted);
         }
@@ -387,6 +389,7 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
                           <span className="font-bold text-sm" style={{ color: theme.primary }}>
                             S/ {prod.price.toFixed(2)}
                           </span>
+                          <OtrosPrecios precios={preciosDeProducto(prod)} className="text-[10px] text-gray-500" />
                         </div>
                         <span className="text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 border" style={{ color: theme.primary, borderColor: theme.primary, borderRadius: '2px' }}>
                           Ver
@@ -476,6 +479,7 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
                     <span className="text-xs text-gray-400 line-through">S/ {selectedProduct.originalPrice.toFixed(2)}</span>
                   )}
                 </div>
+                <OtrosPrecios precios={preciosDeProducto(selectedProduct, selectedSize)} className="text-sm text-gray-500" />
               </div>
 
               {/* Description */}

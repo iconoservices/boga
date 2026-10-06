@@ -3,6 +3,8 @@
 import CustomerAccountButton from '@/components/CustomerAccountButton';
 import React, { useState, useEffect, useMemo } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
+import OtrosPrecios, { preciosDeProducto } from '@/templates/shared/OtrosPrecios';
+import type { PreciosMoneda } from '@/lib/preciosMoneda';
 import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { getDemoProducts } from '@/lib/templates.config';
 import { pedirDatosCliente } from '@/components/pedirDatosCliente';
@@ -27,6 +29,8 @@ interface ProductItem {
   images?: string[];
   description?: string;
   presentaciones?: Presentacion[];
+  /** Precio en otras monedas, escrito por el dueño (lib/preciosMoneda.ts). */
+  preciosMoneda?: PreciosMoneda;
 }
 
 export default function DiscotecaTemplate({ store, initialProductId }: DiscotecaTemplateProps) {
@@ -63,6 +67,7 @@ export default function DiscotecaTemplate({ store, initialProductId }: Discoteca
             images: Array.isArray(p.images) && p.images.length > 1 ? p.images : undefined,
             description: p.description || 'Disfruta de la mejor experiencia nocturna, tragos premium y atención VIP.',
             presentaciones: leerPresentaciones(p.presentaciones),
+            preciosMoneda: p.preciosMoneda,
           }));
           setSupabaseProducts(formatted);
         }
@@ -727,6 +732,7 @@ export default function DiscotecaTemplate({ store, initialProductId }: Discoteca
                       <span className="text-sm sm:text-base font-black text-white">
                         S/ {Number(prod.price).toFixed(2)}
                       </span>
+                      <OtrosPrecios precios={preciosDeProducto(prod)} className="text-[10px] text-gray-400" />
                     </div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400 group-hover:underline">
                       Ver
@@ -825,6 +831,7 @@ export default function DiscotecaTemplate({ store, initialProductId }: Discoteca
                       selectedProduct.price) * detailQty
                   ).toFixed(2)}
                 </p>
+                <OtrosPrecios precios={preciosDeProducto(selectedProduct, selectedSize)} factor={detailQty} className="text-sm text-gray-300" />
                 {selectedProduct.description && (
                   <p className="text-xs text-gray-300 mt-2 leading-relaxed">
                     {selectedProduct.description}

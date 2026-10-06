@@ -9,6 +9,7 @@ import { useCatalogo } from '@/templates/shared/useCatalogo';
 import { AddedToast } from '@/templates/shared/AddFeedback';
 import { ProductModal, CartPanel, ContactPanel, BottomNav, CombosCarrusel } from '@/templates/shared/CatalogoUI';
 import type { Producto } from '@/templates/shared/tokens';
+import OtrosPrecios, { preciosDeProducto } from '@/templates/shared/OtrosPrecios';
 
 interface MercadoTemplateProps {
   store: StoreConfig;
@@ -379,6 +380,7 @@ export default function MercadoTemplate({ store, initialProductId }: MercadoTemp
                             {p.presentaciones?.length ? <span className="block text-[10px] font-semibold" style={{ color: t.onSurfaceVariant }}>Desde</span> : null}
                             S/ {p.price.toFixed(2)}
                             {p.priceAnterior && <span className="block text-xs font-medium line-through" style={{ color: t.onSurfaceVariant }}>S/ {p.priceAnterior.toFixed(2)}</span>}
+                            <OtrosPrecios precios={preciosDeProducto(p)} className="text-[10px]" style={{ color: t.onSurfaceVariant }} />
                           </span>
                           <button
                             onClick={(e) => { e.stopPropagation(); agregarRapido(p); }}

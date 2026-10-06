@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { StoreConfig } from '@/lib/stores.config';
+import OtrosPrecios from '@/templates/shared/OtrosPrecios';
 import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { debeMostrarDemo } from '@/lib/demo';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
@@ -110,6 +111,7 @@ export default function SunsetTemplate({ store, initialProductId }: SunsetTempla
             subcategory: p.subcategory || '',
             featured: false,
             image: p.image || '',
+            preciosMoneda: p.preciosMoneda,
           };
         });
         
@@ -509,6 +511,7 @@ export default function SunsetTemplate({ store, initialProductId }: SunsetTempla
                     >
                       {item.price}
                       {(item as any).oldPrice && <span className="ml-2 text-xs font-normal line-through opacity-60">{(item as any).oldPrice}</span>}
+                      <OtrosPrecios precios={(item as any).preciosMoneda} className="text-[10px] font-normal text-right opacity-70" />
                     </span>
                   </div>
                 ))}
@@ -627,6 +630,7 @@ export default function SunsetTemplate({ store, initialProductId }: SunsetTempla
                 {selectedProduct.price}
                 {(selectedProduct as any).oldPrice && <span className="ml-3 text-lg font-normal line-through opacity-60">{(selectedProduct as any).oldPrice}</span>}
               </span>
+              <OtrosPrecios precios={(selectedProduct as any).preciosMoneda} className="text-lg opacity-70" style={{ fontFamily: t.fontLabel, color: t.onSurfaceVariant }} />
             </div>
 
             <button 

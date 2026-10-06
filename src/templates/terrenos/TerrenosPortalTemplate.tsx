@@ -5,6 +5,7 @@ import type { StoreConfig } from '@/lib/stores.config';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import { useTerrenos, areaDe, precioTerreno, descripcionLimpia } from './useTerrenos';
 import DetalleTerreno from './DetalleTerreno';
+import OtrosPrecios from '../shared/OtrosPrecios';
 
 /**
  * Plantilla "Terreno 1": estilo inmobiliaria moderna (referencia: Los
@@ -176,6 +177,7 @@ export default function TerrenosPortalTemplate({ store, initialProductId }: { st
                   </a>
 
                   <p className="mt-2 text-xl font-bold" style={{ color: t.onSurface }}>Desde {precioTerreno(p.price)}</p>
+                  <OtrosPrecios precios={p.preciosMoneda} className="text-sm" style={{ color: t.onSurfaceVariant }} />
 
                   {/* Botón: siempre visible en celular; en escritorio aparece al pasar el mouse. */}
                   <div className="w-full overflow-hidden transition-all duration-300 max-h-16 [@media(hover:hover)]:max-h-0 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:max-h-16 [@media(hover:hover)]:group-hover:opacity-100">

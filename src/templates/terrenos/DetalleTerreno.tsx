@@ -3,6 +3,7 @@
 import type { StoreConfig } from '@/lib/stores.config';
 import { areaDe, precioTerreno, descripcionLimpia } from './useTerrenos';
 import type { Producto } from '../shared/tokens';
+import OtrosPrecios from '../shared/OtrosPrecios';
 
 interface Props {
   store: StoreConfig;
@@ -49,7 +50,10 @@ export default function DetalleTerreno({ store, terreno: p, nombreDeZona, ubicac
         <div className="p-5 flex flex-col gap-3">
           <span className="text-xs font-bold uppercase tracking-widest" style={{ color: t.primary }}>{nombreDeZona(p.category) || 'Terreno'}</span>
           <h2 className="text-xl font-black leading-tight" style={{ color: t.onSurface }}>{p.name}</h2>
-          <p className="text-2xl font-black" style={{ color: t.primary }}>{precioTerreno(p.price)}</p>
+          <div>
+            <p className="text-2xl font-black" style={{ color: t.primary }}>{precioTerreno(p.price)}</p>
+            <OtrosPrecios precios={p.preciosMoneda} className="text-base" style={{ color: t.onSurfaceVariant }} />
+          </div>
 
           {descripcionLimpia(p) && (
             <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: t.onSurfaceVariant }}>{descripcionLimpia(p)}</p>

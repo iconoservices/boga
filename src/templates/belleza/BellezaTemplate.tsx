@@ -10,6 +10,7 @@ import { useTabRuta } from '../shared/useTabRuta';
 import ReservaModal from '../shared/ReservaModal';
 import { TXT, ICON, soles, type Producto } from '../shared/tokens';
 import { CategoryChips, ProductGrid, ProductModal, CartPanel, ContactPanel, BottomNav, StoreFooter } from '../shared/CatalogoUI';
+import OtrosPrecios from '../shared/OtrosPrecios';
 
 interface Props {
   store: StoreConfig;
@@ -139,6 +140,7 @@ export default function BellezaTemplate({ store, initialProductId, initialTab }:
                         <p className={`${TXT.micro} font-bold mt-1`} style={{ color: t.primary }}>
                           {p.price > 0 ? soles(p.price) : 'Consultar'}{duracion(p) ? ` · ${duracion(p)}` : ''}
                         </p>
+                        {p.price > 0 && <OtrosPrecios precios={p.preciosMoneda} className={TXT.micro} style={{ color: t.onSurfaceVariant }} />}
                       </div>
                     </button>
                   ))}

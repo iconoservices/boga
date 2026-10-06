@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
 import { fetchProductosDeTienda } from '@/lib/catalogo';
+import OtrosPrecios, { preciosDeProducto } from '@/templates/shared/OtrosPrecios';
+import type { PreciosMoneda } from '@/lib/preciosMoneda';
 import { getDemoProducts } from '@/lib/templates.config';
 import { pedirDatosCliente } from '@/components/pedirDatosCliente';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
@@ -46,6 +48,8 @@ interface ProductItem {
   images?: string[];
   description?: string;
   presentaciones?: Presentacion[];
+  /** Precio en otras monedas, escrito por el dueño (lib/preciosMoneda.ts). */
+  preciosMoneda?: PreciosMoneda;
 }
 
 // Eventos de muestra si la tienda o Supabase aún no tienen eventos propios
@@ -232,6 +236,7 @@ export default function CarteleraTemplate({ store, initialProductId }: Cartelera
             images: Array.isArray(p.images) && p.images.length > 1 ? p.images : undefined,
             description: p.description || '',
             presentaciones: leerPresentaciones(p.presentaciones),
+            preciosMoneda: p.preciosMoneda,
           }));
           setSupabaseProducts(formatted);
         }
@@ -985,6 +990,7 @@ export default function CarteleraTemplate({ store, initialProductId }: Cartelera
                           <span className="text-sm font-black text-white">
                             S/ {prod.price.toFixed(2)}
                           </span>
+                          <OtrosPrecios precios={preciosDeProducto(prod)} className="text-[10px] text-gray-400" />
                         </div>
 
                         <button
@@ -1334,6 +1340,7 @@ export default function CarteleraTemplate({ store, initialProductId }: Cartelera
                       selectedProduct.price) * detailQty
                   ).toFixed(2)}
                 </p>
+                <OtrosPrecios precios={preciosDeProducto(selectedProduct, selectedSize)} factor={detailQty} className="text-sm text-gray-300" />
                 {selectedProduct.description && (
                   <p className="text-xs text-gray-300 mt-2">{selectedProduct.description}</p>
                 )}

@@ -5,6 +5,8 @@ import { pedirDatosCliente } from '@/components/pedirDatosCliente';
 import { StoreConfig } from '@/lib/stores.config';
 import { getDemoProducts } from '@/lib/templates.config';
 import { debeMostrarDemo } from '@/lib/demo';
+import OtrosPrecios, { preciosDeProducto } from '@/templates/shared/OtrosPrecios';
+import type { PreciosMoneda } from '@/lib/preciosMoneda';
 import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
@@ -51,6 +53,7 @@ export default function MirkaVisualTemplate({ store, initialProductId }: MirkaVi
             images: Array.isArray(p.images) && p.images.length > 1 ? p.images : undefined,
             description: p.description || 'Prenda exclusiva con acabados de alta calidad.',
             presentaciones: leerPresentaciones(p.presentaciones),
+            preciosMoneda: p.preciosMoneda,
           }));
           setSupabaseProducts(formatted);
         }
@@ -640,6 +643,7 @@ export default function MirkaVisualTemplate({ store, initialProductId }: MirkaVi
                     <span className="font-bold text-sm" style={{ color: theme.primary }}>
                       S/ {Number(prod.price).toFixed(2)}
                     </span>
+                    <OtrosPrecios precios={preciosDeProducto(prod)} className="text-[10px] text-gray-500" />
                   </div>
                   <span
                     className="text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 border"
@@ -767,6 +771,7 @@ export default function MirkaVisualTemplate({ store, initialProductId }: MirkaVi
                       </span>
                     )}
                 </div>
+                <OtrosPrecios precios={preciosDeProducto(selectedProduct, selectedSize)} className="text-sm text-gray-500" />
               </div>
 
               {/* Description */}

@@ -8,6 +8,7 @@ import { useCustomerSession } from '@/context/CustomerSessionContext';
 import { inicialesDe } from '../shared/tokens';
 import { useTerrenos, areaDe, precioTerreno, descripcionLimpia } from './useTerrenos';
 import DetalleTerreno from './DetalleTerreno';
+import OtrosPrecios from '../shared/OtrosPrecios';
 
 const SERIF = "'Merriweather', Georgia, 'Times New Roman', serif";
 
@@ -135,9 +136,12 @@ export default function TerrenosCampoTemplate({ store, initialProductId }: { sto
 
                 <div className="px-4 pt-3.5 pb-4 flex flex-col gap-0.5 flex-1">
                   <div className="flex items-start justify-between gap-3">
-                    <p className="text-lg font-bold" style={{ color: t.onSurface }}>
-                      {precioTerreno(p.price)}{areaDe(p) ? ` • ${areaDe(p)}` : ''}
-                    </p>
+                    <div>
+                      <p className="text-lg font-bold" style={{ color: t.onSurface }}>
+                        {precioTerreno(p.price)}{areaDe(p) ? ` • ${areaDe(p)}` : ''}
+                      </p>
+                      <OtrosPrecios precios={p.preciosMoneda} className="text-sm" style={{ color: t.onSurfaceVariant }} />
+                    </div>
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleFav(p); }}
                       aria-label={esFavorito(store.slug, p.id) ? 'Quitar de favoritos' : 'Guardar en favoritos'}

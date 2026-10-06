@@ -7,6 +7,8 @@ import { pedirDatosCliente } from '@/components/pedirDatosCliente';
 import { StoreConfig } from '@/lib/stores.config';
 import { getDemoProducts } from '@/lib/templates.config';
 import { debeMostrarDemo } from '@/lib/demo';
+import OtrosPrecios, { preciosDeProducto } from '@/templates/shared/OtrosPrecios';
+import type { PreciosMoneda } from '@/lib/preciosMoneda';
 import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
@@ -29,7 +31,9 @@ interface ProductItem {
   image: string;
   images?: string[];
   description: string;
-  presentaciones?: { label: string; price: number }[];
+  presentaciones?: { label: string; price: number; preciosMoneda?: PreciosMoneda }[];
+  /** Precio en otras monedas, escrito por el dueño (lib/preciosMoneda.ts). */
+  preciosMoneda?: PreciosMoneda;
 }
 
 interface CartItem {
@@ -80,6 +84,7 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
             images: Array.isArray(p.images) && p.images.length > 1 ? p.images : undefined,
             description: p.description || 'Prenda de confección de alta calidad y diseño exclusivo.',
             presentaciones: leerPresentaciones(p.presentaciones),
+            preciosMoneda: p.preciosMoneda,
           }));
           setSupabaseProducts(formatted);
         }
@@ -692,6 +697,7 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
                         <span className="text-sm sm:text-base font-extrabold text-gray-900">
                           S/ {Number(product.price).toFixed(2)}
                         </span>
+                        <OtrosPrecios precios={preciosDeProducto(product)} className="text-[10px] text-gray-500" />
                       </div>
 
                       {/* Botón rápido */}
@@ -903,6 +909,7 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
                         </span>
                       )}
                     </div>
+                    <OtrosPrecios precios={preciosDeProducto(selectedProduct, selectedSize)} className="text-sm text-gray-500 mt-0.5" />
 
                     <p className="text-xs text-gray-600 leading-relaxed mt-4">
                       {selectedProduct.description}

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { pedirDatosCliente } from '@/components/pedirDatosCliente';
 import { conMarcaBlanca } from '@/lib/modulos';
 import { StoreConfig } from '@/lib/stores.config';
+import OtrosPrecios from '@/templates/shared/OtrosPrecios';
 import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { debeMostrarDemo } from '@/lib/demo';
 import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
@@ -85,6 +86,7 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
         rating: 4.9,
         reviews: 8,
         description: p.description || '',
+        preciosMoneda: p.preciosMoneda,
       })));
     }).catch(() => {});
     return () => { vivo = false; };
@@ -459,8 +461,11 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
                       </div>
 
                       <div className="flex items-center justify-between border-t border-pink-50 pt-3 mt-3">
-                        <span className="font-black text-xl" style={{ color: theme.primary }}>
-                          {srv.price > 0 ? `S/ ${srv.price.toFixed(2)}` : 'Consultar'}
+                        <span className="flex flex-col">
+                          <span className="font-black text-xl" style={{ color: theme.primary }}>
+                            {srv.price > 0 ? `S/ ${srv.price.toFixed(2)}` : 'Consultar'}
+                          </span>
+                          {srv.price > 0 && <OtrosPrecios precios={srv.preciosMoneda} className="text-[11px] text-gray-500" />}
                         </span>
                         <button
                           onClick={() => handleOpenBooking(srv)}
@@ -525,6 +530,7 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
                           <span className="font-black text-base text-gray-900">
                             S/ {prod.price.toFixed(2)}
                           </span>
+                          <OtrosPrecios precios={prod.preciosMoneda} className="text-[10px] text-gray-500" />
                         </div>
                       </div>
                     </div>
@@ -697,7 +703,10 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
                   </div>
                   <div className="flex justify-between border-b border-pink-50 pb-1.5">
                     <span className="text-pink-400 font-medium">Precio:</span>
-                    <span className="font-bold text-pink-600">{selectedService?.price > 0 ? `S/ ${selectedService.price.toFixed(2)}` : 'A consultar'}</span>
+                    <span className="font-bold text-pink-600 text-right">
+                      {selectedService?.price > 0 ? `S/ ${selectedService.price.toFixed(2)}` : 'A consultar'}
+                      {selectedService?.price > 0 && <OtrosPrecios precios={selectedService?.preciosMoneda} className="text-[11px] font-medium text-pink-400" />}
+                    </span>
                   </div>
                   <div className="flex justify-between border-b border-pink-50 pb-1.5">
                     <span className="text-pink-400 font-medium">Fecha & Hora:</span>

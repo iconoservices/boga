@@ -6,6 +6,7 @@ import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 import { HORAS_RESERVA, horaLegible } from '@/lib/reservas';
 import { hoyLima } from '@/lib/fechaLima';
 import { TXT, ICON, soles, type Producto } from './tokens';
+import OtrosPrecios from './OtrosPrecios';
 
 /**
  * Reservar un servicio: elige servicio, fecha y hora, deja su nombre y teléfono.
@@ -135,6 +136,7 @@ export default function ReservaModal({
               <p className={`${TXT.body} font-extrabold`}>{servicio.name}</p>
               <p className={TXT.small} style={{ color: t.onSurfaceVariant }}>{fecha} · {horaLegible(hora)}</p>
               <p className={`${TXT.small} font-bold`} style={{ color: t.primary }}>{precio(servicio)}</p>
+              {servicio.price > 0 && <OtrosPrecios precios={servicio.preciosMoneda} className={TXT.micro} style={{ color: t.onSurfaceVariant }} />}
             </div>
             <p className={TXT.small} style={{ color: t.onSurfaceVariant }}>Para terminar, avísanos por WhatsApp: ahí te confirmamos tu hora.</p>
             <button onClick={porWhatsApp} className={`w-full py-3 rounded-full font-extrabold ${TXT.body} flex items-center justify-center gap-2 active:scale-95`} style={{ background: '#25D366', color: '#fff' }}>
