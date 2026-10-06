@@ -156,22 +156,22 @@ Presupuesto aproximado: `,
               </section>
             )}
 
-            {/* Accesos grandes por categoría: solo en "Todo" y si hay al menos dos. */}
+            {/* Accesos por categoría: una sola fila compacta (se desliza de lado si hay más de las que caben). Solo en "Todo". */}
             {c.activeCategory === 'all' && categorias.length > 1 && (
-              <section className="px-5 md:px-6 pt-5">
-                <div className={`grid gap-3 ${categorias.length === 2 ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-4'}`}>
+              <section className="px-5 md:px-6 pt-4">
+                <div className="hide-scrollbar flex gap-2.5 overflow-x-auto md:justify-center">
                   {categorias.map((cat) => (
                     <button
                       key={cat.id}
                       type="button"
                       onClick={() => c.setActiveCategory(cat.id)}
-                      className="group flex flex-col items-center justify-center gap-2 rounded-2xl py-5 px-3 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98]"
+                      className="group flex-1 min-w-[88px] md:flex-none md:min-w-[150px] flex flex-col items-center justify-center gap-1.5 rounded-2xl py-3 px-2 text-center transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.97]"
                       style={{ background: t.primaryContainer, border: `1px solid ${t.outlineVariant}` }}
                     >
-                      <span className="w-12 h-12 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-110" style={{ background: t.primary, color: t.onPrimary }}>
-                        <span className={`material-symbols-outlined ${ICON.lg}`}>{iconoDe(cat.label)}</span>
+                      <span className="w-9 h-9 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-110" style={{ background: t.primary, color: t.onPrimary }}>
+                        <span className={`material-symbols-outlined ${ICON.md}`}>{iconoDe(cat.label)}</span>
                       </span>
-                      <span className={`${TXT.body} font-extrabold leading-tight`} style={{ color: t.onSurface, fontFamily: t.fontHeadline }}>{cat.label}</span>
+                      <span className={`${TXT.small} font-extrabold leading-tight line-clamp-2`} style={{ color: t.onSurface, fontFamily: t.fontHeadline }}>{cat.label}</span>
                     </button>
                   ))}
                 </div>
@@ -218,21 +218,36 @@ Presupuesto aproximado: `,
               />
             )}
 
-            {/* En "Todo": una fila por categoría, en el orden de la tienda (cada una con su "Ver todos"). Al elegir un chip se ve la grilla completa. */}
+            {/* En "Todo": cada categoría con su título y la MISMA grilla que se ve al entrar a una categoría (no un carrusel,
+                que dejaba la tarjeta siguiente cortada en el borde). Salen las primeras 4 y un botón para ver todas. */}
             {c.activeCategory === 'all' && c.categoryTabs
               .filter((x) => x.id !== 'all')
-              .map((cat) => (
-                <CombosCarrusel
-                  key={cat.id}
-                  t={t}
-                  productos={c.products.filter((p) => p.category === cat.id)}
-                  titulo={cat.label}
-                  icono=""
-                  onSelect={c.abrirProducto}
-                  onAdd={c.addToCart}
-                  onVerMas={() => c.setActiveCategory(cat.id)}
-                />
-              ))}
+              .map((cat) => {
+                const deLaCategoria = c.products.filter((p) => p.category === cat.id);
+                if (deLaCategoria.length === 0) return null;
+                return (
+                  <section key={cat.id} className="px-5 md:px-6 pt-6">
+                    <div className="flex items-center justify-between gap-3 mb-3">
+                      <h2 className={`${TXT.lead} font-black tracking-tight`} style={{ color: t.onSurface, fontFamily: t.fontHeadline }}>{cat.label}</h2>
+                      {deLaCategoria.length > 4 && (
+                        <button
+                          onClick={() => c.setActiveCategory(cat.id)}
+                          className={`${TXT.small} font-bold flex items-center gap-0.5 hover:underline active:scale-95 transition-transform`}
+                          style={{ color: t.primary }}
+                        >
+                          Ver todos ({deLaCategoria.length}) <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                        </button>
+                      )}
+                    </div>
+                    <ProductGrid
+                      t={t}
+                      productos={deLaCategoria.slice(0, 4)}
+                      onSelect={c.abrirProducto}
+                      onAdd={c.addToCart}
+                    />
+                  </section>
+                );
+              })}
 
             {c.activeCategory !== 'all' && (
               <>
