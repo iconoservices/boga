@@ -19,6 +19,9 @@ export function useTabRuta(slug: string, inicial: string, desdeRuta?: string): [
   const cambiar = useCallback(
     (nueva: string) => {
       setTab(nueva);
+      // En la vista previa de una plantilla (/preview/<id>) no hay tienda real: cambiar la dirección dejaría un enlace roto
+      // (al recargar daba 404), así que la dirección se queda como está.
+      if (window.location.pathname.startsWith('/preview/')) return;
       const ruta = nueva === inicial ? `/${slug}` : `/${slug}/${nueva}`;
       if (window.location.pathname !== ruta) window.history.pushState(null, '', ruta);
     },
