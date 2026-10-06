@@ -179,6 +179,19 @@ export const MODULOS_EXISTENTES_EXTRA: {
   id: string; name: string; icon: string; price: string; description: string; info: InfoModulo;
 }[] = [
   {
+    id: 'academia',
+    name: 'Academia: alumnos y asistencia con QR',
+    icon: 'school',
+    price: 'Por definir',
+    description: 'Carnet digital con QR por alumno, asistencia que toma el profesor con la cámara y aviso al padre cuando su hijo llega. Para academias y colegios; se activa por tienda.',
+    info: {
+      estado: 'existe', nivel: 'extra', esfuerzo: 'bajo',
+      bases: 'Interruptor modulos.academia por tienda; panel /admin/alumnos, lector /academia/asistencia/<tienda>, carnet y avisos push, y plantilla academia con pestaña Alumnos para padres (con cuenta).',
+      falta: 'Probar con una academia real (cámara y avisos), imprimir carnets, reportes por grupo y cobro por alumno.',
+      depende: 'Subdominio propio de la academia para que los padres instalen su app; tablas del SQL de academias en Supabase.',
+    },
+  },
+  {
     id: 'google-merchant',
     name: 'Productos en Google (Merchant Center)',
     icon: 'shopping_bag',

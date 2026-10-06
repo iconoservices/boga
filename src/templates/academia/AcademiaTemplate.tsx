@@ -10,6 +10,7 @@ import { useCatalogo } from '../shared/useCatalogo';
 import { useTabRuta } from '../shared/useTabRuta';
 import { TXT, ICON, soles, type Producto } from '../shared/tokens';
 import { CategoryChips, ProductModal, ContactPanel, BottomNav, StoreFooter } from '../shared/CatalogoUI';
+import { moduloAcademia } from '@/lib/modulos';
 import AccesoAlumnos from './AccesoAlumnos';
 
 interface Props {
@@ -112,10 +113,13 @@ export default function AcademiaTemplate({ store, initialProductId, initialTab }
   const c = useCatalogo(store, initialProductId);
   const [activeTab, setActiveTab] = useTabRuta(store.slug, 'home', initialTab);
 
+  // Alumnos, carnet QR y asistencia son un módulo de pago: sin él la tienda es solo la página de la academia (la vista previa sí lo muestra).
+  const conAlumnos = store.demoDePlantilla === true || moduloAcademia(store.modulos);
+
   const TABS = [
     { id: 'home', label: 'Inicio' },
     { id: 'grupos', label: 'Grupos' },
-    { id: 'alumnos', label: 'Alumnos' },
+    ...(conAlumnos ? [{ id: 'alumnos', label: 'Alumnos' }] : []),
     { id: 'contacto', label: 'Contacto' },
   ];
 
@@ -291,6 +295,7 @@ export default function AcademiaTemplate({ store, initialProductId, initialTab }
               </section>
 
               {/* ══ PARA PADRES ══ */}
+              {conAlumnos && (
               <section>
                 <button onClick={() => irA('alumnos')} className="w-full text-left rounded-3xl p-6 md:p-8 flex items-center gap-4 md:gap-6 active:scale-[0.99] transition-all" style={{ background: t.secondary }}>
                   <span className="w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center shrink-0 bg-white/15">
@@ -303,6 +308,7 @@ export default function AcademiaTemplate({ store, initialProductId, initialTab }
                   <span className={`material-symbols-outlined ${ICON.md} text-white shrink-0`}>arrow_forward</span>
                 </button>
               </section>
+              )}
 
               {cierre}
             </div>
@@ -330,7 +336,7 @@ export default function AcademiaTemplate({ store, initialProductId, initialTab }
           </div>
         )}
 
-        {activeTab === 'alumnos' && <AccesoAlumnos t={t} slug={store.slug} demo={store.demoDePlantilla === true} />}
+        {activeTab === 'alumnos' && conAlumnos && <AccesoAlumnos t={t} slug={store.slug} demo={store.demoDePlantilla === true} />}
 
         {activeTab === 'contacto' && (
           <ContactPanel
@@ -362,7 +368,7 @@ export default function AcademiaTemplate({ store, initialProductId, initialTab }
         tabs={[
           { id: 'home', icon: 'home', label: 'Inicio' },
           { id: 'grupos', icon: 'event_available', label: 'Grupos' },
-          { id: 'alumnos', icon: 'qr_code_2', label: 'Alumnos' },
+          ...(conAlumnos ? [{ id: 'alumnos', icon: 'qr_code_2', label: 'Alumnos' }] : []),
           { id: 'contacto', icon: 'chat', label: 'Contacto' },
         ]}
         active={activeTab}
