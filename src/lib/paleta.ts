@@ -52,6 +52,19 @@ function contraste(a: string, b: string): number {
   return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
 }
 
+/**
+ * Color de texto que se lee sobre `fondo`: el `preferido` si tiene contraste suficiente (4.5), y si no, blanco o casi negro
+ * (el que más contraste dé). Para textos que van sobre un color de la tienda que no se sabe si es claro u oscuro.
+ */
+export function textoLegible(fondo: string, preferido: string): string {
+  try {
+    if (contraste(fondo, preferido) >= 4.5) return preferido;
+    return contraste(fondo, '#ffffff') >= contraste(fondo, '#1a1a1a') ? '#ffffff' : '#1a1a1a';
+  } catch {
+    return preferido;
+  }
+}
+
 /** Saturación y luminosidad (HSL), de 0 a 1. */
 function hsl(hex: string): { s: number; l: number } {
   const [r, g, b] = aRgb(hex).map((v) => v / 255);

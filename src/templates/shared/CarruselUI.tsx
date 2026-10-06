@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import type { StoreConfig } from '@/lib/stores.config';
 import { TXT, ICON } from './tokens';
+import { textoLegible } from '@/lib/paleta';
 
 // Piezas de pantalla que comparten las plantillas Bazar y Tecnología: la fila de tarjetas que se desliza de lado (con flechas en
 // escritorio solo si desborda) y los botones de categoría (ícono en un circulito, fijos bajo el encabezado al bajar).
@@ -59,8 +60,7 @@ export function ChipsCategoria({ t, tabs, active, onSelect }: { t: StoreConfig['
             onClick={() => onSelect(tab.id)}
             className="group shrink-0 inline-flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-4 transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
             style={{
-              // Inactivo: fondo claro de la tienda y texto oscuro (antes usaba el color «contenedor» del tema, que en temas oscuros dejaba el texto ilegible).
-              background: activa ? t.primary : t.surface,
+              background: activa ? t.primary : t.primaryContainer,
               border: `1px solid ${activa ? 'transparent' : t.outlineVariant}`,
               boxShadow: activa ? `0 4px 12px ${t.primary}40` : 'none',
             }}
@@ -71,7 +71,7 @@ export function ChipsCategoria({ t, tabs, active, onSelect }: { t: StoreConfig['
             >
               <span className={`material-symbols-outlined ${ICON.sm}`}>{tab.icon || 'sell'}</span>
             </span>
-            <span className={`${TXT.small} font-extrabold`} style={{ color: activa ? t.onPrimary : t.onSurface, fontFamily: t.fontHeadline }}>{tab.label}</span>
+            <span className={`${TXT.small} font-extrabold`} style={{ color: activa ? t.onPrimary : textoLegible(t.primaryContainer, t.onSurface), fontFamily: t.fontHeadline }}>{tab.label}</span>
           </button>
         );
       })}
