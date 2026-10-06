@@ -504,7 +504,17 @@ function AdminDashboard({ user }: { user: User }) {
     ...(isModalOpen ? (((stores as any)[newProduct.store]?.monedas ?? []) as { codigo: string }[]).map((m) => m.codigo) : []),
     ...(isStoreEditorOpen ? storeForm.monedas.map((m) => m.codigo) : []),
   ]));
-  const cambioHoy = useCambioDeHoy(codigosCambio);
+  // Se consulta SOLO cuando el dueño lo necesita: al tocar un campo de precio en otra moneda o el botón "Traer cambio de hoy".
+  const [pedirCambio, setPedirCambio] = useState(false);
+  const [cambioParaTienda, setCambioParaTienda] = useState<string | null>(null);
+  const cambioHoy = useCambioDeHoy(codigosCambio, pedirCambio);
+  // "Traer cambio de hoy" en Editar tienda: cuando llega la cotización, se escribe en esa moneda.
+  useEffect(() => {
+    const v = cambioParaTienda ? cambioHoy?.tasas[cambioParaTienda] : undefined;
+    if (!cambioParaTienda || !v) return;
+    setStoreForm((prev) => ({ ...prev, monedas: prev.monedas.map((x) => (x.codigo === cambioParaTienda ? { ...x, tasa: String(v) } : x)) }));
+    setCambioParaTienda(null);
+  }, [cambioHoy, cambioParaTienda]);
   const fechaCambio = cambioHoy?.fecha ? new Date(cambioHoy.fecha).toLocaleDateString('es-PE', { day: 'numeric', month: 'short' }) : '';
   // Orden: el cambio que escribió el dueño en su tienda, luego el que escribe aquí, y si no hay ninguno, el de hoy.
   const tasaDe = (m: { codigo: string; tasa?: number }): number | undefined =>
@@ -3340,7 +3350,7 @@ function AdminDashboard({ user }: { user: User }) {
                   if (monedasTienda.length === 0 || newProduct.presentaciones.length > 0 || formEmpresa || precioOpcional) return null;
                   const soles = parseFloat(newProduct.price);
                   return (
-                    <div className="mt-5 p-4 rounded-lg border border-dashed border-gray-300 bg-gray-50/60">
+                    <div className="mt-5 p-4 rounded-lg border border-dashed border-gray-300 bg-gray-50/60" onFocusCapture={() => setPedirCambio(true)}>
                       <p className="text-sm font-bold text-gray-700">Precio en otras monedas (opcional)</p>
                       <p className="text-xs text-gray-500 mt-0.5 mb-3">Si lo escribes, tu tienda muestra este producto con el precio en soles y también en esa moneda.</p>
                       <div className="space-y-2.5">
@@ -3507,7 +3517,7 @@ function AdminDashboard({ user }: { user: User }) {
                               const monedasTienda = ((stores as any)[newProduct.store]?.monedas ?? []) as { codigo: string; simbolo: string; tasa?: number }[];
                               if (monedasTienda.length === 0) return null;
                               return (
-                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pl-1">
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pl-1" onFocusCapture={() => setPedirCambio(true)}>
                                   {monedasTienda.map((m) => {
                                     const valor = x.preciosMoneda?.[m.codigo] ?? '';
                                     const sugerido = precioSugerido(parseFloat(x.price), { ...m, tasa: tasaDe(m) } as any);
@@ -4259,17 +4269,25 @@ function AdminDashboard({ user }: { user: User }) {
                           placeholder={`ej. ${ejemploDeCambio(m.codigo)}`}
                           className="w-28 px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0058be]"
                         />
-                        {cambioHoy?.tasas[m.codigo] && String(cambioHoy.tasas[m.codigo]) !== m.tasa && (
+                        {!(cambioHoy?.tasas[m.codigo] && String(cambioHoy.tasas[m.codigo]) === m.tasa) && (
                           <button
                             type="button"
-                            onClick={() => setStoreForm({
-                              ...storeForm,
-                              monedas: storeForm.monedas.map((x, j) => (j === i ? { ...x, tasa: String(cambioHoy.tasas[m.codigo]) } : x)),
-                            })}
+                            onClick={() => {
+                              const hoy = cambioHoy?.tasas[m.codigo];
+                              if (hoy) {
+                                setStoreForm({ ...storeForm, monedas: storeForm.monedas.map((x, j) => (j === i ? { ...x, tasa: String(hoy) } : x)) });
+                              } else {
+                                // Recién ahora se consulta la cotización; al llegar se escribe sola.
+                                setCambioParaTienda(m.codigo);
+                                setPedirCambio(true);
+                              }
+                            }}
                             className="px-3 py-2 rounded-full border border-gray-300 bg-white text-xs font-bold text-gray-700 hover:border-black transition-colors"
                             title={`Cotización de ExchangeRate-API${fechaCambio ? `, actualizada el ${fechaCambio}` : ''}`}
                           >
-                            Usar cambio de hoy: S/ {cambioHoy.tasas[m.codigo]}
+                            {cambioHoy?.tasas[m.codigo]
+                              ? `Usar cambio de hoy: S/ ${cambioHoy.tasas[m.codigo]}`
+                              : cambioParaTienda === m.codigo ? 'Trayendo…' : 'Traer cambio de hoy'}
                           </button>
                         )}
                       </div>
