@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { iconForCategory } from '@/templates/shared/tokens';
+import { iconForCategory, iconoDeCategoria } from '@/templates/shared/tokens';
 
 export type Categoria = { name: string; icon: string; href: string };
 
@@ -149,7 +149,7 @@ export default function CategoriasTab({ nombreTienda, categorias, conteos, onGua
                 </button>
               </div>
 
-              <span className="material-symbols-outlined text-[20px] text-gray-400 shrink-0">{cat.icon || iconForCategory(cat.name)}</span>
+              <span className="material-symbols-outlined text-[20px] text-gray-400 shrink-0">{iconoDeCategoria(cat.name, cat.icon)}</span>
 
               {editando === cat.href ? (
                 <input

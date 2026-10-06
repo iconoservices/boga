@@ -7,7 +7,7 @@ import { demoSlug } from '@/lib/demoPlantilla';
 import { getDemoProducts } from '@/lib/templates.config';
 import { debeMostrarDemo } from '@/lib/demo';
 import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
-import { iconForCategory, type Producto, type Categoria } from './tokens';
+import { iconForCategory, iconoDeCategoria, type Producto, type Categoria } from './tokens';
 import { formatearSoles, equivalenteEnMoneda } from '@/lib/monedas';
 import { useMonedas } from '@/lib/useMoneda';
 import { avisarAgregado } from './AddFeedback';
@@ -226,7 +226,7 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
           label: c.name,
           // 'category' es el icono generico que se guardaba antes por defecto
           // para toda categoria nueva; se recalcula para no dejarlo pegado.
-          icon: c.icon && c.icon !== 'category' ? c.icon : iconForCategory(c.name),
+          icon: iconoDeCategoria(c.name, c.icon),
         }))
     : [...new Set(products.map((p) => p.category))]
         .filter(Boolean)

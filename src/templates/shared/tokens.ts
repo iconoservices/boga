@@ -82,7 +82,9 @@ export interface Categoria {
  * repetido en todas las categorias, que no dice nada.
  */
 const REGLAS_ICONO_CATEGORIA: [RegExp, string][] = [
-  [/bebid|jugo|gaseosa|refresc|limonada|chicha|emolien/, 'local_bar'],
+  // La copa de cóctel es solo para alcohol y bares; las bebidas en general (gaseosas, jugos, agua) llevan una botella.
+  [/alcohol|cerveza|licor|vino|trago|coctel|pisco|whisky|ron\b|bar\b/, 'local_bar'],
+  [/bebid|jugo|gaseosa|refresc|limonada|chicha|emolien|\bagua\b|energizante/, 'water_bottle'],
   [/cafe|capuchin|expres/, 'coffee'],
   [/cholao/, 'local_drink'],
   [/raspadilla|helad|cremolada|granizad|icecream/, 'icecream'],
@@ -106,6 +108,16 @@ const REGLAS_ICONO_CATEGORIA: [RegExp, string][] = [
   [/fruta/, 'nutrition'],
   [/flor|ramo/, 'local_florist'],
 ];
+
+/**
+ * Icono final de una categoría: el que guardó el dueño, salvo la copa de cóctel en categorías que no son de alcohol
+ * (antes toda "Bebidas" se guardaba con la copa y las tiendas ya creadas la conservaban).
+ */
+export function iconoDeCategoria(nombre: string, guardado?: string): string {
+  const sugerido = iconForCategory(nombre);
+  if (guardado === 'local_bar' && sugerido && sugerido !== 'local_bar') return sugerido;
+  return guardado && guardado !== 'category' ? guardado : sugerido;
+}
 
 export function iconForCategory(nombre: string): string {
   const n = nombre

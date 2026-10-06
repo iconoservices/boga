@@ -373,16 +373,17 @@ export default function MercadoTemplate({ store, initialProductId }: MercadoTemp
                             <p className="text-[10px] mt-1 leading-tight" style={{ color: t.onSurfaceVariant }}>{p.presentaciones.map((x) => x.label).join(' · ')}</p>
                           )}
                         </div>
-                        <div className="flex justify-between items-center">
-                          <span className="font-black text-base" style={{ color: t.primary }}>
-                            {p.presentaciones?.length ? <span className="text-[10px] font-semibold mr-1" style={{ color: t.onSurfaceVariant }}>Desde</span> : null}
+                        <div className="flex justify-between items-end gap-2">
+                          {/* "Desde" arriba y el precio anterior abajo: en una sola línea no cabía junto al botón en tarjetas angostas. */}
+                          <span className="font-black text-base leading-tight min-w-0" style={{ color: t.primary }}>
+                            {p.presentaciones?.length ? <span className="block text-[10px] font-semibold" style={{ color: t.onSurfaceVariant }}>Desde</span> : null}
                             S/ {p.price.toFixed(2)}
-                            {p.priceAnterior && <span className="ml-1.5 text-xs font-medium line-through" style={{ color: t.onSurfaceVariant }}>S/ {p.priceAnterior.toFixed(2)}</span>}
+                            {p.priceAnterior && <span className="block text-xs font-medium line-through" style={{ color: t.onSurfaceVariant }}>S/ {p.priceAnterior.toFixed(2)}</span>}
                           </span>
                           <button
                             onClick={(e) => { e.stopPropagation(); agregarRapido(p); }}
                             aria-label={`Agregar ${p.name} al carrito`}
-                            className="w-8 h-8 rounded-full flex items-center justify-center shadow-sm transition-transform active:scale-90"
+                            className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center shadow-sm transition-transform active:scale-90"
                             style={{
                               background: agregados[p.id] ? '#25D366' : t.primary,
                               color: t.onPrimary,
