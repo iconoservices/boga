@@ -6,8 +6,6 @@ import { RUTAS_DE_BOGAHUB } from '@/lib/rutasBoga';
 
 interface Tienda {
   nombre: string;
-  /** Identifica a la tienda para recordar que ya se vio (el script de layout.tsx usa el mismo nombre). */
-  slug: string;
   logo?: string;
   /** Color de fondo y color de acento: los de la plantilla de la tienda. */
   fondo: string;
@@ -15,7 +13,7 @@ interface Tienda {
 }
 
 // Pantalla de carga. Viene en el HTML del servidor, así que se ve desde el primer paint (antes de
-// que cargue/hidrate la página) y se desvanece apenas la app está lista; una vez por sesión.
+// que cargue/hidrate la página) y se desvanece apenas la app está lista.
 //  - Sin `tienda`: la de BogaHub (logo de Boga), solo en las páginas de BogaHub. En una tienda (ruta
 //    /<tienda> o su subdominio) no sale: ahí va la de la propia tienda (ver html[data-tienda] en globals.css).
 //  - Con `tienda`: el logo y los colores de esa tienda.
@@ -25,15 +23,12 @@ export default function SplashInicial({ tienda }: { tienda?: Tienda }) {
   const esDeBoga = primero === '' || RUTAS_DE_BOGAHUB.has(primero);
   const [fase, setFase] = useState<'visible' | 'saliendo' | 'fuera'>('visible');
   const activo = tienda ? true : esDeBoga;
-  const clave = tienda ? `boga_splash_${tienda.slug}` : 'boga_splash';
 
   useEffect(() => {
     if (!activo) return;
-    // Una vez por sesión (y no dentro de la vista previa del admin): si ya se vio, se quita sin animación.
-    try {
-      if (sessionStorage.getItem(clave) || (tienda && window.parent !== window)) { setFase('fuera'); return; }
-      sessionStorage.setItem(clave, '1');
-    } catch {}
+    // No va dentro de la vista previa del admin (iframe). Sale en cada carga completa (entrar directo, abrir un enlace o recargar);
+    // al navegar dentro del sitio no vuelve a salir porque el layout no se vuelve a montar.
+    if (tienda && window.parent !== window) { setFase('fuera'); return; }
     const salir = () => setFase((f) => (f === 'visible' ? 'saliendo' : f));
     // Está desde el primer instante (viene en el HTML del servidor) y se desvanece cuando la página terminó de cargar.
     const listo = () => salir();
@@ -42,7 +37,7 @@ export default function SplashInicial({ tienda }: { tienda?: Tienda }) {
     // Tope de seguridad: nunca dejar la pantalla tapada más de 3 s.
     const tope = setTimeout(salir, 3000);
     return () => { clearTimeout(tope); window.removeEventListener('load', listo); };
-  }, [activo, clave, tienda]);
+  }, [activo, tienda]);
 
   useEffect(() => {
     if (fase !== 'saliendo') return;

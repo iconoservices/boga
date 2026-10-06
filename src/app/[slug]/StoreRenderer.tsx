@@ -207,7 +207,7 @@ export default function StoreRenderer({ store: initialStore, initialProductId, i
           content_ids: [store.slug],
         }}
       />
-      <SplashInicial tienda={{ nombre: store.name, slug: store.slug, logo: store.logoImage, fondo: store.theme.background, acento: store.theme.primary }} />
+      <SplashInicial tienda={{ nombre: store.name, logo: store.logoImage, fondo: store.theme.background, acento: store.theme.primary }} />
       <AvisoTiendaMovida nombre={store.name} />
       <PedidoEnviadoSheet />
       <CustomerSessionModal storeSlug={store.slug} storeName={store.name} />
