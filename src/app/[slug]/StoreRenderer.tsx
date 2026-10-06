@@ -7,6 +7,7 @@ import PixelEvent from '@/components/PixelEvent';
 import AvisoTiendaMovida from '@/components/AvisoTiendaMovida';
 import PedidoEnviadoSheet from '@/components/PedidoEnviadoSheet';
 import { CustomerSessionProvider } from '@/context/CustomerSessionContext';
+import { FavoritosTiendaProvider } from '@/context/FavoritosTiendaContext';
 import CustomerSessionModal from '@/components/CustomerSessionModal';
 import CustomerAccountButton from '@/components/CustomerAccountButton';
 
@@ -230,7 +231,9 @@ export default function StoreRenderer({ store: initialStore, initialProductId, i
       <PedidoEnviadoSheet />
       <CustomerSessionModal storeSlug={store.slug} storeName={store.name} />
       <CustomerAccountButton />
-      {template}
+      <FavoritosTiendaProvider slug={store.slug} demo={store.demoDePlantilla === true}>
+        {template}
+      </FavoritosTiendaProvider>
       <a
         href="/negocios?ref=menu"
         target="_blank"

@@ -8,6 +8,30 @@ import { ahorroPorCantidad, type Presentacion } from '@/lib/presentaciones';
 import { textoOtrosPrecios } from '@/lib/preciosMoneda';
 import { TXT, ICON, soles, soloConsulta, type Producto, type Categoria } from './tokens';
 import { AddButton, CartBadge, EVENTO_VER_PEDIDO } from './AddFeedback';
+import { useFavoritosTienda } from '@/context/FavoritosTiendaContext';
+
+/** Corazón de favoritos: guarda el producto en la cuenta del cliente (sin sesión le pide entrar). No se dibuja fuera de una tienda. */
+export function BotonFavorito({ producto, className = '', grande = false }: { producto: Producto; className?: string; grande?: boolean }) {
+  const fav = useFavoritosTienda();
+  if (!fav) return null;
+  const activo = fav.esFavorito(producto.id);
+  return (
+    <button
+      type="button"
+      aria-label={activo ? `Quitar ${producto.name} de favoritos` : `Guardar ${producto.name} en favoritos`}
+      aria-pressed={activo}
+      onClick={(e) => { e.stopPropagation(); fav.alternar({ id: producto.id, name: producto.name, price: producto.price, image: producto.image }); }}
+      className={`${grande ? 'w-10 h-10' : 'w-8 h-8'} rounded-full flex items-center justify-center bg-white/90 shadow-md backdrop-blur-sm active:scale-90 transition-transform ${className}`}
+    >
+      <span
+        className={`material-symbols-outlined ${grande ? 'text-[22px]' : 'text-[18px]'}`}
+        style={{ color: activo ? '#e11d48' : '#64748b', fontVariationSettings: activo ? "'FILL' 1" : "'FILL' 0" }}
+      >
+        favorite
+      </span>
+    </button>
+  );
+}
 
 /** Precio(s) del producto en otras monedas ("US$ 10.00 · MX$ 185.00"), debajo del precio en soles. Nada si no tiene. */
 function OtrosPrecios({ producto, t, className = '' }: { producto: Producto; t: StoreTheme; className?: string }) {
@@ -168,6 +192,7 @@ export function ProductGrid({
           style={{ background: t.surface, borderColor: `${t.outlineVariant}30` }}
         >
           <FotoTarjeta product={product} />
+          <BotonFavorito producto={product} className="absolute top-2 right-2 z-10" />
           <div className="p-2.5 flex flex-col flex-1">
             <h4 className={`font-bold ${TXT.body} leading-tight mb-1 line-clamp-2`} style={{ color: t.onSurface }}>
               {product.name}
@@ -277,6 +302,7 @@ export function CombosCarrusel({
               style={{ background: t.surface, borderColor: `${t.outlineVariant}40` }}
             >
               <div className="aspect-[4/3] overflow-hidden relative bg-black/5">
+                <BotonFavorito producto={product} className="absolute top-2 right-2 z-10" />
                 <img
                   src={product.images?.[0] || product.image}
                   alt={product.name}
@@ -539,7 +565,10 @@ export function ProductModal({
                 </span>
               </div>
             )}
-            <h2 className={`font-bold ${TXT.title} md:text-3xl md:leading-tight`} style={{ color: t.onSurface }}>{producto.name}</h2>
+            <div className="flex items-start justify-between gap-3">
+              <h2 className={`font-bold ${TXT.title} md:text-3xl md:leading-tight`} style={{ color: t.onSurface }}>{producto.name}</h2>
+              <BotonFavorito producto={producto} grande className="shrink-0 border" />
+            </div>
 
             {/* Precio destacado (solo escritorio: en celular el precio va en la barra de abajo). */}
             <div className="hidden md:flex items-baseline gap-3 flex-wrap mt-4 pt-4 border-t" style={{ borderColor: `${t.outlineVariant}80` }}>
