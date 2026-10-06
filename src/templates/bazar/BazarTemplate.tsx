@@ -19,11 +19,8 @@ interface Props {
   initialTab?: string;
 }
 
-const SELLOS = [
-  { icon: 'interests', texto: 'Artesanía amazónica' },
-  { icon: 'checkroom', texto: 'Ropa con identidad' },
-  { icon: 'chat', texto: 'Pedido por WhatsApp' },
-];
+/** Portada de fábrica de la plantilla: solo se muestra en la vista previa; una tienda real sin banner propio no la muestra. */
+const PORTADA_DE_FABRICA = '/templates/bazar-portada.svg';
 
 /** Iconos para los accesos por categoría: si el nombre dice ropa/accesorio/recuerdo se ajusta; si no, uno genérico. */
 const iconoDe = (nombre: string) => {
@@ -39,8 +36,8 @@ const iconoDe = (nombre: string) => {
  * Plantilla "Bazar Amazónico".
  *
  * Para bazares y tiendas de artesanías y ropa de la cultura amazónica (Bazar de la Abuelita Pucallpa): paleta de
- * tierra y selva, una franja con patrón geométrico inspirado en los diseños shipibo, accesos grandes por categoría
- * (Artesanías, Ropa…) y un botón para quien busca un recuerdo o un regalo de Pucallpa.
+ * tierra y selva, una franja con patrón geométrico inspirado en los diseños shipibo, accesos compactos por categoría
+ * (Artesanías, Ropa…) y un botón de ayuda por WhatsApp.
  *  · en "Todo" salen primero los combos y ofertas y después una fila por categoría, en el orden de la tienda;
  *  · las categorías las crea el dueño desde su panel (Artesanías, Ropa amazónica, Accesorios, Recuerdos…).
  *
@@ -73,10 +70,10 @@ export default function BazarTemplate({ store, initialProductId, initialTab }: P
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const pedirRecuerdo = () =>
+  const pedirAyuda = () =>
     enviarPedidoPorWhatsApp(
       store,
-      `Hola ${store.name}, busco un recuerdo o regalo de Pucallpa. Es para: (persona u ocasión)
+      `Hola ${store.name}, estoy buscando: (cuéntanos qué necesitas)
 Presupuesto aproximado: `,
     );
 
@@ -114,27 +111,18 @@ Presupuesto aproximado: `,
           <div className="animate-fade-in">
 
             {/* Portada: el banner del comercio se muestra ENTERO, en la proporción que tenga, con la misma imagen
-                desenfocada rellenando lo que sobre. */}
-            <div className="relative overflow-hidden">
-              <img aria-hidden className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-70" alt="" src={store.heroImage} />
-              <section className="relative w-full md:h-[clamp(260px,32vw,460px)]">
-                <img className="relative w-full h-auto max-h-[60vh] object-contain md:h-full md:max-h-none" alt={store.heroAlt} src={store.heroImage} />
-                <StoreFloatingActions store={store} />
-              </section>
-            </div>
+                desenfocada rellenando lo que sobre. Si la tienda no subió banner (le queda el de fábrica de la plantilla),
+                no se muestra: solo salen sus propios datos, no el contenido de ejemplo. */}
+            {(store.heroImage !== PORTADA_DE_FABRICA || store.demoDePlantilla) && (
+              <div className="relative overflow-hidden">
+                <img aria-hidden className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-70" alt="" src={store.heroImage} />
+                <section className="relative w-full md:h-[clamp(260px,32vw,460px)]">
+                  <img className="relative w-full h-auto max-h-[60vh] object-contain md:h-full md:max-h-none" alt={store.heroAlt} src={store.heroImage} />
+                  <StoreFloatingActions store={store} />
+                </section>
+              </div>
+            )}
             <div aria-hidden="true" style={patron} />
-
-            {/* Sellos: de un vistazo, qué vende el bazar. */}
-            <section className="px-5 md:px-6 pt-5">
-              <ul className="flex flex-wrap justify-center gap-x-6 gap-y-2">
-                {SELLOS.map((s) => (
-                  <li key={s.texto} className={`flex items-center gap-2 ${TXT.small} font-bold`} style={{ color: t.secondary }}>
-                    <span className={`material-symbols-outlined ${ICON.sm}`} style={{ color: t.primary }}>{s.icon}</span>
-                    {s.texto}
-                  </li>
-                ))}
-              </ul>
-            </section>
 
             {/* Ubicación y horario, si la tienda los cargó (el nombre y el lema ya salen en el encabezado). */}
             {(store.zona || store.horario) && (
@@ -178,20 +166,20 @@ Presupuesto aproximado: `,
               </section>
             )}
 
-            {/* Recuerdo o regalo de Pucallpa: casi todo el que visita pregunta por esto, así que va a la vista. */}
+            {/* Ayuda para elegir: a la vista, porque en un bazar muchos no saben qué llevar. */}
             {c.whatsappVisible && (
               <section className="px-5 md:px-6 pt-4">
                 <button
                   type="button"
-                  onClick={pedirRecuerdo}
+                  onClick={pedirAyuda}
                   className="w-full flex items-center gap-3 rounded-2xl px-4 py-3.5 text-left active:scale-[0.99] transition-transform"
                   style={{ background: t.surface, color: t.onSurface, border: `1px dashed ${t.primary}` }}
                 >
                   <span className="material-symbols-outlined shrink-0" style={{ color: t.primary }}>redeem</span>
                   <span className="flex-1 min-w-0">
-                    <span className="block text-sm font-black">¿Buscas un recuerdo de Pucallpa?</span>
+                    <span className="block text-sm font-black">¿No encuentras lo que buscas?</span>
                     <span className="block text-xs" style={{ color: t.onSurfaceVariant }}>
-                      Cuéntanos para quién es y tu presupuesto, y te ayudamos a elegir.
+                      Escríbenos qué necesitas y te ayudamos a elegir.
                     </span>
                   </span>
                   <span className="material-symbols-outlined shrink-0" style={{ color: t.primary }}>chat</span>

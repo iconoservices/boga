@@ -98,7 +98,7 @@ const TEMPLATE_PRESENTATION: Record<string, { category?: string; description: st
 
   bazar: {
     category: 'Comercio',
-    description: 'Para bazares y tiendas de artesanías y ropa de la cultura amazónica: paleta de tierra y selva, franja con patrón inspirado en diseños shipibo, accesos grandes por categoría (Artesanías, Ropa, Recuerdos) y un botón para quien busca un recuerdo o regalo de Pucallpa. Carrito y pedido por WhatsApp.',
+    description: 'Para bazares y tiendas de artesanías y ropa de la cultura amazónica: paleta de tierra y selva, franja con patrón inspirado en diseños shipibo, accesos compactos por categoría (Artesanías, Ropa, Recuerdos) y un botón de ayuda por WhatsApp para quien no sabe qué elegir. Carrito y pedido por WhatsApp.',
     previewUrl: '/templates/bazar-portada.svg',
   },
   detalles: {
