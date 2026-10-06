@@ -59,7 +59,8 @@ export function ChipsCategoria({ t, tabs, active, onSelect }: { t: StoreConfig['
             onClick={() => onSelect(tab.id)}
             className="group shrink-0 inline-flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-4 transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
             style={{
-              background: activa ? t.primary : t.primaryContainer,
+              // Inactivo: fondo claro de la tienda y texto oscuro (antes usaba el color «contenedor» del tema, que en temas oscuros dejaba el texto ilegible).
+              background: activa ? t.primary : t.surface,
               border: `1px solid ${activa ? 'transparent' : t.outlineVariant}`,
               boxShadow: activa ? `0 4px 12px ${t.primary}40` : 'none',
             }}
