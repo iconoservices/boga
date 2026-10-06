@@ -38,16 +38,16 @@ export default function PresentacionesEditor({
       <p className="text-[10px] text-[#727785] font-semibold">{ayuda || info.subtitulo}</p>
 
       {filas.map((f, i) => (
-        <div key={i} className="flex items-center gap-2">
+        <div key={i} className="flex flex-wrap sm:flex-nowrap items-center gap-2">
           <input
             value={f.label}
             maxLength={30}
             onChange={(e) => cambiar(i, 'label', e.target.value)}
             autoFocus={foco?.i === i && foco.campo === 'label'}
             placeholder={info.ejemploLabel}
-            className="flex-1 min-w-0 bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
+            className="w-full sm:w-auto sm:flex-1 min-w-0 bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
           />
-          <div className="relative w-28 shrink-0">
+          <div className="relative flex-1 min-w-[6rem] sm:flex-none sm:w-28">
             <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[#727785]">S/</span>
             <input
               type="number" min={0} step={0.1}

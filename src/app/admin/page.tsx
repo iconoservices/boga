@@ -3131,7 +3131,7 @@ function AdminDashboard({ user }: { user: User }) {
               </div>
             )}
 
-            <form id="form-producto-dueno" onSubmit={handleSave} className="p-6 md:p-8 overflow-y-auto flex-1 custom-scrollbar md:grid md:grid-cols-[300px_minmax(0,1fr)] md:gap-8 md:items-start">
+            <form id="form-producto-dueno" onSubmit={handleSave} className="p-6 md:p-8 overflow-y-auto overflow-x-hidden flex-1 custom-scrollbar md:grid md:grid-cols-[300px_minmax(0,1fr)] md:gap-8 md:items-start">
               
               {/* Fotos del producto: la primera es la portada. Se pueden elegir/soltar/pegar varias de una sola vez. */}
               <div className="mb-8 md:mb-0">
@@ -3322,7 +3322,7 @@ function AdminDashboard({ user }: { user: User }) {
                       {newProduct.presentaciones.length > 0 && (
                         <div className="flex flex-col gap-2 mt-3">
                           {newProduct.presentaciones.map((x, i) => (
-                            <div key={i} className="flex items-center gap-2">
+                            <div key={i} className="flex flex-wrap sm:flex-nowrap items-center gap-2">
                               <input
                                 value={x.label}
                                 maxLength={30}
@@ -3333,9 +3333,9 @@ function AdminDashboard({ user }: { user: User }) {
                                   const completo = completarMedida(e.target.value, usaModo ? modo : null);
                                   if (completo !== e.target.value) setNewProduct((prev) => ({ ...prev, presentaciones: prev.presentaciones.map((y, j) => j === i ? { ...y, label: completo } : y) }));
                                 }}
-                                className="flex-1 min-w-0 px-3 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
+                                className="w-full sm:w-auto sm:flex-1 min-w-0 px-3 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
                               />
-                              <div className="relative w-32 shrink-0">
+                              <div className="relative flex-1 min-w-[7rem] sm:flex-none sm:w-32">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">S/</span>
                                 <input
                                   type="number"

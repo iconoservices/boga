@@ -3231,7 +3231,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
               className={`${showStoreProductForm ? 'fixed inset-0 z-[130] flex items-center justify-center bg-black/45 p-4' : 'hidden'} md:static md:z-auto md:flex md:flex-col md:min-h-0 md:w-[420px] md:shrink-0 md:p-0 md:bg-[#f9f9ff] md:border-r md:border-[#ecedf7]`}
               onMouseDown={(e) => { if (e.target === e.currentTarget && window.innerWidth < 768) handleCancelEditStoreProduct(); }}
             >
-              <div className="relative w-full max-w-lg max-h-[92vh] overflow-y-auto bg-white rounded-xl shadow-2xl border border-[#ecedf7] md:max-w-none md:max-h-none md:flex-1 md:min-h-0 md:rounded-none md:shadow-none md:border-0 md:bg-transparent">
+              <div className="relative w-full max-w-lg max-h-[92vh] overflow-y-auto overflow-x-hidden bg-white rounded-xl shadow-2xl border border-[#ecedf7] md:max-w-none md:max-h-none md:flex-1 md:min-h-0 md:rounded-none md:shadow-none md:border-0 md:bg-transparent">
                 <div className="sticky top-0 z-10 flex items-center justify-between gap-3 px-5 py-3 bg-[#f2f3fd] border-b border-[#ecedf7]">
                   <p className="text-xs font-black text-[#191b23] uppercase tracking-widest flex items-center gap-2">
                     <span className="material-symbols-outlined text-[18px] text-[#0058be]">{editingStoreProductId ? 'edit' : 'add_box'}</span>
