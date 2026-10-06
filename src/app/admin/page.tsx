@@ -29,7 +29,8 @@ import CategoriasTab from '@/components/admin/CategoriasTab';
 import HistorialStock from '@/components/admin/HistorialStock';
 import LoyverseSyncModal from '@/components/admin/LoyverseSyncModal';
 import MiPlan from '@/components/admin/MiPlan';
-import { MONEDAS_SUGERIDAS, normalizarMonedas } from '@/lib/monedas';
+import { MONEDAS_SUGERIDAS, normalizarMonedas, precioSugerido } from '@/lib/monedas';
+import { COL_PRECIOS_MONEDA, normalizarPreciosMoneda, type PreciosMoneda } from '@/lib/preciosMoneda';
 import CobroOnline from '@/components/admin/CobroOnline';
 import { COLS_OFERTA, precioOfertaVigente, porcentajeOferta } from '@/lib/ofertas';
 import { COL_PRESENTACIONES, presentacionesSugeridas, textosPresentacion, leerPresentaciones, precioDesde, tipoPresentacionDe, UNIDADES_DE_MEDIDA, completarMedida, ordenarPresentaciones, type ModoMedida } from '@/lib/presentaciones';
@@ -57,6 +58,8 @@ interface Product {
   es_servicio?: boolean | null;
   /** true = es un combo o paquete promocional con sello propio y presencia en Promociones. */
   es_combo?: boolean | null;
+  /** Precio del producto en otras monedas, escrito por el dueño: {"USD": 10, "MXN": 180}. El precio normal (price) es en soles. */
+  precios_moneda?: PreciosMoneda | null;
 }
 
 type TabId = 'inicio' | 'products' | 'categories' | 'orders' | 'pos' | 'metrics' | 'stores';
@@ -283,6 +286,7 @@ function AdminDashboard({ user }: { user: User }) {
           horario: s.horario || undefined,
           perfilEmpresa: normalizarPerfilEmpresa(s.perfil_empresa) ?? undefined,
           metodosPago: s.metodos_pago || undefined,
+          monedas: normalizarMonedas(s.monedas),
           facebook: s.facebook || undefined,
           instagram: s.instagram || undefined,
           tiktok: s.tiktok || undefined,
@@ -481,6 +485,7 @@ function AdminDashboard({ user }: { user: User }) {
     precioOferta: '',
     ofertaHasta: '',
     presentaciones: [] as { label: string; price: string; promo?: boolean }[],
+    preciosMoneda: {} as Record<string, string>,
     esServicio: false,
     esCombo: false,
   });
@@ -511,6 +516,7 @@ function AdminDashboard({ user }: { user: User }) {
       precioOferta: '',
       ofertaHasta: '',
       presentaciones: [],
+      preciosMoneda: {},
       esServicio: false,
       esCombo: false,
     });
@@ -574,9 +580,11 @@ function AdminDashboard({ user }: { user: User }) {
     const base = 'id,name,store,price,category,subcategory,stock,status,image,description,created_at';
     let { data, error } = await supabase
       .from('products')
-      .select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio,es_combo`)
+      .select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio,es_combo,${COL_PRECIOS_MONEDA}`)
       .in('store', slugs)
       .order('created_at', { ascending: false });
+    // Si el SQL de "precios en otras monedas" aún no se corrió, se pide sin esa columna.
+    if (error) ({ data, error } = await supabase.from('products').select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio,es_combo`).in('store', slugs).order('created_at', { ascending: false }) as any);
     // Si el SQL de "es_combo" aún no se corrió, se pide sin esa columna.
     if (error) ({ data, error } = await supabase.from('products').select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio`).in('store', slugs).order('created_at', { ascending: false }) as any);
     // Si el SQL de "fotos extra" (galería) aún no se corrió, se pide sin esa columna.
@@ -815,7 +823,7 @@ function AdminDashboard({ user }: { user: User }) {
       horario: dbData?.horario || config?.horario || '',
       rating: dbData?.rating != null ? String(dbData.rating) : (config?.rating != null ? String(config.rating) : ''),
       metodos_pago: dbData?.metodos_pago || config?.metodosPago || [],
-      monedas: normalizarMonedas(dbData?.monedas).map((m) => ({ ...m, tasa: String(m.tasa) })),
+      monedas: normalizarMonedas(dbData?.monedas).map((m) => ({ ...m, tasa: m.tasa ? String(m.tasa) : '' })),
       facebook: dbData?.facebook || config?.facebook || '',
       instagram: dbData?.instagram || config?.instagram || '',
       tiktok: dbData?.tiktok || config?.tiktok || '',
@@ -899,7 +907,7 @@ function AdminDashboard({ user }: { user: User }) {
         metodos_pago: storeForm.metodos_pago.length ? storeForm.metodos_pago : null,
         // Solo se manda si hay monedas válidas (o si tenía y las quitó): así, sin la columna en la base, no sale el aviso de "no se guardó" en tiendas que no usan monedas.
         ...(() => {
-          const v = normalizarMonedas(storeForm.monedas.map((m) => ({ ...m, tasa: Number(String(m.tasa).replace(',', '.')) })));
+          const v = normalizarMonedas(storeForm.monedas.map((m) => ({ ...m, tasa: String(m.tasa).replace(',', '.') })));
           const antes = dbStores.find((x: any) => x.slug === editingStoreSlug)?.monedas;
           return v.length || antes != null ? { monedas: v.length ? v : null } : {};
         })(),
@@ -1194,6 +1202,13 @@ function AdminDashboard({ user }: { user: User }) {
       const camposPres = hayPres || (productoPrevio?.presentaciones?.length ?? 0) > 0
         ? { [COL_PRESENTACIONES]: hayPres ? presLimpias : null }
         : {};
+      // Precios en otras monedas (US$, MX$…): solo se mandan si hay alguno o si el producto ya tenía (para poder quitarlos).
+      // Un producto con presentaciones tiene un precio por medida: ahí no aplica.
+      const preciosMon = hayPres ? {} : normalizarPreciosMoneda(newProduct.preciosMoneda);
+      const hayPreciosMon = Object.keys(preciosMon).length > 0;
+      const camposMoneda = hayPreciosMon || Object.keys(normalizarPreciosMoneda(productoPrevio?.precios_moneda)).length > 0
+        ? { [COL_PRECIOS_MONEDA]: hayPreciosMon ? preciosMon : null }
+        : {};
       // Igual que arriba: la columna solo se manda si está marcado o si el producto ya la tenía (para poder destildarla).
       const camposServicio = newProduct.esServicio || productoPrevio?.es_servicio
         ? { es_servicio: newProduct.esServicio }
@@ -1219,6 +1234,7 @@ function AdminDashboard({ user }: { user: User }) {
           description: descripcionFinal,
           ...camposOferta,
           ...camposPres,
+          ...camposMoneda,
           ...camposServicio,
           ...camposCombo,
           ...camposFotos,
@@ -1243,6 +1259,7 @@ function AdminDashboard({ user }: { user: User }) {
           ...(tiendaTiene(newProduct.store, 'inventario') ? { stock: finalStock as number } : {}),
           ...camposOferta,
           ...camposPres,
+          ...camposMoneda,
           ...camposServicio,
           ...camposCombo,
           ...camposFotos,
@@ -1275,6 +1292,7 @@ function AdminDashboard({ user }: { user: User }) {
             description: descripcionFinal,
             ...camposOferta,
             ...camposPres,
+            ...camposMoneda,
             ...camposServicio,
             ...camposCombo,
             ...camposFotos,
@@ -1334,6 +1352,7 @@ function AdminDashboard({ user }: { user: User }) {
       precioOferta: product.precio_oferta ? String(product.precio_oferta) : '',
       ofertaHasta: product.oferta_hasta ? product.oferta_hasta.slice(0, 10) : '',
       presentaciones: leerPresentaciones(product.presentaciones).map((x) => ({ label: x.label, price: String(x.price), promo: x.promo === true })),
+      preciosMoneda: Object.fromEntries(Object.entries(normalizarPreciosMoneda(product.precios_moneda)).map(([c, n]) => [c, String(n)])),
       esServicio: product.es_servicio === true,
       esCombo: product.es_combo === true,
     });
@@ -3295,6 +3314,53 @@ function AdminDashboard({ user }: { user: User }) {
                   </div>
                 </div>
 
+                {/* Precio en otras monedas: solo si la tienda activó alguna (Editar tienda → Monedas) y el producto tiene un solo precio.
+                    El cambio de la tienda solo SUGIERE el monto; se puede aceptar o escribir otro a mano. */}
+                {(() => {
+                  const monedasTienda = ((stores as any)[newProduct.store]?.monedas ?? []) as { codigo: string; simbolo: string; tasa?: number }[];
+                  if (monedasTienda.length === 0 || newProduct.presentaciones.length > 0 || formEmpresa || precioOpcional) return null;
+                  const soles = parseFloat(newProduct.price);
+                  return (
+                    <div className="mt-5 p-4 rounded-lg border border-dashed border-gray-300 bg-gray-50/60">
+                      <p className="text-sm font-bold text-gray-700">Precio en otras monedas (opcional)</p>
+                      <p className="text-xs text-gray-500 mt-0.5 mb-3">Si lo escribes, tu tienda muestra este producto con el precio en soles y también en esa moneda.</p>
+                      <div className="space-y-2.5">
+                        {monedasTienda.map((m) => {
+                          const valor = newProduct.preciosMoneda[m.codigo] ?? '';
+                          const sugerido = precioSugerido(soles, m as any);
+                          return (
+                            <div key={m.codigo} className="flex items-center gap-2 flex-wrap">
+                              <label className="text-sm font-bold text-gray-700 w-24">Precio en {m.simbolo}</label>
+                              <div className="relative w-36">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">{m.simbolo}</span>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  value={valor}
+                                  onChange={(e) => setNewProduct({ ...newProduct, preciosMoneda: { ...newProduct.preciosMoneda, [m.codigo]: e.target.value } })}
+                                  placeholder="0.00"
+                                  className="w-full pl-12 pr-2 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
+                                />
+                              </div>
+                              {sugerido !== null && String(sugerido) !== valor && (
+                                <button
+                                  type="button"
+                                  onClick={() => setNewProduct({ ...newProduct, preciosMoneda: { ...newProduct.preciosMoneda, [m.codigo]: String(sugerido) } })}
+                                  className="px-3 py-2 rounded-full border border-gray-300 bg-white text-xs font-bold text-gray-600 hover:border-black transition-colors"
+                                  title="Calculado con el tipo de cambio de tu tienda; puedes escribir otro precio"
+                                >
+                                  Sugerido: {m.simbolo} {sugerido.toFixed(2)} · Usar
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {!formEmpresa && (<>
                 {/* Presentaciones: tallas, tamaños de vaso, medidas o peso con su precio */}
                 {(() => {
@@ -4043,8 +4109,8 @@ function AdminDashboard({ user }: { user: User }) {
 
                 <label className="block text-sm font-bold text-gray-700 mt-6 mb-1">Monedas para tus clientes</label>
                 <p className="text-xs text-gray-500 mb-3">
-                  Tus precios siguen en soles. Si activas una moneda, tu cliente puede ver los precios convertidos (con «≈») tocando un selector en tu tienda.
-                  Tú escribes el tipo de cambio. El pedido y el cobro siguen siendo en soles.
+                  Tus precios están en soles. Si también vendes en otra moneda (por ejemplo dólares, para quien compra desde fuera), actívala aquí.
+                  Luego, en cada producto, escribes su precio en esa moneda y tu tienda muestra los dos precios.
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {MONEDAS_SUGERIDAS.map((m) => {
@@ -4067,8 +4133,10 @@ function AdminDashboard({ user }: { user: User }) {
                     );
                   })}
                 </div>
+
                 {storeForm.monedas.length > 0 && (
                   <div className="mt-3 space-y-2">
+                    <p className="text-xs text-gray-500">Tipo de cambio (opcional): sirve para <b>sugerirte</b> el precio al editar un producto. Siempre puedes escribir otro precio a mano.</p>
                     {storeForm.monedas.map((m, i) => (
                       <div key={m.codigo} className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-bold text-gray-700 w-28">1 {m.simbolo} =</span>
@@ -4084,12 +4152,8 @@ function AdminDashboard({ user }: { user: User }) {
                           placeholder="ej. 3.70"
                           className="w-28 px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0058be]"
                         />
-                        {!(Number(String(m.tasa).replace(',', '.')) > 0) && (
-                          <span className="text-xs text-[#8c0009] font-semibold">Escribe cuántos soles vale 1 {m.simbolo}; sin eso no se muestra.</span>
-                        )}
                       </div>
                     ))}
-                    <p className="text-xs text-gray-400">Revisa tu cambio de vez en cuando: no se actualiza solo.</p>
                   </div>
                 )}
 

@@ -5,7 +5,6 @@ import React, { useState, useEffect } from 'react';
 import type { StoreConfig } from '@/lib/stores.config';
 import { TXT, ICON, inicialesDe } from './tokens';
 import { CartBadge, AddedToast } from './AddFeedback';
-import SelectorMoneda from './SelectorMoneda';
 
 interface Tab {
   id: string;
@@ -141,7 +140,6 @@ export default function StoreHeader({
           </nav>
 
           <div className="flex items-center gap-3 shrink-0">
-            <SelectorMoneda store={store} />
             <button
               onClick={onCta}
               className={`font-bold px-6 py-2.5 rounded-full ${TXT.body} transition-all hover:brightness-110 active:scale-95 shadow-md`}
@@ -183,10 +181,7 @@ export default function StoreHeader({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <SelectorMoneda store={store} compacto />
-          <CustomerAccountButton variant="encabezado" background={`${t.primary}15`} color={t.primary} />
-        </div>
+        <CustomerAccountButton variant="encabezado" background={`${t.primary}15`} color={t.primary} />
       </header>
 
       {/* En Pedidos el aviso sobra: ya se ve el carrito. */}

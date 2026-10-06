@@ -34,6 +34,8 @@ export interface DemoProduct {
   priceAnterior?: number;
   /** Solo para la demo: es un servicio (se reserva, no va al carrito). En `subcategory` va cuánto dura ("45 min"). */
   esServicio?: boolean;
+  /** Solo para la demo: precio en otras monedas (ej. {"USD": 10}); así se ve cómo queda en la tienda. */
+  preciosMoneda?: Record<string, number>;
 }
 
 export interface TemplateConfig {
@@ -1021,8 +1023,8 @@ const TEMPLATES: Record<string, TemplateConfig> = {
       { name: 'Recuerdos', icon: 'redeem', href: 'recuerdos' },
     ],
     demoProducts: [
-      { name: 'Canasta Tejida a Mano', price: 35.00, category: 'Artesanías', image: '/templates/bazar-artesania.svg', description: 'Tejida por artesanos de la selva' },
-      { name: 'Vestido Estampado', price: 89.00, category: 'Ropa amazónica', image: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600&q=80', description: 'Vestido largo con estampado inspirado en la selva' },
+      { name: 'Canasta Tejida a Mano', price: 35.00, category: 'Artesanías', image: '/templates/bazar-artesania.svg', description: 'Tejida por artesanos de la selva', preciosMoneda: { USD: 10, MXN: 185 } },
+      { name: 'Vestido Estampado', price: 89.00, category: 'Ropa amazónica', image: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600&q=80', description: 'Vestido largo con estampado inspirado en la selva', preciosMoneda: { USD: 24, MXN: 450 } },
       { name: 'Blusa Bordada', price: 65.00, category: 'Ropa amazónica', image: 'https://images.unsplash.com/photo-1554568218-0f1715e72254?w=600&q=80', description: 'Blusa con bordados de diseños amazónicos' },
       { name: 'Llavero Artesanal', price: 8.00, category: 'Recuerdos', image: '/templates/bazar-recuerdo.svg', description: 'Recuerdo de Pucallpa hecho a mano' },
     ],

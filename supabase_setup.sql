@@ -1967,8 +1967,11 @@ ON public.reservas FOR UPDATE
 USING (public.is_superadmin() OR public.es_admin_de(store));
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- Monedas de la tienda: el cliente ve los precios en dólares, pesos mexicanos, etc. con el cambio que puso el dueño.
--- Los productos siguen en soles (price); esto es solo para mostrar. Formato: [{"codigo":"USD","simbolo":"US$","tasa":3.7}]
--- (tasa = cuántos soles vale 1 unidad). Sin correr esto la tienda funciona igual: el panel avisa que "monedas" no se guardó.
+-- Precios en otras monedas (dólares, pesos mexicanos…).
+-- stores.monedas: las monedas que la tienda activó en su panel, además de soles. [{"codigo":"USD","simbolo":"US$"}]
+-- products.precios_moneda: el precio del producto en cada una, escrito por el dueño. {"USD": 10, "MXN": 180}
+-- El precio normal (price) sigue en soles. No hay conversión automática: la tienda muestra los precios que el dueño escribió.
+-- Sin correr esto la tienda funciona igual; el panel avisa qué campo no se guardó.
 -- ─────────────────────────────────────────────────────────────────────────────
 ALTER TABLE stores ADD COLUMN IF NOT EXISTS monedas JSONB;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS precios_moneda JSONB;

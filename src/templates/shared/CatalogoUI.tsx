@@ -5,10 +5,17 @@ import React, { useEffect } from 'react';
 import { guardarCliente, leerCliente, normalizarCelular } from '@/lib/cliente';
 import type { StoreTheme } from '@/lib/templates.config';
 import { ahorroPorCantidad, type Presentacion } from '@/lib/presentaciones';
+import { textoOtrosPrecios } from '@/lib/preciosMoneda';
 import { TXT, ICON, soles, soloConsulta, type Producto, type Categoria } from './tokens';
 import { AddButton, CartBadge, EVENTO_VER_PEDIDO } from './AddFeedback';
-import { formatearSoles } from '@/lib/monedas';
-import { useMonedaActiva } from '@/lib/useMoneda';
+
+/** Precio(s) del producto en otras monedas ("US$ 10.00 · MX$ 185.00"), debajo del precio en soles. Nada si no tiene. */
+function OtrosPrecios({ producto, t, className = '' }: { producto: Producto; t: StoreTheme; className?: string }) {
+  if (producto.sinPrecio || (producto.presentaciones?.length ?? 0) > 0) return null;
+  const texto = textoOtrosPrecios(producto.preciosMoneda);
+  if (!texto) return null;
+  return <span className={`block font-semibold ${className}`} style={{ color: t.onSurfaceVariant }}>{texto}</span>;
+}
 
 /* ════════════════════════════════════════════
    CHIPS DE CATEGORIA
@@ -186,6 +193,7 @@ export function ProductGrid({
                 {!product.sinPrecio && product.priceAnterior && (
                   <span className={`block ${TXT.micro} font-medium line-through`} style={{ color: t.onSurfaceVariant }}>{soles(product.priceAnterior)}</span>
                 )}
+                <OtrosPrecios producto={product} t={t} className={TXT.micro} />
               </span>
               {/* Un servicio no se "agrega": se consulta desde su ficha (el tap en la tarjeta ya la abre). */}
               {!soloConsulta(product) && (
@@ -304,6 +312,7 @@ export function CombosCarrusel({
                         {soles(product.priceAnterior)}
                       </span>
                     )}
+                    <OtrosPrecios producto={product} t={t} className={TXT.micro} />
                   </div>
                   {!soloConsulta(product) && (
                     <AddButton t={t} nombre={product.name} onAdd={() => onAdd(product)} />
@@ -537,6 +546,9 @@ export function ProductModal({
                   <span className="text-xs font-black px-2 py-1 rounded-md bg-red-100 text-red-700">-{pctOferta}%</span>
                 </>
               )}
+              {!medida && !producto.sinPrecio && textoOtrosPrecios(producto.preciosMoneda) && (
+                <span className="basis-full text-lg font-bold" style={{ color: t.onSurfaceVariant }}>{textoOtrosPrecios(producto.preciosMoneda)}</span>
+              )}
             </div>
 
             {producto.desc && (
@@ -607,6 +619,9 @@ export function ProductModal({
             {enOferta && (
               <span className="ml-2 text-sm font-medium line-through" style={{ color: t.onSurfaceVariant }}>{soles(producto.priceAnterior!)}</span>
             )}
+            {!medida && !producto.sinPrecio && textoOtrosPrecios(producto.preciosMoneda) && (
+              <span className="block text-xs font-semibold" style={{ color: t.onSurfaceVariant }}>{textoOtrosPrecios(producto.preciosMoneda)}</span>
+            )}
           </span>
           {controlCantidad}
           {botonCompra}
@@ -641,7 +656,6 @@ export function CartPanel({
   /** Cómo entrega la tienda: 'ambos' deja elegir (de siempre); 'delivery'/'recojo' fuerza esa sola opción y esconde el selector. */
   entregaDisponible?: 'delivery' | 'recojo' | 'ambos';
 }) {
-  const monedaActiva = useMonedaActiva();
   const [pagando, setPagando] = React.useState(false);
   // «Usar mi ubicación»: en Pucallpa muchas direcciones son «jirón tal, frente al colegio»; con el punto del GPS el repartidor llega.
   // Se agrega a la dirección un enlace de Google Maps (la tienda lo abre con un toque). Solo se envía a la tienda, al confirmar.
@@ -793,11 +807,6 @@ export function CartPanel({
             <span className={`font-bold ${TXT.small} uppercase`} style={{ color: t.onSurfaceVariant }}>Total</span>
             <span className={`font-black ${TXT.title}`} style={{ color: t.primary }}>{soles(subtotal)}</span>
           </div>
-          {monedaActiva && (
-            <p className={`${TXT.micro} text-center -mt-2`} style={{ color: t.onSurfaceVariant }}>
-              Precio aproximado. Tu pedido y el cobro son en soles: {formatearSoles(subtotal)}.
-            </p>
-          )}
 
           <div className="space-y-3 pt-1">
             <div>

@@ -7,9 +7,7 @@ import { demoSlug } from '@/lib/demoPlantilla';
 import { getDemoProducts } from '@/lib/templates.config';
 import { debeMostrarDemo } from '@/lib/demo';
 import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
-import { iconForCategory, iconoDeCategoria, type Producto, type Categoria } from './tokens';
-import { formatearSoles, equivalenteEnMoneda } from '@/lib/monedas';
-import { useMonedas } from '@/lib/useMoneda';
+import { soles, iconForCategory, iconoDeCategoria, type Producto, type Categoria } from './tokens';
 import { avisarAgregado } from './AddFeedback';
 import { claveLinea, nombreConPresentacion, type Presentacion } from '@/lib/presentaciones';
 import { useDetalleProducto } from './useDetalleProducto';
@@ -27,8 +25,6 @@ type LineaCarrito = { clave: string; producto: Producto; pres?: Presentacion; qt
  */
 export function useCatalogo(store: StoreConfig, initialProductId?: string) {
   const demoPermitido = store.showDemoProducts === true;
-  // Moneda elegida por el cliente: suscribe a toda la plantilla para que los precios se vuelvan a pintar al cambiarla.
-  useMonedas(store.slug, store.monedas);
   // Distribuidoras de gas: ningún producto muestra precio, se consulta por WhatsApp. En las demás plantillas, solo el producto con precio 0.
   const sinPrecioTodo = store.template === 'gas' || store.template === 'empresa';
 
@@ -74,6 +70,7 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
             esServicio: p.es_servicio === true,
             sinPrecio: sinPrecioTodo || !(Number(p.price) > 0),
             esCombo: p.es_combo === true,
+            preciosMoneda: p.preciosMoneda && Object.keys(p.preciosMoneda).length ? p.preciosMoneda : undefined,
           }))
         : [];
 
@@ -92,6 +89,7 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
             esServicio: p.esServicio,
             esCombo: p.esCombo,
             priceAnterior: p.priceAnterior,
+            preciosMoneda: p.preciosMoneda,
             sinPrecio: sinPrecioTodo || !(p.price > 0),
           }))
         : [];
@@ -189,14 +187,14 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
 
   const confirmarPedido = (datos: { nombre: string; telefono: string; entrega: 'delivery' | 'recojo'; direccion: string }) => {
     const lineas = cartItems
-      .map((l) => `• ${l.qty}x ${l.producto.esCombo ? '🔥 [COMBO] ' : ''}${l.pres ? nombreConPresentacion(l.producto.name, l.pres.label) : l.producto.name} — ${formatearSoles(l.precio * l.qty)}`)
+      .map((l) => `• ${l.qty}x ${l.producto.esCombo ? '🔥 [COMBO] ' : ''}${l.pres ? nombreConPresentacion(l.producto.name, l.pres.label) : l.producto.name} — ${soles(l.precio * l.qty)}`)
       .join('\n');
     const entregaTexto = datos.entrega === 'delivery'
       ? `Delivery a: ${datos.direccion}`
       : 'Recojo en tienda';
     enviarPedidoPorWhatsApp(
       store,
-      `¡Hola ${store.name}! Soy ${datos.nombre} (${datos.telefono}). Quiero hacer este pedido:\n\n${lineas}\n\nTotal: ${formatearSoles(subtotal)}${equivalenteEnMoneda(subtotal)}\n\n${entregaTexto}`,
+      `¡Hola ${store.name}! Soy ${datos.nombre} (${datos.telefono}). Quiero hacer este pedido:\n\n${lineas}\n\nTotal: ${soles(subtotal)}\n\n${entregaTexto}`,
       {
         items: cartItems.map((l) => ({ id: l.producto.id, quantity: l.qty, pres: l.pres?.label })),
         cliente: { nombre: datos.nombre, telefono: datos.telefono, entrega: datos.entrega, direccion: datos.direccion },
