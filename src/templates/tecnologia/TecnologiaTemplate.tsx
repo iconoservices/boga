@@ -235,7 +235,7 @@ export default function TecnologiaTemplate({ store, initialProductId, initialTab
                   style={{ background: `linear-gradient(135deg, ${t.secondary}, ${t.primary})`, color: '#fff' }}
                 >
                   <span className="p-5 md:p-10 flex flex-col gap-2">
-                    <span className="self-start text-[11px] font-black px-2 py-0.5 rounded-md bg-white/20">OFERTA {descuento(p)}</span>
+                    <span className="self-start text-[11px] font-black px-2 py-0.5 rounded-md bg-white/20">{p.esCombo ? '🔥 COMBO' : 'OFERTA'} {descuento(p)}</span>
                     <span className="text-lg md:text-3xl font-bold leading-tight line-clamp-3" style={{ fontFamily: t.fontHeadline }}>{p.name}</span>
                     <span className="text-xl md:text-2xl font-black">
                       {soles(p.price)} {p.priceAnterior && <span className="text-sm font-medium line-through opacity-70">{soles(p.priceAnterior)}</span>}
