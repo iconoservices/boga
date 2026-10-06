@@ -21,7 +21,8 @@ const Contexto = createContext<FavoritosTienda | null>(null);
  * En la vista previa de una plantilla (`demo`) el corazón se marca pero no guarda nada.
  */
 export function FavoritosTiendaProvider({ slug, demo = false, children }: { slug: string; demo?: boolean; children: React.ReactNode }) {
-  const { esFavorito, alternar } = useFavoritos();
+  // En la vista previa de una plantilla no hay nada que consultar; en una tienda real, solo los favoritos de esa tienda.
+  const { esFavorito, alternar } = useFavoritos(demo ? '__demo__' : slug);
   const { setModalAbierto } = useCustomerSession();
   const [deMuestra, setDeMuestra] = useState<Set<string>>(new Set());
 
