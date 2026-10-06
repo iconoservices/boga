@@ -110,7 +110,7 @@ function FotoTarjeta({ product }: { product: Producto }) {
    ════════════════════════════════════════════ */
 
 export function ProductGrid({
-  t, productos, onSelect, onAdd, onVerTodo, catalogo, servicios, onConsultar,
+  t, productos, onSelect, onAdd, onVerTodo, catalogo, servicios, onConsultar, carrusel,
 }: {
   t: StoreTheme;
   productos: Producto[];
@@ -123,6 +123,8 @@ export function ProductGrid({
   servicios?: boolean;
   /** Si se pasa, los productos sin precio muestran un botón de WhatsApp en la tarjeta (ej. distribuidora de gas). */
   onConsultar?: (p: Producto) => void;
+  /** Una sola fila que se desliza de lado, con la MISMA tarjeta de la grilla (para el inicio, donde cada categoría tiene pocos productos). */
+  carrusel?: boolean;
 }) {
   // Antes una categoria sin productos dejaba la pantalla en blanco.
   if (productos.length === 0) {
@@ -148,12 +150,12 @@ export function ProductGrid({
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-7 gap-3">
+    <div className={carrusel ? 'flex gap-3 overflow-x-auto hide-scrollbar snap-x scroll-px-5 md:scroll-px-6 pb-2' : 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-7 gap-3'}>
       {productos.map((product) => (
         <div
           key={product.id}
           onClick={() => onSelect(product)}
-          className="rounded-2xl overflow-hidden group relative cursor-pointer border hover:shadow-lg transition-all duration-300 flex flex-col"
+          className={`rounded-2xl overflow-hidden group relative cursor-pointer border hover:shadow-lg transition-all duration-300 flex flex-col ${carrusel ? 'w-[168px] sm:w-[190px] shrink-0 snap-start' : ''}`}
           style={{ background: t.surface, borderColor: `${t.outlineVariant}30` }}
         >
           <FotoTarjeta product={product} />

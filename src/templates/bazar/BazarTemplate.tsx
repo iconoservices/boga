@@ -22,6 +22,42 @@ interface Props {
 /** Portada de fábrica de la plantilla: solo se muestra en la vista previa; una tienda real sin banner propio no la muestra. */
 const PORTADA_DE_FABRICA = '/templates/bazar-portada.svg';
 
+/** Fila que se desliza de lado. En escritorio lleva flechas, porque con el mouse no siempre se puede deslizar. */
+function FilaDeslizable({ t, children }: { t: StoreConfig['theme']; children: React.ReactNode }) {
+  const caja = React.useRef<HTMLDivElement>(null);
+  const [desborda, setDesborda] = useState(false);
+  // La fila que se desliza es el primer hijo (ProductGrid en modo carrusel). Las flechas solo salen si hay más tarjetas de las que caben.
+  const fila = () => caja.current?.firstElementChild as HTMLElement | null;
+  React.useEffect(() => {
+    const el = fila();
+    if (!el) return;
+    const medir = () => setDesborda(el.scrollWidth > el.clientWidth + 4);
+    medir();
+    const ro = new ResizeObserver(medir);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [children]);
+  const mover = (dir: number) => fila()?.scrollBy({ left: dir * 340, behavior: 'smooth' });
+  const flecha = (dir: number, icono: string, lado: string) => (
+    <button
+      type="button"
+      onClick={() => mover(dir)}
+      aria-label={dir < 0 ? 'Anterior' : 'Siguiente'}
+      className={`hidden md:flex absolute top-1/3 ${lado} z-10 w-9 h-9 rounded-full items-center justify-center shadow-lg active:scale-95 transition-transform`}
+      style={{ background: t.surface, color: t.primary, border: `1px solid ${t.outlineVariant}` }}
+    >
+      <span className="material-symbols-outlined text-[20px]">{icono}</span>
+    </button>
+  );
+  return (
+    <div className="relative">
+      {desborda && flecha(-1, 'chevron_left', 'left-2')}
+      <div ref={caja} className="px-5 md:px-6">{children}</div>
+      {desborda && flecha(1, 'chevron_right', 'right-2')}
+    </div>
+  );
+}
+
 /** Categorías: botones pequeños con el ícono en un circulito. Quedan fijos bajo el encabezado al bajar, y se deslizan de lado si no caben. */
 function ChipsBazar({ t, tabs, active, onSelect }: { t: StoreConfig['theme']; tabs: { id: string; label: string; icon?: string }[]; active: string; onSelect: (id: string) => void }) {
   return (
@@ -207,33 +243,34 @@ Presupuesto aproximado: `,
               />
             )}
 
-            {/* En "Todo": cada categoría con su título y la MISMA grilla que se ve al entrar a una categoría (no un carrusel,
-                que dejaba la tarjeta siguiente cortada en el borde). Salen las primeras 4 y un botón para ver todas. */}
+            {/* En "Todo": cada categoría con su título y UNA fila que se desliza de lado, con la misma tarjeta que se ve al entrar
+                a una categoría. Una grilla aquí dejaba 1 o 2 tarjetas pegadas a la izquierda y el resto vacío. */}
             {c.activeCategory === 'all' && c.categoryTabs
               .filter((x) => x.id !== 'all')
               .map((cat) => {
                 const deLaCategoria = c.products.filter((p) => p.category === cat.id);
                 if (deLaCategoria.length === 0) return null;
                 return (
-                  <section key={cat.id} className="px-5 md:px-6 pt-6">
-                    <div className="flex items-center justify-between gap-3 mb-3">
+                  <section key={cat.id} className="pt-6">
+                    <div className="px-5 md:px-6 flex items-center justify-between gap-3 mb-3">
                       <h2 className={`${TXT.lead} font-black tracking-tight`} style={{ color: t.onSurface, fontFamily: t.fontHeadline }}>{cat.label}</h2>
-                      {deLaCategoria.length > 4 && (
-                        <button
-                          onClick={() => c.setActiveCategory(cat.id)}
-                          className={`${TXT.small} font-bold flex items-center gap-0.5 hover:underline active:scale-95 transition-transform`}
-                          style={{ color: t.primary }}
-                        >
-                          Ver todos ({deLaCategoria.length}) <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                        </button>
-                      )}
+                      <button
+                        onClick={() => c.setActiveCategory(cat.id)}
+                        className={`${TXT.small} font-bold flex items-center gap-0.5 hover:underline active:scale-95 transition-transform`}
+                        style={{ color: t.primary }}
+                      >
+                        Ver todos <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                      </button>
                     </div>
-                    <ProductGrid
-                      t={t}
-                      productos={deLaCategoria.slice(0, 4)}
-                      onSelect={c.abrirProducto}
-                      onAdd={c.addToCart}
-                    />
+                    <FilaDeslizable t={t}>
+                      <ProductGrid
+                        t={t}
+                        productos={deLaCategoria}
+                        onSelect={c.abrirProducto}
+                        onAdd={c.addToCart}
+                        carrusel
+                      />
+                    </FilaDeslizable>
                   </section>
                 );
               })}
