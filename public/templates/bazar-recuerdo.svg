@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-label="Llavero artesanal">
+  <defs>
+    <pattern id="p" width="48" height="48" patternUnits="userSpaceOnUse">
+      <rect width="48" height="48" fill="#a8431f"/>
+      <path d="M24 4 44 24 24 44 4 24Z" fill="none" stroke="#f6e3d3" stroke-width="3"/>
+      <path d="M24 16 32 24 24 32 16 24Z" fill="#1f5c3a"/>
+    </pattern>
+    <clipPath id="chapa"><rect x="195" y="230" width="210" height="290" rx="34"/></clipPath>
+  </defs>
+  <rect width="600" height="600" fill="#f1e6d4"/>
+  <circle cx="300" cy="300" r="250" fill="#dcebe1"/>
+  <!-- argolla -->
+  <circle cx="300" cy="150" r="62" fill="none" stroke="#8a8a8a" stroke-width="14"/>
+  <path d="M300 212V240" stroke="#8a8a8a" stroke-width="14" stroke-linecap="round"/>
+  <!-- chapa con patrón -->
+  <rect x="195" y="230" width="210" height="290" rx="34" fill="#7a3217"/>
+  <g clip-path="url(#chapa)"><rect x="207" y="242" width="186" height="266" rx="26" fill="url(#p)"/></g>
+  <circle cx="300" cy="262" r="12" fill="#f1e6d4"/>
+</svg>

@@ -96,6 +96,11 @@ const TEMPLATE_PRESENTATION: Record<string, { category?: string; description: st
     previewUrl: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=600&q=80',
   },
 
+  bazar: {
+    category: 'Comercio',
+    description: 'Para bazares y tiendas de artesanías y ropa de la cultura amazónica: paleta de tierra y selva, franja con patrón inspirado en diseños shipibo, accesos grandes por categoría (Artesanías, Ropa, Recuerdos) y un botón para quien busca un recuerdo o regalo de Pucallpa. Carrito y pedido por WhatsApp.',
+    previewUrl: '/templates/bazar-portada.svg',
+  },
   detalles: {
     category: 'Comercio',
     description: 'Para manualidades y detalles hechos a mano (jabones, velas, adornos en MDF, cerámica al frío): la línea de siempre más una categoría de temporada que el dueño crea con la fecha (San Valentín, Navidad…), y botón de pedido personalizado por WhatsApp.',

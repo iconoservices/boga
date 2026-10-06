@@ -39,7 +39,7 @@ const PORTAL_POR_PLANTILLA: Record<string, string> = {
   mercado: 'Mercado', condimentos: 'Mercado', natura: 'Mercado', amazonia: 'Mercado',
   estilosmirka: 'Moda y Belleza', mirkavisual: 'Moda y Belleza', sweetkittynails: 'Moda y Belleza',
   atelier: 'Moda', lookbook: 'Moda', uniformes: 'Moda',
-  flores: 'Regalos y Detalles', detalles: 'Regalos y Detalles',
+  flores: 'Regalos y Detalles', detalles: 'Regalos y Detalles', bazar: 'Regalos y Detalles',
   veterinaria: 'Salud y Bienestar',
   gas: 'Servicios',
   belleza: 'Moda y Belleza',
@@ -72,6 +72,7 @@ const META: Record<string, { emoji: string; cat: string }> = {
   menudirecto: { emoji: '🍔', cat: 'Restaurantes' },
   iniciocatalogo: { emoji: '🔥', cat: 'Restaurantes' },
   flores: { emoji: '🌸', cat: 'Comercio' },
+  bazar: { emoji: '🏺', cat: 'Comercio' },
   detalles: { emoji: '🧼', cat: 'Comercio' },
 };
 

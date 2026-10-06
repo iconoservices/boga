@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520" role="img" aria-label="Bazar amazónico: artesanías y ropa de la selva">
+  <defs>
+    <linearGradient id="cielo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbe9d6"/>
+      <stop offset="1" stop-color="#f1c9a0"/>
+    </linearGradient>
+    <pattern id="rombos" width="60" height="60" patternUnits="userSpaceOnUse">
+      <rect width="60" height="60" fill="#a8431f"/>
+      <path d="M30 6 54 30 30 54 6 30Z" fill="none" stroke="#f6e3d3" stroke-width="3"/>
+      <path d="M30 20 40 30 30 40 20 30Z" fill="#1f5c3a"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="520" fill="url(#cielo)"/>
+  <circle cx="860" cy="210" r="120" fill="#e9a66b" opacity="0.85"/>
+  <circle cx="860" cy="210" r="84" fill="#f6c58f"/>
+  <!-- selva en capas -->
+  <path d="M0 360C120 300 220 330 330 300S520 250 640 300 860 340 980 290 1120 270 1200 300V520H0Z" fill="#2f7a4f"/>
+  <path d="M0 420C140 370 260 400 380 370S600 330 720 380 960 420 1080 380 1160 360 1200 370V520H0Z" fill="#1f5c3a"/>
+  <!-- hojas grandes -->
+  <g fill="#174a2e">
+    <path d="M120 440C100 360 130 290 190 250 180 320 190 380 120 440Z"/>
+    <path d="M120 440C150 370 210 330 280 330 230 370 190 410 120 440Z"/>
+    <path d="M1060 440C1040 370 1070 300 1130 260 1120 330 1130 390 1060 440Z"/>
+    <path d="M1060 440C1090 380 1140 350 1200 350 1150 385 1110 415 1060 440Z"/>
+  </g>
+  <!-- motivo central de rombos concéntricos (inspirado en diseños shipibo) -->
+  <g transform="translate(360 250)" fill="none" stroke="#a8431f" stroke-width="6" stroke-linejoin="round">
+    <path d="M0 -110 110 0 0 110 -110 0Z"/>
+    <path d="M0 -76 76 0 0 76 -76 0Z" stroke="#1f5c3a"/>
+    <path d="M0 -42 42 0 0 42 -42 0Z"/>
+    <path d="M0 -12 12 0 0 12 -12 0Z" fill="#a8431f"/>
+  </g>
+  <!-- franja inferior con patrón -->
+  <rect y="472" width="1200" height="48" fill="url(#rombos)"/>
+</svg>

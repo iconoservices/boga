@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-label="Canasta tejida a mano">
+  <defs>
+    <clipPath id="cuerpo"><path d="M110 270H490L450 480Q300 520 150 480Z"/></clipPath>
+  </defs>
+  <rect width="600" height="600" fill="#f1e6d4"/>
+  <circle cx="300" cy="300" r="250" fill="#f6e3d3"/>
+  <!-- asa -->
+  <path d="M150 270C150 110 450 110 450 270" fill="none" stroke="#7a3217" stroke-width="22" stroke-linecap="round"/>
+  <!-- cuerpo tejido -->
+  <path d="M110 270H490L450 480Q300 520 150 480Z" fill="#c98a4b"/>
+  <g clip-path="url(#cuerpo)" stroke="#a8431f" stroke-width="10" fill="none">
+    <path d="M90 310H510M90 360H510M90 410H510M90 460H510" stroke="#8a5424"/>
+    <path d="M150 250 230 520M230 250 310 520M310 250 390 520M390 250 470 520" opacity="0.55"/>
+    <path d="M230 250 150 520M310 250 230 520M390 250 310 520M470 250 390 520" opacity="0.55"/>
+  </g>
+  <rect x="100" y="258" width="400" height="28" rx="14" fill="#7a3217"/>
+  <!-- franja con rombos -->
+  <g transform="translate(0 395)" fill="#1f5c3a">
+    <path d="M200 0 220 18 200 36 180 18Z"/><path d="M260 0 280 18 260 36 240 18Z"/>
+    <path d="M320 0 340 18 320 36 300 18Z"/><path d="M380 0 400 18 380 36 360 18Z"/>
+  </g>
+</svg>
