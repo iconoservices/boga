@@ -144,14 +144,6 @@ export default function BazarTemplate({ store, initialProductId, initialTab }: P
               </section>
             )}
 
-            {/* En el inicio, tocar una categoría lleva al catálogo con esa categoría. */}
-            <ChipsCategoria
-              t={t}
-              tabs={c.categoryTabs}
-              active="all"
-              onSelect={(id) => { if (id !== 'all') ir('catalogo', id); }}
-            />
-
             {/* Combos y ofertas (módulo Promociones), siempre primero. */}
             {c.combosYOfertas && c.combosYOfertas.length > 0 && (
               <CombosCarrusel
