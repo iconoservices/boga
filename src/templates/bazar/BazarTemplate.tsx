@@ -131,13 +131,6 @@ export default function BazarTemplate({ store, initialProductId, initialTab }: P
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const pedirAyuda = () =>
-    enviarPedidoPorWhatsApp(
-      store,
-      `Hola ${store.name}, estoy buscando: (cuéntanos qué necesitas)
-Presupuesto aproximado: `,
-    );
-
   // Franja con patrón en zigzag (de inspiración shipibo), hecha solo con CSS.
   const patron: React.CSSProperties = {
     height: 14,
@@ -200,27 +193,6 @@ Presupuesto aproximado: `,
                     </span>
                   )}
                 </div>
-              </section>
-            )}
-
-            {/* Ayuda para elegir: a la vista, porque en un bazar muchos no saben qué llevar. */}
-            {c.whatsappVisible && (
-              <section className="px-5 md:px-6 pt-4">
-                <button
-                  type="button"
-                  onClick={pedirAyuda}
-                  className="w-full flex items-center gap-3 rounded-2xl px-4 py-3.5 text-left active:scale-[0.99] transition-transform"
-                  style={{ background: t.surface, color: t.onSurface, border: `1px dashed ${t.primary}` }}
-                >
-                  <span className="material-symbols-outlined shrink-0" style={{ color: t.primary }}>redeem</span>
-                  <span className="flex-1 min-w-0">
-                    <span className="block text-sm font-black">¿No encuentras lo que buscas?</span>
-                    <span className="block text-xs" style={{ color: t.onSurfaceVariant }}>
-                      Escríbenos qué necesitas y te ayudamos a elegir.
-                    </span>
-                  </span>
-                  <span className="material-symbols-outlined shrink-0" style={{ color: t.primary }}>chat</span>
-                </button>
               </section>
             )}
 

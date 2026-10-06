@@ -28,7 +28,7 @@ export function normalizarPreciosMoneda(raw: unknown): PreciosMoneda {
   return salida;
 }
 
-/** "US$ 10.00 · MX$ 180.00" o '' si el producto no tiene precios en otras monedas. */
-export function textoOtrosPrecios(p?: PreciosMoneda): string {
-  return Object.entries(p ?? {}).map(([c, n]) => `${simboloDe(c)} ${n.toFixed(2)}`).join(' · ');
+/** "US$ 10.00 · MX$ 180.00" o '' si el producto no tiene precios en otras monedas. `factor` = cantidad elegida. */
+export function textoOtrosPrecios(p?: PreciosMoneda, factor = 1): string {
+  return Object.entries(p ?? {}).map(([c, n]) => `${simboloDe(c)} ${(n * factor).toFixed(2)}`).join(' · ');
 }

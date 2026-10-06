@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { StoreConfig } from '@/lib/stores.config';
+import OtrosPrecios from '@/templates/shared/OtrosPrecios';
 import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { debeMostrarDemo } from '@/lib/demo';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
@@ -60,6 +61,7 @@ export default function NaturaTemplate({ store, initialProductId }: NaturaTempla
           category: categoryObj ? categoryObj.href : p.category.toLowerCase(),
           image: p.image || 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400&q=80',
           images: Array.isArray(p.images) && p.images.length > 1 ? p.images : undefined,
+          preciosMoneda: p.preciosMoneda,
         };
       }) : [];
       
@@ -175,7 +177,7 @@ export default function NaturaTemplate({ store, initialProductId }: NaturaTempla
                   <h3 className="font-bold text-[13px] leading-tight line-clamp-1" style={{ color: t.onSurface }}>{product.name}</h3>
                   <p className="text-[11px] mt-0.5 line-clamp-1" style={{ color: t.onSurfaceVariant }}>{product.desc}</p>
                   <div className="flex items-center justify-between mt-2">
-                    <span className="font-black text-[15px]" style={{ color: t.primary }}>{product.price}{product.oldPrice && <span className="ml-1.5 text-[11px] font-medium line-through" style={{ color: t.onSurfaceVariant }}>{product.oldPrice}</span>}</span>
+                    <span className="flex flex-col"><span className="font-black text-[15px]" style={{ color: t.primary }}>{product.price}{product.oldPrice && <span className="ml-1.5 text-[11px] font-medium line-through" style={{ color: t.onSurfaceVariant }}>{product.oldPrice}</span>}</span><OtrosPrecios precios={product.preciosMoneda} className="text-[10px]" style={{ color: t.onSurfaceVariant }} /></span>
                     <button onClick={() => setCartCount((c) => c + 1)}
                       className="w-7 h-7 rounded-full flex items-center justify-center transition-transform active:scale-90"
                       style={{ background: t.primary, color: t.onPrimary }}>
@@ -224,7 +226,7 @@ export default function NaturaTemplate({ store, initialProductId }: NaturaTempla
               <h2 className="font-bold text-lg" style={{ color: t.onSurface }}>{selectedProduct.name}</h2>
               <p className="text-[13px] mt-2 leading-relaxed" style={{ color: t.onSurfaceVariant }}>{selectedProduct.desc}</p>
               <div className="flex items-center justify-between mt-5">
-                <span className="font-black text-xl" style={{ color: t.primary }}>{selectedProduct.price}{selectedProduct.oldPrice && <span className="ml-2 text-sm font-medium line-through" style={{ color: t.onSurfaceVariant }}>{selectedProduct.oldPrice}</span>}</span>
+                <span className="flex flex-col"><span className="font-black text-xl" style={{ color: t.primary }}>{selectedProduct.price}{selectedProduct.oldPrice && <span className="ml-2 text-sm font-medium line-through" style={{ color: t.onSurfaceVariant }}>{selectedProduct.oldPrice}</span>}</span><OtrosPrecios precios={selectedProduct.preciosMoneda} className="text-sm" style={{ color: t.onSurfaceVariant }} /></span>
                 <button onClick={() => { setCartCount((c) => c + 1); cerrarProducto(); }}
                   className="px-6 py-2.5 rounded-xl font-bold text-sm flex items-center gap-1.5 transition-transform active:scale-95"
                   style={{ background: t.primary, color: t.onPrimary }}>

@@ -11,8 +11,10 @@ import { AddButton, CartBadge, EVENTO_VER_PEDIDO } from './AddFeedback';
 
 /** Precio(s) del producto en otras monedas ("US$ 10.00 · MX$ 185.00"), debajo del precio en soles. Nada si no tiene. */
 function OtrosPrecios({ producto, t, className = '' }: { producto: Producto; t: StoreTheme; className?: string }) {
-  if (producto.sinPrecio || (producto.presentaciones?.length ?? 0) > 0) return null;
-  const texto = textoOtrosPrecios(producto.preciosMoneda);
+  if (producto.sinPrecio) return null;
+  // Con medidas, la tarjeta muestra "Desde" la más barata: los otros precios son los de esa medida.
+  const masBarata = producto.presentaciones?.length ? producto.presentaciones.reduce((a, b) => (b.price < a.price ? b : a)) : null;
+  const texto = textoOtrosPrecios(masBarata ? masBarata.preciosMoneda : producto.preciosMoneda);
   if (!texto) return null;
   return <span className={`block font-semibold ${className}`} style={{ color: t.onSurfaceVariant }}>{texto}</span>;
 }
@@ -402,6 +404,8 @@ export function ProductModal({
   const fotos = producto.images && producto.images.length > 1 ? producto.images : [producto.image];
 
   const precioTexto = producto.sinPrecio ? 'Consultar precio' : soles((medida?.price ?? producto.price) * (producto.esServicio ? 1 : cantidad));
+  // Precios en otras monedas de lo que está elegido (la medida, o el producto) y por la cantidad.
+  const otrosPrecios = producto.sinPrecio ? '' : textoOtrosPrecios(medida ? medida.preciosMoneda : producto.preciosMoneda, producto.esServicio ? 1 : cantidad);
   const enOferta = !producto.sinPrecio && !medida && cantidad === 1 && !!producto.priceAnterior && producto.priceAnterior > producto.price;
   const pctOferta = enOferta ? Math.round((1 - producto.price / producto.priceAnterior!) * 100) : 0;
 
@@ -546,8 +550,8 @@ export function ProductModal({
                   <span className="text-xs font-black px-2 py-1 rounded-md bg-red-100 text-red-700">-{pctOferta}%</span>
                 </>
               )}
-              {!medida && !producto.sinPrecio && textoOtrosPrecios(producto.preciosMoneda) && (
-                <span className="basis-full text-lg font-bold" style={{ color: t.onSurfaceVariant }}>{textoOtrosPrecios(producto.preciosMoneda)}</span>
+              {otrosPrecios && (
+                <span className="basis-full text-lg font-bold" style={{ color: t.onSurfaceVariant }}>{otrosPrecios}</span>
               )}
             </div>
 
@@ -577,6 +581,9 @@ export function ProductModal({
                           {x.promo && <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-orange-500 text-white shrink-0">🔥 PROMO</span>}
                         </span>
                         <span className={`block font-bold ${TXT.body}`} style={{ color: t.primary }}>{soles(x.price)}</span>
+                    {x.preciosMoneda && (
+                      <span className="block text-[11px] font-semibold leading-tight" style={{ color: t.onSurfaceVariant }}>{textoOtrosPrecios(x.preciosMoneda)}</span>
+                    )}
                         {ahorro && (
                           <span className="block text-[10px] font-bold leading-tight mt-0.5 text-green-700">
                             Ahorras {soles(ahorro.ahorro)} · {soles(ahorro.porUnidad)} c/u
@@ -619,8 +626,8 @@ export function ProductModal({
             {enOferta && (
               <span className="ml-2 text-sm font-medium line-through" style={{ color: t.onSurfaceVariant }}>{soles(producto.priceAnterior!)}</span>
             )}
-            {!medida && !producto.sinPrecio && textoOtrosPrecios(producto.preciosMoneda) && (
-              <span className="block text-xs font-semibold" style={{ color: t.onSurfaceVariant }}>{textoOtrosPrecios(producto.preciosMoneda)}</span>
+            {otrosPrecios && (
+              <span className="block text-xs font-semibold" style={{ color: t.onSurfaceVariant }}>{otrosPrecios}</span>
             )}
           </span>
           {controlCantidad}

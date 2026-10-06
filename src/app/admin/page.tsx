@@ -53,7 +53,7 @@ interface Product {
   precio_oferta?: number | null;
   oferta_hasta?: string | null;
   /** Medidas o tamaños con su precio (100 g / 250 g / 1 kg…). Sin lista = un solo precio. */
-  presentaciones?: { label: string; price: number }[] | null;
+  presentaciones?: { label: string; price: number; promo?: boolean; preciosMoneda?: PreciosMoneda }[] | null;
   /** true = es un servicio (se reserva/consulta, no se agrega al carrito). Decide si sale en el toggle "Servicios" del Market. */
   es_servicio?: boolean | null;
   /** true = es un combo o paquete promocional con sello propio y presencia en Promociones. */
@@ -484,7 +484,7 @@ function AdminDashboard({ user }: { user: User }) {
     ubicacion: '',
     precioOferta: '',
     ofertaHasta: '',
-    presentaciones: [] as { label: string; price: string; promo?: boolean }[],
+    presentaciones: [] as { label: string; price: string; promo?: boolean; preciosMoneda?: Record<string, string> }[],
     preciosMoneda: {} as Record<string, string>,
     esServicio: false,
     esCombo: false,
@@ -495,6 +495,11 @@ function AdminDashboard({ user }: { user: User }) {
   // Gas: los productos se publican sin precio (el cliente consulta por WhatsApp).
   // Vocabulario del formulario: según la tienda a la que se asigna el ítem.
   const formEmpresa = (stores as any)[newProduct.store]?.template === 'empresa';
+  // Tipo de cambio para SUGERIR precios en otras monedas: el de la tienda (Editar tienda → Monedas) o, si no lo tiene,
+  // el que se escribe aquí mismo (solo vale mientras se edita este producto).
+  const [tasasLocales, setTasasLocales] = useState<Record<string, string>>({});
+  const tasaDe = (m: { codigo: string; tasa?: number }): number | undefined =>
+    m.tasa ?? (Number(String(tasasLocales[m.codigo] ?? '').replace(',', '.')) || undefined);
   const precioOpcional = (stores as any)[newProduct.store]?.template === 'gas' || (stores as any)[newProduct.store]?.template === 'empresa';
 
   const resetForm = () => {
@@ -1185,7 +1190,7 @@ function AdminDashboard({ user }: { user: User }) {
       // Presentaciones (100 g / 250 g / 1 kg…): filas con etiqueta y precio válidos. Si hay, `price` guarda la más barata
       // ("Desde S/ …") y no se usa oferta (cada medida ya tiene su precio).
       // Se guardan de menor a mayor cantidad (1 unidad, 2, 3, 12…), sin importar el orden en que se escribieron.
-      const presLimpias = ordenarPresentaciones(leerPresentaciones(newProduct.presentaciones.map((x) => ({ label: x.label, price: parseFloat(x.price), promo: x.promo === true }))));
+      const presLimpias = ordenarPresentaciones(leerPresentaciones(newProduct.presentaciones.map((x) => ({ label: x.label, price: parseFloat(x.price), promo: x.promo === true, preciosMoneda: x.preciosMoneda }))));
       if (newProduct.presentaciones.some((x) => (x.label.trim() || x.price.trim()) && !(x.label.trim() && parseFloat(x.price) > 0))) {
         throw new Error('Cada presentación necesita un nombre (ej. 250 g) y un precio mayor a 0. Completa o quita las filas vacías.');
       }
@@ -1351,7 +1356,12 @@ function AdminDashboard({ user }: { user: User }) {
       ubicacion: (product.description || '').match(RE_MAPS)?.[0] ?? '',
       precioOferta: product.precio_oferta ? String(product.precio_oferta) : '',
       ofertaHasta: product.oferta_hasta ? product.oferta_hasta.slice(0, 10) : '',
-      presentaciones: leerPresentaciones(product.presentaciones).map((x) => ({ label: x.label, price: String(x.price), promo: x.promo === true })),
+      presentaciones: leerPresentaciones(product.presentaciones).map((x) => ({
+        label: x.label,
+        price: String(x.price),
+        promo: x.promo === true,
+        preciosMoneda: x.preciosMoneda ? Object.fromEntries(Object.entries(x.preciosMoneda).map(([c, n]) => [c, String(n)])) : undefined,
+      })),
       preciosMoneda: Object.fromEntries(Object.entries(normalizarPreciosMoneda(product.precios_moneda)).map(([c, n]) => [c, String(n)])),
       esServicio: product.es_servicio === true,
       esCombo: product.es_combo === true,
@@ -3327,7 +3337,7 @@ function AdminDashboard({ user }: { user: User }) {
                       <div className="space-y-2.5">
                         {monedasTienda.map((m) => {
                           const valor = newProduct.preciosMoneda[m.codigo] ?? '';
-                          const sugerido = precioSugerido(soles, m as any);
+                          const sugerido = precioSugerido(soles, { ...m, tasa: tasaDe(m) } as any);
                           return (
                             <div key={m.codigo} className="flex items-center gap-2 flex-wrap">
                               <label className="text-sm font-bold text-gray-700 w-24">Precio en {m.simbolo}</label>
@@ -3353,10 +3363,27 @@ function AdminDashboard({ user }: { user: User }) {
                                   Sugerido: {m.simbolo} {sugerido.toFixed(2)} · Usar
                                 </button>
                               )}
+                              {!m.tasa && (
+                                <span className="flex items-center gap-1.5 text-xs text-gray-500">
+                                  Cambio: 1 {m.simbolo} = S/
+                                  <input
+                                    type="text"
+                                    inputMode="decimal"
+                                    value={tasasLocales[m.codigo] ?? ''}
+                                    onChange={(e) => setTasasLocales({ ...tasasLocales, [m.codigo]: e.target.value })}
+                                    placeholder="3.70"
+                                    aria-label={`Cuántos soles vale 1 ${m.simbolo}, para sugerirte el precio`}
+                                    className="w-16 px-2 py-1.5 bg-white border border-gray-200 rounded-md text-xs font-medium focus:outline-none focus:border-black"
+                                  />
+                                </span>
+                              )}
                             </div>
                           );
                         })}
                       </div>
+                      {monedasTienda.some((m) => !m.tasa) && (
+                        <p className="text-[11px] text-gray-400 mt-2.5">Escribe el cambio para que te sugiera el precio. Para no escribirlo cada vez, guárdalo en <b>Editar tienda → Monedas</b>.</p>
+                      )}
                     </div>
                   );
                 })()}
@@ -3388,7 +3415,8 @@ function AdminDashboard({ user }: { user: User }) {
                       {newProduct.presentaciones.length > 0 && (
                         <div className="flex flex-col gap-2 mt-3">
                           {newProduct.presentaciones.map((x, i) => (
-                            <div key={i} className="flex flex-wrap sm:flex-nowrap items-center gap-2">
+                            <div key={i} className="space-y-1.5">
+                            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
                               <input
                                 value={x.label}
                                 maxLength={30}
@@ -3432,6 +3460,44 @@ function AdminDashboard({ user }: { user: User }) {
                               >
                                 <span className="material-symbols-outlined text-[20px]">close</span>
                               </button>
+                            </div>
+                            {/* Precio de esta medida en otras monedas: opcional, solo si la tienda activó monedas. El cambio solo sugiere. */}
+                            {(() => {
+                              const monedasTienda = ((stores as any)[newProduct.store]?.monedas ?? []) as { codigo: string; simbolo: string; tasa?: number }[];
+                              if (monedasTienda.length === 0) return null;
+                              return (
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pl-1">
+                                  {monedasTienda.map((m) => {
+                                    const valor = x.preciosMoneda?.[m.codigo] ?? '';
+                                    const sugerido = precioSugerido(parseFloat(x.price), { ...m, tasa: tasaDe(m) } as any);
+                                    const poner = (v: string) => setNewProduct({
+                                      ...newProduct,
+                                      presentaciones: newProduct.presentaciones.map((y, j) => j === i ? { ...y, preciosMoneda: { ...(y.preciosMoneda ?? {}), [m.codigo]: v } } : y),
+                                    });
+                                    return (
+                                      <div key={m.codigo} className="flex items-center gap-1.5">
+                                        <span className="text-xs font-bold text-gray-500 w-9">{m.simbolo}</span>
+                                        <input
+                                          type="number"
+                                          step="0.01"
+                                          min="0"
+                                          value={valor}
+                                          onChange={(e) => poner(e.target.value)}
+                                          placeholder="0.00"
+                                          aria-label={`Precio de ${x.label || 'esta opción'} en ${m.simbolo}`}
+                                          className="w-24 px-2 py-2 bg-white border border-gray-200 rounded-md text-sm font-medium focus:outline-none focus:border-black transition-all"
+                                        />
+                                        {sugerido !== null && String(sugerido) !== valor && (
+                                          <button type="button" onClick={() => poner(String(sugerido))} className="text-[11px] font-bold text-gray-500 underline hover:text-black" title="Calculado con el tipo de cambio de tu tienda; puedes escribir otro">
+                                            Usar {sugerido.toFixed(2)}
+                                          </button>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              );
+                            })()}
                             </div>
                           ))}
                         </div>

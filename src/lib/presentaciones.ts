@@ -7,7 +7,15 @@
 // (nunca se confía en el precio del cliente).
 
 /** `promo`: el dueño la marcó con 🔥 (precio por cantidad / paquete en promoción). */
-export type Presentacion = { label: string; price: number; promo?: boolean };
+import { normalizarPreciosMoneda } from '@/lib/preciosMoneda';
+
+export type Presentacion = {
+  label: string;
+  price: number;
+  promo?: boolean;
+  /** Precio de esta medida en otras monedas, escrito por el dueño: {"USD": 2.5}. Ver lib/preciosMoneda.ts. */
+  preciosMoneda?: Record<string, number>;
+};
 
 /** Nombre de la columna en `products`. */
 export const COL_PRESENTACIONES = 'presentaciones';
@@ -243,7 +251,13 @@ export function leerPresentaciones(v: unknown): Presentacion[] {
     const price = Number((x as Presentacion)?.price);
     if (!label || !(price > 0) || vistas.has(label.toLowerCase())) continue;
     vistas.add(label.toLowerCase());
-    out.push({ label, price: Math.round(price * 100) / 100, ...((x as Presentacion)?.promo === true ? { promo: true } : {}) });
+    const otras = normalizarPreciosMoneda((x as Presentacion)?.preciosMoneda);
+    out.push({
+      label,
+      price: Math.round(price * 100) / 100,
+      ...((x as Presentacion)?.promo === true ? { promo: true } : {}),
+      ...(Object.keys(otras).length ? { preciosMoneda: otras } : {}),
+    });
     if (out.length >= 12) break;
   }
   // De menor a mayor precio (100 g, 250 g, 1 kg): así las ve el cliente sin importar en qué orden se cargaron.

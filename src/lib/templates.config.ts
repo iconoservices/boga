@@ -27,7 +27,7 @@ export interface DemoProduct {
   image: string;
   description?: string;
   /** Medidas con su precio (100 g / 250 g / 1 kg…). `price` es la más barata. Ver lib/presentaciones.ts. */
-  presentaciones?: { label: string; price: number }[];
+  presentaciones?: { label: string; price: number; promo?: boolean; preciosMoneda?: Record<string, number> }[];
   /** Solo para la demo: así se ven los combos y las ofertas de la plantilla. */
   esCombo?: boolean;
   /** Solo para la demo: precio normal tachado (oferta). */
@@ -1026,6 +1026,7 @@ const TEMPLATES: Record<string, TemplateConfig> = {
       { name: 'Canasta Tejida a Mano', price: 35.00, category: 'Artesanías', image: '/templates/bazar-artesania.svg', description: 'Tejida por artesanos de la selva', preciosMoneda: { USD: 10, MXN: 185 } },
       { name: 'Vestido Estampado', price: 89.00, category: 'Ropa amazónica', image: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600&q=80', description: 'Vestido largo con estampado inspirado en la selva', preciosMoneda: { USD: 24, MXN: 450 } },
       { name: 'Blusa Bordada', price: 65.00, category: 'Ropa amazónica', image: 'https://images.unsplash.com/photo-1554568218-0f1715e72254?w=600&q=80', description: 'Blusa con bordados de diseños amazónicos' },
+      { name: 'Collar de Semillas', price: 12.00, category: 'Artesanías', image: '/templates/bazar-recuerdo.svg', description: 'Collar de semillas amazónicas, en dos tamaños', presentaciones: [{ label: 'Chico', price: 12, preciosMoneda: { USD: 3.5, MXN: 65 } }, { label: 'Grande', price: 20, preciosMoneda: { USD: 6, MXN: 110 } }] },
       { name: 'Llavero Artesanal', price: 8.00, category: 'Recuerdos', image: '/templates/bazar-recuerdo.svg', description: 'Recuerdo de Pucallpa hecho a mano' },
     ],
     zona: 'Pucallpa',
