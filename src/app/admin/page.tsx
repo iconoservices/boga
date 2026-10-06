@@ -74,7 +74,6 @@ type TabId = 'inicio' | 'products' | 'categories' | 'orders' | 'pos' | 'metrics'
 const NAV_TABS: { id: TabId; label: string; icon: string; sub: string; inBottomBar: boolean }[] = [
   { id: 'inicio',   label: 'Inicio',       icon: 'home',          sub: 'Resumen de tu carta',        inBottomBar: true },
   { id: 'products', label: 'Productos',    icon: 'inventory_2',   sub: 'Añade o modifica ítems',     inBottomBar: true },
-  { id: 'categories', label: 'Categorías', icon: 'category',     sub: 'Ordena las categorías de tu negocio', inBottomBar: false },
   { id: 'orders',   label: 'Pedidos',      icon: 'receipt_long',  sub: 'Gestiona los pedidos',       inBottomBar: true },
   { id: 'pos',      label: 'Vender (POS)', icon: 'point_of_sale', sub: 'Caja rápida en el local',    inBottomBar: true },
   { id: 'metrics',  label: 'Métricas',     icon: 'bar_chart',     sub: 'Rendimiento del negocio',    inBottomBar: false },
@@ -372,6 +371,26 @@ function AdminDashboard({ user }: { user: User }) {
   // Tiendas de tipo "empresa" (plantilla de servicios): el catálogo se llama "servicios", no "productos".
   const esEmpresa = stores[focusedStore]?.template === 'empresa';
   const esAcademia = stores[focusedStore]?.template === 'academia';
+  // Categorías ya no tiene pestaña propia: se abre desde Productos (y desde el Inicio), y mientras tanto Productos queda resaltado.
+  const navActivo = activeTab === 'categories' ? 'products' : activeTab;
+  // Dos pestañitas arriba de Productos / Categorías: son la misma sección.
+  const pestanasCatalogo = (
+    <div className="flex gap-2 mb-4">
+      {([
+        { id: 'products', label: esEmpresa ? 'Servicios' : esAcademia ? 'Grupos' : 'Productos', icon: 'inventory_2' },
+        { id: 'categories', label: 'Categorías', icon: 'category' },
+      ] as const).map((p) => (
+        <button
+          key={p.id}
+          onClick={() => setActiveTab(p.id)}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-bold transition-colors ${activeTab === p.id ? 'bg-[var(--tienda-color)] text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+        >
+          <span className="material-symbols-outlined text-[18px]">{p.icon}</span>
+          {p.label}
+        </button>
+      ))}
+    </div>
+  );
   // Una empresa no tiene pedidos ni caja: el cliente cotiza por WhatsApp y no queda nada que gestionar aquí.
   const navTabs = (esEmpresa || esAcademia) ? navTabsBase.filter(t => t.id !== 'orders') : navTabsBase;
   const inicioDb = dbStores.find((s: any) => s.slug === focusedStore);
@@ -1571,7 +1590,7 @@ function AdminDashboard({ user }: { user: User }) {
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md font-semibold transition-colors ${activeTab === t.id ? 'bg-[var(--tienda-color)] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md font-semibold transition-colors ${navActivo === t.id ? 'bg-[var(--tienda-color)] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
             >
               <span className="material-symbols-outlined text-[20px]">{t.icon}</span>
               {t.id === 'products' && esEmpresa ? 'Servicios' : t.id === 'products' && esAcademia ? 'Grupos' : t.label}
@@ -1973,6 +1992,7 @@ function AdminDashboard({ user }: { user: User }) {
 
         {activeTab === 'products' && (
           <>
+            {pestanasCatalogo}
             {/* Store Selector Global for Dashboard */}
             <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2 mb-6" style={{ scrollbarWidth: 'none' }}>
               <button
@@ -2389,6 +2409,8 @@ function AdminDashboard({ user }: { user: User }) {
           const conteos: Record<string, number> = {};
           products.filter((p) => p.store === tienda.slug).forEach((p) => { conteos[p.category] = (conteos[p.category] || 0) + 1; });
           return (
+            <>
+            {pestanasCatalogo}
             <CategoriasTab
               key={tienda.slug}
               nombreTienda={tienda.name}
@@ -2407,6 +2429,7 @@ function AdminDashboard({ user }: { user: User }) {
                 return true;
               }}
             />
+            </>
           );
         })()}
 
@@ -4767,7 +4790,7 @@ function AdminDashboard({ user }: { user: User }) {
           <button
             key={t.id}
             onClick={() => setActiveTab(t.id)}
-            className={`relative flex flex-col items-center gap-1 w-16 py-2 rounded-[20px] transition-all ${activeTab === t.id ? 'bg-[var(--tienda-color)] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+            className={`relative flex flex-col items-center gap-1 w-16 py-2 rounded-[20px] transition-all ${navActivo === t.id ? 'bg-[var(--tienda-color)] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
           >
             {t.id === 'orders' && pedidosPendientes > 0 && (
               <span className="absolute top-0.5 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-orange-500 text-white text-[10px] font-black flex items-center justify-center">{pedidosPendientes}</span>
@@ -4877,7 +4900,7 @@ function AdminDashboard({ user }: { user: User }) {
                       <button
                         key={t.id}
                         onClick={() => { setActiveTab(t.id); setIsMobileMenuOpen(false); }}
-                        className={activeTab === t.id ? destacado : normal}
+                        className={navActivo === t.id ? destacado : normal}
                       >
                         {ico(t.icon)}{t.id === 'products' && esEmpresa ? 'Servicios' : t.id === 'products' && esAcademia ? 'Grupos' : t.label}
                       </button>
