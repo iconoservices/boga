@@ -9,7 +9,7 @@ import { useCatalogo } from '../shared/useCatalogo';
 import { useTabRuta } from '../shared/useTabRuta';
 import { TXT, ICON } from '../shared/tokens';
 import {
-  CategoryChips, CombosCarrusel, ProductGrid, ProductModal, CartPanel, ContactPanel, BottomNav, StoreFooter,
+  CombosCarrusel, ProductGrid, ProductModal, CartPanel, ContactPanel, BottomNav, StoreFooter,
 } from '../shared/CatalogoUI';
 
 interface Props {
@@ -22,21 +22,46 @@ interface Props {
 /** Portada de fábrica de la plantilla: solo se muestra en la vista previa; una tienda real sin banner propio no la muestra. */
 const PORTADA_DE_FABRICA = '/templates/bazar-portada.svg';
 
-/** Iconos para los accesos por categoría: si el nombre dice ropa/accesorio/recuerdo se ajusta; si no, uno genérico. */
-const iconoDe = (nombre: string) => {
-  const n = nombre.toLowerCase();
-  if (/ropa|vestid|blusa|polo|camis|prenda/.test(n)) return 'checkroom';
-  if (/accesor|collar|aretes|pulsera|joya|bisut/.test(n)) return 'diamond';
-  if (/recuerdo|souvenir|regalo/.test(n)) return 'redeem';
-  if (/artesan|tejid|cerámic|ceramic|madera/.test(n)) return 'interests';
-  return 'sell';
-};
+/** Categorías: botones pequeños con el ícono en un circulito. Quedan fijos bajo el encabezado al bajar, y se deslizan de lado si no caben. */
+function ChipsBazar({ t, tabs, active, onSelect }: { t: StoreConfig['theme']; tabs: { id: string; label: string; icon?: string }[]; active: string; onSelect: (id: string) => void }) {
+  return (
+    <nav
+      className="hide-scrollbar px-5 md:px-6 overflow-x-auto flex gap-2 whitespace-nowrap sticky top-16 md:top-[60px] py-3 z-40"
+      style={{ background: `${t.background}F0`, backdropFilter: 'blur(12px)' }}
+    >
+      {tabs.map((tab) => {
+        const activa = active === tab.id;
+        return (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => onSelect(tab.id)}
+            className="group shrink-0 inline-flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-4 transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
+            style={{
+              background: activa ? t.primary : t.primaryContainer,
+              border: `1px solid ${activa ? 'transparent' : t.outlineVariant}`,
+              boxShadow: activa ? `0 4px 12px ${t.primary}40` : 'none',
+            }}
+          >
+            <span
+              className="w-7 h-7 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
+              style={{ background: activa ? t.onPrimary : t.primary, color: activa ? t.primary : t.onPrimary }}
+            >
+              <span className={`material-symbols-outlined ${ICON.sm}`}>{tab.icon || 'sell'}</span>
+            </span>
+            <span className={`${TXT.small} font-extrabold`} style={{ color: activa ? t.onPrimary : t.onSurface, fontFamily: t.fontHeadline }}>{tab.label}</span>
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
 
 /**
  * Plantilla "Bazar Amazónico".
  *
  * Para bazares y tiendas de artesanías y ropa de la cultura amazónica (Bazar de la Abuelita Pucallpa): paleta de
- * tierra y selva, una franja con patrón geométrico inspirado en los diseños shipibo, accesos compactos por categoría
+ * tierra y selva, una franja con patrón geométrico inspirado en los diseños shipibo, chips de categoría
  * (Artesanías, Ropa…) y un botón de ayuda por WhatsApp.
  *  · en "Todo" salen primero los combos y ofertas y después una fila por categoría, en el orden de la tienda;
  *  · las categorías las crea el dueño desde su panel (Artesanías, Ropa amazónica, Accesorios, Recuerdos…).
@@ -76,8 +101,6 @@ export default function BazarTemplate({ store, initialProductId, initialTab }: P
       `Hola ${store.name}, estoy buscando: (cuéntanos qué necesitas)
 Presupuesto aproximado: `,
     );
-
-  const categorias = c.categoryTabs.filter((x) => x.id !== 'all').slice(0, 4);
 
   // Franja con patrón en zigzag (de inspiración shipibo), hecha solo con CSS.
   const patron: React.CSSProperties = {
@@ -144,28 +167,6 @@ Presupuesto aproximado: `,
               </section>
             )}
 
-            {/* Accesos por categoría: una sola fila compacta (se desliza de lado si hay más de las que caben). Solo en "Todo". */}
-            {c.activeCategory === 'all' && categorias.length > 1 && (
-              <section className="px-5 md:px-6 pt-4">
-                <div className="hide-scrollbar flex gap-2.5 overflow-x-auto md:justify-center">
-                  {categorias.map((cat) => (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => c.setActiveCategory(cat.id)}
-                      className="group flex-1 min-w-[88px] md:flex-none md:min-w-[150px] flex flex-col items-center justify-center gap-1.5 rounded-2xl py-3 px-2 text-center transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.97]"
-                      style={{ background: t.primaryContainer, border: `1px solid ${t.outlineVariant}` }}
-                    >
-                      <span className="w-9 h-9 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-110" style={{ background: t.primary, color: t.onPrimary }}>
-                        <span className={`material-symbols-outlined ${ICON.md}`}>{iconoDe(cat.label)}</span>
-                      </span>
-                      <span className={`${TXT.small} font-extrabold leading-tight line-clamp-2`} style={{ color: t.onSurface, fontFamily: t.fontHeadline }}>{cat.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </section>
-            )}
-
             {/* Ayuda para elegir: a la vista, porque en un bazar muchos no saben qué llevar. */}
             {c.whatsappVisible && (
               <section className="px-5 md:px-6 pt-4">
@@ -187,7 +188,7 @@ Presupuesto aproximado: `,
               </section>
             )}
 
-            <CategoryChips
+            <ChipsBazar
               t={t}
               tabs={c.categoryTabs}
               active={c.activeCategory}
