@@ -392,6 +392,62 @@ export function ProductModal({
 
   const fotos = producto.images && producto.images.length > 1 ? producto.images : [producto.image];
 
+  const precioTexto = producto.sinPrecio ? 'Consultar precio' : soles((medida?.price ?? producto.price) * (producto.esServicio ? 1 : cantidad));
+  const enOferta = !producto.sinPrecio && !medida && cantidad === 1 && !!producto.priceAnterior && producto.priceAnterior > producto.price;
+  const pctOferta = enOferta ? Math.round((1 - producto.price / producto.priceAnterior!) * 100) : 0;
+
+  const controlCantidad = !soloConsulta(producto) ? (
+    <div className="flex items-center gap-1 shrink-0 rounded-full border p-0.5" style={{ borderColor: `${t.outlineVariant}`, background: t.surface }}>
+      <button
+        type="button"
+        aria-label="Menos"
+        disabled={cantidad <= 1}
+        onClick={() => setCantidad((n) => Math.max(1, n - 1))}
+        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center active:scale-90 transition-transform disabled:opacity-30"
+        style={{ background: `${t.primary}15`, color: t.primary }}
+      >
+        <span className={`material-symbols-outlined ${ICON.sm}`}>remove</span>
+      </button>
+      <span className="min-w-[1.5rem] text-center font-black text-sm tabular-nums" style={{ color: t.onSurface }}>{cantidad}</span>
+      <button
+        type="button"
+        aria-label="Más"
+        onClick={() => setCantidad((n) => Math.min(99, n + 1))}
+        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center active:scale-90 transition-transform"
+        style={{ background: t.primary, color: t.onPrimary }}
+      >
+        <span className={`material-symbols-outlined ${ICON.sm}`}>add</span>
+      </button>
+    </div>
+  ) : null;
+
+  const botonCompra = soloConsulta(producto) ? (
+    <button
+      onClick={() => onConsultar?.(producto)}
+      className={`px-6 py-2.5 md:py-3 rounded-full font-bold ${TXT.body} flex items-center gap-1.5 active:scale-95 bg-[#25D366] text-white`}
+      style={textoConsultar ? { background: t.primary, color: t.onPrimary } : undefined}
+    >
+      <span className={`material-symbols-outlined ${ICON.sm}`}>{textoConsultar?.icono ?? 'chat'}</span>
+      {textoConsultar?.texto ?? 'Consultar por WhatsApp'}
+    </button>
+  ) : (
+    <button
+      onClick={() => {
+        // El modal se queda abierto: abajo hay sugeridos y el cliente
+        // puede seguir agregando o mirando mas platos sin salir de aca.
+        onAdd(producto, medida ?? undefined, cantidad);
+        setAgregado(true);
+        if (cierre.current) clearTimeout(cierre.current);
+        cierre.current = setTimeout(() => setAgregado(false), 1200);
+      }}
+      className={`px-3 sm:px-6 md:px-10 py-2.5 md:py-3 rounded-full font-bold ${TXT.body} flex items-center gap-1 sm:gap-1.5 shrink-0 transition-[background-color,transform] active:scale-95 ${agregado ? 'add-btn-pop' : ''}`}
+      style={{ background: agregado ? '#16a34a' : t.primary, color: agregado ? '#fff' : t.onPrimary }}
+    >
+      <span className={`material-symbols-outlined ${ICON.sm}`}>{agregado ? 'check' : 'add'}</span>
+      {agregado ? 'Agregado' : 'Agregar'}
+    </button>
+  );
+
   return (
     <div
       ref={contenedor}
@@ -410,165 +466,150 @@ export function ProductModal({
         <span className={`material-symbols-outlined ${ICON.md}`}>close</span>
       </button>
 
-      {/* Galería: la foto se ve ENTERA (contain, con la misma foto desenfocada de fondo), se puede deslizar a los lados y
-          las miniaturas van DEBAJO (antes tapaban la foto y la recortaban). */}
-      <div className="w-full">
-        <div
-          className="w-full aspect-square md:aspect-auto md:h-[420px] relative overflow-hidden touch-pan-y"
-          style={{ background: t.surfaceContainerLow }}
-          onTouchStart={(e) => { swipeFoto.current = e.touches[0].clientX; }}
-          onTouchEnd={(e) => {
-            if (swipeFoto.current === null || fotos.length < 2) return;
-            const dx = e.changedTouches[0].clientX - swipeFoto.current;
-            swipeFoto.current = null;
-            if (Math.abs(dx) > 40) setFotoActiva((i) => (dx < 0 ? (i + 1) % fotos.length : (i - 1 + fotos.length) % fotos.length));
-          }}
-        >
-          <img aria-hidden alt="" src={fotos[fotoActiva] ?? producto.image} className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-60" />
-          <img className="relative w-full h-full object-contain" alt={producto.name} src={fotos[fotoActiva] ?? producto.image} />
-          {fotos.length > 1 && (
-            <span className="absolute bottom-2 right-3 text-[11px] font-bold px-2 py-0.5 rounded-full bg-black/55 text-white">
-              {fotoActiva + 1} / {fotos.length}
-            </span>
-          )}
-        </div>
-        {fotos.length > 1 && (
-          <div className="flex justify-center gap-2 px-4 pt-3 overflow-x-auto hide-scrollbar" style={{ scrollbarWidth: 'none' }}>
-            {fotos.map((foto, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setFotoActiva(i)}
-                aria-label={`Ver foto ${i + 1} de ${producto.name}`}
-                aria-current={fotoActiva === i}
-                className="w-14 h-14 rounded-lg overflow-hidden border-2 shrink-0 transition-all active:scale-95"
-                style={{ borderColor: fotoActiva === i ? t.primary : `${t.outlineVariant}`, opacity: fotoActiva === i ? 1 : 0.75, background: t.surfaceContainerLow }}
-              >
-                <img src={foto} className="w-full h-full object-contain" alt="" />
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Escritorio: dos columnas, como en una tienda en línea (miniaturas a la izquierda, foto grande, y a la derecha nombre,
+          precio, medidas y botón de agregar). Celular: galería arriba, datos debajo y barra de compra fija abajo. */}
+      <div className="md:max-w-6xl md:mx-auto md:px-8 md:pt-10">
+        <nav className="hidden md:flex items-center gap-2 mb-5 text-sm font-semibold" style={{ color: t.onSurfaceVariant }} aria-label="Ruta">
+          <button type="button" onClick={onClose} className="hover:underline" style={{ color: t.primary }}>Tienda</button>
+          {producto.category && (<><span aria-hidden="true">›</span><span className="capitalize">{producto.category}</span></>)}
+          <span aria-hidden="true">›</span>
+          <span className="truncate max-w-[40ch]" style={{ color: t.onSurface }}>{producto.name}</span>
+        </nav>
 
-      <div className="max-w-2xl mx-auto px-5 pt-5 pb-28">
-        {producto.esCombo && (
-          <div className="mb-2">
-            <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[11px] font-black px-2.5 py-1 rounded-lg shadow-sm inline-flex items-center gap-1">
-              <span>🔥</span> COMBO / PACK
-            </span>
-          </div>
-        )}
-        <h2 className={`font-bold ${TXT.title}`} style={{ color: t.onSurface }}>{producto.name}</h2>
-        {producto.desc && (
-          <p className={`${TXT.body} mt-2 leading-relaxed`} style={{ color: t.onSurfaceVariant }}>{producto.desc}</p>
-        )}
-
-        {/* Presentaciones: el cliente elige la cantidad (100 g, 250 g, 1 kg…) y el precio cambia. */}
-        {producto.presentaciones && producto.presentaciones.length > 0 && (
-          <div className="mt-6">
-            <h3 className={`font-bold ${TXT.body} mb-2`} style={{ color: t.onSurface }}>Elige la cantidad</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {producto.presentaciones.map((x) => {
-                const activa = medida?.label === x.label;
-                const ahorro = ahorros[x.label];
-                return (
+        <div className="md:grid md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] md:gap-12 md:items-start">
+          {/* Galería: la foto se ve ENTERA (contain, con la misma foto desenfocada de fondo) y se puede deslizar a los lados.
+              Las miniaturas van debajo en celular y en una columna a la izquierda en escritorio. */}
+          <div className="w-full md:flex md:gap-4 md:sticky md:top-6">
+            <div
+              className="w-full aspect-square md:flex-1 md:min-w-0 md:rounded-2xl relative overflow-hidden touch-pan-y"
+              style={{ background: t.surfaceContainerLow }}
+              onTouchStart={(e) => { swipeFoto.current = e.touches[0].clientX; }}
+              onTouchEnd={(e) => {
+                if (swipeFoto.current === null || fotos.length < 2) return;
+                const dx = e.changedTouches[0].clientX - swipeFoto.current;
+                swipeFoto.current = null;
+                if (Math.abs(dx) > 40) setFotoActiva((i) => (dx < 0 ? (i + 1) % fotos.length : (i - 1 + fotos.length) % fotos.length));
+              }}
+            >
+              <img aria-hidden alt="" src={fotos[fotoActiva] ?? producto.image} className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-60" />
+              <img className="relative w-full h-full object-contain" alt={producto.name} src={fotos[fotoActiva] ?? producto.image} />
+              {fotos.length > 1 && (
+                <span className="absolute bottom-2 right-3 text-[11px] font-bold px-2 py-0.5 rounded-full bg-black/55 text-white">
+                  {fotoActiva + 1} / {fotos.length}
+                </span>
+              )}
+            </div>
+            {fotos.length > 1 && (
+              <div className="flex justify-center gap-2 px-4 pt-3 overflow-x-auto hide-scrollbar md:order-first md:flex-col md:justify-start md:gap-3 md:px-0 md:pt-0 md:overflow-x-visible md:overflow-y-auto md:max-h-[560px]" style={{ scrollbarWidth: 'none' }}>
+                {fotos.map((foto, i) => (
                   <button
-                    key={x.label}
+                    key={i}
                     type="button"
-                    onClick={() => setMedida(x)}
-                    aria-pressed={activa}
-                    className="rounded-xl px-3 py-2.5 text-left border-2 transition-colors active:scale-[0.98]"
-                    style={{ borderColor: activa ? t.primary : `${t.outlineVariant}80`, background: activa ? `${t.primary}14` : t.surface, color: t.onSurface }}
+                    onClick={() => setFotoActiva(i)}
+                    aria-label={`Ver foto ${i + 1} de ${producto.name}`}
+                    aria-current={fotoActiva === i}
+                    className="w-14 h-14 md:w-16 md:h-16 rounded-lg overflow-hidden border-2 shrink-0 transition-all active:scale-95"
+                    style={{ borderColor: fotoActiva === i ? t.primary : `${t.outlineVariant}`, opacity: fotoActiva === i ? 1 : 0.75, background: t.surfaceContainerLow }}
                   >
-                    <span className={`flex items-center justify-between gap-1 font-extrabold ${TXT.body}`}>
-                      {x.label}
-                      {x.promo && <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-orange-500 text-white shrink-0">🔥 PROMO</span>}
-                    </span>
-                    <span className={`block font-bold ${TXT.body}`} style={{ color: t.primary }}>{soles(x.price)}</span>
-                    {ahorro && (
-                      <span className="block text-[10px] font-bold leading-tight mt-0.5 text-green-700">
-                        Ahorras {soles(ahorro.ahorro)} · {soles(ahorro.porUnidad)} c/u
-                      </span>
-                    )}
+                    <img src={foto} className="w-full h-full object-contain" alt="" />
                   </button>
-                );
-              })}
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="max-w-2xl mx-auto px-5 pt-5 pb-2 md:max-w-none md:mx-0 md:px-0 md:pt-0 md:pb-6">
+            {producto.esCombo && (
+              <div className="mb-2">
+                <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[11px] font-black px-2.5 py-1 rounded-lg shadow-sm inline-flex items-center gap-1">
+                  <span>🔥</span> COMBO / PACK
+                </span>
+              </div>
+            )}
+            <h2 className={`font-bold ${TXT.title} md:text-3xl md:leading-tight`} style={{ color: t.onSurface }}>{producto.name}</h2>
+
+            {/* Precio destacado (solo escritorio: en celular el precio va en la barra de abajo). */}
+            <div className="hidden md:flex items-baseline gap-3 flex-wrap mt-4 pt-4 border-t" style={{ borderColor: `${t.outlineVariant}80` }}>
+              <span className="text-4xl font-black" style={{ color: t.primary }}>{precioTexto}</span>
+              {enOferta && (
+                <>
+                  <span className="text-lg font-medium line-through" style={{ color: t.onSurfaceVariant }}>{soles(producto.priceAnterior!)}</span>
+                  <span className="text-xs font-black px-2 py-1 rounded-md bg-red-100 text-red-700">-{pctOferta}%</span>
+                </>
+              )}
+            </div>
+
+            {producto.desc && (
+              <p className={`${TXT.body} mt-2 md:mt-4 leading-relaxed whitespace-pre-line`} style={{ color: t.onSurfaceVariant }}>{producto.desc}</p>
+            )}
+
+            {/* Presentaciones: el cliente elige la cantidad (100 g, 250 g, 1 kg…) y el precio cambia. */}
+            {producto.presentaciones && producto.presentaciones.length > 0 && (
+              <div className="mt-6">
+                <h3 className={`font-bold ${TXT.body} mb-2`} style={{ color: t.onSurface }}>Elige la cantidad</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {producto.presentaciones.map((x) => {
+                    const activa = medida?.label === x.label;
+                    const ahorro = ahorros[x.label];
+                    return (
+                      <button
+                        key={x.label}
+                        type="button"
+                        onClick={() => setMedida(x)}
+                        aria-pressed={activa}
+                        className="rounded-xl px-3 py-2.5 text-left border-2 transition-colors active:scale-[0.98]"
+                        style={{ borderColor: activa ? t.primary : `${t.outlineVariant}80`, background: activa ? `${t.primary}14` : t.surface, color: t.onSurface }}
+                      >
+                        <span className={`flex items-center justify-between gap-1 font-extrabold ${TXT.body}`}>
+                          {x.label}
+                          {x.promo && <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-orange-500 text-white shrink-0">🔥 PROMO</span>}
+                        </span>
+                        <span className={`block font-bold ${TXT.body}`} style={{ color: t.primary }}>{soles(x.price)}</span>
+                        {ahorro && (
+                          <span className="block text-[10px] font-bold leading-tight mt-0.5 text-green-700">
+                            Ahorras {soles(ahorro.ahorro)} · {soles(ahorro.porUnidad)} c/u
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Compra en escritorio: cantidad y botón junto a los datos (en celular van en la barra fija de abajo). */}
+            <div className="hidden md:flex items-center gap-4 flex-wrap mt-8">
+              {controlCantidad}
+              {botonCompra}
             </div>
           </div>
-        )}
+        </div>
 
         {sugeridos.length > 0 && (
-          <div className="mt-10">
+          <div className="max-w-2xl mx-auto px-5 mt-8 pb-28 md:max-w-none md:px-0 md:mt-14 md:pb-16">
             <h3 className={`font-black uppercase italic tracking-tight mb-4 ${TXT.title}`} style={{ color: t.onBackground }}>
               También te puede interesar
             </h3>
             <ProductGrid t={t} productos={sugeridos} onSelect={(p) => onSelect?.(p)} onAdd={onAdd} />
           </div>
         )}
+        {sugeridos.length === 0 && <div className="pb-28 md:pb-12" />}
       </div>
 
+      {/* Barra de compra fija: solo celular. */}
       <div
-        className="fixed bottom-0 left-0 right-0 p-4 flex justify-center"
+        className="md:hidden fixed bottom-0 left-0 right-0 p-4 flex justify-center"
         style={{ background: `${t.surface}F5`, backdropFilter: 'blur(12px)', borderTop: `1px solid ${t.outlineVariant}40` }}
       >
         <div className="w-full max-w-2xl flex items-center justify-between gap-2 sm:gap-4 px-1">
           <span className="font-black text-lg sm:text-xl shrink-0" style={{ color: t.primary }}>
-            {producto.sinPrecio ? 'Consultar precio' : soles((medida?.price ?? producto.price) * (producto.esServicio ? 1 : cantidad))}
-            {!producto.sinPrecio && !medida && cantidad === 1 && producto.priceAnterior && (
-              <span className="ml-2 text-sm font-medium line-through" style={{ color: t.onSurfaceVariant }}>{soles(producto.priceAnterior)}</span>
+            {precioTexto}
+            {enOferta && (
+              <span className="ml-2 text-sm font-medium line-through" style={{ color: t.onSurfaceVariant }}>{soles(producto.priceAnterior!)}</span>
             )}
           </span>
-          {!soloConsulta(producto) && (
-            <div className="flex items-center gap-1 shrink-0 rounded-full border p-0.5" style={{ borderColor: `${t.outlineVariant}`, background: t.surface }}>
-              <button
-                type="button"
-                aria-label="Menos"
-                disabled={cantidad <= 1}
-                onClick={() => setCantidad((n) => Math.max(1, n - 1))}
-                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center active:scale-90 transition-transform disabled:opacity-30"
-                style={{ background: `${t.primary}15`, color: t.primary }}
-              >
-                <span className={`material-symbols-outlined ${ICON.sm}`}>remove</span>
-              </button>
-              <span className="min-w-[1.5rem] text-center font-black text-sm tabular-nums" style={{ color: t.onSurface }}>{cantidad}</span>
-              <button
-                type="button"
-                aria-label="Más"
-                onClick={() => setCantidad((n) => Math.min(99, n + 1))}
-                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center active:scale-90 transition-transform"
-                style={{ background: t.primary, color: t.onPrimary }}
-              >
-                <span className={`material-symbols-outlined ${ICON.sm}`}>add</span>
-              </button>
-            </div>
-          )}
-          {soloConsulta(producto) ? (
-            <button
-              onClick={() => onConsultar?.(producto)}
-              className={`px-6 py-2.5 rounded-full font-bold ${TXT.body} flex items-center gap-1.5 active:scale-95 bg-[#25D366] text-white`}
-              style={textoConsultar ? { background: t.primary, color: t.onPrimary } : undefined}
-            >
-              <span className={`material-symbols-outlined ${ICON.sm}`}>{textoConsultar?.icono ?? 'chat'}</span>
-              {textoConsultar?.texto ?? 'Consultar por WhatsApp'}
-            </button>
-          ) : (
-            <button
-              onClick={() => {
-                // El modal se queda abierto: abajo hay sugeridos y el cliente
-                // puede seguir agregando o mirando mas platos sin salir de aca.
-                onAdd(producto, medida ?? undefined, cantidad);
-                setAgregado(true);
-                if (cierre.current) clearTimeout(cierre.current);
-                cierre.current = setTimeout(() => setAgregado(false), 1200);
-              }}
-              className={`px-3 sm:px-6 py-2.5 rounded-full font-bold ${TXT.body} flex items-center gap-1 sm:gap-1.5 shrink-0 transition-[background-color,transform] active:scale-95 ${agregado ? 'add-btn-pop' : ''}`}
-              style={{ background: agregado ? '#16a34a' : t.primary, color: agregado ? '#fff' : t.onPrimary }}
-            >
-              <span className={`material-symbols-outlined ${ICON.sm}`}>{agregado ? 'check' : 'add'}</span>
-              {agregado ? 'Agregado' : 'Agregar'}
-            </button>
-          )}
+          {controlCantidad}
+          {botonCompra}
         </div>
       </div>
     </div>
