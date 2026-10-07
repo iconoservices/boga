@@ -156,9 +156,9 @@ export default function BazarTemplate({ store, initialProductId, initialTab }: P
               />
             )}
 
-            {/* Cada categoría con su título y UNA fila que se desliza de lado. En pantallas anchas van de a dos lado a lado
-                (con 1 o 2 productos cada una, una sola columna dejaba todo el ancho vacío). */}
-            <div className="lg:grid lg:grid-cols-2 lg:gap-x-2 lg:items-start">
+            {/* Cada categoría con su título y UNA fila que se desliza de lado. En computadora (pantalla ancha CON mouse) van de a dos
+                lado a lado; en tablet y celular, una categoría por fila (una tablet horizontal también pasa de 1024 px, por eso se mira el mouse). */}
+            <div className="[@media(hover:hover)_and_(min-width:1024px)]:grid [@media(hover:hover)_and_(min-width:1024px)]:grid-cols-2 [@media(hover:hover)_and_(min-width:1024px)]:gap-x-2 [@media(hover:hover)_and_(min-width:1024px)]:items-start">
               {c.categoryTabs
               .filter((x) => x.id !== 'all' && x.id !== '__combos__')
               .map((cat) => {

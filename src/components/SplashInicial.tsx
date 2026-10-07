@@ -32,10 +32,15 @@ export default function SplashInicial({ tienda }: { tienda?: Tienda }) {
     // No va dentro de la vista previa del admin (iframe). Sale en cada carga completa (entrar directo, abrir un enlace o recargar);
     // al navegar dentro del sitio no vuelve a salir porque el layout no se vuelve a montar.
     if (esTienda && window.parent !== window) { setFase('fuera'); return; }
-    const salir = () => setFase((f) => (f === 'visible' ? 'saliendo' : f));
+    // Una vez que el splash ya salió en ESTA carga, no vuelve a aparecer aunque el componente se vuelva a montar
+    // (cambio de plantilla/estado que remonta el árbol, recarga en caliente, navegación dentro del sitio mientras
+    // el navegador aún tiene algún recurso lento pendiente). Se reinicia solo con una carga completa nueva.
+    const w = window as unknown as { __bogaSplashVisto?: boolean };
+    if (w.__bogaSplashVisto) { setFase('fuera'); return; }
+    const salir = () => { w.__bogaSplashVisto = true; setFase((f) => (f === 'visible' ? 'saliendo' : f)); };
     // Está desde el primer instante (viene en el HTML del servidor) y se desvanece cuando la página terminó de cargar.
     const listo = () => salir();
-    if (document.readyState === 'complete') { setFase('fuera'); return; }
+    if (document.readyState === 'complete') { w.__bogaSplashVisto = true; setFase('fuera'); return; }
     window.addEventListener('load', listo, { once: true });
     // Tope de seguridad: nunca dejar la pantalla tapada más de 3 s.
     const tope = setTimeout(salir, 3000);
