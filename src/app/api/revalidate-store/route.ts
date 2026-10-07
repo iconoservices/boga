@@ -24,11 +24,13 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabaseComoUsuario.auth.getUser(token);
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
-  const [{ data: tienda }, { data: esSuperadmin }] = await Promise.all([
+  const [{ data: tienda }, { data: esSuperadmin }, { data: esAdminDeTienda }] = await Promise.all([
     supabaseComoUsuario.from('stores').select('user_id').eq('slug', slug).maybeSingle(),
     supabaseComoUsuario.rpc('is_superadmin'),
+    // Dueño o co-administrador (store_admins): antes solo pasaba el dueño y el co-admin no refrescaba nada.
+    supabaseComoUsuario.rpc('es_admin_de', { p_store: slug }),
   ]);
-  if (esSuperadmin !== true && tienda?.user_id !== user.id) {
+  if (esSuperadmin !== true && tienda?.user_id !== user.id && esAdminDeTienda !== true) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
   }
 

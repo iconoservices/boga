@@ -657,11 +657,13 @@ export function ProductModal({
 
       {/* Barra de compra fija: solo celular. */}
       <div
-        className="md:hidden fixed bottom-0 left-0 right-0 p-4 flex justify-center"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-30 p-4 flex justify-center"
         style={{ background: `${t.surface}F5`, backdropFilter: 'blur(12px)', borderTop: `1px solid ${t.outlineVariant}40` }}
       >
-        <div className="w-full max-w-2xl flex items-center justify-between gap-2 sm:gap-4 px-1">
-          <span className="font-black text-lg sm:text-xl shrink-0" style={{ color: t.primary }}>
+        {/* flex-wrap: si el precio (con otras monedas) + cantidad + botón no caben en una línea, la cantidad y el botón pasan
+            a la siguiente en vez de salirse de la pantalla y cortar "Agregar". */}
+        <div className="w-full max-w-2xl flex flex-wrap items-center justify-between gap-x-2 gap-y-2 sm:gap-x-4 px-1">
+          <span className="font-black text-lg sm:text-xl min-w-0" style={{ color: t.primary }}>
             {precioTexto}
             {producto.conIgv && !producto.sinPrecio && <span className="block text-[10px] font-semibold leading-none mt-0.5" style={{ color: t.onSurfaceVariant }}>IGV incluido</span>}
             {enOferta && (
@@ -671,8 +673,10 @@ export function ProductModal({
               <span className="block text-xs font-semibold" style={{ color: t.onSurfaceVariant }}>{otrosPrecios}</span>
             )}
           </span>
-          {controlCantidad}
-          {botonCompra}
+          <div className="flex items-center gap-2 ml-auto shrink-0">
+            {controlCantidad}
+            {botonCompra}
+          </div>
         </div>
       </div>
     </div>

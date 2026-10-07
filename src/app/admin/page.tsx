@@ -1383,7 +1383,9 @@ function AdminDashboard({ user }: { user: User }) {
         setIsModalOpen(false);
         resetForm();
       }
-      refrescarTienda(tiendaGuardada);
+      // Se espera a que la caché del catálogo se refresque (el formulario ya se cerró arriba): si el cliente abre la tienda
+      // justo después de guardar, ya no ve la copia vieja.
+      await refrescarTienda(tiendaGuardada);
       fetchProducts(undefined, true);
       
     } catch (error: any) {
@@ -2427,6 +2429,7 @@ function AdminDashboard({ user }: { user: User }) {
                 const { error } = await supabase.from('products').update({ category: nuevo }).eq('store', tienda.slug).eq('category', viejo);
                 if (error) { alert('La categoría cambió, pero no se pudieron mover los productos: ' + error.message); return false; }
                 setProducts((prev) => prev.map((p) => p.store === tienda.slug && p.category === viejo ? { ...p, category: nuevo } : p));
+                refrescarTienda(tienda.slug);
                 return true;
               }}
             />
