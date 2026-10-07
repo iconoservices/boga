@@ -1910,7 +1910,7 @@ function AdminDashboard({ user }: { user: User }) {
                   ...((inicioStore?.template === 'sweetkittynails' || inicioStore?.template === 'belleza') ? [{ icon: 'event_available', t: 'Reservas', s: 'Citas que piden tus clientas', on: () => router.push('/admin/reservas') }] : []),
                   { icon: 'share', t: esEmpresa ? 'Compartir mi página' : 'Compartir mi tienda', s: 'Envía tu enlace por WhatsApp', on: compartirCarta },
                   { icon: 'qr_code_2', t: 'Código QR', s: 'Para tus mesas o tu puerta', on: () => { setSelectedStore(inicioStore.slug); setIsQRModalOpen(true); } },
-                  ...(inicioDb?.push_activo ? [{ icon: 'notifications', t: 'Notificaciones', s: 'Avisa a tus clientes de una oferta', on: () => { window.location.href = '/admin/notificaciones'; } }] : []),
+                  { icon: 'notifications', t: 'Notificaciones', s: 'Avisa a tus clientes de una oferta', on: () => { window.location.href = '/admin/notificaciones'; } },
                 ].map(a => (
                   <button key={a.t} onClick={a.on} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm text-left hover:shadow-md hover:border-gray-200 transition-all flex flex-col gap-2 active:scale-[0.98]">
                     <span className={icono}><span className="material-symbols-outlined text-[20px]">{a.icon}</span></span>
@@ -1958,7 +1958,7 @@ function AdminDashboard({ user }: { user: User }) {
                   { icon: 'palette', t: esEmpresa ? 'Personaliza tu página' : 'Personaliza tu tienda', s: esEmpresa ? 'Logo, portada, perfil de la empresa, horario y contacto' : 'Logo, portada, datos, horario y pagos', on: () => openStoreEditor(inicioStore.slug) },
                   { icon: 'category', t: 'Categorías', s: 'Crea y ordena las categorías de tu negocio', on: () => setActiveTab('categories') },
                   { icon: 'notifications', t: 'Avisos de pedidos', s: 'WhatsApp y correo donde los recibes', on: () => openStoreEditor(inicioStore.slug, 'avisos') },
-                  ...(inicioDb?.push_activo ? [{ icon: 'campaign', t: 'Notificaciones a clientes', s: 'Envía avisos a quienes instalaron tu app', on: () => router.push('/admin/notificaciones') }] : []),
+                  { icon: 'campaign', t: 'Notificaciones a clientes', s: 'Envía avisos a quienes instalaron tu app', on: () => router.push('/admin/notificaciones') },
                   { icon: 'picture_as_pdf', t: 'Exportar catálogo en PDF', s: 'Descarga tu carta para compartirla', on: () => { setSelectedStore(inicioStore.slug); setIsPDFModalOpen(true); } },
                   { icon: 'store', t: 'Mis Tiendas', s: 'Todas tus sucursales, una por una', on: () => setActiveTab('stores') },
                 ].map(f => (

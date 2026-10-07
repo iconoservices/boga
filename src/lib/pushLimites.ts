@@ -6,7 +6,7 @@
 // Encima del cupo se pueden comprar paquetes (stores.push_creditos): no vencen y se gastan solo cuando
 // el cupo del mes ya se usó. El tope de 1 por día y el horario no se saltan con paquetes.
 export const PUSH_LIMITES = {
-  porSemanaApp: 2,      // tienda con subdominio propio (plan App)
+  porSemanaApp: 1,      // tienda con subdominio propio (plan App): igual que el resto, 4 al mes; más se asigna por tienda (push_cupo_mes)
   porSemanaBase: 1,     // el resto
   semanasPorMes: 4,
   maxPorDia: 1,         // campañas de una tienda en las últimas 24 horas

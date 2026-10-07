@@ -21,9 +21,14 @@ export default function NotificacionesDueno() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from('stores').select('slug,name').eq('user_id', user.id).eq('push_activo', true).order('name').then(({ data }) => {
+    (async () => {
+      // Tiendas propias + las que administra como co-administrador
+      const { data: co } = await supabase.from('store_admins').select('store').eq('user_id', user.id);
+      const slugsCo = (co ?? []).map((r: { store: string }) => r.store);
+      const filtro = slugsCo.length ? `user_id.eq.${user.id},slug.in.(${slugsCo.join(',')})` : `user_id.eq.${user.id}`;
+      const { data } = await supabase.from('stores').select('slug,name').or(filtro).order('name');
       setOpciones(((data ?? []) as { slug: string; name: string }[]).map((t) => ({ slug: t.slug, nombre: t.name })));
-    });
+    })();
   }, [user]);
 
   if (!user) return null;
@@ -41,7 +46,7 @@ export default function NotificacionesDueno() {
       </header>
       <main className="max-w-[860px] mx-auto px-container-margin py-8 flex flex-col gap-6">
         <p className="text-sm text-secondary">
-          Envía ofertas o novedades a quienes instalaron tu app y activaron las notificaciones. Tienes 2 por semana, que se acumulan durante el mes,
+          Envía ofertas o novedades a quienes instalaron tu app y activaron las notificaciones. Tu plan incluye una cantidad al mes (la ves abajo), que se acumula durante el mes,
           y las mandas entre las 8:00 y las 22:00. Si necesitas más, puedes comprar paquetes de 4.
         </p>
         {opciones === null ? <p className="text-sm text-secondary">Cargando…</p> : <PanelNotificaciones opciones={opciones} />}

@@ -23,14 +23,17 @@ async function cupo(supabase: NonNullable<ReturnType<typeof clienteServicio>>, s
     cuenta(desdeMes), cuenta(hace24h),
     supabase.from('stores').select('subdominio_activo').eq('slug', slug).maybeSingle(),
     // Sin la columna (SQL sin correr) el saldo es 0 y todo sigue funcionando con el cupo del plan.
-    supabase.from('stores').select('push_creditos').eq('slug', slug).maybeSingle(),
+    supabase.from('stores').select('push_creditos,push_cupo_mes').eq('slug', slug).maybeSingle(),
   ]);
   const usadasMes = mes.count ?? 0, usadasDia = dia.count ?? 0;
-  const cupoMes = cupoMensual(!!tienda.data?.subdominio_activo);
-  const creditos = cred.error ? 0 : Number((cred.data as { push_creditos?: number } | null)?.push_creditos) || 0;
+  const datosPush = cred.error ? null : (cred.data as { push_creditos?: number; push_cupo_mes?: number | null } | null);
+  // Cupo personalizado (lo fija el superadmin); si está vacío rige el del plan
+  const personalizado = datosPush?.push_cupo_mes ?? null;
+  const cupoMes = personalizado !== null ? Math.max(0, Number(personalizado)) : cupoMensual(!!tienda.data?.subdominio_activo);
+  const creditos = Number(datosPush?.push_creditos) || 0;
   const usaCredito = usadasMes >= cupoMes;
   return {
-    usadasMes, usadasDia, cupoMes, creditos,
+    usadasMes, usadasDia, cupoMes, creditos, cupoPersonalizado: personalizado,
     restantesMes: Math.max(0, cupoMes - usadasMes),
     usaCredito,
     puedeHoy: usadasDia < PUSH_LIMITES.maxPorDia && (!usaCredito || creditos > 0),

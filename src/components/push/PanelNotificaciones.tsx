@@ -14,7 +14,7 @@ import { CANAL_BOGA, PUSH_PAQUETE } from '@/lib/pushLimites';
 export type OpcionCanal = { slug: string; nombre: string };
 
 type Estado = {
-  seguidores: number; usadasMes: number; usadasDia: number; cupoMes: number; restantesMes: number; creditos: number; puedeHoy: boolean;
+  seguidores: number; usadasMes: number; usadasDia: number; cupoMes: number; cupoPersonalizado?: number | null; restantesMes: number; creditos: number; puedeHoy: boolean;
   dentroDeHorario: boolean; tablasListas: boolean; sinTope: boolean;
   limites: { maxPorDia: number; horaDesde: number; horaHasta: number };
   ultimas: { id: number; titulo: string; cuerpo: string; url?: string | null; enviados: number; fallidos: number; creada_at: string }[];
@@ -56,6 +56,18 @@ export default function PanelNotificaciones({ opciones, superadmin = false }: { 
     if (!estado || !window.confirm(`¿Sumar ${PUSH_PAQUETE} notificaciones compradas a esta tienda?`)) return;
     const { error: e } = await supabase.from('stores').update({ push_creditos: estado.creditos + PUSH_PAQUETE }).eq('slug', slug);
     setMensaje(e ? 'No se pudo sumar (¿corriste el SQL de push_creditos en supabase_setup.sql?)' : `✅ Se sumaron ${PUSH_PAQUETE} notificaciones.`);
+    if (!e) cargar();
+  };
+
+  // Superadmin: fija cuántas notificaciones al mes incluye el plan de ESTA tienda (vacío = el cupo normal).
+  const [cupoInput, setCupoInput] = useState('');
+  useEffect(() => { setCupoInput(estado?.cupoPersonalizado != null ? String(estado.cupoPersonalizado) : ''); }, [estado]);
+  const guardarCupo = async () => {
+    const limpio = cupoInput.trim();
+    const valor = limpio === '' ? null : Math.floor(Number(limpio));
+    if (valor !== null && (!Number.isFinite(valor) || valor < 0 || valor > 1000)) { setMensaje('Pon un número entre 0 y 1000, o déjalo vacío para usar el del plan.'); return; }
+    const { error: e } = await supabase.from('stores').update({ push_cupo_mes: valor }).eq('slug', slug);
+    setMensaje(e ? 'No se pudo guardar (¿corriste el SQL de push_cupo_mes en supabase_setup.sql?)' : valor === null ? '✅ Esta tienda usa el cupo normal de su plan.' : `✅ Cupo de esta tienda: ${valor} al mes.`);
     if (!e) cargar();
   };
 
@@ -113,8 +125,7 @@ export default function PanelNotificaciones({ opciones, superadmin = false }: { 
   if (opciones.length === 0) {
     return (
       <div className={`${tarjeta} text-sm text-secondary`}>
-        Todavía no hay ninguna tienda con notificaciones activadas. Se activan desde el editor de tienda del superadmin
-        (casilla «Notificaciones push propias»).
+        Todavía no tienes ninguna tienda desde la cual enviar notificaciones.
       </div>
     );
   }
@@ -167,6 +178,23 @@ export default function PanelNotificaciones({ opciones, superadmin = false }: { 
               {!estado.dentroDeHorario && <b className="text-amber-700"> · ahora está fuera de horario</b>}
             </div>
           </div>
+
+          {superadmin && slug !== CANAL_BOGA && (
+            <div className={`${tarjeta} flex flex-wrap items-end gap-3`}>
+              <div className="flex-1 min-w-[220px]">
+                <label className="block text-xs font-bold text-secondary mb-1">Notificaciones al mes de esta tienda (según su plan)</label>
+                <input
+                  className={campo} type="number" min={0} max={1000} inputMode="numeric"
+                  placeholder={`Vacío = cupo normal (4 al mes)`}
+                  value={cupoInput} onChange={(e) => setCupoInput(e.target.value)}
+                />
+              </div>
+              <button onClick={guardarCupo} className="rounded-lg bg-primary text-white font-bold px-4 py-2 text-sm">Guardar</button>
+              <p className="basis-full text-[11px] text-secondary">
+                Reemplaza el cupo del plan solo para esta tienda. El tope de 1 campaña por día y el horario siguen igual.
+              </p>
+            </div>
+          )}
 
           {/* Celular: una sola columna (formulario arriba, detrás del botón). Ancho: historial | formulario */}
           <div className="flex flex-col gap-5 md:grid md:grid-cols-2 md:items-start">

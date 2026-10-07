@@ -30,10 +30,8 @@ export async function POST(request: Request) {
 
   // Solo tiendas que existen (o el canal de la plataforma)
   if (slug !== CANAL_BOGA) {
-    const { data: tienda } = await supabase.from('stores').select('slug,push_activo').eq('slug', slug).maybeSingle();
+    const { data: tienda } = await supabase.from('stores').select('slug').eq('slug', slug).maybeSingle();
     if (!tienda) return NextResponse.json({ error: 'Tienda no encontrada' }, { status: 404, headers: cors });
-    // Solo las tiendas a las que el superadmin les activó los avisos pueden tener suscriptores
-    if (!tienda.push_activo) return NextResponse.json({ error: 'Esta tienda no tiene avisos activados' }, { status: 403, headers: cors });
   }
 
   const { error: e1 } = await supabase.from('push_subs').upsert(

@@ -1453,6 +1453,10 @@ UPDATE public.stores SET modulos = '{"pos": true, "inventario": true}'::jsonb WH
 -- del plan ya se usó (ver src/lib/pushLimites.ts). Los suma el superadmin al registrar el pago.
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS push_creditos INTEGER NOT NULL DEFAULT 0;
 
+-- Cupo mensual PERSONALIZADO de avisos push para una tienda (lo fija el superadmin según el plan que
+-- le dé). NULL = rige el cupo normal (4 al mes). 0 = sin avisos incluidos.
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS push_cupo_mes INTEGER;
+
 -- La política UPDATE de stores deja al dueño editar su tienda: sin esto podría
 -- activarse módulos (o regalarse avisos) él mismo. Mismo patrón que profiles_protege_rol.
 CREATE OR REPLACE FUNCTION public.stores_protege_modulos()
@@ -1467,6 +1471,9 @@ BEGIN
     END IF;
     IF NEW.push_creditos IS DISTINCT FROM OLD.push_creditos THEN
       NEW.push_creditos := OLD.push_creditos;
+    END IF;
+    IF NEW.push_cupo_mes IS DISTINCT FROM OLD.push_cupo_mes THEN
+      NEW.push_cupo_mes := OLD.push_cupo_mes;
     END IF;
     -- Servicios de pago: el subdominio propio (su app instalable con su logo) y los avisos push los prende solo el superadmin.
     IF NEW.subdominio_activo IS DISTINCT FROM OLD.subdominio_activo THEN

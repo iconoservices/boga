@@ -24,7 +24,7 @@ export default function NotificacionesAdmin() {
 
   useEffect(() => {
     if (!esSuperadmin) return;
-    supabase.from('stores').select('slug,name').eq('push_activo', true).order('name').then(({ data }) => {
+    supabase.from('stores').select('slug,name').order('name').then(({ data }) => {
       setOpciones([
         { slug: CANAL_BOGA, nombre: 'BogaHub (notificaciones de la plataforma)' },
         ...((data ?? []) as { slug: string; name: string }[]).map((t) => ({ slug: t.slug, nombre: t.name })),
@@ -52,7 +52,7 @@ export default function NotificacionesAdmin() {
         <main className="max-w-[1000px] mx-auto px-container-margin py-8 flex flex-col gap-6">
           <p className="text-sm text-secondary">
             Envía notificaciones a quienes las activaron. El canal de BogaHub no tiene tope de campañas;
-            las tiendas con subdominio tienen 2 por semana acumulables en el mes (8), y pueden comprar paquetes de 4 notificaciones extra. Los envíos son solo entre las 8:00 y las 22:00 (hora de Lima).
+            cada tienda tiene 4 al mes automáticas (acumulables en el mes), puedes darle otro número con el cuadro de abajo, y pueden comprar paquetes de 4 extra. Los envíos son solo entre las 8:00 y las 22:00 (hora de Lima).
           </p>
           {opciones === null ? <p className="text-sm text-secondary">Cargando…</p> : <PanelNotificaciones opciones={opciones} superadmin />}
         </main>

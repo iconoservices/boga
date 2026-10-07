@@ -46,7 +46,11 @@ export async function quienEs(request: Request): Promise<Quien | null> {
 export async function puedeGestionar(supabase: SupabaseClient, quien: Quien, storeSlug: string, canalBoga: string): Promise<boolean> {
   if (quien.esSuperadmin) return true;
   if (storeSlug === canalBoga) return false; // el canal de la plataforma es solo del superadmin
-  const { data } = await supabase.from('stores').select('user_id,push_activo').eq('slug', storeSlug).maybeSingle();
-  // El dueño solo puede usar los avisos si el superadmin se los activó a su tienda
-  return !!data && data.user_id === quien.userId && data.push_activo === true;
+  const { data } = await supabase.from('stores').select('user_id').eq('slug', storeSlug).maybeSingle();
+  // Todas las tiendas pueden enviar avisos: el dueño o un co-administrador. La cantidad la fija el plan
+  // (o el cupo personalizado que pone el superadmin, ver stores.push_cupo_mes).
+  if (!data) return false;
+  if (data.user_id === quien.userId) return true;
+  const { data: coAdmin } = await supabase.from('store_admins').select('user_id').eq('store', storeSlug).eq('user_id', quien.userId).maybeSingle();
+  return !!coAdmin;
 }
