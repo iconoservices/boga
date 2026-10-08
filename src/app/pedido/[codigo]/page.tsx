@@ -9,7 +9,7 @@ import { use, useCallback, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { compartirPDF, pdfDePedido } from '@/lib/pdfPedido';
+import { compartirPDF, pdfDePedidoDetallado } from '@/lib/pdfPedido';
 
 // Leaflet solo se descarga cuando hay una moto que mostrar.
 const MapaRepartidor = dynamic(() => import('@/components/MapaRepartidor'), {
@@ -19,7 +19,7 @@ const MapaRepartidor = dynamic(() => import('@/components/MapaRepartidor'), {
 
 type Pedido = {
   codigo: string;
-  tienda: { slug: string; nombre: string };
+  tienda: { slug: string; nombre: string; logo?: string | null };
   items: { name: string; price: number; quantity: number }[];
   total: number;
   estado: string;
@@ -207,12 +207,15 @@ export default function PedidoPage({ params }: { params: Promise<{ codigo: strin
 
   const pdf = async () => {
     if (!p) return;
-    const texto = [
-      ...p.items.map((i) => `- ${i.quantity}x ${i.name} - S/ ${(i.price * i.quantity).toFixed(2)}`),
-      '', `Total: S/ ${p.total.toFixed(2)}`, `Entrega: ${p.entrega}`,
-    ].join('\n');
-    const file = await pdfDePedido(p.tienda.nombre, texto, p.codigo);
-    await compartirPDF(file, `Pedido en ${p.tienda.nombre}`);
+    try {
+      const file = await pdfDePedidoDetallado({
+        tienda: p.tienda.nombre, logo: p.tienda.logo, codigo: p.codigo, fecha: p.creado,
+        items: p.items, total: p.total, entrega: p.entrega,
+      });
+      await compartirPDF(file, `Pedido en ${p.tienda.nombre}`);
+    } catch (e) {
+      alert('No se pudo crear el PDF: ' + ((e as Error)?.message || 'error desconocido'));
+    }
   };
 
   const repAsignado = p?.repartidorId ? repartidores.find((r) => r.id === p.repartidorId) : null;

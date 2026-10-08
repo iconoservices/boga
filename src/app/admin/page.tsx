@@ -3,7 +3,8 @@
 import { DOMINIO_BASE } from '@/lib/authCookies';
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import { RUTA_DE_TAB, TAB_DE_RUTA } from '@/lib/adminRutas';
 import { supabase } from '@/lib/supabase';
 import { type StoreConfig } from '@/lib/stores.config';
 import { jsPDF } from 'jspdf';
@@ -35,6 +36,9 @@ import { useCambioDeHoy } from '@/lib/useCambio';
 import CobroOnline from '@/components/admin/CobroOnline';
 import { normalizarIgv } from '@/lib/igv';
 import { COLS_OFERTA, precioOfertaVigente, porcentajeOferta } from '@/lib/ofertas';
+import { cargarImagenPdf, ajustarImagen, textoPdf, hexToRgb, type ImagenPdf } from '@/lib/imagenPdf';
+import { compartirPDF } from '@/lib/pdfPedido';
+import EscanerCamara from '@/components/EscanerCamara';
 import { COL_PRESENTACIONES, presentacionesSugeridas, textosPresentacion, leerPresentaciones, precioDesde, tipoPresentacionDe, UNIDADES_DE_MEDIDA, completarMedida, ordenarPresentaciones, type ModoMedida } from '@/lib/presentaciones';
 
 interface Product {
@@ -190,6 +194,19 @@ function AdminDashboard({ user }: { user: User }) {
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>('inicio');
+  // La pestaña vive también en la dirección (/admin/pedidos): la dirección manda al entrar y con "atrás", y cada cambio de pestaña la actualiza.
+  const pathname = usePathname();
+  const primeraRuta = useRef(true);
+  useEffect(() => {
+    const t = TAB_DE_RUTA[pathname.replace(/\/$/, '') || '/admin'];
+    if (t && t !== activeTab) setActiveTab(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+  useEffect(() => {
+    if (primeraRuta.current) { primeraRuta.current = false; return; }
+    const destino = RUTA_DE_TAB[activeTab];
+    if (destino && window.location.pathname.replace(/\/$/, '') !== destino) window.history.pushState(null, '', destino + window.location.search);
+  }, [activeTab]);
   // A qué sección del editor de tienda saltar al abrirlo desde las tarjetas
   // del Inicio (Datos del negocio / Horarios / Métodos de pago / Avisos).
   const [storeEditorSection, setStoreEditorSection] = useState<string | null>(null);
@@ -363,8 +380,8 @@ function AdminDashboard({ user }: { user: User }) {
   const posDisponible = !!focusedStore && tiendaTiene(focusedStore, 'pos');
   // Si apagan el POS mientras está abierto, volver al Inicio.
   useEffect(() => {
-    if ((activeTab === 'pos' || activeTab === 'metrics') && !posOn) setActiveTab('inicio');
-  }, [activeTab, posOn]);
+    if ((activeTab === 'pos' || activeTab === 'metrics') && !posOn && dbStores.length > 0) setActiveTab('inicio');
+  }, [activeTab, posOn, dbStores.length]);
 
   // Datos derivados para la pestaña Inicio (una sola carta).
   const inicioStore = stores[focusedStore];
@@ -514,6 +531,7 @@ function AdminDashboard({ user }: { user: User }) {
     preciosMoneda: {} as Record<string, string>,
     esServicio: false,
     esCombo: false,
+    codigoBarras: "",
   });
 
   // Tiendas de terrenos: "Subcategoría" pasa a ser el área, y aparece un campo para la ubicación (enlace de Maps).
@@ -569,6 +587,7 @@ function AdminDashboard({ user }: { user: User }) {
       preciosMoneda: {},
       esServicio: false,
       esCombo: false,
+      codigoBarras: '',
     });
     setFotos([]);
   };
@@ -587,9 +606,20 @@ function AdminDashboard({ user }: { user: User }) {
   }, []);
 
   // Avisa (pitido corto y número en la pestaña) cuando sube la cantidad de pedidos pendientes.
+  // Suena solo cuando entra un pedido pendiente NUEVO (un id que no se había visto), nunca por abrir el panel o
+  // la pestaña: la primera carga solo fija la base, y tampoco suena al cambiar de tienda o al pasar un pedido de estado.
+  const [silencio, setSilencio] = useState(false);
+  useEffect(() => { try { setSilencio(localStorage.getItem('boga_sonido_pedidos') === 'off'); } catch { /* sin almacenamiento */ } }, []);
+  const alternarSilencio = () => setSilencio((v) => { try { localStorage.setItem('boga_sonido_pedidos', v ? 'on' : 'off'); } catch { /* sin almacenamiento */ } return !v; });
+  const pedidosYaCargados = useRef(false);
+  const pendientesVistos = useRef<Set<string> | null>(null);
   const pendientesAntes = useRef<number | null>(null);
   useEffect(() => {
-    if (pendientesAntes.current !== null && pedidosPendientes > pendientesAntes.current) {
+    if (!pedidosYaCargados.current || !managedSlugs) return;
+    const ids = new Set(orders.filter(o => managedSlugs.includes(o.store) && o.status === 'Pendiente').map(o => String(o.id)));
+    const hayNuevo = pendientesVistos.current !== null && [...ids].some(id => !pendientesVistos.current!.has(id));
+    pendientesVistos.current = new Set([...(pendientesVistos.current ?? []), ...ids]);
+    if (hayNuevo && !silencio) {
       try {
         const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
         const osc = ctx.createOscillator();
@@ -599,6 +629,9 @@ function AdminDashboard({ user }: { user: User }) {
         osc.start(); osc.stop(ctx.currentTime + 0.25);
       } catch { /* el navegador puede bloquear el sonido: no pasa nada */ }
     }
+  }, [orders, managedSlugs, silencio]);
+
+  useEffect(() => {
     pendientesAntes.current = pedidosPendientes;
     const base = document.title.replace(/^\(\d+\)\s*/, '');
     document.title = pedidosPendientes > 0 ? `(${pedidosPendientes}) ${base}` : base;
@@ -666,6 +699,7 @@ function AdminDashboard({ user }: { user: User }) {
       console.error('Error fetching orders:', error);
     } else {
       setOrders(data || []);
+      pedidosYaCargados.current = true;
     }
   };
 
@@ -704,9 +738,9 @@ function AdminDashboard({ user }: { user: User }) {
     setPedidoOcupado(null);
   };
 
-  // Borra un pedido para siempre. Solo el superadmin y solo si ya está cancelado: sirve para limpiar pedidos de prueba.
+  // Borra un pedido para siempre. Solo si ya está cancelado (limpia pedidos de prueba o equivocados); lo puede hacer el admin de su tienda y el superadmin.
   const eliminarPedido = async (o: Pedido) => {
-    if (o.status !== 'Cancelado' || !esSuperadmin) return;
+    if (o.status !== 'Cancelado') return;
     setPedidoOcupado(o.id);
     const { error } = await supabase.from('orders').delete().eq('id', o.id);
     setPedidoOcupado(null);
@@ -808,51 +842,121 @@ function AdminDashboard({ user }: { user: User }) {
   // Boleta de la venta del POS en PDF (formato ticket 80mm). El modal ya tiene
   // "Imprimir" (window.print) y "Compartir por WhatsApp" en texto; esto agrega
   // un archivo descargable/archivable.
-  const descargarBoletaPDF = (venta: any) => {
-    const storeName = stores[venta.store]?.name || String(venta.store).toUpperCase();
+  // Se arma en dos pasadas: una para medir el alto real y otra para dibujar en una hoja a la medida.
+  const armarBoletaPDF = async (venta: any): Promise<{ doc: jsPDF; nombre: string }> => {
+    const tienda = stores[venta.store];
+    const storeName = textoPdf(tienda?.name || String(venta.store).toUpperCase());
     const items = Array.isArray(venta.items)
       ? venta.items
       : typeof venta.items === 'string' ? JSON.parse(venta.items) : [];
+    const logo = await cargarImagenPdf(tienda?.logoImage, 300);
+    const [cr, cg, cb] = hexToRgb(tienda?.theme?.primary || colorPanel);
 
-    const W = 80;
-    const doc = new jsPDF({ unit: 'mm', format: [W, 297] });
-    const M = 6;
-    let y = 10;
-    const line = (txt: string, opts: { size?: number; bold?: boolean; align?: 'left' | 'center' | 'right'; gap?: number } = {}) => {
-      doc.setFontSize(opts.size ?? 8);
-      doc.setFont('helvetica', opts.bold ? 'bold' : 'normal');
-      const x = opts.align === 'center' ? W / 2 : opts.align === 'right' ? W - M : M;
-      doc.text(txt, x, y, { align: opts.align ?? 'left' });
-      y += opts.gap ?? 4.2;
+    const W = 80, M = 6;
+    const dibujar = (doc: jsPDF) => {
+      let y = 8;
+      const txt = (t: string, o: { size?: number; bold?: boolean; align?: 'left' | 'center' | 'right'; color?: [number, number, number]; gap?: number } = {}) => {
+        doc.setFont('helvetica', o.bold ? 'bold' : 'normal').setFontSize(o.size ?? 8).setTextColor(...(o.color ?? [28, 27, 31]));
+        const x = o.align === 'center' ? W / 2 : o.align === 'right' ? W - M : M;
+        const lineas: string[] = doc.splitTextToSize(t, W - M * 2);
+        lineas.forEach((l) => { doc.text(l, x, y, { align: o.align ?? 'left' }); y += (o.size ?? 8) * 0.44 + 0.9; });
+        y += o.gap ?? 0;
+      };
+      const fila = (l: string, r: string) => {
+        doc.setFont('helvetica', 'normal').setFontSize(8).setTextColor(28, 27, 31);
+        doc.text(l, M, y);
+        doc.text(r, W - M, y, { align: 'right' });
+        y += 4.4;
+      };
+      const regla = () => { doc.setDrawColor(190, 190, 190).setLineDashPattern([0.8, 0.8], 0).line(M, y, W - M, y); doc.setLineDashPattern([], 0); y += 4; };
+
+      if (logo) {
+        const t = ajustarImagen(logo, 24, 24);
+        try { doc.addImage(logo.data, 'JPEG', (W - t.w) / 2, y, t.w, t.h); } catch {}
+        y += t.h + 3;
+      }
+      txt(storeName, { size: 12, bold: true, align: 'center' });
+      txt('BOLETA DE VENTA', { size: 8, bold: true, align: 'center', color: [cr, cg, cb], gap: 1 });
+      regla();
+
+      fila('N° de venta:', '#' + String(venta.id).substring(0, 8).toUpperCase());
+      fila('Fecha:', new Date(venta.created_at).toLocaleString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }));
+      if (venta.seller_name) fila('Vendedor:', textoPdf(venta.seller_name));
+      fila('Pago:', textoPdf(venta.payment_method) || '-');
+      if (venta.customer_name && venta.customer_name !== 'Cliente Local (POS)') fila('Cliente:', textoPdf(venta.customer_name));
+      regla();
+
+      // Detalle: Cant | Producto | Importe
+      doc.setFont('helvetica', 'bold').setFontSize(7).setTextColor(130, 130, 130);
+      doc.text('CANT', M, y);
+      doc.text('PRODUCTO', M + 9, y);
+      doc.text('IMPORTE', W - M, y, { align: 'right' });
+      y += 4;
+      items.forEach((it: any) => {
+        doc.setFont('helvetica', 'normal').setFontSize(8).setTextColor(28, 27, 31);
+        const nombre: string[] = doc.splitTextToSize(textoPdf(it.name), W - M * 2 - 9 - 20);
+        doc.text(String(it.quantity), M, y);
+        doc.text(`S/ ${(Number(it.price) * Number(it.quantity)).toFixed(2)}`, W - M, y, { align: 'right' });
+        nombre.forEach((l, i) => { doc.text(l, M + 9, y); if (i < nombre.length - 1) y += 3.8; });
+        y += 4;
+        if (Number(it.quantity) > 1) {
+          doc.setFontSize(6.5).setTextColor(130, 130, 130);
+          doc.text(`${it.quantity} x S/ ${Number(it.price).toFixed(2)}`, M + 9, y - 0.6);
+          y += 2.6;
+        }
+      });
+      y += 1;
+      regla();
+
+      // Total destacado
+      doc.setFillColor(cr, cg, cb).roundedRect(M, y - 1, W - M * 2, 9, 1.5, 1.5, 'F');
+      doc.setFont('helvetica', 'bold').setFontSize(10).setTextColor(255, 255, 255);
+      doc.text('TOTAL', M + 3, y + 5);
+      doc.text(`S/ ${Number(venta.total_amount).toFixed(2)}`, W - M - 3, y + 5, { align: 'right' });
+      y += 15;
+
+      txt('¡Gracias por su compra!', { size: 8, bold: true, align: 'center' });
+      txt('Comprobante de venta interno, no válido como factura electrónica.', { size: 6, align: 'center', color: [150, 150, 150] });
+      txt('Hecho con BogaHub - bogahub.app', { size: 6, align: 'center', color: [150, 150, 150] });
+      return y + 4;
     };
-    const rule = () => { doc.setLineDashPattern([0.6, 0.6], 0); doc.line(M, y, W - M, y); y += 3; };
-    const row = (l: string, r: string, bold = false) => {
-      doc.setFontSize(8);
-      doc.setFont('helvetica', bold ? 'bold' : 'normal');
-      doc.text(l, M, y);
-      doc.text(r, W - M, y, { align: 'right' });
-      y += 4.2;
-    };
 
-    line('BOGA MARKET', { size: 12, bold: true, align: 'center', gap: 4.5 });
-    line(storeName, { size: 8, bold: true, align: 'center' });
-    line('TICKET DE VENTA LOCAL', { size: 7, align: 'center', gap: 5 });
-    rule();
-    row('ID Venta:', '#' + String(venta.id).substring(0, 8));
-    row('Fecha:', new Date(venta.created_at).toLocaleString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }));
-    row('Vendedor:', venta.seller_name || '-');
-    row('Pago:', venta.payment_method || '-');
-    if (venta.customer_name && venta.customer_name !== 'Cliente Local (POS)') row('Cliente:', venta.customer_name);
-    rule();
-    items.forEach((it: any) => {
-      row(`${it.quantity}x ${it.name}`.slice(0, 32), `S/ ${(it.price * it.quantity).toFixed(2)}`);
-    });
-    rule();
-    row('TOTAL', `S/ ${Number(venta.total_amount).toFixed(2)}`, true);
-    y += 4;
-    line('¡Gracias por su compra!', { size: 7, align: 'center' });
+    const alto = dibujar(new jsPDF({ unit: 'mm', format: [W, 400] }));
+    const doc = new jsPDF({ unit: 'mm', format: [W, Math.max(alto, 100)] });
+    dibujar(doc);
+    return { doc, nombre: `Boleta_${storeName.replace(/[^\w-]+/g, '_')}_${String(venta.id).substring(0, 8)}.pdf` };
+  };
 
-    doc.save(`Boleta_${storeName.replace(/\s+/g, '_')}_${String(venta.id).substring(0, 8)}.pdf`);
+  const descargarBoletaPDF = async (venta: any) => {
+    try {
+      const { doc, nombre } = await armarBoletaPDF(venta);
+      doc.save(nombre);
+    } catch (e) {
+      console.error(e);
+      alert('No se pudo generar la boleta: ' + ((e as Error)?.message || 'error desconocido'));
+    }
+  };
+
+  // WhatsApp: en el celular abre el menú de compartir con la boleta (PDF) adjunta; en la compu la descarga
+  // y abre el chat del cliente para que la adjunten.
+  const enviarBoletaWhatsApp = async (venta: any) => {
+    try {
+      const { doc, nombre } = await armarBoletaPDF(venta);
+      const storeName = stores[venta.store]?.name || String(venta.store);
+      const mensaje = `Hola${venta.customer_name && venta.customer_name !== 'Cliente Local (POS)' ? ' ' + venta.customer_name : ''}, te comparto tu boleta de ${storeName} por S/ ${Number(venta.total_amount).toFixed(2)}. ¡Gracias por tu compra!`;
+      const file = new File([doc.output('blob')], nombre, { type: 'application/pdf' });
+      const r = await compartirPDF(file, mensaje);
+      if (r === 'descargado') {
+        const tel = venta.customer_phone ? String(venta.customer_phone).replace(/\D/g, '') : '';
+        const url = tel
+          ? `https://wa.me/${tel.startsWith('51') ? tel : '51' + tel}?text=${encodeURIComponent(mensaje)}`
+          : `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+        window.open(url, '_blank');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('No se pudo preparar la boleta: ' + ((e as Error)?.message || 'error desconocido'));
+    }
   };
 
   // El editor de tienda habla el idioma de la plantilla: una empresa de servicios no "vende", "cotiza".
@@ -1282,6 +1386,7 @@ function AdminDashboard({ user }: { user: User }) {
         : {};
 
       // 3. Guardar en la base de datos
+      let idGuardado: string | null = editingProductId;
       if (editingProductId) {
         const { error: dbError } = await supabase.from('products').update({
           name: newProduct.name,
@@ -1366,6 +1471,13 @@ function AdminDashboard({ user }: { user: User }) {
         if (dbError) throw dbError;
         // Aparece en la lista de inmediato, sin esperar a que se vuelva a pedir todo.
         if (creado) setProducts((prev) => [creado as Product, ...prev.filter((x) => x.id !== (creado as Product).id)]);
+        idGuardado = (creado as Product | null)?.id ?? null;
+      }
+
+      // Código de barras (columna aparte, solo si la tienda tiene caja): se guarda si lo escribió o si el producto ya tenía uno.
+      if (idGuardado && tiendaTiene(newProduct.store, 'pos') && (newProduct.codigoBarras.trim() || editingProductId)) {
+        const { error: errCodigo } = await supabase.from('products').update({ codigo_barras: newProduct.codigoBarras.trim() || null }).eq('id', idGuardado);
+        if (errCodigo && newProduct.codigoBarras.trim()) alert('El producto se guardó, pero no se pudo guardar el código de barras: ' + errCodigo.message + '\n(Falta correr el SQL del código de barras en Supabase.)');
       }
 
       // Éxito: se cierra el formulario ya (antes esperaba a volver a pedir TODA la lista) y se refresca en segundo plano.
@@ -1425,11 +1537,41 @@ function AdminDashboard({ user }: { user: User }) {
       preciosMoneda: Object.fromEntries(Object.entries(normalizarPreciosMoneda(product.precios_moneda)).map(([c, n]) => [c, String(n)])),
       esServicio: product.es_servicio === true,
       esCombo: product.es_combo === true,
+      codigoBarras: '',
     });
     setFotos(
       product.images?.length ? product.images.map((url) => ({ url })) : product.image ? [{ url: product.image }] : []
     );
     setIsModalOpen(true);
+    // El código de barras no viaja en la lista (columna aparte): se pide solo para este producto. Sin el SQL, no hay nada que mostrar.
+    if (tiendaTiene(product.store, 'pos')) {
+      supabase.from('products').select('codigo_barras').eq('id', product.id).maybeSingle().then(({ data }) => {
+        const cod = (data as { codigo_barras?: string | null } | null)?.codigo_barras;
+        if (cod) setNewProduct((prev) => ({ ...prev, codigoBarras: cod }));
+      });
+    }
+  };
+
+  // ── Cobro con cámara (POS) ──
+  const [escanerPosAbierto, setEscanerPosAbierto] = useState(false);
+  const [escanerCodigoAbierto, setEscanerCodigoAbierto] = useState(false);
+  const codigosPos = useRef<Record<string, string> | null>(null);   // código de barras → id de producto, de la tienda del POS
+  const abrirEscanerPos = async () => {
+    codigosPos.current = null;
+    setEscanerPosAbierto(true);
+    const { data, error } = await supabase.from('products').select('id,codigo_barras').eq('store', focusedStore).not('codigo_barras', 'is', null);
+    if (error) { codigosPos.current = {}; return; }
+    codigosPos.current = Object.fromEntries((data as { id: string; codigo_barras: string }[]).map((r) => [String(r.codigo_barras).trim(), r.id]));
+  };
+  const alEscanearPos = async (codigo: string): Promise<{ ok: boolean; mensaje: string }> => {
+    // Si todavía se están pidiendo los códigos, espera un momento.
+    for (let i = 0; i < 20 && codigosPos.current === null; i++) await new Promise((r) => setTimeout(r, 100));
+    const id = codigosPos.current?.[codigo];
+    const producto = id ? products.find((p) => p.id === id) : undefined;
+    if (!producto) return { ok: false, mensaje: `El código ${codigo} no está registrado en ningún producto de esta tienda.` };
+    if (producto.status === 'Agotado') return { ok: false, mensaje: `${producto.name}: agotado.` };
+    addToCart(producto);
+    return { ok: true, mensaje: `${producto.name} agregado` };
   };
 
   // Duplicar: abre el formulario con todo lo del producto (categoría, precio, presentaciones, oferta, combo…) pero como
@@ -1478,6 +1620,97 @@ function AdminDashboard({ user }: { user: User }) {
     }
   };
 
+  // Datos de marca del QR: el mismo bloque se pinta en el modal y se dibuja en el PNG descargable.
+  const qrMarca = (() => {
+    const t = selectedStore !== 'all' ? stores[selectedStore] : undefined;
+    return {
+      nombre: t?.name || 'BogaHub',
+      logo: t?.logoImage as string | undefined,
+      etiqueta: t ? 'Escanea y pide' : 'Escanea y explora',
+      url: selectedStore === 'all' ? `${siteOrigin}/explore` : urlDeTienda(selectedStore),
+    };
+  })();
+
+  // PNG del QR con el mismo diseño del modal (franja de color + logo + nombre + QR + leyenda).
+  const descargarQRPNG = async () => {
+    const svg = document.querySelector('#qr-container svg');
+    if (!svg) return;
+    try {
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const qrImg = await new Promise<HTMLImageElement>((ok, fail) => {
+        const i = new Image();
+        i.onload = () => ok(i);
+        i.onerror = () => fail(new Error('No se pudo dibujar el QR'));
+        i.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+      });
+      const logo = await cargarImagenPdf(qrMarca.logo, 200);
+      const logoImg = logo ? await new Promise<HTMLImageElement | null>((ok) => {
+        const i = new Image();
+        i.onload = () => ok(i);
+        i.onerror = () => ok(null);
+        i.src = logo.data;
+      }) : null;
+
+      const W = 640, H = 820;
+      const canvas = document.createElement('canvas');
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext('2d')!;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, W, H);
+
+      // Franja de marca
+      ctx.fillStyle = colorPanel;
+      ctx.fillRect(0, 0, W, 150);
+      // Logo completo (sin recortar) sobre una caja blanca del tamaño de su forma
+      let textoX = 30;
+      if (logoImg) {
+        const alto = 96, ancho = Math.min(220, Math.max(96, (logoImg.width / logoImg.height) * (alto - 16) + 16));
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.roundRect(30, 27, ancho, alto, 20);
+        ctx.fill();
+        const r = Math.min((ancho - 16) / logoImg.width, (alto - 16) / logoImg.height);
+        ctx.drawImage(logoImg, 30 + (ancho - logoImg.width * r) / 2, 27 + (alto - logoImg.height * r) / 2, logoImg.width * r, logoImg.height * r);
+        textoX = 30 + ancho + 24;
+      }
+      ctx.fillStyle = 'rgba(255,255,255,0.75)';
+      ctx.font = '700 20px sans-serif';
+      ctx.fillText(qrMarca.etiqueta.toUpperCase(), textoX, 62);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 36px sans-serif';
+      let nombre = qrMarca.nombre;
+      while (ctx.measureText(nombre).width > W - textoX - 30 && nombre.length > 4) nombre = nombre.slice(0, -2);
+      ctx.fillText(nombre === qrMarca.nombre ? nombre : nombre + '…', textoX, 108);
+
+      // QR en caja con borde
+      const box = 440, bx = (W - box) / 2, by = 205;
+      ctx.strokeStyle = colorPanel + '33';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.roundRect(bx, by, box, box, 28);
+      ctx.stroke();
+      ctx.drawImage(qrImg, bx + 20, by + 20, box - 40, box - 40);
+
+      ctx.fillStyle = '#727785';
+      ctx.font = '600 22px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Escanea con la cámara de tu celular', W / 2, by + box + 50);
+      ctx.fillStyle = '#9aa0ad';
+      ctx.font = '500 18px sans-serif';
+      ctx.fillText(qrMarca.url.replace(/^https?:\/\//, ''), W / 2, by + box + 84);
+
+      const a = document.createElement('a');
+      a.download = `QR_${selectedStore === 'all' ? 'bogahub' : selectedStore}.png`;
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    } catch (e) {
+      console.error(e);
+      alert('No se pudo generar el QR para descargar.');
+    }
+  };
+
+  // Catálogo en PDF: logo y datos de la tienda arriba, productos agrupados por categoría con su foto.
   const exportStoreMenuPDF = async (storeSlug: string) => {
     if (isExporting) return;
     const storeObj = Object.values(stores).find(s => s.slug === storeSlug);
@@ -1485,32 +1718,48 @@ function AdminDashboard({ user }: { user: User }) {
 
     setIsExporting(true);
     try {
-      const doc = new jsPDF();
-      
-      // Header
-      doc.setFontSize(22);
-      doc.setTextColor(20, 20, 20);
-      doc.text(`Menú - ${storeObj.name}`, 14, 20);
-      
-      doc.setFontSize(11);
-      doc.setTextColor(100, 100, 100);
-      doc.text(storeObj.tagline, 14, 28);
-      
-      let yOffset = 35;
       const storeProducts = products.filter(p => p.store === storeSlug);
+      if (storeProducts.length === 0) {
+        alert('Esta tienda todavía no tiene productos para exportar.');
+        return;
+      }
 
-      // Preload all images
-      const imagesMap: Record<string, string> = {};
+      const doc = new jsPDF();
+      const pageW = doc.internal.pageSize.getWidth();
+      const [r, g, b] = hexToRgb(colorPanel);
+
+      // Se cargan el logo y las fotos antes de dibujar (en JPEG: jsPDF no lee WebP).
+      const logo = await cargarImagenPdf(storeObj.logoImage, 300);
+      const imagesMap: Record<string, ImagenPdf> = {};
       await Promise.all(storeProducts.map(async (p) => {
-        if (p.image) {
-          const b64 = await getBase64Image(p.image);
-          if (b64) imagesMap[p.id] = b64;
-        }
+        const img = await cargarImagenPdf(p.image, 200);
+        if (img) imagesMap[p.id] = img;
       }));
-      
-      // Se agrupa por la categoría real de cada producto. El array
-      // storeObj.categories solo lleva iconos y orden para la vitrina; el PDF
-      // no los necesita, y las tiendas de la DB suelen tenerlo vacío.
+
+      // Encabezado con franja de la marca
+      doc.setFillColor(r, g, b);
+      doc.rect(0, 0, pageW, 34, 'F');
+      let textoX = 14;
+      if (logo) {
+        const t = ajustarImagen(logo, 40, 20);
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(14, 17 - t.h / 2 - 2, t.w + 4, t.h + 4, 2, 2, 'F');
+        try { doc.addImage(logo.data, 'JPEG', 16, 17 - t.h / 2, t.w, t.h); } catch {}
+        textoX = 14 + t.w + 4 + 6;
+      }
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold').setFontSize(20);
+      doc.text(textoPdf(storeObj.name) || 'Catálogo', textoX, 17, { maxWidth: pageW - textoX - 14 });
+      doc.setFont('helvetica', 'normal').setFontSize(10);
+      const sub = textoPdf(storeObj.tagline) || 'Catálogo de productos';
+      doc.text(sub, textoX, 25, { maxWidth: pageW - textoX - 14 });
+
+      doc.setTextColor(120, 120, 120).setFontSize(8);
+      doc.text(`Precios en soles (S/). Actualizado el ${new Date().toLocaleDateString('es-PE', { day: '2-digit', month: 'long', year: 'numeric' })}`, 14, 41);
+
+      let yOffset = 46;
+
+      // Se agrupa por la categoría real de cada producto (storeObj.categories solo lleva iconos de la vitrina).
       const categorias = Array.from(new Set(storeProducts.map(p => p.category || 'Sin categoría')));
 
       categorias.forEach(cat => {
@@ -1519,50 +1768,56 @@ function AdminDashboard({ user }: { user: User }) {
 
         autoTable(doc, {
           startY: yOffset,
-          head: [['', cat.toUpperCase(), 'Descripción', 'Precio']],
-          body: catProducts.map(p => [
-            '', // placeholder for image
-            p.name + (p.subcategory ? `\n(Subcategoría: ${p.subcategory})` : ''),
-            p.description || '-', 
-            `S/ ${Number(p.price).toFixed(2)}`
-          ]),
+          head: [['', textoPdf(cat).toUpperCase(), 'Descripción', 'Precio']],
+          body: catProducts.map(p => {
+            const pv = precioOfertaVigente(p);
+            return [
+              '',
+              textoPdf(p.name) + (p.subcategory ? `\n${textoPdf(p.subcategory)}` : ''),
+              textoPdf(p.description) || '-',
+              `S/ ${Number(pv ?? p.price).toFixed(2)}`,
+            ];
+          }),
           theme: 'grid',
-          headStyles: { fillColor: [30, 30, 30], textColor: 255, fontStyle: 'bold' },
-          styles: { fontSize: 10, cellPadding: 4, minCellHeight: 18, valign: 'middle' },
+          headStyles: { fillColor: [r, g, b], textColor: 255, fontStyle: 'bold' },
+          styles: { fontSize: 9, cellPadding: 3, minCellHeight: 20, valign: 'middle' },
           columnStyles: {
-            0: { cellWidth: 18 },
-            1: { cellWidth: 45, fontStyle: 'bold' },
+            0: { cellWidth: 22 },
+            1: { cellWidth: 52, fontStyle: 'bold' },
             2: { cellWidth: 'auto' },
-            3: { cellWidth: 25, halign: 'right', fontStyle: 'bold' }
+            3: { cellWidth: 24, halign: 'right', fontStyle: 'bold' },
           },
-          margin: { top: 10, left: 14, right: 14 },
+          margin: { top: 14, left: 14, right: 14, bottom: 16 },
           didDrawCell: (data) => {
             if (data.section === 'body' && data.column.index === 0) {
-              const product = catProducts[data.row.index];
-              const b64 = imagesMap[product.id];
-              if (b64) {
-                try {
-                  // The image format can usually be detected, but we specify 'JPEG' as a fallback
-                  doc.addImage(b64, 'JPEG', data.cell.x + 2, data.cell.y + 2, 14, 14);
-                } catch {}
+              const img = imagesMap[catProducts[data.row.index].id];
+              if (img) {
+                const t = ajustarImagen(img, 16, 16);
+                try { doc.addImage(img.data, 'JPEG', data.cell.x + 3 + (16 - t.w) / 2, data.cell.y + 2 + (16 - t.h) / 2, t.w, t.h); } catch {}
               }
             }
-          }
+          },
         });
-        
-        yOffset = (doc as any).lastAutoTable.finalY + 15;
-        
-        // Add page if needed
-        if (yOffset > 270) {
+
+        yOffset = (doc as any).lastAutoTable.finalY + 10;
+        if (yOffset > 265) {
           doc.addPage();
           yOffset = 20;
         }
       });
-      
-      doc.save(`Menu_${storeObj.name.replace(/\s+/g, '_')}.pdf`);
+
+      // Pie de página con número
+      const paginas = doc.getNumberOfPages();
+      for (let i = 1; i <= paginas; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8).setTextColor(150, 150, 150);
+        doc.text(`${textoPdf(storeObj.name)}  -  Página ${i} de ${paginas}`, pageW / 2, 290, { align: 'center' });
+      }
+
+      doc.save(`Catalogo_${textoPdf(storeObj.name).replace(/[^\w-]+/g, '_')}.pdf`);
     } catch (error) {
       console.error(error);
-      alert('Hubo un error al generar el PDF.');
+      alert('Hubo un error al generar el PDF: ' + ((error as Error)?.message || 'desconocido'));
     } finally {
       setIsExporting(false);
     }
@@ -2084,9 +2339,9 @@ function AdminDashboard({ user }: { user: User }) {
                     <div className="p-4 border-b border-gray-100 flex flex-col gap-4 bg-white">
                       <div className="flex items-center justify-between flex-wrap gap-4">
                         <h2 className="text-base font-bold text-gray-900">Catálogo Actual {selectedStore !== 'all' ? `- ${stores[selectedStore]?.name}` : ''}</h2>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
                           <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest leading-none select-none">Acciones</span>
-                          <div className="flex flex-row items-center gap-1.5">
+                          <div className="flex flex-row flex-wrap items-center gap-1.5">
                             <button
                               onClick={() => setIsQRModalOpen(true)}
                               className="px-2.5 py-1.5 text-[11px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 bg-[var(--tienda-color)] text-white hover:bg-[#8f0f0b] whitespace-nowrap active:scale-95 cursor-pointer shadow-sm"
@@ -2444,7 +2699,9 @@ function AdminDashboard({ user }: { user: User }) {
             mostrarTienda={selectedStore === 'all' && Object.keys(stores).length > 1}
             cambiarEstado={cambiarEstadoPedido}
             eliminar={eliminarPedido}
-            puedeEliminar={esSuperadmin}
+            puedeEliminar
+            silencio={silencio}
+            alternarSilencio={alternarSilencio}
             ocupado={pedidoOcupado}
           />
         )}
@@ -2658,15 +2915,26 @@ function AdminDashboard({ user }: { user: User }) {
             <div className="flex-1 min-w-0 w-full flex flex-col gap-3 pb-60 lg:pb-0">
               {/* Row 1: Unified Search Bar & Categories */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center w-full gap-2 bg-white p-1 md:p-1.5 rounded-md border border-[#e1e3e4]/40 shadow-sm shrink-0">
-                <div className="relative w-full sm:w-56 shrink-0 group">
+                <div className="flex items-center gap-1.5 w-full sm:w-auto shrink-0">
+                <div className="relative flex-1 sm:w-56 shrink-0 group">
                   <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[16px]">search</span>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={posProductSearch}
                     onChange={(e) => setPosProductSearch(e.target.value)}
-                    placeholder="Buscar productos..." 
+                    placeholder="Buscar productos..."
                     className="w-full h-8 pl-8 pr-2.5 bg-gray-50 border border-[#e1e3e4]/40 rounded-lg focus:ring-1 focus:ring-[var(--tienda-color)] focus:border-[var(--tienda-color)] focus:outline-none transition-all text-xs font-medium text-[#191c1d]"
                   />
+                </div>
+                <button
+                  type="button"
+                  onClick={abrirEscanerPos}
+                  className="h-8 px-3 shrink-0 rounded-lg bg-[var(--tienda-color)] text-white text-xs font-bold flex items-center gap-1.5 active:scale-95 cursor-pointer shadow-sm"
+                  title="Escanear código de barras con la cámara"
+                >
+                  <span className="material-symbols-outlined text-[18px]">photo_camera</span>
+                  Escanear
+                </button>
                 </div>
                 <div className="flex-1 flex gap-1 overflow-x-auto hide-scrollbar py-0.5" style={{ scrollbarWidth: 'none' }}>
                   <button 
@@ -3834,6 +4102,30 @@ function AdminDashboard({ user }: { user: User }) {
                   </div>
                 )}
 
+                {tiendaTiene(newProduct.store, 'pos') && (
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Código de barras <span className="font-medium text-gray-400">(opcional, para cobrar con la cámara)</span></label>
+                    <div className="flex gap-2">
+                      <input
+                        value={newProduct.codigoBarras}
+                        onChange={(e) => setNewProduct({ ...newProduct, codigoBarras: e.target.value })}
+                        inputMode="numeric"
+                        placeholder="Escanéalo o escríbelo"
+                        className="flex-1 min-w-0 px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setEscanerCodigoAbierto(true)}
+                        className="px-4 rounded-md bg-gray-900 text-white font-bold text-sm flex items-center gap-1.5 hover:bg-black"
+                      >
+                        <span className="material-symbols-outlined text-[20px]">photo_camera</span>
+                        Escanear
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1.5">Es el código de barras impreso en el empaque. Si el producto no tiene, déjalo vacío.</p>
+                  </div>
+                )}
+
                 {esTerreno && (
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">Ubicación (enlace de Google Maps)</label>
@@ -4678,6 +4970,24 @@ function AdminDashboard({ user }: { user: User }) {
         </div>
       )}
 
+      {/* Lectores de cámara: cobrar escaneando (POS) y registrar el código de un producto */}
+      {escanerPosAbierto && (
+        <EscanerCamara
+          titulo="Cobrar con la cámara"
+          ayuda="Cada código que escanees se agrega al carrito"
+          onCodigo={alEscanearPos}
+          onCerrar={() => setEscanerPosAbierto(false)}
+        />
+      )}
+      {escanerCodigoAbierto && (
+        <EscanerCamara
+          titulo="Escanear código del producto"
+          continuo={false}
+          onCodigo={(c) => { setNewProduct((prev) => ({ ...prev, codigoBarras: c })); return { ok: true, mensaje: `Código ${c}` }; }}
+          onCerrar={() => setEscanerCodigoAbierto(false)}
+        />
+      )}
+
       {/* QR Modal */}
       {isQRModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/40 backdrop-blur-sm" onClick={() => setIsQRModalOpen(false)}>
@@ -4689,41 +4999,34 @@ function AdminDashboard({ user }: { user: User }) {
               <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">Código QR</h2>
               <p className="text-xs text-gray-500 mt-1">Imprímelo para tus mesas o local</p>
             </div>
-            <div className="p-8 flex flex-col items-center gap-6" id="qr-container">
-              <div className="p-4 bg-white rounded-md shadow-sm border border-gray-100 flex flex-col items-center">
-                <div className="text-lg font-black tracking-tight mb-4">{selectedStore !== 'all' ? stores[selectedStore]?.name : 'Boga Market'}</div>
-                <QRCodeSVG
-                  value={(() => {
-                    if (selectedStore === 'all') return `${siteOrigin}/explore`;
-                    return urlDeTienda(selectedStore);
-                  })()}
-                  size={200}
-                  level="H"
-                  includeMargin={true}
-                />
-                <div className="text-[10px] text-gray-400 mt-4 font-bold tracking-widest uppercase">Escanéame para ordenar</div>
+            <div className="p-5 flex flex-col items-center gap-5" id="qr-container">
+              {/* Mismo formato que el carnet de la academia: franja de color con logo y nombre, QR en caja y leyenda. */}
+              <div className="w-full bg-white rounded-3xl shadow-xl overflow-hidden border border-black/5">
+                <div className="bg-[var(--tienda-color)] text-white px-5 py-4 flex items-center gap-3">
+                  {qrMarca.logo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <span className="h-12 max-w-[120px] shrink-0 rounded-xl bg-white p-1.5 flex items-center justify-center">
+                      <img src={qrMarca.logo} alt="" className="h-full w-auto max-w-full object-contain" />
+                    </span>
+                  ) : (
+                    <span className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined">storefront</span>
+                    </span>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-widest font-bold text-white/70">{qrMarca.etiqueta}</p>
+                    <p className="font-extrabold leading-tight truncate">{qrMarca.nombre}</p>
+                  </div>
+                </div>
+                <div className="px-5 pt-5 pb-6 flex flex-col items-center text-center">
+                  <div className="p-3 bg-white rounded-2xl border-2 border-[var(--tienda-color)]/20">
+                    <QRCodeSVG value={qrMarca.url} size={200} level="H" />
+                  </div>
+                  <p className="text-[11px] text-[#727785] font-semibold mt-3">Escanea con la cámara de tu celular</p>
+                </div>
               </div>
-              <button 
-                onClick={() => {
-                  const svg = document.querySelector('#qr-container svg');
-                  if (svg) {
-                    const svgData = new XMLSerializer().serializeToString(svg);
-                    const canvas = document.createElement("canvas");
-                    const ctx = canvas.getContext("2d");
-                    const img = new Image();
-                    img.onload = () => {
-                      canvas.width = img.width;
-                      canvas.height = img.height;
-                      ctx?.drawImage(img, 0, 0);
-                      const pngFile = canvas.toDataURL("image/png");
-                      const downloadLink = document.createElement("a");
-                      downloadLink.download = `QR_${selectedStore === 'all' ? 'boga-market' : selectedStore}.png`;
-                      downloadLink.href = `${pngFile}`;
-                      downloadLink.click();
-                    };
-                    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
-                  }
-                }}
+              <button
+                onClick={descargarQRPNG}
                 className="w-full flex items-center justify-center gap-2 bg-[var(--tienda-color)] text-white px-5 py-3 rounded-md font-bold shadow-lg hover:shadow-[var(--tienda-color)]/30 transition-all"
               >
                 <span className="material-symbols-outlined text-[18px]">download</span>
@@ -5068,41 +5371,11 @@ function AdminDashboard({ user }: { user: User }) {
               </button>
 
               <button
-                onClick={() => {
-                  if (typeof window !== 'undefined') {
-                    const items = Array.isArray(lastCompletedSale.items) 
-                      ? lastCompletedSale.items 
-                      : typeof lastCompletedSale.items === 'string' 
-                        ? JSON.parse(lastCompletedSale.items) 
-                        : [];
-                    
-                    const storeName = stores[lastCompletedSale.store]?.name || lastCompletedSale.store.toUpperCase();
-                    let ticketText = `*TICKET DE VENTA LOCAL*\n`;
-                    ticketText += `*Tienda:* ${storeName}\n`;
-                    ticketText += `*Venta ID:* #${lastCompletedSale.id.substring(0, 8)}\n`;
-                    ticketText += `*Vendedor:* ${lastCompletedSale.seller_name}\n`;
-                    ticketText += `*Método de Pago:* ${lastCompletedSale.payment_method}\n`;
-                    ticketText += `---------------------------\n`;
-                    items.forEach((item: any) => {
-                      ticketText += `• ${item.quantity}x ${item.name} - S/ ${(item.price * item.quantity).toFixed(2)}\n`;
-                    });
-                    ticketText += `---------------------------\n`;
-                    ticketText += `*TOTAL:* S/ ${lastCompletedSale.total_amount.toFixed(2)}\n\n`;
-                    ticketText += `¡Gracias por su compra en ${storeName}!`;
-
-                    const phone = lastCompletedSale.customer_phone ? lastCompletedSale.customer_phone.replace(/\D/g, '') : '';
-                    const encodedText = encodeURIComponent(ticketText);
-                    const whatsappUrl = phone 
-                      ? `https://wa.me/${phone.startsWith('51') ? phone : '51' + phone}?text=${encodedText}` 
-                      : `https://wa.me/?text=${encodedText}`;
-                    
-                    window.open(whatsappUrl, '_blank');
-                  }
-                }}
+                onClick={() => enviarBoletaWhatsApp(lastCompletedSale)}
                 className="w-full flex items-center justify-center gap-2 py-3 bg-[#25D366] text-white hover:bg-[#20ba59] font-bold rounded-md transition-all shadow-md cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[18px]">share</span>
-                Compartir por WhatsApp
+                Enviar boleta por WhatsApp
               </button>
             </div>
           </div>

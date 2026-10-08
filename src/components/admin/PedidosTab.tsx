@@ -73,6 +73,8 @@ export default function PedidosTab({
   eliminar,
   puedeEliminar = false,
   ocupado,
+  silencio = false,
+  alternarSilencio,
 }: {
   pedidos: Pedido[];
   nombreTienda: (slug: string) => string;
@@ -80,9 +82,12 @@ export default function PedidosTab({
   cambiarEstado: (pedido: Pedido, estado: string) => void;
   /** Borra el pedido para siempre. Solo se ofrece en pedidos ya cancelados (ej. pedidos de prueba). */
   eliminar: (pedido: Pedido) => void;
-  /** Solo el superadmin: el dueño de la tienda no borra su historial de ventas (se cancela, no se borra). */
+  /** Se ofrece solo en pedidos ya cancelados; lo puede hacer el admin de la tienda y el superadmin. */
   puedeEliminar?: boolean;
   ocupado: string | null;
+  /** Aviso sonoro de pedidos nuevos apagado (lo decide cada admin). */
+  silencio?: boolean;
+  alternarSilencio?: () => void;
 }) {
   const [filtro, setFiltro] = useState<(typeof FILTROS)[number]['id']>('all');
   const [busca, setBusca] = useState('');
@@ -143,6 +148,17 @@ export default function PedidosTab({
             className="w-full h-10 pl-9 pr-3 bg-white border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-[var(--tienda-color,#b8130e)] focus:border-transparent focus:outline-none"
           />
         </div>
+        {alternarSilencio && (
+          <button
+            type="button"
+            onClick={alternarSilencio}
+            title={silencio ? 'Activar el sonido de pedidos nuevos' : 'Silenciar el sonido de pedidos nuevos'}
+            className={`h-10 px-3 rounded-lg border text-xs font-bold flex items-center gap-1.5 shrink-0 transition ${silencio ? 'bg-gray-100 border-gray-200 text-gray-500' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+          >
+            <span className="material-symbols-outlined text-[18px]">{silencio ? 'volume_off' : 'volume_up'}</span>
+            {silencio ? 'Sonido apagado' : 'Sonido activo'}
+          </button>
+        )}
         <div className="flex gap-2 overflow-x-auto hide-scrollbar">
           {FILTROS.map((f) => (
             <button

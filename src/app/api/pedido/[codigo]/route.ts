@@ -31,7 +31,7 @@ async function cargar(codigo: string, request: Request) {
   if (!o) ({ data: o } = await db.from('orders').select(`${COLUMNAS},repartidor_id,llego_at`).eq('codigo', codigo).maybeSingle());
   if (!o) ({ data: o } = await db.from('orders').select(COLUMNAS).eq('codigo', codigo).maybeSingle());
   if (!o) return null;
-  const { data: t } = await db.from('stores').select('name,user_id').eq('slug', o.store).maybeSingle();
+  const { data: t } = await db.from('stores').select('name,user_id,logo_image').eq('slug', o.store).maybeSingle();
   const quien = await quienEs(request);
   const propietario = !!quien && (quien.esSuperadmin || (!!t && t.user_id === quien.userId));
   return { db, o: o as typeof o & { repartidor_id?: string | null; llego_at?: string | null; pago_estado?: string | null }, tienda: t, propietario };
@@ -66,7 +66,7 @@ export async function GET(request: Request, { params }: Params) {
 
   return NextResponse.json({
     codigo: o.codigo,
-    tienda: { slug: o.store, nombre: tienda?.name ?? o.store },
+    tienda: { slug: o.store, nombre: tienda?.name ?? o.store, logo: (tienda?.logo_image as string | null) ?? null },
     items: items.map((i) => ({ name: i.name, price: Number(i.price) || 0, quantity: Number(i.quantity) || 1 })),
     total: Number(o.total_amount) || 0,
     estado: o.status,

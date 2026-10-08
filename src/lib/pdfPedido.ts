@@ -54,7 +54,9 @@ export const puedeCompartirArchivo = (file: File) => {
 
 /** En el celular abre el menú de compartir (WhatsApp, etc.). Si el navegador no lo permite, descarga el archivo. */
 export async function compartirPDF(file: File, texto: string): Promise<'compartido' | 'descargado' | 'cancelado'> {
-  if (puedeCompartirArchivo(file)) {
+  // El menú de compartir solo en celular/tablet: en la compu (Windows/Mac) abría el panel del sistema en vez de descargar.
+  const esMovil = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
+  if (esMovil && puedeCompartirArchivo(file)) {
     try {
       await navigator.share({ files: [file], title: file.name, text: texto });
       return 'compartido';
@@ -66,7 +68,79 @@ export async function compartirPDF(file: File, texto: string): Promise<'comparti
   const a = document.createElement('a');
   a.href = url;
   a.download = file.name;
+  a.style.display = 'none';
+  document.body.appendChild(a);   // Firefox/Safari solo descargan si el enlace está en la página
   a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 4000);
   return 'descargado';
+}
+
+type DatosPedido = {
+  tienda: string;
+  logo?: string | null;
+  codigo?: string;
+  fecha?: string;
+  items: { name: string; price: number; quantity: number }[];
+  total: number;
+  entrega?: string;
+  estado?: string;
+};
+
+/** Comprobante del pedido armado como boleta: logo de la tienda, detalle por línea y total destacado. */
+export async function pdfDePedidoDetallado(d: DatosPedido): Promise<File> {
+  const [{ jsPDF }, { cargarImagenPdf, ajustarImagen, textoPdf }] = await Promise.all([import('jspdf'), import('./imagenPdf')]);
+  const logo = await cargarImagenPdf(d.logo, 300);
+  const W = 80, M = 6;
+  const dibujar = (doc: InstanceType<typeof jsPDF>) => {
+    let y = 8;
+    const txt = (t: string, o: { size?: number; bold?: boolean; color?: [number, number, number] } = {}) => {
+      doc.setFont('helvetica', o.bold ? 'bold' : 'normal').setFontSize(o.size ?? 8).setTextColor(...(o.color ?? [28, 27, 31]));
+      (doc.splitTextToSize(t, W - M * 2) as string[]).forEach((l) => { doc.text(l, W / 2, y, { align: 'center' }); y += (o.size ?? 8) * 0.44 + 0.9; });
+    };
+    const fila = (l: string, r: string) => {
+      doc.setFont('helvetica', 'normal').setFontSize(8).setTextColor(28, 27, 31);
+      doc.text(l, M, y); doc.text(r, W - M, y, { align: 'right' }); y += 4.4;
+    };
+    const regla = () => { doc.setDrawColor(190, 190, 190).setLineDashPattern([0.8, 0.8], 0).line(M, y, W - M, y); doc.setLineDashPattern([], 0); y += 4; };
+
+    if (logo) {
+      const t = ajustarImagen(logo, 40, 22);
+      try { doc.addImage(logo.data, 'JPEG', (W - t.w) / 2, y, t.w, t.h); } catch { /* logo ilegible: sigue sin él */ }
+      y += t.h + 3;
+    }
+    txt(textoPdf(d.tienda) || 'Pedido', { size: 12, bold: true });
+    txt('COMPROBANTE DE PEDIDO', { size: 8, bold: true, color: [140, 0, 9] });
+    y += 1;
+    regla();
+    if (d.codigo) fila('N° de pedido:', '#' + d.codigo.toUpperCase());
+    fila('Fecha:', new Date(d.fecha || Date.now()).toLocaleString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }));
+    if (d.entrega) fila('Entrega:', textoPdf(d.entrega));
+    regla();
+    doc.setFont('helvetica', 'bold').setFontSize(7).setTextColor(130, 130, 130);
+    doc.text('CANT', M, y); doc.text('PRODUCTO', M + 9, y); doc.text('IMPORTE', W - M, y, { align: 'right' });
+    y += 4;
+    d.items.forEach((it) => {
+      doc.setFont('helvetica', 'normal').setFontSize(8).setTextColor(28, 27, 31);
+      const nombre = doc.splitTextToSize(textoPdf(it.name), W - M * 2 - 9 - 20) as string[];
+      doc.text(String(it.quantity), M, y);
+      doc.text(`S/ ${(it.price * it.quantity).toFixed(2)}`, W - M, y, { align: 'right' });
+      nombre.forEach((l, i) => { doc.text(l, M + 9, y); if (i < nombre.length - 1) y += 3.8; });
+      y += 4;
+      if (it.quantity > 1) { doc.setFontSize(6.5).setTextColor(130, 130, 130); doc.text(`${it.quantity} x S/ ${it.price.toFixed(2)}`, M + 9, y - 0.6); y += 2.6; }
+    });
+    y += 1;
+    regla();
+    doc.setFillColor(140, 0, 9).roundedRect(M, y - 1, W - M * 2, 9, 1.5, 1.5, 'F');
+    doc.setFont('helvetica', 'bold').setFontSize(10).setTextColor(255, 255, 255);
+    doc.text('TOTAL', M + 3, y + 5); doc.text(`S/ ${d.total.toFixed(2)}`, W - M - 3, y + 5, { align: 'right' });
+    y += 15;
+    txt('¡Gracias por tu compra!', { size: 8, bold: true });
+    txt('Hecho con BogaHub - bogahub.app', { size: 6, color: [150, 150, 150] });
+    return y + 4;
+  };
+  const alto = dibujar(new jsPDF({ unit: 'mm', format: [W, 500] }));
+  const doc = new jsPDF({ unit: 'mm', format: [W, Math.max(alto, 100)] });
+  dibujar(doc);
+  const nombre = `Pedido_${textoPdf(d.tienda).replace(/[^\w-]+/g, '_') || 'tienda'}${d.codigo ? '_' + d.codigo.toUpperCase() : ''}.pdf`;
+  return new File([doc.output('blob')], nombre, { type: 'application/pdf' });
 }

@@ -385,11 +385,12 @@ USING (
   OR public.es_admin_de(orders.store)
 );
 
--- Borrar pedidos: SOLO el superadmin (el dueño cancela, no borra su historial de ventas).
+-- Borrar pedidos: el superadmin cualquiera; el dueño solo los ya cancelados (no puede borrar su historial de ventas real).
 CREATE POLICY "orders: dueño o superadmin borra"
 ON public.orders FOR DELETE
 USING (
   public.is_superadmin()
+  OR (public.es_admin_de(orders.store) AND orders.status = 'Cancelado')
 );
 
 -- ============================================================
@@ -2070,3 +2071,10 @@ ALTER TABLE public.alumno_padres ENABLE ROW LEVEL SECURITY;  -- sin políticas: 
 -- No cambia ningún monto: es solo el aviso. Sin correr esto la tienda funciona igual (el panel avisa qué campo no se guardó).
 ALTER TABLE public.stores   ADD COLUMN IF NOT EXISTS igv_incluido BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS igv TEXT CHECK (igv IN ('con', 'sin'));
+
+-- ============================================================
+-- Código de barras por producto (cobro con cámara en la caja / POS).
+-- Opcional: lo escribe o escanea el dueño en el formulario del producto.
+-- ============================================================
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS codigo_barras text;
+CREATE INDEX IF NOT EXISTS products_codigo_barras_idx ON public.products (store, codigo_barras) WHERE codigo_barras IS NOT NULL;
