@@ -150,7 +150,7 @@ export default function NegociosPlanes() {
             <thead>
               <tr className="bg-surface-container text-[11px] uppercase tracking-wide text-secondary">
                 <th className="p-3 font-bold">Qué incluye</th>
-                {PLANES.map((p) => <th key={p.id} className="p-3 font-bold text-center w-28">{p.nombre}</th>)}
+                {planes.map((p) => <th key={p.id} className="p-3 font-bold text-center w-28">{p.nombre}</th>)}
               </tr>
             </thead>
             <tbody>
@@ -162,19 +162,26 @@ export default function NegociosPlanes() {
                       <span className="ml-2 text-[10px] font-bold text-secondary bg-surface-container px-1.5 py-0.5 rounded uppercase tracking-wide">Próximamente</span>
                     )}
                   </td>
-                  {PLANES.map((p) => (
-                    <td key={p.id} className="p-3 text-center">
-                      {!planIncluye(p.id, c.desde)
-                        ? <span className="text-secondary/40">—</span>
-                        : c.valor?.[p.id]
-                          ? <span className="text-xs font-bold text-on-background">{c.valor[p.id]}</span>
-                          : <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>}
-                    </td>
-                  ))}
+                  {planes.map((p) => {
+                    // Un plan sin nivel propio (Multi-sede) incluye todo lo del más completo; el límite de productos sale de cada plan.
+                    const nivel = (p.nivel ?? 'app_google') as 'carta' | 'app' | 'app_google';
+                    const esLimite = c.texto === 'Límite de productos en el catálogo';
+                    return (
+                      <td key={p.id} className="p-3 text-center">
+                        {!planIncluye(nivel, c.desde)
+                          ? <span className="text-secondary/40">—</span>
+                          : esLimite && p.limite_productos
+                            ? <span className="text-xs font-bold text-on-background">{p.limite_productos}</span>
+                            : c.valor?.[nivel] && !esLimite
+                              ? <span className="text-xs font-bold text-on-background">{c.valor[nivel]}</span>
+                              : <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
               <tr className="border-t border-surface-container-highest bg-surface-container">
-                <td colSpan={PLANES.length + 1} className="p-3 text-[11px] font-bold uppercase tracking-wide text-primary">
+                <td colSpan={planes.length + 1} className="p-3 text-[11px] font-bold uppercase tracking-wide text-primary">
                   Se agrega como módulo, en cualquier plan
                 </td>
               </tr>
@@ -185,15 +192,19 @@ export default function NegociosPlanes() {
                     {m.pronto && <span className="ml-2 text-[10px] font-bold text-secondary bg-surface-container px-1.5 py-0.5 rounded uppercase tracking-wide">Próximamente</span>}
                     {m.id === 'avisos' && <span className="block text-xs font-normal text-secondary">Paquete de 4 por S/ 10; no vencen</span>}
                   </td>
-                  {PLANES.map((p) => (
-                    <td key={p.id} className="p-3 text-center">
-                      {m.incluidoEn.includes(p.id)
-                        ? <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>
-                        : m.gratisEnLanzamiento?.includes(p.id)
-                          ? <span className="text-[11px] font-bold text-primary leading-tight block">Incluido en el lanzamiento</span>
-                          : <span className="text-[11px] font-bold text-secondary">Módulo</span>}
-                    </td>
-                  ))}
+                  {planes.map((p) => {
+                    // Un plan sin nivel propio (Multi-sede) trae lo mismo que el más completo.
+                    const nivel = (p.nivel ?? 'app_google') as 'carta' | 'app' | 'app_google';
+                    return (
+                      <td key={p.id} className="p-3 text-center">
+                        {m.incluidoEn.includes(nivel)
+                          ? <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                          : m.gratisEnLanzamiento?.includes(nivel)
+                            ? <span className="text-[11px] font-bold text-primary leading-tight block">Incluido en el lanzamiento</span>
+                            : <span className="text-[11px] font-bold text-secondary">Módulo</span>}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>

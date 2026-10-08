@@ -20,7 +20,7 @@ const MapaRepartidor = dynamic(() => import('@/components/MapaRepartidor'), {
 type Pedido = {
   codigo: string;
   tienda: { slug: string; nombre: string; logo?: string | null };
-  items: { name: string; price: number; quantity: number }[];
+  items: { name: string; price: number; quantity: number; imagen?: string | null }[];
   total: number;
   estado: string;
   pago?: 'pendiente' | 'pagado' | 'fallido' | null;
@@ -304,9 +304,17 @@ export default function PedidoPage({ params }: { params: Promise<{ codigo: strin
               </div>
               <ul className="flex flex-col gap-3 px-5 py-4 border-y border-dashed border-surface-container-highest">
                 {p.items.map((i, k) => (
-                  <li key={k} className="flex items-start justify-between gap-3 text-sm">
-                    <span className="flex items-start gap-2.5 min-w-0">
-                      <span className="shrink-0 min-w-[26px] h-[26px] rounded-md bg-primary/10 text-primary text-xs font-extrabold flex items-center justify-center">{i.quantity}×</span>
+                  <li key={k} className="flex items-center justify-between gap-3 text-sm">
+                    <span className="flex items-center gap-3 min-w-0">
+                      <span className="relative shrink-0">
+                        {i.imagen ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={i.imagen} alt="" loading="lazy" className="w-12 h-12 rounded-lg object-cover bg-surface-container" />
+                        ) : (
+                          <span className="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><span className="material-symbols-outlined text-[22px]">shopping_bag</span></span>
+                        )}
+                        <span className="absolute -top-1.5 -right-1.5 min-w-[22px] h-[22px] px-1 rounded-full bg-primary text-white text-[11px] font-extrabold flex items-center justify-center border-2 border-white">{i.quantity}×</span>
+                      </span>
                       <span className="font-semibold leading-snug break-words">{i.name}</span>
                     </span>
                     <span className="font-bold shrink-0">S/ {(i.price * i.quantity).toFixed(2)}</span>

@@ -45,7 +45,14 @@ export async function GET(request: Request, { params }: Params) {
   if (!r) return NextResponse.json({ error: 'Pedido no encontrado' }, { status: 404, headers: SIN_CACHE });
   const { db, o, tienda, propietario } = r;
 
-  const items = (Array.isArray(o.items) ? o.items : []) as { name: string; price: number; quantity: number }[];
+  const items = (Array.isArray(o.items) ? o.items : []) as { id?: string; name: string; price: number; quantity: number }[];
+  // Miniatura de cada producto (solo la foto principal), para que el recibo se parezca a lo que pidió.
+  const idsProductos = [...new Set(items.map((i) => i.id).filter((x): x is string => typeof x === 'string' && x.length > 0))];
+  const imagenes: Record<string, string | null> = {};
+  if (idsProductos.length > 0) {
+    const { data: prods } = await db.from('products').select('id,image').in('id', idsProductos);
+    (prods ?? []).forEach((pr: { id: string; image: string | null }) => { imagenes[pr.id] = pr.image; });
+  }
   const recojo = o.customer_address === 'Recojo en tienda';
 
   // Seguimiento de la entrega: el repartidor y, solo mientras el pedido va en camino, su posición.
@@ -67,7 +74,7 @@ export async function GET(request: Request, { params }: Params) {
   return NextResponse.json({
     codigo: o.codigo,
     tienda: { slug: o.store, nombre: tienda?.name ?? o.store, logo: (tienda?.logo_image as string | null) ?? null },
-    items: items.map((i) => ({ name: i.name, price: Number(i.price) || 0, quantity: Number(i.quantity) || 1 })),
+    items: items.map((i) => ({ name: i.name, price: Number(i.price) || 0, quantity: Number(i.quantity) || 1, imagen: (i.id && imagenes[i.id]) || null })),
     total: Number(o.total_amount) || 0,
     estado: o.status,
     pago: o.pago_estado ?? null,   // null = sin pago online; 'pendiente' | 'pagado' | 'fallido'
