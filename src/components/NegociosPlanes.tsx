@@ -22,6 +22,31 @@ export default function NegociosPlanes() {
   }, []);
   const hoy = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Lima' });
 
+  // Precios reales de los módulos (los que se editan en Cobros → Precios). Si la lectura falla o el módulo no tiene precio,
+  // se queda el texto de lib/planesNegocios.ts («Precio por confirmar»).
+  const [preciosMod, setPreciosMod] = useState<Record<string, string>>({});
+  useEffect(() => {
+    (async () => {
+      type Fila = { clave: string; monto: number; periodo?: string | null; monto_anual?: number | null; monto_oferta?: number | null; oferta_hasta?: string | null };
+      let res = await supabase.from('plan_precios').select('clave,monto,periodo,monto_anual,monto_oferta,oferta_hasta');
+      if (res.error) res = (await supabase.from('plan_precios').select('clave,monto')) as unknown as typeof res;
+      if (res.error || !res.data) return;
+      const filas = res.data as unknown as Fila[];
+      const hoyLocal = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Lima' });
+      const out: Record<string, string> = {};
+      for (const f of filas) {
+        const anual = f.periodo === 'anio' && f.monto_anual != null && Number(f.monto_anual) > 0;
+        const oferta = f.monto_oferta != null && Number(f.monto_oferta) > 0 && (!f.oferta_hasta || f.oferta_hasta >= hoyLocal);
+        const monto = anual ? Number(f.monto_anual) : Number(f.monto);
+        const vigente = oferta ? Number(f.monto_oferta) : monto;
+        if (vigente > 0) out[f.clave] = `S/ ${vigente.toLocaleString('es-PE', { maximumFractionDigits: 2 })} ${anual ? '/año' : '/mes'}`;
+      }
+      setPreciosMod(out);
+    })();
+  }, []);
+  // Qué fila de precios le toca a cada módulo de la landing (los que no están acá mantienen su texto).
+  const CLAVE_MODULO: Record<string, string> = { app: 'alcance:app', dominio_propio: 'extra:dominio_propio', google: 'alcance:app_google', loyverse: 'extra:loyverse', caja: 'operacion:ventas', inventario: 'operacion:inventario', market: 'mod:marketplace' };
+
   return (
     <section id="precios" className="scroll-mt-24 pb-14 md:pb-16">
       <div className="text-center max-w-[560px] mx-auto mb-8">
@@ -240,7 +265,7 @@ export default function NegociosPlanes() {
               <div className="mt-auto pt-2">
                 {it.promo && <p className="text-primary text-[11px] font-bold uppercase tracking-wide mb-1">{it.promo}</p>}
                 <p className="text-on-background text-xs font-bold">
-                  {it.precio === POR_DEFINIR ? 'Precio por confirmar' : `${it.precio}${it.unidad ?? ' /mes'}`}
+                  {preciosMod[CLAVE_MODULO[it.id] ?? ''] ?? (it.precio === POR_DEFINIR ? 'Precio por confirmar' : `${it.precio}${it.unidad ?? ' /mes'}`)}
                   {it.incluidoEn.length > 0 && (
                     <span className="text-secondary font-semibold"> · Incluido en {it.incluidoEn.map((id) => PLANES.find((p) => p.id === id)?.nombre).join(' y ')}</span>
                   )}
