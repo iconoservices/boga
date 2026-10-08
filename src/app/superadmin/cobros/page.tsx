@@ -16,6 +16,11 @@ import SuperadminSubheader from '@/components/SuperadminSubheader';
 import { hoyLima } from '@/lib/fechaLima';
 import { PLANES } from '@/lib/planesNegocios';
 import NivelesModulos from '@/components/superadmin/NivelesModulos';
+import CatalogoOrdenado from '@/components/superadmin/CatalogoOrdenado';
+import MatrizPlanes from '@/components/superadmin/MatrizPlanes';
+import HistorialPromociones from '@/components/superadmin/HistorialPromociones';
+import ContactoBoga from '@/components/superadmin/ContactoBoga';
+import { INITIAL_MODULES } from '@/lib/modulosPaquetes';
 import { PAQUETES_CARGA, CLAVES_CARGA } from '@/lib/paquetesCarga';
 import { MODULOS_CATALOGO, CLAVES_MODULOS_CATALOGO } from '@/lib/modulosCatalogo';
 import {
@@ -250,6 +255,20 @@ export default function CobrosPage() {
   if (!esSuperadmin) return null;
 
   const abierta = filas.find((f) => f.tienda.slug === gestion) ?? null;
+  // Precio ya formateado de una fila de Precios (módulo o precio a tu medida), para mostrarlo en el catálogo.
+  const precioDeClave = (clave: string): string | null => {
+    const ex = extras.find((x) => x.clave === clave);
+    const unidad = (por: PorUnidad) => (por ? ' ' + (POR_UNIDAD.find((u) => u.id === por)?.texto ?? '') : '');
+    if (ex) {
+      const v = precioDe(ex, hoy);
+      if (!(v > 0)) return null;
+      return `${soles(v)}${unidad(ex.por)} ${PERIODOS_COBRO.find((p) => p.id === ex.periodo)?.texto ?? ''}`.trim();
+    }
+    const v = Number(borrador[clave]) || 0;
+    if (!(v > 0)) return null;
+    const por = borPor[clave] ?? null;
+    return `${soles(v)}${unidad(por)} ${por ? 'al mes' : (borPer[clave] === 'anio' ? 'al año' : 'al mes')}`;
+  };
   // Otros precios en orden: a tu medida → carga de productos → módulos que ya existen → módulos aún sin construir (con bandera).
   type GrupoExtra = 'medida' | 'carga' | 'modulo' | 'sin_construir';
   const ETIQUETA_GRUPO: Record<GrupoExtra, string> = { medida: 'A tu medida', carga: 'Carga de productos (una sola vez)', modulo: 'Módulos del catálogo', sin_construir: 'Módulos que todavía no existen' };
@@ -610,8 +629,18 @@ export default function CobrosPage() {
             </button>
 
             {/* Todo lo que se vende y qué trae cada plan (antes vivía en Paquetes). Se va ajustando acá. */}
-            <div className="border-t border-[#ecedf7] pt-5">
+            <div className="border-t border-[#ecedf7] pt-5 flex flex-col gap-8">
               <NivelesModulos />
+              <MatrizPlanes
+                modulos={INITIAL_MODULES}
+                precioPlan={{
+                  Basic: (Number(borrador['alcance:carta']) || 0) > 0 ? soles(Number(borrador['alcance:carta']) || 0) + '/mes' : undefined,
+                  Pro: (Number(borrador['alcance:app']) || 0) > 0 ? soles((Number(borrador['alcance:carta']) || 0) + (Number(borrador['alcance:app']) || 0)) + '/mes' : undefined,
+                }}
+              />
+              <CatalogoOrdenado modulos={INITIAL_MODULES.filter((m) => m.buildStatus !== 'no_construido')} precioDeClave={precioDeClave} />
+              <HistorialPromociones />
+              <ContactoBoga />
             </div>
           </div>
         </>)}

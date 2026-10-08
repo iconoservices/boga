@@ -26,7 +26,47 @@ const GRUPOS: { estado: EstadoModulo; titulo: string; ayuda: string; color: stri
 const ORDEN_ESFUERZO: Record<Esfuerzo, number> = { bajo: 0, medio: 1, alto: 2 };
 const ESFUERZO_TXT: Record<Esfuerzo, string> = { bajo: 'Esfuerzo bajo', medio: 'Esfuerzo medio', alto: 'Esfuerzo alto' };
 
-export default function CatalogoOrdenado({ modulos }: { modulos: ModuloComercial[] }) {
+// Qué fila de Cobros → Precios le corresponde a cada módulo del catálogo. null = va incluido en otro precio (se explica en el texto).
+const CLAVE_PRECIO: Record<string, string | null> = {
+  academia: 'extra:academia',
+  'google-merchant': 'alcance:app_google',
+  'subdominio-propio': 'alcance:app',
+  'avisos-push': null,
+  'dominio-propio': 'extra:dominio_propio',
+  'loyverse-pos': 'extra:loyverse',
+  'presencia-marketplace': 'mod:marketplace',
+  'pasarela-pago-propia': 'extra:pasarela_pago',
+  'marca-blanca-total': 'extra:marca_blanca',
+  'analitica-favoritos': 'mod:analitica_favoritos',
+  'auto-branding-ia': 'mod:auto_branding',
+  'sitio-web-propio': 'mod:pagina_web',
+  franquicias: 'mod:franquicias',
+  'facturacion-electronica': 'mod:sunat',
+  'business-intelligence': 'mod:bi',
+  'inventario-inteligente': 'mod:inventario_inteligente',
+  'repartidores-propios': 'mod:repartidores',
+  'marketing-automatizado': 'mod:marketing',
+  'notificaciones-inteligentes': 'mod:vecino_cercano',
+  'lealtad-digital': 'mod:socio_fiel',
+  'racha-envio-gratis': 'mod:racha_envio',
+  'app-nativa': 'mod:app_nativa',
+  'reservas-citas': 'mod:reservas',
+  'programa-referidos': 'mod:referidos',
+  'resenas-reales': 'mod:resenas',
+  'delivery-zonas-dinamico': 'mod:delivery_zonas',
+  'happy-hour-automatico': 'mod:happy_hour',
+  'suscripcion-vip': 'mod:suscripcion_vip',
+  'reserva-y-pide': 'mod:reserva_y_pide',
+};
+
+/** `precioDeClave`: el precio ya formateado ("S/ 180 al año") de una fila de Precios, o null si todavía no tiene. */
+export default function CatalogoOrdenado({ modulos, precioDeClave }: { modulos: ModuloComercial[]; precioDeClave?: (clave: string) => string | null }) {
+  const precioReal = (id: string, texto: string) => {
+    const clave = CLAVE_PRECIO[id];
+    if (clave === null) return 'Incluido en el plan App';
+    const real = clave && precioDeClave ? precioDeClave(clave) : null;
+    return real ?? texto;
+  };
   const items: Item[] = [
     ...MODULOS_EXISTENTES_EXTRA.map((m) => ({ id: m.id, name: m.name, icon: m.icon, price: m.price, description: m.description, info: m.info })),
     ...modulos.filter((m) => PLAN_INFO[m.id]).map((m) => ({ ...m, info: PLAN_INFO[m.id] })),
@@ -73,7 +113,7 @@ export default function CatalogoOrdenado({ modulos }: { modulos: ModuloComercial
                     </div>
                     <div className="min-w-0">
                       <p className="text-xs font-bold text-[#191b23]">{m.name}</p>
-                      <p className="text-[10px] font-bold text-[#0058be]">{m.price}</p>
+                      <p className="text-[10px] font-bold text-[#0058be]">{precioReal(m.id, m.price)}</p>
                     </div>
                   </div>
 
