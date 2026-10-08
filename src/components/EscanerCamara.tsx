@@ -188,7 +188,7 @@ export default function EscanerCamara({
   };
 
   return (
-    <div className="fixed inset-0 z-[300] bg-black text-white flex flex-col" role="dialog" aria-label={titulo}>
+    <div className="fixed inset-0 z-[300] bg-black text-white flex flex-col h-[100dvh]" role="dialog" aria-label={titulo}>
       <div className="flex items-center justify-between px-4 py-3 bg-black/80">
         <h2 className="font-extrabold text-base">{titulo}</h2>
         <div className="flex items-center gap-2">
@@ -239,7 +239,7 @@ export default function EscanerCamara({
       )}
 
       <form
-        className="px-4 pt-3 pb-5 bg-black/90 flex flex-col gap-2"
+        className="px-4 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] bg-black/90 flex flex-col gap-2"
         onSubmit={(e) => { e.preventDefault(); const c = manual; setManual(''); procesar(c); }}
       >
         <p className="text-xs text-white/60 text-center">{ayuda}</p>

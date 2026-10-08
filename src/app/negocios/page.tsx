@@ -9,6 +9,7 @@ import React from 'react';
 import Link from 'next/link';
 import NegociosPlanes from '@/components/NegociosPlanes';
 import WhatsAppAsesor from '@/components/WhatsAppAsesor';
+import PrecioDesde from '@/components/PrecioDesde';
 import { PLANES } from '@/lib/planesNegocios';
 import NegociosHeroImagen from '@/components/NegociosHeroImagen';
 
@@ -95,27 +96,27 @@ export default function NegociosPage() {
               </p>
               {/* Ancla de precio: que el dueño sepa de entrada que no es caro. Sale de PLANES, no se escribe a mano. */}
               <p className="text-on-background font-body-md text-sm -mb-1">
-                <span className="font-extrabold">Planes desde {PLANES[0].mes.precio} al mes</span>
+                <PrecioDesde />
                 <span className="text-secondary"> · sin comisión por tus ventas · prueba la demo sin costo</span>
               </p>
-              <div className="flex flex-wrap items-center gap-3 mt-1">
+              <div className="flex flex-wrap items-center gap-3 mt-1 w-full sm:w-auto">
                 <Link
                   href={REGISTRO}
-                  className="bg-primary text-on-primary font-bold text-sm px-7 py-3.5 rounded-full shadow-[0_8px_24px_-6px_rgba(184,19,14,0.5)] hover:opacity-90 hover:shadow-[0_10px_28px_-6px_rgba(184,19,14,0.6)] transition-all active:scale-95 flex items-center gap-1.5"
+                  className="w-full sm:w-auto justify-center bg-primary text-on-primary font-bold text-sm px-7 py-3.5 rounded-full shadow-[0_8px_24px_-6px_rgba(184,19,14,0.5)] hover:opacity-90 hover:shadow-[0_10px_28px_-6px_rgba(184,19,14,0.6)] transition-all active:scale-95 flex items-center gap-1.5"
                 >
                   <span>Crear tu tienda</span>
                   <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                 </Link>
                 <Link
                   href="/productos"
-                  className="bg-surface-container-lowest text-on-surface font-bold text-sm px-6 py-3.5 rounded-full border border-surface-container-highest hover:border-primary hover:text-primary transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
+                  className="flex-1 sm:flex-none justify-center bg-surface-container-lowest text-on-surface font-bold text-sm px-6 py-3.5 rounded-full border border-surface-container-highest hover:border-primary hover:text-primary transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
                 >
                   <span className="material-symbols-outlined text-primary text-[18px]">visibility</span>
                   <span>Ver demo</span>
                 </Link>
                 <Link
                   href="/"
-                  className="text-secondary hover:text-on-background font-semibold text-sm px-5 py-3.5 rounded-full transition-colors"
+                  className="flex-1 sm:flex-none text-center text-secondary hover:text-on-background font-semibold text-sm px-5 py-3.5 rounded-full transition-colors"
                 >
                   Ver la app
                 </Link>

@@ -84,7 +84,7 @@ export default function NegociosPlanes() {
         </div>
       </div>
 
-      <div className={`grid grid-cols-1 md:grid-cols-2 gap-5 ${planes.length >= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
+      <div className={`flex md:grid md:grid-cols-2 overflow-x-auto md:overflow-visible snap-x snap-mandatory gap-4 md:gap-5 -mx-container-margin px-container-margin md:mx-0 md:px-0 pb-3 md:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${planes.length >= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
         {planes.map((plan) => {
           const vigente = precioVigente(plan, hoy);
           const rebajado = enOferta(plan, hoy);
@@ -93,7 +93,7 @@ export default function NegociosPlanes() {
           return (
             <div
               key={plan.id}
-              className={`relative bg-surface-container-lowest rounded-2xl p-5 lg:p-5 flex flex-col gap-3 ${
+              className={`relative bg-surface-container-lowest rounded-2xl p-5 flex flex-col gap-3 min-w-[84%] sm:min-w-[60%] md:min-w-0 snap-center shrink-0 md:shrink ${
                 plan.recomendado ? 'border-[1.5px] border-primary' : 'border border-surface-container-highest'
               }`}
             >
@@ -156,6 +156,7 @@ export default function NegociosPlanes() {
           );
         })}
       </div>
+      <p className="md:hidden text-center text-[11px] font-semibold text-secondary mt-1">Desliza para ver todos los planes →</p>
 
       {/* Comparación completa: mismos checks que la tabla del superadmin, sin las marcas internas. */}
       <div className="mt-6 text-center">
@@ -248,21 +249,22 @@ export default function NegociosPlanes() {
         {/* Cuadrícula pareja: el grupo va como etiqueta en cada tarjeta (así no quedan columnas desiguales). */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {MODULOS_VENTA.flatMap((g) => g.items.map((it) => ({ ...it, grupo: g.grupo }))).map((it) => (
-            <div key={it.id} className="bg-surface-container-lowest border border-surface-container-highest rounded-2xl p-5 flex flex-col gap-2">
-              <div className="flex items-center justify-between gap-2">
+            <div key={it.id} className="bg-surface-container-lowest border border-surface-container-highest rounded-2xl p-4 md:p-5 flex md:flex-col gap-3 md:gap-2">
+              <div className="flex md:items-center md:justify-between gap-2">
                 <div className="w-10 h-10 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center">
                   <span className="material-symbols-outlined text-primary text-[20px]">{it.icon}</span>
                 </div>
-                <span className="text-[10px] font-bold text-primary uppercase tracking-wide text-right">{it.grupo}</span>
+                <span className="hidden md:block text-[10px] font-bold text-primary uppercase tracking-wide text-right">{it.grupo}</span>
               </div>
+              <div className="flex flex-col gap-1.5 md:gap-2 min-w-0 flex-1">
               <h4 className="font-headline-sm text-base text-on-background flex items-center gap-2 flex-wrap">
                 {it.nombre}
                 {it.pronto && (
                   <span className="text-[10px] font-bold text-secondary bg-surface-container px-1.5 py-0.5 rounded uppercase tracking-wide">Próximamente</span>
                 )}
               </h4>
-              <p className="text-secondary font-body-md text-sm leading-relaxed">{it.body}</p>
-              <div className="mt-auto pt-2">
+              <p className="text-secondary font-body-md text-[13px] md:text-sm leading-snug md:leading-relaxed line-clamp-3 md:line-clamp-none">{it.body}</p>
+              <div className="mt-auto pt-1 md:pt-2">
                 {it.promo && <p className="text-primary text-[11px] font-bold uppercase tracking-wide mb-1">{it.promo}</p>}
                 <p className="text-on-background text-xs font-bold">
                   {preciosMod[CLAVE_MODULO[it.id] ?? ''] ?? (it.precio === POR_DEFINIR ? 'Precio por confirmar' : `${it.precio}${it.unidad ?? ' /mes'}`)}
@@ -270,6 +272,7 @@ export default function NegociosPlanes() {
                     <span className="text-secondary font-semibold"> · Incluido en {it.incluidoEn.map((id) => PLANES.find((p) => p.id === id)?.nombre).join(' y ')}</span>
                   )}
                 </p>
+              </div>
               </div>
             </div>
           ))}

@@ -40,6 +40,7 @@ import { cargarImagenPdf, ajustarImagen, textoPdf, hexToRgb, type ImagenPdf } fr
 import { compartirPDF } from '@/lib/pdfPedido';
 import EscanerCamara from '@/components/EscanerCamara';
 import { cargarPlanes, planDeTienda, type PlanComercial } from '@/lib/planesComerciales';
+import { generarEan13Interno } from '@/lib/ean13';
 import { COL_PRESENTACIONES, presentacionesSugeridas, textosPresentacion, leerPresentaciones, precioDesde, tipoPresentacionDe, UNIDADES_DE_MEDIDA, completarMedida, ordenarPresentaciones, type ModoMedida } from '@/lib/presentaciones';
 
 interface Product {
@@ -1579,6 +1580,45 @@ function AdminDashboard({ user }: { user: User }) {
     if (error) { codigosPos.current = {}; return; }
     codigosPos.current = Object.fromEntries((data as { id: string; codigo_barras: string }[]).map((r) => [String(r.codigo_barras).trim(), r.id]));
   };
+  // Etiquetas con código de barras (PDF para imprimir). A los productos sin código se les puede crear uno interno (EAN-13 que empieza en 2).
+  const [haciendoEtiquetas, setHaciendoEtiquetas] = useState(false);
+  const imprimirEtiquetas = async () => {
+    if (!focusedStore || haciendoEtiquetas) return;
+    const lista = products.filter((p) => p.store === focusedStore);
+    if (lista.length === 0) { alert('Esta tienda todavía no tiene productos.'); return; }
+    setHaciendoEtiquetas(true);
+    try {
+      const { data, error } = await supabase.from('products').select('id,codigo_barras').eq('store', focusedStore);
+      if (error) throw new Error('Falta correr el SQL del código de barras en Supabase.');
+      const codigos: Record<string, string> = {};
+      const usados = new Set<string>();
+      ((data ?? []) as { id: string; codigo_barras: string | null }[]).forEach((r) => {
+        const c = (r.codigo_barras ?? '').trim();
+        if (c) { codigos[r.id] = c; usados.add(c); }
+      });
+      const sin = lista.filter((p) => !codigos[p.id]);
+      if (sin.length > 0 && window.confirm(`${sin.length} producto(s) no tienen código de barras. ¿Les creo uno interno a cada uno? Sirve para cobrar e ingresar mercadería con la cámara.`)) {
+        for (const p of sin) {
+          let c = generarEan13Interno();
+          while (usados.has(c)) c = generarEan13Interno();
+          usados.add(c);
+          const { error: e2 } = await supabase.from('products').update({ codigo_barras: c }).eq('id', p.id);
+          if (!e2) codigos[p.id] = c;
+        }
+      }
+      const items = lista.filter((p) => codigos[p.id]).map((p) => ({ name: p.name, price: precioOfertaVigente(p) ?? p.price, codigo: codigos[p.id] }));
+      if (items.length === 0) { alert('Ningún producto tiene código para imprimir.'); return; }
+      const { etiquetasPDF } = await import('@/lib/etiquetasPdf');
+      const nombreTienda = stores[focusedStore]?.name || focusedStore;
+      const doc = await etiquetasPDF(items, nombreTienda);
+      doc.save(`Etiquetas_${textoPdf(nombreTienda).replace(/[^\w-]+/g, '_')}.pdf`);
+    } catch (e) {
+      alert('No se pudieron preparar las etiquetas: ' + ((e as Error)?.message || 'error desconocido'));
+    } finally {
+      setHaciendoEtiquetas(false);
+    }
+  };
+
   // Ingreso de mercadería con la cámara: cada escaneo suma 1 unidad al stock (para más, el "+" de la fila). Queda en el historial.
   const [escanerIngresoAbierto, setEscanerIngresoAbierto] = useState(false);
   const abrirEscanerIngreso = async () => {
@@ -2404,6 +2444,17 @@ function AdminDashboard({ user }: { user: User }) {
                               >
                                 <span className="material-symbols-outlined text-[14px]">photo_camera</span>
                                 Ingresar con cámara
+                              </button>
+                            )}
+                            {inventarioOn && (
+                              <button
+                                onClick={imprimirEtiquetas}
+                                disabled={haciendoEtiquetas}
+                                className="px-2.5 py-1.5 text-[11px] font-bold rounded-md transition-all flex items-center justify-center gap-1 bg-white text-gray-700 hover:bg-gray-50 whitespace-nowrap active:scale-95 cursor-pointer border border-gray-200 shadow-sm disabled:opacity-60"
+                                title="Crea los códigos de barras que falten e imprime las etiquetas"
+                              >
+                                <span className="material-symbols-outlined text-[14px]">barcode</span>
+                                {haciendoEtiquetas ? 'Preparando…' : 'Etiquetas con código'}
                               </button>
                             )}
                             {inventarioOn && (
@@ -3281,14 +3332,24 @@ function AdminDashboard({ user }: { user: User }) {
                 <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Total</span>
                 <span className="text-base font-black text-[var(--tienda-color)]">S/ {posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0).toFixed(2)}</span>
               </div>
-              <button 
-                onClick={() => setIsMobileCheckoutOpen(true)}
-                disabled={posCart.length === 0}
-                className="bg-[var(--tienda-color)] text-white px-5 py-2.5 rounded-md font-bold text-xs flex items-center gap-1.5 active:scale-95 transition-transform disabled:bg-gray-200 disabled:text-gray-400 cursor-pointer shadow-md"
-              >
-                <span className="material-symbols-outlined text-[16px]">shopping_cart</span>
-                Cobrar ({posCart.reduce((sum, item) => sum + item.quantity, 0)})
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={abrirEscanerPos}
+                  aria-label="Escanear código de barras con la cámara"
+                  className="w-11 h-11 rounded-full bg-gray-900 text-white flex items-center justify-center active:scale-95 transition-transform shadow-md cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[22px]">photo_camera</span>
+                </button>
+                <button 
+                  onClick={() => setIsMobileCheckoutOpen(true)}
+                  disabled={posCart.length === 0}
+                  className="bg-[var(--tienda-color)] text-white px-5 h-11 rounded-md font-bold text-xs flex items-center gap-1.5 active:scale-95 transition-transform disabled:bg-gray-200 disabled:text-gray-400 cursor-pointer shadow-md"
+                >
+                  <span className="material-symbols-outlined text-[16px]">shopping_cart</span>
+                  Cobrar ({posCart.reduce((sum, item) => sum + item.quantity, 0)})
+                </button>
+              </div>
             </div>
 
             {/* Mobile Checkout Drawer */}
@@ -4166,13 +4227,24 @@ function AdminDashboard({ user }: { user: User }) {
                       <button
                         type="button"
                         onClick={() => setEscanerCodigoAbierto(true)}
-                        className="px-4 rounded-md bg-gray-900 text-white font-bold text-sm flex items-center gap-1.5 hover:bg-black"
+                        aria-label="Escanear el código del producto con la cámara"
+                        className="px-3 sm:px-4 rounded-md bg-gray-900 text-white font-bold text-sm flex items-center gap-1.5 hover:bg-black"
                       >
                         <span className="material-symbols-outlined text-[20px]">photo_camera</span>
-                        Escanear
+                        <span className="hidden sm:inline">Escanear</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewProduct((prev) => ({ ...prev, codigoBarras: generarEan13Interno() }))}
+                        title="Crear un código de barras interno para este producto"
+                        aria-label="Crear un código de barras interno"
+                        className="px-3 rounded-md bg-white border border-gray-300 text-gray-800 font-bold text-sm flex items-center gap-1.5 hover:bg-gray-50"
+                      >
+                        <span className="material-symbols-outlined text-[20px]">autorenew</span>
+                        <span className="hidden sm:inline">Crear</span>
                       </button>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1.5">Es el código de barras impreso en el empaque. Si el producto no tiene, déjalo vacío.</p>
+                    <p className="text-xs text-gray-500 mt-1.5">Es el código de barras impreso en el empaque. Si el producto no trae, toca «Crear» para darle uno propio e imprime su etiqueta desde Productos → «Etiquetas con código».</p>
                   </div>
                 )}
 
