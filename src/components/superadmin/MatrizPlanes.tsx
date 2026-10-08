@@ -7,7 +7,7 @@ import type { StoreModule } from '@/lib/modulosPaquetes';
 
 const PLANES: { tier: StoreModule['tier']; nombre: string; fondo: string; antes: string | null }[] = [
   { tier: 'Basic', nombre: 'Plan Carta', fondo: 'bg-emerald-50', antes: null },
-  { tier: 'Pro', nombre: 'Plan App / Tienda', fondo: 'bg-amber-50', antes: 'Carta' },
+  { tier: 'Pro', nombre: 'Plan Tienda', fondo: 'bg-amber-50', antes: 'Carta' },
   { tier: 'Enterprise', nombre: 'Plan Supermercado / Pro', fondo: 'bg-violet-50', antes: 'App' },
 ];
 

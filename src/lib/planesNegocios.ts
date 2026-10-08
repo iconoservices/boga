@@ -3,7 +3,7 @@
 //
 // Modelo: todo es un MÓDULO (app, Google, Market, caja, inventario…). Un PLAN es solo un paquete que ya
 // trae algunos módulos incluidos; el mismo módulo se puede comprar suelto en cualquier plan.
-// Los planes siguen el eje de Alcance del admin (lib/modulos.ts): Carta → App → Premium.
+// Los planes siguen el eje de Alcance del admin (lib/modulos.ts): Carta → Tienda → Premium.
 //
 // PRECIOS: 'Por definir' es un marcador. Reemplazar por el monto real ('S/ 80') cuando se decida.
 
@@ -42,7 +42,7 @@ export const PLANES: Plan[] = [
   {
     id: 'app',
     icon: 'install_mobile',
-    nombre: 'App',
+    nombre: 'Tienda',
     etiqueta: 'Recomendado',
     body: 'Todo lo de Carta y, además, tu propia dirección (tunegocio.bogahub.app) que tus clientes instalan como app en el celular.',
     bullets: [
@@ -58,9 +58,9 @@ export const PLANES: Plan[] = [
     icon: 'shopping_bag',
     nombre: 'Premium',
     pronto: true,
-    body: 'Todo lo de App y, además, tus productos aparecen cuando la gente los busca en Google, con un catálogo de hasta 5 000 productos.',
+    body: 'Todo lo de Tienda y, además, tus productos aparecen cuando la gente los busca en Google, con un catálogo de hasta 5 000 productos.',
     bullets: [
-      'Todo lo del plan App',
+      'Todo lo del plan Tienda',
       'Tus productos en Google',
       'Catálogo de 1 001 a 5 000 productos',
     ],
@@ -139,7 +139,7 @@ export const ESCALERA_PRODUCTOS: EscaleraPlan[] = [
     publico: 'Pollerías, restaurantes, huariques, cafeterías (casi ningún menú pasa de 60 platos).',
   },
   {
-    plan: '2. Plan App / Tienda',
+    plan: '2. Plan Tienda',
     limite: LIMITE_PRODUCTOS.app,
     precio: 'S/ 100 / mes',
     publico: 'Tiendas de ropa, zapaterías, licorerías, pet shops, bodegas medianas.',

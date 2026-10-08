@@ -39,6 +39,7 @@ import { COLS_OFERTA, precioOfertaVigente, porcentajeOferta } from '@/lib/oferta
 import { cargarImagenPdf, ajustarImagen, textoPdf, hexToRgb, type ImagenPdf } from '@/lib/imagenPdf';
 import { compartirPDF } from '@/lib/pdfPedido';
 import EscanerCamara from '@/components/EscanerCamara';
+import { cargarPlanes, planDeTienda, type PlanComercial } from '@/lib/planesComerciales';
 import { COL_PRESENTACIONES, presentacionesSugeridas, textosPresentacion, leerPresentaciones, precioDesde, tipoPresentacionDe, UNIDADES_DE_MEDIDA, completarMedida, ordenarPresentaciones, type ModoMedida } from '@/lib/presentaciones';
 
 interface Product {
@@ -1385,6 +1386,13 @@ function AdminDashboard({ user }: { user: User }) {
         ? { images: urlsFotos.length > 1 ? urlsFotos : null }
         : {};
 
+      // Tope de productos del plan: se avisa acá con un mensaje claro (la base también lo hace cumplir).
+      if (!editingProductId) {
+        const tope = topeDeTienda(newProduct.store);
+        const lleva = products.filter((x) => x.store === newProduct.store).length;
+        if (tope != null && lleva >= tope) throw new Error(`Tu plan permite hasta ${tope.toLocaleString('es-PE')} productos y ya tienes ${lleva}. Pasa a un plan mayor para agregar más.`);
+      }
+
       // 3. Guardar en la base de datos
       let idGuardado: string | null = editingProductId;
       if (editingProductId) {
@@ -1550,6 +1558,14 @@ function AdminDashboard({ user }: { user: User }) {
         if (cod) setNewProduct((prev) => ({ ...prev, codigoBarras: cod }));
       });
     }
+  };
+
+  // Planes comerciales: de ahí sale el tope de productos de cada tienda (la base lo hace cumplir; esto avisa antes).
+  const [planesTope, setPlanesTope] = useState<PlanComercial[]>([]);
+  useEffect(() => { cargarPlanes(supabase).then((rp) => setPlanesTope(rp.planes)); }, []);
+  const topeDeTienda = (slug: string): number | null => {
+    const t = dbStores.find((x: any) => x.slug === slug);
+    return t ? planDeTienda(t, planesTope)?.max_productos ?? null : null;
   };
 
   // ── Cobro con cámara (POS) ──

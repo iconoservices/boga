@@ -2113,3 +2113,88 @@ CREATE POLICY "store_cargos: dueño o superadmin ve" ON public.store_cargos FOR 
   USING (public.is_superadmin() OR public.es_admin_de(store_cargos.store));
 CREATE POLICY "store_cargos: superadmin escribe" ON public.store_cargos FOR ALL
   USING (public.is_superadmin()) WITH CHECK (public.is_superadmin());
+
+-- ============================================================
+-- Planes comerciales: la lista de planes que se vende en /negocios, editable en Cobros → Precios.
+--  · precio_mes = lo que paga una tienda por ESTE plan en total (no es un extra encima de la Carta).
+--  · Al guardar en Precios se derivan los pasos de plan_precios (alcance:app = precio App − precio Carta),
+--    que son los que usa Cobros para calcular lo que paga cada tienda.
+--  · nivel enlaza el plan con el alcance de las tiendas: 'carta' | 'app' | 'app_google' (vacío = aún sin nivel propio).
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.planes_comerciales (
+  id               TEXT PRIMARY KEY,
+  orden            INTEGER NOT NULL DEFAULT 0,
+  nombre           TEXT NOT NULL,
+  etiqueta         TEXT,
+  icono            TEXT NOT NULL DEFAULT 'storefront',
+  descripcion      TEXT,
+  caracteristicas  JSONB NOT NULL DEFAULT '[]'::jsonb,
+  precio_mes       NUMERIC NOT NULL DEFAULT 0,
+  precio_oferta    NUMERIC,
+  oferta_hasta     DATE,
+  recomendado      BOOLEAN NOT NULL DEFAULT false,
+  activo           BOOLEAN NOT NULL DEFAULT true,
+  limite_productos TEXT,
+  pronto           BOOLEAN NOT NULL DEFAULT false,
+  nivel            TEXT,
+  updated_at       TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE public.planes_comerciales ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "planes_comerciales: lectura pública"    ON public.planes_comerciales;
+DROP POLICY IF EXISTS "planes_comerciales: superadmin escribe" ON public.planes_comerciales;
+CREATE POLICY "planes_comerciales: lectura pública"    ON public.planes_comerciales FOR SELECT USING (true);
+CREATE POLICY "planes_comerciales: superadmin escribe" ON public.planes_comerciales FOR ALL USING (public.is_superadmin()) WITH CHECK (public.is_superadmin());
+
+INSERT INTO public.planes_comerciales (id, orden, nombre, etiqueta, icono, descripcion, caracteristicas, precio_mes, recomendado, activo, limite_productos, pronto, nivel) VALUES
+ ('carta', 1, 'Carta', 'Huariques y menús', 'storefront',
+  'Tu página de pedidos con tu propio link (bogahub.app/tu-negocio) para compartir en WhatsApp o Instagram. Tú vendes y cobras directo — BogaHub no toca tu plata.',
+  '["Catálogo y gestión de pedidos","Pedidos directo a tu WhatsApp, sin comisión","Promociones y combos con etiqueta especial","Funciona en cualquier ciudad","Instalable como app"]'::jsonb,
+  50, false, true, 'Hasta 100 productos', false, 'carta'),
+ ('app', 2, 'Tienda', 'Para tiendas', 'install_mobile',
+  'Todo lo de Carta y, además, tu propia dirección (tunegocio.bogahub.app) que tus clientes instalan como app en el celular.',
+  '["Todo lo del plan Carta","Subdominio propio, instalable como app","Notificaciones push al celular de tus clientes (2 por semana)"]'::jsonb,
+  100, true, true, 'De 101 a 1 000 productos', false, 'app'),
+ ('app_google', 3, 'Premium', 'Alta capacidad', 'shopping_bag',
+  'Todo lo de Tienda y, además, tus productos aparecen cuando la gente los busca en Google, con un catálogo de hasta 5 000 productos.',
+  '["Todo lo del plan Tienda","Tus productos en Google","Catálogo de 1 001 a 5 000 productos"]'::jsonb,
+  180, false, true, 'De 1 001 a 5 000 productos', true, 'app_google'),
+ ('multisede', 4, 'Multi-sede / Franquicia', 'Empresarial', 'account_tree',
+  'Varias sucursales con métricas consolidadas por sede, acceso para gerentes y cajeros y marca blanca incluida.',
+  '["Todo lo del plan Premium","Múltiples sucursales","Métricas consolidadas por sede","Acceso para gerentes y cajeros","Marca blanca incluida"]'::jsonb,
+  399, false, true, 'Más de 5 000 productos', true, NULL)
+ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================
+-- Límite de productos por plan: el candado de verdad (no solo el aviso en pantalla).
+--  · max_productos = número máximo que admite cada plan (Carta 100, Tienda 1 000, Premium 5 000; vacío = sin tope).
+--  · El trigger revisa cada producto NUEVO: si la tienda ya tiene ese máximo, el INSERT falla con un mensaje claro.
+--    El superadmin se salta el tope. Los productos que ya existen no se tocan.
+--  · El nivel de la tienda sale igual que en el panel: modulos.google → 'app_google'; subdominio_activo → 'app'; si no → 'carta'.
+-- ============================================================
+ALTER TABLE public.planes_comerciales ADD COLUMN IF NOT EXISTS max_productos INTEGER;
+UPDATE public.planes_comerciales
+   SET max_productos = CASE id WHEN 'carta' THEN 100 WHEN 'app' THEN 1000 WHEN 'app_google' THEN 5000 ELSE NULL END
+ WHERE max_productos IS NULL;
+
+CREATE OR REPLACE FUNCTION public.limite_productos_plan() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  v_sub boolean; v_google boolean; v_nivel text; v_max integer; v_actual integer;
+BEGIN
+  IF public.is_superadmin() THEN RETURN NEW; END IF;
+  SELECT COALESCE(subdominio_activo, false), COALESCE((modulos->>'google')::boolean, false)
+    INTO v_sub, v_google FROM public.stores WHERE slug = NEW.store;
+  v_nivel := CASE WHEN v_google THEN 'app_google' WHEN v_sub THEN 'app' ELSE 'carta' END;
+  SELECT max_productos INTO v_max FROM public.planes_comerciales
+   WHERE nivel = v_nivel AND max_productos IS NOT NULL ORDER BY orden LIMIT 1;
+  IF v_max IS NULL THEN RETURN NEW; END IF;
+  SELECT count(*) INTO v_actual FROM public.products WHERE store = NEW.store;
+  IF v_actual >= v_max THEN
+    RAISE EXCEPTION 'Tu plan permite hasta % productos. Pasa a un plan mayor para agregar más.', v_max USING ERRCODE = 'P0001';
+  END IF;
+  RETURN NEW;
+END $$;
+
+DROP TRIGGER IF EXISTS trg_limite_productos ON public.products;
+CREATE TRIGGER trg_limite_productos BEFORE INSERT ON public.products
+  FOR EACH ROW EXECUTE FUNCTION public.limite_productos_plan();

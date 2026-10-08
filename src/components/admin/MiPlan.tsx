@@ -6,10 +6,11 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { cargarPlanes, planDeTienda, type PlanComercial } from '@/lib/planesComerciales';
 import { hoyLima } from '@/lib/fechaLima';
 import { estadoCobro, nivelAlcance, nivelOperacion, pasosDeTienda, precioSugerido, type Modulos, type TipoCobro } from '@/lib/modulos';
 
-const ALCANCE = { carta: 'Carta', app: 'App', app_google: 'Premium' } as const;
+const ALCANCE = { carta: 'Carta', app: 'Tienda', app_google: 'Premium' } as const;
 const OPERACION = { sin_caja: 'Sin caja', ventas: 'Ventas', inventario: 'Ventas + Inventario', 'sin-clasificar': 'Ventas + Inventario' } as const;
 
 const ESTADO: Record<TipoCobro, { texto: (d: number | null) => string; clase: string }> = {
@@ -27,10 +28,15 @@ export default function MiPlan({
   modulos: Modulos | null | undefined;
   subdominioActivo: boolean | null | undefined;
 }) {
+  const [usados, setUsados] = useState<number | null>(null);
+  const [planes, setPlanes] = useState<PlanComercial[]>([]);
   const [datos, setDatos] = useState<{ precios: Record<string, number>; monto: number | null; descuentoHasta: string | null; vence: string | null } | null>(null);
 
   useEffect(() => {
     let vivo = true;
+    // Cuántos productos lleva la tienda y cuál es el tope de su plan.
+    supabase.from('products').select('id', { count: 'exact', head: true }).eq('store', slug).then(({ count }) => { if (vivo) setUsados(count ?? 0); });
+    cargarPlanes(supabase).then((rp) => { if (vivo) setPlanes(rp.planes); });
     Promise.all([
       supabase.from('plan_precios').select('clave,monto'),
       // `descuento_hasta` es columna nueva: si el SQL todavía no se corrió, reintenta sin ella
@@ -80,6 +86,25 @@ export default function MiPlan({
           </p>
         )}
       </div>
+      {(() => {
+        const plan = planDeTienda({ modulos, subdominio_activo: subdominioActivo }, planes);
+        const max = plan?.max_productos ?? null;
+        if (usados === null || !max) return null;
+        const pct = Math.min(100, Math.round((usados / max) * 100));
+        const lleno = usados >= max;
+        return (
+          <div className="mt-3">
+            <div className="flex items-baseline justify-between text-xs font-semibold text-gray-600">
+              <span>Productos</span>
+              <span className={lleno ? 'text-red-600 font-bold' : ''}>{usados} de {max.toLocaleString('es-PE')}</span>
+            </div>
+            <div className="mt-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+              <div className={`h-full rounded-full ${lleno ? 'bg-red-500' : pct >= 85 ? 'bg-amber-500' : 'bg-emerald-500'}`} style={{ width: `${pct}%` }} />
+            </div>
+            {lleno && <p className="mt-1.5 text-[11px] font-semibold text-red-600">Llegaste al límite de tu plan. Para agregar más productos, pásate a un plan mayor.</p>}
+          </div>
+        );
+      })()}
       {descuentoVigente && monto < sugerido && (
         <p className="mt-2 text-xs font-bold text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
           Tienes un descuento de S/ {(sugerido - monto).toFixed(2)} al mes ({Math.round(((sugerido - monto) / sugerido) * 100)}%)

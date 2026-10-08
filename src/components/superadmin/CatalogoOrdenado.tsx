@@ -63,7 +63,7 @@ const CLAVE_PRECIO: Record<string, string | null> = {
 export default function CatalogoOrdenado({ modulos, precioDeClave }: { modulos: ModuloComercial[]; precioDeClave?: (clave: string) => string | null }) {
   const precioReal = (id: string, texto: string) => {
     const clave = CLAVE_PRECIO[id];
-    if (clave === null) return 'Incluido en el plan App';
+    if (clave === null) return 'Incluido en el plan Tienda';
     const real = clave && precioDeClave ? precioDeClave(clave) : null;
     return real ?? texto;
   };

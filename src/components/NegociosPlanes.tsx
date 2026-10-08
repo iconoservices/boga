@@ -3,16 +3,24 @@
 // Sección de planes de /negocios. Cliente porque tiene el toggle mensual/anual.
 // El resto de la landing (/negocios/page.tsx) sigue siendo Server Component.
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 import { CAPACIDADES_PLAN, MODULOS_VENTA, PLANES, POR_DEFINIR, planIncluye } from '@/lib/planesNegocios';
+import { PLANES_BASE, cargarPlanes, enOferta, precioVigente, type PlanComercial } from '@/lib/planesComerciales';
+import { supabase } from '@/lib/supabase';
 
 const REGISTRO = '/negocios/registro';
 
 export default function NegociosPlanes() {
   const [anual, setAnual] = useState(false);
   const [detalle, setDetalle] = useState(false);
+  // Los planes salen de la base (se editan en Cobros → Precios); mientras llegan, o si no hay tabla, se ven los de respaldo.
+  const [planes, setPlanes] = useState<PlanComercial[]>(PLANES_BASE);
+  useEffect(() => {
+    cargarPlanes(supabase).then((r) => setPlanes(r.planes.filter((p) => p.activo)));
+  }, []);
+  const hoy = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Lima' });
 
   return (
     <section id="precios" className="scroll-mt-24 pb-14 md:pb-16">
@@ -51,34 +59,53 @@ export default function NegociosPlanes() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {PLANES.map((plan) => {
-          const p = anual ? plan.anio : plan.mes;
+      <div className={`grid grid-cols-1 md:grid-cols-2 gap-5 ${planes.length >= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
+        {planes.map((plan) => {
+          const vigente = precioVigente(plan, hoy);
+          const rebajado = enOferta(plan, hoy);
+          const precio = anual ? vigente * 10 : vigente;   // anual = 10 meses (2 gratis)
+          const fmt = (n: number) => `S/ ${n.toLocaleString('es-PE', { maximumFractionDigits: 0 })}`;
           return (
             <div
               key={plan.id}
-              className={`relative bg-surface-container-lowest rounded-2xl p-6 flex flex-col gap-3 ${
-                plan.etiqueta ? 'border-[1.5px] border-primary' : 'border border-surface-container-highest'
+              className={`relative bg-surface-container-lowest rounded-2xl p-5 lg:p-5 flex flex-col gap-3 ${
+                plan.recomendado ? 'border-[1.5px] border-primary' : 'border border-surface-container-highest'
               }`}
             >
-              {plan.etiqueta && (
+              {plan.recomendado && (
                 <span className="absolute top-4 right-4 text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md uppercase tracking-wide">
-                  {plan.etiqueta}
+                  Recomendado
                 </span>
               )}
               <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
-                <span className="material-symbols-outlined text-primary">{plan.icon}</span>
+                <span className="material-symbols-outlined text-primary">{plan.icono}</span>
               </div>
-              <h3 className="font-headline-sm text-headline-sm text-on-background">{plan.nombre}</h3>
-              <div className="flex items-baseline gap-1">
-                <span className="font-headline-md text-3xl font-extrabold text-on-background">{p.precio}</span>
-                <span className="text-secondary font-body-md text-sm">{p.periodo}</span>
+              <div>
+                <h3 className="font-headline-sm text-headline-sm text-on-background">{plan.nombre}</h3>
+                {plan.etiqueta && <p className="text-[11px] font-bold uppercase tracking-wide text-secondary">{plan.etiqueta}</p>}
               </div>
-              {p.nota && <p className="text-primary font-label-md text-[11px] font-bold uppercase tracking-wide -mt-1">{p.nota}</p>}
-              <p className="text-secondary font-body-md text-sm leading-relaxed">{plan.body}</p>
+              {plan.pronto && plan.precio_mes <= 0 ? (
+                <div className="flex items-baseline gap-1"><span className="font-headline-md text-2xl font-extrabold text-on-background">Próximamente</span></div>
+              ) : (
+                <div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="font-headline-md text-4xl font-extrabold text-on-background">{fmt(precio)}</span>
+                    <span className="text-secondary font-body-md text-sm">{anual ? '/año' : '/mes'}</span>
+                    {rebajado && <span className="ml-1 text-sm text-secondary line-through">{fmt(anual ? plan.precio_mes * 10 : plan.precio_mes)}</span>}
+                  </div>
+                  {rebajado && <p className="text-primary font-label-md text-[11px] font-bold uppercase tracking-wide">Oferta{plan.oferta_hasta ? ` hasta el ${plan.oferta_hasta.split('-').reverse().join('/')}` : ' de lanzamiento'}</p>}
+                  {anual && !rebajado && <p className="text-secondary text-[11px] font-semibold">2 meses gratis (≈ {fmt(vigente * 10 / 12)}/mes)</p>}
+                </div>
+              )}
+              {plan.limite_productos && (
+                <p className="inline-flex items-center gap-1 self-start text-[11px] font-bold text-on-background bg-surface-container px-2.5 py-1 rounded-full">
+                  <span className="material-symbols-outlined text-[14px] text-primary">inventory_2</span>{plan.limite_productos}
+                </p>
+              )}
+              <p className="text-secondary font-body-md text-[13px] leading-snug lg:min-h-[8.5rem]">{plan.descripcion}</p>
               <ul className="flex flex-col gap-2 my-1">
-                {plan.bullets.map((b) => (
-                  <li key={b} className="flex gap-2 text-sm text-on-background/80">
+                {plan.caracteristicas.map((b) => (
+                  <li key={b} className="flex gap-2 text-[13px] leading-snug text-on-background/80">
                     <span className="material-symbols-outlined text-primary text-[18px] shrink-0">check</span>
                     <span>{b}</span>
                   </li>
@@ -92,7 +119,7 @@ export default function NegociosPlanes() {
                 <Link
                   href={`${REGISTRO}?i=tienda&nivel=${plan.id}${anual ? '&plan=anual' : ''}`}
                   className={`w-full mt-auto py-3 rounded-xl font-bold text-sm text-center transition-all active:scale-95 ${
-                    plan.etiqueta
+                    plan.recomendado
                       ? 'bg-primary text-on-primary hover:opacity-90'
                       : 'border-[1.5px] border-primary text-primary hover:bg-primary/5'
                   }`}

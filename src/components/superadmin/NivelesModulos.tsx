@@ -1,7 +1,7 @@
 'use client';
 
 // Comparativa de los niveles que se le venden al comercio, en dos ejes que se combinan:
-//  · Alcance: Carta → App → Premium
+//  · Alcance: Carta → Tienda → Premium
 //  · Operación: Sin caja → Ventas → Ventas + Inventario
 // Lo que gatea de verdad el panel del dueño: se prende por tienda desde el editor de tienda del
 // superadmin. La definición vive en src/lib/modulos.ts (un solo lugar).
@@ -170,7 +170,7 @@ export default function NivelesModulos() {
       <div className="flex flex-col gap-3">
         <p className="text-[10px] font-bold uppercase tracking-wider text-[#0058be]">Lo que se vende en /negocios <Nuevo /></p>
         <p className="text-xs text-[#424754]">
-          Los planes son paquetes de módulos (siguen el eje de Alcance: Carta → App → Premium) y cada módulo también se vende suelto.
+          Los planes son paquetes de módulos (siguen el eje de Alcance: Carta → Tienda → Premium) y cada módulo también se vende suelto.
           Todo sale de <code>lib/planesNegocios.ts</code>: si cambias precio o texto ahí, cambia en la landing y aquí.
           «Por definir» es un marcador de precio.
         </p>

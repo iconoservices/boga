@@ -14,7 +14,8 @@ import { supabase } from '@/lib/supabase';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import SuperadminSubheader from '@/components/SuperadminSubheader';
 import { hoyLima } from '@/lib/fechaLima';
-import { PLANES, LIMITE_PRODUCTOS } from '@/lib/planesNegocios';
+import EditorPlanes from '@/components/superadmin/EditorPlanes';
+import type { PlanComercial } from '@/lib/planesComerciales';
 import NivelesModulos from '@/components/superadmin/NivelesModulos';
 import CatalogoOrdenado from '@/components/superadmin/CatalogoOrdenado';
 import MatrizPlanes from '@/components/superadmin/MatrizPlanes';
@@ -45,7 +46,7 @@ const precioDe = (x: { monto: string; oferta: string; ofertaHasta: string }, hoy
 
 const METODOS = ['Yape', 'Plin', 'Transferencia', 'Efectivo', 'Otro'];
 const soles = (n: number) => `S/ ${n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const ALCANCE_TXT = { carta: 'Carta', app: 'App', app_google: 'Premium' } as const;
+const ALCANCE_TXT = { carta: 'Carta', app: 'Tienda', app_google: 'Premium' } as const;
 const OPERACION_TXT = { sin_caja: 'Sin caja', ventas: 'Ventas', inventario: 'Ventas + Inventario', 'sin-clasificar': 'Todo (sin clasificar)' } as const;
 
 const ESTADO_UI: Record<TipoCobro, { texto: (d: number | null) => string; clase: string }> = {
@@ -67,6 +68,7 @@ export default function CobrosPage() {
   const [extras, setExtras] = useState<PrecioExtra[]>([]);                  // precios a tu medida
   const [cargos, setCargos] = useState<Record<string, CargoTienda[]>>({});    // cargos extra por tienda
   const [flexError, setFlexError] = useState('');
+  const [planesEd, setPlanesEd] = useState<PlanComercial[]>([]);   // planes comerciales (se editan en EditorPlanes)
   const [ofertaAbierta, setOfertaAbierta] = useState<Record<string, boolean>>({});   // filas de "otros precios" con la oferta desplegada
   const [borPor, setBorPor] = useState<Record<string, PorUnidad>>({});                 // módulos que se cobran por alumno / producto (borrador)
   const [borOf, setBorOf] = useState<Record<string, { oferta: string; hasta: string }>>({}); // ofertas de los módulos (borrador)
@@ -219,7 +221,7 @@ export default function CobrosPage() {
     setGuardandoPrecios(true);
     const ahora = new Date().toISOString();
     // monto = SIEMPRE el equivalente mensual (lo que leen la landing, Paquetes y "Tu plan"). Si es anual, lo tecleado va aparte.
-    const pasos = PASOS_PRECIO.map((p) => {
+    const pasos = PASOS_PRECIO.filter((p) => !p.clave.startsWith('alcance:')).map((p) => {
       const v = Math.max(0, Number(borrador[p.clave]) || 0);
       const anual = !p.clave.startsWith('alcance:') && (borPer[p.clave] ?? 'mes') === 'anio';
       return {
@@ -438,47 +440,13 @@ export default function CobrosPage() {
         {/* Precios: 3 planes (lo que incluye cada uno) + módulos que se suman */}
           <div className="flex flex-col gap-5">
             <p className="text-xs text-[#424754]">
-              Cada tienda paga la <b>suma</b> de lo que tiene prendido: la Carta base + su plan + sus módulos. Ejemplo: App + Ventas + Inventario = Carta + App + Ventas + Inventario.
+              El <b>precio de cada plan es el total</b> que paga la tienda por ese plan. Encima se suman los módulos que tenga prendidos (Ventas, Inventario, dominio propio…). Ejemplo: plan Tienda + Ventas + Inventario.
             </p>
 
-            {/* Los 3 planes */}
-            <div className="grid md:grid-cols-3 gap-3">
-              {([
-                { clave: 'alcance:carta', plan: PLANES[0], suma: null as string | null },
-                { clave: 'alcance:app', plan: PLANES[1], suma: 'alcance:carta' },
-                { clave: 'alcance:app_google', plan: PLANES[2], suma: 'alcance:carta' },
-              ]).map(({ clave, plan, suma }) => {
-                const propio = Number(borrador[clave]) || 0;
-                const base = suma ? Number(borrador[suma]) || 0 : 0;
-                return (
-                  <div key={clave} className="flex flex-col gap-3 border border-[#c2c6d6] rounded-lg p-3 bg-[#f9f9ff]">
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[#0058be] text-[20px]">{plan.icon}</span>
-                      <p className="text-sm font-black">{plan.nombre}</p>
-                      {plan.etiqueta && <span className="text-[9px] font-black uppercase tracking-wider bg-[#0058be] text-white rounded-full px-2 py-0.5">{plan.etiqueta}</span>}
-                    </div>
-                    <label className="text-[10px] font-bold text-[#545f73]">
-                      {suma ? 'Se suma a la Carta (S/ al mes)' : 'Precio base (S/ al mes)'}
-                      <input
-                        type="number" min={0} step="1" inputMode="decimal"
-                        value={borrador[clave] ?? ''}
-                        onChange={(e) => setBorrador((b) => ({ ...b, [clave]: e.target.value }))}
-                        placeholder="0"
-                        className="w-full mt-1 bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-sm font-bold outline-none focus:border-[#0058be]"
-                      />
-                    </label>
-                    {suma && <p className="text-[11px] font-bold text-[#0058be]">Una tienda con este plan paga {soles(base + propio)} /mes</p>}
-                    <p className="self-start inline-flex items-center gap-1 text-[11px] font-bold text-[#191b23] bg-white border border-[#c2c6d6] rounded-full px-2.5 py-1"><span className="material-symbols-outlined text-[14px] text-[#0058be]">inventory_2</span>{LIMITE_PRODUCTOS[plan.id]}</p>
-                    <ul className="flex flex-col gap-1">
-                      {plan.bullets.map((b) => (
-                        <li key={b} className="flex gap-1.5 text-[11px] text-[#424754] font-semibold leading-snug">
-                          <span className="material-symbols-outlined text-[14px] text-emerald-600 shrink-0">check</span>{b}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                );
-              })}
+            {/* Los planes que se venden en /negocios: precio total, recomendado, ofertas, qué incluye */}
+            <div className="flex flex-col gap-2">
+              <p className="text-[10px] font-black text-[#424754] uppercase tracking-widest">Planes que se venden en /negocios</p>
+              <EditorPlanes hoy={hoy} flexOk={flexOk} onGuardado={cargar} onPlanes={setPlanesEd} />
             </div>
 
             {/* Módulos que se suman encima de cualquier plan */}
@@ -667,8 +635,9 @@ export default function CobrosPage() {
               <MatrizPlanes
                 modulos={INITIAL_MODULES}
                 precioPlan={{
-                  Basic: (Number(borrador['alcance:carta']) || 0) > 0 ? soles(Number(borrador['alcance:carta']) || 0) + '/mes' : undefined,
-                  Pro: (Number(borrador['alcance:app']) || 0) > 0 ? soles((Number(borrador['alcance:carta']) || 0) + (Number(borrador['alcance:app']) || 0)) + '/mes' : undefined,
+                  Basic: planesEd.find((x) => x.nivel === 'carta')?.precio_mes ? `${soles(planesEd.find((x) => x.nivel === 'carta')!.precio_mes)}/mes` : undefined,
+                  Pro: planesEd.find((x) => x.nivel === 'app')?.precio_mes ? `${soles(planesEd.find((x) => x.nivel === 'app')!.precio_mes)}/mes` : undefined,
+                  Enterprise: planesEd.find((x) => x.nivel === 'app_google')?.precio_mes ? `${soles(planesEd.find((x) => x.nivel === 'app_google')!.precio_mes)}/mes` : undefined,
                 }}
               />
               <CatalogoOrdenado modulos={INITIAL_MODULES.filter((m) => m.buildStatus !== 'no_construido')} precioDeClave={precioDeClave} />

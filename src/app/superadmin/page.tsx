@@ -54,7 +54,7 @@ const COBRO_UI: Record<TipoCobro, { texto: (d: number | null) => string; clase: 
   por_vencer: { texto: (d) => (d === 0 ? 'Vence hoy' : `Vence en ${d} d`), clase: 'bg-amber-50 text-amber-800 border-amber-200', icono: 'schedule' },
   al_dia: { texto: () => 'Al día', clase: 'bg-emerald-50 text-emerald-700 border-emerald-200', icono: 'check_circle' },
 };
-const ALCANCE_NOMBRE = { carta: 'Carta', app: 'App', app_google: 'Premium' } as const;
+const ALCANCE_NOMBRE = { carta: 'Carta', app: 'Tienda', app_google: 'Premium' } as const;
 
 const META: Record<string, { emoji: string; cat: string }> = {
   sunset:   { emoji: '🥂', cat: 'Bar & Café' },
@@ -1374,7 +1374,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
             </div>
           </div>
           <button
-            onClick={() => router.push('/superadmin/paquetes?nuevo=1')}
+            onClick={() => router.push('/superadmin/cobros?vista=precios')}
             className="w-full py-2.5 px-4 bg-[#0058be] text-white rounded-md font-semibold text-xs flex items-center justify-center gap-2 hover:opacity-90 transition-opacity active:scale-[0.98]"
           >
             <span className="material-symbols-outlined text-[18px]">add</span>
