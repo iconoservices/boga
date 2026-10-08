@@ -56,12 +56,13 @@ export const PLANES: Plan[] = [
   {
     id: 'app_google',
     icon: 'shopping_bag',
-    nombre: 'App + Google',
+    nombre: 'Pro',
     pronto: true,
-    body: 'Todo lo de App y, además, tus productos aparecen cuando la gente los busca en Google.',
+    body: 'Todo lo de App y, además, tus productos aparecen cuando la gente los busca en Google, con un catálogo de hasta 5 000 productos.',
     bullets: [
       'Todo lo del plan App',
       'Tus productos en Google',
+      'Catálogo de 1 001 a 5 000 productos',
     ],
     // Sin precio hasta que el módulo de Google exista y se defina.
     mes: { precio: 'Próximamente', periodo: '', nota: '' },
