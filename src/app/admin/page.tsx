@@ -77,9 +77,9 @@ type TabId = 'inicio' | 'products' | 'categories' | 'orders' | 'pos' | 'metrics'
 // desde acá: así no se desincronizan ni quedan en distinto orden.
 const NAV_TABS: { id: TabId; label: string; icon: string; sub: string; inBottomBar: boolean }[] = [
   { id: 'inicio',   label: 'Inicio',       icon: 'home',          sub: 'Resumen de tu carta',        inBottomBar: true },
-  { id: 'products', label: 'Productos',    icon: 'inventory_2',   sub: 'Añade o modifica ítems',     inBottomBar: true },
   { id: 'orders',   label: 'Pedidos',      icon: 'receipt_long',  sub: 'Gestiona los pedidos',       inBottomBar: true },
   { id: 'pos',      label: 'Vender (POS)', icon: 'point_of_sale', sub: 'Caja rápida en el local',    inBottomBar: true },
+  { id: 'products', label: 'Productos',    icon: 'inventory_2',   sub: 'Añade o modifica ítems',     inBottomBar: true },
   { id: 'metrics',  label: 'Métricas',     icon: 'bar_chart',     sub: 'Rendimiento del negocio',    inBottomBar: false },
   { id: 'stores',   label: 'Mis Tiendas',  icon: 'store',         sub: 'Administra tus sucursales',  inBottomBar: false },
 ];
@@ -1563,6 +1563,26 @@ function AdminDashboard({ user }: { user: User }) {
     if (error) { codigosPos.current = {}; return; }
     codigosPos.current = Object.fromEntries((data as { id: string; codigo_barras: string }[]).map((r) => [String(r.codigo_barras).trim(), r.id]));
   };
+  // Ingreso de mercadería con la cámara: cada escaneo suma 1 unidad al stock (para más, el "+" de la fila). Queda en el historial.
+  const [escanerIngresoAbierto, setEscanerIngresoAbierto] = useState(false);
+  const abrirEscanerIngreso = async () => {
+    codigosPos.current = null;
+    setEscanerIngresoAbierto(true);
+    const { data, error } = await supabase.from('products').select('id,codigo_barras').eq('store', focusedStore).not('codigo_barras', 'is', null);
+    codigosPos.current = error ? {} : Object.fromEntries((data as { id: string; codigo_barras: string }[]).map((r) => [String(r.codigo_barras).trim(), r.id]));
+  };
+  const alEscanearIngreso = async (codigo: string): Promise<{ ok: boolean; mensaje: string }> => {
+    for (let i = 0; i < 20 && codigosPos.current === null; i++) await new Promise((r) => setTimeout(r, 100));
+    const id = codigosPos.current?.[codigo];
+    const producto = id ? products.find((p) => p.id === id) : undefined;
+    if (!producto) return { ok: false, mensaje: `El código ${codigo} no está registrado. Edita el producto y escanéalo en "Código de barras".` };
+    if (stockIlimitado(producto)) return { ok: false, mensaje: `${producto.name}: tiene stock ilimitado, no se controla. Ponle una cantidad en el producto.` };
+    const { fallidos } = await moverStock(supabase, { store: producto.store, motivo: 'ingreso', usuario: user.email ?? null, lineas: [{ id: producto.id, name: producto.name, delta: 1 }] });
+    if (fallidos.length) return { ok: false, mensaje: `No se pudo sumar ${producto.name}. Intenta de nuevo.` };
+    setProducts((prev) => prev.map((x) => x.id !== producto.id ? x : { ...x, stock: (x.stock || 0) + 1, status: x.status === 'Agotado' ? 'Activo' : x.status }));
+    refrescarTienda(producto.store);
+    return { ok: true, mensaje: `${producto.name}: +1 (ahora ${(producto.stock || 0) + 1})` };
+  };
   const alEscanearPos = async (codigo: string): Promise<{ ok: boolean; mensaje: string }> => {
     // Si todavía se están pidiendo los códigos, espera un momento.
     for (let i = 0; i < 20 && codigosPos.current === null; i++) await new Promise((r) => setTimeout(r, 100));
@@ -1570,6 +1590,11 @@ function AdminDashboard({ user }: { user: User }) {
     const producto = id ? products.find((p) => p.id === id) : undefined;
     if (!producto) return { ok: false, mensaje: `El código ${codigo} no está registrado en ningún producto de esta tienda.` };
     if (producto.status === 'Agotado') return { ok: false, mensaje: `${producto.name}: agotado.` };
+    // Con inventario no se vende más de lo que hay (addToCart lo ignoraría en silencio y el lector diría "agregado").
+    const enCarro = posCart.find((i) => i.product.id === producto.id)?.quantity ?? 0;
+    if (tiendaTiene(producto.store, 'inventario') && !stockIlimitado(producto) && enCarro + 1 > producto.stock) {
+      return { ok: false, mensaje: `${producto.name}: solo quedan ${producto.stock}, ya están en el carrito.` };
+    }
     addToCart(producto);
     return { ok: true, mensaje: `${producto.name} agregado` };
   };
@@ -2356,6 +2381,15 @@ function AdminDashboard({ user }: { user: User }) {
                               <span className="material-symbols-outlined text-[14px]">picture_as_pdf</span>
                               Exportar PDF
                             </button>
+                            {inventarioOn && (
+                              <button
+                                onClick={abrirEscanerIngreso}
+                                className="px-2.5 py-1.5 text-[11px] font-bold rounded-md transition-all flex items-center justify-center gap-1 bg-white text-gray-700 hover:bg-gray-50 whitespace-nowrap active:scale-95 cursor-pointer border border-gray-200 shadow-sm"
+                              >
+                                <span className="material-symbols-outlined text-[14px]">photo_camera</span>
+                                Ingresar con cámara
+                              </button>
+                            )}
                             {inventarioOn && (
                               <button
                                 onClick={() => setIsHistorialOpen(true)}
@@ -4977,6 +5011,14 @@ function AdminDashboard({ user }: { user: User }) {
           ayuda="Cada código que escanees se agrega al carrito"
           onCodigo={alEscanearPos}
           onCerrar={() => setEscanerPosAbierto(false)}
+        />
+      )}
+      {escanerIngresoAbierto && (
+        <EscanerCamara
+          titulo="Ingresar mercadería"
+          ayuda="Cada código que escanees suma 1 unidad al stock"
+          onCodigo={alEscanearIngreso}
+          onCerrar={() => { setEscanerIngresoAbierto(false); fetchProducts(undefined, true); }}
         />
       )}
       {escanerCodigoAbierto && (

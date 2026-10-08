@@ -2078,3 +2078,38 @@ ALTER TABLE public.products ADD COLUMN IF NOT EXISTS igv TEXT CHECK (igv IN ('co
 -- ============================================================
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS codigo_barras text;
 CREATE INDEX IF NOT EXISTS products_codigo_barras_idx ON public.products (store, codigo_barras) WHERE codigo_barras IS NOT NULL;
+
+-- ============================================================
+-- Cobros flexibles: precios por año / por unidad / creados a mano, y cargos extra por tienda.
+--  · plan_precios.monto sigue siendo SIEMPRE el equivalente mensual (así lo que ya lee la landing,
+--    Paquetes y "Tu plan" no cambia). Si el precio es anual, el valor tecleado queda en monto_anual.
+--  · periodo: 'mes' | 'anio' | 'unico' (cada cuánto se cobra). por: NULL | 'producto' | 'alumno' (qué se cuenta: en esos casos
+--    monto es lo que cuesta cada unidad). monto_oferta = precio promocional; mientras oferta_hasta no pase (o esté vacía) manda la oferta.
+-- ============================================================
+ALTER TABLE public.plan_precios ADD COLUMN IF NOT EXISTS periodo     TEXT NOT NULL DEFAULT 'mes';
+ALTER TABLE public.plan_precios ADD COLUMN IF NOT EXISTS por         TEXT;
+ALTER TABLE public.plan_precios ADD COLUMN IF NOT EXISTS monto_anual NUMERIC;
+ALTER TABLE public.plan_precios ADD COLUMN IF NOT EXISTS monto_oferta NUMERIC;
+ALTER TABLE public.plan_precios ADD COLUMN IF NOT EXISTS oferta_hasta DATE;
+ALTER TABLE public.plan_precios ADD COLUMN IF NOT EXISTS nombre      TEXT;
+ALTER TABLE public.plan_precios ADD COLUMN IF NOT EXISTS ayuda       TEXT;
+
+CREATE TABLE IF NOT EXISTS public.store_cargos (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  store      TEXT NOT NULL REFERENCES public.stores(slug) ON UPDATE CASCADE ON DELETE CASCADE,
+  nombre     TEXT NOT NULL,
+  monto      NUMERIC NOT NULL DEFAULT 0,          -- precio de UNA unidad (o del cargo entero si cantidad = 1)
+  periodo    TEXT NOT NULL DEFAULT 'mes',         -- 'mes' | 'anio' | 'unico'
+  por        TEXT,                                -- NULL | 'producto' | 'alumno'
+  cantidad   INTEGER NOT NULL DEFAULT 1,
+  nota       TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS store_cargos_store_idx ON public.store_cargos (store);
+ALTER TABLE public.store_cargos ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "store_cargos: dueño o superadmin ve" ON public.store_cargos;
+DROP POLICY IF EXISTS "store_cargos: superadmin escribe"    ON public.store_cargos;
+CREATE POLICY "store_cargos: dueño o superadmin ve" ON public.store_cargos FOR SELECT
+  USING (public.is_superadmin() OR public.es_admin_de(store_cargos.store));
+CREATE POLICY "store_cargos: superadmin escribe" ON public.store_cargos FOR ALL
+  USING (public.is_superadmin()) WITH CHECK (public.is_superadmin());

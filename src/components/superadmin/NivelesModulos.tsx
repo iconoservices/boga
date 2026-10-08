@@ -74,7 +74,7 @@ function Tarjeta({ nombre, resumen, tiendas, precio }: { nombre: string; resumen
       <p className="text-xs text-[#424754]">{resumen}</p>
       {precio !== null && (
         <p className="text-[11px] font-bold text-[#0058be]">
-          {precio && precio > 0 ? `+ S/ ${precio.toLocaleString('es-PE')} /mes` : 'Precio por definir'}
+          {precio && precio > 0 ? `+ S/ ${precio.toLocaleString('es-PE')} /mes` : <a href="/superadmin/cobros?vista=precios" className="underline">Precio por definir — poner el monto →</a>}
         </p>
       )}
       <div className="mt-auto pt-3 border-t border-[#ecedf7]">
@@ -96,18 +96,32 @@ export default function NivelesModulos() {
   const [sinColumna, setSinColumna] = useState(false);
   // Precios de cada paso (tabla plan_precios, se editan en /superadmin/cobros). Sin la tabla, salen "por definir".
   const [precios, setPrecios] = useState<Record<string, number>>({});
+  // Precio anual de los módulos que se cobran al año (SQL «Cobros flexibles»); sin él, todo se lee como mensual.
+  const [anuales, setAnuales] = useState<Record<string, number>>({});
 
   useEffect(() => {
     supabase.from('stores').select('slug,name,modulos,subdominio_activo').then(({ data, error }) => {
       if (error) { setSinColumna(true); setTiendas([]); return; }
       setTiendas((data ?? []) as FilaTienda[]);
     });
-    supabase.from('plan_precios').select('clave,monto').then(({ data, error }) => {
-      if (error) return;
-      setPrecios(Object.fromEntries((data ?? []).map((r: { clave: string; monto: number }) => [r.clave, Number(r.monto) || 0])));
-    });
+    (async () => {
+      let res = await supabase.from('plan_precios').select('clave,monto,periodo,monto_anual');
+      if (res.error) res = (await supabase.from('plan_precios').select('clave,monto')) as unknown as typeof res;
+      if (res.error) return;
+      const filas = (res.data ?? []) as { clave: string; monto: number; periodo?: string; monto_anual?: number | null }[];
+      setPrecios(Object.fromEntries(filas.map((r) => [r.clave, Number(r.monto) || 0])));
+      setAnuales(Object.fromEntries(filas.filter((r) => r.periodo === 'anio' && r.monto_anual != null).map((r) => [r.clave, Number(r.monto_anual) || 0])));
+    })();
   }, []);
 
+  // Cada módulo que se vende suelto, con la fila de precios que le corresponde en Cobros → Precios.
+  const CLAVE_PRECIO: Record<string, string> = { app: 'alcance:app', dominio_propio: 'extra:dominio_propio', google: 'alcance:app_google', loyverse: 'extra:loyverse', caja: 'operacion:ventas', inventario: 'operacion:inventario', market: 'mod:marketplace' };
+  const precioDeModulo = (m: { id: string; precio: string; unidad?: string }) => {
+    const clave = CLAVE_PRECIO[m.id];
+    if (clave && anuales[clave] > 0) return `S/ ${anuales[clave].toLocaleString('es-PE')} /año`;
+    if (clave && precios[clave] > 0) return `S/ ${precios[clave].toLocaleString('es-PE')} /mes`;
+    return `${m.precio}${m.precio !== 'Por definir' ? (m.unidad ?? ' /mes') : ''}`;
+  };
   const deAlcance = (id: AlcanceId) => (tiendas ? tiendas.filter((t) => nivelAlcance(t) === id) : null);
   const deOperacion = (id: OperacionId) => (tiendas ? tiendas.filter((t) => nivelOperacion(t.modulos) === id) : null);
   const sinClasificar = (tiendas ?? []).filter((t) => nivelOperacion(t.modulos) === 'sin-clasificar');
@@ -221,7 +235,7 @@ export default function NivelesModulos() {
                     {m.enDesarrollo && <EnDesarrollo />}
                     {m.promo && <p className="text-[10px] text-[#727785] font-semibold mt-0.5">{m.promo}</p>}
                   </td>
-                  <td className="p-3 text-[#424754]">{m.precio}{m.precio !== 'Por definir' && (m.unidad ?? ' /mes')}</td>
+                  <td className="p-3 text-[#424754]">{precioDeModulo(m)}</td>
                   <td className="p-3 text-[#424754]">
                     {m.incluidoEn.length ? m.incluidoEn.map((id) => PLANES.find((p) => p.id === id)?.nombre).join(', ') : '—'}
                     {m.gratisEnLanzamiento && <span className="block text-[10px] font-semibold text-[#0058be]">Incluido en el lanzamiento: {m.gratisEnLanzamiento.map((id) => PLANES.find((p) => p.id === id)?.nombre).join(', ')}</span>}

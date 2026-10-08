@@ -70,13 +70,22 @@ export default function MiPlan({
         {modulos?.marca_blanca ? ' · Marca blanca' : ''}
       </p>
       <div className="mt-2 flex items-baseline justify-between gap-2">
-        <p className="text-xl font-black text-gray-900">S/ {monto.toFixed(2)}<span className="text-xs text-gray-400 font-semibold"> /mes</span></p>
+        <p className="text-xl font-black text-gray-900">
+          S/ {monto.toFixed(2)}<span className="text-xs text-gray-400 font-semibold"> /mes</span>
+          {descuentoVigente && monto < sugerido && <span className="ml-2 text-xs text-gray-400 font-semibold line-through">S/ {sugerido.toFixed(2)}</span>}
+        </p>
         {datos.vence && (
           <p className="text-xs text-gray-500 font-semibold">
             Pagado hasta {new Date(`${datos.vence}T12:00:00`).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' })}
           </p>
         )}
       </div>
+      {descuentoVigente && monto < sugerido && (
+        <p className="mt-2 text-xs font-bold text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+          Tienes un descuento de S/ {(sugerido - monto).toFixed(2)} al mes ({Math.round(((sugerido - monto) / sugerido) * 100)}%)
+          {datos.descuentoHasta ? ` hasta el ${new Date(`${datos.descuentoHasta}T12:00:00`).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' })}` : ''}.
+        </p>
+      )}
       {(estado.tipo === 'vencido' || estado.tipo === 'por_vencer' || estado.tipo === 'sin_pagos') && (
         <p className="mt-2 text-xs text-gray-500 font-medium">Escríbenos para coordinar tu pago (Yape, Plin o transferencia) y seguir con todo activo.</p>
       )}

@@ -32,6 +32,7 @@ export const PLANES: Plan[] = [
     bullets: [
       'Catálogo y gestión de pedidos',
       'Pedidos directo a tu WhatsApp, sin comisión',
+      'Promociones y combos con etiqueta especial — incluido desde este plan',
       'Funciona en cualquier ciudad',
       'Instalable como app — incluido en el lanzamiento',
     ],

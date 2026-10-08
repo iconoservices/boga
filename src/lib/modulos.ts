@@ -205,7 +205,6 @@ export const PASOS_PRECIO: { clave: string; etiqueta: string; ayuda: string }[] 
   { clave: 'extra:loyverse', etiqueta: 'Loyverse POS', ayuda: 'Se suma al sincronizar con el punto de venta Loyverse.' },
   { clave: 'extra:pasarela_pago', etiqueta: 'Pasarela propia', ayuda: 'Se suma al habilitar pasarela de pago online para la tienda.' },
   { clave: 'extra:academia', etiqueta: 'Academia (alumnos + QR)', ayuda: 'Se suma al activar el carnet con QR y la asistencia de alumnos.' },
-  { clave: 'extra:promociones', etiqueta: 'Promociones & Combos', ayuda: 'Se suma al activar el módulo de combos y promociones comerciales.' },
 ];
 
 /** Presets de planes para configurar tiendas en 1 clic desde superadmin */
@@ -303,7 +302,7 @@ export function pasosDeTienda(t: { modulos?: Modulos | null; subdominio_activo?:
   if (moduloActivo(t.modulos, 'dominio_propio') || !!t.modulos?.dominio_propio_url) pasos.push('extra:dominio_propio');
   if (moduloActivo(t.modulos, 'loyverse')) pasos.push('extra:loyverse');
   if (moduloActivo(t.modulos, 'pasarela_pago')) pasos.push('extra:pasarela_pago');
-  if (moduloActivo(t.modulos, 'promociones')) pasos.push('extra:promociones');
+  // Promociones & Combos va incluido desde el plan Carta: no suma al precio (el módulo se sigue prendiendo por tienda).
   if (moduloAcademia(t.modulos)) pasos.push('extra:academia');
   return pasos;
 }
@@ -336,3 +335,34 @@ export function sumarMeses(iso: string, meses: number): string {
   const ultimo = new Date(Date.UTC(anio, mes + 1, 0)).getUTCDate();
   return new Date(Date.UTC(anio, mes, Math.min(d, ultimo))).toISOString().slice(0, 10);
 }
+
+// ─── Cobros flexibles: precios por año / por unidad y cargos extra por tienda ───
+// `periodo` = cada cuánto se cobra; `por` = qué se cuenta cuando el precio es por unidad.
+export type PeriodoCobro = 'mes' | 'anio' | 'unico';
+export type PorUnidad = 'producto' | 'alumno' | 'transaccion' | 'boleta' | null;
+export const PERIODOS_COBRO: { id: PeriodoCobro; texto: string }[] = [
+  { id: 'mes', texto: 'al mes' },
+  { id: 'anio', texto: 'al año' },
+  { id: 'unico', texto: 'una sola vez' },
+];
+export const POR_UNIDAD: { id: Exclude<PorUnidad, null>; texto: string }[] = [
+  { id: 'producto', texto: 'por producto' },
+  { id: 'alumno', texto: 'por alumno' },
+  { id: 'transaccion', texto: 'por transacción' },
+  { id: 'boleta', texto: 'por boleta' },
+];
+
+export interface CargoTienda {
+  id: string; store: string; nombre: string; monto: number;
+  periodo: PeriodoCobro; por: PorUnidad; cantidad: number; nota: string | null;
+}
+
+/** Total de un cargo en su periodo (precio × cantidad). */
+export const totalCargo = (c: { monto: number; cantidad: number }) => (Number(c.monto) || 0) * Math.max(1, Number(c.cantidad) || 1);
+
+/** Lo que un cargo aporta al ingreso mensual: lo anual se reparte en 12 y lo de una sola vez no es recurrente. */
+export const cargoMensual = (c: { monto: number; cantidad: number; periodo: PeriodoCobro }) =>
+  c.periodo === 'mes' ? totalCargo(c) : c.periodo === 'anio' ? totalCargo(c) / 12 : 0;
+
+/** Un precio anual teclado → su equivalente mensual (es lo que se guarda en plan_precios.monto). */
+export const mensualDeAnual = (anual: number) => Math.round((anual / 12) * 100) / 100;
