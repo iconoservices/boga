@@ -55,7 +55,7 @@ function PaquetesContenido() {
       id: 'app',
       name: 'Plan App / Tienda',
       badge: 'Más Popular',
-      features: ['Hasta 1,000 productos', 'Subdominio propio (.bogahub.app)', 'Notificaciones Push (2/sem)', 'Instalable en celular', 'Soporte prioritario'],
+      features: ['De 101 a 1,000 productos', 'Subdominio propio (.bogahub.app)', 'Notificaciones Push (2/sem)', 'Instalable en celular', 'Soporte prioritario'],
       price: 100,
       active: true,
       isPopular: true,
@@ -65,7 +65,7 @@ function PaquetesContenido() {
       id: 'supermercado',
       name: 'Plan Supermercado / Pro',
       badge: 'Alta Capacidad',
-      features: ['Hasta 5,000 productos', 'Sincronización Loyverse POS en vivo', 'Soporte Dominio Propio (.pe / .com)', 'Inventario masivo en tiempo real', 'Alertas de stock bajo'],
+      features: ['De 1,001 a 5,000 productos', 'Sincronización Loyverse POS en vivo', 'Soporte Dominio Propio (.pe / .com)', 'Inventario masivo en tiempo real', 'Alertas de stock bajo'],
       price: 199,
       active: true,
       bannerUrl: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=500&auto=format&fit=crop&q=60'

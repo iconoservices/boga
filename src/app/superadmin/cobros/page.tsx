@@ -14,7 +14,7 @@ import { supabase } from '@/lib/supabase';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import SuperadminSubheader from '@/components/SuperadminSubheader';
 import { hoyLima } from '@/lib/fechaLima';
-import { PLANES } from '@/lib/planesNegocios';
+import { PLANES, LIMITE_PRODUCTOS } from '@/lib/planesNegocios';
 import NivelesModulos from '@/components/superadmin/NivelesModulos';
 import CatalogoOrdenado from '@/components/superadmin/CatalogoOrdenado';
 import MatrizPlanes from '@/components/superadmin/MatrizPlanes';
@@ -199,11 +199,19 @@ export default function CobrosPage() {
 
   const resumen = useMemo(() => {
     const mes = hoy.slice(0, 7);
+    const activas = filas.filter((f) => (f.tienda.status ?? 'active') === 'active');
+    const esperado = filas.reduce((s, f) => s + f.monto, 0);
+    const quePagan = filas.filter((f) => f.monto > 0).length;
     return {
-      esperado: filas.reduce((s, f) => s + f.monto, 0),
+      esperado,
       cobradoMes: pagos.filter((p) => p.created_at.slice(0, 7) === mes).reduce((s, p) => s + Number(p.monto), 0),
       vencidos: filas.filter((f) => f.estado.tipo === 'vencido').length,
       porVencer: filas.filter((f) => f.estado.tipo === 'por_vencer').length,
+      activas: activas.length,
+      total: filas.length,
+      sinPagos: filas.filter((f) => f.estado.tipo === 'sin_pagos').length,
+      conDescuento: filas.filter((f) => f.descuentoVigente && f.base < f.sugerido).length,
+      promedio: quePagan ? esperado / quePagan : 0,
     };
   }, [filas, pagos, hoy]);
 
@@ -293,7 +301,7 @@ export default function CobrosPage() {
   return (
     <div className="min-h-screen bg-[#f9f9ff] text-[#191b23]">
       <SuperadminSubheader title="Cobros" icon="payments" />
-      <main className="max-w-[900px] mx-auto px-4 py-8 flex flex-col gap-8">
+      <main className="max-w-[1100px] mx-auto px-4 py-6 md:py-8 flex flex-col gap-6 md:gap-8">
         {sinTablas && (
           <div className="p-4 bg-[#fff8e1] border border-[#f5c518]/50 rounded-md text-xs text-[#5c4a00] font-semibold">
             Falta correr el SQL de «Cobros» de <code>supabase_setup.sql</code> en Supabase (tablas plan_precios, store_suscripciones y store_pagos).
@@ -303,16 +311,21 @@ export default function CobrosPage() {
         {mensaje && <div className="p-3 bg-[#f2f3fd] border border-[#c2c6d6] rounded-md text-xs font-semibold text-[#424754]">{mensaje}</div>}
 
         {/* Resumen */}
-        <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
-            { t: 'Ingreso mensual esperado', v: soles(resumen.esperado), c: 'text-[#191b23]' },
-            { t: 'Cobrado este mes', v: soles(resumen.cobradoMes), c: 'text-emerald-700' },
-            { t: 'Vencidos', v: String(resumen.vencidos), c: resumen.vencidos ? 'text-red-600' : 'text-[#191b23]' },
-            { t: 'Vencen en 7 días', v: String(resumen.porVencer), c: resumen.porVencer ? 'text-amber-700' : 'text-[#191b23]' },
+            { t: 'Ingreso mensual esperado', v: soles(resumen.esperado), s: `≈ ${soles(resumen.esperado * 12)} al año`, c: 'text-[#191b23]' },
+            { t: 'Cobrado este mes', v: soles(resumen.cobradoMes), s: resumen.esperado > 0 ? `${Math.round((resumen.cobradoMes / resumen.esperado) * 100)}% de lo esperado` : '', c: 'text-emerald-700' },
+            { t: 'Vencidos', v: String(resumen.vencidos), s: resumen.vencidos ? 'ya pasó su fecha' : 'ninguno', c: resumen.vencidos ? 'text-red-600' : 'text-[#191b23]' },
+            { t: 'Vencen en 7 días', v: String(resumen.porVencer), s: resumen.porVencer ? 'avísales a tiempo' : 'ninguno', c: resumen.porVencer ? 'text-amber-700' : 'text-[#191b23]' },
+            { t: 'Tiendas activas', v: `${resumen.activas} de ${resumen.total}`, s: resumen.total - resumen.activas > 0 ? `${resumen.total - resumen.activas} inactivas` : 'todas activas', c: 'text-[#191b23]' },
+            { t: 'Sin pagos aún', v: String(resumen.sinPagos), s: 'nunca han pagado', c: resumen.sinPagos ? 'text-amber-700' : 'text-[#191b23]' },
+            { t: 'Con descuento', v: String(resumen.conDescuento), s: 'precio acordado vigente', c: 'text-[#191b23]' },
+            { t: 'Promedio por tienda', v: soles(resumen.promedio), s: 'entre las que pagan', c: 'text-[#191b23]' },
           ].map((k) => (
-            <div key={k.t} className="p-4 bg-white border border-[#c2c6d6] rounded-md">
+            <div key={k.t} className="p-3 md:p-4 bg-white border border-[#c2c6d6] rounded-md">
               <p className="text-[10px] font-bold uppercase tracking-wider text-[#424754]">{k.t}</p>
-              <p className={`text-xl font-bold mt-1 ${k.c}`}>{k.v}</p>
+              <p className={`text-lg md:text-xl font-bold mt-1 ${k.c}`}>{k.v}</p>
+              {k.s && <p className="text-[10px] text-[#727785] font-semibold mt-0.5">{k.s}</p>}
             </div>
           ))}
         </section>
@@ -357,40 +370,59 @@ export default function CobrosPage() {
           <input
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
-            placeholder="Buscar tienda…"
-            className="w-full bg-white border border-[#c2c6d6] rounded-md px-3 py-2 text-xs font-semibold outline-none focus:border-[#0058be]"
+            placeholder="Buscar tienda por nombre o link…"
+            className="w-full bg-white border border-[#c2c6d6] rounded-md px-3 py-2.5 text-xs font-semibold outline-none focus:border-[#0058be]"
           />
+          {/* Encabezado de columnas (solo en pantalla ancha; en celular cada tienda es una tarjeta) */}
+          <div className="hidden lg:grid lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1.1fr)_minmax(0,1.4fr)_minmax(0,1.3fr)_96px] gap-x-4 px-4 text-[10px] font-black uppercase tracking-widest text-[#727785]">
+            <span>Tienda</span><span>Paga por mes</span><span>Descuento y extras</span><span>Cobro</span><span />
+          </div>
           <div className="flex flex-col gap-2">
             {visibles.map((f) => {
               const ui = ESTADO_UI[f.estado.tipo];
+              const activa = (f.tienda.status ?? 'active') === 'active';
+              const conDescuento = f.descuentoVigente && f.base < f.sugerido;
+              const nCargos = (cargos[f.tienda.slug] ?? []).length;
               return (
-                <div key={f.tienda.slug} className="bg-white border border-[#c2c6d6] rounded-md p-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-                  <div className="flex-1 min-w-[180px]">
-                    <p className="text-sm font-bold">{f.tienda.name}</p>
-                    <p className="text-[11px] text-[#727785] font-semibold">
+                <div key={f.tienda.slug} className="bg-white border border-[#c2c6d6] rounded-md p-4 grid grid-cols-2 gap-x-4 gap-y-3 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1.1fr)_minmax(0,1.4fr)_minmax(0,1.3fr)_96px] lg:items-center">
+                  <div className="col-span-2 lg:col-span-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-bold truncate">{f.tienda.name}</p>
+                      <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full border ${activa ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>{activa ? 'Activa' : 'Inactiva'}</span>
+                    </div>
+                    <p className="text-[11px] text-[#727785] font-semibold mt-0.5">
                       {ALCANCE_TXT[nivelAlcance(f.tienda)]} · {OPERACION_TXT[nivelOperacion(f.tienda.modulos)]}
                       {f.tienda.modulos?.marca_blanca ? ' · Marca blanca' : ''}
                     </p>
+                    <p className="text-[10px] text-[#a3a8b8] font-semibold">/{f.tienda.slug}</p>
                   </div>
-                  <div className="text-right">
+
+                  <div>
                     <p className="text-sm font-bold">{soles(f.monto)}<span className="text-[10px] text-[#727785] font-semibold"> /mes</span></p>
-                    <p className="text-[10px] text-[#727785] font-semibold">
-                      {f.descuentoVigente ? 'monto acordado' : 'precio sugerido'}
-                    </p>
-                    {f.extrasMes > 0 && <p className="text-[10px] font-semibold text-[#0058be]">incluye {soles(f.extrasMes)} en cargos extra</p>}
-                    {f.sub?.monto_mensual != null && f.sub.descuento_hasta && (
-                      <p className={`text-[10px] font-semibold ${f.descuentoVigente ? 'text-amber-700' : 'text-[#727785] italic'}`}>
-                        {f.descuentoVigente ? `descuento hasta ${f.sub.descuento_hasta}` : `descuento venció el ${f.sub.descuento_hasta}`}
+                    <p className="text-[10px] text-[#727785] font-semibold">{f.descuentoVigente ? 'monto acordado' : 'precio sugerido'}</p>
+                  </div>
+
+                  <div className="text-[11px] font-semibold flex flex-col gap-0.5 lg:order-none order-last col-span-2 lg:col-span-1">
+                    {conDescuento && (
+                      <p className="text-amber-700">
+                        Descuento {soles(f.sugerido - f.base)} ({Math.round(((f.sugerido - f.base) / f.sugerido) * 100)}%){f.sub?.descuento_hasta ? ` hasta ${f.sub.descuento_hasta}` : ''}
                       </p>
                     )}
+                    {!f.descuentoVigente && f.sub?.monto_mensual != null && f.sub.descuento_hasta && (
+                      <p className="text-[#727785] italic">Descuento venció el {f.sub.descuento_hasta}</p>
+                    )}
+                    {f.extrasMes > 0 && <p className="text-[#0058be]">+ {soles(f.extrasMes)} en {nCargos} {nCargos === 1 ? 'cargo extra' : 'cargos extra'}</p>}
+                    {!conDescuento && f.extrasMes <= 0 && !(f.sub?.monto_mensual != null && f.sub.descuento_hasta) && <p className="text-[#a3a8b8]">—</p>}
                   </div>
-                  <div className="w-28 text-right">
+
+                  <div className="lg:text-left text-right">
                     <span className={`inline-block text-[10px] font-bold px-2 py-1 rounded-full border ${ui.clase}`}>{ui.texto(f.estado.dias)}</span>
-                    {f.sub?.vence && <p className="text-[10px] text-[#727785] font-semibold mt-1">hasta {f.sub.vence}</p>}
+                    <p className="text-[10px] text-[#727785] font-semibold mt-1">{f.sub?.vence ? `Pagado hasta ${f.sub.vence}` : 'Sin pagos registrados'}</p>
                   </div>
+
                   <button
                     onClick={() => setGestion(f.tienda.slug)}
-                    className="px-3 py-2 border border-[#c2c6d6] rounded-md text-xs font-bold text-[#0058be] hover:bg-[#f2f3fd] transition-colors"
+                    className="col-span-2 lg:col-span-1 px-3 py-2 border border-[#c2c6d6] rounded-md text-xs font-bold text-[#0058be] hover:bg-[#f2f3fd] transition-colors"
                   >
                     Gestionar
                   </button>
@@ -436,6 +468,7 @@ export default function CobrosPage() {
                       />
                     </label>
                     {suma && <p className="text-[11px] font-bold text-[#0058be]">Una tienda con este plan paga {soles(base + propio)} /mes</p>}
+                    <p className="self-start inline-flex items-center gap-1 text-[11px] font-bold text-[#191b23] bg-white border border-[#c2c6d6] rounded-full px-2.5 py-1"><span className="material-symbols-outlined text-[14px] text-[#0058be]">inventory_2</span>{LIMITE_PRODUCTOS[plan.id]}</p>
                     <ul className="flex flex-col gap-1">
                       {plan.bullets.map((b) => (
                         <li key={b} className="flex gap-1.5 text-[11px] text-[#424754] font-semibold leading-snug">
