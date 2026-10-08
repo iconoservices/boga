@@ -54,7 +54,7 @@ const COBRO_UI: Record<TipoCobro, { texto: (d: number | null) => string; clase: 
   por_vencer: { texto: (d) => (d === 0 ? 'Vence hoy' : `Vence en ${d} d`), clase: 'bg-amber-50 text-amber-800 border-amber-200', icono: 'schedule' },
   al_dia: { texto: () => 'Al día', clase: 'bg-emerald-50 text-emerald-700 border-emerald-200', icono: 'check_circle' },
 };
-const ALCANCE_NOMBRE = { carta: 'Carta', app: 'App', app_google: 'App + Google' } as const;
+const ALCANCE_NOMBRE = { carta: 'Carta', app: 'App', app_google: 'Premium' } as const;
 
 const META: Record<string, { emoji: string; cat: string }> = {
   sunset:   { emoji: '🥂', cat: 'Bar & Café' },

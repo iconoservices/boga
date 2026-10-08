@@ -23,7 +23,7 @@ export interface InfoModulo {
 export const NIVEL_NOMBRE: Record<NivelModulo, string> = {
   carta: 'Alcance: Carta',
   app: 'Alcance: App',
-  app_google: 'Alcance: App + Google',
+  app_google: 'Alcance: Premium',
   ventas: 'Operación: Ventas',
   inventario: 'Operación: Inventario',
   cadena: 'Nivel superior (varias sedes)',

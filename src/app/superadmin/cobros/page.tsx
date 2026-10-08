@@ -45,7 +45,7 @@ const precioDe = (x: { monto: string; oferta: string; ofertaHasta: string }, hoy
 
 const METODOS = ['Yape', 'Plin', 'Transferencia', 'Efectivo', 'Otro'];
 const soles = (n: number) => `S/ ${n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const ALCANCE_TXT = { carta: 'Carta', app: 'App', app_google: 'App + Google' } as const;
+const ALCANCE_TXT = { carta: 'Carta', app: 'App', app_google: 'Premium' } as const;
 const OPERACION_TXT = { sin_caja: 'Sin caja', ventas: 'Ventas', inventario: 'Ventas + Inventario', 'sin-clasificar': 'Todo (sin clasificar)' } as const;
 
 const ESTADO_UI: Record<TipoCobro, { texto: (d: number | null) => string; clase: string }> = {

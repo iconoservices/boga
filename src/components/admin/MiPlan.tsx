@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { hoyLima } from '@/lib/fechaLima';
 import { estadoCobro, nivelAlcance, nivelOperacion, pasosDeTienda, precioSugerido, type Modulos, type TipoCobro } from '@/lib/modulos';
 
-const ALCANCE = { carta: 'Carta', app: 'App', app_google: 'App + Google' } as const;
+const ALCANCE = { carta: 'Carta', app: 'App', app_google: 'Premium' } as const;
 const OPERACION = { sin_caja: 'Sin caja', ventas: 'Ventas', inventario: 'Ventas + Inventario', 'sin-clasificar': 'Ventas + Inventario' } as const;
 
 const ESTADO: Record<TipoCobro, { texto: (d: number | null) => string; clase: string }> = {

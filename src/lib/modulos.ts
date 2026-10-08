@@ -94,7 +94,7 @@ export function moduloActivo(modulos: Modulos | null | undefined, id: ModuloId):
 // Los niveles que se le venden al comercio, en dos ejes que se combinan. Se muestran en Paquetes
 // del superadmin para compararlos.
 //
-//  · ALCANCE (a cuánta gente llega): Carta → App → App + Google.
+//  · ALCANCE (a cuánta gente llega): Carta → App → Premium.
 //    Sale de subdominio_activo y modulos.google de la tienda.
 //  · OPERACIÓN (qué controla el dueño en su local): sin caja → Ventas → Ventas + Inventario.
 //    Sale de modulos.pos y modulos.inventario.
@@ -105,7 +105,7 @@ export type AlcanceId = 'carta' | 'app' | 'app_google';
 export const ALCANCES: { id: AlcanceId; nombre: string; resumen: string }[] = [
   { id: 'carta', nombre: 'Carta', resumen: 'La carta web con botón de WhatsApp. Nivel base.' },
   { id: 'app', nombre: 'App', resumen: 'Suma su propia dirección (subdominio) para instalar y compartir, y avisos a sus clientes.' },
-  { id: 'app_google', nombre: 'App + Google', resumen: 'Suma que sus productos salgan en Google.' },
+  { id: 'app_google', nombre: 'Premium', resumen: 'Suma que sus productos salgan en Google.' },
 ];
 
 // `nuevo`: fila que se sumó para igualar lo que promete /negocios; se marca en el admin para revisarla.

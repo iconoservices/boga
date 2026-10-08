@@ -3,7 +3,7 @@
 //
 // Modelo: todo es un MÓDULO (app, Google, Market, caja, inventario…). Un PLAN es solo un paquete que ya
 // trae algunos módulos incluidos; el mismo módulo se puede comprar suelto en cualquier plan.
-// Los planes siguen el eje de Alcance del admin (lib/modulos.ts): Carta → App → App + Google.
+// Los planes siguen el eje de Alcance del admin (lib/modulos.ts): Carta → App → Premium.
 //
 // PRECIOS: 'Por definir' es un marcador. Reemplazar por el monto real ('S/ 80') cuando se decida.
 
@@ -56,7 +56,7 @@ export const PLANES: Plan[] = [
   {
     id: 'app_google',
     icon: 'shopping_bag',
-    nombre: 'Pro',
+    nombre: 'Premium',
     pronto: true,
     body: 'Todo lo de App y, además, tus productos aparecen cuando la gente los busca en Google, con un catálogo de hasta 5 000 productos.',
     bullets: [
