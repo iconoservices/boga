@@ -28,7 +28,7 @@ export const PLANES: Plan[] = [
     id: 'carta',
     icon: 'storefront',
     nombre: 'Esencial',
-    body: 'Tu página de pedidos con tu propio link (bogahub.app/tu-negocio) para compartir en WhatsApp o Instagram. Tú vendes y cobras directo — BogaHub no toca tu plata.',
+    body: 'Tu página de pedidos con tu propia dirección (tunegocio.bogahub.app), que tus clientes instalan como app en el celular. Tú vendes y cobras directo — BogaHub no toca tu plata.',
     bullets: [
       'Catálogo y gestión de pedidos',
       'Pedidos directo a tu WhatsApp, sin comisión',
@@ -44,11 +44,10 @@ export const PLANES: Plan[] = [
     icon: 'install_mobile',
     nombre: 'Negocio',
     etiqueta: 'Recomendado',
-    body: 'Todo lo de Esencial y, además, tu propia dirección (tunegocio.bogahub.app) que tus clientes instalan como app en el celular.',
+    body: 'Todo lo de Esencial y, además, espacio para un catálogo más grande: de 101 a 1 000 productos.',
     bullets: [
       'Todo lo del plan Esencial',
-      'Subdominio propio, instalable como app',
-      'Notificaciones push al celular de tus clientes (2 por semana)',
+      'Catálogo de 101 a 1 000 productos',
     ],
     mes: { precio: 'S/ 100', periodo: '/mes', nota: 'Precio promocional de lanzamiento' },
     anio: { precio: 'S/ 1 000', periodo: '/año', nota: 'Precio promocional · 2 meses gratis (≈ S/ 83/mes)' },
@@ -92,7 +91,7 @@ export const MODULOS_VENTA: { grupo: string; items: ModuloVenta[] }[] = [
   {
     grupo: 'Llega a más gente',
     items: [
-      { id: 'app', icon: 'install_mobile', nombre: 'Tu propia app', body: 'Tu dirección propia (tunegocio.bogahub.app), instalable en el celular de tus clientes, con avisos a quienes la instalan.', precio: POR_DEFINIR, promo: 'Lanzamiento: instalar tu carta como app va incluido en Esencial', gratisEnLanzamiento: ['carta'], incluidoEn: ['app', 'app_google'] },
+      { id: 'app', icon: 'install_mobile', nombre: 'Tu propia app', body: 'Tu dirección propia (tunegocio.bogahub.app), instalable en el celular de tus clientes, con avisos a quienes la instalan.', precio: POR_DEFINIR, promo: 'Lanzamiento: instalar tu carta como app va incluido en Esencial', gratisEnLanzamiento: ['carta'], incluidoEn: ['carta', 'app', 'app_google'] },
       { id: 'dominio_propio', icon: 'language', nombre: 'Dominio propio (.com / .pe)', body: 'Tu tienda abre directamente con tu propio dominio web (ej. mitienda.pe) sin ver la marca Boga. El cliente lo compra en su registrador y Boga lo conecta.', precio: 'S/ 49', unidad: ' /mes', incluidoEn: [] },
       { id: 'google', icon: 'shopping_bag', nombre: 'Tus productos en Google', body: 'Tus productos aparecen cuando la gente los busca en Google.', precio: POR_DEFINIR, incluidoEn: ['app_google'], pronto: true },
       { id: 'market', icon: 'travel_explore', nombre: 'Boga Market', body: 'Tu negocio aparece en el Market de tu ciudad, junto a otros comercios locales, frente a gente que todavía no te conoce. Solo donde BogaHub opera.', precio: POR_DEFINIR, promo: 'Lanzamiento: incluido sin costo si tu tienda cumple los requisitos', gratisEnLanzamiento: ['carta', 'app', 'app_google'], incluidoEn: [] },
@@ -165,9 +164,9 @@ export const CAPACIDADES_PLAN: { texto: string; desde: PlanId; estado: 'hecho' |
   { texto: 'Marca un producto como Agotado y deja de mostrarse', desde: 'carta', estado: 'hecho', nuevo: true },
   { texto: 'Plantillas listas para tu rubro', desde: 'carta', estado: 'hecho', nuevo: true },
   { texto: 'Funciona en cualquier ciudad', desde: 'carta', estado: 'hecho', nuevo: true },
-  { texto: 'Subdominio propio (tunegocio.bogahub.app)', desde: 'app', estado: 'hecho', nuevo: true },
-  { texto: 'App instalable en el celular de tus clientes', desde: 'carta', estado: 'hecho', nuevo: true, valor: { carta: 'Incluido en el lanzamiento' } },
-  { texto: 'Notificaciones push al celular de tus clientes (las que no uses se acumulan en el mes)', desde: 'app', estado: 'hecho', nuevo: true, valor: { app: '2 por semana', app_google: '2 por semana' } },
+  { texto: 'Subdominio propio (tunegocio.bogahub.app)', desde: 'carta', estado: 'hecho', nuevo: true },
+  { texto: 'App instalable en el celular de tus clientes', desde: 'carta', estado: 'hecho', nuevo: true, valor: undefined },
+  { texto: 'Notificaciones push al celular de tus clientes (las que no uses se acumulan en el mes)', desde: 'carta', estado: 'hecho', nuevo: true, valor: { carta: '2 por semana', app: '2 por semana', app_google: '2 por semana' } },
   { texto: 'Productos en Google', desde: 'app_google', estado: 'falta', nuevo: true },
 ];
 

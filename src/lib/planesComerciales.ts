@@ -29,14 +29,14 @@ export interface PlanComercial {
 export const PLANES_BASE: PlanComercial[] = [
   {
     id: 'carta', orden: 1, nombre: 'Esencial', etiqueta: 'Huariques y menús', icono: 'storefront',
-    descripcion: 'Tu página de pedidos con tu propio link (bogahub.app/tu-negocio) para compartir en WhatsApp o Instagram. Tú vendes y cobras directo — BogaHub no toca tu plata.',
-    caracteristicas: ['Catálogo y gestión de pedidos', 'Pedidos directo a tu WhatsApp, sin comisión', 'Promociones y combos con etiqueta especial', 'Funciona en cualquier ciudad', 'Instalable como app'],
+    descripcion: 'Tu página de pedidos con tu propia dirección (tunegocio.bogahub.app), que tus clientes instalan como app en el celular. Tú vendes y cobras directo — BogaHub no toca tu plata.',
+    caracteristicas: ['Catálogo y gestión de pedidos', 'Pedidos directo a tu WhatsApp, sin comisión', 'Tu dirección propia: tunegocio.bogahub.app', 'Tus clientes la instalan como app en el celular', 'Notificaciones push a tus clientes (2 por semana)', 'Promociones y combos con etiqueta especial', 'Funciona en cualquier ciudad'],
     precio_mes: 50, precio_oferta: null, oferta_hasta: null, recomendado: false, activo: true, limite_productos: 'Hasta 100 productos', max_productos: 100, pronto: false, nivel: 'carta',
   },
   {
     id: 'app', orden: 2, nombre: 'Negocio', etiqueta: 'Para tiendas', icono: 'install_mobile',
-    descripcion: 'Todo lo de Esencial y, además, tu propia dirección (tunegocio.bogahub.app) que tus clientes instalan como app en el celular.',
-    caracteristicas: ['Todo lo del plan Esencial', 'Subdominio propio, instalable como app', 'Notificaciones push al celular de tus clientes (2 por semana)'],
+    descripcion: 'Todo lo de Esencial y, además, espacio para un catálogo más grande: de 101 a 1 000 productos.',
+    caracteristicas: ['Todo lo del plan Esencial', 'Catálogo de 101 a 1 000 productos'],
     precio_mes: 100, precio_oferta: null, oferta_hasta: null, recomendado: true, activo: true, limite_productos: 'De 101 a 1 000 productos', max_productos: 1000, pronto: false, nivel: 'app',
   },
   {

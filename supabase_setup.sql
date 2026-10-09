@@ -2147,12 +2147,12 @@ CREATE POLICY "planes_comerciales: superadmin escribe" ON public.planes_comercia
 
 INSERT INTO public.planes_comerciales (id, orden, nombre, etiqueta, icono, descripcion, caracteristicas, precio_mes, recomendado, activo, limite_productos, pronto, nivel) VALUES
  ('carta', 1, 'Esencial', 'Huariques y menús', 'storefront',
-  'Tu página de pedidos con tu propio link (bogahub.app/tu-negocio) para compartir en WhatsApp o Instagram. Tú vendes y cobras directo — BogaHub no toca tu plata.',
-  '["Catálogo y gestión de pedidos","Pedidos directo a tu WhatsApp, sin comisión","Promociones y combos con etiqueta especial","Funciona en cualquier ciudad","Instalable como app"]'::jsonb,
+  'Tu página de pedidos con tu propia dirección (tunegocio.bogahub.app), que tus clientes instalan como app en el celular. Tú vendes y cobras directo — BogaHub no toca tu plata.',
+  '["Catálogo y gestión de pedidos","Pedidos directo a tu WhatsApp, sin comisión","Tu dirección propia: tunegocio.bogahub.app","Tus clientes la instalan como app en el celular","Notificaciones push a tus clientes (2 por semana)","Promociones y combos con etiqueta especial","Funciona en cualquier ciudad"]'::jsonb,
   50, false, true, 'Hasta 100 productos', false, 'carta'),
  ('app', 2, 'Negocio', 'Para tiendas', 'install_mobile',
-  'Todo lo de Esencial y, además, tu propia dirección (tunegocio.bogahub.app) que tus clientes instalan como app en el celular.',
-  '["Todo lo del plan Esencial","Subdominio propio, instalable como app","Notificaciones push al celular de tus clientes (2 por semana)"]'::jsonb,
+  'Todo lo de Esencial y, además, espacio para un catálogo más grande: de 101 a 1 000 productos.',
+  '["Todo lo del plan Esencial","Catálogo de 101 a 1 000 productos"]'::jsonb,
   100, true, true, 'De 101 a 1 000 productos', false, 'app'),
  ('app_google', 3, 'Premium', 'Alta capacidad', 'shopping_bag',
   'Todo lo de Negocio y, además, tus productos aparecen cuando la gente los busca en Google, con un catálogo de hasta 5 000 productos.',
@@ -2162,7 +2162,8 @@ INSERT INTO public.planes_comerciales (id, orden, nombre, etiqueta, icono, descr
   'Varias sucursales con métricas consolidadas por sede, acceso para gerentes y cajeros y marca blanca incluida.',
   '["Todo lo del plan Premium","Múltiples sucursales","Métricas consolidadas por sede","Acceso para gerentes y cajeros","Marca blanca incluida"]'::jsonb,
   399, false, true, 'Más de 5 000 productos', true, NULL)
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET descripcion = EXCLUDED.descripcion, caracteristicas = EXCLUDED.caracteristicas
+  WHERE public.planes_comerciales.id IN ('carta', 'app');   -- si ya existían, solo se corrige el texto de Esencial y Negocio; no se tocan precios ni lo que hayas editado
 
 -- ============================================================
 -- Límite de productos por plan: el candado de verdad (no solo el aviso en pantalla).

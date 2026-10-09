@@ -97,6 +97,34 @@ export default function NegociosPlanes() {
         </div>
       </div>
 
+      {/* Lo más importante de todos los planes: tu propia app. Va destacado porque es lo que más pesa al decidir. */}
+      <div className="mb-6 rounded-2xl border-[1.5px] border-primary/30 bg-primary/5 p-4 md:p-5 flex flex-col md:flex-row md:items-center gap-3 md:gap-6">
+        <div className="flex items-center gap-3 md:max-w-[320px]">
+          <div className="w-12 h-12 shrink-0 rounded-2xl bg-primary text-on-primary flex items-center justify-center shadow-md">
+            <span className="material-symbols-outlined text-[26px]">install_mobile</span>
+          </div>
+          <div>
+            <p className="font-headline-sm text-base md:text-lg text-on-background leading-tight">Todos los planes incluyen tu propia app</p>
+            <p className="text-secondary text-xs md:text-[13px] leading-snug mt-0.5">Desde el plan más económico, sin pagar de más.</p>
+          </div>
+        </div>
+        <ul className="grid grid-cols-1 sm:grid-cols-3 gap-2 flex-1">
+          {[
+            { i: 'link', t: 'Tu dirección propia', d: 'tunegocio.bogahub.app' },
+            { i: 'smartphone', t: 'Instalable en el celular', d: 'tus clientes la abren como app' },
+            { i: 'notifications_active', t: 'Notificaciones a tus clientes', d: '2 por semana incluidas' },
+          ].map((x) => (
+            <li key={x.t} className="flex items-start gap-2 rounded-xl bg-surface-container-lowest border border-primary/15 px-3 py-2">
+              <span className="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">{x.i}</span>
+              <span className="leading-tight">
+                <span className="block text-[13px] font-bold text-on-background">{x.t}</span>
+                <span className="block text-[11px] text-secondary">{x.d}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
       {/* Celular: un plan a la vez, con un selector arriba (el recomendado ya viene elegido). Tablet y escritorio: todos juntos. */}
       <div role="tablist" aria-label="Planes" className="md:hidden flex gap-1 p-1 mb-4 rounded-full bg-surface-container border border-surface-container-highest">
         {planes.map((x) => (
@@ -158,8 +186,8 @@ export default function NegociosPlanes() {
               <p className="text-secondary font-body-md text-[13px] leading-snug lg:min-h-[8.5rem]">{plan.descripcion}</p>
               <ul className="flex flex-col gap-2 my-1">
                 {plan.caracteristicas.map((b) => (
-                  <li key={b} className="flex gap-2 text-[13px] leading-snug text-on-background/80">
-                    <span className="material-symbols-outlined text-primary text-[18px] shrink-0">check</span>
+                  <li key={b} className={`flex gap-2 text-[13px] leading-snug ${/dirección propia|instalan como app|notificaciones push/i.test(b) ? 'font-bold text-on-background bg-primary/8 rounded-lg px-2 py-1 -mx-2' : 'text-on-background/80'}`}>
+                    <span className="material-symbols-outlined text-primary text-[18px] shrink-0">{/dirección propia|instalan como app|notificaciones push/i.test(b) ? 'check_circle' : 'check'}</span>
                     <span>{b}</span>
                   </li>
                 ))}
