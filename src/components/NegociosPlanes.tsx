@@ -93,7 +93,7 @@ export default function NegociosPlanes() {
           return (
             <div
               key={plan.id}
-              className={`relative bg-surface-container-lowest rounded-2xl p-5 flex flex-col gap-3 min-w-[84%] sm:min-w-[60%] md:min-w-0 snap-center shrink-0 md:shrink ${
+              className={`relative bg-surface-container-lowest rounded-2xl p-5 flex flex-col gap-3 w-[84%] sm:w-[60%] md:w-auto min-w-0 snap-center shrink-0 md:shrink ${
                 plan.recomendado ? 'border-[1.5px] border-primary' : 'border border-surface-container-highest'
               }`}
             >
