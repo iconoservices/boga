@@ -15,7 +15,7 @@ import { fetchSorteos } from '@/lib/sorteos';
 import { CarruselSorteos } from '@/components/SorteosCarrusel';
 import { fetchLugares } from '@/lib/lugares';
 import { BannerOverlay, type BannerStyle } from '@/components/BannerOverlay';
-import { hrefTienda, esFuera } from '@/lib/tiendaUrl';
+import { hrefTienda, hrefProducto, esFuera } from '@/lib/tiendaUrl';
 import { MARCA, REDES } from '@/lib/marca';
 import {
   armarCatalogoHome, armarChamba, armarInmuebles, armarNotas, armarPromos, armarQueHacer, armarViajes,
@@ -392,10 +392,10 @@ export default function HomeClient({ inicial }: { inicial: HomeData }) {
             <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
               {comidaProducts.map((p) => (
                 <Link
-                  href={hrefTienda(p.storeSlug, p.storeExternalUrl)}
+                  href={hrefProducto(p.storeSlug, p.storeExternalUrl, p.id)}
                   key={p.id}
-                  target={esFuera(hrefTienda(p.storeSlug, p.storeExternalUrl)) ? '_blank' : undefined}
-                  rel={esFuera(hrefTienda(p.storeSlug, p.storeExternalUrl)) ? 'noopener' : undefined}
+                  target={esFuera(hrefProducto(p.storeSlug, p.storeExternalUrl, p.id)) ? '_blank' : undefined}
+                  rel={esFuera(hrefProducto(p.storeSlug, p.storeExternalUrl, p.id)) ? 'noopener' : undefined}
                   className="group bg-white border border-surface-container-highest rounded-2xl overflow-hidden shadow-sm hover:border-primary/30 hover:shadow-md transition-all min-w-[150px] w-[150px] snap-start shrink-0"
                 >
                   <div className="aspect-square bg-surface-container-low overflow-hidden">

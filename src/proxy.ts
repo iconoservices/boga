@@ -115,6 +115,7 @@ export async function proxy(request: NextRequest) {
     const esInterno = primero === 'api' || primero === '_next' || primero === 'admin' || primero === 'superadmin';   // /admin y /superadmin: el panel se abre en la propia tienda, sin saltar al sitio principal
     if (pathname === '/') return NextResponse.rewrite(new URL(`/${tienda}${search}`, request.url));   // portada = la tienda
     if (esArchivo || esInterno || primero === tienda) return NextResponse.next();                     // /<tienda>/… y recursos
+    if (primero === 'producto') return NextResponse.rewrite(new URL(`/${tienda}${pathname}${search}`, request.url));   // <tienda>.bogahub.app/producto/<id> = la ficha de ese producto
     return NextResponse.redirect(`${SITIO}${pathname}${search}`);                                     // lo demás: al sitio principal
   }
 

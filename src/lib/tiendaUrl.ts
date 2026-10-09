@@ -23,3 +23,18 @@ export function hrefTienda(slug: string, externalUrl?: string | null): string {
 export function esFuera(href: string): boolean {
   return /^https?:\/\//i.test(href);
 }
+
+/**
+ * Dirección del PRODUCTO de una tienda (no solo de su portada): al tocar un producto en el Inicio se abre su ficha.
+ * Con subdominio propio (<tienda>.bogahub.app) va a <tienda>.bogahub.app/producto/<id>; sin él, a /<tienda>/producto/<id>.
+ * Un enlace externo que no es de BogaHub (p. ej. Delva) no entiende esa ruta: ahí se abre su portada, como antes.
+ * En desarrollo (localhost) no existe el subdominio, así que se usa la ruta.
+ */
+export function hrefProducto(slug: string, externalUrl: string | null | undefined, productoId: string): string {
+  const porRuta = `/${slug}/producto/${productoId}`;
+  if (!externalUrl) return BASE ? `${BASE}/${slug}/producto/${productoId}` : porRuta;
+  if (/^https?:\/\/[a-z0-9-]+\.bogahub\.app/i.test(externalUrl)) {
+    return process.env.NODE_ENV === 'development' ? porRuta : `${externalUrl.replace(/\/$/, '')}/producto/${productoId}`;
+  }
+  return hrefTienda(slug, externalUrl);
+}
