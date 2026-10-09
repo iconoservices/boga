@@ -21,8 +21,8 @@ export interface InfoModulo {
 }
 
 export const NIVEL_NOMBRE: Record<NivelModulo, string> = {
-  carta: 'Alcance: Carta',
-  app: 'Alcance: Tienda',
+  carta: 'Alcance: Esencial',
+  app: 'Alcance: Negocio',
   app_google: 'Alcance: Premium',
   ventas: 'Operación: Ventas',
   inventario: 'Operación: Inventario',

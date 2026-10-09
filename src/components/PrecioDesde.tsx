@@ -1,7 +1,7 @@
 'use client';
 
 // «Planes desde S/ 50 al mes»: el precio más bajo de los planes activos, leído de la base (Cobros → Precios).
-// Mientras llega, o si no hay tabla, se ve el precio del plan Carta de respaldo.
+// Mientras llega, o si no hay tabla, se ve el precio del plan Esencial de respaldo.
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';

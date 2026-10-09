@@ -2146,17 +2146,17 @@ CREATE POLICY "planes_comerciales: lectura pública"    ON public.planes_comerci
 CREATE POLICY "planes_comerciales: superadmin escribe" ON public.planes_comerciales FOR ALL USING (public.is_superadmin()) WITH CHECK (public.is_superadmin());
 
 INSERT INTO public.planes_comerciales (id, orden, nombre, etiqueta, icono, descripcion, caracteristicas, precio_mes, recomendado, activo, limite_productos, pronto, nivel) VALUES
- ('carta', 1, 'Carta', 'Huariques y menús', 'storefront',
+ ('carta', 1, 'Esencial', 'Huariques y menús', 'storefront',
   'Tu página de pedidos con tu propio link (bogahub.app/tu-negocio) para compartir en WhatsApp o Instagram. Tú vendes y cobras directo — BogaHub no toca tu plata.',
   '["Catálogo y gestión de pedidos","Pedidos directo a tu WhatsApp, sin comisión","Promociones y combos con etiqueta especial","Funciona en cualquier ciudad","Instalable como app"]'::jsonb,
   50, false, true, 'Hasta 100 productos', false, 'carta'),
- ('app', 2, 'Tienda', 'Para tiendas', 'install_mobile',
-  'Todo lo de Carta y, además, tu propia dirección (tunegocio.bogahub.app) que tus clientes instalan como app en el celular.',
-  '["Todo lo del plan Carta","Subdominio propio, instalable como app","Notificaciones push al celular de tus clientes (2 por semana)"]'::jsonb,
+ ('app', 2, 'Negocio', 'Para tiendas', 'install_mobile',
+  'Todo lo de Esencial y, además, tu propia dirección (tunegocio.bogahub.app) que tus clientes instalan como app en el celular.',
+  '["Todo lo del plan Esencial","Subdominio propio, instalable como app","Notificaciones push al celular de tus clientes (2 por semana)"]'::jsonb,
   100, true, true, 'De 101 a 1 000 productos', false, 'app'),
  ('app_google', 3, 'Premium', 'Alta capacidad', 'shopping_bag',
-  'Todo lo de Tienda y, además, tus productos aparecen cuando la gente los busca en Google, con un catálogo de hasta 5 000 productos.',
-  '["Todo lo del plan Tienda","Tus productos en Google","Catálogo de 1 001 a 5 000 productos"]'::jsonb,
+  'Todo lo de Negocio y, además, tus productos aparecen cuando la gente los busca en Google, con un catálogo de hasta 5 000 productos.',
+  '["Todo lo del plan Negocio","Tus productos en Google","Catálogo de 1 001 a 5 000 productos"]'::jsonb,
   180, false, true, 'De 1 001 a 5 000 productos', true, 'app_google'),
  ('multisede', 4, 'Multi-sede / Franquicia', 'Empresarial', 'account_tree',
   'Varias sucursales con métricas consolidadas por sede, acceso para gerentes y cajeros y marca blanca incluida.',

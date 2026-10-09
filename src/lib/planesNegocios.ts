@@ -3,7 +3,7 @@
 //
 // Modelo: todo es un MÓDULO (app, Google, Market, caja, inventario…). Un PLAN es solo un paquete que ya
 // trae algunos módulos incluidos; el mismo módulo se puede comprar suelto en cualquier plan.
-// Los planes siguen el eje de Alcance del admin (lib/modulos.ts): Carta → Tienda → Premium.
+// Los planes siguen el eje de Alcance del admin (lib/modulos.ts): Esencial → Negocio → Premium.
 //
 // PRECIOS: 'Por definir' es un marcador. Reemplazar por el monto real ('S/ 80') cuando se decida.
 
@@ -27,7 +27,7 @@ export const PLANES: Plan[] = [
   {
     id: 'carta',
     icon: 'storefront',
-    nombre: 'Carta',
+    nombre: 'Esencial',
     body: 'Tu página de pedidos con tu propio link (bogahub.app/tu-negocio) para compartir en WhatsApp o Instagram. Tú vendes y cobras directo — BogaHub no toca tu plata.',
     bullets: [
       'Catálogo y gestión de pedidos',
@@ -42,11 +42,11 @@ export const PLANES: Plan[] = [
   {
     id: 'app',
     icon: 'install_mobile',
-    nombre: 'Tienda',
+    nombre: 'Negocio',
     etiqueta: 'Recomendado',
-    body: 'Todo lo de Carta y, además, tu propia dirección (tunegocio.bogahub.app) que tus clientes instalan como app en el celular.',
+    body: 'Todo lo de Esencial y, además, tu propia dirección (tunegocio.bogahub.app) que tus clientes instalan como app en el celular.',
     bullets: [
-      'Todo lo del plan Carta',
+      'Todo lo del plan Esencial',
       'Subdominio propio, instalable como app',
       'Notificaciones push al celular de tus clientes (2 por semana)',
     ],
@@ -58,9 +58,9 @@ export const PLANES: Plan[] = [
     icon: 'shopping_bag',
     nombre: 'Premium',
     pronto: true,
-    body: 'Todo lo de Tienda y, además, tus productos aparecen cuando la gente los busca en Google, con un catálogo de hasta 5 000 productos.',
+    body: 'Todo lo de Negocio y, además, tus productos aparecen cuando la gente los busca en Google, con un catálogo de hasta 5 000 productos.',
     bullets: [
-      'Todo lo del plan Tienda',
+      'Todo lo del plan Negocio',
       'Tus productos en Google',
       'Catálogo de 1 001 a 5 000 productos',
     ],
@@ -133,13 +133,13 @@ export interface EscaleraPlan {
 
 export const ESCALERA_PRODUCTOS: EscaleraPlan[] = [
   {
-    plan: '1. Plan Carta',
+    plan: '1. Plan Esencial',
     limite: LIMITE_PRODUCTOS.carta,
     precio: 'S/ 50 / mes',
     publico: 'Pollerías, restaurantes, huariques, cafeterías (casi ningún menú pasa de 60 platos).',
   },
   {
-    plan: '2. Plan Tienda',
+    plan: '2. Plan Negocio',
     limite: LIMITE_PRODUCTOS.app,
     precio: 'S/ 100 / mes',
     publico: 'Tiendas de ropa, zapaterías, licorerías, pet shops, bodegas medianas.',

@@ -46,7 +46,7 @@ const precioDe = (x: { monto: string; oferta: string; ofertaHasta: string }, hoy
 
 const METODOS = ['Yape', 'Plin', 'Transferencia', 'Efectivo', 'Otro'];
 const soles = (n: number) => `S/ ${n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const ALCANCE_TXT = { carta: 'Carta', app: 'Tienda', app_google: 'Premium' } as const;
+const ALCANCE_TXT = { carta: 'Esencial', app: 'Negocio', app_google: 'Premium' } as const;
 const OPERACION_TXT = { sin_caja: 'Sin caja', ventas: 'Ventas', inventario: 'Ventas + Inventario', 'sin-clasificar': 'Todo (sin clasificar)' } as const;
 
 const ESTADO_UI: Record<TipoCobro, { texto: (d: number | null) => string; clase: string }> = {
@@ -440,7 +440,7 @@ export default function CobrosPage() {
         {/* Precios: 3 planes (lo que incluye cada uno) + módulos que se suman */}
           <div className="flex flex-col gap-5">
             <p className="text-xs text-[#424754]">
-              El <b>precio de cada plan es el total</b> que paga la tienda por ese plan. Encima se suman los módulos que tenga prendidos (Ventas, Inventario, dominio propio…). Ejemplo: plan Tienda + Ventas + Inventario.
+              El <b>precio de cada plan es el total</b> que paga la tienda por ese plan. Encima se suman los módulos que tenga prendidos (Ventas, Inventario, dominio propio…). Ejemplo: plan Negocio + Ventas + Inventario.
             </p>
 
             {/* Los planes que se venden en /negocios: precio total, recomendado, ofertas, qué incluye */}

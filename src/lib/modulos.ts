@@ -94,7 +94,7 @@ export function moduloActivo(modulos: Modulos | null | undefined, id: ModuloId):
 // Los niveles que se le venden al comercio, en dos ejes que se combinan. Se muestran en Paquetes
 // del superadmin para compararlos.
 //
-//  · ALCANCE (a cuánta gente llega): Carta → Tienda → Premium.
+//  · ALCANCE (a cuánta gente llega): Esencial → Negocio → Premium.
 //    Sale de subdominio_activo y modulos.google de la tienda.
 //  · OPERACIÓN (qué controla el dueño en su local): sin caja → Ventas → Ventas + Inventario.
 //    Sale de modulos.pos y modulos.inventario.
@@ -103,8 +103,8 @@ export function moduloActivo(modulos: Modulos | null | undefined, id: ModuloId):
 export type AlcanceId = 'carta' | 'app' | 'app_google';
 
 export const ALCANCES: { id: AlcanceId; nombre: string; resumen: string }[] = [
-  { id: 'carta', nombre: 'Carta', resumen: 'La carta web con botón de WhatsApp. Nivel base.' },
-  { id: 'app', nombre: 'Tienda', resumen: 'Suma su propia dirección (subdominio) para instalar y compartir, y avisos a sus clientes.' },
+  { id: 'carta', nombre: 'Esencial', resumen: 'La carta web con botón de WhatsApp. Nivel base.' },
+  { id: 'app', nombre: 'Negocio', resumen: 'Suma su propia dirección (subdominio) para instalar y compartir, y avisos a sus clientes.' },
   { id: 'app_google', nombre: 'Premium', resumen: 'Suma que sus productos salgan en Google.' },
 ];
 
@@ -220,7 +220,7 @@ export interface PlanPreset {
 export const PLANES_PRESETS: PlanPreset[] = [
   {
     id: 'carta',
-    nombre: 'Plan Carta',
+    nombre: 'Plan Esencial',
     badge: 'Huariques & Menús',
     precio: 'S/ 50 /mes',
     subdominio_activo: false,
@@ -237,7 +237,7 @@ export const PLANES_PRESETS: PlanPreset[] = [
   },
   {
     id: 'app',
-    nombre: 'Plan Tienda',
+    nombre: 'Plan Negocio',
     badge: 'Más Popular',
     precio: 'S/ 100 /mes',
     subdominio_activo: true,
@@ -302,7 +302,7 @@ export function pasosDeTienda(t: { modulos?: Modulos | null; subdominio_activo?:
   if (moduloActivo(t.modulos, 'dominio_propio') || !!t.modulos?.dominio_propio_url) pasos.push('extra:dominio_propio');
   if (moduloActivo(t.modulos, 'loyverse')) pasos.push('extra:loyverse');
   if (moduloActivo(t.modulos, 'pasarela_pago')) pasos.push('extra:pasarela_pago');
-  // Promociones & Combos va incluido desde el plan Carta: no suma al precio (el módulo se sigue prendiendo por tienda).
+  // Promociones & Combos va incluido desde el plan Esencial: no suma al precio (el módulo se sigue prendiendo por tienda).
   if (moduloAcademia(t.modulos)) pasos.push('extra:academia');
   return pasos;
 }
