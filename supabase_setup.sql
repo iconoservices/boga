@@ -2199,3 +2199,36 @@ END $$;
 DROP TRIGGER IF EXISTS trg_limite_productos ON public.products;
 CREATE TRIGGER trg_limite_productos BEFORE INSERT ON public.products
   FOR EACH ROW EXECUTE FUNCTION public.limite_productos_plan();
+
+-- ============================================================
+-- Plan de cada tienda: un dato propio (el que contrató), no se deduce de si tiene dirección propia.
+--  · stores.plan = 'carta' (Esencial) | 'app' (Negocio) | 'app_google' (Premium). De ahí salen el precio sugerido y el tope de productos.
+--  · Para las tiendas que ya existen se asigna por su cantidad de productos (hasta 100 → Esencial, hasta 1 000 → Negocio, más → Premium).
+--    Se corrige a mano en Cobros → Gestionar → Editar plan.
+-- ============================================================
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS plan TEXT;
+
+UPDATE public.stores s
+   SET plan = CASE WHEN c.n > 1000 THEN 'app_google' WHEN c.n > 100 THEN 'app' ELSE 'carta' END
+  FROM (SELECT s2.slug, count(p.id) AS n FROM public.stores s2 LEFT JOIN public.products p ON p.store = s2.slug GROUP BY s2.slug) c
+ WHERE s.slug = c.slug AND s.plan IS NULL;
+
+-- El candado de productos ahora lee el plan de la tienda (y, si todavía no tiene, lo deduce como antes).
+CREATE OR REPLACE FUNCTION public.limite_productos_plan() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  v_plan text; v_sub boolean; v_google boolean; v_nivel text; v_max integer; v_actual integer;
+BEGIN
+  IF public.is_superadmin() THEN RETURN NEW; END IF;
+  SELECT plan, COALESCE(subdominio_activo, false), COALESCE((modulos->>'google')::boolean, false)
+    INTO v_plan, v_sub, v_google FROM public.stores WHERE slug = NEW.store;
+  v_nivel := COALESCE(NULLIF(v_plan, ''), CASE WHEN v_google THEN 'app_google' WHEN v_sub THEN 'app' ELSE 'carta' END);
+  SELECT max_productos INTO v_max FROM public.planes_comerciales
+   WHERE nivel = v_nivel AND max_productos IS NOT NULL ORDER BY orden LIMIT 1;
+  IF v_max IS NULL THEN RETURN NEW; END IF;
+  SELECT count(*) INTO v_actual FROM public.products WHERE store = NEW.store;
+  IF v_actual >= v_max THEN
+    RAISE EXCEPTION 'Tu plan permite hasta % productos. Pasa a un plan mayor para agregar más.', v_max USING ERRCODE = 'P0001';
+  END IF;
+  RETURN NEW;
+END $$;

@@ -128,7 +128,10 @@ const RANGO_ALCANCE: Record<AlcanceId, number> = { carta: 0, app: 1, app_google:
 export const alcanceIncluye = (nivel: AlcanceId, desde: AlcanceId) => RANGO_ALCANCE[nivel] >= RANGO_ALCANCE[desde];
 
 /** En qué nivel de alcance está una tienda. */
-export function nivelAlcance(t: { modulos?: Modulos | null; subdominio_activo?: boolean | null }): AlcanceId {
+export function nivelAlcance(t: { modulos?: Modulos | null; subdominio_activo?: boolean | null; plan?: string | null }): AlcanceId {
+  // El plan que contrató la tienda (columna stores.plan) manda. No depende de si tiene dirección propia: esa va incluida en todos los planes.
+  if (t.plan === 'carta' || t.plan === 'app' || t.plan === 'app_google') return t.plan;
+  // Tiendas sin plan asignado todavía: se deduce como antes.
   if (t.modulos?.google === true) return 'app_google';
   if (t.subdominio_activo) return 'app';
   return 'carta';
@@ -289,12 +292,13 @@ export const PLANES_PRESETS: PlanPreset[] = [
 ];
 
 /** Los pasos de precio que alcanzó una tienda según lo que tiene prendido. */
-export function pasosDeTienda(t: { modulos?: Modulos | null; subdominio_activo?: boolean | null }): string[] {
+export function pasosDeTienda(t: { modulos?: Modulos | null; subdominio_activo?: boolean | null; plan?: string | null }): string[] {
   const pasos = ['alcance:carta'];
-  const google = t.modulos?.google === true;
-  // Cada módulo se paga por sí solo: Google no arrastra el precio de App.
-  if (t.subdominio_activo) pasos.push('alcance:app');
-  if (google) pasos.push('alcance:app_google');
+  // El precio de cada plan es su total: Carta = su precio; Negocio y Premium = su precio menos el de la Carta (lo deriva el editor de planes).
+  // Por eso se suma UN solo paso de alcance, el del plan de la tienda.
+  const nivel = nivelAlcance(t);
+  if (nivel === 'app') pasos.push('alcance:app');
+  if (nivel === 'app_google') pasos.push('alcance:app_google');
   const op = nivelOperacion(t.modulos);
   if (op === 'ventas' || op === 'inventario' || op === 'sin-clasificar') pasos.push('operacion:ventas');
   if (op === 'inventario' || op === 'sin-clasificar') pasos.push('operacion:inventario');

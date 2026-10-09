@@ -747,6 +747,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
               tiktok: dbStore.tiktok || undefined,
               externalUrl: dbStore.external_url || undefined,
               subdominioActivo: dbStore.subdominio_activo ?? undefined,
+              plan: dbStore.plan ?? undefined,
               pushActivo: dbStore.push_activo ?? undefined,
               modulos: dbStore.modulos ?? undefined,
               theme: (() => {
@@ -1607,10 +1608,10 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                             </td>
                             <td className="block md:table-cell md:px-5 md:py-3 md:whitespace-nowrap">
                               {(() => {
-                                const alcance = nivelAlcance({ modulos: store.modulos, subdominio_activo: store.subdominioActivo });
+                                const alcance = nivelAlcance({ modulos: store.modulos, subdominio_activo: store.subdominioActivo, plan: store.plan });
                                 const sub = cobroDatos?.subs[store.slug];
                                 const hoyL = hoyLima();
-                                const sugerido = cobroDatos ? precioSugerido(pasosDeTienda({ modulos: store.modulos, subdominio_activo: store.subdominioActivo }), cobroDatos.precios) : 0;
+                                const sugerido = cobroDatos ? precioSugerido(pasosDeTienda({ modulos: store.modulos, subdominio_activo: store.subdominioActivo, plan: store.plan }), cobroDatos.precios) : 0;
                                 const conDescuento = sub?.monto_mensual != null && (!sub.descuento_hasta || sub.descuento_hasta >= hoyL);
                                 const monto = conDescuento ? (sub!.monto_mensual as number) : sugerido;
                                 const cobro = cobroDatos ? estadoCobro(sub?.vence, monto, hoyL) : null;

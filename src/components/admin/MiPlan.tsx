@@ -22,11 +22,12 @@ const ESTADO: Record<TipoCobro, { texto: (d: number | null) => string; clase: st
 };
 
 export default function MiPlan({
-  slug, modulos, subdominioActivo,
+  slug, modulos, subdominioActivo, plan,
 }: {
   slug: string;
   modulos: Modulos | null | undefined;
   subdominioActivo: boolean | null | undefined;
+  plan?: string | null;
 }) {
   const [usados, setUsados] = useState<number | null>(null);
   const [planes, setPlanes] = useState<PlanComercial[]>([]);
@@ -54,7 +55,7 @@ export default function MiPlan({
 
   if (!datos) return null;
 
-  const tienda = { modulos, subdominio_activo: subdominioActivo };
+  const tienda = { modulos, subdominio_activo: subdominioActivo, plan };
   const sugerido = precioSugerido(pasosDeTienda(tienda), datos.precios);
   // Sin descuentoHasta, el monto acordado queda fijo para siempre; con fecha ya pasada, vuelve solo al sugerido.
   const descuentoVigente = datos.monto != null && (!datos.descuentoHasta || datos.descuentoHasta >= hoyLima());
@@ -87,8 +88,8 @@ export default function MiPlan({
         )}
       </div>
       {(() => {
-        const plan = planDeTienda({ modulos, subdominio_activo: subdominioActivo }, planes);
-        const max = plan?.max_productos ?? null;
+        const planDeEsta = planDeTienda({ modulos, subdominio_activo: subdominioActivo, plan }, planes);
+        const max = planDeEsta?.max_productos ?? null;
         if (usados === null || !max) return null;
         const pct = Math.min(100, Math.round((usados / max) * 100));
         const lleno = usados >= max;

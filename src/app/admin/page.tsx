@@ -2321,7 +2321,7 @@ function AdminDashboard({ user }: { user: User }) {
             </div>
 
             {/* Tu plan: nivel, cuánto paga y hasta cuándo (solo si tiene costo o fecha de pago) */}
-            <MiPlan slug={focusedStore} modulos={inicioDb?.modulos} subdominioActivo={inicioDb?.subdominio_activo} />
+            <MiPlan slug={focusedStore} modulos={inicioDb?.modulos} subdominioActivo={inicioDb?.subdominio_activo} plan={inicioDb?.plan} />
             </div>
             </div>
           </div>

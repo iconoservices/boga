@@ -30,7 +30,7 @@ import {
   type Modulos, type TipoCobro, type CargoTienda, type PeriodoCobro, type PorUnidad,
 } from '@/lib/modulos';
 
-interface Tienda { slug: string; name: string; status: string | null; modulos: Modulos | null; subdominio_activo: boolean | null }
+interface Tienda { slug: string; name: string; status: string | null; modulos: Modulos | null; subdominio_activo: boolean | null; plan?: string | null }
 interface Suscripcion { store: string; monto_mensual: number | null; vence: string | null; notas: string | null; descuento_hasta?: string | null }
 interface Pago { id: string; store: string; monto: number; metodo: string | null; referencia: string | null; meses: number; vence_despues: string | null; nota: string | null; created_at: string }
 
@@ -90,12 +90,15 @@ export default function CobrosPage() {
   const hoy = hoyLima();
 
   const cargar = useCallback(async () => {
-    const [t, pr0, pa, cg] = await Promise.all([
-      supabase.from('stores').select('slug,name,status,modulos,subdominio_activo').order('name'),
+    const [t0, pr0, pa, cg] = await Promise.all([
+      supabase.from('stores').select('slug,name,status,modulos,subdominio_activo,plan').order('name'),
       supabase.from('plan_precios').select('clave,monto,periodo,por,monto_anual,monto_oferta,oferta_hasta,nombre'),
       supabase.from('store_pagos').select('id,store,monto,metodo,referencia,meses,vence_despues,nota,created_at').order('created_at', { ascending: false }).limit(500),
       supabase.from('store_cargos').select('id,store,nombre,monto,periodo,por,cantidad,nota').order('created_at'),
     ]);
+    // `stores.plan` viene del SQL «Plan de cada tienda»: sin él, se lee igual y el plan se deduce como antes.
+    let t = t0;
+    if (t0.error) t = (await supabase.from('stores').select('slug,name,status,modulos,subdominio_activo').order('name')) as unknown as typeof t0;
     // Las columnas nuevas de plan_precios y store_cargos vienen del SQL de «Cobros flexibles»: sin él, todo sigue como antes.
     let pr = pr0;
     const flex = !pr0.error;
@@ -678,6 +681,7 @@ function GestionTienda({
 }) {
   const { tienda, sub, sugerido, base: planMes, extrasMes, monto, descuentoVigente, estado } = fila;
   const [pestana, setPestana] = useState<'pago' | 'plan' | 'cargos' | 'historial'>('pago');
+  const [planSel, setPlanSel] = useState<string>(nivelAlcance(fila.tienda));
   const [fechaAbierta, setFechaAbierta] = useState(false);
   const [acordado, setAcordado] = useState(sub?.monto_mensual != null ? String(sub.monto_mensual) : '');
   const [vence, setVence] = useState(sub?.vence ?? '');
@@ -724,6 +728,15 @@ function GestionTienda({
     if (err) { setError(err.message); return; }
     onCambio(`Fecha de pago de ${tienda.name} corregida.`);
     onClose();
+  };
+
+  // Plan que contrató la tienda (Esencial / Negocio / Premium). No depende de si tiene dirección propia.
+  const guardarPlanContratado = async () => {
+    setOcupado(true); setError(null);
+    const { error: err } = await supabase.from('stores').update({ plan: planSel }).eq('slug', tienda.slug);
+    setOcupado(false);
+    if (err) { setError(`${err.message} (¿corriste el SQL «Plan de cada tienda»?)`); return; }
+    onCambio(`${tienda.name} ahora está en el plan ${ALCANCE_TXT[planSel as keyof typeof ALCANCE_TXT] ?? planSel}.`);
   };
 
   const registrarPago = async () => {
@@ -919,6 +932,19 @@ function GestionTienda({
 
           {pestana === 'plan' && (
             <section className="flex flex-col gap-3">
+              <div className="rounded-md border border-[#c2c6d6] bg-[#f9f9ff] p-3 flex flex-col gap-2">
+                <label className="text-[10px] font-bold text-[#545f73]">Plan que contrató
+                  <select value={planSel} onChange={(e) => setPlanSel(e.target.value)} className={`${campo} mt-1`}>
+                    <option value="carta">{ALCANCE_TXT.carta}</option>
+                    <option value="app">{ALCANCE_TXT.app}</option>
+                    <option value="app_google">{ALCANCE_TXT.app_google}</option>
+                  </select>
+                </label>
+                <p className="text-[10px] text-[#727785] font-semibold">De aquí sale el precio sugerido y el tope de productos. La dirección propia y las notificaciones van incluidas en todos los planes.</p>
+                {planSel !== nivelAlcance(tienda) && (
+                  <button onClick={guardarPlanContratado} disabled={ocupado || deshabilitado} className="self-start px-3 py-2 border border-[#c2c6d6] text-[#0058be] rounded-md font-bold text-xs hover:bg-white disabled:opacity-50">Guardar plan contratado</button>
+                )}
+              </div>
               <p className="text-[11px] text-[#727785] font-semibold">Cuánto paga esta tienda por mes. Si lo dejas vacío, paga el precio sugerido ({soles(sugerido)}).</p>
               <label className="text-[10px] font-bold text-[#545f73]">Monto acordado (S/ al mes)
                 <input type="number" min={0} step="0.01" value={acordado} onChange={(e) => setAcordado(e.target.value)} placeholder={`Vacío = ${sugerido}`} className={`${campo} mt-1`} />

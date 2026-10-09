@@ -46,6 +46,8 @@ export interface StoreConfig {
    */
   externalUrl?: string;
   subdominioActivo?: boolean;
+  /** Plan que contrató la tienda: 'carta' | 'app' | 'app_google' (Esencial / Negocio / Premium). */
+  plan?: string;
   /** true si la tienda puede instalarse como SU app (subdominio, dominio propio o enlace externo). Ver lib/appPropia.ts. */
   appPropia?: boolean;
   /** Avisos push propios habilitados por el superadmin (solo se usan en la dirección propia de la tienda). */

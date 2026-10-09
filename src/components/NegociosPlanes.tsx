@@ -330,11 +330,11 @@ export default function NegociosPlanes() {
                 </ul>
               )}
               <div className="mt-auto pt-1 md:pt-2">
-                {it.promo && <p className="text-primary text-[11px] font-bold uppercase tracking-wide mb-1">{it.promo}</p>}
+                {it.promo && it.id !== 'app' && <p className="text-primary text-[11px] font-bold uppercase tracking-wide mb-1">{it.promo}</p>}
                 <p className="text-on-background text-xs font-bold">
-                  {it.id === 'app' ? 'Viene incluida en los planes' : (preciosMod[CLAVE_MODULO[it.id] ?? ''] ?? (it.precio === POR_DEFINIR ? 'Precio por confirmar' : `${it.precio}${it.unidad ?? ' /mes'}`))}
+                  {it.id === 'app' ? 'Incluida en todos los planes' : (preciosMod[CLAVE_MODULO[it.id] ?? ''] ?? (it.precio === POR_DEFINIR ? 'Precio por confirmar' : `${it.precio}${it.unidad ?? ' /mes'}`))}
                   {it.incluidoEn.length > 0 && (
-                    <span className="text-secondary font-semibold"> · {it.id === 'app' ? '' : 'Incluido en '}{it.incluidoEn.map((id) => PLANES.find((p) => p.id === id)?.nombre).join(' y ')}</span>
+                    <span className="text-secondary font-semibold"> {it.id === 'app' ? '' : <> · Incluido en {it.incluidoEn.map((id) => PLANES.find((p) => p.id === id)?.nombre).join(' y ')}</>}</span>
                   )}
                 </p>
               </div>

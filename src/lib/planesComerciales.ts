@@ -89,7 +89,7 @@ export async function cargarPlanes(db: SupabaseClient): Promise<{ planes: PlanCo
 }
 
 /** Plan que le corresponde a una tienda según su alcance (igual que el panel y el trigger de la base). */
-export function planDeTienda(t: { modulos?: { google?: boolean } | null; subdominio_activo?: boolean | null }, planes: PlanComercial[]): PlanComercial | undefined {
-  const nivel: NivelPlan = t.modulos?.google === true ? 'app_google' : t.subdominio_activo ? 'app' : 'carta';
+export function planDeTienda(t: { modulos?: { google?: boolean } | null; subdominio_activo?: boolean | null; plan?: string | null }, planes: PlanComercial[]): PlanComercial | undefined {
+  const nivel: NivelPlan = t.plan === 'carta' || t.plan === 'app' || t.plan === 'app_google' ? t.plan : t.modulos?.google === true ? 'app_google' : t.subdominio_activo ? 'app' : 'carta';
   return planes.find((p) => p.nivel === nivel);
 }
