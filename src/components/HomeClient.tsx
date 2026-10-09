@@ -439,11 +439,13 @@ export default function HomeClient({ inicial }: { inicial: HomeData }) {
           <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
             {queHacer.map((e) => (
               <Link href="/eventos" key={e.id} className="min-w-[220px] w-[220px] lg:min-w-[260px] lg:w-[260px] bg-white border border-surface-container-highest overflow-hidden shadow-sm rounded-2xl snap-start group flex flex-col">
-                <div className="relative h-32 overflow-hidden bg-surface-container-low flex items-center justify-center">
+                <div className="relative h-40 overflow-hidden bg-surface-container-low flex items-center justify-center">
                   {/* Si la foto no carga (p. ej. un enlace de Facebook que caducó) se ve este ícono, no el texto roto */}
                   <span className="material-symbols-outlined text-[40px] text-secondary/40" aria-hidden>event</span>
-                  <img loading="lazy" src={e.img} alt="" onError={(ev) => { ev.currentTarget.style.display = 'none'; }} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <span className="absolute top-2 left-2 bg-white/95 backdrop-blur-sm text-on-surface text-[10px] font-label-md px-2 py-0.5 flex items-center gap-1">
+                  {/* El afiche se ve ENTERO (cada uno tiene su forma); el fondo es la misma imagen difuminada para que no queden bandas vacías. */}
+                  <img aria-hidden loading="lazy" src={e.img} alt="" onError={(ev) => { ev.currentTarget.style.display = 'none'; }} className="absolute inset-0 w-full h-full object-cover blur-xl scale-125 opacity-60" />
+                  <img loading="lazy" src={e.img} alt={e.title} onError={(ev) => { ev.currentTarget.style.display = 'none'; }} className="relative z-[1] w-full h-full object-contain group-hover:scale-[1.03] transition-transform duration-500" />
+                  <span className="absolute z-[2] top-2 left-2 bg-white/95 backdrop-blur-sm text-on-surface text-[10px] font-label-md px-2 py-0.5 flex items-center gap-1">
                     <span className="material-symbols-outlined text-[12px]">schedule</span>{e.tag}
                   </span>
                 </div>

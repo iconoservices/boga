@@ -92,7 +92,7 @@ export const MODULOS_VENTA: { grupo: string; items: ModuloVenta[] }[] = [
   {
     grupo: 'Llega a más gente',
     items: [
-      { id: 'app', icon: 'install_mobile', nombre: 'Tu propia app', body: 'Tu dirección propia (tunegocio.bogahub.app), instalable en el celular de tus clientes, con avisos a quienes la instalan.', precio: POR_DEFINIR, promo: 'Lanzamiento: instalar tu carta como app va incluido en Carta', gratisEnLanzamiento: ['carta'], incluidoEn: ['app', 'app_google'] },
+      { id: 'app', icon: 'install_mobile', nombre: 'Tu propia app', body: 'Tu dirección propia (tunegocio.bogahub.app), instalable en el celular de tus clientes, con avisos a quienes la instalan.', precio: POR_DEFINIR, promo: 'Lanzamiento: instalar tu carta como app va incluido en Esencial', gratisEnLanzamiento: ['carta'], incluidoEn: ['app', 'app_google'] },
       { id: 'dominio_propio', icon: 'language', nombre: 'Dominio propio (.com / .pe)', body: 'Tu tienda abre directamente con tu propio dominio web (ej. mitienda.pe) sin ver la marca Boga. El cliente lo compra en su registrador y Boga lo conecta.', precio: 'S/ 49', unidad: ' /mes', incluidoEn: [] },
       { id: 'google', icon: 'shopping_bag', nombre: 'Tus productos en Google', body: 'Tus productos aparecen cuando la gente los busca en Google.', precio: POR_DEFINIR, incluidoEn: ['app_google'], pronto: true },
       { id: 'market', icon: 'travel_explore', nombre: 'Boga Market', body: 'Tu negocio aparece en el Market de tu ciudad, junto a otros comercios locales, frente a gente que todavía no te conoce. Solo donde BogaHub opera.', precio: POR_DEFINIR, promo: 'Lanzamiento: incluido sin costo si tu tienda cumple los requisitos', gratisEnLanzamiento: ['carta', 'app', 'app_google'], incluidoEn: [] },

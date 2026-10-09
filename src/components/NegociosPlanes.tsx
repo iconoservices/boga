@@ -47,7 +47,18 @@ export default function NegociosPlanes() {
     })();
   }, []);
   // Qué fila de precios le toca a cada módulo de la landing (los que no están acá mantienen su texto).
-  const CLAVE_MODULO: Record<string, string> = { app: 'alcance:app', dominio_propio: 'extra:dominio_propio', google: 'alcance:app_google', loyverse: 'extra:loyverse', caja: 'operacion:ventas', inventario: 'operacion:inventario', market: 'mod:marketplace' };
+  // Lo que trae cada módulo, en pocas líneas (para que el dueño entienda qué está sumando).
+  const DETALLES_MODULO: Record<string, string[]> = {
+    app: ['Tu dirección propia: tunegocio.bogahub.app', 'Tus clientes la instalan como app en el celular', 'Notificaciones push a quienes la instalan (2 por semana)'],
+    dominio_propio: ['Tu tienda abre en tu propio .com o .pe', 'Sin la marca Boga en la dirección', 'Tú lo compras en tu registrador y Boga lo conecta'],
+    google: ['Tus productos aparecen cuando buscan en Google', 'Cada producto con su propia página'],
+    market: ['Apareces en el Market de tu ciudad', 'Te ven clientes que aún no te conocen'],
+    avisos: ['4 notificaciones push por paquete', 'No vencen: las usas cuando quieras', 'Se suman a las que ya trae tu plan'],
+    loyverse: ['Productos, precios y stock sincronizados', 'Con tu caja física Loyverse, en tiempo real'],
+    caja: ['Cobras en tu local con boleta en PDF o WhatsApp', 'Vendedores propios', 'Ventas del día y del mes'],
+    inventario: ['El stock baja solo con cada venta y pedido', 'Te avisa cuando queda poco', 'Ingresas mercadería escaneando con la cámara'],
+  };
+  const CLAVE_MODULO: Record<string, string> = { dominio_propio: 'extra:dominio_propio', google: 'alcance:app_google', loyverse: 'extra:loyverse', caja: 'operacion:ventas', inventario: 'operacion:inventario', market: 'mod:marketplace' };
 
   return (
     <section id="precios" className="scroll-mt-24 pb-14 md:pb-16">
@@ -280,12 +291,21 @@ export default function NegociosPlanes() {
                 )}
               </h4>
               <p className="text-secondary font-body-md text-[13px] md:text-sm leading-snug md:leading-relaxed line-clamp-3 md:line-clamp-none">{it.body}</p>
+              {DETALLES_MODULO[it.id] && (
+                <ul className="flex flex-col gap-1">
+                  {DETALLES_MODULO[it.id].map((d) => (
+                    <li key={d} className="flex gap-1.5 text-[12px] leading-snug text-on-background/80">
+                      <span className="material-symbols-outlined text-primary text-[15px] shrink-0">check</span>{d}
+                    </li>
+                  ))}
+                </ul>
+              )}
               <div className="mt-auto pt-1 md:pt-2">
                 {it.promo && <p className="text-primary text-[11px] font-bold uppercase tracking-wide mb-1">{it.promo}</p>}
                 <p className="text-on-background text-xs font-bold">
-                  {preciosMod[CLAVE_MODULO[it.id] ?? ''] ?? (it.precio === POR_DEFINIR ? 'Precio por confirmar' : `${it.precio}${it.unidad ?? ' /mes'}`)}
+                  {it.id === 'app' ? 'Viene incluida en los planes' : (preciosMod[CLAVE_MODULO[it.id] ?? ''] ?? (it.precio === POR_DEFINIR ? 'Precio por confirmar' : `${it.precio}${it.unidad ?? ' /mes'}`))}
                   {it.incluidoEn.length > 0 && (
-                    <span className="text-secondary font-semibold"> · Incluido en {it.incluidoEn.map((id) => PLANES.find((p) => p.id === id)?.nombre).join(' y ')}</span>
+                    <span className="text-secondary font-semibold"> · {it.id === 'app' ? '' : 'Incluido en '}{it.incluidoEn.map((id) => PLANES.find((p) => p.id === id)?.nombre).join(' y ')}</span>
                   )}
                 </p>
               </div>
