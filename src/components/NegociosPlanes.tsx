@@ -17,10 +17,12 @@ export default function NegociosPlanes() {
   const [detalle, setDetalle] = useState(false);
   // Los planes salen de la base (se editan en Cobros → Precios); mientras llegan, o si no hay tabla, se ven los de respaldo.
   const [planes, setPlanes] = useState<PlanComercial[]>(PLANES_BASE);
+  const [elegido, setElegido] = useState<string | null>(null);   // en celular se ve un plan a la vez; por defecto el recomendado
   useEffect(() => {
     cargarPlanes(supabase).then((r) => setPlanes(r.planes.filter((p) => p.activo)));
   }, []);
   const hoy = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Lima' });
+  const idVisible = elegido ?? (planes.find((x) => x.recomendado) ?? planes[0])?.id;
 
   // Precios reales de los módulos (los que se editan en Cobros → Precios). Si la lectura falla o el módulo no tiene precio,
   // se queda el texto de lib/planesNegocios.ts («Precio por confirmar»).
@@ -84,7 +86,22 @@ export default function NegociosPlanes() {
         </div>
       </div>
 
-      <div className={`flex md:grid md:grid-cols-2 overflow-x-auto md:overflow-visible snap-x snap-mandatory gap-4 md:gap-5 -mx-container-margin px-container-margin md:mx-0 md:px-0 pb-3 md:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${planes.length >= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
+      {/* Celular: un plan a la vez, con un selector arriba (el recomendado ya viene elegido). Tablet y escritorio: todos juntos. */}
+      <div role="tablist" aria-label="Planes" className="md:hidden flex gap-1 p-1 mb-4 rounded-full bg-surface-container border border-surface-container-highest">
+        {planes.map((x) => (
+          <button
+            key={x.id}
+            role="tab"
+            aria-selected={x.id === idVisible}
+            type="button"
+            onClick={() => setElegido(x.id)}
+            className={`flex-1 min-w-0 px-2 py-2 rounded-full text-[13px] font-bold truncate transition-colors ${x.id === idVisible ? 'bg-primary text-on-primary shadow-sm' : 'text-secondary'}`}
+          >
+            {x.nombre.split(' / ')[0]}
+          </button>
+        ))}
+      </div>
+      <div className={`grid grid-cols-1 md:grid-cols-2 gap-5 ${planes.length >= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
         {planes.map((plan) => {
           const vigente = precioVigente(plan, hoy);
           const rebajado = enOferta(plan, hoy);
@@ -93,7 +110,7 @@ export default function NegociosPlanes() {
           return (
             <div
               key={plan.id}
-              className={`relative bg-surface-container-lowest rounded-2xl p-5 flex flex-col gap-3 w-[84%] sm:w-[60%] md:w-auto min-w-0 snap-center shrink-0 md:shrink ${
+              className={`relative bg-surface-container-lowest rounded-2xl p-5 flex-col gap-3 min-w-0 ${plan.id === idVisible ? 'flex' : 'hidden md:flex'} ${
                 plan.recomendado ? 'border-[1.5px] border-primary' : 'border border-surface-container-highest'
               }`}
             >
@@ -156,7 +173,6 @@ export default function NegociosPlanes() {
           );
         })}
       </div>
-      <p className="md:hidden text-center text-[11px] font-semibold text-secondary mt-1">Desliza para ver todos los planes →</p>
 
       {/* Comparación completa: mismos checks que la tabla del superadmin, sin las marcas internas. */}
       <div className="mt-6 text-center">
