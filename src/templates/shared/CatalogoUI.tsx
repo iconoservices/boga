@@ -391,6 +391,9 @@ export function ProductModal({
   const [medida, setMedida] = React.useState<Presentacion | null>(null);
   // Foto que se ve arriba, cuando el producto tiene más de una.
   const [fotoActiva, setFotoActiva] = React.useState(0);
+  // Visor a pantalla completa: se abre al tocar la foto; un toque más acerca (zoom) y otro la devuelve a su tamaño.
+  const [visor, setVisor] = React.useState(false);
+  const [zoomVisor, setZoomVisor] = React.useState(false);
   const swipeFoto = React.useRef<number | null>(null);
   const cierre = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const contenedor = React.useRef<HTMLDivElement>(null);
@@ -404,6 +407,8 @@ export function ProductModal({
     setCantidad(1);
     setMedida(producto?.presentaciones?.[0] ?? null);
     setFotoActiva(0);
+    setVisor(false);
+    setZoomVisor(false);
     contenedor.current?.scrollTo({ top: 0 });
     return () => { if (cierre.current) clearTimeout(cierre.current); };
   }, [producto]);
@@ -421,13 +426,13 @@ export function ProductModal({
     if (!producto) return;
     const previo = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { if (visor) { setVisor(false); setZoomVisor(false); } else onClose(); } };
     window.addEventListener('keydown', onKey);
     return () => {
       document.body.style.overflow = previo;
       window.removeEventListener('keydown', onKey);
     };
-  }, [producto, onClose]);
+  }, [producto, onClose, visor]);
 
   const sugeridos = producto
     ? productos.filter((p) => p.id !== producto.id && p.category === producto.category).slice(0, 6)
@@ -506,6 +511,50 @@ export function ProductModal({
       aria-modal="true"
       aria-label={producto.name}
     >
+      {visor && (
+        <div
+          className="fixed inset-0 z-[120] bg-black flex flex-col"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Foto de ${producto.name}`}
+          onTouchStart={(e) => { swipeFoto.current = e.touches[0].clientX; }}
+          onTouchEnd={(e) => {
+            if (swipeFoto.current === null || fotos.length < 2 || zoomVisor) return;
+            const dx = e.changedTouches[0].clientX - swipeFoto.current;
+            swipeFoto.current = null;
+            if (Math.abs(dx) > 50) setFotoActiva((i) => (dx < 0 ? (i + 1) % fotos.length : (i - 1 + fotos.length) % fotos.length));
+          }}
+        >
+          <div className="flex items-center justify-between px-4 py-3 text-white">
+            <span className="text-sm font-bold truncate pr-3">{producto.name}</span>
+            <button type="button" onClick={() => { setVisor(false); setZoomVisor(false); }} aria-label="Cerrar la foto" className="w-9 h-9 shrink-0 rounded-full bg-white/15 flex items-center justify-center">
+              <span className={`material-symbols-outlined ${ICON.md}`}>close</span>
+            </button>
+          </div>
+          <div className={`flex-1 min-h-0 relative ${zoomVisor ? 'overflow-auto' : 'overflow-hidden flex items-center justify-center'}`}>
+            <img
+              src={fotos[fotoActiva] ?? producto.image}
+              alt={producto.name}
+              onClick={() => setZoomVisor((z) => !z)}
+              className={zoomVisor ? 'max-w-none w-[220%] h-auto cursor-zoom-out' : 'max-w-full max-h-full object-contain cursor-zoom-in'}
+              draggable={false}
+            />
+            {fotos.length > 1 && !zoomVisor && (
+              <>
+                <button type="button" aria-label="Foto anterior" onClick={() => setFotoActiva((i) => (i - 1 + fotos.length) % fotos.length)} className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 text-white flex items-center justify-center">
+                  <span className={`material-symbols-outlined ${ICON.md}`}>chevron_left</span>
+                </button>
+                <button type="button" aria-label="Foto siguiente" onClick={() => setFotoActiva((i) => (i + 1) % fotos.length)} className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 text-white flex items-center justify-center">
+                  <span className={`material-symbols-outlined ${ICON.md}`}>chevron_right</span>
+                </button>
+              </>
+            )}
+          </div>
+          <p className="text-center text-white/70 text-[11px] font-semibold py-2.5">
+            {fotos.length > 1 ? `${fotoActiva + 1} / ${fotos.length} · ` : ''}Toca la foto para acercar
+          </p>
+        </div>
+      )}
       <button
         onClick={onClose}
         className="fixed top-4 right-4 z-20 w-9 h-9 rounded-full flex items-center justify-center shadow-lg"
@@ -533,6 +582,9 @@ export function ProductModal({
               className="w-full aspect-square md:flex-1 md:min-w-0 md:rounded-2xl relative overflow-hidden touch-pan-y"
               style={{ background: t.surfaceContainerLow }}
               onTouchStart={(e) => { swipeFoto.current = e.touches[0].clientX; }}
+              onClick={() => setVisor(true)}
+              role="button"
+              aria-label={`Ver la foto de ${producto.name} en grande`}
               onTouchEnd={(e) => {
                 if (swipeFoto.current === null || fotos.length < 2) return;
                 const dx = e.changedTouches[0].clientX - swipeFoto.current;
@@ -542,6 +594,9 @@ export function ProductModal({
             >
               <img aria-hidden alt="" src={fotos[fotoActiva] ?? producto.image} className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-60" />
               <img className="relative w-full h-full object-contain" alt={producto.name} src={fotos[fotoActiva] ?? producto.image} />
+              <span className="absolute bottom-2 left-3 w-8 h-8 rounded-full bg-black/55 text-white flex items-center justify-center pointer-events-none" aria-hidden="true">
+                <span className={`material-symbols-outlined ${ICON.sm}`}>zoom_in</span>
+              </span>
               {fotos.length > 1 && (
                 <span className="absolute bottom-2 right-3 text-[11px] font-bold px-2 py-0.5 rounded-full bg-black/55 text-white">
                   {fotoActiva + 1} / {fotos.length}

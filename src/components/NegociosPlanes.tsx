@@ -49,8 +49,8 @@ export default function NegociosPlanes() {
   // Qué fila de precios le toca a cada módulo de la landing (los que no están acá mantienen su texto).
   // Lo que trae cada módulo, en pocas líneas (para que el dueño entienda qué está sumando).
   const DETALLES_MODULO: Record<string, string[]> = {
-    app: ['Tu dirección propia: tunegocio.bogahub.app', 'Tus clientes la instalan como app en el celular', 'Notificaciones push a quienes la instalan (2 por semana)'],
-    dominio_propio: ['Tu tienda abre en tu propio .com o .pe', 'Sin la marca Boga en la dirección', 'Tú lo compras en tu registrador y Boga lo conecta'],
+    app: ['Tu dirección propia: tunegocio.bogahub.app', 'Se activa apenas pagas tu plan, sea cual sea', 'Tus clientes la instalan como app en el celular', 'Notificaciones push a quienes la instalan (2 por semana)'],
+    dominio_propio: ['Tu tienda abre en tu propio .com o .pe (ej. mitienda.pe)', 'Es aparte de tu dirección tunegocio.bogahub.app, que ya viene incluida', 'Tú lo compras en tu registrador y Boga lo conecta'],
     google: ['Tus productos aparecen cuando buscan en Google', 'Cada producto con su propia página'],
     market: ['Apareces en el Market de tu ciudad', 'Te ven clientes que aún no te conocen'],
     avisos: ['4 notificaciones push por paquete', 'No vencen: las usas cuando quieras', 'Se suman a las que ya trae tu plan'],
@@ -110,7 +110,7 @@ export default function NegociosPlanes() {
         </div>
         <ul className="grid grid-cols-1 sm:grid-cols-3 gap-2 flex-1">
           {[
-            { i: 'link', t: 'Tu dirección propia', d: 'tunegocio.bogahub.app' },
+            { i: 'link', t: 'Tu dirección propia', d: 'tunegocio.bogahub.app, apenas pagas' },
             { i: 'smartphone', t: 'Instalable en el celular', d: 'tus clientes la abren como app' },
             { i: 'notifications_active', t: 'Notificaciones a tus clientes', d: '2 por semana incluidas' },
           ].map((x) => (
