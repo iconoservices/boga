@@ -577,7 +577,7 @@ export default function HomeClient({ inicial }: { inicial: HomeData }) {
                 <Link
                   href="/trabajos"
                   key={e.id}
-                  className="group min-w-[260px] w-[260px] lg:min-w-[290px] lg:w-[290px] snap-start shrink-0 bg-white border border-surface-container-highest rounded-2xl p-3 flex flex-col gap-2.5 shadow-sm hover:border-primary/30 hover:shadow-md transition-all"
+                  className="group min-w-[260px] w-[260px] lg:min-w-[290px] lg:w-[290px] snap-start shrink-0 self-start bg-white border border-surface-container-highest rounded-2xl p-3 flex flex-col gap-2.5 shadow-sm hover:border-primary/30 hover:shadow-md transition-all"
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-primary-fixed flex items-center justify-center">
