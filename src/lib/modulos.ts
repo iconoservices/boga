@@ -105,7 +105,7 @@ export type AlcanceId = 'carta' | 'app' | 'app_google';
 export const ALCANCES: { id: AlcanceId; nombre: string; resumen: string }[] = [
   { id: 'carta', nombre: 'Esencial', resumen: 'La carta web con botón de WhatsApp. Nivel base.' },
   { id: 'app', nombre: 'Negocio', resumen: 'Suma su propia dirección (subdominio) para instalar y compartir, y avisos a sus clientes.' },
-  { id: 'app_google', nombre: 'Premium', resumen: 'Suma que sus productos salgan en Google.' },
+  { id: 'app_google', nombre: 'Premium', resumen: 'Catálogo grande: de 1 001 a 5 000 productos.' },
 ];
 
 // `nuevo`: fila que se sumó para igualar lo que promete /negocios; se marca en el admin para revisarla.
@@ -121,7 +121,6 @@ export const CAPACIDADES_ALCANCE: { texto: string; desde: AlcanceId; nuevo?: boo
   { texto: 'Funciona en cualquier ciudad', desde: 'carta', nuevo: true },
   { texto: 'Subdominio propio (tienda.bogahub.app) con su app instalable', desde: 'app' },
   { texto: 'Notificaciones push propias a quienes instalaron su app (2 por semana, acumulables en el mes; paquetes extra de 4)', desde: 'app' },
-  { texto: 'Productos en Google (Merchant Center)', desde: 'app_google' },
 ];
 
 const RANGO_ALCANCE: Record<AlcanceId, number> = { carta: 0, app: 1, app_google: 2 };
@@ -132,7 +131,6 @@ export function nivelAlcance(t: { modulos?: Modulos | null; subdominio_activo?: 
   // El plan que contrató la tienda (columna stores.plan) manda. No depende de si tiene dirección propia: esa va incluida en todos los planes.
   if (t.plan === 'carta' || t.plan === 'app' || t.plan === 'app_google') return t.plan;
   // Tiendas sin plan asignado todavía: se deduce como antes.
-  if (t.modulos?.google === true) return 'app_google';
   if (t.subdominio_activo) return 'app';
   return 'carta';
 }
@@ -200,7 +198,8 @@ export const conMarcaBlanca = (modulos: Modulos | null | undefined) => modulos?.
 export const PASOS_PRECIO: { clave: string; etiqueta: string; ayuda: string }[] = [
   { clave: 'alcance:carta', etiqueta: 'Carta (base)', ayuda: 'Lo que paga toda tienda por tener su carta. Puede ser 0.' },
   { clave: 'alcance:app', etiqueta: 'App', ayuda: 'Se suma al tener subdominio propio y avisos.' },
-  { clave: 'alcance:app_google', etiqueta: 'Google', ayuda: 'Se suma al activar los productos en Google (suelto: no incluye el precio de App).' },
+  { clave: 'alcance:app_google', etiqueta: 'Premium', ayuda: 'Paso del plan Premium: lo deriva el editor de planes (precio del plan menos el de Esencial).' },
+  { clave: 'extra:google', etiqueta: 'Productos en Google', ayuda: 'Se suma al activar que los productos de la tienda salgan en Google Shopping (módulo suelto, en cualquier plan).' },
   { clave: 'operacion:ventas', etiqueta: 'Ventas (POS)', ayuda: 'Se suma al activar la caja y las ventas.' },
   { clave: 'operacion:inventario', etiqueta: 'Inventario', ayuda: 'Se suma al activar el control de stock.' },
   { clave: 'extra:marca_blanca', etiqueta: 'Marca blanca', ayuda: 'Se suma al quitar el "Powered by Boga Market".' },
@@ -299,6 +298,8 @@ export function pasosDeTienda(t: { modulos?: Modulos | null; subdominio_activo?:
   const nivel = nivelAlcance(t);
   if (nivel === 'app') pasos.push('alcance:app');
   if (nivel === 'app_google') pasos.push('alcance:app_google');
+  // Google Shopping es un módulo suelto: se cobra aparte del plan, en cualquiera.
+  if (t.modulos?.google === true) pasos.push('extra:google');
   const op = nivelOperacion(t.modulos);
   if (op === 'ventas' || op === 'inventario' || op === 'sin-clasificar') pasos.push('operacion:ventas');
   if (op === 'inventario' || op === 'sin-clasificar') pasos.push('operacion:inventario');

@@ -115,7 +115,7 @@ export default function NivelesModulos() {
   }, []);
 
   // Cada módulo que se vende suelto, con la fila de precios que le corresponde en Cobros → Precios.
-  const CLAVE_PRECIO: Record<string, string> = { app: 'alcance:app', dominio_propio: 'extra:dominio_propio', google: 'alcance:app_google', loyverse: 'extra:loyverse', caja: 'operacion:ventas', inventario: 'operacion:inventario', market: 'mod:marketplace' };
+  const CLAVE_PRECIO: Record<string, string> = { app: 'alcance:app', dominio_propio: 'extra:dominio_propio', google: 'extra:google', loyverse: 'extra:loyverse', caja: 'operacion:ventas', inventario: 'operacion:inventario', market: 'mod:marketplace' };
   const precioDeModulo = (m: { id: string; precio: string; unidad?: string }) => {
     if (m.id === 'app') return 'Viene en los planes';   // se contrata subiendo de plan, no como módulo suelto
     const clave = CLAVE_PRECIO[m.id];

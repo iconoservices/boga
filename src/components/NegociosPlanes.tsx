@@ -58,7 +58,7 @@ export default function NegociosPlanes() {
     caja: ['Cobras en tu local con boleta en PDF o WhatsApp', 'Vendedores propios', 'Ventas del día y del mes'],
     inventario: ['El stock baja solo con cada venta y pedido', 'Te avisa cuando queda poco', 'Ingresas mercadería escaneando con la cámara'],
   };
-  const CLAVE_MODULO: Record<string, string> = { dominio_propio: 'extra:dominio_propio', google: 'alcance:app_google', loyverse: 'extra:loyverse', caja: 'operacion:ventas', inventario: 'operacion:inventario', market: 'mod:marketplace' };
+  const CLAVE_MODULO: Record<string, string> = { dominio_propio: 'extra:dominio_propio', google: 'extra:google', loyverse: 'extra:loyverse', caja: 'operacion:ventas', inventario: 'operacion:inventario', market: 'mod:marketplace' };
 
   return (
     <section id="precios" className="scroll-mt-24 pb-14 md:pb-16">

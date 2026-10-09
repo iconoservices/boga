@@ -57,10 +57,10 @@ export const PLANES: Plan[] = [
     icon: 'shopping_bag',
     nombre: 'Premium',
     pronto: true,
-    body: 'Todo lo de Negocio y, además, tus productos aparecen cuando la gente los busca en Google, con un catálogo de hasta 5 000 productos.',
+    body: 'Todo lo de Negocio y, además, un catálogo grande: de 1 001 a 5 000 productos.',
     bullets: [
       'Todo lo del plan Negocio',
-      'Tus productos en Google',
+      'Catálogo de 1 001 a 5 000 productos',
       'Catálogo de 1 001 a 5 000 productos',
     ],
     // Sin precio hasta que el módulo de Google exista y se defina.
@@ -93,7 +93,7 @@ export const MODULOS_VENTA: { grupo: string; items: ModuloVenta[] }[] = [
     items: [
       { id: 'app', icon: 'install_mobile', nombre: 'Tu propia app', body: 'Tu dirección propia (tunegocio.bogahub.app), instalable en el celular de tus clientes, con avisos a quienes la instalan.', precio: POR_DEFINIR, promo: 'Lanzamiento: instalar tu carta como app va incluido en Esencial', gratisEnLanzamiento: ['carta'], incluidoEn: ['carta', 'app', 'app_google'] },
       { id: 'dominio_propio', icon: 'language', nombre: 'Dominio propio (.com / .pe)', body: 'Tu tienda abre directamente con tu propio dominio web (ej. mitienda.pe) sin ver la marca Boga. El cliente lo compra en su registrador y Boga lo conecta.', precio: 'S/ 49', unidad: ' /mes', incluidoEn: [] },
-      { id: 'google', icon: 'shopping_bag', nombre: 'Tus productos en Google', body: 'Tus productos aparecen cuando la gente los busca en Google.', precio: POR_DEFINIR, incluidoEn: ['app_google'], pronto: true },
+      { id: 'google', icon: 'shopping_bag', nombre: 'Tus productos en Google', body: 'Tus productos aparecen cuando la gente los busca en Google.', precio: POR_DEFINIR, incluidoEn: [], pronto: true },
       { id: 'market', icon: 'travel_explore', nombre: 'Boga Market', body: 'Tu negocio aparece en el Market de tu ciudad, junto a otros comercios locales, frente a gente que todavía no te conoce. Solo donde BogaHub opera.', precio: POR_DEFINIR, promo: 'Lanzamiento: incluido sin costo si tu tienda cumple los requisitos', gratisEnLanzamiento: ['carta', 'app', 'app_google'], incluidoEn: [] },
     ],
   },
@@ -167,7 +167,6 @@ export const CAPACIDADES_PLAN: { texto: string; desde: PlanId; estado: 'hecho' |
   { texto: 'Subdominio propio (tunegocio.bogahub.app)', desde: 'carta', estado: 'hecho', nuevo: true },
   { texto: 'App instalable en el celular de tus clientes', desde: 'carta', estado: 'hecho', nuevo: true, valor: undefined },
   { texto: 'Notificaciones push al celular de tus clientes (las que no uses se acumulan en el mes)', desde: 'carta', estado: 'hecho', nuevo: true, valor: { carta: '2 por semana', app: '2 por semana', app_google: '2 por semana' } },
-  { texto: 'Productos en Google', desde: 'app_google', estado: 'falta', nuevo: true },
 ];
 
 // Requisitos para entrar al Market durante el lanzamiento. Los revisa el superadmin a mano

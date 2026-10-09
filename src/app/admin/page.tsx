@@ -41,6 +41,7 @@ import { compartirPDF } from '@/lib/pdfPedido';
 import EscanerCamara from '@/components/EscanerCamara';
 import { cargarPlanes, planDeTienda, type PlanComercial } from '@/lib/planesComerciales';
 import { generarEan13Interno } from '@/lib/ean13';
+import AvisoLimiteProductos from '@/components/admin/AvisoLimiteProductos';
 import { COL_PRESENTACIONES, presentacionesSugeridas, textosPresentacion, leerPresentaciones, precioDesde, tipoPresentacionDe, UNIDADES_DE_MEDIDA, completarMedida, ordenarPresentaciones, type ModoMedida } from '@/lib/presentaciones';
 
 interface Product {
@@ -2414,6 +2415,18 @@ function AdminDashboard({ user }: { user: User }) {
                       <div className="hidden lg:block flex-1 border-2 border-dashed border-gray-200 rounded-md bg-transparent"></div>
                     )}
                   </div>
+
+                  {/* Aviso del tope de productos del plan (desde el 90%) con botón para pasar al plan siguiente */}
+                  {focusedStore && topeDeTienda(focusedStore) != null && (
+                    <AvisoLimiteProductos
+                      nombreTienda={stores[focusedStore]?.name || focusedStore}
+                      slug={focusedStore}
+                      usados={products.filter((x) => x.store === focusedStore).length}
+                      max={topeDeTienda(focusedStore)}
+                      plan={planDeTienda(dbStores.find((x: any) => x.slug === focusedStore) ?? {}, planesTope)}
+                      planes={planesTope}
+                    />
+                  )}
 
                   {/* Products Table */}
                   <div className="bg-white border border-gray-100 rounded-md overflow-hidden shadow-sm">

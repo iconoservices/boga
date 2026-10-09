@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { cargarPlanes, planDeTienda, type PlanComercial } from '@/lib/planesComerciales';
+import AvisoLimiteProductos from '@/components/admin/AvisoLimiteProductos';
 import { hoyLima } from '@/lib/fechaLima';
 import { estadoCobro, nivelAlcance, nivelOperacion, pasosDeTienda, precioSugerido, type Modulos, type TipoCobro } from '@/lib/modulos';
 
@@ -94,6 +95,7 @@ export default function MiPlan({
         const pct = Math.min(100, Math.round((usados / max) * 100));
         const lleno = usados >= max;
         return (
+          <>
           <div className="mt-3">
             <div className="flex items-baseline justify-between text-xs font-semibold text-gray-600">
               <span>Productos</span>
@@ -102,8 +104,9 @@ export default function MiPlan({
             <div className="mt-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
               <div className={`h-full rounded-full ${lleno ? 'bg-red-500' : pct >= 85 ? 'bg-amber-500' : 'bg-emerald-500'}`} style={{ width: `${pct}%` }} />
             </div>
-            {lleno && <p className="mt-1.5 text-[11px] font-semibold text-red-600">Llegaste al límite de tu plan. Para agregar más productos, pásate a un plan mayor.</p>}
           </div>
+          <AvisoLimiteProductos nombreTienda={slug} slug={slug} usados={usados} max={max} plan={planDeEsta} planes={planes} />
+          </>
         );
       })()}
       {descuentoVigente && monto < sugerido && (

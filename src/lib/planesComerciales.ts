@@ -41,8 +41,8 @@ export const PLANES_BASE: PlanComercial[] = [
   },
   {
     id: 'app_google', orden: 3, nombre: 'Premium', etiqueta: 'Alta capacidad', icono: 'shopping_bag',
-    descripcion: 'Todo lo de Negocio y, además, tus productos aparecen cuando la gente los busca en Google, con un catálogo de hasta 5 000 productos.',
-    caracteristicas: ['Todo lo del plan Negocio', 'Tus productos en Google', 'Catálogo de 1 001 a 5 000 productos'],
+    descripcion: 'Todo lo de Negocio y, además, un catálogo grande: de 1 001 a 5 000 productos.',
+    caracteristicas: ['Todo lo del plan Negocio', 'Catálogo de 1 001 a 5 000 productos'],
     precio_mes: 180, precio_oferta: null, oferta_hasta: null, recomendado: false, activo: true, limite_productos: 'De 1 001 a 5 000 productos', max_productos: 5000, pronto: true, nivel: 'app_google',
   },
   {
@@ -90,6 +90,6 @@ export async function cargarPlanes(db: SupabaseClient): Promise<{ planes: PlanCo
 
 /** Plan que le corresponde a una tienda según su alcance (igual que el panel y el trigger de la base). */
 export function planDeTienda(t: { modulos?: { google?: boolean } | null; subdominio_activo?: boolean | null; plan?: string | null }, planes: PlanComercial[]): PlanComercial | undefined {
-  const nivel: NivelPlan = t.plan === 'carta' || t.plan === 'app' || t.plan === 'app_google' ? t.plan : t.modulos?.google === true ? 'app_google' : t.subdominio_activo ? 'app' : 'carta';
+  const nivel: NivelPlan = t.plan === 'carta' || t.plan === 'app' || t.plan === 'app_google' ? t.plan : t.subdominio_activo ? 'app' : 'carta';
   return planes.find((p) => p.nivel === nivel);
 }

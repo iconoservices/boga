@@ -29,7 +29,7 @@ const ESFUERZO_TXT: Record<Esfuerzo, string> = { bajo: 'Esfuerzo bajo', medio: '
 // Qué fila de Cobros → Precios le corresponde a cada módulo del catálogo. null = va incluido en otro precio (se explica en el texto).
 const CLAVE_PRECIO: Record<string, string | null> = {
   academia: 'extra:academia',
-  'google-merchant': 'alcance:app_google',
+  'google-merchant': 'extra:google',
   'subdominio-propio': 'alcance:app',
   'avisos-push': null,
   'dominio-propio': 'extra:dominio_propio',
