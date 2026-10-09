@@ -8,7 +8,7 @@
 
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 const PESTANAS = [
   { id: 'explorar', href: '/explore', label: 'Explorar', icon: 'explore' },
@@ -18,6 +18,7 @@ const PESTANAS = [
 
 function Barra() {
   const pathname = usePathname() || '';
+  const router = useRouter();
   const vista = useSearchParams().get('vista');
   const activa = pathname.startsWith('/explore') ? (vista === 'servicios' ? 'servicios' : 'explorar') : 'tiendas';
 
@@ -35,6 +36,14 @@ function Barra() {
               if (p.href.startsWith('/explore') && pathname.startsWith('/explore') && !e.metaKey && !e.ctrlKey && !e.shiftKey && e.button === 0) {
                 e.preventDefault();
                 window.history.pushState(null, '', p.href);
+                return;
+              }
+              // Después de cambiar entre Explorar y Servicios (que cambia la URL a mano), el router de Next a veces no sigue un enlace a OTRA
+              // página (Tiendas): el toque no hacía nada. Se navega con el router y, si en un instante la dirección no cambió, se entra normal.
+              if (!p.href.startsWith('/explore') && !e.metaKey && !e.ctrlKey && !e.shiftKey && e.button === 0) {
+                e.preventDefault();
+                router.push(p.href);
+                window.setTimeout(() => { if (window.location.pathname !== p.href.split('?')[0]) window.location.assign(p.href); }, 700);
               }
             }}
             aria-current={activa === p.id ? 'page' : undefined}
