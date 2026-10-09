@@ -290,7 +290,8 @@ export default function NegociosPlanes() {
                   <span className="text-[10px] font-bold text-secondary bg-surface-container px-1.5 py-0.5 rounded uppercase tracking-wide">Próximamente</span>
                 )}
               </h4>
-              <p className="text-secondary font-body-md text-[13px] md:text-sm leading-snug md:leading-relaxed line-clamp-3 md:line-clamp-none">{it.body}</p>
+                            {/* Si el módulo trae su lista de lo incluido, esa lista reemplaza al párrafo (decían lo mismo). */}
+              {!DETALLES_MODULO[it.id] && <p className="text-secondary font-body-md text-[13px] md:text-sm leading-snug md:leading-relaxed line-clamp-3 md:line-clamp-none">{it.body}</p>}
               {DETALLES_MODULO[it.id] && (
                 <ul className="flex flex-col gap-1">
                   {DETALLES_MODULO[it.id].map((d) => (
