@@ -97,7 +97,7 @@ export default function NegociosPage() {
               {/* Ancla de precio: que el dueño sepa de entrada que no es caro. Sale de PLANES, no se escribe a mano. */}
               <p className="text-on-background font-body-md text-sm -mb-1">
                 <PrecioDesde />
-                <span className="text-secondary"> · sin comisión por tus ventas · prueba la demo sin costo</span>
+                <span className="text-secondary"> · sin comisión por tus ventas · prueba tu tienda sin costo</span>
               </p>
               <div className="flex flex-wrap items-center gap-3 mt-1 w-full sm:w-auto">
                 <Link
@@ -112,13 +112,13 @@ export default function NegociosPage() {
                   className="flex-1 sm:flex-none justify-center bg-surface-container-lowest text-on-surface font-bold text-sm px-6 py-3.5 rounded-full border border-surface-container-highest hover:border-primary hover:text-primary transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
                 >
                   <span className="material-symbols-outlined text-primary text-[18px]">visibility</span>
-                  <span>Ver demo</span>
+                  <span>Ver la app</span>
                 </Link>
                 <Link
                   href="/"
                   className="flex-1 sm:flex-none text-center text-secondary hover:text-on-background font-semibold text-sm px-5 py-3.5 rounded-full transition-colors"
                 >
-                  Ver la app
+                  Ir a BogaHub
                 </Link>
               </div>
             </div>

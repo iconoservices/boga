@@ -1,7 +1,7 @@
 import { getTemplate } from '@/lib/templates.config';
 import { BOGA_DEFAULT_ICON } from '@/lib/stores.config';
 import { notFound } from 'next/navigation';
-import StoreRenderer from '@/app/[slug]/StoreRenderer';
+import PreviewConLogo from '@/components/PreviewConLogo';
 import type { Metadata } from 'next';
 
 interface Props {
@@ -59,5 +59,5 @@ export default async function PreviewPage({ params }: Props) {
     showDemoProducts: true,
   };
 
-  return <StoreRenderer store={base} />;
+  return <PreviewConLogo store={base} />;
 }
