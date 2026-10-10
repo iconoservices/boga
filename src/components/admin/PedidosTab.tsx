@@ -417,6 +417,28 @@ export default function PedidosTab({
                             <span className="material-symbols-outlined text-[22px]">{col.siguiente.icono}</span>{col.siguiente.texto}
                           </button>
                         )}
+                        {/* Mover a cualquier etapa con un toque (adelante o atrás), por si se tocó sin querer o hay que saltar un paso */}
+                        {col.id !== 'cancelados' && (
+                          <div className="flex flex-wrap items-center gap-1" aria-label="Mover a otra etapa">
+                            <span className="text-[10px] font-extrabold uppercase tracking-wide text-gray-400 mr-0.5">Mover a</span>
+                            {[
+                              { id: 'recibidos', texto: 'Recibidos', estado: 'Pendiente' },
+                              { id: 'preparando', texto: 'Preparando', estado: 'Preparando' },
+                              { id: 'camino', texto: 'En camino', estado: 'Enviado' },
+                              { id: 'entregado', texto: 'Entregado', estado: 'Entregado' },
+                            ].filter((e) => e.id !== col.id).map((e) => (
+                              <button
+                                key={e.id}
+                                type="button"
+                                disabled={ocupado === o.id}
+                                onClick={() => avanzar(o, e.estado)}
+                                className="h-7 px-2.5 rounded-full border border-gray-200 bg-white text-gray-600 text-[11px] font-extrabold hover:bg-gray-50 hover:border-gray-300 active:scale-95 transition disabled:opacity-50"
+                              >
+                                {e.texto}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                         {/* Acciones con nombre (no solo íconos) para que se entienda qué hace cada una */}
                         <div className="flex flex-wrap items-center gap-1.5 pt-2 mt-0.5 border-t border-gray-100">
                           {tel && (
@@ -428,17 +450,6 @@ export default function PedidosTab({
                             <a href={`/pedido/${o.codigo}`} target="_blank" rel="noopener noreferrer" title="Lo mismo que le llegó al cliente" className="flex-1 min-w-[84px] h-8 px-2 rounded-full border border-gray-200 text-gray-600 text-[11px] font-extrabold flex items-center justify-center gap-1.5 hover:bg-gray-50 active:scale-95 transition">
                               <span className="material-symbols-outlined text-[16px]">receipt_long</span>Recibo
                             </a>
-                          )}
-                          {col.anterior && (
-                            <button
-                              type="button"
-                              disabled={ocupado === o.id}
-                              onClick={() => avanzar(o, col.anterior!.estado)}
-                              title={`Regresarlo a «${col.anterior.texto}»`}
-                              className="w-full h-8 px-2 rounded-full border border-gray-200 text-gray-600 text-[11px] font-extrabold flex items-center justify-center gap-1.5 hover:bg-gray-50 active:scale-95 transition disabled:opacity-50"
-                            >
-                              <span className="material-symbols-outlined text-[16px]">undo</span>Regresar a {col.anterior.texto}
-                            </button>
                           )}
                           {col.id !== 'entregado' && col.id !== 'cancelados' && (
                             <button
