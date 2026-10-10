@@ -102,8 +102,9 @@ function TarjetaDeslizable({ onAvanzar, etiqueta, icono, children }: { onAvanzar
   const reiniciar = () => { inicio.current = null; modo.current = null; setDx(0); setArrastrando(false); };
   const alBajar = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
-    // Los botones y enlaces de la tarjeta se tocan normal: el arrastre solo arranca desde el resto de la tarjeta.
-    if ((e.target as HTMLElement).closest('button, a, input, select, textarea')) return;
+    // Se puede arrastrar desde cualquier parte, también desde los botones: un toque sin mover sigue siendo un clic normal;
+    // si hubo arrastre, el clic se cancela (ver onClickCapture).
+    if ((e.target as HTMLElement).closest('input, select, textarea')) return;
     inicio.current = { x: e.clientX, y: e.clientY };
     modo.current = null;
     arrastro.current = false;
