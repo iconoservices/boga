@@ -27,6 +27,7 @@ import { fechaLima, hoyLima } from '@/lib/fechaLima';
 import { moverStock, registrarMovimientos, stockIlimitado } from '@/lib/stock';
 import PedidosTab, { type Pedido } from '@/components/admin/PedidosTab';
 import CategoriasTab from '@/components/admin/CategoriasTab';
+import CerrarOtrasSesiones from '@/components/CerrarOtrasSesiones';
 import HistorialStock from '@/components/admin/HistorialStock';
 import LoyverseSyncModal from '@/components/admin/LoyverseSyncModal';
 import MiPlan from '@/components/admin/MiPlan';
@@ -1965,6 +1966,10 @@ function AdminDashboard({ user }: { user: User }) {
             <span className="material-symbols-outlined text-[20px]">arrow_back</span>
             Volver a BogaHub
           </Link>
+          <CerrarOtrasSesiones className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-gray-900 font-semibold transition-colors text-left">
+            <span className="material-symbols-outlined text-[20px]">devices</span>
+            Cerrar en otros dispositivos
+          </CerrarOtrasSesiones>
           <button
             onClick={async () => { await signOut(); router.replace('/login'); }}
             className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-gray-900 font-semibold transition-colors"

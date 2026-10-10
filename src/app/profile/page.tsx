@@ -10,6 +10,7 @@ import { useEsSuperadmin } from '@/lib/superadmin';
 import PasswordInput from '@/components/PasswordInput';
 import PedidosPanel from '@/components/PedidosPanel';
 import AvisosBogaSwitch from '@/components/AvisosBogaSwitch';
+import CerrarOtrasSesiones from '@/components/CerrarOtrasSesiones';
 
 // Placeholder mientras se resuelve la sesión / mientras redirige a /login.
 // El contenido real de la página sale de la cuenta autenticada, no de esto.
@@ -339,6 +340,11 @@ export default function ProfilePage() {
                   <span className="material-symbols-outlined text-[18px] text-secondary/35">chevron_right</span>
                 </a>
               ))}
+
+              <CerrarOtrasSesiones className="flex items-center gap-3.5 px-5 py-3.5 border-t border-surface-container-low w-full text-left bg-transparent border-0 cursor-pointer text-on-surface-variant hover:bg-surface-container-low/50 transition-colors font-bold text-xs">
+                <span className="material-symbols-outlined text-[20px]">devices</span>
+                Cerrar sesión en otros dispositivos
+              </CerrarOtrasSesiones>
 
               <button
                 onClick={async () => { await signOut(); window.location.href = '/login'; }}
