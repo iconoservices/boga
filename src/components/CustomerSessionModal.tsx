@@ -9,6 +9,7 @@ import { CLAVE_REABRIR_MODAL, setAuthCookie } from '@/lib/authCookies';
 import { useFavoritos } from '@/lib/useFavoritos';
 import { supabase } from '@/lib/supabase';
 import { useEsSuperadmin } from '@/lib/superadmin';
+import CerrarOtrasSesiones from '@/components/CerrarOtrasSesiones';
 
 interface Props {
   storeSlug: string;
@@ -491,13 +492,18 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
                       <p className="text-[10px] text-emerald-700 truncate">{user.email}</p>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleCerrarSesionCompleta}
-                    className="text-[11px] font-bold text-red-600 hover:text-red-800 underline shrink-0"
-                  >
-                    Cerrar sesión
-                  </button>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={handleCerrarSesionCompleta}
+                      className="text-[11px] font-bold text-red-600 hover:text-red-800 underline"
+                    >
+                      Cerrar sesión
+                    </button>
+                    <CerrarOtrasSesiones className="text-[10px] font-semibold text-emerald-800 hover:text-emerald-950 underline text-right">
+                      Cerrar en otros dispositivos
+                    </CerrarOtrasSesiones>
+                  </div>
                 </div>
               ) : (
                 <div className="p-3 bg-gray-50 border border-gray-200 rounded-2xl flex items-center justify-between gap-2">
