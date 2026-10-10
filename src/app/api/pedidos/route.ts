@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { moduloActivo } from '@/lib/modulos';
-import { moverStock } from '@/lib/stock';
+import { liberarPedidosVencidos, moverStock, stockIlimitado } from '@/lib/stock';
 import { COLS_OFERTA, aplicarOferta } from '@/lib/ofertas';
 import { descontarStockEnLoyverse } from '@/lib/loyverse';
 import { leerCredencialesLoyverse } from '@/lib/loyverseServidor';
@@ -63,6 +63,10 @@ export async function POST(request: Request) {
   const { data: tienda } = await db.from('stores').select('slug,status,modulos').eq('slug', slug).maybeSingle();
   if (!tienda || tienda.status !== 'active') return NextResponse.json({ ok: false, motivo: 'tienda' }, { status: 404 });
 
+  // Con inventario, antes de mirar el stock: los pedidos de la carta que nunca se concretaron (Pendiente hace más de
+  // 24 h) se cancelan y devuelven lo que apartaron.
+  if (moduloActivo(tienda.modulos, 'inventario')) await liberarPedidosVencidos(db, slug).catch(() => 0);
+
   // El precio se lee de la base (nunca del cliente) y es el vigente: si el producto está en oferta se cobra la oferta.
   const ids = Array.from(new Set(Array.from(pedidas.values(), (l) => l.id)));
   // Las columnas extra (ofertas, presentaciones) son opcionales: si su SQL aún no se corrió, cae al conjunto anterior.
@@ -73,7 +77,10 @@ export async function POST(request: Request) {
   if (errProductos) ({ data: productos } = await consulta(baseCols) as any);
 
   const porId = new Map(((productos ?? []) as any[]).map((p) => [String(p.id), aplicarOferta(p) as any]));
-  const lineas: { id: string; name: string; price: number; quantity: number; conPres: boolean }[] = [];
+  const lineas: { id: string; name: string; price: number; quantity: number; conPres: boolean; sinStock?: boolean }[] = [];
+  // Con inventario se revisa si alcanza: el pedido sale igual por WhatsApp (el navegador no espera esta respuesta), pero
+  // la línea queda marcada «sin stock» para que el dueño lo vea en su panel antes de confirmarlo.
+  const conInventario = moduloActivo(tienda.modulos, 'inventario');
   for (const { id, pres, q } of pedidas.values()) {
     const p = porId.get(id);
     if (!p) continue;
@@ -83,7 +90,8 @@ export async function POST(request: Request) {
       if (!elegida) continue;
       lineas.push({ id, name: nombreConPresentacion(p.name as string, elegida.label), price: elegida.price, quantity: q, conPres: true });
     } else {
-      lineas.push({ id, name: p.name as string, price: Number(p.price) || 0, quantity: q, conPres: false });
+      const sinStock = conInventario && (p.status === 'Agotado' || (!stockIlimitado(p) && Number(p.stock) < q));
+      lineas.push({ id, name: p.name as string, price: Number(p.price) || 0, quantity: q, conPres: false, ...(sinStock ? { sinStock } : {}) });
     }
   }
   if (lineas.length === 0) return NextResponse.json({ ok: false, motivo: 'sin_productos' });
@@ -101,7 +109,7 @@ export async function POST(request: Request) {
       customer_name: texto(cliente?.nombre, 80) || 'Cliente de la carta',
       customer_phone: texto(cliente?.telefono, 30).replace(/\D/g, '') || null,
       customer_address: entrega === 'delivery' ? (direccion || 'Delivery (sin dirección)') : 'Recojo en tienda',
-      items: lineas.map(({ id, name, price, quantity }) => ({ id, name, price, quantity })),
+      items: lineas.map(({ id, name, price, quantity, sinStock }) => ({ id, name, price, quantity, ...(sinStock ? { sin_stock: true } : {}) })),
       total_amount: lineas.reduce((s, l) => s + l.price * l.quantity, 0),
       status: 'Pendiente',
       order_source: 'Carta',
@@ -117,7 +125,7 @@ export async function POST(request: Request) {
   }
 
   // Con inventario, el pedido descuenta stock (si se cancela, el panel lo devuelve).
-  if (moduloActivo(tienda.modulos, 'inventario')) {
+  if (conInventario) {
     await moverStock(db, {
       store: slug,
       motivo: 'venta_carta',

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { enlaceTienda } from '@/lib/pdfPedido';
 import { clienteServicio, quienEs } from '@/lib/pushServidor';
-import { moverStock } from '@/lib/stock';
+import { devolverStockDePedido } from '@/lib/stock';
 import { avisarChofer } from '@/lib/despacho';
 import { UUID } from '@/lib/transporteServidor';
 
@@ -141,18 +141,7 @@ export async function PATCH(request: Request, { params }: Params) {
   if (estado !== 'Enviado' && estado !== 'Entregado') await db.from('orders').update({ llego_at: null }).eq('id', o.id);
 
   // Cancelar devuelve al inventario lo que el pedido había descontado (si no se devolvió ya).
-  if (estado === 'Cancelado') {
-    const { data: movs } = await db.from('stock_movements').select('product_id,product_name,delta,motivo').eq('pedido_id', o.id);
-    if (movs && !movs.some((m) => m.motivo === 'cancelacion')) {
-      const ventas = movs.filter((m) => String(m.motivo).startsWith('venta') && m.delta < 0);
-      if (ventas.length) {
-        await moverStock(db, {
-          store: o.store, motivo: 'cancelacion', pedidoId: o.id, usuario: null,
-          lineas: ventas.map((m) => ({ id: m.product_id, name: m.product_name, delta: -m.delta })),
-        });
-      }
-    }
-  }
+  if (estado === 'Cancelado') await devolverStockDePedido(db, { id: o.id as string, store: o.store as string });
   return NextResponse.json({ ok: true, estado }, { headers: SIN_CACHE });
 }
 

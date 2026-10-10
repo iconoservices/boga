@@ -24,7 +24,7 @@ import { getTemplate } from '@/lib/templates.config';
 import { iconForCategory } from '@/templates/shared/tokens';
 import { moduloActivo, moduloAcademia, STOCK_BAJO, type ModuloId } from '@/lib/modulos';
 import { fechaLima, hoyLima } from '@/lib/fechaLima';
-import { moverStock, registrarMovimientos, stockIlimitado } from '@/lib/stock';
+import { moverStock, registrarMovimientos, stockIlimitado, devolverStockDePedido as devolverStock, liberarPedidosVencidos } from '@/lib/stock';
 import PedidosTab, { type Pedido } from '@/components/admin/PedidosTab';
 import CategoriasTab from '@/components/admin/CategoriasTab';
 import CerrarOtrasSesiones from '@/components/CerrarOtrasSesiones';
@@ -694,7 +694,15 @@ function AdminDashboard({ user }: { user: User }) {
     setIsLoading(false);
   };
 
+  // Pedidos de la carta que nunca se concretaron: se liberan una vez por visita al panel (además de con cada pedido nuevo).
+  const vencidosRevisados = useRef(false);
   const fetchOrders = async () => {
+    if (!vencidosRevisados.current && myStoreSlugs.length > 0) {
+      vencidosRevisados.current = true;
+      const conInventario = myStoreSlugs.filter((s) => tiendaTiene(s, 'inventario'));
+      const liberados = (await Promise.all(conInventario.map((s) => liberarPedidosVencidos(supabase, s).catch(() => 0)))).reduce((a, b) => a + b, 0);
+      if (liberados > 0) { conInventario.forEach((s) => refrescarTienda(s)); fetchProducts(); }
+    }
     const { data, error } = await supabase
       .from('orders')
       .select('*')
@@ -710,21 +718,8 @@ function AdminDashboard({ user }: { user: User }) {
 
   // Cancelar un pedido devuelve al inventario lo que ese pedido había descontado (según el historial de stock).
   const devolverStockDePedido = async (o: Pedido) => {
-    const { data: movs, error } = await supabase
-      .from('stock_movements')
-      .select('product_id,product_name,delta,motivo')
-      .eq('pedido_id', o.id);
-    if (error || !movs) return;                                  // sin historial no se sabe qué se descontó
-    if (movs.some(m => m.motivo === 'cancelacion')) return;      // ya se devolvió
-    const ventas = movs.filter(m => String(m.motivo).startsWith('venta') && m.delta < 0);
-    if (ventas.length === 0) return;
-    await moverStock(supabase, {
-      store: o.store,
-      motivo: 'cancelacion',
-      pedidoId: o.id,
-      usuario: user.email ?? null,
-      lineas: ventas.map(m => ({ id: m.product_id, name: m.product_name, delta: -m.delta })),
-    });
+    const devuelto = await devolverStock(supabase, { id: o.id, store: o.store }, user.email ?? null);
+    if (!devuelto) return;
     refrescarTienda(o.store);
     await fetchProducts();
   };
@@ -804,37 +799,36 @@ function AdminDashboard({ user }: { user: User }) {
   const handlePosCheckout = async () => {
     if (posCart.length === 0 || !focusedStore || !posDisponible) return;
     setIsPosSaving(true);
-    const cartTotal = posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+    // La venta la guarda el servidor junto con el descuento de stock (api/pos/venta): si se corta el internet a mitad,
+    // no queda una venta registrada sin su stock descontado. Precios y stock se revisan allá con lo que hay en la base.
+    let r: { ok?: boolean; error?: string; venta?: any; sinDescontar?: string[] } = {};
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch('/api/pos/venta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
+        body: JSON.stringify({
+          store: focusedStore,
+          items: posCart.map(item => ({ id: item.product.id, quantity: item.quantity })),
+          cliente: posCustomerName.trim(),
+          telefono: posCustomerPhone.trim(),
+          metodo: posPaymentMethod,
+          vendedor: posSeller === 'Otro' ? customSeller.trim() || 'Otro' : posSeller,
+        }),
+      });
+      r = await res.json().catch(() => ({ error: 'Respuesta inválida del servidor' }));
+    } catch {
+      r = { error: 'Sin conexión: la venta NO se registró. Revisa el internet e intenta de nuevo.' };
+    }
 
-    const saleDetails = {
-      store: focusedStore,
-      customer_name: posCustomerName.trim() || 'Cliente Local (POS)',
-      customer_phone: posCustomerPhone.trim() || null,
-      items: posCart.map(item => ({
-        id: item.product.id,
-        name: item.product.name,
-        price: item.product.price,
-        quantity: item.quantity
-      })),
-      total_amount: cartTotal,
-      status: 'Entregado',
-      payment_method: posPaymentMethod,
-      seller_name: posSeller === 'Otro' ? customSeller.trim() || 'Otro' : posSeller,
-      order_source: 'POS'
-    };
-
-    const { data, error } = await supabase
-      .from('orders')
-      .insert([saleDetails])
-      .select('*')
-      .single();
-
-    if (error) {
-      console.error('Error saving POS sale:', error);
-      alert('Hubo un error al registrar la venta: ' + error.message);
+    if (!r.ok || !r.venta) {
+      alert('No se registró la venta: ' + (r.error || 'error desconocido'));
+      await fetchProducts();   // por si el stock cambió (otra venta, un pedido de la carta)
     } else {
-      if (tiendaTiene(focusedStore, 'inventario')) await descontarStock(posCart, data?.id ?? null);
-      setLastCompletedSale(data || { ...saleDetails, id: 'POS-' + Math.floor(Math.random() * 90000 + 10000), created_at: new Date().toISOString() });
+      const data = r.venta;
+      if (r.sinDescontar?.length) alert('La venta se registró, pero no se pudo descontar el stock de: ' + r.sinDescontar.join(', ') + '. Revísalo en Productos.');
+      if (tiendaTiene(focusedStore, 'inventario')) { refrescarTienda(focusedStore); await fetchProducts(); }
+      setLastCompletedSale(data);
       setPosCart([]);
       setPosCustomerName('');
       setPosCustomerPhone('');
@@ -1170,6 +1164,22 @@ function AdminDashboard({ user }: { user: User }) {
 
   const toggleStatus = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === 'Activo' ? 'Agotado' : 'Activo';
+    // Con inventario, un producto en 0 unidades no se reactiva a mano: con stock 0 y "Activo" contaría como ilimitado
+    // (ver stockIlimitado) y se vendería sin tope. Primero se ingresa mercadería (botón + de la columna Stock).
+    const prod = products.find(p => p.id === id);
+    if (newStatus === 'Activo' && prod && tiendaTiene(prod.store, 'inventario') && prod.stock === 0) {
+      const ilimitado = window.confirm(
+        `"${prod.name}" tiene 0 unidades.\n\n` +
+        `• Si te llegó mercadería: toca Cancelar y usa "Ingresar mercadería" (el botón + de la columna Stock); se activa solo.\n` +
+        `• Si de este producto NO llevas la cuenta de unidades: toca Aceptar y queda activo como "Ilimitado".`
+      );
+      if (!ilimitado) return;
+      setProducts(prev => prev.map(p => p.id === id ? { ...p, status: 'Activo', stock: null as unknown as number } : p));
+      const { error } = await supabase.from('products').update({ status: 'Activo', stock: null }).eq('id', id);
+      if (error) { alert('No se pudo activar: ' + error.message); await fetchProducts(); return; }
+      refrescarTienda(prod.store);
+      return;
+    }
     setProducts(prev => prev.map(p => p.id === id ? { ...p, status: newStatus } : p));
     try {
       const { error } = await supabase.from('products').update({ status: newStatus }).eq('id', id);
@@ -1251,20 +1261,6 @@ function AdminDashboard({ user }: { user: User }) {
     if (fallidos.length) { alert('No se pudo ingresar la mercadería. Inténtalo de nuevo.'); return; }
     refrescarTienda(p.store);
     await fetchProducts();
-  };
-
-  // Inventario: descuenta lo vendido en el POS y lo deja en el historial (ver lib/stock.ts).
-  const descontarStock = async (items: { product: Product; quantity: number }[], pedidoId?: string | null) => {
-    const { fallidos, cambiados } = await moverStock(supabase, {
-      store: focusedStore,
-      motivo: 'venta_pos',
-      pedidoId: pedidoId ?? null,
-      usuario: user.email ?? null,
-      lineas: items.map(({ product, quantity }) => ({ id: product.id, name: product.name, delta: -quantity })),
-    });
-    if (cambiados.length > 0) refrescarTienda(focusedStore);
-    await fetchProducts();
-    if (fallidos.length) alert('La venta se registró, pero no se pudo descontar el stock de: ' + fallidos.join(', ') + '. Revísalo en Productos.');
   };
 
   // Celda de stock de la tabla y de las tarjetas de Productos (solo con el módulo de inventario).
@@ -2032,13 +2028,22 @@ function AdminDashboard({ user }: { user: User }) {
             </div>
             {/* Cada pestaña muestra solo su accion principal */}
             {activeTab === 'pos' ? (
-              <button
-                onClick={() => setPosCart([])}
-                className="flex items-center justify-center gap-1.5 bg-white text-[#8c0009] border border-[#8c0009]/25 hover:bg-[#8c0009]/5 px-3.5 py-1.5 rounded-md font-bold text-xs transition-all w-full md:w-auto h-9 cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[16px]">delete_sweep</span>
-                Limpiar Carrito
-              </button>
+              <div className="flex items-center gap-2 w-full md:w-auto">
+                <Link
+                  href={`/admin/caja?tienda=${focusedStore}`}
+                  className="flex items-center justify-center gap-1.5 bg-white text-gray-800 border border-gray-200 hover:bg-gray-50 px-3.5 py-1.5 rounded-md font-bold text-xs transition-all w-full md:w-auto h-9"
+                >
+                  <span className="material-symbols-outlined text-[16px]">payments</span>
+                  Caja chica
+                </Link>
+                <button
+                  onClick={() => setPosCart([])}
+                  className="flex items-center justify-center gap-1.5 bg-white text-[#8c0009] border border-[#8c0009]/25 hover:bg-[#8c0009]/5 px-3.5 py-1.5 rounded-md font-bold text-xs transition-all w-full md:w-auto h-9 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[16px]">delete_sweep</span>
+                  Limpiar Carrito
+                </button>
+              </div>
             ) : activeTab === 'products' ? (
               <div className="flex items-center gap-2 w-full md:w-auto">
                 <button
@@ -3038,6 +3043,12 @@ function AdminDashboard({ user }: { user: User }) {
         )}
 
         {activeTab === 'pos' && posDisponible && (
+          <Link href={`/admin/caja?tienda=${focusedStore}`} className="md:hidden mb-2 flex items-center justify-center gap-1.5 bg-white text-gray-800 border border-gray-200 rounded-md h-9 text-xs font-bold">
+            <span className="material-symbols-outlined text-[16px]">payments</span>
+            Caja chica: abrir, gastos y cierre
+          </Link>
+        )}
+        {activeTab === 'pos' && posDisponible && (
           <div className="flex flex-col lg:flex-row gap-3 w-full items-stretch lg:items-start bg-[#f8f9fa] p-2 md:p-3 min-h-[calc(100vh-100px)] rounded-lg">
             {/* Catalog Grid (Left Side) — min-w-0 para que ceda espacio al carrito
                 en vez de empujarlo fuera de la pantalla */}
@@ -3981,6 +3992,12 @@ function AdminDashboard({ user }: { user: User }) {
                       <p className="text-xs text-gray-500 mt-1">
                         {infoPres.subtitulo}
                       </p>
+                      {newProduct.presentaciones.length > 0 && tiendaTiene(newProduct.store, 'inventario') && (
+                        <p className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 mt-2 flex items-start gap-1.5">
+                          <span className="material-symbols-outlined text-[14px] mt-px">info</span>
+                          Con presentaciones el inventario no cuenta unidades de este producto (se vende por medida). Para que no se venda, márcalo Agotado.
+                        </p>
+                      )}
 
                       {newProduct.presentaciones.length > 0 && (
                         <div className="flex flex-col gap-2 mt-3">
