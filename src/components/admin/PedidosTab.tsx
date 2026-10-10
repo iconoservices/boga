@@ -85,31 +85,43 @@ const hace = (iso: string) => {
 };
 
 /**
- * Arrastrar la tarjeta hacia la derecha la pasa a la siguiente etapa (solo con el dedo; con mouse se usa el botón).
+ * Arrastrar la tarjeta hacia la derecha (con el dedo o con el mouse) la pasa a la siguiente etapa.
  * Cuidado con el scroll: el gesto solo cuenta si es claramente horizontal y largo; soltar antes lo cancela, y el aviso
  * «Deshacer» cubre cualquier error. El botón de la tarjeta sigue ahí para quien prefiera tocar.
  */
 function TarjetaDeslizable({ onAvanzar, etiqueta, icono, children }: { onAvanzar?: () => void; etiqueta?: string; icono?: string; children: React.ReactNode }) {
   const inicio = useRef<{ x: number; y: number } | null>(null);
   const modo = useRef<'h' | 'v' | null>(null);
+  const arrastro = useRef(false);
   const [dx, setDx] = useState(0);
+  const [arrastrando, setArrastrando] = useState(false);
   const UMBRAL = 96;
 
   if (!onAvanzar) return <>{children}</>;
 
-  const alMover = (e: React.TouchEvent) => {
+  const reiniciar = () => { inicio.current = null; modo.current = null; setDx(0); setArrastrando(false); };
+  const alBajar = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    // Los botones y enlaces de la tarjeta se tocan normal: el arrastre solo arranca desde el resto de la tarjeta.
+    if ((e.target as HTMLElement).closest('button, a, input, select, textarea')) return;
+    inicio.current = { x: e.clientX, y: e.clientY };
+    modo.current = null;
+    arrastro.current = false;
+  };
+  const alMover = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!inicio.current) return;
-    const mx = e.touches[0].clientX - inicio.current.x;
-    const my = e.touches[0].clientY - inicio.current.y;
+    const mx = e.clientX - inicio.current.x;
+    const my = e.clientY - inicio.current.y;
     if (!modo.current) {
-      if (Math.abs(mx) < 12 && Math.abs(my) < 12) return;
+      if (Math.abs(mx) < 10 && Math.abs(my) < 10) return;
       modo.current = Math.abs(mx) > Math.abs(my) * 1.8 ? 'h' : 'v';
+      if (modo.current === 'h') { try { e.currentTarget.setPointerCapture(e.pointerId); } catch {} setArrastrando(true); }
     }
-    if (modo.current === 'h') setDx(Math.max(0, Math.min(mx, 160)));
+    if (modo.current === 'h') { arrastro.current = true; setDx(Math.max(0, Math.min(mx, 160))); }
   };
   const alSoltar = () => {
     if (modo.current === 'h' && dx >= UMBRAL) onAvanzar();
-    inicio.current = null; modo.current = null; setDx(0);
+    reiniciar();
   };
 
   return (
@@ -118,12 +130,13 @@ function TarjetaDeslizable({ onAvanzar, etiqueta, icono, children }: { onAvanzar
         <span className="material-symbols-outlined text-[22px]">{icono ?? 'arrow_forward'}</span>{dx >= UMBRAL ? 'Suelta para ' : 'Sigue arrastrando · '}{etiqueta}
       </div>
       <div
-        className="relative"
+        className={`relative ${arrastrando ? 'select-none cursor-grabbing' : 'cursor-grab'}`}
         style={{ transform: `translateX(${dx}px)`, transition: dx === 0 ? 'transform 0.2s' : 'none' }}
-        onTouchStart={(e) => { inicio.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; modo.current = null; }}
-        onTouchMove={alMover}
-        onTouchEnd={alSoltar}
-        onTouchCancel={() => { inicio.current = null; modo.current = null; setDx(0); }}
+        onPointerDown={alBajar}
+        onPointerMove={alMover}
+        onPointerUp={alSoltar}
+        onPointerCancel={reiniciar}
+        onClickCapture={(e) => { if (arrastro.current) { e.preventDefault(); e.stopPropagation(); arrastro.current = false; } }}
       >
         {children}
       </div>
@@ -345,7 +358,7 @@ export default function PedidosTab({
                   </h3>
                   <span className="text-[11px] font-black text-gray-500 bg-white border border-gray-200 rounded-full min-w-[22px] text-center px-1.5 py-0.5">{todos.length}</span>
                 </header>
-                <div className="flex flex-col gap-2.5 p-2 lg:pt-0 lg:max-h-[calc(100vh-290px)] lg:overflow-y-auto">
+                <div className="flex flex-col gap-2.5 p-2 lg:pt-0">
                   {visibles.length === 0 && <p className="text-[11px] font-semibold text-gray-400 text-center py-6">Sin pedidos</p>}
                   {visibles.map((o) => {
                     const items = itemsDe(o);
