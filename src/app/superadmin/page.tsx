@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import SuperadminSidebarNav from '@/components/superadmin/SuperadminSidebarNav';
 import { useUsuariosAdmin, ROLES, type UserRow, type UserRole } from './usuarios/useUsuariosAdmin';
 import Toggle from '@/components/superadmin/Toggle';
+import CerrarOtrasSesiones from '@/components/CerrarOtrasSesiones';
 import { type StoreConfig } from '@/lib/stores.config';
 import { getTemplate, getDemoProducts, getAllTemplates } from '@/lib/templates.config';
 import { useDemo } from '@/context/DemoContext';
@@ -1373,6 +1374,20 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
               <span className="font-bold text-xs truncate">Admin User</span>
               <span className="text-[10px] text-[#424754] truncate">admin@system.com</span>
             </div>
+          </div>
+          <div className="flex flex-col gap-1 mb-3">
+            <a href="/" className="flex items-center gap-3 px-2 py-2 rounded-md text-xs font-semibold text-[#424754] hover:bg-[#e1e2ec] hover:text-[#0058be] transition-colors">
+              <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+              Volver a BogaHub
+            </a>
+            <a href="/admin" className="flex items-center gap-3 px-2 py-2 rounded-md text-xs font-semibold text-[#424754] hover:bg-[#e1e2ec] hover:text-[#0058be] transition-colors">
+              <span className="material-symbols-outlined text-[18px]">storefront</span>
+              Ir al panel de tienda
+            </a>
+            <CerrarOtrasSesiones className="flex items-center gap-3 px-2 py-2 rounded-md text-xs font-semibold text-[#424754] hover:bg-[#e1e2ec] transition-colors text-left">
+              <span className="material-symbols-outlined text-[18px]">devices</span>
+              Cerrar en otros dispositivos
+            </CerrarOtrasSesiones>
           </div>
           <button
             onClick={() => router.push('/superadmin/cobros?vista=precios')}
