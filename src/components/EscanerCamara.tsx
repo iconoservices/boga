@@ -205,7 +205,8 @@ export default function EscanerCamara({
 
       <div className="relative flex-1 min-h-0 bg-black flex items-center justify-center overflow-hidden">
         <video ref={videoRef} playsInline muted className="absolute inset-0 w-full h-full object-cover" />
-        <div id="escaner-camara-video" className="w-full" />
+        {/* Contenedor del lector alternativo (html5-qrcode): ocupa todo el fondo y NO empuja el marco, que va centrado */}
+        <div id="escaner-camara-video" className="absolute inset-0 w-full h-full [&_video]:w-full [&_video]:h-full [&_video]:object-cover" />
         {!error && (
           <div className="relative w-[78%] max-w-sm aspect-[7/4] rounded-2xl border-2 border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.45)] pointer-events-none">
             <span className="absolute left-3 right-3 top-1/2 h-0.5 bg-red-500/80" />
