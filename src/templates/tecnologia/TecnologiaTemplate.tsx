@@ -189,7 +189,7 @@ export default function TecnologiaTemplate({ store, initialProductId, initialTab
                 <button
                   type="button"
                   onClick={() => c.abrirProducto(p)}
-                  className="relative overflow-hidden w-full h-[220px] md:h-[clamp(240px,30vw,430px)] grid grid-cols-2 grid-rows-1 items-center text-left"
+                  className="relative overflow-hidden w-full flex-1 min-h-[220px] md:min-h-[clamp(240px,30vw,430px)] grid grid-cols-2 grid-rows-1 items-center text-left"
                   style={{ background: `linear-gradient(135deg, ${t.secondary}, ${t.primary})`, color: '#fff' }}
                 >
                   <span className="p-5 md:p-10 flex flex-col gap-2 min-w-0">

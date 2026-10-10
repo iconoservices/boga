@@ -110,7 +110,7 @@ export default function BazarTemplate({ store, initialProductId, initialTab }: P
         <button
           type="button"
           onClick={() => c.abrirProducto(p)}
-          className="relative overflow-hidden w-full h-[200px] md:h-[clamp(190px,21vw,290px)] grid grid-cols-2 grid-rows-1 items-center text-left"
+          className="relative overflow-hidden w-full flex-1 min-h-[200px] md:min-h-[clamp(190px,21vw,290px)] grid grid-cols-2 grid-rows-1 items-center text-left"
           style={{ background: `linear-gradient(135deg, ${t.secondary}, ${t.primary})`, color: '#fff' }}
         >
           <span className="p-5 md:p-10 flex flex-col gap-2 min-w-0">

@@ -31,7 +31,7 @@ export default function BannerSlider({ slides }: { slides: { key: string; conten
         onMouseLeave={() => { pausa.current = false; }}
       >
         {slides.map((sl) => (
-          <div key={sl.key} className="w-full shrink-0 snap-center">{sl.contenido}</div>
+          <div key={sl.key} className="w-full shrink-0 snap-center flex flex-col"{sl.contenido}</div>
         ))}
       </div>
       {slides.length > 1 && (
