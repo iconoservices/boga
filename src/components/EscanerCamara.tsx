@@ -28,12 +28,15 @@ export default function EscanerCamara({
   titulo = 'Escanear código',
   ayuda = 'Apunta la cámara al código de barras del producto',
   continuo = true,
+  textoListo = 'Listo, ver carrito',
   onCodigo,
   onCerrar,
 }: {
   titulo?: string;
   ayuda?: string;
   continuo?: boolean;
+  /** Texto del botón verde de abajo (por defecto el de la caja). */
+  textoListo?: string;
   onCodigo: (codigo: string) => ResultadoEscaneo | Promise<ResultadoEscaneo>;
   onCerrar: () => void;
 }) {
@@ -254,7 +257,7 @@ export default function EscanerCamara({
           />
           <button type="submit" className="h-11 px-4 rounded-lg bg-white text-black text-sm font-extrabold">Agregar</button>
         </div>
-        {continuo && <button type="button" onClick={onCerrar} className="h-11 rounded-lg bg-[#25D366] text-white font-extrabold text-sm">Listo, ver carrito</button>}
+        {continuo && <button type="button" onClick={onCerrar} className="h-11 rounded-lg bg-[#25D366] text-white font-extrabold text-sm">{textoListo}</button>}
       </form>
     </div>
   );
