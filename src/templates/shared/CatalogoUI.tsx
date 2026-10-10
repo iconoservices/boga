@@ -255,6 +255,7 @@ export function CombosCarrusel({
   onVerMas,
   titulo,
   icono = '🔥',
+  extra,
 }: {
   t: StoreTheme;
   productos: Producto[];
@@ -264,6 +265,8 @@ export function CombosCarrusel({
   titulo?: string;
   /** Emoji delante del título (por defecto 🔥, para combos y ofertas). Vacío = sin emoji, para filas de categoría. */
   icono?: string;
+  /** Algo a la derecha del título, junto a "Ver todos" (ej. la cuenta regresiva de la oferta). */
+  extra?: React.ReactNode;
 }) {
   if (!productos || productos.length === 0) return null;
 
@@ -281,15 +284,18 @@ export function CombosCarrusel({
         <h3 className={`${TXT.lead} font-black uppercase italic tracking-tight flex items-center gap-1.5`} style={{ color: t.onSurface }}>
           {icono && <span className="text-amber-500">{icono}</span>} {encabezado}
         </h3>
-        {onVerMas && (
-          <button
-            onClick={onVerMas}
-            className={`${TXT.small} font-bold flex items-center gap-0.5 hover:underline active:scale-95 transition-transform`}
-            style={{ color: t.primary }}
-          >
-            Ver todos <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {extra}
+          {onVerMas && (
+            <button
+              onClick={onVerMas}
+              className={`${TXT.small} font-bold flex items-center gap-0.5 hover:underline active:scale-95 transition-transform`}
+              style={{ color: t.primary }}
+            >
+              Ver todos <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+            </button>
+          )}
+        </div>
       </div>
 
       <div

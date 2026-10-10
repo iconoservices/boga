@@ -7,7 +7,10 @@ import StoreFloatingActions from '@/components/StoreFloatingActions';
 import StoreHeader from '../shared/StoreHeader';
 import { useCatalogo } from '../shared/useCatalogo';
 import { useTabRuta } from '../shared/useTabRuta';
-import { TXT, ICON } from '../shared/tokens';
+import BannerSlider from '../shared/BannerSlider';
+import CuentaRegresiva from '../shared/CuentaRegresiva';
+import { porcentajeOferta } from '@/lib/ofertas';
+import { TXT, ICON, soles } from '../shared/tokens';
 import { FilaDeslizable, ChipsCategoria } from '../shared/CarruselUI';
 import {
   CombosCarrusel, ProductGrid, ProductModal, CartPanel, ContactPanel, BottomNav, StoreFooter,
@@ -79,6 +82,53 @@ export default function BazarTemplate({ store, initialProductId, initialTab }: P
   const nombreCategoria = (id: string) => c.categoryTabs.find((x) => x.id === id)?.label ?? '';
   const resultados = c.filtered.filter((p) => !q || sinAcentos(`${p.name} ${p.desc} ${nombreCategoria(p.category)}`).includes(q));
 
+  // Portada del comercio (entera, con la misma imagen desenfocada rellenando lo que sobre) y hasta 3 ofertas como diapositivas
+  // que pasan solas. Si la tienda no subió banner (le queda el de fábrica de la plantilla), no se muestra la portada: solo
+  // salen sus propios datos, no el contenido de ejemplo.
+  const ofertas = c.combosYOfertas ?? [];
+  // La oferta que termina primero marca la cuenta regresiva (solo si el dueño le puso fecha de fin).
+  const finOferta = ofertas.map((p) => p.ofertaHasta).filter((f): f is string => !!f).sort()[0];
+  const slides: { key: string; contenido: React.ReactNode }[] = [];
+  if (store.heroImage !== PORTADA_DE_FABRICA || store.demoDePlantilla) {
+    slides.push({
+      key: 'portada',
+      contenido: (
+        <div className="relative overflow-hidden">
+          <img aria-hidden className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-70" alt="" src={store.heroImage} />
+          <section className="relative w-full md:h-[clamp(190px,21vw,290px)]">
+            <img className="relative w-full h-auto max-h-[34vh] object-contain md:h-full md:max-h-none" alt={store.heroAlt} src={store.heroImage} />
+          </section>
+        </div>
+      ),
+    });
+  }
+  ofertas.slice(0, 3).forEach((p) => {
+    const pct = p.priceAnterior && p.priceAnterior > p.price ? porcentajeOferta(p.priceAnterior, p.price) : '';
+    slides.push({
+      key: `oferta-${p.id}`,
+      contenido: (
+        <button
+          type="button"
+          onClick={() => c.abrirProducto(p)}
+          className="relative overflow-hidden w-full h-[200px] md:h-[clamp(190px,21vw,290px)] grid grid-cols-2 grid-rows-1 items-center text-left"
+          style={{ background: `linear-gradient(135deg, ${t.secondary}, ${t.primary})`, color: '#fff' }}
+        >
+          <span className="p-5 md:p-10 flex flex-col gap-2 min-w-0">
+            <span className="self-start text-[11px] font-black px-2 py-0.5 rounded-md bg-white/20">{p.esCombo ? '🔥 COMBO' : 'OFERTA'} {pct}</span>
+            <span className="text-lg md:text-3xl font-bold leading-tight line-clamp-3" style={{ fontFamily: t.fontHeadline }}>{p.name}</span>
+            <span className="text-xl md:text-2xl font-black">
+              {soles(p.price)} {p.priceAnterior && <span className="text-sm font-medium line-through opacity-70">{soles(p.priceAnterior)}</span>}
+            </span>
+            <span className="self-start text-xs font-bold px-3 py-1.5 rounded-full bg-white" style={{ color: t.primary }}>Ver producto</span>
+          </span>
+          <span className="relative h-full min-h-0">
+            <img src={p.image} alt="" className="absolute inset-0 w-full h-full object-contain p-4 drop-shadow-xl" />
+          </span>
+        </button>
+      ),
+    });
+  });
+
   // Franja con patrón en zigzag (de inspiración shipibo), hecha solo con CSS.
   const patron: React.CSSProperties = {
     height: 14,
@@ -113,13 +163,10 @@ export default function BazarTemplate({ store, initialProductId, initialTab }: P
             {/* Portada: el banner del comercio se muestra ENTERO, en la proporción que tenga, con la misma imagen
                 desenfocada rellenando lo que sobre. Si la tienda no subió banner (le queda el de fábrica de la plantilla),
                 no se muestra: solo salen sus propios datos, no el contenido de ejemplo. */}
-            {(store.heroImage !== PORTADA_DE_FABRICA || store.demoDePlantilla) && (
-              <div className="relative overflow-hidden">
-                <img aria-hidden className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-70" alt="" src={store.heroImage} />
-                <section className="relative w-full md:h-[clamp(190px,21vw,290px)]">
-                  <img className="relative w-full h-auto max-h-[34vh] object-contain md:h-full md:max-h-none" alt={store.heroAlt} src={store.heroImage} />
-                  <StoreFloatingActions store={store} />
-                </section>
+            {slides.length > 0 && (
+              <div className="relative">
+                <BannerSlider slides={slides} />
+                <StoreFloatingActions store={store} />
               </div>
             )}
             <div aria-hidden="true" style={patron} />
@@ -153,6 +200,7 @@ export default function BazarTemplate({ store, initialProductId, initialTab }: P
                 onSelect={c.abrirProducto}
                 onAdd={c.addToCart}
                 onVerMas={() => ir('catalogo', '__combos__')}
+                extra={finOferta ? <CuentaRegresiva t={t} hasta={finOferta} /> : undefined}
               />
             )}
 
