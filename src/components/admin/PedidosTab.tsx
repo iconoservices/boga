@@ -387,14 +387,13 @@ export default function PedidosTab({
                           {items.length > 4 && <li className="text-[11px] text-gray-400 font-bold">+{items.length - 4} más…</li>}
                         </ul>
                         {(direccion || enlaceMapa) && (
-                          <div className="flex flex-col gap-1">
-                            {direccion && <p className="text-[11px] text-gray-500 font-medium flex items-start gap-1 line-clamp-2"><span className="material-symbols-outlined text-[14px] shrink-0">location_on</span>{direccion}</p>}
-                            {enlaceMapa && (
-                              <a href={enlaceMapa} target="_blank" rel="noopener noreferrer" className="self-start inline-flex items-center gap-1 text-[11px] font-extrabold text-[var(--tienda-color,#b8130e)] underline">
-                                <span className="material-symbols-outlined text-[14px]">map</span>Abrir en el mapa
-                              </a>
-                            )}
-                          </div>
+                          <p className="text-[12px] text-gray-500 font-medium leading-snug flex items-start gap-1">
+                            <span className="material-symbols-outlined text-[15px] shrink-0 text-gray-400 mt-px">location_on</span>
+                            <span className="min-w-0">
+                              {direccion}
+                              {enlaceMapa && <>{direccion ? ' · ' : ''}<a href={enlaceMapa} target="_blank" rel="noopener noreferrer" className="font-extrabold text-[var(--tienda-color,#b8130e)] underline whitespace-nowrap">Abrir en el mapa</a></>}
+                            </span>
+                          </p>
                         )}
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-base font-black text-gray-900">S/ {Number(o.total_amount).toFixed(2)}</span>
@@ -419,24 +418,26 @@ export default function PedidosTab({
                         )}
                         {/* Mover a cualquier etapa con un toque (adelante o atrás), por si se tocó sin querer o hay que saltar un paso */}
                         {col.id !== 'cancelados' && (
-                          <div className="flex flex-wrap items-center gap-1" aria-label="Mover a otra etapa">
-                            <span className="text-[10px] font-extrabold uppercase tracking-wide text-gray-400 mr-0.5">Mover a</span>
-                            {[
-                              { id: 'recibidos', texto: 'Recibidos', estado: 'Pendiente' },
-                              { id: 'preparando', texto: 'Preparando', estado: 'Preparando' },
-                              { id: 'camino', texto: 'En camino', estado: 'Enviado' },
-                              { id: 'entregado', texto: 'Entregado', estado: 'Entregado' },
-                            ].filter((e) => e.id !== col.id).map((e) => (
-                              <button
-                                key={e.id}
-                                type="button"
-                                disabled={ocupado === o.id}
-                                onClick={() => avanzar(o, e.estado)}
-                                className="h-7 px-2.5 rounded-full border border-gray-200 bg-white text-gray-600 text-[11px] font-extrabold hover:bg-gray-50 hover:border-gray-300 active:scale-95 transition disabled:opacity-50"
-                              >
-                                {e.texto}
-                              </button>
-                            ))}
+                          <div>
+                            <p className="text-[10px] font-extrabold uppercase tracking-wide text-gray-400 mb-1">Mover a</p>
+                            <div className="grid grid-cols-3 gap-1">
+                              {[
+                                { id: 'recibidos', texto: 'Recibidos', estado: 'Pendiente' },
+                                { id: 'preparando', texto: 'Preparando', estado: 'Preparando' },
+                                { id: 'camino', texto: 'En camino', estado: 'Enviado' },
+                                { id: 'entregado', texto: 'Entregado', estado: 'Entregado' },
+                              ].filter((e) => e.id !== col.id).map((e) => (
+                                <button
+                                  key={e.id}
+                                  type="button"
+                                  disabled={ocupado === o.id}
+                                  onClick={() => avanzar(o, e.estado)}
+                                  className="h-8 rounded-lg border border-gray-200 bg-gray-50 text-gray-600 text-[11px] font-extrabold hover:bg-gray-100 active:scale-95 transition disabled:opacity-50 truncate px-1"
+                                >
+                                  {e.texto}
+                                </button>
+                              ))}
+                            </div>
                           </div>
                         )}
                         {/* Acciones con nombre (no solo íconos) para que se entienda qué hace cada una */}
@@ -449,6 +450,11 @@ export default function PedidosTab({
                           {o.codigo && (
                             <a href={`/pedido/${o.codigo}`} target="_blank" rel="noopener noreferrer" title="Lo mismo que le llegó al cliente" className="flex-1 min-w-[84px] h-8 px-2 rounded-full border border-gray-200 text-gray-600 text-[11px] font-extrabold flex items-center justify-center gap-1.5 hover:bg-gray-50 active:scale-95 transition">
                               <span className="material-symbols-outlined text-[16px]">receipt_long</span>Recibo
+                            </a>
+                          )}
+                          {o.codigo && (col.id === 'preparando' || col.id === 'camino') && (direccion || enlaceMapa) && (
+                            <a href={`/pedido/${o.codigo}`} target="_blank" rel="noopener noreferrer" title="Asignar o ver el repartidor de este pedido" className="flex-1 min-w-[84px] h-8 px-2 rounded-full border border-gray-200 text-gray-700 text-[11px] font-extrabold flex items-center justify-center gap-1.5 hover:bg-gray-50 active:scale-95 transition">
+                              <span className="material-symbols-outlined text-[16px]">two_wheeler</span>Repartidor
                             </a>
                           )}
                           {col.id !== 'entregado' && col.id !== 'cancelados' && (

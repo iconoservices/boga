@@ -1638,7 +1638,20 @@ function AdminDashboard({ user }: { user: User }) {
     for (let i = 0; i < 20 && codigosPos.current === null; i++) await new Promise((r) => setTimeout(r, 100));
     const id = codigosPos.current?.[codigo];
     const producto = id ? products.find((p) => p.id === id) : undefined;
-    if (!producto) return { ok: false, mensaje: `El código ${codigo} no está registrado. Edita el producto y escanéalo en "Código de barras".` };
+    if (!producto) {
+      // Código nuevo: en vez de mandarlo a "editar el producto", se ofrece crearlo ahora mismo con este código.
+      if (window.confirm(`El código ${codigo} todavía no está registrado.
+
+¿Crear un producto nuevo con este código?`)) {
+        setEscanerIngresoAbierto(false);
+        setActiveTab('products');
+        resetForm();
+        setNewProduct((prev) => ({ ...prev, store: focusedStore, codigoBarras: codigo }));
+        setIsModalOpen(true);
+        return { ok: true, mensaje: `Código ${codigo}: completa el producto` };
+      }
+      return { ok: false, mensaje: `El código ${codigo} no está registrado. Puedes crearlo o escanearlo en "Código de barras" de un producto.` };
+    }
     if (stockIlimitado(producto)) return { ok: false, mensaje: `${producto.name}: tiene stock ilimitado, no se controla. Ponle una cantidad en el producto.` };
     const { fallidos } = await moverStock(supabase, { store: producto.store, motivo: 'ingreso', usuario: user.email ?? null, lineas: [{ id: producto.id, name: producto.name, delta: 1 }] });
     if (fallidos.length) return { ok: false, mensaje: `No se pudo sumar ${producto.name}. Intenta de nuevo.` };
