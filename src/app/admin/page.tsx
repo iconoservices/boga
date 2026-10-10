@@ -63,7 +63,7 @@ interface Product {
   precio_oferta?: number | null;
   oferta_hasta?: string | null;
   /** Medidas o tamaños con su precio (100 g / 250 g / 1 kg…). Sin lista = un solo precio. */
-  presentaciones?: { label: string; price: number; promo?: boolean; preciosMoneda?: PreciosMoneda }[] | null;
+  presentaciones?: { label: string; price: number; promo?: boolean; preciosMoneda?: PreciosMoneda; imagen?: string }[] | null;
   /** true = es un servicio (se reserva/consulta, no se agrega al carrito). Decide si sale en el toggle "Servicios" del Market. */
   es_servicio?: boolean | null;
   /** true = es un combo o paquete promocional con sello propio y presencia en Promociones. */
@@ -531,7 +531,8 @@ function AdminDashboard({ user }: { user: User }) {
     precioOferta: '',
     ofertaHasta: '',
     igv: '' as '' | 'con' | 'sin',
-    presentaciones: [] as { label: string; price: string; promo?: boolean; preciosMoneda?: Record<string, string> }[],
+    // fotoIdx: posición (en `fotos`) de la foto que corresponde a la opción; al guardar pasa a ser la URL (`imagen`).
+    presentaciones: [] as { label: string; price: string; promo?: boolean; preciosMoneda?: Record<string, string>; fotoIdx?: number }[],
     preciosMoneda: {} as Record<string, string>,
     esServicio: false,
     esCombo: false,
@@ -1348,7 +1349,14 @@ function AdminDashboard({ user }: { user: User }) {
       // Presentaciones (100 g / 250 g / 1 kg…): filas con etiqueta y precio válidos. Si hay, `price` guarda la más barata
       // ("Desde S/ …") y no se usa oferta (cada medida ya tiene su precio).
       // Se guardan de menor a mayor cantidad (1 unidad, 2, 3, 12…), sin importar el orden en que se escribieron.
-      const presLimpias = ordenarPresentaciones(leerPresentaciones(newProduct.presentaciones.map((x) => ({ label: x.label, price: parseFloat(x.price), promo: x.promo === true, preciosMoneda: x.preciosMoneda }))));
+      const presLimpias = ordenarPresentaciones(leerPresentaciones(newProduct.presentaciones.map((x) => ({
+        label: x.label,
+        price: parseFloat(x.price),
+        promo: x.promo === true,
+        preciosMoneda: x.preciosMoneda,
+        // Con una sola foto no hay galería que enlazar.
+        imagen: urlsFotos.length > 1 && x.fotoIdx != null ? urlsFotos[x.fotoIdx] : undefined,
+      }))));
       if (newProduct.presentaciones.some((x) => (x.label.trim() || x.price.trim()) && !(x.label.trim() && parseFloat(x.price) > 0))) {
         throw new Error('Cada presentación necesita un nombre (ej. 250 g) y un precio mayor a 0. Completa o quita las filas vacías.');
       }
@@ -1544,6 +1552,7 @@ function AdminDashboard({ user }: { user: User }) {
         price: String(x.price),
         promo: x.promo === true,
         preciosMoneda: x.preciosMoneda ? Object.fromEntries(Object.entries(x.preciosMoneda).map(([c, n]) => [c, String(n)])) : undefined,
+        fotoIdx: x.imagen && (product.images?.indexOf(x.imagen) ?? -1) >= 0 ? product.images!.indexOf(x.imagen) : undefined,
       })),
       preciosMoneda: Object.fromEntries(Object.entries(normalizarPreciosMoneda(product.precios_moneda)).map(([c, n]) => [c, String(n)])),
       esServicio: product.es_servicio === true,
@@ -1662,7 +1671,8 @@ function AdminDashboard({ user }: { user: User }) {
   const handleDuplicate = (product: Product) => {
     handleEdit(product);
     setEditingProductId(null);
-    setNewProduct((prev) => ({ ...prev, name: `${product.name} (copia)`, image: '' }));
+    // Sin fotos, las opciones no pueden seguir enlazadas a la foto del original.
+    setNewProduct((prev) => ({ ...prev, name: `${product.name} (copia)`, image: '', presentaciones: prev.presentaciones.map(({ fotoIdx, ...resto }) => resto) }));
     setFotos([]);
   };
 
@@ -3676,7 +3686,14 @@ function AdminDashboard({ user }: { user: User }) {
                         )}
                         <button
                           type="button"
-                          onClick={() => setFotos((prev) => prev.filter((_, j) => j !== i))}
+                          onClick={() => {
+                            setFotos((prev) => prev.filter((_, j) => j !== i));
+                            // Las opciones enlazadas a esta foto quedan sin foto; las de fotos posteriores se corren un lugar.
+                            setNewProduct((prev) => ({
+                              ...prev,
+                              presentaciones: prev.presentaciones.map((y) => y.fotoIdx == null ? y : y.fotoIdx === i ? { ...y, fotoIdx: undefined } : y.fotoIdx > i ? { ...y, fotoIdx: y.fotoIdx - 1 } : y),
+                            }));
+                          }}
                           className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-black/70 text-white flex items-center justify-center shadow-sm hover:bg-red-600 transition-colors"
                           aria-label={`Quitar foto ${i + 1}`}
                         >
@@ -4014,6 +4031,29 @@ function AdminDashboard({ user }: { user: User }) {
                                 <span className="material-symbols-outlined text-[20px]">close</span>
                               </button>
                             </div>
+                            {/* Foto de esta opción (sabor, color…): solo si el producto tiene más de una foto. Al elegir la opción el cliente ve esa foto y al tocar la foto se elige la opción. */}
+                            {fotos.length > 1 && (
+                              <div className="flex items-center gap-1.5 pl-1">
+                                <span className="text-[11px] font-bold text-gray-500 shrink-0">Foto de esta opción:</span>
+                                <div className="flex flex-wrap gap-1">
+                                  {fotos.map((foto, k) => {
+                                    const activa = x.fotoIdx === k;
+                                    return (
+                                      <button
+                                        key={foto.url}
+                                        type="button"
+                                        aria-label={`Foto ${k + 1}`}
+                                        aria-pressed={activa}
+                                        onClick={() => setNewProduct({ ...newProduct, presentaciones: newProduct.presentaciones.map((y, j) => j === i ? { ...y, fotoIdx: activa ? undefined : k } : y) })}
+                                        className={`w-8 h-8 rounded-md overflow-hidden border-2 transition-all ${activa ? 'border-black scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                                      >
+                                        <img src={foto.url} alt="" className="w-full h-full object-cover" />
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
                             {/* Precio de esta medida en otras monedas: opcional, solo si la tienda activó monedas. El cambio solo sugiere. */}
                             {(() => {
                               const monedasTienda = ((stores as any)[newProduct.store]?.monedas ?? []) as { codigo: string; simbolo: string; tasa?: number }[];

@@ -247,6 +247,9 @@ export function ProductGrid({
    CARRUSEL DE COMBOS Y OFERTAS (Primera fila destacada)
    ════════════════════════════════════════════ */
 
+/** Fotos del producto, en orden: la galería si tiene más de una, o solo la portada. */
+const fotosDe = (p: Producto | null): string[] => (!p ? [] : p.images && p.images.length > 1 ? p.images : [p.image]);
+
 export function CombosCarrusel({
   t,
   productos,
@@ -409,13 +412,30 @@ export function ProductModal({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setAgregado(false);
     setCantidad(1);
-    setMedida(producto?.presentaciones?.[0] ?? null);
-    setFotoActiva(0);
+    const primera = producto?.presentaciones?.[0] ?? null;
+    setMedida(primera);
+    // Si la primera opción tiene su propia foto, el modal abre mostrándola.
+    setFotoActiva(Math.max(0, fotosDe(producto).indexOf(primera?.imagen ?? '')));
     setVisor(false);
     setZoomVisor(false);
     contenedor.current?.scrollTo({ top: 0 });
     return () => { if (cierre.current) clearTimeout(cierre.current); };
   }, [producto]);
+
+  // Opción y foto van enlazadas: al cambiar de foto (tocándola, deslizando o con las flechas) se elige la opción que le
+  // corresponde (`irAFoto`); y al elegir una opción se muestra su foto (`elegirMedida`).
+  const irAFoto = (i: number) => {
+    setFotoActiva(i);
+    const img = fotosDe(producto)[i];
+    const pres = producto?.presentaciones?.find((x) => x.imagen === img);
+    if (pres && medida?.imagen !== img) setMedida(pres);
+  };
+
+  const elegirMedida = (x: Presentacion) => {
+    setMedida(x);
+    const i = fotosDe(producto).indexOf(x.imagen ?? '');
+    if (i >= 0) setFotoActiva(i);
+  };
 
   // "Ver" del aviso "Agregado": el modal tapa la pantalla, asi que se cierra
   // para que el cliente vea el pedido.
@@ -444,7 +464,7 @@ export function ProductModal({
 
   if (!producto) return null;
 
-  const fotos = producto.images && producto.images.length > 1 ? producto.images : [producto.image];
+  const fotos = fotosDe(producto);
 
   const precioTexto = producto.sinPrecio ? 'Consultar precio' : soles((medida?.price ?? producto.price) * (producto.esServicio ? 1 : cantidad));
   // Precios en otras monedas de lo que está elegido (la medida, o el producto) y por la cantidad.
@@ -526,7 +546,7 @@ export function ProductModal({
             if (swipeFoto.current === null || fotos.length < 2 || zoomVisor) return;
             const dx = e.changedTouches[0].clientX - swipeFoto.current;
             swipeFoto.current = null;
-            if (Math.abs(dx) > 50) setFotoActiva((i) => (dx < 0 ? (i + 1) % fotos.length : (i - 1 + fotos.length) % fotos.length));
+            if (Math.abs(dx) > 50) irAFoto((dx < 0 ? fotoActiva + 1 : fotoActiva - 1 + fotos.length) % fotos.length);
           }}
         >
           <div className="flex items-center justify-between px-4 py-3 text-white">
@@ -545,10 +565,10 @@ export function ProductModal({
             />
             {fotos.length > 1 && !zoomVisor && (
               <>
-                <button type="button" aria-label="Foto anterior" onClick={() => setFotoActiva((i) => (i - 1 + fotos.length) % fotos.length)} className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 text-white flex items-center justify-center">
+                <button type="button" aria-label="Foto anterior" onClick={() => irAFoto((fotoActiva - 1 + fotos.length) % fotos.length)} className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 text-white flex items-center justify-center">
                   <span className={`material-symbols-outlined ${ICON.md}`}>chevron_left</span>
                 </button>
-                <button type="button" aria-label="Foto siguiente" onClick={() => setFotoActiva((i) => (i + 1) % fotos.length)} className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 text-white flex items-center justify-center">
+                <button type="button" aria-label="Foto siguiente" onClick={() => irAFoto((fotoActiva + 1) % fotos.length)} className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 text-white flex items-center justify-center">
                   <span className={`material-symbols-outlined ${ICON.md}`}>chevron_right</span>
                 </button>
               </>
@@ -593,7 +613,7 @@ export function ProductModal({
                 if (swipeFoto.current === null || fotos.length < 2) return;
                 const dx = e.changedTouches[0].clientX - swipeFoto.current;
                 swipeFoto.current = null;
-                if (Math.abs(dx) > 40) setFotoActiva((i) => (dx < 0 ? (i + 1) % fotos.length : (i - 1 + fotos.length) % fotos.length));
+                if (Math.abs(dx) > 40) irAFoto((dx < 0 ? fotoActiva + 1 : fotoActiva - 1 + fotos.length) % fotos.length);
               }}
             >
               <img aria-hidden alt="" src={fotos[fotoActiva] ?? producto.image} className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-60" />
@@ -613,7 +633,7 @@ export function ProductModal({
                   <button
                     key={i}
                     type="button"
-                    onClick={() => setFotoActiva(i)}
+                    onClick={() => irAFoto(i)}
                     aria-label={`Ver foto ${i + 1} de ${producto.name}`}
                     aria-current={fotoActiva === i}
                     className="w-14 h-14 md:w-16 md:h-16 rounded-lg overflow-hidden border-2 shrink-0 transition-all active:scale-95"
@@ -670,7 +690,7 @@ export function ProductModal({
                       <button
                         key={x.label}
                         type="button"
-                        onClick={() => setMedida(x)}
+                        onClick={() => elegirMedida(x)}
                         aria-pressed={activa}
                         className="rounded-xl px-3 py-2.5 text-left border-2 transition-colors active:scale-[0.98]"
                         style={{ borderColor: activa ? t.primary : `${t.outlineVariant}80`, background: activa ? `${t.primary}14` : t.surface, color: t.onSurface }}

@@ -15,6 +15,8 @@ export type Presentacion = {
   promo?: boolean;
   /** Precio de esta medida en otras monedas, escrito por el dueño: {"USD": 2.5}. Ver lib/preciosMoneda.ts. */
   preciosMoneda?: Record<string, number>;
+  /** Foto del producto (una de su galería) que corresponde a esta opción: al elegir la opción se ve esa foto y al tocar la foto se elige la opción. */
+  imagen?: string;
 };
 
 /** Nombre de la columna en `products`. */
@@ -252,9 +254,11 @@ export function leerPresentaciones(v: unknown): Presentacion[] {
     if (!label || !(price > 0) || vistas.has(label.toLowerCase())) continue;
     vistas.add(label.toLowerCase());
     const otras = normalizarPreciosMoneda((x as Presentacion)?.preciosMoneda);
+    const img = (x as Presentacion)?.imagen;
     out.push({
       label,
       price: Math.round(price * 100) / 100,
+      ...(typeof img === 'string' && /^(https?:\/\/|\/)/.test(img) && img.length <= 600 ? { imagen: img } : {}),
       ...((x as Presentacion)?.promo === true ? { promo: true } : {}),
       ...(Object.keys(otras).length ? { preciosMoneda: otras } : {}),
     });
