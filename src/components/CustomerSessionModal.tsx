@@ -56,6 +56,15 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
   // un acceso directo a su panel, sin tener que pasar por "Acceso staff".
   const [tiendasPropias, setTiendasPropias] = useState<string[]>([]);
   const { esSuperadmin } = useEsSuperadmin();
+
+  // Enlace a BogaHub: en producción va a bogahub.app; en local (localhost o tienda.localhost) vuelve al localhost de la raíz.
+  const [urlBogaHub, setUrlBogaHub] = useState('https://bogahub.app/');
+  useEffect(() => {
+    const { hostname, protocol, port } = window.location;
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.endsWith('.localhost')) {
+      setUrlBogaHub(`${protocol}//${hostname.endsWith('.localhost') ? 'localhost' : hostname}${port ? `:${port}` : ''}/`);
+    }
+  }, []);
   useEffect(() => {
     if (!user?.id) { setTiendasPropias([]); return; }
     let vivo = true;
@@ -551,7 +560,7 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
               )}
 
               <a
-                href="https://bogahub.app/"
+                href={urlBogaHub}
                 className="flex items-center gap-3 p-3 rounded-2xl border border-primary/20 bg-primary/5 text-primary active:scale-[0.98] transition-all"
               >
                 <span className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
