@@ -38,7 +38,7 @@ import CobroOnline from '@/components/admin/CobroOnline';
 import { normalizarIgv } from '@/lib/igv';
 import { COLS_OFERTA, precioOfertaVigente, porcentajeOferta } from '@/lib/ofertas';
 import { cargarImagenPdf, ajustarImagen, textoPdf, hexToRgb, type ImagenPdf } from '@/lib/imagenPdf';
-import { compartirPDF } from '@/lib/pdfPedido';
+import { compartirPDF, enlaceTienda } from '@/lib/pdfPedido';
 import EscanerCamara from '@/components/EscanerCamara';
 import { cargarPlanes, planDeTienda, type PlanComercial } from '@/lib/planesComerciales';
 import { generarEan13Interno } from '@/lib/ean13';
@@ -922,7 +922,7 @@ function AdminDashboard({ user }: { user: User }) {
 
       txt('¡Gracias por su compra!', { size: 8, bold: true, align: 'center' });
       txt('Comprobante de venta interno, no válido como factura electrónica.', { size: 6, align: 'center', color: [150, 150, 150] });
-      txt('Hecho con BogaHub - bogahub.app', { size: 6, align: 'center', color: [150, 150, 150] });
+      if (tienda) txt(enlaceTienda(tienda.slug, tienda.externalUrl, tienda.subdominioActivo), { size: 6, align: 'center', color: [150, 150, 150] });
       return y + 4;
     };
 
@@ -2003,16 +2003,16 @@ function AdminDashboard({ user }: { user: User }) {
             <Link href="/superadmin" className="ml-auto underline font-bold">Volver al superadmin</Link>
           </div>
         )}
-        <header className={`hidden md:flex flex-col md:flex-row md:items-center justify-between gap-4 ${activeTab === 'pos' ? 'mb-2' : 'mb-6'}`}>
+        <header className={`hidden md:flex flex-col md:flex-row md:items-center justify-between gap-4 ${activeTab === 'pos' || activeTab === 'orders' ? 'mb-2' : 'mb-6'}`}>
           <div>
-            <h1 className={`${activeTab === 'pos' ? 'text-lg font-black' : 'text-2xl font-extrabold'} text-gray-900 tracking-tight`}>
+            <h1 className={`${activeTab === 'pos' || activeTab === 'orders' ? 'text-lg font-black' : 'text-2xl font-extrabold'} text-gray-900 tracking-tight`}>
               {activeTab === 'inicio' ? 'Inicio' : activeTab === 'products' ? (esEmpresa ? 'Gestión de Servicios' : esAcademia ? 'Grupos y horarios' : 'Gestión de Productos') : activeTab === 'categories' ? 'Categorías' : activeTab === 'orders' ? 'Gestión de Pedidos' : activeTab === 'stores' ? 'Mis Tiendas' : activeTab === 'pos' ? 'Caja Rápida (POS)' : 'Métricas y Rendimiento'}
               {(activeTab === 'pos' || activeTab === 'inicio') && stores[focusedStore] && (
                 <span className="ml-2 text-gray-400 font-semibold">· {stores[focusedStore].name}</span>
               )}
             </h1>
             {activeTab !== 'pos' && activeTab !== 'inicio' && (
-              <p className="text-gray-500 text-sm font-medium mt-1">
+              <p className={`text-gray-500 text-sm font-medium mt-1 ${activeTab === 'orders' ? 'hidden' : ''}`}>
                 {activeTab === 'products' ? (esEmpresa ? 'Administra los servicios de tu empresa.' : esAcademia ? 'Los grupos de tu academia: nombre, horario (una línea por día) y mensualidad opcional.' : inventarioOn ? 'Administra el inventario de tus tiendas.' : 'Administra la carta de tus tiendas.') : activeTab === 'categories' ? 'Crea, ordena y renombra las categorías de tu negocio.' : activeTab === 'orders' ? 'Gestiona los pedidos de tus clientes.' : activeTab === 'stores' ? 'Administra la información de tus sucursales.' : 'Analiza el rendimiento de tu negocio.'}
               </p>
             )}
@@ -2022,7 +2022,7 @@ function AdminDashboard({ user }: { user: User }) {
               <select
                 value={selectedStore}
                 onChange={(e) => setSelectedStore(e.target.value)}
-                className={`bg-white border border-gray-200 text-gray-900 rounded-md font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-black/5 cursor-pointer ${activeTab === 'pos' ? 'px-3 py-1.5 text-xs h-9' : 'px-4 py-2.5 text-sm'}`}
+                className={`bg-white border border-gray-200 text-gray-900 rounded-md font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-black/5 cursor-pointer ${activeTab === 'pos' || activeTab === 'orders' ? 'px-3 py-1.5 text-xs h-9' : 'px-4 py-2.5 text-sm'}`}
               >
                 <option value="all">Todas mis tiendas</option>
                 {Object.values(stores).map(s => (
@@ -2258,7 +2258,7 @@ function AdminDashboard({ user }: { user: User }) {
               <p className={titulo}>Acciones rápidas</p>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { icon: 'add_circle', t: esEmpresa ? 'Agregar servicio' : esAcademia ? 'Agregar grupo' : 'Agregar producto', s: esEmpresa ? 'Súbelo con su foto y descripción' : 'Súbelo con su foto y precio', on: () => { resetForm(); setNewProduct(prev => ({ ...prev, store: inicioStore.slug })); setIsModalOpen(true); } },
+                  { icon: 'add_circle', t: esEmpresa ? 'Agregar servicio' : esAcademia ? 'Agregar grupo' : 'Agregar producto', s: esEmpresa ? 'Súbelo con su foto y descripción' : 'Súbelo con su foto y precio', on: () => { setActiveTab('products'); setSelectedStore(inicioStore.slug); resetForm(); setNewProduct(prev => ({ ...prev, store: inicioStore.slug })); setIsModalOpen(true); } },
                   ...(posOn ? [{ icon: 'point_of_sale', t: 'Nueva venta', s: 'Caja rápida en el local', on: () => setActiveTab('pos') }] : []),
                   ...(moduloAcademia(inicioDb?.modulos) ? [{ icon: 'school', t: 'Alumnos', s: 'Carnet con QR y asistencia', on: () => router.push('/admin/alumnos') }] : []),
                   ...((inicioStore?.template === 'sweetkittynails' || inicioStore?.template === 'belleza') ? [{ icon: 'event_available', t: 'Reservas', s: 'Citas que piden tus clientas', on: () => router.push('/admin/reservas') }] : []),

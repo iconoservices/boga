@@ -130,13 +130,8 @@ export default function PlazaChatBubble() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen]);
 
-  // No mostrar en rutas administrativas ni en previsualizaciones de plantillas
-  if (
-    pathname.startsWith('/admin') ||
-    pathname.startsWith('/superadmin') ||
-    pathname.startsWith('/negocios') ||
-    pathname.startsWith('/preview')
-  ) {
+  // El chat de la plaza solo sale en el inicio: en el resto de páginas (recibos, tiendas, paneles, hubs…) tapaba el contenido.
+  if (pathname !== '/') {
     return null;
   }
 

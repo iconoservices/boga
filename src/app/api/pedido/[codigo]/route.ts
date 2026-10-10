@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { enlaceTienda } from '@/lib/pdfPedido';
 import { clienteServicio, quienEs } from '@/lib/pushServidor';
 import { moverStock } from '@/lib/stock';
 import { avisarChofer } from '@/lib/despacho';
@@ -31,7 +32,7 @@ async function cargar(codigo: string, request: Request) {
   if (!o) ({ data: o } = await db.from('orders').select(`${COLUMNAS},repartidor_id,llego_at`).eq('codigo', codigo).maybeSingle());
   if (!o) ({ data: o } = await db.from('orders').select(COLUMNAS).eq('codigo', codigo).maybeSingle());
   if (!o) return null;
-  const { data: t } = await db.from('stores').select('name,user_id,logo_image').eq('slug', o.store).maybeSingle();
+  const { data: t } = await db.from('stores').select('name,user_id,logo_image,external_url,subdominio_activo').eq('slug', o.store).maybeSingle();
   const quien = await quienEs(request);
   const propietario = !!quien && (quien.esSuperadmin || (!!t && t.user_id === quien.userId));
   return { db, o: o as typeof o & { repartidor_id?: string | null; llego_at?: string | null; pago_estado?: string | null }, tienda: t, propietario };
@@ -73,7 +74,7 @@ export async function GET(request: Request, { params }: Params) {
 
   return NextResponse.json({
     codigo: o.codigo,
-    tienda: { slug: o.store, nombre: tienda?.name ?? o.store, logo: (tienda?.logo_image as string | null) ?? null },
+    tienda: { slug: o.store, nombre: tienda?.name ?? o.store, logo: (tienda?.logo_image as string | null) ?? null, enlace: enlaceTienda(o.store, tienda?.external_url as string | null, tienda?.subdominio_activo as boolean | null) },
     items: items.map((i) => ({ name: i.name, price: Number(i.price) || 0, quantity: Number(i.quantity) || 1, imagen: (i.id && imagenes[i.id]) || null })),
     total: Number(o.total_amount) || 0,
     estado: o.status,

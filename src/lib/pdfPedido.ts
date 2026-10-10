@@ -13,7 +13,18 @@ const limpiar = (t: string) =>
     .replace(/[^\u0000-\u00FF]/g, '')
     .replace(/[ \t]+$/gm, '');
 
-export async function pdfDePedido(tienda: string, mensaje: string, codigo?: string): Promise<File> {
+/**
+ * Dirección propia de la tienda para el pie de sus comprobantes (sin «https://»): su dirección propia si la tiene
+ * (subdominio o dominio), o bogahub.app/<tienda>. Así el comprobante lleva la marca de la tienda, no la de BogaHub.
+ */
+export function enlaceTienda(slug: string, externalUrl?: string | null, subdominioActivo?: boolean | null): string {
+  const limpio = (u: string) => u.replace(/^https?:\/\//i, '').replace(/\/$/, '');
+  if (externalUrl) return limpio(externalUrl);
+  if (subdominioActivo) return `${slug}.bogahub.app`;
+  return `bogahub.app/${slug}`;
+}
+
+export async function pdfDePedido(tienda: string, mensaje: string, codigo?: string, enlace?: string): Promise<File> {
   const { jsPDF } = await import('jspdf');
   const W = 300, M = 24;
   const cuerpo = limpiar(mensaje).trim();
@@ -40,8 +51,10 @@ export async function pdfDePedido(tienda: string, mensaje: string, codigo?: stri
 
   y += 10;
   doc.setDrawColor(200, 200, 200).line(M, y, W - M, y);
-  doc.setFontSize(8).setTextColor(150, 150, 150);
-  doc.text('Hecho con BogaHub - bogahub.app', W / 2, y + 16, { align: 'center' });
+  if (enlace) {
+    doc.setFont('helvetica', 'normal').setFontSize(8).setTextColor(150, 150, 150);
+    doc.text(limpiar(enlace), W / 2, y + 16, { align: 'center' });
+  }
 
   const nombre = `Pedido_${limpiar(tienda).replace(/[^\w-]+/g, '_') || 'tienda'}${codigo ? '_' + codigo.toUpperCase() : ''}_${new Date().toISOString().slice(0, 10)}.pdf`;
   return new File([doc.output('blob')], nombre, { type: 'application/pdf' });
@@ -84,6 +97,8 @@ type DatosPedido = {
   total: number;
   entrega?: string;
   estado?: string;
+  /** Dirección de la tienda (ver enlaceTienda): sale al pie del comprobante. */
+  enlace?: string;
 };
 
 /** Comprobante del pedido armado como boleta: logo de la tienda, detalle por línea y total destacado. */
@@ -135,7 +150,7 @@ export async function pdfDePedidoDetallado(d: DatosPedido): Promise<File> {
     doc.text('TOTAL', M + 3, y + 5); doc.text(`S/ ${d.total.toFixed(2)}`, W - M - 3, y + 5, { align: 'right' });
     y += 15;
     txt('¡Gracias por tu compra!', { size: 8, bold: true });
-    txt('Hecho con BogaHub - bogahub.app', { size: 6, color: [150, 150, 150] });
+    if (d.enlace) txt(textoPdf(d.enlace), { size: 6, color: [150, 150, 150] });
     return y + 4;
   };
   const alto = dibujar(new jsPDF({ unit: 'mm', format: [W, 500] }));

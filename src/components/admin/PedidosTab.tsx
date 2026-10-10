@@ -4,7 +4,7 @@
 // también quedan registrados) y las ventas de la caja (POS). Se puede ver el detalle, escribirle al
 // cliente por WhatsApp y cambiar el estado. Cancelar devuelve el stock (lo hace el panel).
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 export interface Pedido {
   id: string;
@@ -65,6 +65,25 @@ const wa = (tel: string) => {
   return d ? `https://wa.me/${d.length === 9 ? '51' + d : d}` : '';
 };
 
+// ── Tablero: una columna por etapa; cada pedido avanza con un solo botón ──
+const COLUMNAS = [
+  { id: 'recibidos', titulo: 'Recibidos', punto: 'bg-orange-500', estados: ['Pendiente'], siguiente: { estado: 'Preparando', texto: 'Preparar', icono: 'skillet' } },
+  { id: 'preparando', titulo: 'Preparando', punto: 'bg-amber-500', estados: ['Preparando', 'Listo'], siguiente: { estado: 'Enviado', texto: 'Enviar', icono: 'local_shipping' } },
+  { id: 'camino', titulo: 'En camino', punto: 'bg-sky-500', estados: ['Enviado'], siguiente: { estado: 'Entregado', texto: 'Entregado', icono: 'check_circle' } },
+  { id: 'entregado', titulo: 'Entregados', punto: 'bg-emerald-500', estados: ['Entregado'], siguiente: null },
+  { id: 'cancelados', titulo: 'Cancelados', punto: 'bg-red-500', estados: ['Cancelado'], siguiente: null },
+] as { id: string; titulo: string; punto: string; estados: string[]; siguiente: { estado: string; texto: string; icono: string } | null }[];
+const MAX_ENTREGADOS = 15;
+
+const hace = (iso: string) => {
+  const min = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  if (min < 1) return 'ahora';
+  if (min < 60) return `hace ${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `hace ${h} h`;
+  return `hace ${Math.floor(h / 24)} d`;
+};
+
 export default function PedidosTab({
   pedidos,
   nombreTienda,
@@ -92,6 +111,19 @@ export default function PedidosTab({
   const [filtro, setFiltro] = useState<(typeof FILTROS)[number]['id']>('all');
   const [busca, setBusca] = useState('');
   const [abierto, setAbierto] = useState<string | null>(null);
+  // Tablero (por etapas) o lista; se recuerda lo último que eligió el dueño en este dispositivo.
+  const [vista, setVista] = useState<'tablero' | 'lista'>('tablero');
+  const [verCancelados, setVerCancelados] = useState(false);
+  // En celular se ve una etapa a la vez (con pestañas arriba); en pantalla ancha, todas las columnas juntas.
+  const [colMovil, setColMovil] = useState('recibidos');
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    try { if (localStorage.getItem('boga:pedidos-vista') === 'lista') setVista('lista'); } catch {}
+  }, []);
+  const elegirVista = (v: 'tablero' | 'lista') => {
+    setVista(v);
+    try { localStorage.setItem('boga:pedidos-vista', v); } catch {}
+  };
 
   const kpi = useMemo(() => {
     const validos = pedidos.filter((p) => p.status !== 'Cancelado');
@@ -106,6 +138,14 @@ export default function PedidosTab({
     };
   }, [pedidos]);
 
+  // Tablero: todos los pedidos que coinciden con la búsqueda, del más nuevo al más viejo.
+  const tablero = useMemo(() => {
+    const q = busca.trim().toLowerCase();
+    return pedidos
+      .filter((p) => !q || p.id.toLowerCase().includes(q) || (p.codigo || '').toLowerCase().includes(q) || (p.customer_name || '').toLowerCase().includes(q) || (p.customer_phone || '').includes(q))
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [pedidos, busca]);
+
   const lista = useMemo(() => {
     const q = busca.trim().toLowerCase();
     return pedidos.filter((p) => {
@@ -117,20 +157,20 @@ export default function PedidosTab({
   }, [pedidos, filtro, busca]);
 
   return (
-    <div className="flex flex-col gap-5 w-full">
-      {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="flex flex-col gap-3 w-full">
+      {/* Resumen: una franja delgada con los cuatro números (antes eran cuatro tarjetas grandes) */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 bg-white border border-gray-100 rounded-md shadow-sm divide-x divide-y sm:divide-y-0 divide-gray-100 overflow-hidden">
         {[
-          { t: 'Ingresos', v: `S/ ${kpi.ingresos.toFixed(2)}`, s: `${kpi.total} ${kpi.total === 1 ? 'pedido' : 'pedidos'} en total`, i: 'receipt_long' },
-          { t: 'Activos', v: String(kpi.activos), s: `${kpi.pendientes} por atender`, i: 'schedule' },
-          { t: 'Ticket promedio', v: `S/ ${kpi.ticket.toFixed(2)}`, s: 'Por pedido', i: 'payments' },
-          { t: 'Cancelados', v: String(kpi.cancelados), s: kpi.total ? `${((kpi.cancelados / kpi.total) * 100).toFixed(0)}% del total` : '—', i: 'cancel' },
+          { t: 'Ingresos', v: `S/ ${kpi.ingresos.toFixed(2)}`, s: `${kpi.total} ${kpi.total === 1 ? 'pedido' : 'pedidos'}` },
+          { t: 'Activos', v: String(kpi.activos), s: `${kpi.pendientes} por atender` },
+          { t: 'Ticket promedio', v: `S/ ${kpi.ticket.toFixed(2)}`, s: 'por pedido' },
+          { t: 'Cancelados', v: String(kpi.cancelados), s: kpi.total ? `${((kpi.cancelados / kpi.total) * 100).toFixed(0)}%` : '—' },
         ].map((k) => (
-          <div key={k.t} className="bg-white border border-gray-100 rounded-md p-4 shadow-sm">
-            <h4 className="text-[10px] font-bold text-gray-500 tracking-wider uppercase mb-1">{k.t}</h4>
-            <span className="text-2xl font-black text-gray-900">{k.v}</span>
-            <p className="mt-2 flex items-center gap-1 text-gray-400 font-bold text-[12px]">
-              <span className="material-symbols-outlined text-[15px]">{k.i}</span>{k.s}
+          <div key={k.t} className="px-3 py-2 min-w-0">
+            <h4 className="text-[10px] font-bold text-gray-500 tracking-wider uppercase truncate">{k.t}</h4>
+            <p className="flex items-baseline gap-1.5">
+              <span className="text-lg font-black text-gray-900 leading-tight">{k.v}</span>
+              <span className="text-[11px] font-semibold text-gray-400 truncate">{k.s}</span>
             </p>
           </div>
         ))}
@@ -159,7 +199,29 @@ export default function PedidosTab({
             {silencio ? 'Sonido apagado' : 'Sonido activo'}
           </button>
         )}
-        <div className="flex gap-2 overflow-x-auto hide-scrollbar">
+        <div className="flex rounded-lg border border-gray-200 bg-white p-0.5 shrink-0" role="group" aria-label="Cómo ver los pedidos">
+          {([['tablero', 'view_kanban', 'Tablero'], ['lista', 'list', 'Lista']] as const).map(([id, ico, txt]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => elegirVista(id)}
+              aria-pressed={vista === id}
+              className={`h-9 px-3 rounded-md text-xs font-bold flex items-center gap-1.5 transition ${vista === id ? 'bg-[var(--tienda-color,#b8130e)] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+            >
+              <span className="material-symbols-outlined text-[16px]">{ico}</span>{txt}
+            </button>
+          ))}
+        </div>
+        {vista === 'tablero' && kpi.cancelados > 0 && (
+          <button
+            type="button"
+            onClick={() => setVerCancelados((v) => !v)}
+            className={`h-10 px-3 rounded-lg border text-xs font-bold flex items-center gap-1.5 shrink-0 transition ${verCancelados ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+          >
+            <span className="material-symbols-outlined text-[16px]">cancel</span>Cancelados ({kpi.cancelados})
+          </button>
+        )}
+        <div className={`flex gap-2 overflow-x-auto hide-scrollbar ${vista === 'lista' ? '' : 'hidden'}`}>
           {FILTROS.map((f) => (
             <button
               key={f.id}
@@ -174,8 +236,147 @@ export default function PedidosTab({
         </div>
       </div>
 
+      {/* Tablero */}
+      {vista === 'tablero' && (
+        <>
+        <div className="flex gap-1.5 overflow-x-auto hide-scrollbar lg:hidden -mx-1 px-1" role="tablist" aria-label="Etapas del pedido">
+          {COLUMNAS.filter((col) => col.id !== 'cancelados' || verCancelados).map((col) => {
+            const n = tablero.filter((p) => col.estados.includes(p.status)).length;
+            const activa = colMovil === col.id;
+            return (
+              <button
+                key={col.id}
+                type="button"
+                role="tab"
+                aria-selected={activa}
+                onClick={() => setColMovil(col.id)}
+                className={`shrink-0 h-10 px-3 rounded-lg border text-xs font-extrabold flex items-center gap-1.5 transition ${activa ? 'bg-[var(--tienda-color,#b8130e)] border-transparent text-white' : 'bg-white border-gray-200 text-gray-600'}`}
+              >
+                <span className={`w-2 h-2 rounded-full ${activa ? 'bg-white' : col.punto}`} />
+                {col.titulo}
+                <span className={`min-w-[20px] text-center rounded-full px-1.5 text-[11px] font-black ${activa ? 'bg-white/25' : 'bg-gray-100 text-gray-500'}`}>{n}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex flex-col lg:grid gap-3" style={{ gridTemplateColumns: `repeat(${verCancelados ? 5 : 4}, minmax(0, 1fr))` }}>
+          {COLUMNAS.filter((col) => col.id !== 'cancelados' || verCancelados).map((col) => {
+            const todos = tablero.filter((p) => col.estados.includes(p.status));
+            const visibles = col.id === 'entregado' ? todos.slice(0, MAX_ENTREGADOS) : todos;
+            return (
+              <section key={col.id} className={`${colMovil === col.id ? 'flex' : 'hidden'} lg:flex min-w-0 flex-col rounded-xl bg-gray-50/70 border border-gray-100`}>
+                <header className="hidden lg:flex items-center justify-between gap-2 px-3 py-2.5">
+                  <h3 className="flex items-center gap-2 text-xs font-extrabold text-gray-700 uppercase tracking-wide">
+                    <span className={`w-2 h-2 rounded-full ${col.punto}`} />{col.titulo}
+                  </h3>
+                  <span className="text-[11px] font-black text-gray-500 bg-white border border-gray-200 rounded-full min-w-[22px] text-center px-1.5 py-0.5">{todos.length}</span>
+                </header>
+                <div className="flex flex-col gap-2.5 p-2 lg:pt-0 lg:max-h-[calc(100vh-290px)] lg:overflow-y-auto">
+                  {visibles.length === 0 && <p className="text-[11px] font-semibold text-gray-400 text-center py-6">Sin pedidos</p>}
+                  {visibles.map((o) => {
+                    const items = itemsDe(o);
+                    const tel = o.customer_phone ? wa(o.customer_phone) : '';
+                    const nuevo = o.status === 'Pendiente';
+                    const direccion = (o.customer_address || '').replace(/https?:\/\/\S+/g, '').trim();
+                    const enlaceMapa = (o.customer_address || '').match(/https?:\/\/\S+/)?.[0];
+                    return (
+                      <article key={o.id} className={`bg-white rounded-lg border shadow-sm p-3 flex flex-col gap-2 ${nuevo ? 'border-orange-300' : 'border-gray-100'}`}>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[var(--tienda-color,#b8130e)] font-black text-xs">#{(o.codigo || o.id.slice(0, 8)).toUpperCase()}</span>
+                          <span className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400">
+                            {nuevo && <span className="px-1.5 py-0.5 rounded bg-orange-500 text-white text-[9px] font-black">NUEVO</span>}
+                            {hace(o.created_at)}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-extrabold text-gray-900 leading-tight truncate">{o.customer_name || 'Cliente'}</p>
+                          {o.customer_phone && <p className="text-[11px] font-semibold text-gray-500">{o.customer_phone}</p>}
+                          {mostrarTienda && <p className="text-[10px] font-bold text-gray-400">{nombreTienda(o.store)}</p>}
+                        </div>
+                        <ul className="text-xs text-gray-700 font-medium border-y border-gray-100 py-1.5 flex flex-col gap-0.5">
+                          {items.slice(0, 4).map((it, i) => <li key={i} className="flex gap-1.5"><span className="font-black text-gray-900">{it.quantity}×</span><span className="truncate">{it.name}</span></li>)}
+                          {items.length > 4 && <li className="text-[11px] text-gray-400 font-bold">+{items.length - 4} más…</li>}
+                        </ul>
+                        {(direccion || enlaceMapa) && (
+                          <div className="flex flex-col gap-1">
+                            {direccion && <p className="text-[11px] text-gray-500 font-medium flex items-start gap-1 line-clamp-2"><span className="material-symbols-outlined text-[14px] shrink-0">location_on</span>{direccion}</p>}
+                            {enlaceMapa && (
+                              <a href={enlaceMapa} target="_blank" rel="noopener noreferrer" className="self-start inline-flex items-center gap-1 text-[11px] font-extrabold text-[var(--tienda-color,#b8130e)] underline">
+                                <span className="material-symbols-outlined text-[14px]">map</span>Abrir en el mapa
+                              </a>
+                            )}
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-base font-black text-gray-900">S/ {Number(o.total_amount).toFixed(2)}</span>
+                          <span className="flex items-center gap-1 flex-wrap justify-end">
+                            {o.payment_method && <span className="text-[10px] font-bold text-gray-500">{o.payment_method}</span>}
+                            {o.pago_estado && (
+                              <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-full border ${o.pago_estado === 'pagado' ? 'bg-green-50 text-green-700 border-green-200' : o.pago_estado === 'fallido' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                                {o.pago_estado === 'pagado' ? 'Pagado' : o.pago_estado === 'fallido' ? 'Pago fallido' : 'Por cobrar'}
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                        {col.siguiente && (
+                          <button
+                            type="button"
+                            disabled={ocupado === o.id}
+                            onClick={() => cambiarEstado(o, col.siguiente!.estado)}
+                            className="w-full h-10 rounded-lg bg-[var(--tienda-color,#b8130e)] text-white text-sm font-extrabold flex items-center justify-center gap-1.5 active:scale-95 transition disabled:opacity-50"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">{col.siguiente.icono}</span>{col.siguiente.texto}
+                          </button>
+                        )}
+                        {/* Acciones con nombre (no solo íconos) para que se entienda qué hace cada una */}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {tel && (
+                            <a href={tel} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-[84px] h-8 px-2 rounded-full bg-[#25D366] text-white text-[11px] font-extrabold flex items-center justify-center gap-1.5 hover:brightness-95 active:scale-95 transition">
+                              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white" aria-hidden="true"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.08 1.76-.72 2-1.41.25-.7.25-1.29.17-1.41-.07-.12-.27-.2-.57-.35zM12.04 21.8h-.01a9.9 9.9 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.9-9.88 2.64 0 5.12 1.03 6.99 2.9a9.82 9.82 0 0 1 2.9 6.99c0 5.45-4.44 9.88-9.9 9.88zM20.52 3.45A11.8 11.8 0 0 0 12.04 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.54 0 11.89-5.34 11.89-11.89 0-3.18-1.24-6.16-3.48-8.4z"/></svg>WhatsApp
+                            </a>
+                          )}
+                          {o.codigo && (
+                            <a href={`/pedido/${o.codigo}`} target="_blank" rel="noopener noreferrer" title="Lo mismo que le llegó al cliente" className="flex-1 min-w-[84px] h-8 px-2 rounded-full border border-gray-200 text-gray-600 text-[11px] font-extrabold flex items-center justify-center gap-1.5 hover:bg-gray-50 active:scale-95 transition">
+                              <span className="material-symbols-outlined text-[16px]">receipt_long</span>Recibo
+                            </a>
+                          )}
+                          {col.id !== 'entregado' && col.id !== 'cancelados' && (
+                            <button
+                              type="button"
+                              disabled={ocupado === o.id}
+                              onClick={() => { if (window.confirm('¿Cancelar este pedido? Si llevaba stock, se devuelve al inventario.')) cambiarEstado(o, 'Cancelado'); }}
+                              className="flex-1 min-w-[84px] h-8 px-2 rounded-full border border-red-200 text-red-600 text-[11px] font-extrabold flex items-center justify-center gap-1.5 hover:bg-red-50 active:scale-95 transition disabled:opacity-50"
+                            >
+                              <span className="material-symbols-outlined text-[16px]">close</span>Cancelar
+                            </button>
+                          )}
+                          {col.id === 'cancelados' && puedeEliminar && (
+                            <button
+                              type="button"
+                              disabled={ocupado === o.id}
+                              onClick={() => { if (window.confirm('¿Eliminar este pedido para siempre? Sirve para limpiar pedidos de prueba. No se puede deshacer.')) eliminar(o); }}
+                              className="flex-1 min-w-[84px] h-8 px-2 rounded-full border border-red-200 text-red-600 text-[11px] font-extrabold flex items-center justify-center gap-1.5 hover:bg-red-50 active:scale-95 transition disabled:opacity-50"
+                            >
+                              <span className="material-symbols-outlined text-[16px]">delete</span>Eliminar
+                            </button>
+                          )}
+                        </div>
+                      </article>
+                    );
+                  })}
+                  {col.id === 'entregado' && todos.length > MAX_ENTREGADOS && (
+                    <p className="text-[11px] font-semibold text-gray-400 text-center py-1">Mostrando los últimos {MAX_ENTREGADOS}. Los demás están en «Lista».</p>
+                  )}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+        </>
+      )}
+
       {/* Lista */}
-      {lista.length === 0 ? (
+      {vista === 'lista' && (lista.length === 0 ? (
         <div className="bg-white rounded-md border border-gray-100 p-12 text-center">
           <span className="material-symbols-outlined text-4xl text-gray-300 mb-2 block">receipt_long</span>
           <p className="text-gray-500 font-bold text-sm">
@@ -327,7 +528,7 @@ export default function PedidosTab({
           })}
           <p className="text-xs text-gray-400 font-medium px-1">Mostrando {lista.length} de {pedidos.length} pedidos</p>
         </div>
-      )}
+      ))}
     </div>
   );
 }

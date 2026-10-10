@@ -19,7 +19,7 @@ const MapaRepartidor = dynamic(() => import('@/components/MapaRepartidor'), {
 
 type Pedido = {
   codigo: string;
-  tienda: { slug: string; nombre: string; logo?: string | null };
+  tienda: { slug: string; nombre: string; logo?: string | null; enlace?: string };
   items: { name: string; price: number; quantity: number; imagen?: string | null }[];
   total: number;
   estado: string;
@@ -210,7 +210,7 @@ export default function PedidoPage({ params }: { params: Promise<{ codigo: strin
     try {
       const file = await pdfDePedidoDetallado({
         tienda: p.tienda.nombre, logo: p.tienda.logo, codigo: p.codigo, fecha: p.creado,
-        items: p.items, total: p.total, entrega: p.entrega,
+        items: p.items, total: p.total, entrega: p.entrega, enlace: p.tienda.enlace,
       });
       await compartirPDF(file, `Pedido en ${p.tienda.nombre}`);
     } catch (e) {
@@ -223,15 +223,25 @@ export default function PedidoPage({ params }: { params: Promise<{ codigo: strin
   return (
     <div className="min-h-screen bg-background text-on-background font-body-md">
       <header className="border-b border-surface-container-highest bg-surface">
-        <div className="max-w-[560px] mx-auto px-4 py-3 flex items-center gap-2">
-          <Link href="/" className="flex items-center gap-2">
-            <img src="/logo-mark.svg" alt="" className="w-7 h-7" />
-            <span className="font-headline-sm text-headline-sm">BogaHub</span>
+        <div className={`${estado === 'ok' && p?.propietario && p?.cliente ? 'max-w-[1040px]' : 'max-w-[560px]'} mx-auto px-4 py-3 flex items-center justify-between gap-3`}>
+          {/* La tienda va primero (es su pedido); BogaHub queda como «hecho con tecnología» */}
+          {estado === 'ok' && p ? (
+            <Link href={`/${p.tienda.slug}`} className="flex items-center gap-2 min-w-0">
+              {p.tienda.logo && <img src={p.tienda.logo} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0" />}
+              <span className="font-headline-sm text-headline-sm truncate">{p.tienda.nombre}</span>
+            </Link>
+          ) : <span />}
+          <Link href="/" className="flex flex-col items-end gap-0.5 shrink-0 whitespace-nowrap" title="Conoce BogaHub">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-secondary leading-none">Con tecnología de</span>
+            <span className="flex items-center gap-1.5">
+              <img src="/logo-mark.svg" alt="" className="w-5 h-5" />
+              <span className="font-extrabold text-sm text-on-background leading-none">BogaHub</span>
+            </span>
           </Link>
         </div>
       </header>
 
-      <main className="max-w-[560px] mx-auto px-4 py-6">
+      <main className={`${estado === 'ok' && p?.propietario && p?.cliente ? 'max-w-[1040px]' : 'max-w-[560px]'} mx-auto px-4 py-6`}>
         {estado === 'cargando' && <p className="text-secondary text-sm">Cargando tu pedido…</p>}
 
         {estado === 'noexiste' && (
@@ -243,7 +253,10 @@ export default function PedidoPage({ params }: { params: Promise<{ codigo: strin
         )}
 
         {estado === 'ok' && p && (
-          <div className="flex flex-col gap-4">
+          <div className={p.propietario && p.cliente ? 'grid lg:grid-cols-2 gap-6 items-start' : 'flex flex-col gap-4'}>
+            {/* Lado del cliente: lo que ve quien hizo el pedido (y se mantiene en una sola columna si no eres el dueño) */}
+            <div className="flex flex-col gap-4 min-w-0">
+            {p.propietario && p.cliente && <p className="text-[10px] font-extrabold uppercase tracking-widest text-secondary -mb-2">Lo que ve tu cliente</p>}
             <div>
               <p className="text-[11px] font-bold uppercase tracking-wide text-secondary">Pedido N° {p.codigo.toUpperCase()}</p>
               <h1 className="font-headline-md text-2xl font-extrabold mt-0.5">{p.tienda.nombre}</h1>
@@ -327,43 +340,64 @@ export default function PedidoPage({ params }: { params: Promise<{ codigo: strin
               </p>
             </div>
 
+            {/* Justo debajo del recibo: ver la tienda, descargarlo y la invitación a conocer BogaHub */}
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-2">
+                <Link href={`/${p.tienda.slug}`} className="flex-1 sm:flex-none text-center text-sm font-bold text-white bg-primary px-5 py-2.5 rounded-full">Ver la tienda</Link>
+                <button type="button" onClick={pdf} className="flex-1 sm:flex-none text-sm font-bold px-5 py-2.5 rounded-full border border-surface-container-highest">Descargar recibo</button>
+              </div>
+              <p className="text-center text-[11px] text-secondary">
+                Pedido hecho con <Link href="/" className="font-bold underline">BogaHub</Link> · la app de tu ciudad
+              </p>
+            </div>
+
             <p className="text-[11px] text-secondary leading-relaxed">
               Este pedido es directo con <b>{p.tienda.nombre}</b>: la tienda lo prepara, lo cobra y lo entrega o lo deja listo para recoger.
               BogaHub solo te conecta con ella.
             </p>
 
+            </div>
+
+            {/* Lado de la tienda: solo lo ve el dueño del pedido */}
             {p.propietario && p.cliente && (
-              <div className="bg-surface-container-lowest border border-primary/30 rounded-2xl p-4 text-sm">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-primary mb-1">Solo tú ves esto · datos del cliente</p>
-                <p className="font-bold">{p.cliente.nombre || 'Cliente'}</p>
+              <div className="min-w-0 flex flex-col gap-2">
+              <p className="text-[10px] font-extrabold uppercase tracking-widest text-secondary">Lo que ves tú (tienda)</p>
+              <div className="bg-surface-container-lowest border border-primary/30 rounded-2xl p-3 text-sm">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-primary mb-1.5">Solo tú ves esto · datos del cliente</p>
+                {/* Nombre, celular y WhatsApp en una sola fila */}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-bold leading-tight truncate">{p.cliente.nombre || 'Cliente'}</p>
+                    {p.cliente.telefono && <p className="text-sm font-semibold text-secondary">{p.cliente.telefono}</p>}
+                  </div>
                 {p.cliente.telefono && (
-                  <div className="flex items-center gap-3 mt-1">
-                    <span className="text-base font-bold">{p.cliente.telefono}</span>
+                  <div className="flex items-center gap-3">
                     {wa(p.cliente.telefono) && (
-                      <a href={wa(p.cliente.telefono)} target="_blank" rel="noopener noreferrer" aria-label="Escribir por WhatsApp" title="Escribir por WhatsApp" className="w-11 h-11 rounded-full bg-[#25D366] flex items-center justify-center shadow-sm active:scale-95 transition">
-                        <svg viewBox="0 0 24 24" className="w-6 h-6 fill-white" aria-hidden="true"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.08 1.76-.72 2-1.41.25-.7.25-1.29.17-1.41-.07-.12-.27-.2-.57-.35zM12.04 21.8h-.01a9.9 9.9 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.9-9.88 2.64 0 5.12 1.03 6.99 2.9a9.82 9.82 0 0 1 2.9 6.99c0 5.45-4.44 9.88-9.9 9.88zM20.52 3.45A11.8 11.8 0 0 0 12.04 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.54 0 11.89-5.34 11.89-11.89 0-3.18-1.24-6.16-3.48-8.4z"/></svg>
+                      <a href={wa(p.cliente.telefono)} target="_blank" rel="noopener noreferrer" aria-label="Escribir por WhatsApp" title="Escribir por WhatsApp" className="w-10 h-10 rounded-full bg-[#25D366] flex items-center justify-center shadow-sm active:scale-95 transition">
+                        <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white" aria-hidden="true"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.08 1.76-.72 2-1.41.25-.7.25-1.29.17-1.41-.07-.12-.27-.2-.57-.35zM12.04 21.8h-.01a9.9 9.9 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.9-9.88 2.64 0 5.12 1.03 6.99 2.9a9.82 9.82 0 0 1 2.9 6.99c0 5.45-4.44 9.88-9.9 9.88zM20.52 3.45A11.8 11.8 0 0 0 12.04 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.54 0 11.89-5.34 11.89-11.89 0-3.18-1.24-6.16-3.48-8.4z"/></svg>
                       </a>
                     )}
                   </div>
                 )}
+                </div>
                 {p.cliente.direccion && (
-                  <p className="text-secondary break-words">
+                  <p className="text-secondary break-words mt-1.5 text-[13px] leading-snug">
                     {p.cliente.direccion.split(/(https?:\/\/[^\s]+)/g).map((t, i) => /^https?:\/\//.test(t)
                       ? <a key={i} href={t} target="_blank" rel="noopener noreferrer" className="text-primary font-bold underline">Abrir en el mapa</a>
                       : <span key={i}>{t}</span>)}
                   </p>
                 )}
 
-                <p className="text-[10px] font-bold uppercase tracking-wide text-secondary mt-3 mb-1.5">Estado del pedido</p>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-secondary mt-2.5 mb-1">Estado del pedido</p>
+                <div className="grid grid-cols-5 gap-1.5">
                   {ESTADOS.map((e) => {
                     const activo = p.estado === e;
                     return (
                       <button key={e} type="button" disabled={ocupado || activo} onClick={() => cambiar(e)}
-                        className={`flex flex-col items-center justify-center gap-1 min-h-[64px] rounded-xl border-2 text-xs font-extrabold transition active:scale-95 disabled:cursor-default ${
+                        className={`flex flex-col items-center justify-center gap-0.5 min-h-[52px] rounded-xl border-2 text-[10px] sm:text-xs font-extrabold transition active:scale-95 disabled:cursor-default ${
                           activo ? 'bg-primary border-transparent text-white shadow-md' : 'bg-white border-surface-container-highest text-secondary disabled:opacity-50'
-                        } ${e === 'Cancelado' ? 'col-span-2 sm:col-span-1 min-h-[44px] sm:min-h-[64px]' : ''}`}>
-                        <span className="material-symbols-outlined text-[24px]">{ICONO_ESTADO[e]}</span>
+                        }`}>
+                        <span className="material-symbols-outlined text-[20px]">{ICONO_ESTADO[e]}</span>
                         {e}
                       </button>
                     );
@@ -371,8 +405,8 @@ export default function PedidoPage({ params }: { params: Promise<{ codigo: strin
                 </div>
 
                 {gestionaRepartidor && (
-                  <div className="mt-4 pt-3 border-t border-surface-container-highest">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-secondary mb-1.5">Repartidor</p>
+                  <div className="mt-3 pt-2.5 border-t border-surface-container-highest">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-secondary mb-1">Repartidor</p>
                     {p.repartidorId ? (
                       <div className="flex items-center justify-between gap-2">
                         <p className="font-bold">🛵 {repAsignado?.nombre ?? p.repartidor?.nombre ?? 'Asignado'}{p.repartidor?.de === 'boga' && <span className="ml-2 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200 align-middle">🛡 BogaHub</span>}</p>
@@ -392,10 +426,10 @@ export default function PedidoPage({ params }: { params: Promise<{ codigo: strin
                         <button type="button" disabled={ocupado || !elegido} onClick={() => asignar(elegido)} className="px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold disabled:opacity-50">Asignar</button>
                       </div>
                     ) : (
-                      <p className="text-secondary text-xs">Todavía no tienes repartidores. Agrega uno abajo: le llega su enlace por WhatsApp y desde su celular ve los pedidos que le asignes.</p>
+                      <p className="text-secondary text-xs">Aún no tienes repartidores: agrega uno abajo y le llega su enlace por WhatsApp.</p>
                     )}
 
-                    <details className="mt-3">
+                    <details className="mt-2">
                       <summary className="text-xs font-bold text-primary cursor-pointer">Mis repartidores ({repartidores.length})</summary>
                       <div className="mt-2 flex flex-col gap-2">
                         {repartidores.map((r) => (
@@ -424,14 +458,10 @@ export default function PedidoPage({ params }: { params: Promise<{ codigo: strin
                 )}
 
                 {aviso && <p className={`text-xs font-semibold mt-2 ${aviso.startsWith('Enlace copiado') ? 'text-green-700' : 'text-red-600'}`}>{aviso}</p>}
-                <Link href="/admin" className="inline-block mt-3 text-xs font-bold text-primary">Ir a mi panel de pedidos</Link>
+                <Link href="/admin/pedidos" className="inline-block mt-2 text-xs font-bold text-primary">Ir a mi panel de pedidos →</Link>
+              </div>
               </div>
             )}
-
-            <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={pdf} className="text-sm font-bold text-white bg-primary px-4 py-2.5 rounded-full">Descargar / compartir PDF</button>
-              <Link href={`/${p.tienda.slug}`} className="text-sm font-bold px-4 py-2.5 rounded-full border border-surface-container-highest">Ver la tienda</Link>
-            </div>
           </div>
         )}
       </main>

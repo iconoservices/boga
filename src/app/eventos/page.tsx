@@ -291,21 +291,22 @@ export default function Eventos() {
                 <div className="relative aspect-square overflow-hidden bg-surface-container-low">
                   <Foto src={e.img} alt={e.titulo} className="w-full h-full object-cover" />
                 </div>
-                <div className="p-3 flex flex-col gap-1 flex-1">
+                <div className="p-3 flex flex-col gap-1.5 flex-1">
                   <span className="w-fit bg-primary-fixed text-primary text-[10px] font-label-md px-2 py-0.5 rounded-full">{e.dia} {e.mes}</span>
-                  <h3 className="font-headline-sm text-sm text-on-surface line-clamp-2 mt-0.5">{e.titulo}</h3>
-                  <span className="text-secondary font-label-md text-[11px] flex items-center gap-1 mt-auto">
-                    <span className="material-symbols-outlined text-[12px]">location_on</span>{e.lugar}
+                  <h3 className="font-headline-sm text-sm leading-tight text-on-surface line-clamp-2 min-h-[2.1rem]">{e.titulo}</h3>
+                  <span className="text-secondary font-label-md text-[11px] flex items-start gap-1">
+                    <span className="material-symbols-outlined text-[13px] shrink-0 mt-px">location_on</span>
+                    <span className="line-clamp-2 leading-tight">{e.lugar}</span>
                   </span>
-                  <div className="flex items-center justify-between mt-auto pt-1">
-                    <span className="font-price-lg text-primary text-sm">{e.precio}</span>
+                  <div className="flex flex-col gap-1.5 mt-auto pt-1.5 border-t border-surface-container-highest">
+                    <span className="font-price-lg text-primary text-[12px] leading-snug line-clamp-3">{e.precio}</span>
                     {e.linkPostOriginal && (
                       <a
                         href={e.linkPostOriginal}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(ev) => ev.stopPropagation()}
-                        className="bg-[#f2f3fd] hover:bg-[#e6e7f2] text-[#0058be] text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 transition-colors border border-blue-200"
+                        className="self-start bg-[#f2f3fd] hover:bg-[#e6e7f2] text-[#0058be] text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 transition-colors border border-blue-200"
                         title="Ver post original"
                       >
                         <span className="material-symbols-outlined text-[12px]">open_in_new</span>Post
