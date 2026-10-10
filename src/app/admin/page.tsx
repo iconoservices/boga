@@ -40,6 +40,7 @@ import { COLS_OFERTA, precioOfertaVigente, porcentajeOferta } from '@/lib/oferta
 import { cargarImagenPdf, ajustarImagen, textoPdf, hexToRgb, type ImagenPdf } from '@/lib/imagenPdf';
 import { compartirPDF, enlaceTienda } from '@/lib/pdfPedido';
 import EscanerCamara from '@/components/EscanerCamara';
+import RegistroRapidoProducto, { type DatosRegistroRapido } from '@/components/admin/RegistroRapidoProducto';
 import { cargarPlanes, planDeTienda, type PlanComercial } from '@/lib/planesComerciales';
 import { generarEan13Interno } from '@/lib/ean13';
 import AvisoLimiteProductos from '@/components/admin/AvisoLimiteProductos';
@@ -1628,6 +1629,30 @@ function AdminDashboard({ user }: { user: User }) {
 
   // Ingreso de mercadería con la cámara: cada escaneo suma 1 unidad al stock (para más, el "+" de la fila). Queda en el historial.
   const [escanerIngresoAbierto, setEscanerIngresoAbierto] = useState(false);
+  const [registroRapido, setRegistroRapido] = useState<string | null>(null);
+  // Crea el producto con lo mínimo (la foto queda con el logo de BogaHub hasta que la edites) y le pone su código de barras.
+  const guardarRegistroRapido = async (d: DatosRegistroRapido): Promise<string | null> => {
+    const store = focusedStore;
+    if (!store) return 'Elige una tienda primero.';
+    const inventario = tiendaTiene(store, 'inventario');
+    const { data: creado, error } = await supabase.from('products').insert([{
+      name: d.nombre, store, price: d.precio, category: d.categoria, subcategory: '', image: '/logo-mark.svg', description: '',
+      stock: inventario ? 0 : null, status: inventario ? 'Agotado' : 'Activo',
+    }]).select().single();
+    if (error || !creado) return error?.message || 'No se pudo crear el producto.';
+    const { error: errCodigo } = await supabase.from('products').update({ codigo_barras: d.codigo }).eq('id', (creado as Product).id);
+    if (errCodigo) return 'El producto se creó, pero no se pudo guardar el código: ' + errCodigo.message;
+    let nuevo = creado as Product;
+    if (inventario && d.cantidad > 0) {
+      const { fallidos } = await moverStock(supabase, { store, motivo: 'ingreso', usuario: user.email ?? null, lineas: [{ id: nuevo.id, name: nuevo.name, delta: d.cantidad }] });
+      if (!fallidos.length) nuevo = { ...nuevo, stock: d.cantidad, status: 'Activo' };
+    }
+    codigosPos.current = { ...(codigosPos.current ?? {}), [d.codigo]: nuevo.id };
+    setProducts((prev) => [nuevo, ...prev.filter((x) => x.id !== nuevo.id)]);
+    refrescarTienda(store);
+    setRegistroRapido(null);
+    return null;
+  };
   const abrirEscanerIngreso = async () => {
     codigosPos.current = null;
     setEscanerIngresoAbierto(true);
@@ -1639,18 +1664,9 @@ function AdminDashboard({ user }: { user: User }) {
     const id = codigosPos.current?.[codigo];
     const producto = id ? products.find((p) => p.id === id) : undefined;
     if (!producto) {
-      // Código nuevo: en vez de mandarlo a "editar el producto", se ofrece crearlo ahora mismo con este código.
-      if (window.confirm(`El código ${codigo} todavía no está registrado.
-
-¿Crear un producto nuevo con este código?`)) {
-        setEscanerIngresoAbierto(false);
-        setActiveTab('products');
-        resetForm();
-        setNewProduct((prev) => ({ ...prev, store: focusedStore, codigoBarras: codigo }));
-        setIsModalOpen(true);
-        return { ok: true, mensaje: `Código ${codigo}: completa el producto` };
-      }
-      return { ok: false, mensaje: `El código ${codigo} no está registrado. Puedes crearlo o escanearlo en "Código de barras" de un producto.` };
+      // Código nuevo: sin salir de la cámara se abre el registro rápido (nombre, precio y unidades) para crearlo con este código.
+      setRegistroRapido(codigo);
+      return { ok: true, mensaje: `Código nuevo ${codigo}: ponle nombre y precio` };
     }
     if (stockIlimitado(producto)) return { ok: false, mensaje: `${producto.name}: tiene stock ilimitado, no se controla. Ponle una cantidad en el producto.` };
     const { fallidos } = await moverStock(supabase, { store: producto.store, motivo: 'ingreso', usuario: user.email ?? null, lineas: [{ id: producto.id, name: producto.name, delta: 1 }] });
@@ -5187,6 +5203,15 @@ function AdminDashboard({ user }: { user: User }) {
           ayuda="Cada código que escanees se agrega al carrito"
           onCodigo={alEscanearPos}
           onCerrar={() => setEscanerPosAbierto(false)}
+        />
+      )}
+      {registroRapido && (
+        <RegistroRapidoProducto
+          codigo={registroRapido}
+          categorias={(stores[focusedStore]?.categories ?? []).map((c) => c.name)}
+          conStock={tiendaTiene(focusedStore, 'inventario')}
+          onGuardar={guardarRegistroRapido}
+          onCancelar={() => setRegistroRapido(null)}
         />
       )}
       {escanerIngresoAbierto && (
