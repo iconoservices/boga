@@ -280,23 +280,21 @@ export function CombosCarrusel({
 
   return (
     <section className="mb-6 animate-fade-in">
-      <div className="px-5 md:px-6 flex items-center justify-between gap-3 mb-3">
-        <h3 className={`${TXT.lead} font-black uppercase italic tracking-tight flex items-center gap-1.5`} style={{ color: t.onSurface }}>
+      <div className={`px-5 md:px-6 flex items-center justify-between gap-3 ${extra ? 'mb-2' : 'mb-3'}`}>
+        <h3 className={`${TXT.lead} font-black uppercase italic tracking-tight flex items-center gap-1.5 min-w-0`} style={{ color: t.onSurface }}>
           {icono && <span className="text-amber-500">{icono}</span>} {encabezado}
         </h3>
-        <div className="flex items-center gap-3">
-          {extra}
-          {onVerMas && (
-            <button
-              onClick={onVerMas}
-              className={`${TXT.small} font-bold flex items-center gap-0.5 hover:underline active:scale-95 transition-transform`}
-              style={{ color: t.primary }}
-            >
-              Ver todos <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-            </button>
-          )}
-        </div>
+        {onVerMas && (
+          <button
+            onClick={onVerMas}
+            className={`${TXT.small} font-bold flex items-center gap-0.5 whitespace-nowrap shrink-0 hover:underline active:scale-95 transition-transform`}
+            style={{ color: t.primary }}
+          >
+            Ver todos <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+          </button>
+        )}
       </div>
+      {extra && <div className="px-5 md:px-6 mb-3">{extra}</div>}
 
       <div
         className="flex gap-3 overflow-x-auto hide-scrollbar px-5 md:px-6 pb-2 snap-x scroll-px-5 md:scroll-px-6"
