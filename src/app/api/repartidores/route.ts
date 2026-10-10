@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { clienteServicio, quienEs } from '@/lib/pushServidor';
-import { excedeLimite, ipDe, texto, UUID } from '@/lib/transporteServidor';
+import { ipDe, texto, UUID } from '@/lib/transporteServidor';
+import { frenar } from '@/lib/frenos';
 
 // Los repartidores propios de una tienda. Cada uno es una fila de `drivers` (tipo 'Repartidor', store_slug = la
 // tienda) con su enlace secreto en `driver_acceso`: entra a la MISMA app del chofer (/transporte/chofer) y ahí ve
@@ -52,7 +53,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  if (excedeLimite(`repartidor-nuevo:${ipDe(request)}`, 20, 60_000)) return NextResponse.json({ error: 'Demasiados intentos' }, { status: 429, headers: SIN_CACHE });
+  if (await frenar(`repartidor-nuevo:${ipDe(request)}`, 20, 60_000)) return NextResponse.json({ error: 'Demasiados intentos' }, { status: 429, headers: SIN_CACHE });
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   const a = await autorizar(request, texto(body?.store, 60));
   if ('error' in a) return a.error;

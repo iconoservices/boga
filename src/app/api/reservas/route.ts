@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { HORAS_RESERVA, generarCodigoReserva } from '@/lib/reservas';
 import { hoyLima, hoyLimaMas } from '@/lib/fechaLima';
+import { frenar } from '@/lib/frenos';
+import { ipDe } from '@/lib/transporteServidor';
 
 // Reservas de servicios. Los visitantes no tienen sesión, así que escribe el servidor con la llave de servicio.
 //   GET  ?store=<slug>&fecha=AAAA-MM-DD  → horas ya ocupadas ese día (solo horas, nunca datos de otras clientas).
@@ -16,16 +18,9 @@ const ID_VALIDO = /^[A-Za-z0-9_-]{1,64}$/;
 const FECHA = /^\d{4}-\d{2}-\d{2}$/;
 const DIAS_MAX = 60;
 
+// Freno por IP, compartido entre todas las instancias del servidor (lib/frenos.ts).
 const VENTANA_MS = 10 * 60_000;
 const MAX_POR_VENTANA = 6;
-const visitas = new Map<string, { n: number; desde: number }>();
-function excedeLimite(ip: string) {
-  const ahora = Date.now();
-  const v = visitas.get(ip);
-  if (!v || ahora - v.desde > VENTANA_MS) { visitas.set(ip, { n: 1, desde: ahora }); return false; }
-  v.n += 1;
-  return v.n > MAX_POR_VENTANA;
-}
 
 const texto = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 
@@ -53,8 +48,8 @@ export async function POST(request: Request) {
   const db = cliente();
   if (!db) return NextResponse.json({ ok: false, motivo: 'sin_servicio' });
 
-  const ip = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'desconocida';
-  if (excedeLimite(ip)) return NextResponse.json({ ok: false, motivo: 'limite' }, { status: 429 });
+  const ip = ipDe(request);
+  if (await frenar(`reserva-servicio:${ip}`, MAX_POR_VENTANA, VENTANA_MS)) return NextResponse.json({ ok: false, motivo: 'limite' }, { status: 429 });
 
   let body: Record<string, unknown> | null;
   try { body = await request.json(); } catch { return NextResponse.json({ ok: false, motivo: 'json' }, { status: 400 }); }

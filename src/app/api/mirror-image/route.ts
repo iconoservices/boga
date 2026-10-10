@@ -19,10 +19,13 @@ const EXT: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', '
 function esIpPrivada(ip: string): boolean {
   if (ip.includes(':')) {
     const l = ip.toLowerCase();
-    return l === '::1' || l.startsWith('fc') || l.startsWith('fd') || l.startsWith('fe80') || l.startsWith('::ffff:127.') || l.startsWith('::ffff:10.') || l.startsWith('::ffff:192.168.');
+    // IPv4 dentro de IPv6 (::ffff:169.254.169.254): se revisa como IPv4. La forma hexadecimal (::ffff:a9fe:a9fe) se rechaza entera.
+    const v4 = l.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
+    if (v4) return esIpPrivada(v4[1]);
+    return l === '::' || l === '::1' || l.startsWith('::ffff:') || l.startsWith('64:ff9b:') || l.startsWith('fc') || l.startsWith('fd') || /^fe[89ab]/.test(l);
   }
   const [a, b] = ip.split('.').map(Number);
-  return a === 10 || a === 127 || a === 0 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127);
+  return a === 10 || a === 127 || a === 0 || a >= 224 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127);
 }
 
 async function hostSeguro(u: URL): Promise<boolean> {

@@ -6,6 +6,8 @@ import { COLS_OFERTA, aplicarOferta } from '@/lib/ofertas';
 import { descontarStockEnLoyverse } from '@/lib/loyverse';
 import { leerCredencialesLoyverse } from '@/lib/loyverseServidor';
 import { COL_PRESENTACIONES, claveLinea, leerPresentaciones, nombreConPresentacion, presentacionPorEtiqueta } from '@/lib/presentaciones';
+import { frenar } from '@/lib/frenos';
+import { ipDe } from '@/lib/transporteServidor';
 
 // Guarda el pedido de la carta en la base ANTES de que el cliente abra WhatsApp.
 //
@@ -22,17 +24,9 @@ export const dynamic = 'force-dynamic';
 const ID_VALIDO = /^[A-Za-z0-9_-]{1,64}$/;
 const SLUG = /^[a-z0-9-]{1,80}$/;
 
-// Freno simple por IP (en memoria; sirve de defensa básica contra el spam, no es infalible).
+// Freno por IP, compartido entre todas las instancias del servidor (lib/frenos.ts).
 const VENTANA_MS = 10 * 60_000;
 const MAX_POR_VENTANA = 12;
-const visitas = new Map<string, { n: number; desde: number }>();
-function excedeLimite(ip: string) {
-  const ahora = Date.now();
-  const v = visitas.get(ip);
-  if (!v || ahora - v.desde > VENTANA_MS) { visitas.set(ip, { n: 1, desde: ahora }); return false; }
-  v.n += 1;
-  return v.n > MAX_POR_VENTANA;
-}
 
 const texto = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 
@@ -42,8 +36,8 @@ export async function POST(request: Request) {
   // Sin llave de servicio no se puede guardar: no es un error para el cliente.
   if (!url || !key) return NextResponse.json({ ok: false, motivo: 'sin_servicio' });
 
-  const ip = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'desconocida';
-  if (excedeLimite(ip)) return NextResponse.json({ ok: false, motivo: 'limite' }, { status: 429 });
+  const ip = ipDe(request);
+  if (await frenar(`pedido-carta:${ip}`, MAX_POR_VENTANA, VENTANA_MS)) return NextResponse.json({ ok: false, motivo: 'limite' }, { status: 429 });
 
   let body: { store?: unknown; items?: unknown; cliente?: Record<string, unknown>; codigo?: unknown } | null;
   try { body = await request.json(); } catch { return NextResponse.json({ ok: false, motivo: 'json' }, { status: 400 }); }

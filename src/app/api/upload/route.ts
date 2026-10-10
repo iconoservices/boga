@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { uploadToR2 } from '@/lib/r2';
+import { IMAGENES_Y_PDF, carpetaValida, firmaCoincide } from '@/lib/tiposArchivo';
+
+const MAX_BYTES = 10 * 1024 * 1024;
 
 // Antes de migrar a R2, subir una imagen pasaba por Supabase Storage, cuyas
 // políticas exigían `auth.role() = 'authenticated'`. Al mover la subida acá
@@ -48,12 +51,18 @@ export async function POST(request: Request) {
     }
   }
 
-  const ext = file.name.split('.').pop() || 'bin';
-  const key = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  // Solo imágenes y PDF, con la extensión sacada del tipo (ver lib/tiposArchivo.ts: un .html o .svg en
+  // fotos.bogahub.app podría leer las cookies de sesión de .bogahub.app).
+  if (!carpetaValida(folder)) return NextResponse.json({ error: 'Carpeta destino no válida' }, { status: 400 });
+  const ext = IMAGENES_Y_PDF[file.type];
+  if (!ext) return NextResponse.json({ error: 'Solo se pueden subir imágenes (JPG, PNG, WebP, GIF, AVIF) o PDF' }, { status: 415 });
+  if (file.size > MAX_BYTES) return NextResponse.json({ error: 'El archivo pesa más de 10 MB' }, { status: 413 });
   const buffer = Buffer.from(await file.arrayBuffer());
+  if (!firmaCoincide(file.type, buffer)) return NextResponse.json({ error: 'El archivo no es lo que dice ser' }, { status: 415 });
+  const key = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
   try {
-    const url = await uploadToR2(key, buffer, file.type || 'application/octet-stream');
+    const url = await uploadToR2(key, buffer, file.type);
     return NextResponse.json({ url });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Error al subir a R2' }, { status: 500 });

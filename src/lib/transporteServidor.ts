@@ -27,7 +27,10 @@ export function excedeLimite(clave: string, max: number, ventanaMs: number): boo
   v.n += 1;
   return v.n > max;
 }
-export const ipDe = (request: Request) => (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'desconocida';
+// Con Cloudflare delante, Vercel ve la IP del servidor de Cloudflare (la misma para muchos clientes): la del
+// visitante viene en cf-connecting-ip. Sin Cloudflare (local, *.vercel.app) se usa x-forwarded-for.
+export const ipDe = (request: Request) =>
+  (request.headers.get('cf-connecting-ip') || (request.headers.get('x-forwarded-for') || '').split(',')[0]).trim() || 'desconocida';
 
 export interface ChoferAutenticado {
   driverId: string;

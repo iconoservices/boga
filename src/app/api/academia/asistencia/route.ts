@@ -4,6 +4,8 @@ import { clienteServicio, quienEs } from '@/lib/pushServidor';
 import { TOKEN_ALUMNO, horaLegibleLima } from '@/lib/academia';
 import { hoyLima } from '@/lib/fechaLima';
 import { moduloAcademia } from '@/lib/modulos';
+import { frenar } from '@/lib/frenos';
+import { ipDe } from '@/lib/transporteServidor';
 
 // Toma la asistencia: el profesor escanea el QR del carnet del alumno y queda marcada su llegada de hoy.
 //   POST {store, token, pin?}  (con el PIN del profesor, o con la sesión del dueño en `Authorization: Bearer`)
@@ -15,16 +17,11 @@ export const runtime = 'nodejs';
 
 const SLUG = /^[a-z0-9-]{1,80}$/;
 
-// Freno contra adivinar el PIN (en memoria: defensa básica). 8 fallos por IP cada 10 minutos.
+// Freno contra adivinar el PIN: 8 fallos por IP cada 10 minutos, compartido entre instancias (lib/frenos.ts).
 const VENTANA_MS = 10 * 60_000;
 const MAX_FALLOS = 8;
-const fallos = new Map<string, { n: number; desde: number }>();
-const bloqueado = (ip: string) => { const v = fallos.get(ip); return !!v && Date.now() - v.desde < VENTANA_MS && v.n >= MAX_FALLOS; };
-function anotarFallo(ip: string) {
-  const v = fallos.get(ip);
-  if (!v || Date.now() - v.desde > VENTANA_MS) fallos.set(ip, { n: 1, desde: Date.now() });
-  else v.n += 1;
-}
+const bloqueado = (ip: string) => frenar(`academia-pin:${ip}`, MAX_FALLOS, VENTANA_MS, false);
+const anotarFallo = (ip: string) => frenar(`academia-pin:${ip}`, MAX_FALLOS, VENTANA_MS);
 
 export async function POST(request: Request) {
   const db = clienteServicio();
@@ -36,8 +33,8 @@ export async function POST(request: Request) {
   const pin = typeof body?.pin === 'string' ? body.pin.trim() : '';
   if (!SLUG.test(slug)) return NextResponse.json({ ok: false, resultado: 'error', mensaje: 'Academia inválida' }, { status: 400 });
 
-  const ip = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'desconocida';
-  if (bloqueado(ip)) return NextResponse.json({ ok: false, resultado: 'sin_permiso', mensaje: 'Demasiados intentos. Espera unos minutos.' }, { status: 429 });
+  const ip = ipDe(request);
+  if (await bloqueado(ip)) return NextResponse.json({ ok: false, resultado: 'sin_permiso', mensaje: 'Demasiados intentos. Espera unos minutos.' }, { status: 429 });
 
   const { data: tienda } = await db.from('stores').select('slug,name,user_id,modulos').eq('slug', slug).maybeSingle();
   if (!tienda || !moduloAcademia(tienda.modulos)) {
@@ -55,7 +52,7 @@ export async function POST(request: Request) {
     autorizado = !!cfg?.pin && cfg.pin === pin;
   }
   if (!autorizado) {
-    anotarFallo(ip);
+    await anotarFallo(ip);
     return NextResponse.json({ ok: false, resultado: 'sin_permiso', mensaje: 'PIN incorrecto o sesión vencida' }, { status: 401 });
   }
 

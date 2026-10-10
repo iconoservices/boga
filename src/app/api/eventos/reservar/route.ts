@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { ipDe } from '@/lib/transporteServidor';
+import { frenar } from '@/lib/frenos';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,10 +23,14 @@ export async function POST(request: Request) {
   const event_id = (body?.event_id || '').trim();
   const nombre = (body?.nombre || '').trim();
   const telefono = (body?.telefono || '').trim();
-  const promotor = (body?.promotor || '').trim().toLowerCase();
+  const promotorCrudo = String(body?.promotor || '').trim().toLowerCase();
+  const promotor = /^[a-z0-9_-]{2,40}$/.test(promotorCrudo) ? promotorCrudo : '';   // mismo formato que busca /api/eventos/promotor
 
   if (!event_id || !nombre) {
     return NextResponse.json({ ok: false, error: 'Nombre y evento requeridos' }, { status: 400 });
+  }
+  if (await frenar(`reservar-entrada:${ipDe(request)}`, 10, 10 * 60_000)) {
+    return NextResponse.json({ ok: false, error: 'Hiciste muchas reservas seguidas. Espera unos minutos.' }, { status: 429 });
   }
 
   const supabase = createClient(url, key, { auth: { persistSession: false } });

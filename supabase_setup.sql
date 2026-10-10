@@ -1483,6 +1483,11 @@ BEGIN
     IF NEW.push_activo IS DISTINCT FROM OLD.push_activo THEN
       NEW.push_activo := OLD.push_activo;
     END IF;
+    -- El plan contratado fija el tope de productos (limite_productos_plan): sin esto el dueño podía
+    -- ponerse 'multisede' desde la consola del navegador y quedar sin tope.
+    IF NEW.plan IS DISTINCT FROM OLD.plan THEN
+      NEW.plan := OLD.plan;
+    END IF;
     -- Quién es el dueño (stores.user_id) de una tienda YA reclamada lo cambia solo el superadmin:
     -- sin esto, un co-administrador (ver store_admins) podría ponerse a sí mismo como dueño al
     -- guardar. Ojo: no frena "reclamar mi tienda" (OLD.user_id NULL -> el propio usuario), la
@@ -2232,3 +2237,45 @@ BEGIN
   END IF;
   RETURN NEW;
 END $$;
+
+-- ============================================================
+-- FRENOS anti-spam / anti-adivinar PIN, compartidos entre todas las instancias del servidor (lib/frenos.ts).
+-- Antes vivían en la memoria de cada instancia de Vercel y alguien insistente se los saltaba.
+-- La tabla y la función solo las usa el servidor (llave de servicio): sin políticas ni permisos para el navegador.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.frenos (
+  clave TEXT PRIMARY KEY,
+  n     INTEGER NOT NULL,
+  desde TIMESTAMPTZ NOT NULL
+);
+ALTER TABLE public.frenos ENABLE ROW LEVEL SECURITY;   -- sin políticas a propósito
+
+-- Suma un intento a la clave y devuelve true si ya pasó de p_max en la ventana. Con p_sumar = false solo mira.
+CREATE OR REPLACE FUNCTION public.frenar(p_clave TEXT, p_max INTEGER, p_ventana_seg INTEGER, p_sumar BOOLEAN DEFAULT true)
+RETURNS BOOLEAN
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  v_n INTEGER;
+  v_limite TIMESTAMPTZ := now() - make_interval(secs => p_ventana_seg);
+BEGIN
+  IF NOT p_sumar THEN
+    SELECT n INTO v_n FROM public.frenos WHERE clave = p_clave AND desde >= v_limite;
+    RETURN COALESCE(v_n, 0) >= p_max;
+  END IF;
+
+  INSERT INTO public.frenos AS f (clave, n, desde) VALUES (p_clave, 1, now())
+  ON CONFLICT (clave) DO UPDATE SET
+    n     = CASE WHEN f.desde < v_limite THEN 1 ELSE f.n + 1 END,
+    desde = CASE WHEN f.desde < v_limite THEN now() ELSE f.desde END
+  RETURNING n INTO v_n;
+
+  -- Limpieza de vez en cuando (claves de más de un día)
+  IF random() < 0.01 THEN
+    DELETE FROM public.frenos WHERE desde < now() - interval '1 day';
+  END IF;
+
+  RETURN v_n > p_max;
+END $$;
+
+REVOKE ALL ON FUNCTION public.frenar(TEXT, INTEGER, INTEGER, BOOLEAN) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.frenar(TEXT, INTEGER, INTEGER, BOOLEAN) TO service_role;

@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { uploadToR2 } from '@/lib/r2';
+import { IMAGENES, firmaCoincide } from '@/lib/tiposArchivo';
+import { ipDe } from '@/lib/transporteServidor';
+import { frenar } from '@/lib/frenos';
 
 export const runtime = 'nodejs';
 
@@ -16,9 +19,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No se recibió ningún archivo' }, { status: 400 });
     }
 
-    // Validar tipo MIME
-    if (!file.type.startsWith('image/')) {
+    // Solo fotos de verdad (sin SVG ni extensiones inventadas: ver lib/tiposArchivo.ts)
+    const ext = IMAGENES[file.type];
+    if (!ext) {
       return NextResponse.json({ error: 'Solo se permiten imágenes (JPG, PNG, WebP)' }, { status: 400 });
+    }
+    if (await frenar(`postulacion-foto:${ipDe(request)}`, 10, 10 * 60_000)) {
+      return NextResponse.json({ error: 'Demasiadas fotos seguidas. Espera unos minutos.' }, { status: 429 });
     }
 
     // Validar peso máximo (5 MB)
@@ -27,15 +34,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'La imagen excede el límite de 5 MB' }, { status: 400 });
     }
 
-    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
     const subcarpeta = tipo === 'perfil' ? 'perfiles' : 'vehiculos';
     const key = `drivers/postulaciones/${subcarpeta}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const buffer = Buffer.from(await file.arrayBuffer());
+    if (!firmaCoincide(file.type, buffer)) {
+      return NextResponse.json({ error: 'El archivo no es una imagen válida' }, { status: 400 });
+    }
 
-    const url = await uploadToR2(key, buffer, file.type || 'image/jpeg');
+    const url = await uploadToR2(key, buffer, file.type);
     return NextResponse.json({ url });
   } catch (err: any) {
     console.error('[drivers/upload] error:', err);
-    return NextResponse.json({ error: err.message || 'Error al procesar la imagen' }, { status: 500 });
+    return NextResponse.json({ error: 'Error al procesar la imagen' }, { status: 500 });
   }
 }

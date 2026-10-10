@@ -6,6 +6,8 @@ import { COLS_OFERTA, aplicarOferta } from '@/lib/ofertas';
 import { moduloActivo } from '@/lib/modulos';
 import { stockIlimitado } from '@/lib/stock';
 import { COL_PRESENTACIONES, claveLinea, leerPresentaciones, nombreConPresentacion, presentacionPorEtiqueta } from '@/lib/presentaciones';
+import { frenar } from '@/lib/frenos';
+import { ipDe } from '@/lib/transporteServidor';
 
 // Crea el pedido de un cliente que va a PAGAR ONLINE (tarjeta / Yape por Izipay) y devuelve su código: el cliente sigue
 // en /pagar/<código>. Igual que /api/pedidos, el cliente solo manda qué productos y cuántos; los precios (con ofertas) y
@@ -18,16 +20,9 @@ const ID_VALIDO = /^[A-Za-z0-9_-]{1,64}$/;
 const SLUG = /^[a-z0-9-]{1,80}$/;
 const texto = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 
+// Freno por IP, compartido entre todas las instancias del servidor (lib/frenos.ts).
 const VENTANA_MS = 10 * 60_000;
 const MAX_POR_VENTANA = 10;
-const visitas = new Map<string, { n: number; desde: number }>();
-function excedeLimite(ip: string) {
-  const ahora = Date.now();
-  const v = visitas.get(ip);
-  if (!v || ahora - v.desde > VENTANA_MS) { visitas.set(ip, { n: 1, desde: ahora }); return false; }
-  v.n += 1;
-  return v.n > MAX_POR_VENTANA;
-}
 
 const codigoNuevo = () => Array.from(randomBytes(10), (b) => 'abcdefghijkmnpqrstuvwxyz23456789'[b % 32]).join('');
 
@@ -35,8 +30,8 @@ export async function POST(request: Request) {
   const db = clienteServicio();
   if (!db) return NextResponse.json({ ok: false, motivo: 'sin_servicio' }, { status: 503 });
 
-  const ip = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'desconocida';
-  if (excedeLimite(ip)) return NextResponse.json({ ok: false, motivo: 'limite' }, { status: 429 });
+  const ip = ipDe(request);
+  if (await frenar(`pago-crear:${ip}`, MAX_POR_VENTANA, VENTANA_MS)) return NextResponse.json({ ok: false, motivo: 'limite' }, { status: 429 });
 
   let body: { store?: unknown; items?: unknown; cliente?: Record<string, unknown> } | null;
   try { body = await request.json(); } catch { return NextResponse.json({ ok: false, motivo: 'json' }, { status: 400 }); }

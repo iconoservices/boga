@@ -1,3 +1,4 @@
+import { createHmac, timingSafeEqual } from 'crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { cifrar, descifrar, cifradoDisponible } from '@/lib/pagosCrypto';
 import { quienEs, type Quien } from '@/lib/pushServidor';
@@ -36,6 +37,30 @@ export async function guardarCredencialesLoyverse(db: SupabaseClient, slug: stri
   }
   if (p.merchantId !== undefined) fila.merchant_id = p.merchantId;
   return db.from('store_loyverse').upsert(fila, { onConflict: 'store' });
+}
+
+// Firma del webhook. Loyverse no firma sus avisos, así que la firma va en la URL que se le registra:
+// /api/loyverse/webhook?tienda=<slug>&firma=<HMAC-SHA-256 del slug>. Solo el servidor sabe calcularla
+// (llave LOYVERSE_WEBHOOK_SECRET, o PAGOS_ENC_KEY si no está) y la URL solo la conocen Boga y Loyverse.
+function llaveWebhook(): string | null {
+  return (process.env.LOYVERSE_WEBHOOK_SECRET || process.env.PAGOS_ENC_KEY || '').trim() || null;
+}
+
+export function firmaWebhookLoyverse(slug: string): string | null {
+  const llave = llaveWebhook();
+  return llave ? createHmac('sha256', llave).update(`loyverse-webhook:${slug}`).digest('hex') : null;
+}
+
+export function firmaWebhookValida(slug: string, firma: string): boolean {
+  const esperada = firmaWebhookLoyverse(slug);
+  if (!esperada || !/^[0-9a-f]{64}$/.test(firma)) return false;
+  return timingSafeEqual(Buffer.from(esperada), Buffer.from(firma));
+}
+
+/** URL firmada del webhook de una tienda, o null si el servidor no tiene llave para firmar. */
+export function urlWebhookLoyverse(siteUrl: string, slug: string): string | null {
+  const firma = firmaWebhookLoyverse(slug);
+  return firma ? `${siteUrl.replace(/\/$/, '')}/api/loyverse/webhook?tienda=${encodeURIComponent(slug)}&firma=${firma}` : null;
 }
 
 /** Tiendas cuyo Loyverse tiene ese merchant_id (para el webhook). */

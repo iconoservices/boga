@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { normalizarCelular } from '@/lib/cliente';
 import { avanzarOlas, EXPIRA_MIN } from '@/lib/despacho';
 import { zonaPorId, TIPOS_PEDIDO } from '@/lib/zonasTransporte';
-import { coordenada, excedeLimite, ipDe, servicio, texto } from '@/lib/transporteServidor';
+import { coordenada, ipDe, servicio, texto } from '@/lib/transporteServidor';
+import { frenar } from '@/lib/frenos';
 
 // Un pasajero pide un taxi. Se guarda el pedido y sale la primera ola de avisos a los choferes disponibles
 // más cercanos (ver lib/despacho.ts). Devuelve el id del pedido: quien lo tiene puede ver su estado.
@@ -14,7 +15,7 @@ export async function POST(request: Request) {
   const db = servicio();
   if (!db) return NextResponse.json({ error: 'El servicio de taxi no está configurado todavía.' }, { status: 503 });
 
-  if (excedeLimite(`pedir:${ipDe(request)}`, 6, 10 * 60_000)) {
+  if (await frenar(`pedir:${ipDe(request)}`, 6, 10 * 60_000)) {
     return NextResponse.json({ error: 'Hiciste muchos pedidos seguidos. Espera unos minutos.' }, { status: 429 });
   }
 

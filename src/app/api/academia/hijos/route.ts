@@ -3,6 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import { clienteServicio } from '@/lib/pushServidor';
 import { hoyLima } from '@/lib/fechaLima';
 import { moduloAcademia } from '@/lib/modulos';
+import { frenar } from '@/lib/frenos';
+import { ipDe } from '@/lib/transporteServidor';
 
 // Los hijos de un padre que inició sesión en la app de la academia.
 //   POST {store}                       → [{nombre, grupo, token, llegadaHoy}] de los hijos de esa cuenta
@@ -15,17 +17,9 @@ export const dynamic = 'force-dynamic';
 const SLUG = /^[a-z0-9-]{1,80}$/;
 const CODIGO = /^[A-Z0-9]{6}$/;
 
-// Freno por IP contra adivinar códigos (en memoria; defensa básica).
+// Freno por IP, compartido entre todas las instancias del servidor (lib/frenos.ts).
 const VENTANA_MS = 10 * 60_000;
 const MAX_POR_VENTANA = 20;
-const visitas = new Map<string, { n: number; desde: number }>();
-function excedeLimite(ip: string) {
-  const ahora = Date.now();
-  const v = visitas.get(ip);
-  if (!v || ahora - v.desde > VENTANA_MS) { visitas.set(ip, { n: 1, desde: ahora }); return false; }
-  v.n += 1;
-  return v.n > MAX_POR_VENTANA;
-}
 
 async function usuarioDe(request: Request): Promise<{ id: string; email: string } | null> {
   const token = (request.headers.get('authorization') || '').replace('Bearer ', '');
@@ -42,8 +36,8 @@ export async function POST(request: Request) {
   const db = clienteServicio();
   if (!db) return NextResponse.json({ error: 'Servidor sin configurar' }, { status: 500 });
 
-  const ip = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'desconocida';
-  if (excedeLimite(ip)) return NextResponse.json({ error: 'Demasiados intentos. Espera unos minutos.' }, { status: 429 });
+  const ip = ipDe(request);
+  if (await frenar(`academia-codigo:${ip}`, MAX_POR_VENTANA, VENTANA_MS)) return NextResponse.json({ error: 'Demasiados intentos. Espera unos minutos.' }, { status: 429 });
 
   const yo = await usuarioDe(request);
   if (!yo) return NextResponse.json({ error: 'Inicia sesión para ver a tus hijos' }, { status: 401 });

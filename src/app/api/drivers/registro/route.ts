@@ -1,12 +1,18 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { normalizarHorario, resumenHorario } from '@/lib/horario';
+import { ipDe } from '@/lib/transporteServidor';
+import { frenar } from '@/lib/frenos';
 
 export const runtime = 'nodejs';
 
 // Endpoint para registrar postulaciones de Taxi Seguro y disparar
 // alertas automáticas al WhatsApp del superadmin (CallMeBot u otros).
 export async function POST(request: Request) {
+  // Sin freno, un script podía llenar la tabla y el WhatsApp del superadmin (CallMeBot) de postulaciones falsas.
+  if (await frenar(`postulacion:${ipDe(request)}`, 5, 60 * 60_000)) {
+    return NextResponse.json({ error: 'Ya enviaste varias postulaciones. Intenta más tarde.' }, { status: 429 });
+  }
   try {
     const body = await request.json();
     const {
@@ -90,6 +96,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, id: data?.id });
   } catch (err: any) {
     console.error('[drivers/registro] error:', err);
-    return NextResponse.json({ error: err.message || 'Error del servidor' }, { status: 500 });
+    return NextResponse.json({ error: 'Error del servidor' }, { status: 500 });
   }
 }

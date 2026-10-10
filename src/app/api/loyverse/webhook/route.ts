@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { leerCredencialesLoyverse, tiendasConMerchantId } from '@/lib/loyverseServidor';
+import { firmaWebhookValida, leerCredencialesLoyverse, tiendasConMerchantId } from '@/lib/loyverseServidor';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,6 +20,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: 'Base de datos no configurada.' }, { status: 500 });
   }
 
+  // La firma va en la URL que Boga registró en Loyverse (ver urlWebhookLoyverse). Sin firma válida no se hace nada:
+  // antes bastaba adivinar un merchant_id para disparar sincronizaciones.
+  const params = new URL(request.url).searchParams;
+  const tiendaFirmada = params.get('tienda') || '';
+  if (!/^[a-z0-9-]{1,80}$/.test(tiendaFirmada) || !firmaWebhookValida(tiendaFirmada, params.get('firma') || '')) {
+    return NextResponse.json({ ok: false, error: 'Firma no válida' }, { status: 401 });
+  }
+
   const supabase = createClient(supabaseUrl, serviceKey);
 
   let payload: any = null;
@@ -30,7 +38,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: 'JSON inválido' }, { status: 400 });
   }
 
-  console.log('[Loyverse Webhook] Evento recibido:', JSON.stringify(payload, null, 2));
+  console.log('[Loyverse Webhook] Evento recibido para', tiendaFirmada, payload?.type || payload?.event);
 
   // Loyverse envía merchant_id o data con el ID de la tienda
   const merchantId = payload?.merchant_id || payload?.data?.merchant_id;
@@ -42,7 +50,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, message: 'Aviso sin merchant_id: ignorado.' });
   }
 
-  const slugs = await tiendasConMerchantId(supabase, merchantId);
+  // Solo la tienda de la URL firmada, y solo si su Loyverse es el que avisa.
+  const slugs = (await tiendasConMerchantId(supabase, merchantId)).filter((s) => s === tiendaFirmada);
   if (slugs.length === 0) {
     return NextResponse.json({ ok: true, message: 'Ninguna tienda coincide con el webhook.' });
   }

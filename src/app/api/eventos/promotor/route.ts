@@ -14,7 +14,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const codigo = (searchParams.get('codigo') || '').trim().toLowerCase();
 
-  if (!codigo) {
+  // Solo letras, números y guiones: con `ilike` un código como "%" devolvía los tickets de TODOS los promotores.
+  if (!/^[a-z0-9_-]{2,40}$/.test(codigo)) {
     return NextResponse.json({ ok: false, mensaje: 'Código de promotor requerido' }, { status: 400 });
   }
 
@@ -24,7 +25,7 @@ export async function GET(request: Request) {
   const { data: tickets, error: ticketsError } = await supabase
     .from('tickets')
     .select('id, event_id, nombre, created_at, estado, usado_at')
-    .ilike('promotor_codigo', codigo);
+    .eq('promotor_codigo', codigo);   // se guarda en minúscula (ver /api/eventos/reservar)
 
   if (ticketsError) {
     // Si la columna promotor_codigo todavía no existe en una base vieja, no rompemos

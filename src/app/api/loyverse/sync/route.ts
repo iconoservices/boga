@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { asegurarWebhooksLoyverse } from '@/lib/loyverse';
 import { quienEs } from '@/lib/pushServidor';
-import { leerCredencialesLoyverse, guardarCredencialesLoyverse } from '@/lib/loyverseServidor';
+import { leerCredencialesLoyverse, guardarCredencialesLoyverse, urlWebhookLoyverse } from '@/lib/loyverseServidor';
 
 export const dynamic = 'force-dynamic';
 
@@ -316,8 +316,11 @@ export async function POST(request: Request) {
     }
 
     // 9. Auto-asegurar Webhooks en Loyverse para sincronización en tiempo real
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bogamarket.com';
-    const whResult = await asegurarWebhooksLoyverse(loyverseToken, siteUrl);
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app';
+    const webhookUrl = urlWebhookLoyverse(siteUrl, storeSlug);
+    const whResult = webhookUrl
+      ? await asegurarWebhooksLoyverse(loyverseToken, webhookUrl)
+      : { ok: false, merchantId: null, error: 'Falta LOYVERSE_WEBHOOK_SECRET (o PAGOS_ENC_KEY) para firmar el webhook' };
 
     // 10. Actualizar metadatos de la tienda (última sincronización, webhooks y token)
     // La ficha y el merchant_id van a la tabla privada; en stores.modulos (público) solo quedan datos sin secretos.

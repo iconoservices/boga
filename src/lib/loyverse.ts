@@ -13,8 +13,7 @@ export interface LoyverseStockUpdate {
  * Registra los Webhooks automáticos en Loyverse para que notifique a Boga
  * en tiempo real cuando hay cambios en productos o ventas.
  */
-export async function asegurarWebhooksLoyverse(token: string, siteUrl: string) {
-  const webhookUrl = `${siteUrl.replace(/\/$/, '')}/api/loyverse/webhook`;
+export async function asegurarWebhooksLoyverse(token: string, webhookUrl: string) {
   const headers = {
     Authorization: `Bearer ${token}`,
     'Content-Type': 'application/json',
@@ -25,8 +24,24 @@ export async function asegurarWebhooksLoyverse(token: string, siteUrl: string) {
     if (!listRes.ok) return { ok: false, error: 'No se pudo listar webhooks' };
 
     const data = await listRes.json();
-    const existing = (data.webhooks || []) as { url: string; type: string; status: string; merchant_id?: string }[];
-    const merchantId = existing[0]?.merchant_id || null;
+    const existing = (data.webhooks || []) as { id?: string; url: string; type: string; status: string; merchant_id?: string }[];
+    let merchantId = existing[0]?.merchant_id || null;
+    // Primera conexión (sin webhooks todavía): el merchant_id se pide aparte, si no el webhook no sabría de qué tienda es.
+    if (!merchantId) {
+      const m = await fetch('https://api.loyverse.com/v1.0/merchant', { headers }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+      merchantId = (m?.id as string | undefined) || null;
+    }
+
+    // Los webhooks viejos de Boga (sin firma, o de ESTA tienda con otra firma) se borran: el servidor ya no los acepta.
+    // Los de otra tienda de Boga que comparta la misma cuenta de Loyverse se dejan.
+    const tienda = new URL(webhookUrl).searchParams.get('tienda');
+    for (const w of existing) {
+      let deEstaTienda = false, firmado = false;
+      try { const u = new URL(w.url); firmado = u.searchParams.has('firma'); deEstaTienda = u.searchParams.get('tienda') === tienda; } catch { /* URL rara: no es nuestra */ }
+      if (w.id && w.url.includes('/api/loyverse/webhook') && w.url !== webhookUrl && (!firmado || deEstaTienda)) {
+        await fetch(`https://api.loyverse.com/v1.0/webhooks/${encodeURIComponent(w.id)}`, { method: 'DELETE', headers }).catch(() => {});
+      }
+    }
 
     const needed = ['items.update', 'receipts.update'];
     for (const t of needed) {
