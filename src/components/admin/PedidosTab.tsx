@@ -4,7 +4,7 @@
 // también quedan registrados) y las ventas de la caja (POS). Se puede ver el detalle, escribirle al
 // cliente por WhatsApp y cambiar el estado. Cancelar devuelve el stock (lo hace el panel).
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 export interface Pedido {
   id: string;
@@ -12,7 +12,7 @@ export interface Pedido {
   customer_name: string | null;
   customer_phone: string | null;
   customer_address: string | null;
-  items: { id?: string; name: string; price: number; quantity: number }[] | string | null;
+  items: { id?: string; name: string; price: number; quantity: number; /** El cliente lo pidió sin stock suficiente (lo marca /api/pedidos). */ sin_stock?: boolean }[] | string | null;
   total_amount: number;
   status: string;
   payment_method?: string | null;
@@ -68,11 +68,11 @@ const wa = (tel: string) => {
 // ── Tablero: una columna por etapa; cada pedido avanza con un solo botón ──
 const COLUMNAS = [
   { id: 'recibidos', titulo: 'Recibidos', punto: 'bg-orange-500', estados: ['Pendiente'], siguiente: { estado: 'Preparando', texto: 'Preparar', icono: 'skillet' } },
-  { id: 'preparando', titulo: 'Preparando', punto: 'bg-amber-500', estados: ['Preparando', 'Listo'], siguiente: { estado: 'Enviado', texto: 'Enviar', icono: 'local_shipping' } },
-  { id: 'camino', titulo: 'En camino', punto: 'bg-sky-500', estados: ['Enviado'], siguiente: { estado: 'Entregado', texto: 'Entregado', icono: 'check_circle' } },
-  { id: 'entregado', titulo: 'Entregados', punto: 'bg-emerald-500', estados: ['Entregado'], siguiente: null },
+  { id: 'preparando', titulo: 'Preparando', punto: 'bg-amber-500', estados: ['Preparando', 'Listo'], siguiente: { estado: 'Enviado', texto: 'Enviar', icono: 'local_shipping' }, anterior: { estado: 'Pendiente', texto: 'Recibidos' } },
+  { id: 'camino', titulo: 'En camino', punto: 'bg-sky-500', estados: ['Enviado'], siguiente: { estado: 'Entregado', texto: 'Entregado', icono: 'check_circle' }, anterior: { estado: 'Preparando', texto: 'Preparando' } },
+  { id: 'entregado', titulo: 'Entregados', punto: 'bg-emerald-500', estados: ['Entregado'], siguiente: null, anterior: { estado: 'Enviado', texto: 'En camino' } },
   { id: 'cancelados', titulo: 'Cancelados', punto: 'bg-red-500', estados: ['Cancelado'], siguiente: null },
-] as { id: string; titulo: string; punto: string; estados: string[]; siguiente: { estado: string; texto: string; icono: string } | null }[];
+] as { id: string; titulo: string; punto: string; estados: string[]; siguiente: { estado: string; texto: string; icono: string } | null; anterior?: { estado: string; texto: string } }[];
 const MAX_ENTREGADOS = 15;
 
 const hace = (iso: string) => {
@@ -83,6 +83,53 @@ const hace = (iso: string) => {
   if (h < 24) return `hace ${h} h`;
   return `hace ${Math.floor(h / 24)} d`;
 };
+
+/**
+ * Arrastrar la tarjeta hacia la derecha la pasa a la siguiente etapa (solo con el dedo; con mouse se usa el botón).
+ * Cuidado con el scroll: el gesto solo cuenta si es claramente horizontal y largo; soltar antes lo cancela, y el aviso
+ * «Deshacer» cubre cualquier error. El botón de la tarjeta sigue ahí para quien prefiera tocar.
+ */
+function TarjetaDeslizable({ onAvanzar, etiqueta, icono, children }: { onAvanzar?: () => void; etiqueta?: string; icono?: string; children: React.ReactNode }) {
+  const inicio = useRef<{ x: number; y: number } | null>(null);
+  const modo = useRef<'h' | 'v' | null>(null);
+  const [dx, setDx] = useState(0);
+  const UMBRAL = 96;
+
+  if (!onAvanzar) return <>{children}</>;
+
+  const alMover = (e: React.TouchEvent) => {
+    if (!inicio.current) return;
+    const mx = e.touches[0].clientX - inicio.current.x;
+    const my = e.touches[0].clientY - inicio.current.y;
+    if (!modo.current) {
+      if (Math.abs(mx) < 12 && Math.abs(my) < 12) return;
+      modo.current = Math.abs(mx) > Math.abs(my) * 1.8 ? 'h' : 'v';
+    }
+    if (modo.current === 'h') setDx(Math.max(0, Math.min(mx, 160)));
+  };
+  const alSoltar = () => {
+    if (modo.current === 'h' && dx >= UMBRAL) onAvanzar();
+    inicio.current = null; modo.current = null; setDx(0);
+  };
+
+  return (
+    <div className="relative rounded-lg overflow-hidden" style={{ touchAction: 'pan-y' }}>
+      <div className={`absolute inset-0 flex items-center gap-2 pl-4 rounded-lg text-white font-extrabold text-sm transition-colors ${dx >= UMBRAL ? 'bg-emerald-600' : 'bg-emerald-400'}`} aria-hidden="true">
+        <span className="material-symbols-outlined text-[22px]">{icono ?? 'arrow_forward'}</span>{dx >= UMBRAL ? 'Suelta para ' : 'Sigue arrastrando · '}{etiqueta}
+      </div>
+      <div
+        className="relative"
+        style={{ transform: `translateX(${dx}px)`, transition: dx === 0 ? 'transform 0.2s' : 'none' }}
+        onTouchStart={(e) => { inicio.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; modo.current = null; }}
+        onTouchMove={alMover}
+        onTouchEnd={alSoltar}
+        onTouchCancel={() => { inicio.current = null; modo.current = null; setDx(0); }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
 
 export default function PedidosTab({
   pedidos,
@@ -116,6 +163,27 @@ export default function PedidosTab({
   const [verCancelados, setVerCancelados] = useState(false);
   // En celular se ve una etapa a la vez (con pestañas arriba); en pantalla ancha, todas las columnas juntas.
   const [colMovil, setColMovil] = useState('recibidos');
+  // Al pasar un pedido a la siguiente etapa sale un aviso con «Deshacer» unos segundos (en celular la tarjeta desaparece de la
+  // pestaña y no se ve a dónde fue; además evita los errores de dedo).
+  const [deshacer, setDeshacer] = useState<{ pedido: Pedido; antes: string; ahora: string } | null>(null);
+  useEffect(() => {
+    if (!deshacer) return;
+    const t = setTimeout(() => setDeshacer(null), 7000);
+    return () => clearTimeout(t);
+  }, [deshacer]);
+  const avanzar = (o: Pedido, estado: string) => {
+    setDeshacer({ pedido: o, antes: o.status, ahora: estado });
+    cambiarEstado(o, estado);
+  };
+  // Al abrir, se muestra la primera etapa que tenga pedidos (los nuevos, si hay).
+  const [yaElegi, setYaElegi] = useState(false);
+  useEffect(() => {
+    if (yaElegi || pedidos.length === 0) return;
+    const primera = COLUMNAS.find((c) => c.id !== 'cancelados' && pedidos.some((p) => c.estados.includes(p.status)));
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (primera) setColMovil(primera.id);
+    setYaElegi(true);
+  }, [pedidos, yaElegi]);
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     try { if (localStorage.getItem('boga:pedidos-vista') === 'lista') setVista('lista'); } catch {}
@@ -159,7 +227,11 @@ export default function PedidosTab({
   return (
     <div className="flex flex-col gap-3 w-full">
       {/* Resumen: una franja delgada con los cuatro números (antes eran cuatro tarjetas grandes) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 bg-white border border-gray-100 rounded-md shadow-sm divide-x divide-y sm:divide-y-0 divide-gray-100 overflow-hidden">
+      <p className="sm:hidden flex items-center justify-between gap-2 bg-white border border-gray-100 rounded-md shadow-sm px-3 py-2 text-[12px] font-semibold text-gray-500">
+        <span><b className="text-gray-900 text-sm font-black">S/ {kpi.ingresos.toFixed(2)}</b> · {kpi.total} {kpi.total === 1 ? 'pedido' : 'pedidos'}</span>
+        <span>{kpi.activos} {kpi.activos === 1 ? 'activo' : 'activos'}{kpi.cancelados > 0 ? ` · ${kpi.cancelados} canc.` : ''}</span>
+      </p>
+      <div className="hidden sm:grid grid-cols-4 bg-white border border-gray-100 rounded-md shadow-sm divide-x divide-gray-100 overflow-hidden">
         {[
           { t: 'Ingresos', v: `S/ ${kpi.ingresos.toFixed(2)}`, s: `${kpi.total} ${kpi.total === 1 ? 'pedido' : 'pedidos'}` },
           { t: 'Activos', v: String(kpi.activos), s: `${kpi.pendientes} por atender` },
@@ -188,6 +260,7 @@ export default function PedidosTab({
             className="w-full h-10 pl-9 pr-3 bg-white border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-[var(--tienda-color,#b8130e)] focus:border-transparent focus:outline-none"
           />
         </div>
+        <div className="flex items-center gap-2 sm:contents">
         {alternarSilencio && (
           <button
             type="button"
@@ -196,7 +269,7 @@ export default function PedidosTab({
             className={`h-10 px-3 rounded-lg border text-xs font-bold flex items-center gap-1.5 shrink-0 transition ${silencio ? 'bg-gray-100 border-gray-200 text-gray-500' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}
           >
             <span className="material-symbols-outlined text-[18px]">{silencio ? 'volume_off' : 'volume_up'}</span>
-            {silencio ? 'Sonido apagado' : 'Sonido activo'}
+            <span className="hidden sm:inline">{silencio ? 'Sonido apagado' : 'Sonido activo'}</span>
           </button>
         )}
         <div className="flex rounded-lg border border-gray-200 bg-white p-0.5 shrink-0" role="group" aria-label="Cómo ver los pedidos">
@@ -221,6 +294,7 @@ export default function PedidosTab({
             <span className="material-symbols-outlined text-[16px]">cancel</span>Cancelados ({kpi.cancelados})
           </button>
         )}
+        </div>
         <div className={`flex gap-2 overflow-x-auto hide-scrollbar ${vista === 'lista' ? '' : 'hidden'}`}>
           {FILTROS.map((f) => (
             <button
@@ -250,7 +324,7 @@ export default function PedidosTab({
                 role="tab"
                 aria-selected={activa}
                 onClick={() => setColMovil(col.id)}
-                className={`shrink-0 h-10 px-3 rounded-lg border text-xs font-extrabold flex items-center gap-1.5 transition ${activa ? 'bg-[var(--tienda-color,#b8130e)] border-transparent text-white' : 'bg-white border-gray-200 text-gray-600'}`}
+                className={`shrink-0 h-10 px-3 rounded-lg border text-xs font-extrabold flex items-center gap-1.5 transition ${activa ? 'bg-[var(--tienda-color,#b8130e)] border-transparent text-white' : col.id === 'recibidos' && n > 0 ? 'bg-orange-50 border-orange-300 text-orange-700 ring-2 ring-orange-200' : 'bg-white border-gray-200 text-gray-600'}`}
               >
                 <span className={`w-2 h-2 rounded-full ${activa ? 'bg-white' : col.punto}`} />
                 {col.titulo}
@@ -280,7 +354,8 @@ export default function PedidosTab({
                     const direccion = (o.customer_address || '').replace(/https?:\/\/\S+/g, '').trim();
                     const enlaceMapa = (o.customer_address || '').match(/https?:\/\/\S+/)?.[0];
                     return (
-                      <article key={o.id} className={`bg-white rounded-lg border shadow-sm p-3 flex flex-col gap-2 ${nuevo ? 'border-orange-300' : 'border-gray-100'}`}>
+                      <TarjetaDeslizable key={o.id} onAvanzar={col.siguiente && ocupado !== o.id ? () => avanzar(o, col.siguiente!.estado) : undefined} etiqueta={col.siguiente?.texto.toLowerCase()} icono={col.siguiente?.icono}>
+                      <article className={`bg-white rounded-lg border shadow-sm p-3 flex flex-col gap-2 ${nuevo ? 'border-orange-300' : 'border-gray-100'}`}>
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-[var(--tienda-color,#b8130e)] font-black text-xs">#{(o.codigo || o.id.slice(0, 8)).toUpperCase()}</span>
                           <span className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400">
@@ -322,14 +397,14 @@ export default function PedidosTab({
                           <button
                             type="button"
                             disabled={ocupado === o.id}
-                            onClick={() => cambiarEstado(o, col.siguiente!.estado)}
-                            className="w-full h-10 rounded-lg bg-[var(--tienda-color,#b8130e)] text-white text-sm font-extrabold flex items-center justify-center gap-1.5 active:scale-95 transition disabled:opacity-50"
+                            onClick={() => avanzar(o, col.siguiente!.estado)}
+                            className="w-full h-12 rounded-xl bg-[var(--tienda-color,#b8130e)] text-white text-base font-extrabold flex items-center justify-center gap-2 shadow-sm active:scale-[0.98] transition disabled:opacity-50"
                           >
-                            <span className="material-symbols-outlined text-[18px]">{col.siguiente.icono}</span>{col.siguiente.texto}
+                            <span className="material-symbols-outlined text-[22px]">{col.siguiente.icono}</span>{col.siguiente.texto}
                           </button>
                         )}
                         {/* Acciones con nombre (no solo íconos) para que se entienda qué hace cada una */}
-                        <div className="flex flex-wrap items-center gap-1.5">
+                        <div className="flex flex-wrap items-center gap-1.5 pt-2 mt-0.5 border-t border-gray-100">
                           {tel && (
                             <a href={tel} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-[84px] h-8 px-2 rounded-full bg-[#25D366] text-white text-[11px] font-extrabold flex items-center justify-center gap-1.5 hover:brightness-95 active:scale-95 transition">
                               <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white" aria-hidden="true"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.08 1.76-.72 2-1.41.25-.7.25-1.29.17-1.41-.07-.12-.27-.2-.57-.35zM12.04 21.8h-.01a9.9 9.9 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.9-9.88 2.64 0 5.12 1.03 6.99 2.9a9.82 9.82 0 0 1 2.9 6.99c0 5.45-4.44 9.88-9.9 9.88zM20.52 3.45A11.8 11.8 0 0 0 12.04 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.54 0 11.89-5.34 11.89-11.89 0-3.18-1.24-6.16-3.48-8.4z"/></svg>WhatsApp
@@ -340,14 +415,25 @@ export default function PedidosTab({
                               <span className="material-symbols-outlined text-[16px]">receipt_long</span>Recibo
                             </a>
                           )}
+                          {col.anterior && (
+                            <button
+                              type="button"
+                              disabled={ocupado === o.id}
+                              onClick={() => avanzar(o, col.anterior!.estado)}
+                              title={`Regresarlo a «${col.anterior.texto}»`}
+                              className="w-full h-8 px-2 rounded-full border border-gray-200 text-gray-600 text-[11px] font-extrabold flex items-center justify-center gap-1.5 hover:bg-gray-50 active:scale-95 transition disabled:opacity-50"
+                            >
+                              <span className="material-symbols-outlined text-[16px]">undo</span>Regresar a {col.anterior.texto}
+                            </button>
+                          )}
                           {col.id !== 'entregado' && col.id !== 'cancelados' && (
                             <button
                               type="button"
                               disabled={ocupado === o.id}
                               onClick={() => { if (window.confirm('¿Cancelar este pedido? Si llevaba stock, se devuelve al inventario.')) cambiarEstado(o, 'Cancelado'); }}
-                              className="flex-1 min-w-[84px] h-8 px-2 rounded-full border border-red-200 text-red-600 text-[11px] font-extrabold flex items-center justify-center gap-1.5 hover:bg-red-50 active:scale-95 transition disabled:opacity-50"
+                              className="w-full h-8 px-2 rounded-full text-red-500 text-[11px] font-bold flex items-center justify-center gap-1.5 hover:bg-red-50 active:scale-95 transition disabled:opacity-50"
                             >
-                              <span className="material-symbols-outlined text-[16px]">close</span>Cancelar
+                              <span className="material-symbols-outlined text-[16px]">close</span>Cancelar pedido
                             </button>
                           )}
                           {col.id === 'cancelados' && puedeEliminar && (
@@ -362,6 +448,7 @@ export default function PedidosTab({
                           )}
                         </div>
                       </article>
+                      </TarjetaDeslizable>
                     );
                   })}
                   {col.id === 'entregado' && todos.length > MAX_ENTREGADOS && (
@@ -373,6 +460,19 @@ export default function PedidosTab({
           })}
         </div>
         </>
+      )}
+
+      {deshacer && (
+        <div className="fixed left-3 right-3 bottom-20 lg:bottom-6 lg:left-auto lg:right-6 lg:w-96 z-[60] flex items-center justify-between gap-3 rounded-xl bg-gray-900 text-white px-4 py-3 shadow-xl" role="status">
+          <span className="text-sm font-semibold min-w-0 truncate">Pasó a «{deshacer.ahora === 'Pendiente' ? 'Recibidos' : deshacer.ahora === 'Enviado' ? 'En camino' : deshacer.ahora === 'Entregado' ? 'Entregados' : deshacer.ahora}»</span>
+          <button
+            type="button"
+            onClick={() => { cambiarEstado(deshacer.pedido, deshacer.antes); setDeshacer(null); }}
+            className="shrink-0 text-sm font-extrabold text-amber-300 px-2 py-1 -mr-2"
+          >
+            Deshacer
+          </button>
+        </div>
       )}
 
       {/* Lista */}
@@ -497,7 +597,14 @@ export default function PedidosTab({
                         <ul className="flex flex-col gap-1">
                           {items.map((it, idx) => (
                             <li key={idx} className="flex justify-between gap-3">
-                              <span className="text-gray-700 font-medium">{it.quantity}× {it.name}</span>
+                              <span className="text-gray-700 font-medium">
+                                {it.quantity}× {it.name}
+                                {it.sin_stock && (
+                                  <span className="ml-1.5 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-100 text-[10px] font-bold align-middle" title="Cuando el cliente lo pidió no había stock suficiente. Revisa antes de confirmar.">
+                                    <span className="material-symbols-outlined text-[12px]">warning</span>Sin stock
+                                  </span>
+                                )}
+                              </span>
                               <span className="text-gray-900 font-bold">S/ {(Number(it.price) * Number(it.quantity)).toFixed(2)}</span>
                             </li>
                           ))}
