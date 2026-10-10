@@ -550,6 +550,20 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
                 </Link>
               )}
 
+              <a
+                href="https://bogahub.app/"
+                className="flex items-center gap-3 p-3 rounded-2xl border border-primary/20 bg-primary/5 text-primary active:scale-[0.98] transition-all"
+              >
+                <span className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[20px]">explore</span>
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[9px] font-bold uppercase tracking-wider opacity-70 leading-tight">Todo Pucallpa en una app</span>
+                  <span className="block text-xs font-bold truncate leading-tight mt-0.5">Explorar más en BogaHub</span>
+                </span>
+                <span className="material-symbols-outlined opacity-70 text-[20px] shrink-0">chevron_right</span>
+              </a>
+
               <form onSubmit={handleSubmitDatos} className="flex flex-col gap-3">
                 <div>
                   <h4 className="text-xs font-bold text-gray-900">Tus datos para pedidos por WhatsApp</h4>
