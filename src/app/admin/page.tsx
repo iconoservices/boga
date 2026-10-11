@@ -247,9 +247,6 @@ function AdminDashboard({ user }: { user: User }) {
   // base (RLS ya solo deja editar las propias). Antes esto era una lista
   // guardada en localStorage sin ninguna verificacion real de dueño — cualquiera
   // que abriera /admin podia "elegir" y editar la tienda de otro comercio.
-  const [isStorePickerOpen, setIsStorePickerOpen] = useState(false);
-  const [pickerDraft, setPickerDraft] = useState<string[]>([]);
-  const [claiming, setClaiming] = useState(false);
 
   // Tiendas donde este usuario es co-administrador (store_admins), además de las que tiene como
   // dueño (user_id) — una tienda ahora puede tener más de una persona con el mismo acceso.
@@ -270,23 +267,7 @@ function AdminDashboard({ user }: { user: User }) {
       : dbStores.filter((s: any) => s.user_id === user.id || coAdminSlugs.includes(s.slug)).map((s: any) => s.slug),
     [dbStores, user.id, viendoComo, coAdminSlugs]
   );
-  const unclaimedStores = React.useMemo(
-    () => dbStores.filter((s: any) => !s.user_id),
-    [dbStores]
-  );
   const managedSlugs = myStoreSlugs.length > 0 ? myStoreSlugs : null;
-
-  // Ya no se ofrece "reclamar" una tienda sin dueño: las tiendas las asigna el equipo de BogaHub (superadmin).
-
-  const claimStores = async (slugs: string[]) => {
-    if (slugs.length === 0) return;
-    setClaiming(true);
-    const { error } = await supabase.from('stores').update({ user_id: user.id }).in('slug', slugs);
-    setClaiming(false);
-    if (error) { alert('No se pudo reclamar la tienda: ' + error.message); return; }
-    await fetchStores();
-    setIsStorePickerOpen(false);
-  };
 
   const visibleDbStores = React.useMemo(() => {
     if (!managedSlugs) return [];
@@ -1107,7 +1088,18 @@ function AdminDashboard({ user }: { user: User }) {
         }
       }
 
-      let { error } = await supabase.from('stores').upsert(upsertData, { onConflict: 'slug' });
+      // Si la tienda ya existe en la base se hace UPDATE: un upsert también pasa por la política de INSERT, que es solo del superadmin, y al dueño/admin le daba "violates row-level security".
+      const existeEnBase = dbStores.some((x: any) => x.slug === editingStoreSlug);
+      // Un UPDATE bloqueado por RLS no da error, solo afecta 0 filas: se pide la fila de vuelta para no decir "guardado" sin haber guardado.
+      const guardar = async () => {
+        if (!existeEnBase) return supabase.from('stores').upsert(upsertData, { onConflict: 'slug' });
+        const r = await supabase.from('stores').update(upsertData).eq('slug', editingStoreSlug).select('slug');
+        if (!r.error && (r.data ?? []).length === 0) {
+          return { error: { message: 'Tu cuenta no tiene permiso para editar esta tienda (no figura como dueño ni administrador).' } } as { error: any };
+        }
+        return { error: r.error };
+      };
+      let { error } = await guardar();
 
       // Si alguna columna nueva todavia no existe en la base, reintenta sin ella
       // en vez de perder todo el guardado. Paso exactamente esto con `whatsapp`:
@@ -1119,7 +1111,7 @@ function AdminDashboard({ user }: { user: User }) {
       while (error && faltante) {
         delete upsertData[faltante];
         columnasFaltantes.push(faltante);
-        ({ error } = await supabase.from('stores').upsert(upsertData, { onConflict: 'slug' }));
+        ({ error } = await guardar());
         faltante = columnasOpcionales.find((col) => col in upsertData && new RegExp(col).test(error?.message || ''));
       }
       if (!error && columnasFaltantes.length) {
@@ -5624,86 +5616,6 @@ function AdminDashboard({ user }: { user: User }) {
               }
             }
           `}} />
-        </div>
-      )}
-
-      {/* ── Selector de Tiendas Administradas ── */}
-      {isStorePickerOpen && (
-        <div className="fixed inset-0 z-[300] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-[420px] overflow-hidden flex flex-col max-h-[85vh]">
-            <div className="px-6 py-5 border-b border-gray-100">
-              <h3 className="font-extrabold text-lg text-gray-900">¿Cuál es tu tienda?</h3>
-              <p className="text-gray-500 text-xs font-medium mt-1">
-                Reclama la tienda que te creó el equipo de BogaHub: queda asociada a tu cuenta ({user.email}) y nadie más va a poder editarla.
-              </p>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
-              {unclaimedStores.map((s: any) => {
-                const checked = pickerDraft.includes(s.slug);
-                return (
-                  <label
-                    key={s.slug}
-                    className={`flex items-center gap-3 p-3 rounded-md border-2 cursor-pointer transition-all ${
-                      checked ? 'border-black bg-gray-50' : 'border-gray-100 hover:border-gray-200'
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => setPickerDraft(prev =>
-                        checked ? prev.filter(x => x !== s.slug) : [...prev, s.slug]
-                      )}
-                      className="w-4 h-4 accent-black cursor-pointer shrink-0"
-                    />
-                    {(s.logo_image || s.hero_image) ? (
-                      <img src={s.logo_image || s.hero_image} alt={s.name} className="w-10 h-10 rounded-lg object-cover border border-gray-100 shrink-0" />
-                    ) : (
-                      <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-lg shrink-0">🏪</div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <p className="font-bold text-sm text-gray-900 truncate">{s.name}</p>
-                      <p className="text-[11px] text-gray-400 font-medium truncate">/{s.slug} · {s.marketplace_category || 'General'}</p>
-                    </div>
-                    {checked && <span className="material-symbols-outlined text-[18px] text-black shrink-0">check_circle</span>}
-                  </label>
-                );
-              })}
-              {dbStores.length === 0 && (
-                <p className="text-gray-400 text-sm text-center py-6 font-medium">Cargando tiendas...</p>
-              )}
-              {dbStores.length > 0 && unclaimedStores.length === 0 && (
-                <p className="text-gray-400 text-sm text-center py-6 font-medium">
-                  No hay tiendas sin reclamar. Si el equipo de BogaHub ya te creó la tuya y no aparece acá, escribile para que la verifique.
-                </p>
-              )}
-            </div>
-            <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between gap-3">
-              <span className="text-[11px] font-bold text-gray-400">
-                {pickerDraft.length} {pickerDraft.length === 1 ? 'tienda seleccionada' : 'tiendas seleccionadas'}
-              </span>
-              <div className="flex items-center gap-2">
-                {managedSlugs !== null && (
-                  <button
-                    onClick={() => setIsStorePickerOpen(false)}
-                    className="px-4 py-2.5 rounded-md font-bold text-xs text-gray-500 hover:bg-gray-50 transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                )}
-                <button
-                  onClick={() => claimStores(pickerDraft)}
-                  disabled={pickerDraft.length === 0 || claiming}
-                  className={`px-5 py-2.5 rounded-md font-bold text-xs transition-all ${
-                    pickerDraft.length === 0 || claiming
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-[var(--tienda-color)] text-white shadow-lg shadow-[var(--tienda-color)]/20 hover:-translate-y-0.5 active:translate-y-0'
-                  }`}
-                >
-                  {claiming ? 'Reclamando...' : 'Reclamar tienda'}
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
       )}
 
