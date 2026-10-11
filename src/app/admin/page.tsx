@@ -719,9 +719,9 @@ function AdminDashboard({ user }: { user: User }) {
     setPedidoOcupado(null);
   };
 
-  // Borra un pedido para siempre. Solo si ya está cancelado (limpia pedidos de prueba o equivocados); lo puede hacer el admin de su tienda y el superadmin.
+  // Borra un pedido para siempre. Solo el superadmin y solo si ya está cancelado (limpia pedidos de prueba o equivocados); el admin de la tienda solo cancela.
   const eliminarPedido = async (o: Pedido) => {
-    if (o.status !== 'Cancelado') return;
+    if (!esSuperadmin || o.status !== 'Cancelado') return;
     setPedidoOcupado(o.id);
     const { error } = await supabase.from('orders').delete().eq('id', o.id);
     setPedidoOcupado(null);
@@ -1055,7 +1055,6 @@ function AdminDashboard({ user }: { user: User }) {
         instagram: storeForm.instagram || null,
         tiktok: storeForm.tiktok || null,
         categories: storeCategories,
-        status: 'active',
       };
       // Perfil de empresa: solo se manda en tiendas con esa plantilla o que ya tenían uno (así guardar otra tienda no depende del SQL).
       const tienePerfilEmpresa = stores[editingStoreSlug]?.template === 'empresa' || !!dbStores.find((x: any) => x.slug === editingStoreSlug)?.perfil_empresa;
@@ -1092,7 +1091,8 @@ function AdminDashboard({ user }: { user: User }) {
       const existeEnBase = dbStores.some((x: any) => x.slug === editingStoreSlug);
       // Un UPDATE bloqueado por RLS no da error, solo afecta 0 filas: se pide la fila de vuelta para no decir "guardado" sin haber guardado.
       const guardar = async () => {
-        if (!existeEnBase) return supabase.from('stores').upsert(upsertData, { onConflict: 'slug' });
+        // status solo al crear: en una tienda que ya existe, guardar no debe volver a prender una carta apagada (por el dueño o el superadmin).
+        if (!existeEnBase) return supabase.from('stores').upsert({ ...upsertData, status: 'active' }, { onConflict: 'slug' });
         const r = await supabase.from('stores').update(upsertData).eq('slug', editingStoreSlug).select('slug');
         if (!r.error && (r.data ?? []).length === 0) {
           return { error: { message: 'Tu cuenta no tiene permiso para editar esta tienda (no figura como dueño ni administrador).' } } as { error: any };
@@ -2841,7 +2841,7 @@ function AdminDashboard({ user }: { user: User }) {
             mostrarTienda={selectedStore === 'all' && Object.keys(stores).length > 1}
             cambiarEstado={cambiarEstadoPedido}
             eliminar={eliminarPedido}
-            puedeEliminar
+            puedeEliminar={esSuperadmin}
             silencio={silencio}
             alternarSilencio={alternarSilencio}
             ocupado={pedidoOcupado}

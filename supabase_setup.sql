@@ -385,13 +385,10 @@ USING (
   OR public.es_admin_de(orders.store)
 );
 
--- Borrar pedidos: el superadmin cualquiera; el dueño solo los ya cancelados (no puede borrar su historial de ventas real).
+-- Borrar pedidos: solo el superadmin. El dueño/admin de la tienda solo puede cancelarlos (no borra su historial de ventas).
 CREATE POLICY "orders: dueño o superadmin borra"
 ON public.orders FOR DELETE
-USING (
-  public.is_superadmin()
-  OR (public.es_admin_de(orders.store) AND orders.status = 'Cancelado')
-);
+USING (public.is_superadmin());
 
 -- ============================================================
 -- 6. STORE_REQUESTS  (form público de alta; solo superadmin lee/gestiona)

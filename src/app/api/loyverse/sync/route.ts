@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { asegurarWebhooksLoyverse } from '@/lib/loyverse';
 import { quienEs } from '@/lib/pushServidor';
-import { leerCredencialesLoyverse, guardarCredencialesLoyverse, urlWebhookLoyverse } from '@/lib/loyverseServidor';
+import { leerCredencialesLoyverse, guardarCredencialesLoyverse, urlWebhookLoyverse, esCoAdmin } from '@/lib/loyverseServidor';
 
 export const dynamic = 'force-dynamic';
 
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
   if (storeError || !store) {
     return NextResponse.json({ ok: false, error: 'Tienda no encontrada.' }, { status: 404 });
   }
-  if (!quien.esSuperadmin && store.user_id !== quien.userId) {
+  if (!quien.esSuperadmin && store.user_id !== quien.userId && !(await esCoAdmin(supabase, storeSlug, quien.userId))) {
     return NextResponse.json({ ok: false, error: 'Esta tienda no es tuya.' }, { status: 403 });
   }
 

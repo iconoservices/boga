@@ -78,13 +78,19 @@ export async function tieneCredencialesLoyverse(db: SupabaseClient, slug: string
   return !!(await leerCredencialesLoyverse(db, slug));
 }
 
-/** Sesión válida y dueño de la tienda (o superadmin). Devuelve `motivo` para responder 401/403/404. */
+/** ¿Es co-administrador de la tienda (store_admins)? Mismo acceso que el dueño, como en la RLS (es_admin_de). */
+export async function esCoAdmin(db: SupabaseClient, slug: string, userId: string): Promise<boolean> {
+  const { data } = await db.from('store_admins').select('user_id').eq('store', slug).eq('user_id', userId).maybeSingle();
+  return !!data;
+}
+
+/** Sesión válida y dueño o co-administrador de la tienda (o superadmin). Devuelve `motivo` para responder 401/403/404. */
 export async function autorizarTiendaLoyverse(request: Request, db: SupabaseClient, slug: string):
   Promise<{ ok: true; quien: Quien; tienda: { slug: string; name: string; modulos: Record<string, unknown> | null } } | { ok: false; status: 401 | 403 | 404; error: string }> {
   const quien = await quienEs(request);
   if (!quien) return { ok: false, status: 401, error: 'Inicia sesión para usar esto.' };
   const { data: t } = await db.from('stores').select('slug,name,user_id,modulos').eq('slug', slug).maybeSingle();
   if (!t) return { ok: false, status: 404, error: 'Tienda no encontrada.' };
-  if (!quien.esSuperadmin && t.user_id !== quien.userId) return { ok: false, status: 403, error: 'Esta tienda no es tuya.' };
+  if (!quien.esSuperadmin && t.user_id !== quien.userId && !(await esCoAdmin(db, slug, quien.userId))) return { ok: false, status: 403, error: 'Esta tienda no es tuya.' };
   return { ok: true, quien, tienda: { slug: t.slug as string, name: t.name as string, modulos: (t.modulos as Record<string, unknown> | null) ?? null } };
 }
