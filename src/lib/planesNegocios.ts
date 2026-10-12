@@ -57,11 +57,11 @@ export const PLANES: Plan[] = [
     icon: 'shopping_bag',
     nombre: 'Premium',
     pronto: true,
-    body: 'Todo lo de Negocio y, además, un catálogo grande: de 1 001 a 5 000 productos.',
+    body: 'Todo lo de Negocio y, además, un catálogo grande: de 1 001 a 5 000 productos. Pagas según tu catálogo: S/ 150 hasta 2 000 productos y S/ 50 más por cada 1 000 productos extra.',
     bullets: [
       'Todo lo del plan Negocio',
       'Catálogo de 1 001 a 5 000 productos',
-      'Catálogo de 1 001 a 5 000 productos',
+      'S/ 50 más al mes por cada 1 000 productos extra',
     ],
     // Sin precio hasta que el módulo de Google exista y se defina.
     mes: { precio: 'Próximamente', periodo: '', nota: '' },
@@ -146,7 +146,7 @@ export const ESCALERA_PRODUCTOS: EscaleraPlan[] = [
   {
     plan: '3. Plan Supermercado / Pro',
     limite: LIMITE_PRODUCTOS.app_google,
-    precio: 'S/ 180 a S/ 200 / mes',
+    precio: 'Desde S/ 150 / mes (+S/ 50 por cada 1 000 productos extra)',
     publico: 'Minimarkets grandes, ferreterías, distribuidoras mayoristas y farmacias.',
   },
 ];

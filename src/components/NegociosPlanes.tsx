@@ -169,6 +169,7 @@ export default function NegociosPlanes() {
                 <div className="flex items-baseline gap-1"><span className="font-headline-md text-2xl font-extrabold text-on-background">Próximamente</span></div>
               ) : (
                 <div>
+                  {plan.nivel === 'app_google' && <p className="text-secondary text-[11px] font-bold uppercase tracking-wide">Desde</p>}
                   <div className="flex items-baseline gap-1">
                     <span className="font-headline-md text-4xl font-extrabold text-on-background">{fmt(precio)}</span>
                     <span className="text-secondary font-body-md text-sm">{anual ? '/año' : '/mes'}</span>

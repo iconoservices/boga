@@ -41,9 +41,9 @@ export const PLANES_BASE: PlanComercial[] = [
   },
   {
     id: 'app_google', orden: 3, nombre: 'Premium', etiqueta: 'Alta capacidad', icono: 'shopping_bag',
-    descripcion: 'Todo lo de Negocio y, además, un catálogo grande: de 1 001 a 5 000 productos.',
-    caracteristicas: ['Todo lo del plan Negocio', 'Catálogo de 1 001 a 5 000 productos'],
-    precio_mes: 180, precio_oferta: null, oferta_hasta: null, recomendado: false, activo: true, limite_productos: 'De 1 001 a 5 000 productos', max_productos: 5000, pronto: true, nivel: 'app_google',
+    descripcion: 'Todo lo de Negocio y, además, un catálogo grande: de 1 001 a 5 000 productos. Pagas según tu catálogo: S/ 150 hasta 2 000 productos y S/ 50 más por cada 1 000 productos extra.',
+    caracteristicas: ['Todo lo del plan Negocio', 'Catálogo de 1 001 a 5 000 productos', 'S/ 50 más al mes por cada 1 000 productos extra (hasta 3 000 → S/ 200, hasta 4 000 → S/ 250…)'],
+    precio_mes: 150, precio_oferta: null, oferta_hasta: null, recomendado: false, activo: true, limite_productos: 'De 1 001 a 5 000 productos', max_productos: 5000, pronto: true, nivel: 'app_google',
   },
   {
     id: 'multisede', orden: 4, nombre: 'Multi-sede / Franquicia', etiqueta: 'Empresarial', icono: 'account_tree',

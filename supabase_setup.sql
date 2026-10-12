@@ -2349,3 +2349,14 @@ CREATE POLICY "caja_movimientos: borra" ON public.caja_movimientos FOR DELETE
     (public.is_superadmin() OR public.es_admin_de(store))
     AND EXISTS (SELECT 1 FROM public.caja_sesiones s WHERE s.id = sesion_id AND s.cerrada_at IS NULL)
   );
+
+-- ============================================================
+-- PRECIO PLAN PREMIUM (12 oct 2026): desde S/ 150 (hasta 2 000 productos) y S/ 50 más por cada 1 000 productos extra.
+--  Escalera: Esencial ≤100 → S/ 50 · Negocio 101–1 000 → S/ 100 · Premium: hasta 2 000 → S/ 150, 3 000 → S/ 200, 4 000 → S/ 250, 5 000 → S/ 300.
+-- ============================================================
+UPDATE public.planes_comerciales SET
+  precio_mes = 150,
+  descripcion = 'Todo lo de Negocio y, además, un catálogo grande: de 1 001 a 5 000 productos. Pagas según tu catálogo: S/ 150 hasta 2 000 productos y S/ 50 más por cada 1 000 productos extra.',
+  caracteristicas = '["Todo lo del plan Negocio","Catálogo de 1 001 a 5 000 productos","S/ 50 más al mes por cada 1 000 productos extra (hasta 3 000 → S/ 200, hasta 4 000 → S/ 250…)"]'::jsonb,
+  updated_at = now()
+WHERE id = 'app_google';
