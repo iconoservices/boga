@@ -38,13 +38,22 @@ export async function GET() {
   const storeMap = new Map(stores.map((s) => [s.slug, s]));
 
   // 2. Productos de esas tiendas que no estén inactivos
-  const { data: products, error } = storeMap.size === 0
-    ? { data: [], error: null }
+  // Con galería (`images`) y categoría; si la columna de galería aún no existe, cae a lo de siempre.
+  const slugsFeed = Array.from(storeMap.keys());
+  let { data: products, error } = storeMap.size === 0
+    ? { data: [] as any[], error: null }
     : await supabase
         .from('products')
-        .select('id, name, description, price, image, store, status, stock, precio_oferta, oferta_hasta')
-        .in('store', Array.from(storeMap.keys()))
+        .select('id, name, description, price, image, images, category, store, status, stock, precio_oferta, oferta_hasta')
+        .in('store', slugsFeed)
         .neq('status', 'Inactivo');
+  if (error) {
+    ({ data: products, error } = await supabase
+      .from('products')
+      .select('id, name, description, price, image, category, store, status, stock, precio_oferta, oferta_hasta')
+      .in('store', slugsFeed)
+      .neq('status', 'Inactivo') as any);
+  }
 
   if (error || !products) {
     console.error('Error cargando productos para feed:', error);
@@ -60,8 +69,20 @@ export async function GET() {
       .replace(/'/g, '&apos;');
   };
 
+  // Categoría de Google (taxonomía oficial) solo cuando es segura; si no, se omite y Google la deduce.
+  const categoriaGoogle = (nombre: string, categoria: string): string | null => {
+    const t = `${categoria} ${nombre}`.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    if (/reloj|watch/.test(t)) return '201'; // Ropa y accesorios > Joyería > Relojes
+    if (/lente|gafa|sunglass|goggle/.test(t)) return '178'; // Accesorios de ropa > Gafas de sol
+    if (/zapat|zapatilla|calzado|sandalia/.test(t)) return '187'; // Calzado
+    if (/polo|camisa|blusa|vestido|pantalon|casaca|ropa|short|falda/.test(t)) return '1604'; // Ropa
+    return null;
+  };
+
   const xmlItems = products
-    .map((p) => {
+    // Sin foto propia no entra: Google rechaza las imágenes genéricas de relleno.
+    .filter((p: any) => typeof p.image === 'string' && /^https?:\/\//.test(p.image))
+    .map((p: any) => {
       const storeInfo = storeMap.get(p.store)!;
       const storeBrand = storeInfo.name || storeInfo.slug;
       const productUrl = storeInfo.subdominio_activo
@@ -81,16 +102,22 @@ export async function GET() {
       const formattedPrice = priceNum.toFixed(2);
       // Oferta vigente: Google pide el precio normal en g:price y el rebajado en g:sale_price.
       const ofertaNum = precioOfertaVigente(p);
-      const desc = (p.description || p.name || 'Producto disponible en ' + storeBrand).slice(0, 5000);
+      // Sin descripción propia, una descripción útil (antes repetía el nombre).
+      const desc = (p.description?.trim() || `${p.name} en ${storeBrand}, Pucallpa. Precio S/ ${(ofertaNum ?? priceNum).toFixed(2)}${p.category ? ` · ${p.category}` : ''}.`).slice(0, 5000);
+      const extras = (Array.isArray(p.images) ? p.images : []).filter((u: unknown): u is string => typeof u === 'string' && /^https?:\/\//.test(u) && u !== imageUrl).slice(0, 10);
+      const catGoogle = categoriaGoogle(p.name || '', p.category || '');
 
       return `    <item>
       <g:id>${escapeXml(String(p.id))}</g:id>
       <g:title>${escapeXml(p.name)}</g:title>
       <g:description>${escapeXml(desc)}</g:description>
       <g:link>${escapeXml(productUrl)}</g:link>
-      <g:image_link>${escapeXml(imageUrl)}</g:image_link>
+      <g:image_link>${escapeXml(imageUrl)}</g:image_link>${extras.map((u: string) => `
+      <g:additional_image_link>${escapeXml(u)}</g:additional_image_link>`).join('')}
       <g:brand>${escapeXml(storeBrand)}</g:brand>
-      <g:condition>new</g:condition>
+      <g:condition>new</g:condition>${p.category ? `
+      <g:product_type>${escapeXml(String(p.category))}</g:product_type>` : ''}${catGoogle ? `
+      <g:google_product_category>${catGoogle}</g:google_product_category>` : ''}
       <g:availability>${availability}</g:availability>
       <g:price>${formattedPrice} PEN</g:price>${ofertaNum !== null ? `
       <g:sale_price>${ofertaNum.toFixed(2)} PEN</g:sale_price>` : ''}

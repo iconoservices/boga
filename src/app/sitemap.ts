@@ -70,11 +70,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Cada producto disponible, en su página propia (/<tienda>/producto/<id>).
   const tiendaPorSlug = new Map((activeStores ?? []).map((t) => [t.slug, t]));
-  const { data: productosActivos } = await supabase
+  // Con sus fotos (`image`, `images`): Google Imágenes las descubre desde el sitemap. Si la columna de galería aún no existe, se piden solo las principales.
+  let { data: productosActivos, error: errProductos } = await supabase
     .from('products')
-    .select('id,store')
+    .select('id,store,image,images')
     .neq('status', 'Inactivo')
     .neq('status', 'Agotado');
+  if (errProductos) ({ data: productosActivos } = await supabase.from('products').select('id,store,image').neq('status', 'Inactivo').neq('status', 'Agotado') as any);
   const fichasTienda: MetadataRoute.Sitemap = (productosActivos ?? [])
     .filter((pr) => tiendaPorSlug.has(pr.store))
     .map((pr) => {
@@ -85,6 +87,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           : `${SITE_URL}/${t.slug}/producto/${pr.id}`,
         changeFrequency: 'weekly' as const,
         priority: 0.5,
+        images: Array.from(new Set([pr.image, ...(Array.isArray((pr as { images?: unknown }).images) ? ((pr as { images: unknown[] }).images) : [])].filter((u): u is string => typeof u === 'string' && /^https?:\/\//.test(u)))).slice(0, 8),
       };
     });
 

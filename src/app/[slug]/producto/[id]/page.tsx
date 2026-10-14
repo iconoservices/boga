@@ -52,7 +52,15 @@ const cargar = cache(async (slug: string, id: string) => {
   // Presentaciones (100 g / 250 g / 1 kg…): consulta aparte para que, si su SQL aún no se corrió, la página siga abriendo.
   const { data: conPres } = await supabase.from('products').select(COL_PRESENTACIONES).eq('id', producto.id).maybeSingle();
   const presentaciones = leerPresentaciones((conPres as Record<string, unknown> | null)?.[COL_PRESENTACIONES]);
-  return { tienda, producto, presentaciones };
+  // Galería y reserva: consulta aparte (columnas opcionales) para que, si su SQL aún no se corrió, la página siga abriendo.
+  const [{ data: extra }, { data: tiendaReserva }] = await Promise.all([
+    supabase.from('products').select('images,reserva').eq('id', producto.id).maybeSingle(),
+    supabase.from('stores').select('reserva_activa').eq('slug', slug).maybeSingle(),
+  ]);
+  const galeria = Array.isArray((extra as { images?: unknown } | null)?.images) ? ((extra as { images: unknown[] }).images.filter((u) => typeof u === 'string' && u) as string[]) : [];
+  const reserva = (extra as { reserva?: boolean | null } | null)?.reserva ?? null;
+  const reservaActiva = (tiendaReserva as { reserva_activa?: boolean } | null)?.reserva_activa === true;
+  return { tienda, producto, presentaciones, galeria, reserva, reservaActiva };
 });
 
 const urlOficial = (tienda: { slug: string; subdominio_activo: boolean | null }, id: string) =>
@@ -79,7 +87,7 @@ export default async function ProductoPage({ params }: { params: Promise<Params>
   const { slug, id } = await params;
   const datos = await cargar(slug, id);
   if (!datos) notFound();
-  const { tienda, producto } = datos;
+  const { tienda, producto, galeria, reserva, reservaActiva } = datos;
 
   const store = await getDynamicStore(slug);
   if (!store) notFound();
@@ -88,21 +96,29 @@ export default async function ProductoPage({ params }: { params: Promise<Params>
   // Con oferta vigente se declara a Google el precio rebajado.
   const precio = precioOfertaVigente(producto) ?? precioNormal;
   const agotado = producto.status === 'Agotado' || producto.status === 'Sin stock';
+  // Con reservas prendidas, un producto «en reserva» se declara como preventa (no como agotado ni en stock).
+  const enReserva = reservaActiva && (reserva === true || (reserva !== false && agotado));
+  // Todas las fotos del producto, sin repetidas (la principal primero): Google Imágenes puede mostrar varias.
+  const fotos = Array.from(new Set([producto.image, ...galeria].filter((u): u is string => typeof u === 'string' && u.length > 0))).slice(0, 8);
+  const descripcion = producto.description?.trim() || `${producto.name} en ${tienda.name}, Pucallpa. Precio S/ ${precio.toFixed(2)}${producto.category ? ` · ${producto.category}` : ''}.`;
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: producto.name,
-    description: producto.description || producto.name,
+    description: descripcion,
     sku: producto.id,
-    image: producto.image || undefined,
+    ...(producto.category ? { category: producto.category } : {}),
+    image: fotos.length > 1 ? fotos : fotos[0] || undefined,
     brand: { '@type': 'Brand', name: tienda.name },
     offers: {
       '@type': 'Offer',
       url: urlOficial(tienda, producto.id),
       priceCurrency: 'PEN',
       price: precio.toFixed(2),
-      availability: agotado ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+      availability: enReserva ? 'https://schema.org/PreOrder' : agotado ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+      // Con oferta con fecha, Google sabe hasta cuándo vale el precio.
+      ...(producto.oferta_hasta && precioOfertaVigente(producto) != null ? { priceValidUntil: String(producto.oferta_hasta).slice(0, 10) } : {}),
       seller: { '@type': 'Organization', name: tienda.name },
     },
   };
@@ -110,6 +126,16 @@ export default async function ProductoPage({ params }: { params: Promise<Params>
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      {/* Lo que ve Google en el HTML (la tienda se arma en el navegador): título, fotos con texto alternativo y precio. Solo para lectores y buscadores. */}
+      <section className="sr-only" aria-label={producto.name}>
+        <h1>{producto.name}</h1>
+        {fotos.slice(0, 6).map((src, i) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img key={src} src={src} alt={i === 0 ? `${producto.name} · ${tienda.name}, Pucallpa` : `${producto.name} · foto ${i + 1}`} loading="lazy" />
+        ))}
+        <p>{descripcion}</p>
+        <p>Precio: S/ {precio.toFixed(2)}</p>
+      </section>
       <StoreRenderer store={store} initialProductId={producto.id} />
     </>
   );
