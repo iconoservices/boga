@@ -1429,6 +1429,10 @@ function AdminDashboard({ user }: { user: User }) {
         ? { es_servicio: newProduct.esServicio }
         : {};
       // Reserva por producto: solo se manda si se eligió «siempre» o «nunca», o si ya tenía una (para poder volver a «automática»).
+      if (newProduct.reserva === 'si' && !tiendaConReservas(newProduct.store)) {
+        const { error: errRes } = await supabase.from('stores').update({ reserva_activa: true }).eq('slug', newProduct.store);
+        if (!errRes) setDbStores((prev) => prev.map((x: any) => x.slug === newProduct.store ? { ...x, reserva_activa: true } : x));
+      }
       const camposReserva = newProduct.reserva || productoPrevio?.reserva != null
         ? { reserva: newProduct.reserva === 'si' ? true : newProduct.reserva === 'no' ? false : null }
         : {};
@@ -3889,29 +3893,6 @@ function AdminDashboard({ user }: { user: User }) {
                     <p className="text-xs text-gray-500 mt-2">Ej. un corte, una consulta, una reserva. En tu tienda no tendrá carrito: el cliente te consulta por WhatsApp.</p>
                   )}
                 </div>
-                {/* Reservas: solo si la tienda las prendió (Mis Tiendas → Editar). Por defecto, un producto sin stock va a reserva solo. */}
-                {dbStores.find((x: any) => x.slug === newProduct.store)?.reserva_activa === true && (
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">🗓️ Reserva</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {([
-                        { v: '', label: 'Automática', nota: 'Sin stock → reserva' },
-                        { v: 'si', label: 'Siempre', nota: 'Se reserva aunque haya' },
-                        { v: 'no', label: 'Nunca', nota: 'Sin stock → oculto' },
-                      ] as const).map((o) => (
-                        <button
-                          key={o.v}
-                          type="button"
-                          onClick={() => setNewProduct({ ...newProduct, reserva: o.v })}
-                          className={`rounded-xl border-2 px-2 py-2.5 text-center transition-all ${newProduct.reserva === o.v ? 'border-[var(--tienda-color)] bg-[var(--tienda-color)]/10' : 'border-gray-200 bg-gray-50'}`}
-                        >
-                          <span className="block text-sm font-bold text-gray-900">{o.label}</span>
-                          <span className="block text-[10px] font-medium text-gray-500 leading-tight mt-0.5">{o.nota}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
                 </>)}
 
                 <div className="grid grid-cols-2 gap-4">
@@ -4477,30 +4458,31 @@ function AdminDashboard({ user }: { user: User }) {
                 )}
 
                 </>)}
-                {/* Disponibilidad e Inventario (solo con el módulo de inventario) */}
-                {tiendaTiene(newProduct.store, 'inventario') && (
+                {/* Disponibilidad: siempre disponible, stock controlado (con inventario) o por reserva (se reserva por WhatsApp, no se vende al momento). */}
+                {(() => {
+                  const conInventario = tiendaTiene(newProduct.store, 'inventario');
+                  const porReserva = newProduct.reserva === 'si';
+                  const tiendaReserva = tiendaConReservas(newProduct.store);
+                  const tarjeta = (activa: boolean) => `p-3 rounded-lg border text-left transition-all flex items-start gap-2.5 ${activa ? 'border-[var(--tienda-color)] bg-white ring-2 ring-[var(--tienda-color)]/10 shadow-sm' : 'border-gray-200 bg-white/50 hover:bg-white text-gray-600'}`;
+                  return (
                 <div className="bg-gray-50/70 border border-gray-200/80 rounded-xl p-4 space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
                         <span className="material-symbols-outlined text-[18px] text-[var(--tienda-color)]">inventory_2</span>
-                        Disponibilidad e Inventario
+                        {conInventario ? 'Disponibilidad e Inventario' : 'Disponibilidad'}
                       </h4>
-                      <p className="text-xs text-gray-500 mt-0.5">Define si el producto tiene stock controlado o siempre está disponible</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{conInventario ? 'Define si el producto tiene stock controlado, siempre está disponible o se vende por reserva' : 'Define si el producto se vende al momento o por reserva'}</p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className={`grid gap-3 ${conInventario ? 'grid-cols-3' : 'grid-cols-2'}`}>
                     <button
                       type="button"
-                      onClick={() => setNewProduct({ ...newProduct, stockType: 'ilimitado' })}
-                      className={`p-3 rounded-lg border text-left transition-all flex items-start gap-2.5 ${
-                        newProduct.stockType === 'ilimitado'
-                          ? 'border-[var(--tienda-color)] bg-white ring-2 ring-[var(--tienda-color)]/10 shadow-sm'
-                          : 'border-gray-200 bg-white/50 hover:bg-white text-gray-600'
-                      }`}
+                      onClick={() => setNewProduct({ ...newProduct, stockType: 'ilimitado', reserva: '' })}
+                      className={tarjeta(!porReserva && newProduct.stockType === 'ilimitado')}
                     >
-                      <span className={`material-symbols-outlined text-[20px] shrink-0 mt-0.5 ${newProduct.stockType === 'ilimitado' ? 'text-[var(--tienda-color)]' : 'text-gray-400'}`}>
+                      <span className={`material-symbols-outlined text-[20px] shrink-0 mt-0.5 ${!porReserva && newProduct.stockType === 'ilimitado' ? 'text-[var(--tienda-color)]' : 'text-gray-400'}`}>
                         all_inclusive
                       </span>
                       <div>
@@ -4509,16 +4491,13 @@ function AdminDashboard({ user }: { user: User }) {
                       </div>
                     </button>
 
+                    {conInventario && (
                     <button
                       type="button"
-                      onClick={() => setNewProduct({ ...newProduct, stockType: 'limitado', stockQuantity: newProduct.stockQuantity || '10' })}
-                      className={`p-3 rounded-lg border text-left transition-all flex items-start gap-2.5 ${
-                        newProduct.stockType === 'limitado'
-                          ? 'border-[var(--tienda-color)] bg-white ring-2 ring-[var(--tienda-color)]/10 shadow-sm'
-                          : 'border-gray-200 bg-white/50 hover:bg-white text-gray-600'
-                      }`}
+                      onClick={() => setNewProduct({ ...newProduct, stockType: 'limitado', stockQuantity: newProduct.stockQuantity || '10', reserva: newProduct.reserva === 'no' ? 'no' : '' })}
+                      className={tarjeta(!porReserva && newProduct.stockType === 'limitado')}
                     >
-                      <span className={`material-symbols-outlined text-[20px] shrink-0 mt-0.5 ${newProduct.stockType === 'limitado' ? 'text-[var(--tienda-color)]' : 'text-gray-400'}`}>
+                      <span className={`material-symbols-outlined text-[20px] shrink-0 mt-0.5 ${!porReserva && newProduct.stockType === 'limitado' ? 'text-[var(--tienda-color)]' : 'text-gray-400'}`}>
                         inventory
                       </span>
                       <div>
@@ -4526,9 +4505,40 @@ function AdminDashboard({ user }: { user: User }) {
                         <p className="text-[11px] text-gray-500 leading-tight mt-0.5">Para prendas, abarrotes o unidades exactas</p>
                       </div>
                     </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => setNewProduct({ ...newProduct, reserva: 'si' })}
+                      className={tarjeta(porReserva)}
+                    >
+                      <span className={`material-symbols-outlined text-[20px] shrink-0 mt-0.5 ${porReserva ? 'text-orange-600' : 'text-gray-400'}`}>
+                        event_available
+                      </span>
+                      <div>
+                        <p className="text-xs font-bold text-gray-900">Por reserva</p>
+                        <p className="text-[11px] text-gray-500 leading-tight mt-0.5">Se reserva por WhatsApp, no se vende al momento</p>
+                      </div>
+                    </button>
                   </div>
 
-                  {newProduct.stockType === 'limitado' && (
+                  {porReserva && !tiendaReserva && (
+                    <p className="text-[11px] font-semibold text-orange-700 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2">Las reservas están apagadas en esta tienda: al guardar se prenden solas.</p>
+                  )}
+
+                  {conInventario && !porReserva && newProduct.stockType === 'limitado' && tiendaReserva && (
+                    <label className="flex items-start gap-2 text-[11px] text-gray-600 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={newProduct.reserva === 'no'}
+                        onChange={(e) => setNewProduct({ ...newProduct, reserva: e.target.checked ? 'no' : '' })}
+                        className="mt-0.5 w-3.5 h-3.5 accent-black"
+                      />
+                      <span>Si se agota, <b>esconderlo</b> (no ofrecerlo en reserva). Sin marcar, un producto agotado pasa a reserva solo.</span>
+                    </label>
+                  )}
+
+                  {conInventario && !porReserva && newProduct.stockType === 'limitado' && (
                     <div className="pt-2 border-t border-gray-200/60 flex items-center justify-between gap-4">
                       <div>
                         <label className="block text-xs font-bold text-gray-700">Cantidad de unidades en stock</label>
@@ -4547,7 +4557,8 @@ function AdminDashboard({ user }: { user: User }) {
                     </div>
                   )}
                 </div>
-                )}
+                  );
+                })()}
               </div>
             </form>
             
