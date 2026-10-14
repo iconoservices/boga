@@ -1206,22 +1206,38 @@ function AdminDashboard({ user }: { user: User }) {
     refrescarTienda(p.store);
   };
 
+  // Producto en 0 unidades que se quiere volver a activar: se elige qué hacer (ingresar mercadería, ilimitado o reserva).
+  const [opcionesCero, setOpcionesCero] = useState<Product | null>(null);
+  const activarIlimitado = async (prod: Product) => {
+    setOpcionesCero(null);
+    setProducts(prev => prev.map(p => p.id === prod.id ? { ...p, status: 'Activo', stock: null as unknown as number } : p));
+    const { error } = await supabase.from('products').update({ status: 'Activo', stock: null }).eq('id', prod.id);
+    if (error) { alert('No se pudo activar: ' + error.message); await fetchProducts(); return; }
+    refrescarTienda(prod.store);
+  };
+  const activarEnReserva = async (prod: Product) => {
+    setOpcionesCero(null);
+    // Queda Activo (interruptor prendido) y siempre en reserva. Con stock 0 y Activo se contaría como ilimitado, por eso stock null.
+    if (!tiendaConReservas(prod.store)) {
+      const ok = window.confirm('Las reservas están apagadas en esta tienda.\n\n¿Prenderlas ahora? El producto saldrá con «Reservar por WhatsApp».');
+      if (!ok) return;
+      const { error: errTienda } = await supabase.from('stores').update({ reserva_activa: true }).eq('slug', prod.store);
+      if (errTienda) { alert('No se pudieron prender las reservas: ' + errTienda.message); return; }
+      setDbStores((prev) => prev.map((x: any) => x.slug === prod.store ? { ...x, reserva_activa: true } : x));
+    }
+    setProducts(prev => prev.map(p => p.id === prod.id ? { ...p, status: 'Activo', stock: null as unknown as number, reserva: true } : p));
+    const { error } = await supabase.from('products').update({ status: 'Activo', stock: null, reserva: true }).eq('id', prod.id);
+    if (error) { alert('No se pudo activar: ' + error.message); await fetchProducts(); return; }
+    refrescarTienda(prod.store);
+  };
+
   const toggleStatus = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === 'Activo' ? 'Agotado' : 'Activo';
     // Con inventario, un producto en 0 unidades no se reactiva a mano: con stock 0 y "Activo" contaría como ilimitado
     // (ver stockIlimitado) y se vendería sin tope. Primero se ingresa mercadería (botón + de la columna Stock).
     const prod = products.find(p => p.id === id);
     if (newStatus === 'Activo' && prod && tiendaTiene(prod.store, 'inventario') && prod.stock === 0) {
-      const ilimitado = window.confirm(
-        `"${prod.name}" tiene 0 unidades.\n\n` +
-        `• Si te llegó mercadería: toca Cancelar y usa "Ingresar mercadería" (el botón + de la columna Stock); se activa solo.\n` +
-        `• Si de este producto NO llevas la cuenta de unidades: toca Aceptar y queda activo como "Ilimitado".`
-      );
-      if (!ilimitado) return;
-      setProducts(prev => prev.map(p => p.id === id ? { ...p, status: 'Activo', stock: null as unknown as number } : p));
-      const { error } = await supabase.from('products').update({ status: 'Activo', stock: null }).eq('id', id);
-      if (error) { alert('No se pudo activar: ' + error.message); await fetchProducts(); return; }
-      refrescarTienda(prod.store);
+      setOpcionesCero(prod);
       return;
     }
     setProducts(prev => prev.map(p => p.id === id ? { ...p, status: newStatus } : p));
@@ -2061,6 +2077,29 @@ function AdminDashboard({ user }: { user: User }) {
       {/* Main Content */}
       {/* min-w-0: sin esto el flex item no baja de su ancho de contenido y desborda la pagina */}
       <main className={`flex-1 min-w-0 px-3 py-4 md:p-6 w-full pb-28 md:pb-6 md:h-screen md:overflow-y-auto ${activeTab === 'pos' ? 'max-w-none md:px-6' : 'max-w-7xl mx-auto'}`}>
+        {opcionesCero && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 p-4" onClick={() => setOpcionesCero(null)}>
+            <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-base font-bold text-gray-900">&quot;{opcionesCero.name}&quot; tiene 0 unidades</h3>
+              <p className="mt-1 mb-4 text-xs text-gray-500">¿Qué quieres hacer con este producto?</p>
+              <div className="flex flex-col gap-2">
+                <button type="button" onClick={() => { const p = opcionesCero; setOpcionesCero(null); agregarStock(p); }} className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2.5 text-left text-sm font-semibold hover:bg-gray-50 cursor-pointer">
+                  <span className="material-symbols-outlined text-[18px]">add_box</span>
+                  <span>Ingresar mercadería<span className="block text-[11px] font-normal text-gray-500">Llegaron unidades; se activa solo.</span></span>
+                </button>
+                <button type="button" onClick={() => activarIlimitado(opcionesCero)} className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2.5 text-left text-sm font-semibold hover:bg-gray-50 cursor-pointer">
+                  <span className="material-symbols-outlined text-[18px]">all_inclusive</span>
+                  <span>Ponerlo ilimitado<span className="block text-[11px] font-normal text-gray-500">Ya no llevas la cuenta de unidades.</span></span>
+                </button>
+                <button type="button" onClick={() => activarEnReserva(opcionesCero)} className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2.5 text-left text-sm font-semibold hover:bg-gray-50 cursor-pointer">
+                  <span className="material-symbols-outlined text-[18px]">event_available</span>
+                  <span>Dejarlo para reservas<span className="block text-[11px] font-normal text-gray-500">Se ofrece como «Reservar por WhatsApp».</span></span>
+                </button>
+                <button type="button" onClick={() => setOpcionesCero(null)} className="mt-1 text-xs font-semibold text-gray-500 hover:text-gray-700 cursor-pointer">Cancelar</button>
+              </div>
+            </div>
+          </div>
+        )}
         {viendoComo && (
           <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-900">
             <span className="material-symbols-outlined text-[18px]">visibility</span>
@@ -2744,7 +2783,7 @@ function AdminDashboard({ user }: { user: User }) {
                                       <div className={`block w-10 h-6 rounded-full transition-colors ${p.status === 'Activo' ? 'bg-[#25D366]' : 'bg-red-500'}`}></div>
                                       <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${p.status === 'Activo' ? 'translate-x-4' : ''}`}></div>
                                     </div>
-                                    <span className={`ml-2 text-xs font-bold ${p.status === 'Activo' ? 'text-green-700' : 'text-red-600'}`}>{p.status === 'Activo' ? 'ACTIVO' : 'AGOTADO'}</span>
+                                    <span className={`ml-2 text-xs font-bold ${p.status === 'Activo' ? 'text-green-700' : 'text-red-600'}`}>{p.status === 'Activo' ? 'ACTIVO' : p.stock === 0 ? 'AGOTADO' : 'DESACTIVADO'}</span>
                                   </label>
                                 </td>
                                 <td className="p-3 font-bold text-gray-900">
@@ -2861,7 +2900,7 @@ function AdminDashboard({ user }: { user: User }) {
                                     <div className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform ${p.status === 'Activo' ? 'translate-x-3' : ''}`}></div>
                                   </div>
                                   <span className={`ml-1.5 text-[9px] font-extrabold ${p.status === 'Activo' ? 'text-green-700' : 'text-red-600'}`}>
-                                    {p.status === 'Activo' ? 'ACTIVO' : 'AGOTADO'}
+                                    {p.status === 'Activo' ? 'ACTIVO' : p.stock === 0 ? 'AGOTADO' : 'DESACTIVADO'}
                                   </span>
                                 </label>
                                 
