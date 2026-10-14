@@ -18,6 +18,7 @@ import { extractThemeFromImageClient } from '@/lib/extractThemeClient';
 import { uploadFile } from '@/lib/uploadClient';
 import { refrescarTienda } from '@/lib/refrescar';
 import PresentacionesEditor from '@/components/PresentacionesEditor';
+import HorarioBuilder from '@/components/HorarioBuilder';
 import { cargarCategoriasPersonalizadas, categoriasDePlantilla, type CategoriaPlantilla } from '@/lib/plantillaCategorias';
 import { filasAPresentaciones, leerPresentaciones, plantillaAceptaPresentaciones, plantillaEsPorPeso, precioDesde, textosPresentacion, type FilaPresentacion } from '@/lib/presentaciones';
 import { useEsSuperadmin } from '@/lib/superadmin';
@@ -431,6 +432,8 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     location: string;
     emoji: string;
     tier: string;
+    /** Plan que contrató la tienda (stores.plan): carta = Esencial, app = Negocio, app_google = Premium. Es el mismo de Cobros. */
+    plan: string;
     active: boolean;
     whatsapp: string;
     zona: string;
@@ -457,6 +460,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     location: '',
     emoji: '🏪',
     tier: 'Basic Tier',
+    plan: 'carta',
     active: true,
     whatsapp: '',
     zona: '',
@@ -608,6 +612,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       location: '',
       emoji: '🏪',
       tier: 'Basic Tier',
+      plan: 'carta',
       active: true,
       // El comercio ya lo dejo en su solicitud (/vende-con-boga): que no lo tenga
       // que volver a escribir.
@@ -857,6 +862,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       location: '',
       emoji: '🏪',
       tier: 'Basic Tier',
+      plan: 'carta',
       active: true,
       whatsapp: '',
       zona: '',
@@ -921,6 +927,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       location: storeDetails[slug]?.location || '',
       emoji: storeMeta[slug]?.emoji || '🏪',
       tier: storeTiers[slug] || 'Basic Tier',
+      plan: nivelAlcance({ modulos: store.modulos, subdominio_activo: store.subdominioActivo, plan: store.plan }),
       active: !!activeStores[slug],
       whatsapp: store.whatsapp || '',
       zona: store.zona || '',
@@ -972,6 +979,34 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         });
     }
   };
+
+  // Dirección propia del editor: /superadmin?tienda=<slug>. Abrir una tienda para editar pone su slug en la dirección
+  // (se puede recargar, guardar en favoritos o mandar el enlace) y cerrarlo lo quita. Si se entra con el enlace, se abre sola.
+  const abiertaDesdeUrl = useRef(false);
+  React.useEffect(() => {
+    const slug = searchParams.get('tienda');
+    if (!slug || abiertaDesdeUrl.current) return;
+    const tienda = stores[slug];
+    // Se espera a que carguen las tiendas Y los perfiles: al abrir sin ellos, el correo del dueño quedaría vacío y al guardar se le quitaría la tienda.
+    if (!tienda || !storeIds[slug] || profiles.length === 0) return;
+    abiertaDesdeUrl.current = true;
+    handleOpenEditStore(tienda);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, stores, storeIds, profiles]);
+
+  React.useEffect(() => {
+    const url = new URL(window.location.href);
+    const enUrl = url.searchParams.get('tienda');
+    if (showStoreModal && editingStore?.slug) {
+      if (enUrl !== editingStore.slug) {
+        url.searchParams.set('tienda', editingStore.slug);
+        window.history.replaceState(null, '', url.pathname + url.search);
+      }
+    } else if (!showStoreModal && enUrl && abiertaDesdeUrl.current) {
+      url.searchParams.delete('tienda');
+      window.history.replaceState(null, '', url.pathname + url.search);
+    }
+  }, [showStoreModal, editingStore?.slug]);
 
   // Preset dinamico: saca la paleta de la imagen que ya cargo el comercio (logo
   // si tiene, si no el banner) en vez de un color fijo elegido a mano.
@@ -1177,6 +1212,9 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       },
     };
     if (ownerUserId) upsertData.user_id = ownerUserId;
+    // El plan solo se manda en tiendas nuevas o si se cambió: así no se le escribe un plan a quien todavía no tiene uno asignado.
+    const planAntes = editingStore ? nivelAlcance({ modulos: editingStore.modulos, subdominio_activo: editingStore.subdominioActivo, plan: editingStore.plan }) : null;
+    if (storeForm.plan && storeForm.plan !== planAntes) upsertData.plan = storeForm.plan;
     if (logoUrl) {
       upsertData.logo_image = logoUrl;
     } else if (logoRemoved) {
@@ -1200,7 +1238,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       // Mismo problema que ya paso con `whatsapp` en el panel del cliente: si una
       // columna nueva todavia no existe en la base, reintenta sin ella en vez de
       // perder el guardado completo de la tienda.
-      const columnasOpcionales = ['whatsapp', 'zona', 'direccion', 'horario', 'rating', 'show_demo_products', 'metodos_pago', 'entrega', 'facebook', 'instagram', 'tiktok', 'external_url', 'subdominio_activo', 'push_activo', 'modulos'];
+      const columnasOpcionales = ['whatsapp', 'zona', 'direccion', 'horario', 'rating', 'show_demo_products', 'metodos_pago', 'entrega', 'facebook', 'instagram', 'tiktok', 'external_url', 'subdominio_activo', 'push_activo', 'modulos', 'plan'];
       const columnasFaltantes: string[] = [];
       let faltante = columnasOpcionales.find((col) => col in upsertData && new RegExp(col).test(error?.message || ''));
       while (error && faltante) {
@@ -2133,7 +2171,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                               <div className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
                             </div>
                             <div className="flex-1 max-w-md mx-auto bg-white/70 rounded h-5 flex items-center justify-center text-[9px] text-[#545f73] border border-[#c2c6d6]/60">
-                              bogamarket.com/{storeForm.slug || 'nueva-tienda'}
+                              {(process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app').replace(/^https?:\/\//, '')}/{storeForm.slug || 'nueva-tienda'}
                             </div>
                           </div>
                         )}
@@ -2414,6 +2452,30 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                             Vas a renombrar /{editingStore.slug} → /{storeForm.slug}. Los links viejos con el slug anterior dejan de funcionar.
                           </p>
                         )}
+                        {/* Las direcciones de la tienda: la normal (siempre) y la propia (si el subdominio está prendido). */}
+                        {(() => {
+                          const sitio = (process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app').replace(/\/$/, '');
+                          const s = (storeForm.slug || 'tu-tienda').trim().toLowerCase();
+                          const filas = [
+                            { titulo: 'Dirección en BogaHub', url: `${sitio}/${s}`, nota: 'Siempre activa', on: true },
+                            { titulo: 'Dirección propia', url: `https://${s}.${sitio.replace(/^https?:\/\//, '')}`, nota: storeForm.subdominioActivo ? 'Activa' : 'Apagada: redirige a la de arriba', on: !!storeForm.subdominioActivo },
+                          ];
+                          return (
+                            <div className="mt-2 rounded-lg border border-[#c2c6d6] bg-white divide-y divide-[#ecedf7]">
+                              {filas.map((f) => (
+                                <div key={f.titulo} className="px-3 py-2 flex items-center gap-2">
+                                  <span className={`w-2 h-2 rounded-full shrink-0 ${f.on ? 'bg-emerald-500' : 'bg-[#c2c6d6]'}`} />
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-[9px] font-black uppercase tracking-wider text-[#545f73]">{f.titulo} · <span className="normal-case font-bold">{f.nota}</span></p>
+                                    <p className="text-[11px] font-bold text-[#191b23] truncate">{f.url.replace(/^https?:\/\//, '')}</p>
+                                  </div>
+                                  <a href={f.url} target="_blank" rel="noopener noreferrer" className="text-[#0058be] shrink-0" title="Abrir"><span className="material-symbols-outlined text-[16px]">open_in_new</span></a>
+                                  <button type="button" className="text-[#0058be] shrink-0" title="Copiar" onClick={() => navigator.clipboard?.writeText(f.url)}><span className="material-symbols-outlined text-[16px]">content_copy</span></button>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })()}
                         <div className="mt-2 p-3 bg-[#f0f7ff] rounded-lg border border-[#0058be]/20">
                           <label className="flex items-start gap-3 cursor-pointer">
                             <input
@@ -2729,16 +2791,28 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Paquete Comercial</label>
-                        <select
-                          value={storeForm.tier}
-                          onChange={(e) => setStoreForm(prev => ({ ...prev, tier: e.target.value }))}
-                          className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
-                        >
-                          <option value="Basic Tier">Basic Tier</option>
-                          <option value="Professional">Professional</option>
-                          <option value="Enterprise Plus">Enterprise Plus</option>
-                        </select>
+                        <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Plan contratado</label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {([
+                            { id: 'carta', nombre: 'Esencial', nota: 'Carta web + pedidos por WhatsApp' },
+                            { id: 'app', nombre: 'Negocio', nota: 'Suma su app y su dirección propia' },
+                            { id: 'app_google', nombre: 'Premium', nota: 'Suma Google Shopping' },
+                          ] as const).map((pl) => {
+                            const sel = storeForm.plan === pl.id;
+                            return (
+                              <button
+                                key={pl.id}
+                                type="button"
+                                onClick={() => setStoreForm(prev => ({ ...prev, plan: pl.id }))}
+                                className={`text-left rounded-lg border px-3 py-2.5 transition-all ${sel ? 'border-[#0058be] bg-[#f0f7ff] ring-1 ring-[#0058be]' : 'border-[#ecedf7] bg-[#f8fafc] hover:border-[#c2c6d6]'}`}
+                              >
+                                <span className={`block text-xs font-black ${sel ? 'text-[#0058be]' : 'text-[#191b23]'}`}>{pl.nombre}</span>
+                                <span className="block text-[9px] font-semibold text-[#727785] leading-snug mt-0.5">{pl.nota}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <p className="text-[9px] text-[#727785] font-semibold mt-1">Es el mismo plan de Cobros: de aquí sale el precio sugerido. Los pagos y descuentos se manejan en Cobros.</p>
                       </div>
 
                       <div className="flex items-center justify-between p-3.5 bg-[#f2f3fd] rounded-lg border border-[#c2c6d6]/60">
@@ -2772,13 +2846,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
 
                     <div>
                       <label className="block text-[10px] font-black text-[#545f73] uppercase tracking-wider mb-1">Horario de Atención</label>
-                      <input
-                        type="text"
-                        value={storeForm.horario}
-                        onChange={(e) => setStoreForm(prev => ({ ...prev, horario: e.target.value }))}
-                        className="w-full bg-[#f8fafc] border border-[#ecedf7] rounded-md px-4 py-2.5 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be] transition-all"
-                        placeholder="Ej: Lun a Dom, 12pm - 11pm"
-                      />
+                      <HorarioBuilder key={editingStore?.slug || 'nueva'} value={storeForm.horario} onChange={(texto) => setStoreForm(prev => ({ ...prev, horario: texto }))} />
                     </div>
 
                     <div>
@@ -3060,6 +3128,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           location: '',
                           emoji: '🏪',
                           tier: 'Basic Tier',
+                          plan: 'carta',
                           active: true,
                           whatsapp: '',
                           zona: '',
