@@ -2807,7 +2807,7 @@ function AdminDashboard({ user }: { user: User }) {
                                 </td>
                                 <td className="p-3 text-right">
                                   {/* Solo se ocultan hasta pasar el mouse donde HAY mouse; en tablet/celular (sin hover) siempre se ven. */}
-                                  <div className="flex items-center justify-end gap-1 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100">
+                                  <div className="flex items-center justify-end gap-1">
                                     <button
                                       onClick={() => toggleReserva(p)}
                                       className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${tiendaConReservas(p.store) && p.reserva === true ? 'text-orange-600 bg-orange-50 hover:bg-orange-100' : 'text-gray-400 hover:text-orange-600 hover:bg-orange-50'}`}
