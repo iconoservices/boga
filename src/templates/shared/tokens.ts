@@ -25,7 +25,7 @@ export const ICON = {
 export const soles = (n: number) => `S/ ${n.toFixed(2)}`;
 
 /** Un servicio o un producto sin precio no va al carrito: se consulta por WhatsApp. */
-export const soloConsulta = (p: { esServicio?: boolean; sinPrecio?: boolean }) => p.esServicio === true || p.sinPrecio === true;
+export const soloConsulta = (p: { esServicio?: boolean; sinPrecio?: boolean; agotado?: boolean }) => p.esServicio === true || p.sinPrecio === true || p.agotado === true;
 
 /** Cuantas estrellas llenas/media pintar para un rating real (ya no uno de relleno). */
 export const estrellasDe = (rating: number) => ({
@@ -57,6 +57,8 @@ export interface Producto {
   presentaciones?: Presentacion[];
   /** true = es un servicio (corte, consulta, reserva): no se agrega al carrito, se consulta directo por WhatsApp. */
   esServicio?: boolean;
+  /** true = está agotado: no va al carrito, se ofrece como reserva por WhatsApp (solo en plantillas con «Reserva»). */
+  agotado?: boolean;
   /** true = no se muestra precio (distribuidoras de gas, cotizaciones): se consulta directo por WhatsApp. */
   sinPrecio?: boolean;
   /** true = es un combo o paquete promocional con distintivo y visibilidad especial. */

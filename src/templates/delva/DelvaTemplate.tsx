@@ -21,7 +21,7 @@ interface Props {
   initialTab?: string;
 }
 
-type Filtro = 'all' | 'promos' | 'novedad';
+type Filtro = 'all' | 'promos' | 'novedad' | 'reserva';
 
 /** Portada de fábrica de la plantilla: solo se muestra en la vista previa; una tienda real sin banner propio no la muestra. */
 export const PORTADA_DELVA = 'https://images.unsplash.com/photo-1516253593875-bd7ba052fbc5?w=1600&q=80';
@@ -45,11 +45,12 @@ function Tarjeta({ p, onSelect, onAdd }: { p: Producto; onSelect: (p: Producto) 
 
   const oferta = enOferta(p) && !p.sinPrecio;
   const desde = !!p.presentaciones?.length;
-  const consultar = soloConsulta(p);
+  const agotado = p.agotado === true;
+  const consultar = soloConsulta(p) && !agotado;
 
   return (
     <div
-      className="dv-pc"
+      className={`dv-pc ${agotado ? 'dv-pc-agotado' : ''}`}
       onClick={() => onSelect(p)}
     >
       <div className="dv-pc-media" ref={refFoto} {...handlers}>
@@ -61,10 +62,11 @@ function Tarjeta({ p, onSelect, onAdd }: { p: Producto; onSelect: (p: Producto) 
             {fotos.map((_, i) => <div key={i} style={{ flex: 1, background: i === activa ? '#fff' : 'transparent' }} />)}
           </div>
         )}
-        {(p.esCombo || esNuevo(p)) && (
+        {(agotado || p.esCombo || esNuevo(p)) && (
           <div className="dv-pc-badges">
-            {p.esCombo && <span className="dv-pc-badge dv-pc-badge-combo">Combo</span>}
-            {esNuevo(p) && <span className="dv-pc-badge">Nuevo</span>}
+            {agotado && <span className="dv-pc-badge dv-pc-badge-reserva">Reservar</span>}
+            {!agotado && p.esCombo && <span className="dv-pc-badge dv-pc-badge-combo">Combo</span>}
+            {!agotado && esNuevo(p) && <span className="dv-pc-badge">Nuevo</span>}
           </div>
         )}
         <BotonFavorito producto={p} className="absolute top-2 right-2 z-10" />
@@ -88,18 +90,18 @@ function Tarjeta({ p, onSelect, onAdd }: { p: Producto; onSelect: (p: Producto) 
         </div>
         <button
           type="button"
-          className={`dv-pc-buy ${consultar ? 'dv-pc-buy-consulta' : ''} ${ok ? 'dv-pc-buy-ok' : ''}`}
+          className={`dv-pc-buy ${consultar ? 'dv-pc-buy-consulta' : ''} ${agotado ? 'dv-pc-buy-reserva' : ''} ${ok ? 'dv-pc-buy-ok' : ''}`}
           onClick={(e) => {
             e.stopPropagation();
-            // Un servicio, un producto sin precio o uno con medidas se resuelve en su ficha.
-            if (consultar || desde) { onSelect(p); return; }
+            // Un agotado (se reserva), un servicio, un producto sin precio o uno con medidas se resuelve en su ficha.
+            if (agotado || consultar || desde) { onSelect(p); return; }
             onAdd(p);
             setOk(true);
             if (timer.current) clearTimeout(timer.current);
             timer.current = setTimeout(() => setOk(false), 1000);
           }}
         >
-          {ok ? '✓ Agregado' : consultar ? 'Consultar' : desde ? 'Elegir' : 'Comprar'}
+          {ok ? '✓ Agregado' : agotado ? 'Reservar' : consultar ? 'Consultar' : desde ? 'Elegir' : 'Comprar'}
         </button>
       </div>
     </div>
@@ -260,18 +262,22 @@ export default function DelvaTemplate({ store, initialProductId, initialTab }: P
   const q = sinAcentos(busqueda.trim());
   const coincide = (p: Producto) => !q || sinAcentos(`${p.name} ${p.desc} ${nombreCategoria(p.category)}`).includes(q);
 
-  const ofertas = c.combosYOfertas ?? [];
-  const nuevos = (c.products.some((p) => p.creado)
-    ? [...c.products].filter((p) => p.creado).sort((a, b) => String(b.creado).localeCompare(String(a.creado)))
-    : [...c.products].reverse()
+  // Los agotados no van en las filas destacadas: salen en «Reserva» y al final de la tienda.
+  const enStock = c.products.filter((p) => !p.agotado);
+  const agotados = c.products.filter((p) => p.agotado);
+  const alFinalLosAgotados = (lista: Producto[]) => [...lista.filter((p) => !p.agotado), ...lista.filter((p) => p.agotado)];
+  const ofertas = (c.combosYOfertas ?? []).filter((p) => !p.agotado);
+  const nuevos = (enStock.some((p) => p.creado)
+    ? [...enStock].filter((p) => p.creado).sort((a, b) => String(b.creado).localeCompare(String(a.creado)))
+    : [...enStock].reverse()
   ).slice(0, 10);
 
   // Con un chip (Promos / Novedad), una búsqueda o una categoría, el inicio pasa a una sola grilla de resultados (como en Delva).
   const enResultados = filtro !== 'all' || !!q || c.activeCategory !== 'all';
-  const resultados = (filtro === 'promos' ? ofertas : filtro === 'novedad' ? c.products.filter(esNuevo) : c.filtered).filter(
+  const resultados = alFinalLosAgotados(filtro === 'promos' ? ofertas : filtro === 'novedad' ? enStock.filter(esNuevo) : filtro === 'reserva' ? agotados : c.filtered).filter(
     (p) => coincide(p) && (c.activeCategory === 'all' || p.category === c.activeCategory),
   );
-  const tituloResultados = filtro === 'promos' ? '🔥 Promos' : filtro === 'novedad' ? '✨ Lo más nuevo' : q ? `Resultados para «${busqueda.trim()}»` : nombreCategoria(c.activeCategory) || 'Resultados';
+  const tituloResultados = filtro === 'promos' ? '🔥 Promos' : filtro === 'novedad' ? '✨ Lo más nuevo' : filtro === 'reserva' ? '🗓️ Reserva' : q ? `Resultados para «${busqueda.trim()}»` : nombreCategoria(c.activeCategory) || 'Resultados';
 
   const sugerencias = q ? c.products.filter(coincide) : [];
 
@@ -342,7 +348,8 @@ export default function DelvaTemplate({ store, initialProductId, initialTab }: P
 
   const filtrosRapidos = ([
     { id: 'promos', label: 'Promos', icon: '🔥', color: '#E91E63', hay: ofertas.length > 0 },
-    { id: 'novedad', label: 'Novedad', icon: '✨', color: '#00A651', hay: c.products.some(esNuevo) },
+    { id: 'reserva', label: 'Reserva', icon: '🗓️', color: '#F39C12', hay: agotados.length > 0 },
+    { id: 'novedad', label: 'Novedad', icon: '✨', color: '#00A651', hay: enStock.some(esNuevo) },
   ] as const).filter((f) => f.hay);
 
   const chipFiltro = (f: (typeof filtrosRapidos)[number]) => (
@@ -527,10 +534,11 @@ export default function DelvaTemplate({ store, initialProductId, initialTab }: P
               </section>
             ) : (
               <>
-                {seccion('destacados', '🔥 Lo más pedido', c.products.slice(0, 12), () => ir('tienda'))}
+                {seccion('destacados', '🔥 Lo más pedido', enStock.slice(0, 12), () => ir('tienda'))}
                 {seccion('promos', '🔥 Promos', ofertas, () => setFiltro('promos'))}
                 {seccion('nuevos', '✨ Novedades', nuevos, () => ir('tienda'))}
-                {categorias.map((cat) => seccion(`cat-${cat.id}`, cat.label, c.products.filter((p) => p.category === cat.id), () => ir('tienda', cat.id)))}
+                {seccion('reserva', '🗓️ Reserva', agotados, () => setFiltro('reserva'))}
+                {categorias.map((cat) => seccion(`cat-${cat.id}`, cat.label, enStock.filter((p) => p.category === cat.id), () => ir('tienda', cat.id)))}
                 {c.products.length > 0 && (
                   <div className="dv-see-all-wrap">
                     <button className="dv-see-all-btn" onClick={() => ir('tienda')}>Ver toda la tienda →</button>
@@ -557,7 +565,7 @@ export default function DelvaTemplate({ store, initialProductId, initialTab }: P
                 <h3 className="dv-section-title">{q ? `Resultados para «${busqueda.trim()}»` : nombreCategoria(c.activeCategory) || 'Toda la tienda'}</h3>
                 <span className="dv-count">{c.filtered.filter(coincide).length} productos</span>
               </div>
-              {grilla(c.filtered.filter(coincide))}
+              {grilla(alFinalLosAgotados(c.filtered.filter(coincide)))}
             </section>
           </div>
         )}
@@ -632,7 +640,7 @@ export default function DelvaTemplate({ store, initialProductId, initialTab }: P
         onSelect={c.abrirProducto}
         onClose={c.cerrarProducto}
         onAdd={c.addToCart}
-        onConsultar={(p) => enviarPedidoPorWhatsApp(store, `Hola ${store.name}, quiero consultar por "${p.name}".`)}
+        onConsultar={(p) => enviarPedidoPorWhatsApp(store, p.agotado ? `Hola ${store.name}, "${p.name}" aparece agotado. Quiero reservarlo para cuando llegue.` : `Hola ${store.name}, quiero consultar por "${p.name}".`)}
       />
     </div>
   );
@@ -771,6 +779,11 @@ const CSS = `
 .dv-pc-prices + .dv-pc-buy { margin-top: 10px; }
 .dv-pc-buy:hover { background: var(--dv-primary); }
 .dv-pc-buy:active { transform: scale(0.97); }
+.dv-pc-agotado .dv-pc-media { filter: grayscale(0.35); }
+.dv-pc-agotado .dv-pc-regular, .dv-pc-agotado .dv-pc-offer { color: #8a958f; }
+.dv-pc-badge-reserva { background: #f39c12; }
+.dv-pc-buy-reserva { background: #f39c12; }
+.dv-pc-buy-reserva:hover { background: #d98a0c; }
 .dv-pc-buy-consulta { background: #25D366; }
 .dv-pc-buy-consulta:hover { background: #1ebe5b; }
 .dv-pc-buy-ok, .dv-pc-buy-ok:hover { background: #16a34a; }

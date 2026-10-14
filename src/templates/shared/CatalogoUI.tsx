@@ -516,7 +516,7 @@ export function ProductModal({
       style={textoConsultar ? { background: t.primary, color: t.onPrimary } : undefined}
     >
       <span className={`material-symbols-outlined ${ICON.sm}`}>{textoConsultar?.icono ?? 'chat'}</span>
-      {textoConsultar?.texto ?? 'Consultar por WhatsApp'}
+      {textoConsultar?.texto ?? (producto.agotado ? 'Reservar por WhatsApp' : 'Consultar por WhatsApp')}
     </button>
   ) : (
     <button

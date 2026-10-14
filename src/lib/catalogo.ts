@@ -32,14 +32,15 @@ export async function fetchBanners(page: string): Promise<{ banners: any[]; styl
 }
 
 /** Productos de una sola tienda (para las plantillas de storefront). */
-export async function fetchProductosDeTienda(slug: string): Promise<any[]> {
+export async function fetchProductosDeTienda(slug: string, incluirAgotados = false): Promise<any[]> {
   try {
     const res = await fetch(`/api/catalog/${encodeURIComponent(slug)}`, { cache: 'no-store' });
     if (!res.ok) return [];
     const data = await res.json();
     // Lo marcado Agotado (a mano, o solo por el inventario al llegar a 0) no se ofrece en la carta; lo Inactivo (oculto por el dueño) tampoco:
     // el sitemap, la ficha del producto y el feed de Google ya lo escondían, pero las plantillas lo seguían mostrando.
-    return ((data.products ?? []) as any[]).filter((p) => p.status !== 'Agotado' && p.status !== 'Inactivo');
+    // Las plantillas con «Reserva» (Delva) piden también los Agotados para ofrecerlos como reserva; las demás no los ven.
+    return ((data.products ?? []) as any[]).filter((p) => (incluirAgotados || p.status !== 'Agotado') && p.status !== 'Inactivo');
   } catch {
     return [];
   }

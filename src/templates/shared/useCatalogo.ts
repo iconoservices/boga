@@ -62,7 +62,8 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
       categorias.find((c) => c.name === nombre)?.href ?? (nombre || '').toLowerCase();
 
     const cargar = async () => {
-      const data = await fetchProductosDeTienda(store.demoDePlantilla ? demoSlug(store.slug) : store.slug);
+      // Delva ofrece los agotados como «Reserva»; las demás plantillas no los ven.
+      const data = await fetchProductosDeTienda(store.demoDePlantilla ? demoSlug(store.slug) : store.slug, store.template === 'delva');
 
       const deLaBase: Producto[] = data
         ? data.map((p) => ({
@@ -77,6 +78,7 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
             extra: p.subcategory ? { area: String(p.subcategory) } : undefined,
             presentaciones: Array.isArray(p.presentaciones) && p.presentaciones.length ? p.presentaciones : undefined,
             esServicio: p.es_servicio === true,
+            agotado: p.status === 'Agotado' ? true : undefined,
             sinPrecio: sinPrecioTodo || !(Number(p.price) > 0),
             esCombo: p.es_combo === true,
             preciosMoneda: p.preciosMoneda && Object.keys(p.preciosMoneda).length ? p.preciosMoneda : undefined,
