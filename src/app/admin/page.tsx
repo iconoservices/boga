@@ -44,6 +44,7 @@ import { cargarPlanes, planDeTienda, type PlanComercial } from '@/lib/planesCome
 import { generarEan13Interno } from '@/lib/ean13';
 import AvisoLimiteProductos from '@/components/admin/AvisoLimiteProductos';
 import { COL_PRESENTACIONES, presentacionesSugeridas, textosPresentacion, leerPresentaciones, precioDesde, tipoPresentacionDe, UNIDADES_DE_MEDIDA, completarMedida, ordenarPresentaciones, type ModoMedida } from '@/lib/presentaciones';
+import { plantillaConReserva } from '@/lib/reserva';
 
 interface Product {
   id: string;
@@ -66,6 +67,8 @@ interface Product {
   presentaciones?: { label: string; price: number; promo?: boolean; preciosMoneda?: PreciosMoneda; imagen?: string }[] | null;
   /** true = es un servicio (se reserva/consulta, no se agrega al carrito). Decide si sale en el toggle "Servicios" del Market. */
   es_servicio?: boolean | null;
+  /** Reservas (lib/reserva.ts): true = siempre en reserva, false = nunca, null = automático (agotado → reserva). */
+  reserva?: boolean | null;
   /** true = es un combo o paquete promocional con sello propio y presencia en Promociones. */
   es_combo?: boolean | null;
   /** IGV incluido en el precio de este producto: 'con' | 'sin'; vacío = lo que diga la tienda. Ver lib/igv.ts. */
@@ -469,7 +472,7 @@ function AdminDashboard({ user }: { user: User }) {
   const [isStoreEditorOpen, setIsStoreEditorOpen] = useState(false);
   const [editingStoreSlug, setEditingStoreSlug] = useState<string | null>(null);
   const [isStoreSaving, setIsStoreSaving] = useState(false);
-  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '', show_demo_products: false, hide_hero_text: false, igv_incluido: false, zona: '', direccion: '', horario: '', rating: '', metodos_pago: [] as string[], monedas: [] as { codigo: string; simbolo: string; tasa: string }[], facebook: '', instagram: '', tiktok: '', latitud: null as number | null, longitud: null as number | null, mostrar_ubicacion: false, entrega: 'ambos' as 'delivery' | 'recojo' | 'ambos', perfil_empresa: {} as PerfilEmpresa });
+  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '', show_demo_products: false, reserva_activa: false, hide_hero_text: false, igv_incluido: false, zona: '', direccion: '', horario: '', rating: '', metodos_pago: [] as string[], monedas: [] as { codigo: string; simbolo: string; tasa: string }[], facebook: '', instagram: '', tiktok: '', latitud: null as number | null, longitud: null as number | null, mostrar_ubicacion: false, entrega: 'ambos' as 'delivery' | 'recojo' | 'ambos', perfil_empresa: {} as PerfilEmpresa });
   // Constructor de horario a golpe de clic: arma el texto de storeForm.horario a partir de los días
   // y la hora elegidos, en vez de que el dueño tenga que escribirlo a mano. El campo de texto sigue
   // ahí para ajustarlo o escribir algo distinto (ej. "Cerramos los feriados").
@@ -530,6 +533,7 @@ function AdminDashboard({ user }: { user: User }) {
     presentaciones: [] as { label: string; price: string; promo?: boolean; preciosMoneda?: Record<string, string>; fotoIdx?: number }[],
     preciosMoneda: {} as Record<string, string>,
     esServicio: false,
+    reserva: '' as '' | 'si' | 'no',
     esCombo: false,
     codigoBarras: "",
   });
@@ -586,6 +590,7 @@ function AdminDashboard({ user }: { user: User }) {
       presentaciones: [],
       preciosMoneda: {},
       esServicio: false,
+      reserva: '' as '' | 'si' | 'no',
       esCombo: false,
       codigoBarras: '',
     });
@@ -663,9 +668,11 @@ function AdminDashboard({ user }: { user: User }) {
     const base = 'id,name,store,price,category,subcategory,stock,status,image,description,created_at';
     let { data, error } = await supabase
       .from('products')
-      .select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio,es_combo,${COL_PRECIOS_MONEDA},igv`)
+      .select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio,es_combo,${COL_PRECIOS_MONEDA},igv,reserva`)
       .in('store', slugs)
       .order('created_at', { ascending: false });
+    // Si el SQL de «reservas» aún no se corrió, se pide sin esa columna.
+    if (error) ({ data, error } = await supabase.from('products').select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio,es_combo,${COL_PRECIOS_MONEDA},igv`).in('store', slugs).order('created_at', { ascending: false }) as any);
     // Si el SQL de "IGV incluido" aún no se corrió, se pide sin esa columna.
     if (error) ({ data, error } = await supabase.from('products').select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio,es_combo,${COL_PRECIOS_MONEDA}`).in('store', slugs).order('created_at', { ascending: false }) as any);
     // Si el SQL de "precios en otras monedas" aún no se corrió, se pide sin esa columna.
@@ -967,6 +974,7 @@ function AdminDashboard({ user }: { user: User }) {
       marketplace_category: dbData?.marketplace_category || config?.marketplaceCategory || '',
       whatsapp: dbData?.whatsapp || '',
       show_demo_products: dbData?.show_demo_products ?? false,
+      reserva_activa: dbData?.reserva_activa === true,
       hide_hero_text: dbData?.hide_hero_text === true || config?.hideHeroText === true,
       igv_incluido: dbData?.igv_incluido === true,
       zona: dbData?.zona || config?.zona || '',
@@ -1056,6 +1064,8 @@ function AdminDashboard({ user }: { user: User }) {
         marketplace_category: storeForm.marketplace_category,
         whatsapp: storeForm.whatsapp || null,
         show_demo_products: storeForm.show_demo_products,
+        // Solo se manda si está prendido o ya lo tenía (para poder apagarlo): sin el SQL, guardar una tienda que no lo usa no avisa nada.
+        ...(storeForm.reserva_activa || dbStores.find((x: any) => x.slug === editingStoreSlug)?.reserva_activa === true ? { reserva_activa: storeForm.reserva_activa } : {}),
         hide_hero_text: storeForm.hide_hero_text,
         // Solo se manda si está marcado o ya lo tenía (para poder destildarlo): sin el SQL, guardar una tienda que no lo usa no avisa nada.
         ...(storeForm.igv_incluido || dbStores.find((x: any) => x.slug === editingStoreSlug)?.igv_incluido === true ? { igv_incluido: storeForm.igv_incluido } : {}),
@@ -1129,7 +1139,7 @@ function AdminDashboard({ user }: { user: User }) {
       // en vez de perder todo el guardado. Paso exactamente esto con `whatsapp`:
       // el panel quedo sin poder guardar NADA de ninguna tienda hasta correr la
       // migracion. Columnas opcionales porque llegaron despues del lanzamiento.
-      const columnasOpcionales = ['igv_incluido', 'show_demo_products', 'hide_hero_text', 'zona', 'direccion', 'horario', 'rating', 'metodos_pago', 'categories', 'facebook', 'instagram', 'tiktok', 'latitud', 'longitud', 'mostrar_ubicacion', 'perfil_empresa', 'monedas', 'hero_images'];
+      const columnasOpcionales = ['igv_incluido', 'show_demo_products', 'hide_hero_text', 'zona', 'direccion', 'horario', 'rating', 'metodos_pago', 'categories', 'facebook', 'instagram', 'tiktok', 'latitud', 'longitud', 'mostrar_ubicacion', 'perfil_empresa', 'monedas', 'hero_images', 'reserva_activa'];
       const columnasFaltantes: string[] = [];
       let faltante = columnasOpcionales.find((col) => col in upsertData && new RegExp(col).test(error?.message || ''));
       while (error && faltante) {
@@ -1176,6 +1186,16 @@ function AdminDashboard({ user }: { user: User }) {
     } finally {
       setIsStoreSaving(false);
     }
+  };
+
+  // Reservas por producto (lib/reserva.ts): un toque lo pone «siempre en reserva» (con o sin stock, también si es ilimitado) y otro lo deja en automático.
+  const tiendaConReservas = (slug: string) => dbStores.find((x: any) => x.slug === slug)?.reserva_activa === true;
+  const toggleReserva = async (p: Product) => {
+    const nuevo = p.reserva === true ? null : true;
+    setProducts(prev => prev.map(x => x.id === p.id ? { ...x, reserva: nuevo } : x));
+    const { error } = await supabase.from('products').update({ reserva: nuevo }).eq('id', p.id);
+    if (error) { alert('No se pudo cambiar la reserva: ' + error.message + '\n\n(¿corriste el SQL de reservas en Supabase?)'); await fetchProducts(); return; }
+    refrescarTienda(p.store);
   };
 
   const toggleStatus = async (id: string, currentStatus: string) => {
@@ -1400,6 +1420,10 @@ function AdminDashboard({ user }: { user: User }) {
       const camposServicio = newProduct.esServicio || productoPrevio?.es_servicio
         ? { es_servicio: newProduct.esServicio }
         : {};
+      // Reserva por producto: solo se manda si se eligió «siempre» o «nunca», o si ya tenía una (para poder volver a «automática»).
+      const camposReserva = newProduct.reserva || productoPrevio?.reserva != null
+        ? { reserva: newProduct.reserva === 'si' ? true : newProduct.reserva === 'no' ? false : null }
+        : {};
       // Combo: la columna solo se manda si está marcado o si el producto ya la tenía (para poder destildarla).
       const camposCombo = newProduct.esCombo || productoPrevio?.es_combo
         ? { es_combo: newProduct.esCombo }
@@ -1431,6 +1455,7 @@ function AdminDashboard({ user }: { user: User }) {
           ...camposPres,
           ...camposMoneda,
           ...camposServicio,
+          ...camposReserva,
           ...camposCombo,
           ...camposFotos,
           ...camposIgv,
@@ -1457,6 +1482,7 @@ function AdminDashboard({ user }: { user: User }) {
           ...camposPres,
           ...camposMoneda,
           ...camposServicio,
+          ...camposReserva,
           ...camposCombo,
           ...camposFotos,
           ...camposIgv,
@@ -1491,6 +1517,7 @@ function AdminDashboard({ user }: { user: User }) {
             ...camposPres,
             ...camposMoneda,
             ...camposServicio,
+            ...camposReserva,
             ...camposCombo,
             ...camposFotos,
             ...camposIgv,
@@ -1569,6 +1596,7 @@ function AdminDashboard({ user }: { user: User }) {
       preciosMoneda: Object.fromEntries(Object.entries(normalizarPreciosMoneda(product.precios_moneda)).map(([c, n]) => [c, String(n)])),
       esServicio: product.es_servicio === true,
       esCombo: product.es_combo === true,
+      reserva: product.reserva === true ? 'si' : product.reserva === false ? 'no' : '',
       codigoBarras: '',
     });
     setFotos(
@@ -2662,6 +2690,9 @@ function AdminDashboard({ user }: { user: User }) {
                                     <div>
                                       <p className="font-bold text-gray-900 flex items-center gap-1.5">
                                         {p.name}
+                                        {tiendaConReservas(p.store) && p.reserva === true && (
+                                          <span className="bg-orange-100 text-orange-800 text-[10px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase">🗓️ Reserva</span>
+                                        )}
                                         {p.es_combo && (
                                           <span className="bg-amber-100 text-amber-800 text-[10px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase">
                                             🔥 Combo
@@ -2717,6 +2748,15 @@ function AdminDashboard({ user }: { user: User }) {
                                 <td className="p-3 text-right">
                                   {/* Solo se ocultan hasta pasar el mouse donde HAY mouse; en tablet/celular (sin hover) siempre se ven. */}
                                   <div className="flex items-center justify-end gap-1 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100">
+                                    {tiendaConReservas(p.store) && (
+                                      <button
+                                        onClick={() => toggleReserva(p)}
+                                        className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${p.reserva === true ? 'text-orange-600 bg-orange-50 hover:bg-orange-100' : 'text-gray-400 hover:text-orange-600 hover:bg-orange-50'}`}
+                                        title={p.reserva === true ? 'Quitar de reserva (vuelve a automático)' : 'Marcar como reserva (siempre se reserva por WhatsApp)'}
+                                      >
+                                        <span className="material-symbols-outlined text-[18px]">event_available</span>
+                                      </button>
+                                    )}
                                     <button 
                                       onClick={() => handleEdit(p)}
                                       className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition-colors"
@@ -2816,6 +2856,11 @@ function AdminDashboard({ user }: { user: User }) {
                                 </label>
                                 
                                 <div className="flex items-center gap-1">
+                                  {tiendaConReservas(p.store) && (
+                                    <button onClick={() => toggleReserva(p)} title={p.reserva === true ? 'Quitar de reserva' : 'Marcar como reserva'} className={`p-1.5 rounded-lg transition-colors ${p.reserva === true ? 'text-orange-600 bg-orange-50' : 'text-gray-400 hover:text-orange-600 hover:bg-orange-50'}`}>
+                                      <span className="material-symbols-outlined text-[16px]">event_available</span>
+                                    </button>
+                                  )}
                                   <button onClick={() => handleEdit(p)} className="p-1.5 text-gray-400 hover:text-black rounded-lg hover:bg-gray-100 transition-colors">
                                     <span className="material-symbols-outlined text-[16px]">edit</span>
                                   </button>
@@ -3840,6 +3885,29 @@ function AdminDashboard({ user }: { user: User }) {
                     <p className="text-xs text-gray-500 mt-2">Ej. un corte, una consulta, una reserva. En tu tienda no tendrá carrito: el cliente te consulta por WhatsApp.</p>
                   )}
                 </div>
+                {/* Reservas: solo si la tienda las prendió (Mis Tiendas → Editar). Por defecto, un producto sin stock va a reserva solo. */}
+                {dbStores.find((x: any) => x.slug === newProduct.store)?.reserva_activa === true && (
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">🗓️ Reserva</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {([
+                        { v: '', label: 'Automática', nota: 'Sin stock → reserva' },
+                        { v: 'si', label: 'Siempre', nota: 'Se reserva aunque haya' },
+                        { v: 'no', label: 'Nunca', nota: 'Sin stock → oculto' },
+                      ] as const).map((o) => (
+                        <button
+                          key={o.v}
+                          type="button"
+                          onClick={() => setNewProduct({ ...newProduct, reserva: o.v })}
+                          className={`rounded-xl border-2 px-2 py-2.5 text-center transition-all ${newProduct.reserva === o.v ? 'border-[var(--tienda-color)] bg-[var(--tienda-color)]/10' : 'border-gray-200 bg-gray-50'}`}
+                        >
+                          <span className="block text-sm font-bold text-gray-900">{o.label}</span>
+                          <span className="block text-[10px] font-medium text-gray-500 leading-tight mt-0.5">{o.nota}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 </>)}
 
                 <div className="grid grid-cols-2 gap-4">
@@ -5241,6 +5309,28 @@ function AdminDashboard({ user }: { user: User }) {
                       Sirve para ver cómo queda el diseño antes de cargar tu catálogo. En cuanto
                       subas tu primer producto propio, los de ejemplo dejan de mostrarse solos.
                     </span>
+                  </span>
+                </label>
+              </div>
+
+              {/* Reservas: apagado por defecto */}
+              <div>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={storeForm.reserva_activa}
+                    onChange={e => setStoreForm({ ...storeForm, reserva_activa: e.target.checked })}
+                    className="mt-0.5 w-4 h-4 shrink-0 accent-black"
+                  />
+                  <span>
+                    <span className="block text-sm font-bold text-gray-700">🗓️ Ofrecer reservas</span>
+                    <span className="block text-xs text-gray-500 mt-1">
+                      Los productos que se quedan sin stock no se esconden: salen con un botón «Reservar» que le escribe a tu WhatsApp. En cada producto puedes elegir
+                      si va <b>siempre</b> en reserva, <b>nunca</b> o <b>automática</b> (solo cuando se agota).
+                    </span>
+                    {storeForm.reserva_activa && editingStoreSlug && !plantillaConReserva(stores[editingStoreSlug]?.template) && (
+                      <span className="block text-xs font-semibold text-amber-700 mt-1">Tu plantilla todavía no muestra las reservas: se activarán cuando la actualicemos.</span>
+                    )}
                   </span>
                 </label>
               </div>

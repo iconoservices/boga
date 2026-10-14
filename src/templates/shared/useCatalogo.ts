@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { StoreConfig } from '@/lib/stores.config';
 import { fetchProductosDeTienda } from '@/lib/catalogo';
+import { plantillaConReserva, esReservable } from '@/lib/reserva';
 import { demoSlug } from '@/lib/demoPlantilla';
 import { getDemoProducts } from '@/lib/templates.config';
 import { debeMostrarDemo } from '@/lib/demo';
@@ -62,8 +63,11 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
       categorias.find((c) => c.name === nombre)?.href ?? (nombre || '').toLowerCase();
 
     const cargar = async () => {
-      // Delva ofrece los agotados como «Reserva»; las demás plantillas no los ven.
-      const data = await fetchProductosDeTienda(store.demoDePlantilla ? demoSlug(store.slug) : store.slug, store.template === 'delva');
+      // Reservas: solo con la tienda prendida y una plantilla que sepa pintarlas (lib/reserva.ts). Si no, los agotados no se piden.
+      const reservaOn = store.reservaActiva === true && plantillaConReserva(store.template);
+      const crudo = await fetchProductosDeTienda(store.demoDePlantilla ? demoSlug(store.slug) : store.slug, reservaOn);
+      // Un agotado que no es reservable (el dueño lo marcó «nunca», o es de stock ilimitado y lo apagó a mano) se esconde, como siempre.
+      const data = reservaOn ? crudo.filter((p) => p.status !== 'Agotado' || esReservable(p)) : crudo;
 
       const deLaBase: Producto[] = data
         ? data.map((p) => ({
@@ -79,6 +83,7 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
             presentaciones: Array.isArray(p.presentaciones) && p.presentaciones.length ? p.presentaciones : undefined,
             esServicio: p.es_servicio === true,
             agotado: p.status === 'Agotado' ? true : undefined,
+            reservable: reservaOn && esReservable(p) ? true : undefined,
             sinPrecio: sinPrecioTodo || !(Number(p.price) > 0),
             esCombo: p.es_combo === true,
             preciosMoneda: p.preciosMoneda && Object.keys(p.preciosMoneda).length ? p.preciosMoneda : undefined,

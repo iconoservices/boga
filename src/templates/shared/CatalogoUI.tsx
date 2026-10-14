@@ -106,7 +106,7 @@ function FotoTarjeta({ product }: { product: Producto }) {
   return (
     <div
       ref={ref}
-      className="aspect-square overflow-hidden relative"
+      className={`aspect-square overflow-hidden relative ${product.agotado ? 'grayscale-[0.35]' : ''}`}
       {...handlers}
     >
       {fotos.map((src, i) => (
@@ -129,6 +129,9 @@ function FotoTarjeta({ product }: { product: Producto }) {
             />
           ))}
         </div>
+      )}
+      {product.reservable && (
+        <div className={`absolute left-2 ${product.esCombo ? 'top-8' : 'top-2'} bg-[#f39c12] text-white text-[10px] font-black px-2 py-0.5 rounded-lg shadow-md z-10`}>🗓️ RESERVA</div>
       )}
       {product.esCombo && (
         <div className="absolute top-2 left-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded-lg shadow-md z-10 flex items-center gap-0.5">
@@ -157,6 +160,8 @@ export function ProductGrid({
   servicios?: boolean;
   /** Si se pasa, los productos sin precio muestran un botón de WhatsApp en la tarjeta (ej. distribuidora de gas). */
   onConsultar?: (p: Producto) => void;
+  /** Mensaje propio al reservar (si no, se usa el de consulta). */
+  onReservar?: (p: Producto) => void;
   /** Una sola fila que se desliza de lado, con la MISMA tarjeta de la grilla (para el inicio, donde cada categoría tiene pocos productos). */
   carrusel?: boolean;
 }) {
@@ -225,6 +230,15 @@ export function ProductGrid({
                 <IgvTag t={t} p={product} />
               </span>
               {/* Un servicio no se "agrega": se consulta desde su ficha (el tap en la tarjeta ya la abre). */}
+              {product.reservable && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onSelect(product); }}
+                  className={`px-3 py-1.5 rounded-full font-bold ${TXT.small} bg-[#f39c12] text-white active:scale-95 transition-transform`}
+                >
+                  Reservar
+                </button>
+              )}
               {!soloConsulta(product) && (
                 // Con medidas, el "+" agrega la más chica (la del precio "Desde"); para otra medida se toca el producto.
                 <AddButton t={t} nombre={product.name} onAdd={() => onAdd(product)} />
@@ -370,7 +384,7 @@ export function CombosCarrusel({
    ════════════════════════════════════════════ */
 
 export function ProductModal({
-  t, producto, productos = [], onClose, onAdd, onSelect, onConsultar, textoConsultar,
+  t, producto, productos = [], onClose, onAdd, onSelect, onConsultar, onReservar, textoConsultar,
 }: {
   t: StoreTheme;
   producto: Producto | null;
@@ -382,6 +396,8 @@ export function ProductModal({
   onSelect?: (p: Producto) => void;
   /** Un servicio no se agrega al carrito: este botón manda directo a WhatsApp. */
   onConsultar?: (p: Producto) => void;
+  /** Mensaje propio al reservar (si no, se usa el de consulta). */
+  onReservar?: (p: Producto) => void;
   /** Texto del botón de los servicios (por defecto «Consultar por WhatsApp»; los salones ponen «Reservar cita»). */
   textoConsultar?: { texto: string; icono: string };
 }) {
@@ -511,12 +527,16 @@ export function ProductModal({
 
   const botonCompra = soloConsulta(producto) ? (
     <button
-      onClick={() => onConsultar?.(producto)}
+      onClick={() => {
+        // Una reserva usa su propio mensaje si la plantilla lo trae; si no, el de consulta con «(para reservar)» junto al nombre.
+        if (producto.reservable) { if (onReservar) onReservar(producto); else onConsultar?.({ ...producto, name: `${producto.name} (para reservar)` }); return; }
+        onConsultar?.(producto);
+      }}
       className={`px-6 py-2.5 md:py-3 rounded-full font-bold ${TXT.body} flex items-center gap-1.5 active:scale-95 bg-[#25D366] text-white`}
       style={textoConsultar ? { background: t.primary, color: t.onPrimary } : undefined}
     >
       <span className={`material-symbols-outlined ${ICON.sm}`}>{textoConsultar?.icono ?? 'chat'}</span>
-      {textoConsultar?.texto ?? (producto.agotado ? 'Reservar por WhatsApp' : 'Consultar por WhatsApp')}
+      {textoConsultar?.texto ?? (producto.reservable ? 'Reservar por WhatsApp' : 'Consultar por WhatsApp')}
     </button>
   ) : (
     <button

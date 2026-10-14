@@ -46,7 +46,8 @@ function Tarjeta({ p, onSelect, onAdd }: { p: Producto; onSelect: (p: Producto) 
   const oferta = enOferta(p) && !p.sinPrecio;
   const desde = !!p.presentaciones?.length;
   const agotado = p.agotado === true;
-  const consultar = soloConsulta(p) && !agotado;
+  const reservable = p.reservable === true;
+  const consultar = soloConsulta(p) && !reservable;
 
   return (
     <div
@@ -62,11 +63,11 @@ function Tarjeta({ p, onSelect, onAdd }: { p: Producto; onSelect: (p: Producto) 
             {fotos.map((_, i) => <div key={i} style={{ flex: 1, background: i === activa ? '#fff' : 'transparent' }} />)}
           </div>
         )}
-        {(agotado || p.esCombo || esNuevo(p)) && (
+        {(reservable || p.esCombo || esNuevo(p)) && (
           <div className="dv-pc-badges">
-            {agotado && <span className="dv-pc-badge dv-pc-badge-reserva">Reservar</span>}
-            {!agotado && p.esCombo && <span className="dv-pc-badge dv-pc-badge-combo">Combo</span>}
-            {!agotado && esNuevo(p) && <span className="dv-pc-badge">Nuevo</span>}
+            {reservable && <span className="dv-pc-badge dv-pc-badge-reserva">Reservar</span>}
+            {!reservable && p.esCombo && <span className="dv-pc-badge dv-pc-badge-combo">Combo</span>}
+            {!reservable && esNuevo(p) && <span className="dv-pc-badge">Nuevo</span>}
           </div>
         )}
         <BotonFavorito producto={p} className="absolute top-2 right-2 z-10" />
@@ -90,18 +91,18 @@ function Tarjeta({ p, onSelect, onAdd }: { p: Producto; onSelect: (p: Producto) 
         </div>
         <button
           type="button"
-          className={`dv-pc-buy ${consultar ? 'dv-pc-buy-consulta' : ''} ${agotado ? 'dv-pc-buy-reserva' : ''} ${ok ? 'dv-pc-buy-ok' : ''}`}
+          className={`dv-pc-buy ${consultar ? 'dv-pc-buy-consulta' : ''} ${reservable ? 'dv-pc-buy-reserva' : ''} ${ok ? 'dv-pc-buy-ok' : ''}`}
           onClick={(e) => {
             e.stopPropagation();
             // Un agotado (se reserva), un servicio, un producto sin precio o uno con medidas se resuelve en su ficha.
-            if (agotado || consultar || desde) { onSelect(p); return; }
+            if (reservable || consultar || desde) { onSelect(p); return; }
             onAdd(p);
             setOk(true);
             if (timer.current) clearTimeout(timer.current);
             timer.current = setTimeout(() => setOk(false), 1000);
           }}
         >
-          {ok ? '✓ Agregado' : agotado ? 'Reservar' : consultar ? 'Consultar' : desde ? 'Elegir' : 'Comprar'}
+          {ok ? '✓ Agregado' : reservable ? 'Reservar' : consultar ? 'Consultar' : desde ? 'Elegir' : 'Comprar'}
         </button>
       </div>
     </div>
@@ -262,11 +263,11 @@ export default function DelvaTemplate({ store, initialProductId, initialTab }: P
   const q = sinAcentos(busqueda.trim());
   const coincide = (p: Producto) => !q || sinAcentos(`${p.name} ${p.desc} ${nombreCategoria(p.category)}`).includes(q);
 
-  // Los agotados no van en las filas destacadas: salen en «Reserva» y al final de la tienda.
-  const enStock = c.products.filter((p) => !p.agotado);
-  const agotados = c.products.filter((p) => p.agotado);
-  const alFinalLosAgotados = (lista: Producto[]) => [...lista.filter((p) => !p.agotado), ...lista.filter((p) => p.agotado)];
-  const ofertas = (c.combosYOfertas ?? []).filter((p) => !p.agotado);
+  // Lo reservable no va en las filas destacadas: sale en «Reserva» y al final de la tienda.
+  const enStock = c.products.filter((p) => !p.reservable);
+  const agotados = c.products.filter((p) => p.reservable);
+  const alFinalLosAgotados = (lista: Producto[]) => [...lista.filter((p) => !p.reservable), ...lista.filter((p) => p.reservable)];
+  const ofertas = (c.combosYOfertas ?? []).filter((p) => !p.reservable);
   const nuevos = (enStock.some((p) => p.creado)
     ? [...enStock].filter((p) => p.creado).sort((a, b) => String(b.creado).localeCompare(String(a.creado)))
     : [...enStock].reverse()
@@ -640,7 +641,8 @@ export default function DelvaTemplate({ store, initialProductId, initialTab }: P
         onSelect={c.abrirProducto}
         onClose={c.cerrarProducto}
         onAdd={c.addToCart}
-        onConsultar={(p) => enviarPedidoPorWhatsApp(store, p.agotado ? `Hola ${store.name}, "${p.name}" aparece agotado. Quiero reservarlo para cuando llegue.` : `Hola ${store.name}, quiero consultar por "${p.name}".`)}
+        onConsultar={(p) => enviarPedidoPorWhatsApp(store, `Hola ${store.name}, quiero consultar por "${p.name}".`)}
+        onReservar={(p) => enviarPedidoPorWhatsApp(store, p.agotado ? `Hola ${store.name}, "${p.name}" aparece agotado. Quiero reservarlo para cuando llegue.` : `Hola ${store.name}, quiero reservar "${p.name}".`)}
       />
     </div>
   );

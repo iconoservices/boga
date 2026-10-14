@@ -1,4 +1,5 @@
 import { RUTAS_PLANTILLA } from './rutasTienda';
+import { plantillaConReserva } from './reserva';
 
 /**
  * Estándar de construcción de plantillas (ver docs/plantillas-estandar.md). Es lo que muestra /superadmin/mapa.
@@ -10,6 +11,7 @@ export const PIEZAS_ESTANDAR = [
   { id: 'rutas', label: 'Rutas', icon: 'link', desc: 'Cada pestaña tiene su propia dirección (/tienda/pestaña).' },
   { id: 'favoritos', label: 'Favoritos', icon: 'favorite', desc: 'Corazón para guardar productos.' },
   { id: 'cuenta', label: 'Cuenta', icon: 'account_circle', desc: 'Botón de cuenta del cliente en el encabezado.' },
+  { id: 'reserva', label: 'Reserva', icon: 'event_available', desc: 'Si la tienda prende «Ofrecer reservas», los productos sin stock (o marcados en reserva) se reservan por WhatsApp.' },
   { id: 'fotos', label: 'Fotos', icon: 'photo_library', desc: 'Con varias fotos, la tarjeta las cambia sola (mouse encima en PC; a la vista en celular).' },
 ] as const;
 
@@ -29,6 +31,7 @@ export function cumpleEstandar(plantilla: string, pieza: PiezaEstandar): boolean
     case 'rutas': return plantilla in RUTAS_PLANTILLA;
     case 'favoritos': return FAVORITOS.has(plantilla);
     case 'cuenta': return CUENTA.has(plantilla);
+    case 'reserva': return plantillaConReserva(plantilla);
     case 'fotos': return !FOTOS_EXCEPTO.has(plantilla);
   }
 }

@@ -84,6 +84,7 @@ async function cargarTienda(slug: string) {
         template: (dbStore.template || 'default') as any,
         heroImage,
         heroImages: Array.isArray(dbStore.hero_images) ? dbStore.hero_images.filter((u: unknown): u is string => typeof u === 'string' && u.length > 0).slice(0, 8) : undefined,
+        reservaActiva: dbStore.reserva_activa === true,
         heroAlt: dbStore.hero_alt || 'store image',
         iconImage: tmpl?.iconImage || undefined,
         theme: resolvedTheme,

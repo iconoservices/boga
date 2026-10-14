@@ -80,6 +80,10 @@ ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS hide_hero_text BOOLEAN DEFAUL
 -- Banners extra de una tienda (además de hero_image): lista de enlaces, la edita el dueño en /admin → Más banners.
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS hero_images JSONB;
 
+-- Reservas: la tienda las prende (apagadas por defecto) y cada producto puede ir «siempre» (true), «nunca» (false) o automático (NULL = solo si está Agotado).
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS reserva_activa BOOLEAN DEFAULT false;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS reserva BOOLEAN;
+
 CREATE INDEX IF NOT EXISTS stores_slug_idx ON public.stores (slug);
 CREATE INDEX IF NOT EXISTS stores_user_id_idx ON public.stores (user_id);
 

@@ -17,10 +17,13 @@ export async function GET(
   const { slug } = await params;
   // Con precio de oferta (lib/ofertas.ts); si esas columnas aún no existen, cae a las de siempre.
   // created_at: para "Lo último" en las plantillas que lo muestran.
-  const base = 'id,name,description,price,category,subcategory,image,status,created_at';
+  // `stock` solo se lee aquí para saber si el producto lleva la cuenta de unidades (con_stock); la cantidad no sale en la respuesta.
+  const base = 'id,name,description,price,category,subcategory,image,status,created_at,stock';
   // Cada columna extra es opcional: si su SQL aún no se corrió, cae al conjunto anterior.
   // Primero con la columna `igv` (IGV incluido por producto); si su SQL aún no se corrió, cae al conjunto de siempre.
-  let { data, error } = await supabase.from('products').select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio,es_combo,${COL_PRECIOS_MONEDA},igv`).eq('store', slug);
+  // Primero con `reserva` (reservas por producto, lib/reserva.ts); si su SQL aún no se corrió, cae al conjunto anterior.
+  let { data, error } = await supabase.from('products').select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio,es_combo,${COL_PRECIOS_MONEDA},igv,reserva`).eq('store', slug);
+  if (error) ({ data, error } = await supabase.from('products').select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio,es_combo,${COL_PRECIOS_MONEDA},igv`).eq('store', slug) as any);
   if (error) ({ data, error } = await supabase.from('products').select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio,es_combo,${COL_PRECIOS_MONEDA}`).eq('store', slug) as any);
   if (error) ({ data, error } = await supabase.from('products').select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio,es_combo`).eq('store', slug) as any);
   if (error) ({ data, error } = await supabase.from('products').select(`${base},images,${COLS_OFERTA},${COL_PRESENTACIONES},es_servicio`).eq('store', slug) as any);
@@ -43,12 +46,14 @@ export async function GET(
         return r.price_anterior && row.oferta_hasta ? { ...r, oferta_hasta: String(row.oferta_hasta).slice(0, 10) } : r;
       }).map((p: any) => {
         // Solo los productos con presentaciones llevan la lista (el resto queda como siempre).
-        const { presentaciones, precios_moneda, ...resto } = p;
+        const { presentaciones, precios_moneda, stock, ...resto } = p;
         const pres = leerPresentaciones(presentaciones);
         // Precios en otras monedas: solo viajan si el producto los tiene y no usa presentaciones (cada medida ya tiene su precio).
         const otras = pres.length ? {} : normalizarPreciosMoneda(precios_moneda);
         return {
           ...resto,
+          // Lleva la cuenta de unidades (no es ilimitado): solo así un agotado puede ir a reserva solo. Mismo criterio que stockIlimitado.
+          ...(stock != null && Number(stock) < 999 ? { con_stock: true } : {}),
           ...(pres.length ? { presentaciones: pres } : {}),
           ...(Object.keys(otras).length ? { preciosMoneda: otras } : {}),
         };

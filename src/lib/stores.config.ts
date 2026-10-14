@@ -12,6 +12,8 @@ export interface StoreConfig {
   template: string;
   theme: StoreTheme;
   heroImage: string;
+  /** true = la tienda ofrece reservas (productos sin stock o marcados «en reserva» se reservan por WhatsApp). Ver lib/reserva.ts. */
+  reservaActiva?: boolean;
   /** Banners extra que sumó el dueño (además de heroImage): las plantillas con carrusel los muestran todos. */
   heroImages?: string[];
   heroAlt: string;
