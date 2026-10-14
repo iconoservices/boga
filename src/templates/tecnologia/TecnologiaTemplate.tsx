@@ -182,6 +182,20 @@ export default function TecnologiaTemplate({ store, initialProductId, initialTab
               ),
             });
           }
+          // Banners extra que sumó el dueño: se muestran tras la portada, igual que ella.
+          (store.heroImages ?? []).forEach((img, i) => {
+            slides.push({
+              key: `banner-${i}`,
+              contenido: (
+                <div className="relative overflow-hidden">
+                  <img aria-hidden className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-70" alt="" src={img} />
+                  <section className="relative w-full md:h-[clamp(240px,30vw,430px)]">
+                    <img className="relative w-full h-auto max-h-[60vh] object-contain md:h-full md:max-h-none" alt={store.heroAlt} src={img} />
+                  </section>
+                </div>
+              ),
+            });
+          });
           ofertas.slice(0, 3).forEach((p) => {
             slides.push({
               key: `oferta-${p.id}`,

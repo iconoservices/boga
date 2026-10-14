@@ -55,3 +55,4 @@ Resumen (14 oct 2026):
 
 - Favoritos, cuenta del cliente y rutas por pestaña en las plantillas que faltan (ver arriba).
 - Pasar las plantillas propias al motor compartido para que cualquier pieza nueva les llegue sola.
+- **Varios banners** (el dueño suma banners en /admin → «Más banners», columna `stores.hero_images`, `StoreConfig.heroImages`): hoy los muestran Delva, Mercado y Tecnología (las que tienen carrusel). Falta el resto: las demás usan solo `heroImage`.

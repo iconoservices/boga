@@ -396,6 +396,21 @@ export function ProductModal({
   // Visor a pantalla completa: se abre al tocar la foto; un toque más acerca (zoom) y otro la devuelve a su tamaño.
   const [visor, setVisor] = React.useState(false);
   const [zoomVisor, setZoomVisor] = React.useState(false);
+  // Zoom en su recuadro (computadora con mouse, como AliExpress): la foto se acerca ahí mismo siguiendo el mouse. Se maneja directo
+  // sobre el elemento (sin estado) para no repintar el modal entero en cada movimiento.
+  const fotoZoomRef = React.useRef<HTMLImageElement>(null);
+  const conMouse = () => typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches && window.matchMedia('(min-width: 768px)').matches;
+  const moverZoom = (e: React.MouseEvent<HTMLElement>) => {
+    const img = fotoZoomRef.current;
+    if (!img || !conMouse()) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    img.style.transformOrigin = `${((e.clientX - r.left) / r.width) * 100}% ${((e.clientY - r.top) / r.height) * 100}%`;
+    img.style.transform = 'scale(2.6)';
+  };
+  const quitarZoom = () => {
+    const img = fotoZoomRef.current;
+    if (img) img.style.transform = 'scale(1)';
+  };
   const swipeFoto = React.useRef<number | null>(null);
   const cierre = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const contenedor = React.useRef<HTMLDivElement>(null);
@@ -602,6 +617,8 @@ export function ProductModal({
               style={{ background: t.surfaceContainerLow }}
               onTouchStart={(e) => { swipeFoto.current = e.touches[0].clientX; }}
               onClick={() => setVisor(true)}
+              onMouseMove={moverZoom}
+              onMouseLeave={quitarZoom}
               role="button"
               aria-label={`Ver la foto de ${producto.name} en grande`}
               onTouchEnd={(e) => {
@@ -612,8 +629,8 @@ export function ProductModal({
               }}
             >
               <img aria-hidden alt="" src={fotos[fotoActiva] ?? producto.image} className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-60" />
-              <img className="relative w-full h-full object-contain" alt={producto.name} src={fotos[fotoActiva] ?? producto.image} />
-              <span className="absolute bottom-2 left-3 w-8 h-8 rounded-full bg-black/55 text-white flex items-center justify-center pointer-events-none" aria-hidden="true">
+              <img ref={fotoZoomRef} className="relative w-full h-full object-contain md:cursor-zoom-in transition-transform duration-150 ease-out will-change-transform" alt={producto.name} src={fotos[fotoActiva] ?? producto.image} />
+              <span className="absolute bottom-2 left-3 w-8 h-8 rounded-full bg-black/55 text-white flex items-center justify-center pointer-events-none md:hidden" aria-hidden="true">
                 <span className={`material-symbols-outlined ${ICON.sm}`}>zoom_in</span>
               </span>
               {fotos.length > 1 && (

@@ -77,6 +77,9 @@ ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS tiktok TEXT;
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS external_url TEXT;
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS hide_hero_text BOOLEAN DEFAULT false;
 
+-- Banners extra de una tienda (además de hero_image): lista de enlaces, la edita el dueño en /admin → Más banners.
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS hero_images JSONB;
+
 CREATE INDEX IF NOT EXISTS stores_slug_idx ON public.stores (slug);
 CREATE INDEX IF NOT EXISTS stores_user_id_idx ON public.stores (user_id);
 

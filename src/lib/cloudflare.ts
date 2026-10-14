@@ -5,7 +5,23 @@
 // local) no hace nada. Nunca rompe el guardado si falla.
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app';
 
-export async function purgeCloudflare(paths: string[]): Promise<void> {
+/**
+ * Direcciones desde las que se ve una tienda: BogaHub, su subdominio propio (<slug>.bogahub.app) y su dominio propio si lo tiene.
+ * Cloudflare guarda una copia por cada dirección, así que un cambio hay que borrarlo en todas (antes solo se borraba la de BogaHub
+ * y en `delva.bogahub.app` el cambio tardaba hasta 12 min).
+ */
+export function hostsDeTienda(slug: string, modulos?: { dominio_propio_url?: unknown; dominio_propio?: unknown } | null): string[] {
+  const base = new URL(SITE_URL).host;
+  const hosts = new Set<string>([`${slug}.${base}`]);
+  const dom = modulos?.dominio_propio_url || (typeof modulos?.dominio_propio === 'string' ? modulos.dominio_propio : null);
+  if (typeof dom === 'string') {
+    const limpio = dom.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '').replace(/:\d+$/, '').replace(/^www\./, '').toLowerCase();
+    if (limpio) { hosts.add(limpio); hosts.add(`www.${limpio}`); }
+  }
+  return [...hosts];
+}
+
+export async function purgeCloudflare(paths: string[], hostsExtra: string[] = []): Promise<void> {
   const token = process.env.CLOUDFLARE_API_TOKEN;
   const zone = process.env.CLOUDFLARE_ZONE_ID;
   if (paths.length === 0) return;
@@ -14,7 +30,8 @@ export async function purgeCloudflare(paths: string[]): Promise<void> {
     return;
   }
   try {
-    const files = paths.map((p) => `${SITE_URL}${p}`);
+    // Cloudflare admite hasta 30 direcciones por llamada.
+    const files = [SITE_URL, ...hostsExtra.map((h) => `https://${h}`)].flatMap((origen) => paths.map((p) => `${origen}${p}`)).slice(0, 30);
     const res = await fetch(`https://api.cloudflare.com/client/v4/zones/${zone}/purge_cache`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },

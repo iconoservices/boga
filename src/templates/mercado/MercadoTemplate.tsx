@@ -48,6 +48,8 @@ export default function MercadoTemplate({ store, initialProductId }: MercadoTemp
     const base: { titulo1: string; titulo2: string; sub: string; img: string; limpio?: boolean }[] = [
       // El banner del comercio trae su propio arte y textos: se muestra limpio, sin letras ni oscurecido encima.
       { titulo1: '', titulo2: '', sub: '', img: store.heroImage, limpio: true },
+      // Banners extra que sumó el dueño (también traen su propio arte).
+      ...(store.heroImages ?? []).map((img) => ({ titulo1: '', titulo2: '', sub: '', img, limpio: true })),
     ];
     // Los banners destacados son SOLO las promos (combos y ofertas): es lo que más mueve a comprar. Recién si la tienda
     // no tiene ninguna, se muestran los primeros productos para que el carrusel no quede vacío.
@@ -63,7 +65,7 @@ export default function MercadoTemplate({ store, initialProductId }: MercadoTemp
       });
     });
     return base;
-  }, [c.products, c.combosYOfertas, store.name, store.tagline, store.heroImage]);
+  }, [c.products, c.combosYOfertas, store.name, store.tagline, store.heroImage, store.heroImages]);
 
   const sliderRef = useRef<HTMLDivElement>(null);
   const [bannerIdx, setBannerIdx] = useState(0);

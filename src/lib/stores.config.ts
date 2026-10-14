@@ -12,6 +12,8 @@ export interface StoreConfig {
   template: string;
   theme: StoreTheme;
   heroImage: string;
+  /** Banners extra que sumó el dueño (además de heroImage): las plantillas con carrusel los muestran todos. */
+  heroImages?: string[];
   heroAlt: string;
   iconImage?: string;
   categories: { name: string; icon: string; href: string }[];

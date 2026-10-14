@@ -280,6 +280,8 @@ export default function DelvaTemplate({ store, initialProductId, initialTab }: P
     ...(hayPortada
       ? [{ key: 'portada', img: store.heroImage, tag: 'DESTACADO', titulo: store.name, sub: store.tagline, limpio: store.hideHeroText, onClick: () => ir('tienda') }]
       : []),
+    // Banners extra que sumó el dueño: se ven limpios (traen su propio arte), antes de las ofertas.
+    ...(store.heroImages ?? []).map((img, i) => ({ key: `banner-${i}`, img, tag: '', titulo: '', sub: '', limpio: true, onClick: () => ir('tienda') })),
     ...ofertas.slice(0, 3).map((p) => ({
       key: `of-${p.id}`,
       img: p.image,

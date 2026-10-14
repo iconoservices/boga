@@ -477,6 +477,10 @@ function AdminDashboard({ user }: { user: User }) {
   const [storeHeroFile, setStoreHeroFile] = useState<File | null>(null);
   const [storeLogoPreview, setStoreLogoPreview] = useState<string | null>(null);
   const [storeHeroPreview, setStoreHeroPreview] = useState<string | null>(null);
+  // Banners extra (además de la portada): los ya guardados traen `url`; los nuevos traen `file` y una vista previa local.
+  const [storeExtraBanners, setStoreExtraBanners] = useState<{ url: string; file?: File }[]>([]);
+  const storeExtraInputRef = useRef<HTMLInputElement>(null);
+  const MAX_BANNERS_EXTRA = 6;
   const [storeCategories, setStoreCategories] = useState<{ name: string; icon: string; href: string }[]>([]);
   const [newCategoryName, setNewCategoryName] = useState('');
   // null = no tocar el color: se deja el que ya tenia (de la plantilla o de
@@ -973,6 +977,7 @@ function AdminDashboard({ user }: { user: User }) {
     // El constructor de horario arranca en blanco: no intenta adivinar los días/hora desde el texto libre que ya tenía.
     setHorarioBloques([BLOQUE_VACIO]);
     setStoreHeroPreview(dbData?.hero_image || config?.heroImage || null);
+    setStoreExtraBanners((Array.isArray(dbData?.hero_images) ? dbData.hero_images : []).filter((u: unknown): u is string => typeof u === 'string').map((url: string) => ({ url })));
     setStoreLogoPreview(dbData?.logo_image || config?.logoImage || null);
     setStoreLogoFile(null);
     setStoreHeroFile(null);
@@ -1028,6 +1033,11 @@ function AdminDashboard({ user }: { user: User }) {
       ]);
       if (logoSubido) logoUrl = logoSubido;
       if (heroSubido) heroUrl = heroSubido;
+      // Banners extra: los nuevos se suben (en paralelo); los que fallan se omiten y se avisa en consola.
+      const extrasSubidos = await Promise.all(
+        storeExtraBanners.map((b) => (b.file ? uploadFile(b.file, `store-assets/${editingStoreSlug}`).catch((err) => { console.error('Error subiendo banner:', err); return null; }) : b.url)),
+      );
+      const bannersExtra = extrasSubidos.filter((u): u is string => !!u);
 
       const upsertData: any = {
         slug: editingStoreSlug,
@@ -1067,6 +1077,10 @@ function AdminDashboard({ user }: { user: User }) {
         upsertData.mostrar_ubicacion = storeForm.latitud != null && storeForm.longitud != null && storeForm.mostrar_ubicacion;
       }
       if (heroUrl) upsertData.hero_image = heroUrl;
+      // Solo se manda si hay banners extra (o si tenía y los quitó): así, sin la columna en la base, guardar una tienda que no los usa no avisa nada.
+      if (bannersExtra.length || Array.isArray(dbStores.find((x: any) => x.slug === editingStoreSlug)?.hero_images)) {
+        upsertData.hero_images = bannersExtra.length ? bannersExtra : null;
+      }
       if (logoUrl) upsertData.logo_image = logoUrl;
 
       // Solo se manda el theme si el comercio eligio un preset (incluido "logo",
@@ -1105,7 +1119,7 @@ function AdminDashboard({ user }: { user: User }) {
       // en vez de perder todo el guardado. Paso exactamente esto con `whatsapp`:
       // el panel quedo sin poder guardar NADA de ninguna tienda hasta correr la
       // migracion. Columnas opcionales porque llegaron despues del lanzamiento.
-      const columnasOpcionales = ['igv_incluido', 'show_demo_products', 'hide_hero_text', 'zona', 'direccion', 'horario', 'rating', 'metodos_pago', 'categories', 'facebook', 'instagram', 'tiktok', 'latitud', 'longitud', 'mostrar_ubicacion', 'perfil_empresa', 'monedas'];
+      const columnasOpcionales = ['igv_incluido', 'show_demo_products', 'hide_hero_text', 'zona', 'direccion', 'horario', 'rating', 'metodos_pago', 'categories', 'facebook', 'instagram', 'tiktok', 'latitud', 'longitud', 'mostrar_ubicacion', 'perfil_empresa', 'monedas', 'hero_images'];
       const columnasFaltantes: string[] = [];
       let faltante = columnasOpcionales.find((col) => col in upsertData && new RegExp(col).test(error?.message || ''));
       while (error && faltante) {
@@ -2055,14 +2069,6 @@ function AdminDashboard({ user }: { user: User }) {
             ) : activeTab === 'products' ? (
               <div className="flex items-center gap-2 w-full md:w-auto">
                 <button
-                  onClick={() => setIsLoyverseOpen(true)}
-                  className="flex items-center justify-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 px-3.5 py-2.5 rounded-md font-bold hover:bg-emerald-100 transition-all text-sm w-full md:w-auto cursor-pointer shadow-sm"
-                  title="Sincronizar con punto de venta Loyverse POS"
-                >
-                  <span className="material-symbols-outlined text-[18px] text-emerald-600">sync_alt</span>
-                  Loyverse POS
-                </button>
-                <button
                   onClick={() => { resetForm(); setIsModalOpen(true); }}
                   className="flex items-center justify-center gap-2 bg-[var(--tienda-color)] text-white px-5 py-2.5 rounded-md font-bold shadow-lg shadow-[var(--tienda-color)]/20 hover:shadow-[var(--tienda-color)]/30 transition-all hover:-translate-y-0.5 active:translate-y-0 w-full md:w-auto"
                 >
@@ -2361,7 +2367,8 @@ function AdminDashboard({ user }: { user: User }) {
           <>
             {pestanasCatalogo}
             {/* Store Selector Global for Dashboard */}
-            <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2 mb-6" style={{ scrollbarWidth: 'none' }}>
+            {Object.keys(stores).length > 1 && (
+            <div className="md:hidden flex gap-2 overflow-x-auto hide-scrollbar pb-2 mb-4" style={{ scrollbarWidth: 'none' }}>
               <button
                 onClick={() => setSelectedStore('all')}
                 className={`px-4 py-2 rounded-md text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-2 ${
@@ -2387,63 +2394,26 @@ function AdminDashboard({ user }: { user: User }) {
                 </button>
               ))}
             </div>
+            )}
 
             {/* Stats Row */}
             {(() => {
               const storeFiltered = selectedStore === 'all' ? visibleProducts : visibleProducts.filter(p => p.store === selectedStore);
-              const availableCategories = Array.from(new Set(storeFiltered.map(p => p.category)));
+              // Sin las categorías vacías: ya salen juntas en el botón «Sin categoría».
+              const normCat = (c: string) => (c || '').trim().toLowerCase();
+              // Sin repetidos por mayúsculas o espacios ("Relojes" y "relojes " son la misma categoría).
+              const availableCategories = Array.from(new Map(storeFiltered.filter((p) => normCat(p.category)).map((p) => [normCat(p.category), p.category.trim()] as const)).values());
               
               const filteredProducts = storeFiltered.filter(p => {
                 const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                                       p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
                                       (p.subcategory || '').toLowerCase().includes(searchQuery.toLowerCase());
-                const matchesCategory = selectedFilterCategory === 'all' || (selectedFilterCategory === '__sin__' ? sinCategoria(p) : p.category === selectedFilterCategory);
+                const matchesCategory = selectedFilterCategory === 'all' || (selectedFilterCategory === '__sin__' ? sinCategoria(p) : normCat(p.category) === normCat(selectedFilterCategory));
                 return matchesSearch && matchesCategory;
               });
 
               return (
                 <>
-                  <div className="flex flex-wrap gap-4 mb-6">
-                    <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm flex items-center gap-3 min-w-[150px] flex-1">
-                      <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                        <span className="material-symbols-outlined text-[18px]">inventory_2</span>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 font-medium text-[11px] mb-0.5">Total Productos</p>
-                        <h3 className="text-xl font-extrabold text-gray-900 leading-none">{storeFiltered.length}</h3>
-                      </div>
-                    </div>
-                    {selectedStore === 'all' && (
-                      <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm flex items-center gap-3 min-w-[150px] flex-1">
-                        <div className="w-8 h-8 rounded-full bg-green-50 text-green-600 flex items-center justify-center shrink-0">
-                          <span className="material-symbols-outlined text-[18px]">storefront</span>
-                        </div>
-                        <div>
-                          <p className="text-gray-500 font-medium text-[11px] mb-0.5">Tiendas Activas</p>
-                          <h3 className="text-xl font-extrabold text-gray-900 leading-none">
-                            {new Set(visibleProducts.map(p => p.store)).size || 0}
-                          </h3>
-                        </div>
-                      </div>
-                    )}
-                    {inventarioOn ? (() => {
-                      const bajos = storeFiltered.filter(p => tiendaTiene(p.store, 'inventario') && !stockIlimitado(p) && p.stock <= STOCK_BAJO).length;
-                      return (
-                        <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm flex items-center gap-3 min-w-[150px] flex-1">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${bajos ? 'bg-amber-50 text-amber-600' : 'bg-gray-50 text-gray-400'}`}>
-                            <span className="material-symbols-outlined text-[18px]">warning</span>
-                          </div>
-                          <div>
-                            <p className="text-gray-500 font-medium text-[11px] mb-0.5">Poco stock</p>
-                            <h3 className="text-xl font-extrabold text-gray-900 leading-none">{bajos}</h3>
-                          </div>
-                        </div>
-                      );
-                    })() : (
-                      <div className="hidden lg:block flex-1 border-2 border-dashed border-gray-200 rounded-md bg-transparent"></div>
-                    )}
-                  </div>
-
                   {/* Aviso del tope de productos del plan (desde el 90%) con botón para pasar al plan siguiente */}
                   {focusedStore && topeDeTienda(focusedStore) != null && (
                     <AvisoLimiteProductos
@@ -2460,63 +2430,55 @@ function AdminDashboard({ user }: { user: User }) {
                   <div className="bg-white border border-gray-100 rounded-md overflow-hidden shadow-sm">
                     <div className="p-4 border-b border-gray-100 flex flex-col gap-4 bg-white">
                       <div className="flex items-center justify-between flex-wrap gap-4">
-                        <h2 className="text-base font-bold text-gray-900">Catálogo Actual {selectedStore !== 'all' ? `- ${stores[selectedStore]?.name}` : ''}</h2>
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
-                          <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest leading-none select-none">Acciones</span>
-                          <div className="flex flex-row flex-wrap items-center gap-1.5">
-                            <button
-                              onClick={() => setIsQRModalOpen(true)}
-                              className="px-2.5 py-1.5 text-[11px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 bg-[var(--tienda-color)] text-white hover:bg-[#8f0f0b] whitespace-nowrap active:scale-95 cursor-pointer shadow-sm"
-                            >
-                              <span className="material-symbols-outlined text-[14px]">qr_code_2</span>
-                              Código QR
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <h2 className="text-base font-bold text-gray-900">Catálogo {selectedStore !== 'all' ? `· ${stores[selectedStore]?.name}` : ''}</h2>
+                          {(() => {
+                            const bajos = inventarioOn ? storeFiltered.filter(p => tiendaTiene(p.store, 'inventario') && !stockIlimitado(p) && p.stock <= STOCK_BAJO).length : 0;
+                            return (
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <span className="text-[11px] font-bold text-gray-600 bg-gray-100 rounded-full px-2.5 py-0.5">{storeFiltered.length} {esEmpresa ? 'servicios' : 'productos'}</span>
+                                {selectedStore === 'all' && <span className="text-[11px] font-bold text-gray-600 bg-gray-100 rounded-full px-2.5 py-0.5">{new Set(visibleProducts.map(p => p.store)).size || 0} tiendas</span>}
+                                {inventarioOn && bajos > 0 && <span className="text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-0.5">⚠ {bajos} con poco stock</span>}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                        <details className="relative">
+                          <summary className="list-none cursor-pointer select-none px-3 py-1.5 text-[11px] font-bold rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 flex items-center gap-1.5 shadow-sm [&::-webkit-details-marker]:hidden">
+                            <span className="material-symbols-outlined text-[16px]">more_horiz</span>
+                            Acciones
+                            <span className="material-symbols-outlined text-[16px]">expand_more</span>
+                          </summary>
+                          <div
+                            className="absolute right-0 mt-1.5 z-30 w-64 rounded-lg border border-gray-200 bg-white shadow-xl p-1.5 flex flex-col"
+                            onClick={(e) => (e.currentTarget.parentElement as HTMLDetailsElement | null)?.removeAttribute('open')}
+                          >
+                            <button onClick={() => setIsQRModalOpen(true)} className="flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-left text-xs font-bold text-gray-700 hover:bg-gray-50 cursor-pointer disabled:opacity-60">
+                              <span className="material-symbols-outlined text-[18px] text-gray-500">qr_code_2</span>Código QR
                             </button>
-                            <button
-                              onClick={() => setIsPDFModalOpen(true)}
-                              className="px-2.5 py-1.5 text-[11px] font-bold rounded-md transition-all flex items-center justify-center gap-1 bg-white text-[#8c0009] hover:bg-[#8c0009]/5 whitespace-nowrap active:scale-95 cursor-pointer border border-[#8c0009]/25 shadow-sm"
-                            >
-                              <span className="material-symbols-outlined text-[14px]">picture_as_pdf</span>
-                              Exportar PDF
+                            <button onClick={() => setIsPDFModalOpen(true)} className="flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-left text-xs font-bold text-gray-700 hover:bg-gray-50 cursor-pointer disabled:opacity-60">
+                              <span className="material-symbols-outlined text-[18px] text-gray-500">picture_as_pdf</span>Exportar PDF
                             </button>
                             {inventarioOn && (
-                              <button
-                                onClick={abrirEscanerIngreso}
-                                className="px-2.5 py-1.5 text-[11px] font-bold rounded-md transition-all flex items-center justify-center gap-1 bg-white text-gray-700 hover:bg-gray-50 whitespace-nowrap active:scale-95 cursor-pointer border border-gray-200 shadow-sm"
-                              >
-                                <span className="material-symbols-outlined text-[14px]">photo_camera</span>
-                                Ingresar con cámara
+                              <button onClick={abrirEscanerIngreso} className="flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-left text-xs font-bold text-gray-700 hover:bg-gray-50 cursor-pointer disabled:opacity-60">
+                                <span className="material-symbols-outlined text-[18px] text-gray-500">photo_camera</span>Ingresar con cámara
                               </button>
                             )}
                             {inventarioOn && (
-                              <button
-                                onClick={imprimirEtiquetas}
-                                disabled={haciendoEtiquetas}
-                                className="px-2.5 py-1.5 text-[11px] font-bold rounded-md transition-all flex items-center justify-center gap-1 bg-white text-gray-700 hover:bg-gray-50 whitespace-nowrap active:scale-95 cursor-pointer border border-gray-200 shadow-sm disabled:opacity-60"
-                                title="Crea los códigos de barras que falten e imprime las etiquetas"
-                              >
-                                <span className="material-symbols-outlined text-[14px]">barcode</span>
-                                {haciendoEtiquetas ? 'Preparando…' : 'Etiquetas con código'}
+                              <button onClick={imprimirEtiquetas} disabled={haciendoEtiquetas} className="flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-left text-xs font-bold text-gray-700 hover:bg-gray-50 cursor-pointer disabled:opacity-60" title="Crea los códigos de barras que falten e imprime las etiquetas">
+                                <span className="material-symbols-outlined text-[18px] text-gray-500">barcode</span>{haciendoEtiquetas ? 'Preparando…' : 'Etiquetas con código'}
                               </button>
                             )}
                             {inventarioOn && (
-                              <button
-                                onClick={() => setIsHistorialOpen(true)}
-                                className="px-2.5 py-1.5 text-[11px] font-bold rounded-md transition-all flex items-center justify-center gap-1 bg-white text-gray-700 hover:bg-gray-50 whitespace-nowrap active:scale-95 cursor-pointer border border-gray-200 shadow-sm"
-                              >
-                                <span className="material-symbols-outlined text-[14px]">history</span>
-                                Historial de stock
+                              <button onClick={() => setIsHistorialOpen(true)} className="flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-left text-xs font-bold text-gray-700 hover:bg-gray-50 cursor-pointer disabled:opacity-60">
+                                <span className="material-symbols-outlined text-[18px] text-gray-500">history</span>Historial de stock
                               </button>
                             )}
-                            <button
-                              onClick={() => setIsLoyverseOpen(true)}
-                              className="px-2.5 py-1.5 text-[11px] font-bold rounded-md transition-all flex items-center justify-center gap-1 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 whitespace-nowrap active:scale-95 cursor-pointer border border-emerald-200 shadow-sm"
-                              title="Sincronizar catálogo con Loyverse POS"
-                            >
-                              <span className="material-symbols-outlined text-[14px] text-emerald-600">sync_alt</span>
-                              Loyverse POS
+                            <button onClick={() => setIsLoyverseOpen(true)} className="flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-left text-xs font-bold text-gray-700 hover:bg-gray-50 cursor-pointer disabled:opacity-60" title="Sincronizar catálogo con Loyverse POS">
+                              <span className="material-symbols-outlined text-[18px] text-emerald-600">sync_alt</span>Loyverse POS
                             </button>
                           </div>
-                        </div>
+                        </details>
                       </div>
 
                       {/* Search and Filters */}
@@ -4487,6 +4449,53 @@ function AdminDashboard({ user }: { user: User }) {
                       <span className="text-xs opacity-70">Imagen panorámica (16:9)</span>
                     </div>
                   )}
+                </div>
+
+                {/* Más banners: la tienda los muestra en carrusel, junto a la portada. */}
+                <div className="mt-4">
+                  <label className="block text-sm font-bold text-gray-700 mb-1">Más banners (opcional)</label>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Suma otras fotos de promoción y tu tienda las muestra una tras otra, junto a la portada. Hasta {MAX_BANNERS_EXTRA} más.
+                  </p>
+                  <input
+                    type="file"
+                    ref={storeExtraInputRef}
+                    multiple
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={(e) => {
+                      const archivos = Array.from(e.target.files ?? []);
+                      e.target.value = '';
+                      if (!archivos.length) return;
+                      setStoreExtraBanners((prev) => [...prev, ...archivos.map((file) => ({ url: URL.createObjectURL(file), file }))].slice(0, MAX_BANNERS_EXTRA));
+                    }}
+                  />
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {storeExtraBanners.map((b, i) => (
+                      <div key={b.url} className="relative aspect-video rounded-lg overflow-hidden border border-gray-200 bg-gray-50 group">
+                        <img src={b.url} alt={`Banner ${i + 2}`} className="w-full h-full object-cover" />
+                        <span className="absolute left-1.5 top-1.5 text-[10px] font-bold bg-black/60 text-white rounded px-1.5 py-0.5">{i + 2}</span>
+                        <button
+                          type="button"
+                          onClick={() => setStoreExtraBanners((prev) => prev.filter((_, j) => j !== i))}
+                          className="absolute right-1.5 top-1.5 w-7 h-7 rounded-full bg-white/95 text-gray-700 hover:text-red-600 flex items-center justify-center shadow"
+                          aria-label={`Quitar banner ${i + 2}`}
+                        >
+                          <span className="material-symbols-outlined text-[16px]">close</span>
+                        </button>
+                      </div>
+                    ))}
+                    {storeExtraBanners.length < MAX_BANNERS_EXTRA && (
+                      <button
+                        type="button"
+                        onClick={() => storeExtraInputRef.current?.click()}
+                        className="aspect-video rounded-lg border-2 border-dashed border-gray-200 hover:border-black transition-colors bg-gray-50 flex flex-col items-center justify-center text-gray-400 hover:text-gray-700"
+                      >
+                        <span className="material-symbols-outlined text-2xl">add_photo_alternate</span>
+                        <span className="text-xs font-bold">Agregar banner</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 

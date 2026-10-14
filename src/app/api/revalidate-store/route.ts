@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { createClient } from '@supabase/supabase-js';
-import { purgeCloudflare, rutasCatalogo } from '@/lib/cloudflare';
+import { purgeCloudflare, rutasCatalogo, hostsDeTienda } from '@/lib/cloudflare';
 
 // Al guardar un producto o tu tienda desde el panel del negocio, refresca de
 // una vez la copia guardada del catálogo (la de Vercel y la de Cloudflare), en
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
   const [{ data: tienda }, { data: esSuperadmin }, { data: esAdminDeTienda }] = await Promise.all([
-    supabaseComoUsuario.from('stores').select('user_id').eq('slug', slug).maybeSingle(),
+    supabaseComoUsuario.from('stores').select('user_id,modulos').eq('slug', slug).maybeSingle(),
     supabaseComoUsuario.rpc('is_superadmin'),
     // Dueño o co-administrador (store_admins): antes solo pasaba el dueño y el co-admin no refrescaba nada.
     supabaseComoUsuario.rpc('es_admin_de', { p_store: slug }),
@@ -39,6 +39,7 @@ export async function POST(request: Request) {
   // Global (no por tienda): si esto tocó el módulo de Google, que el feed no se quede sirviendo la versión vieja hasta 1 hora.
   revalidatePath('/api/google-feed');
   revalidateTag('stores', { expire: 0 });
-  await purgeCloudflare(rutasCatalogo(slug));
+  // También en su subdominio / dominio propio: ahí Cloudflare guarda su propia copia.
+  await purgeCloudflare(rutasCatalogo(slug), hostsDeTienda(slug, tienda?.modulos));
   return NextResponse.json({ ok: true });
 }
