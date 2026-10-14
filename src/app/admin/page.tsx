@@ -195,6 +195,16 @@ function AdminDashboard({ user }: { user: User }) {
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilterCategory, setSelectedFilterCategory] = useState('all');
+  // Tabla de productos: orden por columna, filtro de precio y estado, y páginas.
+  type ColOrden = 'nombre' | 'categoria' | 'stock' | 'estado' | 'precio';
+  const [tablaOrden, setTablaOrden] = useState<{ col: ColOrden; dir: 'asc' | 'desc' } | null>(null);
+  const [tablaPagina, setTablaPagina] = useState(1);
+  const [tablaTamano, setTablaTamano] = useState(20);
+  const [precioMin, setPrecioMin] = useState('');
+  const [precioMax, setPrecioMax] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState<'all' | 'Activo' | 'Inactivo' | 'Agotado'>('all');
+  // Al cambiar cualquier filtro u orden, vuelve a la primera página.
+  useEffect(() => { setTablaPagina(1); }, [searchQuery, selectedFilterCategory, selectedStore, precioMin, precioMax, filtroEstado, tablaOrden, tablaTamano]);
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>('inicio');
@@ -2404,13 +2414,43 @@ function AdminDashboard({ user }: { user: User }) {
               // Sin repetidos por mayúsculas o espacios ("Relojes" y "relojes " son la misma categoría).
               const availableCategories = Array.from(new Map(storeFiltered.filter((p) => normCat(p.category)).map((p) => [normCat(p.category), p.category.trim()] as const)).values());
               
-              const filteredProducts = storeFiltered.filter(p => {
+              const filtradosBase = storeFiltered.filter(p => {
                 const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                                       p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
                                       (p.subcategory || '').toLowerCase().includes(searchQuery.toLowerCase());
                 const matchesCategory = selectedFilterCategory === 'all' || (selectedFilterCategory === '__sin__' ? sinCategoria(p) : normCat(p.category) === normCat(selectedFilterCategory));
                 return matchesSearch && matchesCategory;
               });
+
+              const pMin = parseFloat(precioMin.replace(',', '.'));
+              const pMax = parseFloat(precioMax.replace(',', '.'));
+              const filtrados = filtradosBase.filter(p => (isNaN(pMin) || p.price >= pMin) && (isNaN(pMax) || p.price <= pMax) && (filtroEstado === 'all' || p.status === filtroEstado));
+              const ordenados = tablaOrden
+                ? [...filtrados].sort((a, b) => {
+                    const f = tablaOrden.dir === 'asc' ? 1 : -1;
+                    switch (tablaOrden.col) {
+                      case 'nombre': return f * a.name.localeCompare(b.name, 'es', { sensitivity: 'base' });
+                      case 'categoria': return f * (a.category || '').localeCompare(b.category || '', 'es', { sensitivity: 'base' });
+                      case 'stock': return f * ((a.stock || 0) - (b.stock || 0));
+                      case 'estado': return f * (a.status || '').localeCompare(b.status || '', 'es');
+                      default: return f * ((a.price || 0) - (b.price || 0));
+                    }
+                  })
+                : filtrados;
+              const totalPaginas = Math.max(1, Math.ceil(ordenados.length / tablaTamano));
+              const paginaActual = Math.min(tablaPagina, totalPaginas);
+              const desde = (paginaActual - 1) * tablaTamano;
+              const filteredProducts = ordenados.slice(desde, desde + tablaTamano);
+              const hayFiltrosExtra = !!precioMin || !!precioMax || filtroEstado !== 'all' || !!tablaOrden;
+              const alternarOrden = (col: ColOrden) => setTablaOrden(prev => (!prev || prev.col !== col ? { col, dir: 'asc' } : prev.dir === 'asc' ? { col, dir: 'desc' } : null));
+              const flecha = (col: ColOrden) => (tablaOrden?.col === col ? (tablaOrden.dir === 'asc' ? '↑' : '↓') : '↕');
+              const thOrden = (col: ColOrden, texto: string) => (
+                <th className="p-3 font-bold" aria-sort={tablaOrden?.col === col ? (tablaOrden.dir === 'asc' ? 'ascending' : 'descending') : 'none'}>
+                  <button type="button" onClick={() => alternarOrden(col)} className={`uppercase tracking-wider inline-flex items-center gap-1 hover:text-black transition-colors ${tablaOrden?.col === col ? 'text-black' : ''}`}>
+                    {texto}<span className={tablaOrden?.col === col ? '' : 'opacity-40'}>{flecha(col)}</span>
+                  </button>
+                </th>
+              );
 
               return (
                 <>
@@ -2532,6 +2572,40 @@ function AdminDashboard({ user }: { user: User }) {
                           ))}
                         </div>
                       </div>
+
+                      {/* Precio, estado y orden (en celular no hay cabeceras para ordenar, por eso el selector). */}
+                      <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-gray-600">
+                        <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Precio</span>
+                        <input type="number" inputMode="decimal" min="0" value={precioMin} onChange={(e) => setPrecioMin(e.target.value)} placeholder="Desde S/" className="w-24 px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-black" />
+                        <span className="text-gray-400">a</span>
+                        <input type="number" inputMode="decimal" min="0" value={precioMax} onChange={(e) => setPrecioMax(e.target.value)} placeholder="Hasta S/" className="w-24 px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-black" />
+                        <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value as typeof filtroEstado)} className="px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-black cursor-pointer" aria-label="Filtrar por estado">
+                          <option value="all">Todos los estados</option>
+                          <option value="Activo">Activos</option>
+                          <option value="Inactivo">Ocultos</option>
+                          <option value="Agotado">Agotados</option>
+                        </select>
+                        <select
+                          value={tablaOrden ? `${tablaOrden.col}:${tablaOrden.dir}` : ''}
+                          onChange={(e) => { const [col, dir] = e.target.value.split(':'); setTablaOrden(col ? { col: col as ColOrden, dir: dir as 'asc' | 'desc' } : null); }}
+                          className="px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-black cursor-pointer"
+                          aria-label="Ordenar por"
+                        >
+                          <option value="">Orden: como se cargaron</option>
+                          <option value="nombre:asc">Nombre A → Z</option>
+                          <option value="nombre:desc">Nombre Z → A</option>
+                          <option value="categoria:asc">Categoría A → Z</option>
+                          <option value="precio:asc">Precio: menor a mayor</option>
+                          <option value="precio:desc">Precio: mayor a menor</option>
+                          <option value="stock:asc">Stock: menor a mayor</option>
+                          <option value="stock:desc">Stock: mayor a menor</option>
+                        </select>
+                        {hayFiltrosExtra && (
+                          <button type="button" onClick={() => { setPrecioMin(''); setPrecioMax(''); setFiltroEstado('all'); setTablaOrden(null); }} className="text-[11px] font-bold text-gray-500 hover:text-black underline">
+                            Quitar filtros
+                          </button>
+                        )}
+                      </div>
                     </div>
                 
                 <div className="overflow-x-auto">
@@ -2558,12 +2632,16 @@ function AdminDashboard({ user }: { user: User }) {
                         <table className="w-full text-left border-collapse min-w-[800px]">
                           <thead>
                             <tr className="bg-[#f8f9fa] text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-100">
-                              <th className="p-3 font-bold w-1/3">{esEmpresa ? 'Servicio' : 'Producto'}</th>
+                              <th className="p-3 font-bold w-1/3" aria-sort={tablaOrden?.col === 'nombre' ? (tablaOrden.dir === 'asc' ? 'ascending' : 'descending') : 'none'}>
+                                <button type="button" onClick={() => alternarOrden('nombre')} className={`uppercase tracking-wider inline-flex items-center gap-1 hover:text-black transition-colors ${tablaOrden?.col === 'nombre' ? 'text-black' : ''}`}>
+                                  {esEmpresa ? 'Servicio' : 'Producto'}<span className={tablaOrden?.col === 'nombre' ? '' : 'opacity-40'}>{flecha('nombre')}</span>
+                                </button>
+                              </th>
                               {selectedStore === 'all' && <th className="p-3 font-bold">Tienda</th>}
-                              <th className="p-3 font-bold">Categoría</th>
-                              {inventarioOn && <th className="p-3 font-bold">Stock</th>}
-                              <th className="p-3 font-bold">Estado</th>
-                              <th className="p-3 font-bold">Precio</th>
+                              {thOrden('categoria', 'Categoría')}
+                              {inventarioOn && thOrden('stock', 'Stock')}
+                              {thOrden('estado', 'Estado')}
+                              {thOrden('precio', 'Precio')}
                               <th className="p-3 font-bold text-right">Acciones</th>
                             </tr>
                           </thead>
@@ -2755,6 +2833,24 @@ function AdminDashboard({ user }: { user: User }) {
                           </div>
                         ))}
                       </div>
+
+                      {/* Páginas */}
+                      {(ordenados.length > 20 || totalPaginas > 1) && (
+                        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-gray-100 text-xs font-semibold text-gray-600">
+                          <span>Mostrando {desde + 1}–{Math.min(desde + tablaTamano, ordenados.length)} de {ordenados.length}</span>
+                          <div className="flex items-center gap-2">
+                            <label className="flex items-center gap-1.5">
+                              Por página
+                              <select value={tablaTamano} onChange={(e) => setTablaTamano(Number(e.target.value))} className="px-2 py-1 bg-gray-50 border border-gray-200 rounded-md cursor-pointer">
+                                {[20, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
+                              </select>
+                            </label>
+                            <button type="button" disabled={paginaActual <= 1} onClick={() => setTablaPagina(paginaActual - 1)} className="px-3 py-1.5 rounded-md border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">← Anterior</button>
+                            <span className="px-1">Página {paginaActual} de {totalPaginas}</span>
+                            <button type="button" disabled={paginaActual >= totalPaginas} onClick={() => setTablaPagina(paginaActual + 1)} className="px-3 py-1.5 rounded-md border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">Siguiente →</button>
+                          </div>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>

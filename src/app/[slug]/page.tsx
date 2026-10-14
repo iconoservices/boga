@@ -84,6 +84,7 @@ export default async function StorePage({ params, searchParams }: Props) {
         marketplaceCategory: defaultTmpl?.category || 'General',
         template: 'default',
         heroImage: defaultTmpl?.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
+        heroImages: undefined,
         heroAlt: defaultTmpl?.heroAlt || 'nueva tienda',
         iconImage: defaultTmpl?.iconImage || undefined,
         theme: defaultTmpl?.theme || DEFAULT_THEME,
