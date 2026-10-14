@@ -205,7 +205,7 @@ function AdminDashboard({ user }: { user: User }) {
   const [tablaTamano, setTablaTamano] = useState(20);
   const [precioMin, setPrecioMin] = useState('');
   const [precioMax, setPrecioMax] = useState('');
-  const [filtroEstado, setFiltroEstado] = useState<'all' | 'Activo' | 'Inactivo' | 'Agotado'>('all');
+  const [filtroEstado, setFiltroEstado] = useState<'all' | 'Activo' | 'Inactivo' | 'Agotado' | 'Desactivado'>('all');
   // Al cambiar cualquier filtro u orden, vuelve a la primera página.
   useEffect(() => { setTablaPagina(1); }, [searchQuery, selectedFilterCategory, selectedStore, precioMin, precioMax, filtroEstado, tablaOrden, tablaTamano]);
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
@@ -1326,6 +1326,14 @@ function AdminDashboard({ user }: { user: User }) {
   // Celda de stock de la tabla y de las tarjetas de Productos (solo con el módulo de inventario).
   const celdaStock = (p: Product) => {
     if (!tiendaTiene(p.store, 'inventario')) return <span className="text-xs text-gray-300">—</span>;
+    if (p.reserva === true && p.status === 'Activo' && stockIlimitado(p)) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-violet-50 text-violet-700 border border-violet-100/80">
+          <span className="material-symbols-outlined text-[13px]">event_available</span>
+          Solo reserva
+        </span>
+      );
+    }
     if (stockIlimitado(p)) {
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100/80">
@@ -2503,7 +2511,7 @@ function AdminDashboard({ user }: { user: User }) {
 
               const pMin = parseFloat(precioMin.replace(',', '.'));
               const pMax = parseFloat(precioMax.replace(',', '.'));
-              const filtrados = filtradosBase.filter(p => (isNaN(pMin) || p.price >= pMin) && (isNaN(pMax) || p.price <= pMax) && (filtroEstado === 'all' || p.status === filtroEstado));
+              const filtrados = filtradosBase.filter(p => (isNaN(pMin) || p.price >= pMin) && (isNaN(pMax) || p.price <= pMax) && (filtroEstado === 'all' || (filtroEstado === 'Agotado' ? p.status === 'Agotado' && p.stock === 0 : filtroEstado === 'Desactivado' ? p.status === 'Agotado' && p.stock !== 0 : p.status === filtroEstado)));
               const ordenados = tablaOrden
                 ? [...filtrados].sort((a, b) => {
                     const f = tablaOrden.dir === 'asc' ? 1 : -1;
@@ -2662,7 +2670,8 @@ function AdminDashboard({ user }: { user: User }) {
                           <option value="all">Todos los estados</option>
                           <option value="Activo">Activos</option>
                           <option value="Inactivo">Ocultos</option>
-                          <option value="Agotado">Agotados</option>
+                          <option value="Agotado">Agotados (sin stock)</option>
+                          <option value="Desactivado">Desactivados</option>
                         </select>
                         <select
                           value={tablaOrden ? `${tablaOrden.col}:${tablaOrden.dir}` : ''}
