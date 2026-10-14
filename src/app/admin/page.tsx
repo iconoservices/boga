@@ -1215,6 +1215,25 @@ function AdminDashboard({ user }: { user: User }) {
     if (error) { alert('No se pudo activar: ' + error.message); await fetchProducts(); return; }
     refrescarTienda(prod.store);
   };
+  // Desde la etiqueta «Ilimitado»: empezar a llevar la cuenta con una cantidad inicial.
+  const fijarStock = async (prod: Product) => {
+    setOpcionesCero(null);
+    const txt = window.prompt(`¿Cuántas unidades tienes de "${prod.name}"?`, '10');
+    if (txt == null) return;
+    const n = parseInt(txt, 10);
+    if (isNaN(n) || n <= 0) { alert('Escribe un número mayor a 0.'); return; }
+    setProducts(prev => prev.map(p => p.id === prod.id ? { ...p, status: 'Activo', stock: n } : p));
+    const { error } = await supabase.from('products').update({ status: 'Activo', stock: n }).eq('id', prod.id);
+    if (error) { alert('No se pudo guardar el stock: ' + error.message); await fetchProducts(); return; }
+    refrescarTienda(prod.store);
+  };
+  const quitarReserva = async (prod: Product) => {
+    setOpcionesCero(null);
+    setProducts(prev => prev.map(p => p.id === prod.id ? { ...p, reserva: null } : p));
+    const { error } = await supabase.from('products').update({ reserva: null }).eq('id', prod.id);
+    if (error) { alert('No se pudo quitar la reserva: ' + error.message); await fetchProducts(); return; }
+    refrescarTienda(prod.store);
+  };
   const activarEnReserva = async (prod: Product) => {
     setOpcionesCero(null);
     // Queda Activo (interruptor prendido) y siempre en reserva. Con stock 0 y Activo se contaría como ilimitado, por eso stock null.
@@ -1328,18 +1347,18 @@ function AdminDashboard({ user }: { user: User }) {
     if (!tiendaTiene(p.store, 'inventario')) return <span className="text-xs text-gray-300">—</span>;
     if (p.reserva === true && p.status === 'Activo' && stockIlimitado(p)) {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-violet-50 text-violet-700 border border-violet-100/80">
+        <button type="button" onClick={() => setOpcionesCero(p)} title="Cambiar stock" className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-violet-50 text-violet-700 border border-violet-100/80 cursor-pointer hover:bg-violet-100">
           <span className="material-symbols-outlined text-[13px]">event_available</span>
           Solo reserva
-        </span>
+        </button>
       );
     }
     if (stockIlimitado(p)) {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100/80">
+        <button type="button" onClick={() => setOpcionesCero(p)} title="Cambiar stock" className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100/80 cursor-pointer hover:bg-emerald-100">
           <span className="material-symbols-outlined text-[13px]">all_inclusive</span>
           Ilimitado
-        </span>
+        </button>
       );
     }
     const sin = p.stock <= 0;
@@ -2088,23 +2107,48 @@ function AdminDashboard({ user }: { user: User }) {
         {opcionesCero && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 p-4" onClick={() => setOpcionesCero(null)}>
             <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
-              <h3 className="text-base font-bold text-gray-900">&quot;{opcionesCero.name}&quot; tiene 0 unidades</h3>
-              <p className="mt-1 mb-4 text-xs text-gray-500">¿Qué quieres hacer con este producto?</p>
-              <div className="flex flex-col gap-2">
-                <button type="button" onClick={() => { const p = opcionesCero; setOpcionesCero(null); agregarStock(p); }} className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2.5 text-left text-sm font-semibold hover:bg-gray-50 cursor-pointer">
-                  <span className="material-symbols-outlined text-[18px]">add_box</span>
-                  <span>Ingresar mercadería<span className="block text-[11px] font-normal text-gray-500">Llegaron unidades; se activa solo.</span></span>
-                </button>
-                <button type="button" onClick={() => activarIlimitado(opcionesCero)} className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2.5 text-left text-sm font-semibold hover:bg-gray-50 cursor-pointer">
-                  <span className="material-symbols-outlined text-[18px]">all_inclusive</span>
-                  <span>Ponerlo ilimitado<span className="block text-[11px] font-normal text-gray-500">Ya no llevas la cuenta de unidades.</span></span>
-                </button>
-                <button type="button" onClick={() => activarEnReserva(opcionesCero)} className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2.5 text-left text-sm font-semibold hover:bg-gray-50 cursor-pointer">
-                  <span className="material-symbols-outlined text-[18px]">event_available</span>
-                  <span>Dejarlo para reservas<span className="block text-[11px] font-normal text-gray-500">Se ofrece como «Reservar por WhatsApp».</span></span>
-                </button>
-                <button type="button" onClick={() => setOpcionesCero(null)} className="mt-1 text-xs font-semibold text-gray-500 hover:text-gray-700 cursor-pointer">Cancelar</button>
-              </div>
+              {(() => {
+                const sinCuenta = stockIlimitado(opcionesCero);
+                const enReserva = opcionesCero.reserva === true;
+                const btn = 'flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2.5 text-left text-sm font-semibold hover:bg-gray-50 cursor-pointer';
+                return (
+                  <>
+                    <h3 className="text-base font-bold text-gray-900">&quot;{opcionesCero.name}&quot; {sinCuenta ? 'tiene stock ilimitado' : 'tiene 0 unidades'}</h3>
+                    <p className="mt-1 mb-4 text-xs text-gray-500">¿Qué quieres hacer con este producto?</p>
+                    <div className="flex flex-col gap-2">
+                      {sinCuenta ? (
+                        <button type="button" onClick={() => fijarStock(opcionesCero)} className={btn}>
+                          <span className="material-symbols-outlined text-[18px]">inventory_2</span>
+                          <span>Llevar la cuenta<span className="block text-[11px] font-normal text-gray-500">Le pones cuántas unidades tienes.</span></span>
+                        </button>
+                      ) : (
+                        <>
+                          <button type="button" onClick={() => { const p = opcionesCero; setOpcionesCero(null); agregarStock(p); }} className={btn}>
+                            <span className="material-symbols-outlined text-[18px]">add_box</span>
+                            <span>Ingresar mercadería<span className="block text-[11px] font-normal text-gray-500">Llegaron unidades; se activa solo.</span></span>
+                          </button>
+                          <button type="button" onClick={() => activarIlimitado(opcionesCero)} className={btn}>
+                            <span className="material-symbols-outlined text-[18px]">all_inclusive</span>
+                            <span>Ponerlo ilimitado<span className="block text-[11px] font-normal text-gray-500">Ya no llevas la cuenta de unidades.</span></span>
+                          </button>
+                        </>
+                      )}
+                      {sinCuenta && enReserva ? (
+                        <button type="button" onClick={() => quitarReserva(opcionesCero)} className={btn}>
+                          <span className="material-symbols-outlined text-[18px]">event_busy</span>
+                          <span>Quitar de reservas<span className="block text-[11px] font-normal text-gray-500">Vuelve a venderse normal.</span></span>
+                        </button>
+                      ) : (
+                        <button type="button" onClick={() => activarEnReserva(opcionesCero)} className={btn}>
+                          <span className="material-symbols-outlined text-[18px]">event_available</span>
+                          <span>Dejarlo para reservas<span className="block text-[11px] font-normal text-gray-500">Se ofrece como «Reservar por WhatsApp».</span></span>
+                        </button>
+                      )}
+                      <button type="button" onClick={() => setOpcionesCero(null)} className="mt-1 text-xs font-semibold text-gray-500 hover:text-gray-700 cursor-pointer">Cancelar</button>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
         )}
