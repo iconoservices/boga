@@ -97,7 +97,11 @@ export async function GET(request: Request) {
   return NextResponse.json(
     {
       stores: visibles.map(({ modulos: _modulos, ...s }) => conDireccionPropia(s)),
-      products: ((products.data ?? []) as any[]).filter((p) => slugsVisibles.has(p.store)).map(aplicarOferta),
+      // Apagado = no aparece: ni los Agotados (sin stock o desactivados a mano) ni los Inactivos (ocultos) salen en Inicio, Explorar ni Market.
+      // La carta de cada tienda sí los puede pedir (ver /api/catalog/[slug]) para ofrecerlos como reserva.
+      products: ((products.data ?? []) as any[])
+        .filter((p) => slugsVisibles.has(p.store) && p.status !== 'Agotado' && p.status !== 'Inactivo')
+        .map(aplicarOferta),
       banners: banners.data ?? [],
       bannerStyle: estilo.data?.style || ESTILO_DEFECTO.market,
     },
