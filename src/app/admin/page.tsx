@@ -1210,8 +1210,10 @@ function AdminDashboard({ user }: { user: User }) {
   const [opcionesCero, setOpcionesCero] = useState<Product | null>(null);
   const activarIlimitado = async (prod: Product) => {
     setOpcionesCero(null);
-    setProducts(prev => prev.map(p => p.id === prod.id ? { ...p, status: 'Activo', stock: null as unknown as number } : p));
-    const { error } = await supabase.from('products').update({ status: 'Activo', stock: null }).eq('id', prod.id);
+    // Ilimitado = se vende normal: si estaba marcado «siempre en reserva», se quita (si no, seguiría saliendo como reserva).
+    const quitaReserva = prod.reserva === true ? { reserva: null } : {};
+    setProducts(prev => prev.map(p => p.id === prod.id ? { ...p, status: 'Activo', stock: null as unknown as number, ...quitaReserva } : p));
+    const { error } = await supabase.from('products').update({ status: 'Activo', stock: null, ...quitaReserva }).eq('id', prod.id);
     if (error) { alert('No se pudo activar: ' + error.message); await fetchProducts(); return; }
     refrescarTienda(prod.store);
   };
@@ -1222,8 +1224,9 @@ function AdminDashboard({ user }: { user: User }) {
     if (txt == null) return;
     const n = parseInt(txt, 10);
     if (isNaN(n) || n <= 0) { alert('Escribe un número mayor a 0.'); return; }
-    setProducts(prev => prev.map(p => p.id === prod.id ? { ...p, status: 'Activo', stock: n } : p));
-    const { error } = await supabase.from('products').update({ status: 'Activo', stock: n }).eq('id', prod.id);
+    const quitaReserva = prod.reserva === true ? { reserva: null } : {};
+    setProducts(prev => prev.map(p => p.id === prod.id ? { ...p, status: 'Activo', stock: n, ...quitaReserva } : p));
+    const { error } = await supabase.from('products').update({ status: 'Activo', stock: n, ...quitaReserva }).eq('id', prod.id);
     if (error) { alert('No se pudo guardar el stock: ' + error.message); await fetchProducts(); return; }
     refrescarTienda(prod.store);
   };
@@ -1338,6 +1341,8 @@ function AdminDashboard({ user }: { user: User }) {
       lineas: [{ id: p.id, name: p.name, delta: n }],
     });
     if (fallidos.length) { alert('No se pudo ingresar la mercadería. Inténtalo de nuevo.'); return; }
+    // Con mercadería nueva se vende normal: se quita la marca «siempre en reserva».
+    if (p.reserva === true) await supabase.from('products').update({ reserva: null }).eq('id', p.id);
     refrescarTienda(p.store);
     await fetchProducts();
   };
