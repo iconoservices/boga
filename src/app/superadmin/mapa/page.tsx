@@ -9,17 +9,18 @@ import { useRouter } from 'next/navigation';
 import { useEsSuperadmin } from '@/lib/superadmin';
 import { getAllTemplates, getTemplate } from '@/lib/templates.config';
 import SuperadminSubheader from '@/components/SuperadminSubheader';
+import { PIEZAS_ESTANDAR, cumpleEstandar } from '@/lib/estandarPlantillas';
 
 // Plantillas con botón de pedido por WhatsApp implementado en su código.
 const TEMPLATES_WITH_WHATSAPP = new Set([
-  'polleria', 'estilosmirka', 'sweetkittynails', 'mercado', 'condimentos', 'menudirecto', 'iniciocatalogo', 'flores', 'bazar', 'tecnologia', 'detalles',
+  'polleria', 'estilosmirka', 'sweetkittynails', 'mercado', 'condimentos', 'menudirecto', 'iniciocatalogo', 'flores', 'bazar', 'tecnologia', 'delva', 'detalles',
   'fichadigital', 'fichaplana', 'veterinaria', 'gas', 'academia', 'belleza', 'empresa', 'terreno1', 'terreno2',
 ]);
 
 // Plantillas que montan <StoreFloatingActions/> (compartir + instalar PWA).
 const TEMPLATES_WITH_SHARE_INSTALL = new Set([
   'polleria', 'estilosmirka', 'mercado', 'condimentos', 'sunset', 'natura', 'amazonia', 'sweetkittynails',
-  'menudirecto', 'iniciocatalogo', 'flores', 'bazar', 'tecnologia', 'detalles', 'fichadigital', 'fichaplana', 'veterinaria', 'gas', 'academia', 'belleza', 'empresa', 'terreno1', 'terreno2',
+  'menudirecto', 'iniciocatalogo', 'flores', 'bazar', 'tecnologia', 'delva', 'detalles', 'fichadigital', 'fichaplana', 'veterinaria', 'gas', 'academia', 'belleza', 'empresa', 'terreno1', 'terreno2',
 ]);
 
 const META: Record<string, { emoji: string }> = {
@@ -120,6 +121,58 @@ export default function MapaPage() {
               <p className="text-[9px] uppercase tracking-wider font-extrabold text-neutral-400 leading-none">Promedio Global</p>
               <p className="text-2xl font-black text-white mt-1">{promedio}%</p>
             </div>
+          </div>
+        </div>
+
+        <div className="bg-white border border-[#c2c6d6] rounded-lg shadow-sm overflow-hidden">
+          <div className="px-4 py-3 bg-[#f2f3fd] border-b border-[#c2c6d6] flex flex-wrap justify-between items-center gap-2">
+            <h3 className="font-bold text-xs text-[#191b23] flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[15px] text-[#0058be]">construction</span>
+              Estándar de construcción: lo que toda plantilla debería tener
+            </h3>
+            <span className="text-[9px] font-bold text-[#424754]">Detalle en docs/plantillas-estandar.md</span>
+          </div>
+          <div className="px-4 pt-3 grid grid-cols-1 sm:grid-cols-5 gap-2">
+            {PIEZAS_ESTANDAR.map((pz) => {
+              const n = allTemplates.filter((tpl) => cumpleEstandar(tpl.id, pz.id)).length;
+              return (
+                <div key={pz.id} title={pz.desc} className="rounded-md border border-[#c2c6d6]/70 bg-[#f2f3fd]/50 p-2.5 cursor-help">
+                  <div className="flex items-center gap-1 text-[10px] font-bold text-[#191b23]"><span className="material-symbols-outlined text-[13px] text-[#0058be]">{pz.icon}</span>{pz.label}</div>
+                  <p className="text-[18px] font-black leading-tight mt-1">{n}<span className="text-[10px] font-bold text-[#424754]"> / {allTemplates.length}</span></p>
+                  <div className="h-1 rounded bg-[#ecedf7] mt-1.5 overflow-hidden"><div className="h-full bg-emerald-500" style={{ width: `${(n / allTemplates.length) * 100}%` }} /></div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="overflow-x-auto p-4">
+            <table className="w-full text-[10px]">
+              <thead>
+                <tr className="text-left text-[#424754] uppercase tracking-wider text-[9px]">
+                  <th className="py-1.5 pr-3 font-extrabold">Plantilla</th>
+                  {PIEZAS_ESTANDAR.map((pz) => <th key={pz.id} className="py-1.5 px-2 font-extrabold text-center" title={pz.desc}>{pz.label}</th>)}
+                  <th className="py-1.5 pl-2 font-extrabold text-center">Total</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#ecedf7]">
+                {allTemplates.map((tpl) => {
+                  const ok = PIEZAS_ESTANDAR.map((pz) => cumpleEstandar(tpl.id, pz.id));
+                  const n = ok.filter(Boolean).length;
+                  return (
+                    <tr key={tpl.id} className="hover:bg-[#f2f3fd]/40">
+                      <td className="py-1.5 pr-3 font-bold text-[#191b23] whitespace-nowrap">{META[tpl.id]?.emoji || '🎨'} {tpl.name}</td>
+                      {ok.map((v, i) => (
+                        <td key={i} className="py-1.5 px-2 text-center">
+                          <span className={`material-symbols-outlined text-[14px] font-bold ${v ? 'text-emerald-600' : 'text-red-400'}`}>{v ? 'check_circle' : 'cancel'}</span>
+                        </td>
+                      ))}
+                      <td className="py-1.5 pl-2 text-center">
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${n === ok.length ? 'bg-emerald-50 text-emerald-800 border-emerald-100' : 'bg-amber-50 text-amber-800 border-amber-100'}`}>{n}/{ok.length}</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
 

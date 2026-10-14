@@ -1,6 +1,7 @@
 'use client';
 
 import IconoWhatsApp from './IconoWhatsApp';
+import { useCicloFotos } from './useCicloFotos';
 import React, { useEffect } from 'react';
 import { guardarCliente, leerCliente, normalizarCelular } from '@/lib/cliente';
 import type { StoreTheme } from '@/lib/templates.config';
@@ -97,28 +98,22 @@ export function CategoryChips({
   );
 }
 
-/** Foto de una tarjeta del catálogo: con varias fotos, al pasar el mouse va rotando entre ellas (como Delva). */
+/** Foto de una tarjeta del catálogo: con varias fotos van cambiando solas (mouse encima en computadora; a la vista en celular). Ver useCicloFotos. */
 function FotoTarjeta({ product }: { product: Producto }) {
   const fotos = product.images && product.images.length > 1 ? product.images : [product.image];
-  const [activa, setActiva] = React.useState<number | null>(null);
-
-  useEffect(() => {
-    if (activa === null || fotos.length < 2) return;
-    const id = setTimeout(() => setActiva((activa + 1) % fotos.length), 900);
-    return () => clearTimeout(id);
-  }, [activa, fotos.length]);
+  const { ref, activa, handlers } = useCicloFotos(fotos.length);
 
   return (
     <div
+      ref={ref}
       className="aspect-square overflow-hidden relative"
-      onMouseEnter={() => fotos.length > 1 && setActiva(0)}
-      onMouseLeave={() => setActiva(null)}
+      {...handlers}
     >
       {fotos.map((src, i) => (
         <img
           key={i}
           className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-[opacity,transform] duration-500"
-          style={{ opacity: (activa ?? 0) === i ? 1 : 0 }}
+          style={{ opacity: activa === i ? 1 : 0 }}
           alt={product.name}
           src={src}
           loading="lazy"
@@ -130,7 +125,7 @@ function FotoTarjeta({ product }: { product: Producto }) {
             <div
               key={i}
               className="h-[3px] flex-1 rounded-full transition-colors"
-              style={{ background: (activa ?? 0) === i ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.4)' }}
+              style={{ background: activa === i ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.4)' }}
             />
           ))}
         </div>

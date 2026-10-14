@@ -11,6 +11,7 @@ import { TXT, ICON, inicialesDe } from '../shared/tokens';
 import type { PerfilEmpresa } from '@/lib/perfilEmpresa';
 import FormularioCotizacion from './FormularioCotizacion';
 import { ProductModal, BottomNav, StoreFooter } from '../shared/CatalogoUI';
+import FotoCiclica from '../shared/FotoCiclica';
 
 interface Props {
   store: StoreConfig;
@@ -114,7 +115,7 @@ function TarjetaServicio({
   t, prod, onAbrir, onCotizar, conWhatsApp,
 }: {
   t: StoreConfig['theme'];
-  prod: { name: string; desc?: string; image: string };
+  prod: { name: string; desc?: string; image: string; images?: string[] };
   onAbrir: () => void;
   onCotizar: () => void;
   /** Sin WhatsApp cargado el botón no tiene a dónde ir: la tarjeta solo abre el detalle. */
@@ -124,7 +125,7 @@ function TarjetaServicio({
     <div className="group flex flex-col rounded-2xl overflow-hidden" style={{ background: t.surface, border: `1px solid ${t.outlineVariant}60` }}>
       <button onClick={onAbrir} className="text-left flex-1 active:opacity-90 transition-opacity" aria-label={`Ver ${prod.name}`}>
         <div className="aspect-[4/3] overflow-hidden">
-          <img src={prod.image} alt={prod.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          <FotoCiclica fotos={prod.images?.length ? prod.images : [prod.image]} alt={prod.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         </div>
         <div className="p-4 pb-3">
           <p className={`font-extrabold ${TXT.lead} leading-snug line-clamp-2`} style={{ color: t.onSurface }}>{prod.name}</p>
@@ -621,7 +622,7 @@ export default function EmpresaTemplate({ store, initialProductId, initialTab }:
                         <div className="mt-auto pt-5">
                           <div className="aspect-[4/3] overflow-hidden rounded-xl flex items-center justify-center" style={{ background: t.surfaceContainer }}>
                             {prod.image ? (
-                              <img src={prod.image} alt={prod.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                              <FotoCiclica fotos={prod.images?.length ? prod.images : [prod.image]} alt={prod.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                             ) : (
                               <span className={`material-symbols-outlined ${ICON.xl}`} style={{ color: `${t.onSurfaceVariant}80` }}>construction</span>
                             )}

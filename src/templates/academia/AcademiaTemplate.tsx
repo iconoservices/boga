@@ -12,6 +12,7 @@ import { TXT, ICON, soles, type Producto } from '../shared/tokens';
 import { CategoryChips, ProductModal, ContactPanel, BottomNav, StoreFooter } from '../shared/CatalogoUI';
 import { moduloAcademia } from '@/lib/modulos';
 import AccesoAlumnos from './AccesoAlumnos';
+import FotoCiclica from '../shared/FotoCiclica';
 
 interface Props {
   store: StoreConfig;
@@ -65,7 +66,7 @@ function TarjetaGrupo({ t, p, conWhatsApp, onAbrir, onInscribir }: { t: Tema; p:
       <button onClick={onAbrir} className="text-left flex-1 active:opacity-90 transition-opacity" aria-label={`Ver ${p.name}`}>
         {p.image && (
           <div className="aspect-[16/9] overflow-hidden">
-            <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            <FotoCiclica fotos={p.images?.length ? p.images : [p.image]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
           </div>
         )}
         <div className="p-4 pb-3">

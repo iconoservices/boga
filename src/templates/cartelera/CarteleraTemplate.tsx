@@ -10,6 +10,7 @@ import { pedirDatosCliente } from '@/components/pedirDatosCliente';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import { leerPresentaciones, Presentacion } from '@/lib/presentaciones';
 import { fetchEventos } from '@/lib/eventos';
+import FotoCiclica from '../shared/FotoCiclica';
 
 interface CarteleraTemplateProps {
   store: StoreConfig;
@@ -965,8 +966,8 @@ export default function CarteleraTemplate({ store, initialProductId }: Cartelera
                       }}
                       className="aspect-square w-full overflow-hidden bg-black/40 relative cursor-pointer"
                     >
-                      <img
-                        src={prod.image}
+                      <FotoCiclica
+                        fotos={prod.images?.length ? prod.images : [prod.image]}
                         alt={prod.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />

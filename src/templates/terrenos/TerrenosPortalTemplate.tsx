@@ -6,6 +6,7 @@ import StoreFloatingActions from '@/components/StoreFloatingActions';
 import { useTerrenos, areaDe, precioTerreno, descripcionLimpia } from './useTerrenos';
 import DetalleTerreno from './DetalleTerreno';
 import OtrosPrecios from '../shared/OtrosPrecios';
+import FotoCiclica from '../shared/FotoCiclica';
 
 /**
  * Plantilla "Terreno 1": estilo inmobiliaria moderna (referencia: Los
@@ -144,7 +145,7 @@ export default function TerrenosPortalTemplate({ store, initialProductId }: { st
               >
                 {/* Foto: en pantallas con mouse se encoge al pasar por encima para dejar ver el botón. */}
                 <div className="relative overflow-hidden h-[300px] transition-all duration-300 [@media(hover:hover)]:group-hover:h-[190px]">
-                  <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                  <FotoCiclica fotos={p.images?.length ? p.images : [p.image]} alt={p.name} className="w-full h-full object-cover" />
                   <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/45 to-transparent" />
                   <span className="absolute top-4 left-4 text-white font-extrabold text-sm tracking-wide drop-shadow truncate max-w-[55%]">{store.name}</span>
                   {areaDe(p) && (

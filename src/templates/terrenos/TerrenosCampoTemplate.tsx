@@ -9,6 +9,7 @@ import { inicialesDe } from '../shared/tokens';
 import { useTerrenos, areaDe, precioTerreno, descripcionLimpia } from './useTerrenos';
 import DetalleTerreno from './DetalleTerreno';
 import OtrosPrecios from '../shared/OtrosPrecios';
+import FotoCiclica from '../shared/FotoCiclica';
 
 const SERIF = "'Merriweather', Georgia, 'Times New Roman', serif";
 
@@ -121,7 +122,7 @@ export default function TerrenosCampoTemplate({ store, initialProductId }: { sto
               <article key={p.id} onClick={() => c.abrirProducto(p)} className="rounded overflow-hidden border flex flex-col shadow-sm bg-white cursor-pointer" style={{ borderColor: t.outlineVariant }}>
                 {/* Foto con el acceso al mapa abajo a la izquierda */}
                 <div className="relative aspect-[16/10]">
-                  <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                  <FotoCiclica fotos={p.images?.length ? p.images : [p.image]} alt={p.name} className="w-full h-full object-cover" />
                   <a
                     href={c.ubicacionUrl(p)}
                     target="_blank"

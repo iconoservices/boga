@@ -11,6 +11,7 @@ import { enviarPedidoPorWhatsApp } from '@/lib/whatsapp';
 import { HORAS_RESERVA, horaLegible } from '@/lib/reservas';
 import { hoyLima } from '@/lib/fechaLima';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
+import FotoCiclica from '../shared/FotoCiclica';
 
 interface SweetKittyNailsTemplateProps {
   store: StoreConfig;
@@ -83,6 +84,7 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
         // Un servicio no tiene "subcategoría": ahí el dueño anota cuánto dura ("45 min").
         duration: p.es_servicio === true && p.subcategory ? String(p.subcategory) : '',
         image: p.image || store.heroImage,
+        images: Array.isArray(p.images) && p.images.length > 1 ? p.images : undefined,
         rating: 4.9,
         reviews: 8,
         description: p.description || '',
@@ -442,7 +444,7 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
                 {filteredServices.map((srv) => (
                   <div key={srv.id} className="bg-white rounded-3xl p-5 shadow-sm border border-pink-50 flex flex-col md:flex-row gap-5 hover:shadow-md transition-shadow group">
                     <div className="w-full md:w-36 h-36 rounded-2xl overflow-hidden shrink-0 bg-pink-50 relative">
-                      <img src={srv.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={srv.title} />
+                      <FotoCiclica fotos={(srv as any).images?.length ? (srv as any).images : [srv.image]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={srv.title} />
                       {srv.duration && (
                         <span className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 backdrop-blur-sm rounded-full text-[9px] font-bold text-white flex items-center gap-0.5">
                           <span className="material-symbols-outlined text-[10px]">schedule</span> {srv.duration}
@@ -500,7 +502,7 @@ export default function SweetKittyNailsTemplate({ store }: SweetKittyNailsTempla
                     )}
 
                     <div className="aspect-square bg-pink-50/20 overflow-hidden relative">
-                      <img src={prod.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={prod.title} />
+                      <FotoCiclica fotos={(prod as any).images?.length ? (prod as any).images : [prod.image]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={prod.title} />
                       <button
                         onClick={() => addToCart(prod)}
                         className="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-white hover:bg-pink-50 shadow-lg border border-pink-100 flex items-center justify-center text-pink-600 transition-all hover:scale-110 active:scale-90 cursor-pointer"

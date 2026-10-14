@@ -7,6 +7,7 @@ import { fetchProductosDeTienda } from '@/lib/catalogo';
 import { debeMostrarDemo } from '@/lib/demo';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import { useDetalleProducto } from '../shared/useDetalleProducto';
+import FotoCiclica from '../shared/FotoCiclica';
 
 interface AmazoniaTemplateProps {
   store: StoreConfig;
@@ -171,7 +172,7 @@ export default function AmazoniaTemplate({ store, initialProductId }: AmazoniaTe
                 className={`rounded-2xl overflow-hidden cursor-pointer active:scale-95 transition-transform ${isFeatured ? 'col-span-2' : 'col-span-1'}`}
                 style={{ background: t.surface, border: `1px solid ${t.outlineVariant}`, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
                 <div className={isFeatured ? 'aspect-[2/1]' : 'aspect-square'}>
-                  <img className="w-full h-full object-cover" alt={product.name} src={product.image} />
+                  <FotoCiclica fotos={product.images?.length ? product.images : [product.image]} className="w-full h-full object-cover" alt={product.name} />
                 </div>
                 <div className="p-3">
                   <h3 className="font-bold text-[13px] leading-tight line-clamp-1" style={{ color: t.onSurface }}>{product.name}</h3>

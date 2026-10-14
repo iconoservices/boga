@@ -16,6 +16,7 @@ import CustomerAccountButton from '@/components/CustomerAccountButton';
 import { estrellasDe } from '../shared/tokens';
 import { useDetalleProducto } from '../shared/useDetalleProducto';
 import { leerPresentaciones } from '@/lib/presentaciones';
+import FotoCiclica from '../shared/FotoCiclica';
 
 interface AtelierTemplateProps {
   store: StoreConfig;
@@ -612,10 +613,9 @@ export default function AtelierTemplate({ store, initialProductId }: AtelierTemp
                 >
                   {/* Photo Container (Fashion 3:4 aspect ratio) */}
                   <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
-                    <img
-                      src={product.image}
+                    <FotoCiclica
+                      fotos={product.images?.length ? product.images : [product.image]}
                       alt={product.title}
-                      loading="lazy"
                       className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
                     />
 

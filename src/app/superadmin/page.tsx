@@ -40,7 +40,7 @@ const PORTAL_POR_PLANTILLA: Record<string, string> = {
   mercado: 'Mercado', condimentos: 'Mercado', natura: 'Mercado', amazonia: 'Mercado',
   estilosmirka: 'Moda y Belleza', mirkavisual: 'Moda y Belleza', sweetkittynails: 'Moda y Belleza',
   atelier: 'Moda', lookbook: 'Moda', uniformes: 'Moda',
-  flores: 'Regalos y Detalles', detalles: 'Regalos y Detalles', bazar: 'Regalos y Detalles', tecnologia: 'Tecnología',
+  flores: 'Regalos y Detalles', detalles: 'Regalos y Detalles', bazar: 'Regalos y Detalles', tecnologia: 'Tecnología', delva: 'Mercado',
   veterinaria: 'Salud y Bienestar',
   gas: 'Servicios',
   belleza: 'Moda y Belleza',
@@ -59,7 +59,7 @@ const ALCANCE_NOMBRE = { carta: 'Esencial', app: 'Negocio', app_google: 'Premium
 
 const META: Record<string, { emoji: string; cat: string }> = {
   sunset:   { emoji: '🥂', cat: 'Bar & Café' },
-  delva:    { emoji: '🌿', cat: 'Mercado' },
+  delva:    { emoji: '🌿', cat: 'Comercio' },
   natura:   { emoji: '🪴', cat: 'Salud' },
   amazonia: { emoji: '🏺', cat: 'Artesanía' },
   estilosmirka: { emoji: '👗', cat: 'Boutique' },

@@ -17,6 +17,7 @@ import { useDetalleProducto } from '../shared/useDetalleProducto';
 import { leerPresentaciones } from '@/lib/presentaciones';
 import { porcentajeOferta } from '@/lib/ofertas';
 import BannerSlider from '../shared/BannerSlider';
+import FotoCiclica from '../shared/FotoCiclica';
 
 interface LookbookTemplateProps {
   store: StoreConfig;
@@ -664,10 +665,9 @@ export default function LookbookTemplate({ store, initialProductId }: LookbookTe
                 >
                   {/* Foto con aspecto 3:4 */}
                   <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
-                    <img
-                      src={product.image}
+                    <FotoCiclica
+                      fotos={product.images?.length ? product.images : [product.image]}
                       alt={product.title}
-                      loading="lazy"
                       className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
                     />
 

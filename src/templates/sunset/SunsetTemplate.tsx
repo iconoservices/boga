@@ -9,6 +9,7 @@ import { debeMostrarDemo } from '@/lib/demo';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import { useDetalleProducto } from '../shared/useDetalleProducto';
+import FotoCiclica from '../shared/FotoCiclica';
 
 interface SunsetTemplateProps {
   store: StoreConfig;
@@ -111,6 +112,7 @@ export default function SunsetTemplate({ store, initialProductId }: SunsetTempla
             subcategory: p.subcategory || '',
             featured: false,
             image: p.image || '',
+            images: Array.isArray(p.images) && p.images.length > 1 ? p.images : undefined,
             preciosMoneda: p.preciosMoneda,
           };
         });
@@ -490,7 +492,7 @@ export default function SunsetTemplate({ store, initialProductId }: SunsetTempla
                     <div className="z-10 flex items-center gap-4">
                       {settings.showProductImages && item.image && (
                         <div className="w-14 h-14 rounded-lg overflow-hidden shrink-0">
-                          <img className="w-full h-full object-cover" alt={item.name} src={item.image} />
+                          <FotoCiclica fotos={(item as { images?: string[] }).images?.length ? (item as { images?: string[] }).images! : [item.image]} className="w-full h-full object-cover" alt={item.name} />
                         </div>
                       )}
                       <div>

@@ -12,6 +12,7 @@ import { enviarPedidoPorWhatsApp, tieneWhatsApp } from '@/lib/whatsapp';
 import StoreFloatingActions from '@/components/StoreFloatingActions';
 import { leerPresentaciones, Presentacion } from '@/lib/presentaciones';
 import { useDetalleProducto } from '../shared/useDetalleProducto';
+import FotoCiclica from '../shared/FotoCiclica';
 
 interface DiscotecaTemplateProps {
   store: StoreConfig;
@@ -539,8 +540,8 @@ export default function DiscotecaTemplate({ store, initialProductId }: Discoteca
                   className="w-64 sm:w-72 shrink-0 bg-[#141420]/80 rounded-2xl border border-white/10 overflow-hidden group cursor-pointer hover:border-purple-500/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.25)] transition-all flex flex-col"
                 >
                   <div className="aspect-[4/3] w-full overflow-hidden relative bg-[#1c1c2e]">
-                    <img
-                      src={item.image}
+                    <FotoCiclica
+                      fotos={item.images?.length ? item.images : [item.image]}
                       alt={item.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
@@ -681,8 +682,8 @@ export default function DiscotecaTemplate({ store, initialProductId }: Discoteca
               >
                 {/* Imagen */}
                 <div className="aspect-[4/3] sm:aspect-square w-full relative overflow-hidden bg-[#1a1a28]">
-                  <img
-                    src={prod.image}
+                  <FotoCiclica
+                    fotos={prod.images?.length ? prod.images : [prod.image]}
                     alt={prod.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />

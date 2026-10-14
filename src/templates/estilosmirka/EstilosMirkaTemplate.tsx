@@ -11,6 +11,7 @@ import StoreFloatingActions from '@/components/StoreFloatingActions';
 import { estrellasDe } from '../shared/tokens';
 import { useDetalleProducto } from '../shared/useDetalleProducto';
 import { leerPresentaciones } from '@/lib/presentaciones';
+import FotoCiclica from '../shared/FotoCiclica';
 
 interface EstilosMirkaTemplateProps {
   store: StoreConfig;
@@ -362,7 +363,7 @@ export default function EstilosMirkaTemplate({ store, initialProductId }: Estilo
 
                     {/* Portrait image — 3:4 ratio like fashion stores */}
                     <div className="overflow-hidden relative bg-gray-100" style={{ aspectRatio: '3/4' }}>
-                      <img src={prod.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt={prod.title} />
+                      <FotoCiclica fotos={prod.images?.length ? prod.images : [prod.image]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt={prod.title} />
                       {/* Agregar rápido: sin entrar a la ficha, como en el resto de plantillas. */}
                       <button
                         type="button"

@@ -10,6 +10,7 @@ import { AddedToast } from '@/templates/shared/AddFeedback';
 import { ProductModal, CartPanel, ContactPanel, BottomNav, CombosCarrusel } from '@/templates/shared/CatalogoUI';
 import type { Producto } from '@/templates/shared/tokens';
 import OtrosPrecios, { preciosDeProducto } from '@/templates/shared/OtrosPrecios';
+import FotoCiclica from '../shared/FotoCiclica';
 
 interface MercadoTemplateProps {
   store: StoreConfig;
@@ -357,8 +358,8 @@ export default function MercadoTemplate({ store, initialProductId }: MercadoTemp
                             </span>
                           )}
                         </div>
-                        <img
-                          src={p.image}
+                        <FotoCiclica
+                          fotos={p.images?.length ? p.images : [p.image]}
                           alt={p.name}
                           className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                         />
