@@ -166,7 +166,7 @@ function Carrusel({ children, intervalo = 3500 }: { children: React.ReactNode; i
    BANNER GRANDE (portada de la tienda + sus ofertas, con degradado verde y puntos)
    ════════════════════════════════════════════ */
 
-interface Slide { key: string; img: string; tag: string; titulo: string; sub: string; limpio?: boolean; onClick?: () => void }
+interface Slide { key: string; img: string; tag: string; titulo: string; sub: string; limpio?: boolean; producto?: boolean; precio?: string; onClick?: () => void }
 
 function Banner({ slides }: { slides: Slide[] }) {
   const [actual, setActual] = useState(0);
@@ -201,8 +201,20 @@ function Banner({ slides }: { slides: Slide[] }) {
           style={{ opacity: i === actual ? 1 : 0, transform: i === actual ? 'scale(1)' : 'scale(1.04)', pointerEvents: i === actual ? 'auto' : 'none' }}
           onClick={s.onClick}
         >
-          <img src={s.img} alt="" className="dv-hero-img" />
-          {!s.limpio && (
+          {s.producto ? (
+            <>
+              <div className="dv-hero-prod-bg" />
+              <div className="dv-hero-prod-foto"><img src={s.img} alt={s.titulo} /></div>
+              <div className="dv-hero-text dv-hero-text-prod">
+                <span className="dv-hero-tag">{s.tag}</span>
+                <h2>{s.titulo}</h2>
+                {s.precio && <p className="dv-hero-precio">{s.precio}</p>}
+                {s.sub && <p>{s.sub}</p>}
+                <span className="dv-hero-cta">Ver producto</span>
+              </div>
+            </>
+          ) : <img src={s.img} alt="" className="dv-hero-img" />}
+          {!s.limpio && !s.producto && (
             <>
               <div className="dv-hero-shade" />
               <div className="dv-hero-text">
@@ -294,7 +306,9 @@ export default function DelvaTemplate({ store, initialProductId, initialTab }: P
       img: p.image,
       tag: p.esCombo ? '🔥 COMBO' : `OFERTA ${porcentajeOferta(p.priceAnterior ?? p.price, p.price)}`.trim(),
       titulo: p.name,
-      sub: p.priceAnterior && p.priceAnterior > p.price ? `Antes ${soles(p.priceAnterior)} · Ahora ${soles(p.price)}` : soles(p.price),
+      producto: true,
+      precio: soles(p.price),
+      sub: p.priceAnterior && p.priceAnterior > p.price ? `Antes ${soles(p.priceAnterior)}` : '',
       onClick: () => c.abrirProducto(p),
     })),
   ];
@@ -708,6 +722,13 @@ const CSS = `
 .dv-hero-tag { color: #FF5722; font-weight: 900; font-size: 0.65rem; letter-spacing: 1px; margin-bottom: 6px; }
 .dv-hero-text h2 { color: #fff; font-size: clamp(1.3rem, 7vw, 2rem); font-weight: 900; margin: 0 0 8px; text-shadow: 0 2px 15px rgba(0,0,0,0.4); max-width: 560px; font-family: var(--dv-font-head); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .dv-hero-text p { color: rgba(255,255,255,0.85); font-size: clamp(0.75rem, 3vw, 0.9rem); font-weight: 600; max-width: 280px; margin: 0; line-height: 1.4; }
+.dv-hero-prod-bg { position: absolute; inset: 0; background: radial-gradient(circle at 78% 50%, color-mix(in srgb, var(--dv-primary) 55%, #fff) 0%, var(--dv-primary) 45%, color-mix(in srgb, var(--dv-primary) 70%, #000) 100%); }
+.dv-hero-prod-foto { position: absolute; top: 12px; bottom: 12px; right: 56px; width: 42%; display: flex; align-items: center; justify-content: center; }
+.dv-hero-prod-foto img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 16px; background: #fff; box-shadow: 0 12px 30px rgba(0,0,0,0.35); }
+.dv-hero-text-prod { right: 48%; }
+.dv-hero-text-prod h2 { font-size: clamp(1.05rem, 4.6vw, 1.7rem); }
+.dv-hero-text-prod .dv-hero-precio { color: #fff; font-size: clamp(1.2rem, 5.5vw, 1.9rem); font-weight: 900; margin: 0 0 2px; }
+.dv-hero-cta { display: inline-block; align-self: flex-start; margin-top: 10px; background: #FF5722; color: #fff; font-weight: 800; font-size: 0.75rem; padding: 7px 16px; border-radius: 999px; }
 .dv-hero-dots { position: absolute; bottom: 12px; right: 25px; display: flex; gap: 8px; z-index: 3; }
 .dv-hero-dots button { width: 8px; height: 8px; border-radius: 10px; background: rgba(255,255,255,0.3); border: none; padding: 0; transition: all 0.3s ease; }
 .dv-hero-dots button.on { width: 22px; background: #FF5722; }
