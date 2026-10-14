@@ -1191,6 +1191,14 @@ function AdminDashboard({ user }: { user: User }) {
   // Reservas por producto (lib/reserva.ts): un toque lo pone «siempre en reserva» (con o sin stock, también si es ilimitado) y otro lo deja en automático.
   const tiendaConReservas = (slug: string) => dbStores.find((x: any) => x.slug === slug)?.reserva_activa === true;
   const toggleReserva = async (p: Product) => {
+    // Con las reservas apagadas en la tienda, se ofrece prenderlas ahí mismo (antes el botón ni se veía y no había cómo enterarse).
+    if (!tiendaConReservas(p.store)) {
+      const ok = window.confirm('Las reservas están apagadas en esta tienda.\n\n¿Prenderlas ahora? Los productos sin stock (o los que marques con este botón) saldrán con «Reservar por WhatsApp».');
+      if (!ok) return;
+      const { error: errTienda } = await supabase.from('stores').update({ reserva_activa: true }).eq('slug', p.store);
+      if (errTienda) { alert('No se pudieron prender las reservas: ' + errTienda.message + '\n\n(¿corriste el SQL de reservas en Supabase?)'); return; }
+      setDbStores((prev) => prev.map((x: any) => x.slug === p.store ? { ...x, reserva_activa: true } : x));
+    }
     const nuevo = p.reserva === true ? null : true;
     setProducts(prev => prev.map(x => x.id === p.id ? { ...x, reserva: nuevo } : x));
     const { error } = await supabase.from('products').update({ reserva: nuevo }).eq('id', p.id);
@@ -2748,15 +2756,13 @@ function AdminDashboard({ user }: { user: User }) {
                                 <td className="p-3 text-right">
                                   {/* Solo se ocultan hasta pasar el mouse donde HAY mouse; en tablet/celular (sin hover) siempre se ven. */}
                                   <div className="flex items-center justify-end gap-1 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100">
-                                    {tiendaConReservas(p.store) && (
-                                      <button
-                                        onClick={() => toggleReserva(p)}
-                                        className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${p.reserva === true ? 'text-orange-600 bg-orange-50 hover:bg-orange-100' : 'text-gray-400 hover:text-orange-600 hover:bg-orange-50'}`}
-                                        title={p.reserva === true ? 'Quitar de reserva (vuelve a automático)' : 'Marcar como reserva (siempre se reserva por WhatsApp)'}
-                                      >
-                                        <span className="material-symbols-outlined text-[18px]">event_available</span>
-                                      </button>
-                                    )}
+                                    <button
+                                      onClick={() => toggleReserva(p)}
+                                      className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${tiendaConReservas(p.store) && p.reserva === true ? 'text-orange-600 bg-orange-50 hover:bg-orange-100' : 'text-gray-400 hover:text-orange-600 hover:bg-orange-50'}`}
+                                      title={tiendaConReservas(p.store) ? (p.reserva === true ? 'Quitar de reserva (vuelve a automático)' : 'Marcar como reserva (siempre se reserva por WhatsApp)') : 'Poner en reserva (te ofrece prender las reservas)'}
+                                    >
+                                      <span className="material-symbols-outlined text-[18px]">event_available</span>
+                                    </button>
                                     <button 
                                       onClick={() => handleEdit(p)}
                                       className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition-colors"
@@ -2856,11 +2862,9 @@ function AdminDashboard({ user }: { user: User }) {
                                 </label>
                                 
                                 <div className="flex items-center gap-1">
-                                  {tiendaConReservas(p.store) && (
-                                    <button onClick={() => toggleReserva(p)} title={p.reserva === true ? 'Quitar de reserva' : 'Marcar como reserva'} className={`p-1.5 rounded-lg transition-colors ${p.reserva === true ? 'text-orange-600 bg-orange-50' : 'text-gray-400 hover:text-orange-600 hover:bg-orange-50'}`}>
-                                      <span className="material-symbols-outlined text-[16px]">event_available</span>
-                                    </button>
-                                  )}
+                                  <button onClick={() => toggleReserva(p)} title={p.reserva === true && tiendaConReservas(p.store) ? 'Quitar de reserva' : 'Poner en reserva'} className={`p-1.5 rounded-lg transition-colors ${tiendaConReservas(p.store) && p.reserva === true ? 'text-orange-600 bg-orange-50' : 'text-gray-400 hover:text-orange-600 hover:bg-orange-50'}`}>
+                                    <span className="material-symbols-outlined text-[16px]">event_available</span>
+                                  </button>
                                   <button onClick={() => handleEdit(p)} className="p-1.5 text-gray-400 hover:text-black rounded-lg hover:bg-gray-100 transition-colors">
                                     <span className="material-symbols-outlined text-[16px]">edit</span>
                                   </button>

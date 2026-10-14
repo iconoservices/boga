@@ -44,13 +44,13 @@ export async function GET() {
     ? { data: [] as any[], error: null }
     : await supabase
         .from('products')
-        .select('id, name, description, price, image, images, category, store, status, stock, precio_oferta, oferta_hasta')
+        .select('id, name, description, price, image, images, category, store, status, stock, precio_oferta, oferta_hasta, es_servicio')
         .in('store', slugsFeed)
         .neq('status', 'Inactivo');
   if (error) {
     ({ data: products, error } = await supabase
       .from('products')
-      .select('id, name, description, price, image, category, store, status, stock, precio_oferta, oferta_hasta')
+      .select('id, name, description, price, image, category, store, status, stock, precio_oferta, oferta_hasta, es_servicio')
       .in('store', slugsFeed)
       .neq('status', 'Inactivo') as any);
   }
@@ -80,8 +80,8 @@ export async function GET() {
   };
 
   const xmlItems = products
-    // Sin foto propia no entra: Google rechaza las imágenes genéricas de relleno.
-    .filter((p: any) => typeof p.image === 'string' && /^https?:\/\//.test(p.image))
+    // Sin foto propia no entra: Google rechaza las imágenes genéricas de relleno. Tampoco los servicios (Google no los acepta como producto) ni lo que no tiene precio.
+    .filter((p: any) => typeof p.image === 'string' && /^https?:\/\//.test(p.image) && p.es_servicio !== true && (typeof p.price === 'number' ? p.price : parseFloat(p.price) || 0) > 0)
     .map((p: any) => {
       const storeInfo = storeMap.get(p.store)!;
       const storeBrand = storeInfo.name || storeInfo.slug;

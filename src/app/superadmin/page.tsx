@@ -475,7 +475,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     externalUrl: '',
       subdominioActivo: false,
       pushActivo: true, // por defecto activas en tiendas nuevas
-      modulos: { pos: false, inventario: false, google: false, marca_blanca: false, marketplace: true, promociones: true } as Modulos,
+      modulos: { pos: false, inventario: false, google: true, marca_blanca: false, marketplace: true, promociones: true } as Modulos,
     ownerEmail: '',
     hideHeroText: true
   });
@@ -629,7 +629,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       externalUrl: '',
       subdominioActivo: false,
       pushActivo: true, // por defecto activas en tiendas nuevas
-      modulos: { pos: false, inventario: false, google: false, marca_blanca: false, marketplace: true, promociones: true } as Modulos,
+      modulos: { pos: false, inventario: false, google: true, marca_blanca: false, marketplace: true, promociones: true } as Modulos,
       // El correo de la solicitud: asi al guardar la tienda ya queda asignada
       // a quien la pidio, sin tener que ir despues a mano a "Usuarios".
       ownerEmail: req.email || '',
@@ -877,7 +877,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       externalUrl: '',
       subdominioActivo: false,
       pushActivo: true, // por defecto activas en tiendas nuevas
-      modulos: { pos: false, inventario: false, google: false, marca_blanca: false, marketplace: true, promociones: true } as Modulos,
+      modulos: { pos: false, inventario: false, google: true, marca_blanca: false, marketplace: true, promociones: true } as Modulos,
       ownerEmail: '',
       hideHeroText: true // por defecto el banner va limpio; el dueño decide si le suma textos
     });
@@ -1176,6 +1176,9 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       }
     }
 
+    // Google (Merchant Center) arranca prendido en las tiendas nuevas de productos: es tráfico gratis. En las de servicios no (Google no los acepta como productos).
+    const PLANTILLAS_SIN_GOOGLE = new Set(['empresa', 'academia', 'gas']);
+    const googleFinal = !!storeForm.modulos?.google && !(!editingStore && PLANTILLAS_SIN_GOOGLE.has(String(storeForm.template)));
     const upsertData: Record<string, any> = {
       slug,
       name: storeForm.name,
@@ -1205,7 +1208,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
         ...(storeForm.modulos || {}),
         pos: !!storeForm.modulos?.pos,
         inventario: !!storeForm.modulos?.inventario,
-        google: !!storeForm.modulos?.google,
+        google: googleFinal,
         marca_blanca: !!storeForm.modulos?.marca_blanca,
         marketplace: storeForm.modulos?.marketplace !== false,
         promociones: !!storeForm.modulos?.promociones,
@@ -1342,7 +1345,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
           ...(storeForm.modulos || {}),
           pos: !!storeForm.modulos?.pos,
           inventario: !!storeForm.modulos?.inventario,
-          google: !!storeForm.modulos?.google,
+          google: googleFinal,
           marca_blanca: !!storeForm.modulos?.marca_blanca,
           marketplace: storeForm.modulos?.marketplace !== false,
           promociones: !!storeForm.modulos?.promociones,
@@ -3143,7 +3146,7 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           externalUrl: '',
       subdominioActivo: false,
       pushActivo: true,
-      modulos: { pos: false, inventario: false, google: false, marca_blanca: false, marketplace: true, promociones: true } as Modulos,
+      modulos: { pos: false, inventario: false, google: true, marca_blanca: false, marketplace: true, promociones: true } as Modulos,
                           ownerEmail: ''
                         });
                         setOriginalOwnerEmail('');
