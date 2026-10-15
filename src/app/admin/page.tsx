@@ -3261,103 +3261,103 @@ function AdminDashboard({ user }: { user: User }) {
               const gananciaEst = detalle.reduce((n, d) => n + d.unidCostadas * (Number(d.p.price) || 0) - d.invers, 0);
               const conVariosPrecios = detalle.filter(d => d.susLotes.length > 0 || d.p.costo != null);
 
+              const kpi = (icono: string, color: string, titulo: string, valor: string, nota?: string, colorValor = 'text-gray-900') => (
+                <div className="min-w-0">
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center mb-3 ${color}`}>
+                    <span className="material-symbols-outlined text-[20px]">{icono}</span>
+                  </div>
+                  <p className="text-xs font-bold text-gray-500">{titulo}</p>
+                  <p className={`text-2xl md:text-[1.7rem] leading-tight font-black mt-0.5 truncate ${colorValor}`}>{valor}</p>
+                  {nota && <p className="text-[11px] font-semibold text-gray-400 mt-0.5">{nota}</p>}
+                </div>
+              );
+              const hayCosto = conCosto.length > 0;
+
               return (
                 <>
-                  <h2 className="text-xs font-extrabold uppercase tracking-widest text-gray-400">Ventas</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-white p-6 rounded-md border border-gray-100 shadow-sm">
-                      <div className="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center mb-4">
-                        <span className="material-symbols-outlined">payments</span>
+                  {/* Dos tableros lado a lado: lo que vendes y lo que tienes en mercadería, separados para que no se confundan. */}
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 border-t-4 border-t-green-500">
+                      <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-sm font-extrabold uppercase tracking-widest text-gray-700">Ventas</h2>
+                        <span className="text-[11px] font-semibold text-gray-400">lo que ya cobraste</span>
                       </div>
-                      <p className="text-sm font-bold text-gray-500">Ventas de Hoy</p>
-                      <h3 className="text-3xl font-black text-gray-900 mt-1">S/ {total(deHoy).toFixed(2)}</h3>
-                    </div>
-                    <div className="bg-white p-6 rounded-md border border-gray-100 shadow-sm">
-                      <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
-                        <span className="material-symbols-outlined">shopping_bag</span>
+                      <div className="grid grid-cols-3 gap-4">
+                        {kpi('payments', 'bg-green-50 text-green-600', 'Ventas de hoy', `S/ ${total(deHoy).toFixed(2)}`)}
+                        {kpi('shopping_bag', 'bg-blue-50 text-blue-600', 'Ventas hoy', String(deHoy.length), 'registradas')}
+                        {kpi('calendar_month', 'bg-purple-50 text-purple-600', 'Ventas del mes', `S/ ${total(delMes).toFixed(2)}`)}
                       </div>
-                      <p className="text-sm font-bold text-gray-500">Ventas Registradas Hoy</p>
-                      <h3 className="text-3xl font-black text-gray-900 mt-1">{deHoy.length}</h3>
-                    </div>
-                    <div className="bg-white p-6 rounded-md border border-gray-100 shadow-sm">
-                      <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center mb-4">
-                        <span className="material-symbols-outlined">calendar_month</span>
+                    </section>
+
+                    <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 border-t-4 border-t-amber-500">
+                      <div className="flex items-center justify-between mb-4 gap-2">
+                        <h2 className="text-sm font-extrabold uppercase tracking-widest text-gray-700">Valor del inventario</h2>
+                        <span className="text-[11px] font-semibold text-gray-400 text-right">{enStock.length > 0 ? `${unidadesStock.toLocaleString('es-PE')} unid. · ${enStock.length} productos` : 'lo que tienes en stock'}</span>
                       </div>
-                      <p className="text-sm font-bold text-gray-500">Ventas del Mes</p>
-                      <h3 className="text-3xl font-black text-gray-900 mt-1">S/ {total(delMes).toFixed(2)}</h3>
-                    </div>
+                      {enStock.length === 0 ? (
+                        <p className="text-sm text-gray-500 py-4">Aquí verás cuánto vale tu mercadería cuando tengas productos con stock contado (con el módulo de inventario).</p>
+                      ) : (
+                        <div className="grid grid-cols-3 gap-4">
+                          {kpi('sell', 'bg-amber-50 text-amber-600', 'A precio de venta', `S/ ${valorVenta.toFixed(2)}`)}
+                          {kpi('savings', 'bg-sky-50 text-sky-600', 'Tu inversión', hayCosto ? `S/ ${inversion.toFixed(2)}` : '—', hayCosto ? undefined : 'sin costos aún')}
+                          {kpi('trending_up', hayCosto && gananciaEst < 0 ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600', 'Ganancia estimada', hayCosto ? `S/ ${gananciaEst.toFixed(2)}` : '—', hayCosto ? undefined : 'sin costos aún', hayCosto && gananciaEst < 0 ? 'text-red-600' : hayCosto ? 'text-green-700' : 'text-gray-900')}
+                        </div>
+                      )}
+                      {enStock.length > 0 && (
+                        <p className="text-[11px] text-gray-400 mt-4">
+                          {!hayCosto
+                            ? 'Anota el costo al ingresar mercadería (botón +) o el «Costo por unidad» al editar un producto para ver tu inversión y ganancia.'
+                            : conCosto.length < enStock.length
+                              ? `Inversión y ganancia cuentan solo las unidades con costo anotado (${conCosto.length} de ${enStock.length} productos).`
+                              : 'Calculado con el costo de cada compra que anotaste.'}
+                        </p>
+                      )}
+                    </section>
                   </div>
 
-                  <div className="bg-white border border-gray-100 rounded-md overflow-hidden shadow-sm mt-4">
-                    <div className="p-4 border-b border-gray-100 bg-gray-50">
-                      <h3 className="font-bold text-gray-900">Productos Más Vendidos del Mes</h3>
-                    </div>
-                    {masVendidos.length === 0 ? (
-                      <div className="p-8 text-center">
-                        <p className="text-gray-500">Todavía no hay ventas este mes. Cuando cobres en la caja, aquí verás qué se vende más.</p>
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+                      <div className="p-4 border-b border-gray-100 bg-gray-50">
+                        <h3 className="font-bold text-gray-900">Productos más vendidos del mes</h3>
                       </div>
-                    ) : (
-                      <ul className="divide-y divide-gray-50">
-                        {masVendidos.map((m, idx) => (
-                          <li key={m.name + idx} className="flex items-center gap-3 px-4 py-3">
-                            <span className="w-6 h-6 rounded-full bg-[var(--tienda-color)]/10 text-[var(--tienda-color)] text-xs font-black flex items-center justify-center shrink-0">{idx + 1}</span>
-                            <span className="flex-1 min-w-0 truncate text-sm font-bold text-gray-900">{m.name}</span>
-                            <span className="text-xs font-semibold text-gray-500">{m.unidades} unid.</span>
-                            <span className="text-sm font-extrabold text-gray-900">S/ {m.monto.toFixed(2)}</span>
-                          </li>
-                        ))}
-                      </ul>
+                      {masVendidos.length === 0 ? (
+                        <div className="p-8 text-center">
+                          <p className="text-gray-500">Todavía no hay ventas este mes. Cuando cobres en la caja, aquí verás qué se vende más.</p>
+                        </div>
+                      ) : (
+                        <ul className="divide-y divide-gray-50">
+                          {masVendidos.map((m, idx) => (
+                            <li key={m.name + idx} className="flex items-center gap-3 px-4 py-3">
+                              <span className="w-6 h-6 rounded-full bg-[var(--tienda-color)]/10 text-[var(--tienda-color)] text-xs font-black flex items-center justify-center shrink-0">{idx + 1}</span>
+                              <span className="flex-1 min-w-0 truncate text-sm font-bold text-gray-900">{m.name}</span>
+                              <span className="text-xs font-semibold text-gray-500">{m.unidades} unid.</span>
+                              <span className="text-sm font-extrabold text-gray-900">S/ {m.monto.toFixed(2)}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+
+                    {conVariosPrecios.length > 0 && (
+                      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+                        <div className="p-4 border-b border-gray-100 bg-gray-50">
+                          <h3 className="font-bold text-gray-900">Unidades por precio de compra</h3>
+                          <p className="text-[11px] text-gray-400">Cuántas te quedan de cada lote, por producto</p>
+                        </div>
+                        <ul className="divide-y divide-gray-50 max-h-[22rem] overflow-y-auto">
+                          {conVariosPrecios.map(d => (
+                            <li key={d.p.id} className="px-4 py-3 text-xs flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                              <span className="font-bold text-gray-900 min-w-0 flex-1 truncate text-sm">{d.p.name}</span>
+                              <span className="text-gray-600 font-semibold">
+                                {d.susLotes.map(l => `${l.cantidad_restante} × ${l.costo != null ? `S/ ${l.costo.toFixed(2)}` : 'sin costo'}`).join(' · ')}
+                                {d.sinLote > 0 && `${d.susLotes.length ? ' · ' : ''}${d.sinLote} × ${d.p.costo != null ? `S/ ${d.p.costo.toFixed(2)}` : 'sin costo'}`}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     )}
                   </div>
-                  {enStock.length > 0 && (
-                    <div className="mt-6 pt-6 border-t-2 border-dashed border-gray-200">
-                    <h2 className="text-xs font-extrabold uppercase tracking-widest text-gray-400 mb-3">Valor del inventario</h2>
-                    <div className="bg-white p-5 rounded-md border border-gray-100 shadow-sm">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="material-symbols-outlined text-[20px] text-amber-600">inventory_2</span>
-                        <p className="text-sm font-bold text-gray-700">Mercadería en stock</p>
-                        <span className="text-xs font-semibold text-gray-400">{unidadesStock.toLocaleString('es-PE')} unid. en {enStock.length} productos</span>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div>
-                          <p className="text-xs font-bold text-gray-500">Valor a precio de venta</p>
-                          <p className="text-2xl font-black text-gray-900">S/ {valorVenta.toFixed(2)}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-gray-500">Tu inversión</p>
-                          <p className="text-2xl font-black text-gray-900">{conCosto.length ? `S/ ${inversion.toFixed(2)}` : '—'}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-gray-500">Ganancia estimada</p>
-                          <p className={`text-2xl font-black ${gananciaEst >= 0 ? 'text-green-700' : 'text-red-600'}`}>{conCosto.length ? `S/ ${gananciaEst.toFixed(2)}` : '—'}</p>
-                        </div>
-                      </div>
-                      {conVariosPrecios.length > 0 && (
-                        <details className="mt-3">
-                          <summary className="text-xs font-bold text-[var(--tienda-color)] cursor-pointer">Ver cuántas unidades quedan de cada precio de compra</summary>
-                          <ul className="mt-2 divide-y divide-gray-50 border border-gray-100 rounded-lg">
-                            {conVariosPrecios.map(d => (
-                              <li key={d.p.id} className="px-3 py-2 text-xs flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                                <span className="font-bold text-gray-900 min-w-0 flex-1 truncate">{d.p.name}</span>
-                                <span className="text-gray-600">
-                                  {d.susLotes.map(l => `${l.cantidad_restante} × ${l.costo != null ? `S/ ${l.costo.toFixed(2)}` : 'sin costo'}`).join(' · ')}
-                                  {d.sinLote > 0 && `${d.susLotes.length ? ' · ' : ''}${d.sinLote} × ${d.p.costo != null ? `S/ ${d.p.costo.toFixed(2)}` : 'sin costo'}`}
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
-                        </details>
-                      )}
-                      <p className="text-[11px] text-gray-400 mt-3">
-                        {conCosto.length === 0
-                          ? 'Para ver tu inversión y ganancia, anota el costo al ingresar mercadería (botón +) o el «Costo por unidad» al editar cada producto (es opcional).'
-                          : conCosto.length < enStock.length
-                            ? `La inversión y la ganancia cuentan solo las unidades que tienen costo anotado (${conCosto.length} de ${enStock.length} productos).`
-                            : 'Calculado con el costo de cada compra que anotaste.'}
-                      </p>
-                    </div>
-                    </div>
-                  )}
                 </>
               );
             })()}
