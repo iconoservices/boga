@@ -71,6 +71,8 @@ interface Product {
   reserva?: boolean | null;
   /** false = no sale en BogaHub (Inicio, Explorar, Market); sigue en la carta de su tienda. Vacío/true = sale. */
   en_market?: boolean | null;
+  /** Lo que te costó cada unidad (opcional, solo lo ves tú): con él, Métricas calcula tu inversión en mercadería y la ganancia estimada. */
+  costo?: number | null;
   /** true = es un combo o paquete promocional con sello propio y presencia en Promociones. */
   es_combo?: boolean | null;
   /** IGV incluido en el precio de este producto: 'con' | 'sin'; vacío = lo que diga la tienda. Ver lib/igv.ts. */
@@ -537,6 +539,7 @@ function AdminDashboard({ user }: { user: User }) {
     esServicio: false,
     reserva: '' as '' | 'si' | 'no',
     esCombo: false,
+    costo: '',
     codigoBarras: "",
   });
 
@@ -594,6 +597,7 @@ function AdminDashboard({ user }: { user: User }) {
       esServicio: false,
       reserva: '' as '' | 'si' | 'no',
       esCombo: false,
+      costo: '',
       codigoBarras: '',
     });
     setFotos([]);
@@ -699,6 +703,11 @@ function AdminDashboard({ user }: { user: User }) {
       if (!errMarca && marcas) {
         const m = new Map((marcas as any[]).map((x) => [x.id, x.en_market]));
         lista = lista.map((p) => ({ ...p, en_market: m.get(p.id) ?? null }));
+      }
+      const { data: costos, error: errCosto } = await supabase.from('products').select('id,costo').in('store', slugs);
+      if (!errCosto && costos) {
+        const c = new Map((costos as any[]).map((x) => [x.id, x.costo]));
+        lista = lista.map((p) => ({ ...p, costo: c.get(p.id) != null ? Number(c.get(p.id)) : null }));
       }
       setProducts(lista);
     }
@@ -1509,6 +1518,11 @@ function AdminDashboard({ user }: { user: User }) {
       const camposCombo = newProduct.esCombo || productoPrevio?.es_combo
         ? { es_combo: newProduct.esCombo }
         : {};
+      // Costo por unidad (opcional): solo se manda si se escribió algo o si el producto ya tenía uno (para poder borrarlo).
+      const costoNum = newProduct.costo.trim() === '' ? null : Math.max(0, Number(newProduct.costo.replace(',', '.')));
+      const camposCosto = newProduct.costo.trim() !== '' || productoPrevio?.costo != null
+        ? { costo: costoNum != null && Number.isFinite(costoNum) ? costoNum : null }
+        : {};
       // Igual que arriba: solo se manda si hay más de una foto o si el producto ya tenía galería (para poder achicarla a una sola).
       const camposFotos = urlsFotos.length > 1 || (productoPrevio?.images?.length ?? 0) > 0
         ? { images: urlsFotos.length > 1 ? urlsFotos : null }
@@ -1538,6 +1552,7 @@ function AdminDashboard({ user }: { user: User }) {
           ...camposServicio,
           ...camposReserva,
           ...camposCombo,
+          ...camposCosto,
           ...camposFotos,
           ...camposIgv,
           // Sin módulo de inventario no se toca el stock guardado (por si lo vuelven a prender).
@@ -1565,6 +1580,7 @@ function AdminDashboard({ user }: { user: User }) {
           ...camposServicio,
           ...camposReserva,
           ...camposCombo,
+          ...camposCosto,
           ...camposFotos,
           ...camposIgv,
         } as Product));
@@ -1600,6 +1616,7 @@ function AdminDashboard({ user }: { user: User }) {
             ...camposServicio,
             ...camposReserva,
             ...camposCombo,
+          ...camposCosto,
             ...camposFotos,
             ...camposIgv,
             stock: finalStock,
@@ -1677,6 +1694,7 @@ function AdminDashboard({ user }: { user: User }) {
       preciosMoneda: Object.fromEntries(Object.entries(normalizarPreciosMoneda(product.precios_moneda)).map(([c, n]) => [c, String(n)])),
       esServicio: product.es_servicio === true,
       esCombo: product.es_combo === true,
+      costo: product.costo != null ? String(product.costo) : '',
       reserva: product.reserva === true ? 'si' : product.reserva === false ? 'no' : '',
       codigoBarras: '',
     });
@@ -3215,8 +3233,17 @@ function AdminDashboard({ user }: { user: User }) {
               });
               const masVendidos = Array.from(porProducto.values()).sort((a, b) => b.unidades - a.unidades).slice(0, 5);
 
+              // Mercadería en stock (solo tiendas con inventario y productos con unidades contadas).
+              const enStock = products.filter(p => (selectedStore === 'all' || p.store === selectedStore) && tiendaTiene(p.store, 'inventario') && !stockIlimitado(p) && p.stock > 0);
+              const unidadesStock = enStock.reduce((n, p) => n + p.stock, 0);
+              const valorVenta = enStock.reduce((n, p) => n + p.stock * (Number(p.price) || 0), 0);
+              const conCosto = enStock.filter(p => p.costo != null);
+              const inversion = conCosto.reduce((n, p) => n + p.stock * (p.costo as number), 0);
+              const gananciaEst = conCosto.reduce((n, p) => n + p.stock * ((Number(p.price) || 0) - (p.costo as number)), 0);
+
               return (
                 <>
+                  <h2 className="text-xs font-extrabold uppercase tracking-widest text-gray-400">Ventas</h2>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="bg-white p-6 rounded-md border border-gray-100 shadow-sm">
                       <div className="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center mb-4">
@@ -3262,6 +3289,39 @@ function AdminDashboard({ user }: { user: User }) {
                       </ul>
                     )}
                   </div>
+                  {enStock.length > 0 && (
+                    <div className="mt-6 pt-6 border-t-2 border-dashed border-gray-200">
+                    <h2 className="text-xs font-extrabold uppercase tracking-widest text-gray-400 mb-3">Valor del inventario</h2>
+                    <div className="bg-white p-5 rounded-md border border-gray-100 shadow-sm">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="material-symbols-outlined text-[20px] text-amber-600">inventory_2</span>
+                        <p className="text-sm font-bold text-gray-700">Mercadería en stock</p>
+                        <span className="text-xs font-semibold text-gray-400">{unidadesStock.toLocaleString('es-PE')} unid. en {enStock.length} productos</span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                          <p className="text-xs font-bold text-gray-500">Valor a precio de venta</p>
+                          <p className="text-2xl font-black text-gray-900">S/ {valorVenta.toFixed(2)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-gray-500">Tu inversión</p>
+                          <p className="text-2xl font-black text-gray-900">{conCosto.length ? `S/ ${inversion.toFixed(2)}` : '—'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-gray-500">Ganancia estimada</p>
+                          <p className={`text-2xl font-black ${gananciaEst >= 0 ? 'text-green-700' : 'text-red-600'}`}>{conCosto.length ? `S/ ${gananciaEst.toFixed(2)}` : '—'}</p>
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-gray-400 mt-3">
+                        {conCosto.length === 0
+                          ? 'Para ver tu inversión y ganancia, anota el «Costo por unidad» al editar cada producto (es opcional).'
+                          : conCosto.length < enStock.length
+                            ? `La inversión y la ganancia cuentan solo los ${conCosto.length} productos que tienen costo anotado.`
+                            : 'Calculado con el costo que anotaste en cada producto.'}
+                      </p>
+                    </div>
+                    </div>
+                  )}
                 </>
               );
             })()}
@@ -4067,6 +4127,24 @@ function AdminDashboard({ user }: { user: User }) {
                     </select>
                   </div>
                 </div>
+
+                {/* Costo (opcional): solo lo ves tú; sirve para calcular tu inversión y ganancia en Métricas. */}
+                {!formEmpresa && (
+                <div className="mt-5">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Costo por unidad <span className="font-medium text-gray-400">· opcional, solo lo ves tú</span></label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-400">S/</span>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={newProduct.costo}
+                      onChange={(e) => setNewProduct({ ...newProduct, costo: e.target.value.replace(/[^0-9.,]/g, '') })}
+                      placeholder="Lo que te costó cada unidad"
+                      className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black transition-all"
+                    />
+                  </div>
+                </div>
+                )}
 
                 {/* IGV: por defecto sigue a la tienda (Personaliza tu tienda → «Mis precios incluyen IGV»); aquí se puede salir de eso. */}
                 {!formEmpresa && !precioOpcional && (
