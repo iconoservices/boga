@@ -69,6 +69,8 @@ interface Product {
   es_servicio?: boolean | null;
   /** Reservas (lib/reserva.ts): true = siempre en reserva, false = nunca, null = automático (agotado → reserva). */
   reserva?: boolean | null;
+  /** false = no sale en BogaHub (Inicio, Explorar, Market); sigue en la carta de su tienda. Vacío/true = sale. */
+  en_market?: boolean | null;
   /** true = es un combo o paquete promocional con sello propio y presencia en Promociones. */
   es_combo?: boolean | null;
   /** IGV incluido en el precio de este producto: 'con' | 'sin'; vacío = lo que diga la tienda. Ver lib/igv.ts. */
@@ -691,7 +693,14 @@ function AdminDashboard({ user }: { user: User }) {
     if (error) {
       console.error('Error fetching products:', error);
     } else {
-      setProducts(data || []);
+      let lista: any[] = data || [];
+      // `en_market` va aparte: si el SQL de «Mostrar en BogaHub» aún no se corrió, el resto de columnas se carga igual.
+      const { data: marcas, error: errMarca } = await supabase.from('products').select('id,en_market').in('store', slugs);
+      if (!errMarca && marcas) {
+        const m = new Map((marcas as any[]).map((x) => [x.id, x.en_market]));
+        lista = lista.map((p) => ({ ...p, en_market: m.get(p.id) ?? null }));
+      }
+      setProducts(lista);
     }
     setIsLoading(false);
   };
@@ -1206,6 +1215,15 @@ function AdminDashboard({ user }: { user: User }) {
     setProducts(prev => prev.map(x => x.id === p.id ? { ...x, reserva: nuevo } : x));
     const { error } = await supabase.from('products').update({ reserva: nuevo }).eq('id', p.id);
     if (error) { alert('No se pudo cambiar la reserva: ' + error.message + '\n\n(¿corriste el SQL de reservas en Supabase?)'); await fetchProducts(); return; }
+    refrescarTienda(p.store);
+  };
+
+  // «Mostrar en BogaHub»: apaga o prende un producto en Inicio, Explorar y Market. En la carta de su tienda sigue igual.
+  const toggleEnMarket = async (p: Product) => {
+    const nuevo = p.en_market === false;
+    setProducts(prev => prev.map(x => x.id === p.id ? { ...x, en_market: nuevo } : x));
+    const { error } = await supabase.from('products').update({ en_market: nuevo }).eq('id', p.id);
+    if (error) { alert('No se pudo cambiar: ' + error.message + '\n\n(¿corriste supabase_en_market.sql en Supabase?)'); await fetchProducts(); return; }
     refrescarTienda(p.store);
   };
 
@@ -2865,6 +2883,13 @@ function AdminDashboard({ user }: { user: User }) {
                                   {/* Solo se ocultan hasta pasar el mouse donde HAY mouse; en tablet/celular (sin hover) siempre se ven. */}
                                   <div className="flex items-center justify-end gap-1">
                                     <button
+                                      onClick={() => toggleEnMarket(p)}
+                                      className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${p.en_market === false ? 'text-gray-300 hover:text-blue-600 hover:bg-blue-50' : 'text-blue-600 bg-blue-50 hover:bg-blue-100'}`}
+                                      title={p.en_market === false ? 'No sale en BogaHub: toca para mostrarlo' : 'Sale en BogaHub (Explorar y Market): toca para ocultarlo'}
+                                    >
+                                      <span className="material-symbols-outlined text-[18px]">{p.en_market === false ? 'visibility_off' : 'public'}</span>
+                                    </button>
+                                    <button
                                       onClick={() => toggleReserva(p)}
                                       className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${tiendaConReservas(p.store) && p.reserva === true ? 'text-orange-600 bg-orange-50 hover:bg-orange-100' : 'text-gray-400 hover:text-orange-600 hover:bg-orange-50'}`}
                                       title={tiendaConReservas(p.store) ? (p.reserva === true ? 'Quitar de reserva (vuelve a automático)' : 'Marcar como reserva (siempre se reserva por WhatsApp)') : 'Poner en reserva (te ofrece prender las reservas)'}
@@ -2970,6 +2995,9 @@ function AdminDashboard({ user }: { user: User }) {
                                 </label>
                                 
                                 <div className="flex items-center gap-1">
+                                  <button onClick={() => toggleEnMarket(p)} title={p.en_market === false ? 'No sale en BogaHub: mostrarlo' : 'Sale en BogaHub: ocultarlo'} className={`p-1.5 rounded-lg transition-colors ${p.en_market === false ? 'text-gray-300 hover:text-blue-600 hover:bg-blue-50' : 'text-blue-600 bg-blue-50'}`}>
+                                    <span className="material-symbols-outlined text-[16px]">{p.en_market === false ? 'visibility_off' : 'public'}</span>
+                                  </button>
                                   <button onClick={() => toggleReserva(p)} title={p.reserva === true && tiendaConReservas(p.store) ? 'Quitar de reserva' : 'Poner en reserva'} className={`p-1.5 rounded-lg transition-colors ${tiendaConReservas(p.store) && p.reserva === true ? 'text-orange-600 bg-orange-50' : 'text-gray-400 hover:text-orange-600 hover:bg-orange-50'}`}>
                                     <span className="material-symbols-outlined text-[16px]">event_available</span>
                                   </button>

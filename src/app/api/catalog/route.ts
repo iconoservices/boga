@@ -36,6 +36,9 @@ const ESTILO_DEFECTO: Record<string, string> = { market: 'center', home: 'bottom
 // (SQL de ofertas sin correr), pide las de siempre para que el catálogo no quede vacío.
 async function productosConOferta() {
   const base = 'id,name,price,category,image,store,status';
+  // `en_market` (false = no sale en BogaHub): si el SQL aún no se corrió, se pide sin esa columna.
+  const r0 = await supabase.from('products').select(`${base},${COLS_OFERTA},es_servicio,es_combo,en_market`);
+  if (!r0.error) return r0;
   const r = await supabase.from('products').select(`${base},${COLS_OFERTA},es_servicio,es_combo`);
   if (!r.error) return r;
   const r1 = await supabase.from('products').select(`${base},${COLS_OFERTA},es_servicio`);
@@ -100,7 +103,7 @@ export async function GET(request: Request) {
       // Apagado = no aparece: ni los Agotados (sin stock o desactivados a mano) ni los Inactivos (ocultos) salen en Inicio, Explorar ni Market.
       // La carta de cada tienda sí los puede pedir (ver /api/catalog/[slug]) para ofrecerlos como reserva.
       products: ((products.data ?? []) as any[])
-        .filter((p) => slugsVisibles.has(p.store) && p.status !== 'Agotado' && p.status !== 'Inactivo')
+        .filter((p) => slugsVisibles.has(p.store) && p.status !== 'Agotado' && p.status !== 'Inactivo' && p.en_market !== false)
         .map(aplicarOferta),
       banners: banners.data ?? [],
       bannerStyle: estilo.data?.style || ESTILO_DEFECTO.market,
