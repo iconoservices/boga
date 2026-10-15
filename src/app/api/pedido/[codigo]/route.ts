@@ -24,6 +24,12 @@ type Params = { params: Promise<{ codigo: string }> };
 
 const COLUMNAS = 'id,store,customer_name,customer_phone,customer_address,items,total_amount,status,created_at,codigo';
 
+// Color de marca de la tienda (theme.primary) para pintar el recibo; si no es un hex válido, se queda el color de BogaHub.
+const colorTienda = (theme: unknown): string | null => {
+  const c = (theme as { primary?: unknown } | null)?.primary;
+  return typeof c === 'string' && /^#[0-9a-fA-F]{6}$/.test(c) ? c : null;
+};
+
 async function cargar(codigo: string, request: Request) {
   const db = clienteServicio();
   if (!db || !CODIGO.test(codigo)) return null;
@@ -32,7 +38,7 @@ async function cargar(codigo: string, request: Request) {
   if (!o) ({ data: o } = await db.from('orders').select(`${COLUMNAS},repartidor_id,llego_at`).eq('codigo', codigo).maybeSingle());
   if (!o) ({ data: o } = await db.from('orders').select(COLUMNAS).eq('codigo', codigo).maybeSingle());
   if (!o) return null;
-  const { data: t } = await db.from('stores').select('name,user_id,logo_image,external_url,subdominio_activo').eq('slug', o.store).maybeSingle();
+  const { data: t } = await db.from('stores').select('name,user_id,logo_image,external_url,subdominio_activo,theme').eq('slug', o.store).maybeSingle();
   const quien = await quienEs(request);
   const propietario = !!quien && (quien.esSuperadmin || (!!t && t.user_id === quien.userId));
   return { db, o: o as typeof o & { repartidor_id?: string | null; llego_at?: string | null; pago_estado?: string | null }, tienda: t, propietario };
@@ -74,7 +80,7 @@ export async function GET(request: Request, { params }: Params) {
 
   return NextResponse.json({
     codigo: o.codigo,
-    tienda: { slug: o.store, nombre: tienda?.name ?? o.store, logo: (tienda?.logo_image as string | null) ?? null, enlace: enlaceTienda(o.store, tienda?.external_url as string | null, tienda?.subdominio_activo as boolean | null) },
+    tienda: { slug: o.store, nombre: tienda?.name ?? o.store, logo: (tienda?.logo_image as string | null) ?? null, color: colorTienda(tienda?.theme), enlace: enlaceTienda(o.store, tienda?.external_url as string | null, tienda?.subdominio_activo as boolean | null) },
     items: items.map((i) => ({ name: i.name, price: Number(i.price) || 0, quantity: Number(i.quantity) || 1, imagen: (i.id && imagenes[i.id]) || null })),
     total: Number(o.total_amount) || 0,
     estado: o.status,

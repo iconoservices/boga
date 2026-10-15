@@ -19,7 +19,7 @@ const MapaRepartidor = dynamic(() => import('@/components/MapaRepartidor'), {
 
 type Pedido = {
   codigo: string;
-  tienda: { slug: string; nombre: string; logo?: string | null; enlace?: string };
+  tienda: { slug: string; nombre: string; logo?: string | null; color?: string | null; enlace?: string };
   items: { name: string; price: number; quantity: number; imagen?: string | null }[];
   total: number;
   estado: string;
@@ -221,7 +221,7 @@ export default function PedidoPage({ params }: { params: Promise<{ codigo: strin
   const repAsignado = p?.repartidorId ? repartidores.find((r) => r.id === p.repartidorId) : null;
 
   return (
-    <div className="min-h-screen bg-background text-on-background font-body-md">
+    <div className="min-h-screen bg-background text-on-background font-body-md" style={p?.tienda.color ? ({ '--color-primary': p.tienda.color } as React.CSSProperties) : undefined}>
       <header className="border-b border-surface-container-highest bg-surface">
         <div className={`${estado === 'ok' && p?.propietario && p?.cliente ? 'max-w-[1040px]' : 'max-w-[560px]'} mx-auto px-4 py-3 flex items-center justify-between gap-3`}>
           {/* La tienda va primero (es su pedido); BogaHub queda como «hecho con tecnología» */}
