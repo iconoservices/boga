@@ -4,7 +4,7 @@
 CREATE TABLE IF NOT EXISTS public.stock_lotes (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   store             TEXT NOT NULL,
-  product_id        UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
+  product_id        TEXT NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
   cantidad_inicial  INTEGER NOT NULL CHECK (cantidad_inicial > 0),
   cantidad_restante INTEGER NOT NULL CHECK (cantidad_restante >= 0),
   costo             NUMERIC(10,2) CHECK (costo IS NULL OR costo >= 0),
