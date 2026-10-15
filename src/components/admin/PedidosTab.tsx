@@ -148,6 +148,7 @@ function TarjetaDeslizable({ onAvanzar, etiqueta, icono, children }: { onAvanzar
 export default function PedidosTab({
   pedidos,
   nombreTienda,
+  colorTienda,
   mostrarTienda,
   cambiarEstado,
   eliminar,
@@ -158,6 +159,8 @@ export default function PedidosTab({
 }: {
   pedidos: Pedido[];
   nombreTienda: (slug: string) => string;
+  /** Color de marca de cada tienda: con varias tiendas, cada pedido se pinta con el de su tienda. */
+  colorTienda?: (slug: string) => string | undefined;
   mostrarTienda: boolean;
   cambiarEstado: (pedido: Pedido, estado: string) => void;
   /** Borra el pedido para siempre. Solo se ofrece en pedidos ya cancelados (ej. pedidos de prueba). */
@@ -369,7 +372,7 @@ export default function PedidosTab({
                     const enlaceMapa = (o.customer_address || '').match(/https?:\/\/\S+/)?.[0];
                     return (
                       <TarjetaDeslizable key={o.id} onAvanzar={col.siguiente && ocupado !== o.id ? () => avanzar(o, col.siguiente!.estado) : undefined} etiqueta={col.siguiente?.texto.toLowerCase()} icono={col.siguiente?.icono}>
-                      <article className={`bg-white rounded-lg border shadow-sm p-3 flex flex-col gap-2 ${nuevo ? 'border-orange-300' : 'border-gray-100'}`}>
+                      <article style={colorTienda?.(o.store) ? ({ '--tienda-color': colorTienda(o.store) } as React.CSSProperties) : undefined} className={`bg-white rounded-lg border shadow-sm p-3 flex flex-col gap-2 ${nuevo ? 'border-orange-300' : 'border-gray-100'}`}>
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-[var(--tienda-color,#b8130e)] font-black text-xs">#{(o.codigo || o.id.slice(0, 8)).toUpperCase()}</span>
                           <span className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400">
@@ -523,7 +526,7 @@ export default function PedidosTab({
             const tel = o.customer_phone ? wa(o.customer_phone) : '';
             const esCarta = o.order_source === 'Carta';
             return (
-              <div key={o.id} className={`bg-white rounded-md border shadow-sm overflow-hidden ${o.status === 'Pendiente' ? 'border-orange-200' : 'border-gray-100'}`}>
+              <div key={o.id} style={colorTienda?.(o.store) ? ({ '--tienda-color': colorTienda(o.store) } as React.CSSProperties) : undefined} className={`bg-white rounded-md border shadow-sm overflow-hidden ${o.status === 'Pendiente' ? 'border-orange-200' : 'border-gray-100'}`}>
                 <button
                   type="button"
                   onClick={() => setAbierto(abierta ? null : o.id)}

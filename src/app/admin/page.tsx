@@ -3053,6 +3053,7 @@ function AdminDashboard({ user }: { user: User }) {
           <PedidosTab
             pedidos={visibleOrders as Pedido[]}
             nombreTienda={(slug) => stores[slug]?.name || slug}
+            colorTienda={(slug) => stores[slug]?.theme?.primary}
             mostrarTienda={selectedStore === 'all' && Object.keys(stores).length > 1}
             cambiarEstado={cambiarEstadoPedido}
             eliminar={eliminarPedido}
