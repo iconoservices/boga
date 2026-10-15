@@ -32,6 +32,56 @@ export async function registrarMovimientos(db: SupabaseClient, filas: FilaMovimi
 }
 
 /**
+ * Lotes de compra (tabla stock_lotes): cada ingreso de mercadería guarda cuántas unidades entraron y a qué costo;
+ * las ventas descuentan primero del lote más antiguo (FIFO). Es solo para saber cuántas unidades quedan de cada
+ * precio de compra: el stock real sigue siendo `products.stock`, y si la tabla no existe (o falla) no pasa nada.
+ * Las unidades que ya estaban antes de usar lotes no pertenecen a ningún lote (Métricas las valora con `products.costo`).
+ */
+async function ajustarLotes(db: SupabaseClient, store: string, productId: string, delta: number, motivo: MotivoStock, costo: number | null) {
+  try {
+    if (delta > 0 && (motivo === 'ingreso' || motivo === 'ajuste')) {
+      let c = costo;
+      if (c == null && motivo === 'ingreso') {
+        const { data } = await db.from('products').select('costo').eq('id', productId).maybeSingle();
+        const v = (data as { costo?: number | null } | null)?.costo;
+        c = v != null ? Number(v) : null;
+      }
+      const { error } = await db.from('stock_lotes').insert({ store, product_id: productId, cantidad_inicial: delta, cantidad_restante: delta, costo: c, origen: motivo });
+      if (error) console.warn('No se pudo guardar el lote de compra:', error.message);
+      return;
+    }
+    if (delta > 0) {
+      // Devolución (cancelación): vuelve a los lotes más nuevos que habían sido descontados.
+      let falta = delta;
+      const { data, error } = await db.from('stock_lotes').select('id,cantidad_inicial,cantidad_restante').eq('product_id', productId).order('created_at', { ascending: false });
+      if (error || !data) return;
+      for (const l of data as { id: string; cantidad_inicial: number; cantidad_restante: number }[]) {
+        if (falta <= 0) break;
+        const cabe = l.cantidad_inicial - l.cantidad_restante;
+        if (cabe <= 0) continue;
+        const pone = Math.min(cabe, falta);
+        await db.from('stock_lotes').update({ cantidad_restante: l.cantidad_restante + pone }).eq('id', l.id);
+        falta -= pone;
+      }
+      return;
+    }
+    if (delta < 0) {
+      let falta = -delta;
+      const { data, error } = await db.from('stock_lotes').select('id,cantidad_restante').eq('product_id', productId).gt('cantidad_restante', 0).order('created_at', { ascending: true });
+      if (error || !data) return;
+      for (const l of data as { id: string; cantidad_restante: number }[]) {
+        if (falta <= 0) break;
+        const saca = Math.min(l.cantidad_restante, falta);
+        await db.from('stock_lotes').update({ cantidad_restante: l.cantidad_restante - saca }).eq('id', l.id);
+        falta -= saca;
+      }
+    }
+  } catch (e) {
+    console.warn('Lotes de compra no disponibles:', e);
+  }
+}
+
+/**
  * Suma o resta stock producto por producto. `delta` negativo = sale (venta), positivo = entra (ingreso, cancelación).
  * Solo pisa el stock si nadie lo cambió mientras tanto (`.eq('stock', actual)`); si lo cambiaron, relee y reintenta una vez.
  * Los productos ilimitados no se tocan. Al llegar a 0 el producto pasa a Agotado; si estaba Agotado por falta
@@ -44,7 +94,8 @@ export async function moverStock(
     motivo: MotivoStock;
     pedidoId?: string | null;
     usuario?: string | null;
-    lineas: { id: string; name: string; delta: number }[];
+    /** `costo` solo cuenta en un ingreso de mercadería: lo que costó cada unidad de ese lote (si falta, se usa el costo del producto). */
+    lineas: { id: string; name: string; delta: number; costo?: number | null }[];
   },
 ): Promise<{ fallidos: string[]; cambiados: string[] }> {
   const fallidos: string[] = [];
@@ -68,6 +119,7 @@ export async function moverStock(
       if (hecho && hecho.length > 0) {
         ok = true;
         cambiados.push(l.id);
+        await ajustarLotes(db, opts.store, l.id, nuevo - antes, opts.motivo, l.costo ?? null);
         movimientos.push({
           store: opts.store,
           product_id: l.id,

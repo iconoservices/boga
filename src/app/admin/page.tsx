@@ -664,6 +664,7 @@ function AdminDashboard({ user }: { user: User }) {
     return () => clearTimeout(t);
   }, [isStoreEditorOpen, storeEditorSection]);
 
+  const [lotes, setLotes] = useState<{ id: string; product_id: string; cantidad_restante: number; costo: number | null; created_at: string }[]>([]);
   const fetchProducts = async (slugs: string[] = myStoreSlugs, enSilencio = false) => {
     if (slugs.length === 0) {
       setProducts([]);
@@ -709,6 +710,9 @@ function AdminDashboard({ user }: { user: User }) {
         const c = new Map((costos as any[]).map((x) => [x.id, x.costo]));
         lista = lista.map((p) => ({ ...p, costo: c.get(p.id) != null ? Number(c.get(p.id)) : null }));
       }
+      // Lotes de compra (tabla stock_lotes): si el SQL aún no se corrió, simplemente no hay detalle por precio.
+      const { data: lotesDb, error: errLotes } = await supabase.from('stock_lotes').select('id,product_id,cantidad_restante,costo,created_at').in('store', slugs).gt('cantidad_restante', 0).order('created_at', { ascending: true });
+      setLotes(!errLotes && lotesDb ? (lotesDb as any[]).map((x) => ({ ...x, costo: x.costo != null ? Number(x.costo) : null })) : []);
       setProducts(lista);
     }
     setIsLoading(false);
@@ -1364,11 +1368,16 @@ function AdminDashboard({ user }: { user: User }) {
     if (txt == null) return;
     const n = parseInt(txt, 10);
     if (isNaN(n) || n <= 0) { alert('Escribe un número mayor a 0.'); return; }
+    // Costo de esta compra (opcional): cada ingreso queda como un lote con su propio costo. Vacío = el costo que ya tiene el producto.
+    const txtCosto = window.prompt(`¿A cuánto te costó cada unidad de esta compra? (S/, opcional)${p.costo != null ? `\nSi lo dejas vacío se usa S/ ${p.costo}.` : ''}`, p.costo != null ? String(p.costo) : '');
+    if (txtCosto == null) return;
+    const costoLote = txtCosto.trim() === '' ? null : Number(txtCosto.replace(',', '.'));
+    if (costoLote != null && (!Number.isFinite(costoLote) || costoLote < 0)) { alert('Escribe un costo válido, o déjalo vacío.'); return; }
     const { fallidos } = await moverStock(supabase, {
       store: p.store,
       motivo: 'ingreso',
       usuario: user.email ?? null,
-      lineas: [{ id: p.id, name: p.name, delta: n }],
+      lineas: [{ id: p.id, name: p.name, delta: n, costo: costoLote }],
     });
     if (fallidos.length) { alert('No se pudo ingresar la mercadería. Inténtalo de nuevo.'); return; }
     // Con mercadería nueva se vende normal: se quita la marca «siempre en reserva».
@@ -3237,9 +3246,20 @@ function AdminDashboard({ user }: { user: User }) {
               const enStock = products.filter(p => (selectedStore === 'all' || p.store === selectedStore) && tiendaTiene(p.store, 'inventario') && !stockIlimitado(p) && p.stock > 0);
               const unidadesStock = enStock.reduce((n, p) => n + p.stock, 0);
               const valorVenta = enStock.reduce((n, p) => n + p.stock * (Number(p.price) || 0), 0);
-              const conCosto = enStock.filter(p => p.costo != null);
-              const inversion = conCosto.reduce((n, p) => n + p.stock * (p.costo as number), 0);
-              const gananciaEst = conCosto.reduce((n, p) => n + p.stock * ((Number(p.price) || 0) - (p.costo as number)), 0);
+              // Por producto: lo que está en lotes de compra se valora con el costo de cada lote; el resto (stock de antes de usar lotes) con el costo del producto.
+              const detalle = enStock.map(p => {
+                const susLotes = lotes.filter(l => l.product_id === p.id);
+                const enLotes = Math.min(p.stock, susLotes.reduce((n, l) => n + l.cantidad_restante, 0));
+                const sinLote = p.stock - enLotes;
+                const conCostoLotes = susLotes.filter(l => l.costo != null);
+                const unidCostadas = conCostoLotes.reduce((n, l) => n + l.cantidad_restante, 0) + (p.costo != null ? sinLote : 0);
+                const invers = conCostoLotes.reduce((n, l) => n + l.cantidad_restante * (l.costo as number), 0) + (p.costo != null ? sinLote * p.costo : 0);
+                return { p, susLotes, sinLote, unidCostadas, invers };
+              });
+              const conCosto = detalle.filter(d => d.unidCostadas > 0);
+              const inversion = detalle.reduce((n, d) => n + d.invers, 0);
+              const gananciaEst = detalle.reduce((n, d) => n + d.unidCostadas * (Number(d.p.price) || 0) - d.invers, 0);
+              const conVariosPrecios = detalle.filter(d => d.susLotes.length > 0 || d.p.costo != null);
 
               return (
                 <>
@@ -3312,12 +3332,28 @@ function AdminDashboard({ user }: { user: User }) {
                           <p className={`text-2xl font-black ${gananciaEst >= 0 ? 'text-green-700' : 'text-red-600'}`}>{conCosto.length ? `S/ ${gananciaEst.toFixed(2)}` : '—'}</p>
                         </div>
                       </div>
+                      {conVariosPrecios.length > 0 && (
+                        <details className="mt-3">
+                          <summary className="text-xs font-bold text-[var(--tienda-color)] cursor-pointer">Ver cuántas unidades quedan de cada precio de compra</summary>
+                          <ul className="mt-2 divide-y divide-gray-50 border border-gray-100 rounded-lg">
+                            {conVariosPrecios.map(d => (
+                              <li key={d.p.id} className="px-3 py-2 text-xs flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                                <span className="font-bold text-gray-900 min-w-0 flex-1 truncate">{d.p.name}</span>
+                                <span className="text-gray-600">
+                                  {d.susLotes.map(l => `${l.cantidad_restante} × ${l.costo != null ? `S/ ${l.costo.toFixed(2)}` : 'sin costo'}`).join(' · ')}
+                                  {d.sinLote > 0 && `${d.susLotes.length ? ' · ' : ''}${d.sinLote} × ${d.p.costo != null ? `S/ ${d.p.costo.toFixed(2)}` : 'sin costo'}`}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </details>
+                      )}
                       <p className="text-[11px] text-gray-400 mt-3">
                         {conCosto.length === 0
-                          ? 'Para ver tu inversión y ganancia, anota el «Costo por unidad» al editar cada producto (es opcional).'
+                          ? 'Para ver tu inversión y ganancia, anota el costo al ingresar mercadería (botón +) o el «Costo por unidad» al editar cada producto (es opcional).'
                           : conCosto.length < enStock.length
-                            ? `La inversión y la ganancia cuentan solo los ${conCosto.length} productos que tienen costo anotado.`
-                            : 'Calculado con el costo que anotaste en cada producto.'}
+                            ? `La inversión y la ganancia cuentan solo las unidades que tienen costo anotado (${conCosto.length} de ${enStock.length} productos).`
+                            : 'Calculado con el costo de cada compra que anotaste.'}
                       </p>
                     </div>
                     </div>
