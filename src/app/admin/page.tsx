@@ -753,9 +753,12 @@ function AdminDashboard({ user }: { user: User }) {
     setOrders((prev) => prev.filter((x: any) => x.id !== o.id));
   };
 
+  // Hasta que llega la primera lista de tiendas no se sabe si el usuario tiene o no (evita mostrar «no tienes ninguna carta» mientras carga).
+  const [tiendasListas, setTiendasListas] = useState(false);
   const fetchStores = async () => {
     const { data } = await supabase.from('stores').select('*');
     if (data) setDbStores(data);
+    setTiendasListas(true);
   };
 
   // "Carta activa": prende/apaga la tienda. Si está inactiva sigue existiendo
@@ -2226,7 +2229,11 @@ function AdminDashboard({ user }: { user: User }) {
           </div>
         </header>
 
-        {activeTab === 'inicio' && !inicioStore && (
+        {activeTab === 'inicio' && !inicioStore && !tiendasListas && (
+          <div className="py-24 flex justify-center"><span className="material-symbols-outlined animate-spin text-gray-300 text-[32px]">progress_activity</span></div>
+        )}
+
+        {activeTab === 'inicio' && !inicioStore && tiendasListas && (
           <div className="max-w-md mx-auto py-16 text-center">
             <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
               <span className="material-symbols-outlined text-gray-400 text-[28px]">storefront</span>
