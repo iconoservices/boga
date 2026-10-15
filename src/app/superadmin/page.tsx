@@ -407,6 +407,20 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     }
   };
 
+  // «Sale en BogaHub»: prende o apaga un producto en Inicio, Explorar y Market (en la carta de su tienda sigue igual).
+  // Solo se decide aquí; el dueño ya no ve este botón en su panel.
+  const toggleEnMarketStoreProduct = async (p: any) => {
+    const nuevo = p.en_market === false;
+    setStoreProductsList(prev => prev.map(x => x.id === p.id ? { ...x, en_market: nuevo } : x));
+    const { error } = await supabase.from('products').update({ en_market: nuevo }).eq('id', p.id);
+    if (error) {
+      setStoreProductsList(prev => prev.map(x => x.id === p.id ? { ...x, en_market: p.en_market } : x));
+      alert('No se pudo cambiar: ' + error.message + '\n\n(¿corriste supabase_en_market.sql en Supabase?)');
+      return;
+    }
+    if (productsStoreSlug) refrescarTienda(productsStoreSlug);
+  };
+
   const handleDeleteStoreProduct = async (id: string) => {
     if (!confirm('¿Eliminar este producto?')) return;
     setDeletingStoreProductId(id);
@@ -3294,6 +3308,13 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           S/ {Number(p.price).toFixed(2)}{p.category ? ` · ${p.category}` : ''}
                         </p>
                       </div>
+                      <button
+                        onClick={() => toggleEnMarketStoreProduct(p)}
+                        className={`material-symbols-outlined text-[16px] transition-colors p-1 rounded shrink-0 ${p.en_market === false ? 'text-[#c2c6d6] hover:text-[#0058be] hover:bg-blue-50' : 'text-[#0058be] bg-blue-50'}`}
+                        title={p.en_market === false ? 'No sale en BogaHub: toca para mostrarlo' : 'Sale en BogaHub (Inicio, Explorar y Market): toca para ocultarlo'}
+                      >
+                        {p.en_market === false ? 'visibility_off' : 'public'}
+                      </button>
                       <button
                         onClick={() => handleStartEditStoreProduct(p)}
                         className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] transition-colors p-1 hover:bg-blue-50 rounded shrink-0"
