@@ -35,6 +35,7 @@ import { MONEDAS_SUGERIDAS, ejemploDeCambio, normalizarMonedas, precioSugerido }
 import { COL_PRECIOS_MONEDA, normalizarPreciosMoneda, type PreciosMoneda } from '@/lib/preciosMoneda';
 import { useCambioDeHoy } from '@/lib/useCambio';
 import CobroOnline from '@/components/admin/CobroOnline';
+import CobrosMensuales from '@/components/admin/CobrosMensuales';
 import { normalizarIgv } from '@/lib/igv';
 import { COLS_OFERTA, precioOfertaVigente, porcentajeOferta } from '@/lib/ofertas';
 import { cargarImagenPdf, ajustarImagen, textoPdf, hexToRgb, type ImagenPdf } from '@/lib/imagenPdf';
@@ -81,7 +82,7 @@ interface Product {
   precios_moneda?: PreciosMoneda | null;
 }
 
-type TabId = 'inicio' | 'products' | 'categories' | 'orders' | 'pos' | 'metrics' | 'stores';
+type TabId = 'inicio' | 'products' | 'categories' | 'orders' | 'pos' | 'metrics' | 'cobros' | 'stores';
 
 // Orden canónico de la navegación. La sidebar de escritorio, la barra inferior
 // móvil, el menú Perfil y las tarjetas de "Gestión" del Inicio se arman TODAS
@@ -92,6 +93,7 @@ const NAV_TABS: { id: TabId; label: string; icon: string; sub: string; inBottomB
   { id: 'pos',      label: 'Vender (POS)', icon: 'point_of_sale', sub: 'Caja rápida en el local',    inBottomBar: true },
   { id: 'products', label: 'Productos',    icon: 'inventory_2',   sub: 'Añade o modifica ítems',     inBottomBar: true },
   { id: 'metrics',  label: 'Métricas',     icon: 'bar_chart',     sub: 'Rendimiento del negocio',    inBottomBar: false },
+  { id: 'cobros',   label: 'Cobros',       icon: 'event_repeat',  sub: 'Cobros mensuales a tus clientes', inBottomBar: false },
   { id: 'stores',   label: 'Mis Tiendas',  icon: 'store',         sub: 'Administra tus sucursales',  inBottomBar: false },
 ];
 
@@ -374,7 +376,12 @@ function AdminDashboard({ user }: { user: User }) {
   const posOn = algunaTiene('pos');
   const inventarioOn = algunaTiene('inventario');
   // Pedidos es para todos: los pedidos de la carta ahora se registran. Caja y Métricas de ventas son del módulo de ventas.
-  const navTabsBase = NAV_TABS.filter(t => !['pos', 'metrics'].includes(t.id) || posOn);
+  // «Cobros mensuales» NO usa moduloActivo: tiendas viejas sin módulos guardados no lo tienen (solo si está en true).
+  const tiendaConCobros = selectedStore !== 'all'
+    ? ((dbStores.find((s: any) => s.slug === selectedStore) as any)?.modulos?.cobros_mensuales === true ? selectedStore : '')
+    : ((visibleDbStores.find((s: any) => s.modulos?.cobros_mensuales === true) as any)?.slug ?? '');
+  const cobrosOn = !!tiendaConCobros;
+  const navTabsBase = NAV_TABS.filter(t => !['pos', 'metrics'].includes(t.id) || posOn).filter(t => t.id !== 'cobros' || cobrosOn);
 
   const focusedStore = selectedStore === 'all'
     ? ((activeTab === 'pos' ? Object.keys(stores).find(k => tiendaTiene(k, 'pos')) : undefined) ?? Object.keys(stores)[0] ?? '')
@@ -384,6 +391,10 @@ function AdminDashboard({ user }: { user: User }) {
   useEffect(() => {
     if ((activeTab === 'pos' || activeTab === 'metrics') && !posOn && dbStores.length > 0) setActiveTab('inicio');
   }, [activeTab, posOn, dbStores.length]);
+
+  useEffect(() => {
+    if (activeTab === 'cobros' && !cobrosOn && dbStores.length > 0) setActiveTab('inicio');
+  }, [activeTab, cobrosOn, dbStores.length]);
 
   // Datos derivados para la pestaña Inicio (una sola carta).
   const inicioStore = stores[focusedStore];
@@ -2203,7 +2214,7 @@ function AdminDashboard({ user }: { user: User }) {
         <header className={`hidden md:flex flex-col md:flex-row md:items-center justify-between gap-4 ${activeTab === 'pos' || activeTab === 'orders' ? 'mb-2' : 'mb-6'}`}>
           <div>
             <h1 className={`${activeTab === 'pos' || activeTab === 'orders' ? 'text-lg font-black' : 'text-2xl font-extrabold'} text-gray-900 tracking-tight`}>
-              {activeTab === 'inicio' ? 'Inicio' : activeTab === 'products' ? (esEmpresa ? 'Gestión de Servicios' : esAcademia ? 'Grupos y horarios' : 'Gestión de Productos') : activeTab === 'categories' ? 'Categorías' : activeTab === 'orders' ? 'Gestión de Pedidos' : activeTab === 'stores' ? 'Mis Tiendas' : activeTab === 'pos' ? 'Caja Rápida (POS)' : 'Métricas y Rendimiento'}
+              {activeTab === 'inicio' ? 'Inicio' : activeTab === 'products' ? (esEmpresa ? 'Gestión de Servicios' : esAcademia ? 'Grupos y horarios' : 'Gestión de Productos') : activeTab === 'categories' ? 'Categorías' : activeTab === 'orders' ? 'Gestión de Pedidos' : activeTab === 'stores' ? 'Mis Tiendas' : activeTab === 'pos' ? 'Caja Rápida (POS)' : activeTab === 'cobros' ? 'Cobros mensuales' : 'Métricas y Rendimiento'}
               {(activeTab === 'pos' || activeTab === 'inicio') && stores[focusedStore] && (
                 <span className="ml-2 text-gray-400 font-semibold">· {stores[focusedStore].name}</span>
               )}
@@ -3188,6 +3199,10 @@ function AdminDashboard({ user }: { user: User }) {
               </div>
             </div>
           </div>
+        )}
+
+        {activeTab === 'cobros' && tiendaConCobros && (
+          <CobrosMensuales slug={tiendaConCobros} />
         )}
 
         {activeTab === 'metrics' && (

@@ -1,6 +1,6 @@
 // Cada pestaña del panel tiene su propia dirección (/admin/pedidos, /admin/vender…): se puede guardar en
 // favoritos, abrir en una pestaña del navegador y el botón "atrás" funciona entre secciones.
-export type TabAdmin = 'inicio' | 'products' | 'categories' | 'orders' | 'pos' | 'metrics' | 'stores';
+export type TabAdmin = 'inicio' | 'products' | 'categories' | 'orders' | 'pos' | 'metrics' | 'cobros' | 'stores';
 
 export const RUTA_DE_TAB: Record<TabAdmin, string> = {
   inicio: '/admin',
@@ -9,6 +9,7 @@ export const RUTA_DE_TAB: Record<TabAdmin, string> = {
   orders: '/admin/pedidos',
   pos: '/admin/vender',
   metrics: '/admin/metricas',
+  cobros: '/admin/cobros',
   stores: '/admin/tiendas',
 };
 

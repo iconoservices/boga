@@ -4,7 +4,7 @@
 // el editor de tienda del superadmin (los interruptores) y la página de Paquetes
 // (la tabla de niveles). Si se agrega un módulo, se agrega acá y en NIVELES.
 
-export type ModuloId = 'pos' | 'inventario' | 'google' | 'marca_blanca' | 'marketplace' | 'loyverse' | 'dominio_propio' | 'pasarela_pago' | 'promociones' | 'academia' | 'ofertas_tiempo';
+export type ModuloId = 'pos' | 'inventario' | 'google' | 'marca_blanca' | 'marketplace' | 'loyverse' | 'dominio_propio' | 'pasarela_pago' | 'promociones' | 'academia' | 'ofertas_tiempo' | 'cobros_mensuales';
 export type Modulos = Partial<Record<ModuloId, boolean>> & {
   // (La ficha de Loyverse y su merchant_id ya NO viven aquí: `stores.modulos` es público. Ver lib/loyverseServidor.ts.)
   loyverse_last_sync?: string;
@@ -78,6 +78,12 @@ export const MODULOS: { id: ModuloId; label: string; icon: string; desc: string;
     desc: 'Las ofertas de los productos terminan solas el día elegido. Sin este módulo las ofertas son manuales: duran hasta que el negocio las quita al editar el producto. Módulo aparte (de pago).',
     // Registrado para poder cobrarlo; todavía no está conectado a las páginas (hoy las fechas no se respetan en ninguna tienda).
     enDesarrollo: true,
+  },
+  {
+    id: 'cobros_mensuales',
+    label: 'Cobros mensuales a sus clientes',
+    icon: 'event_repeat',
+    desc: 'Pestaña «Cobros» en el panel: el negocio lleva a quién le cobra cada mes (pensión, membresía, cuota), ve quién está al día o vencido, registra cada pago y recuerda por WhatsApp. Se prende solo; módulo aparte (de pago).',
   },
   {
     id: 'pasarela_pago',
