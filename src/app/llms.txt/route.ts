@@ -17,7 +17,7 @@ const SECCIONES: [string, string, string][] = [
   ['Viajes', '/viajes', 'Viajes desde Pucallpa: rápidos y lanchas por el río Ucayali, buses por carretera y vuelos.'],
   ['Agenda y eventos', '/eventos', 'Eventos, conciertos, ferias y cultura en Pucallpa, con fecha y precio.'],
   ['Sorteos', '/sorteos', 'Sorteos de negocios de Pucallpa con premios reales.'],
-  ['Promos', '/promotions', 'Ofertas de las tiendas de Pucallpa.'],
+  ['Promociones', '/promotions', 'Ofertas de las tiendas de Pucallpa.'],
   ['BogaHub para negocios', '/negocios', 'Cómo un negocio pone su carta y vende por WhatsApp con BogaHub.'],
 ];
 

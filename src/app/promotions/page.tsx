@@ -63,7 +63,7 @@ export default function Promotions() {
 
       <main className="max-w-[1440px] mx-auto px-container-margin w-full pt-6 flex flex-col gap-6 lg:gap-8 pb-12">
         <div className="flex flex-col gap-1">
-          <h1 className="font-headline-lg text-on-surface">Promos</h1>
+          <h1 className="font-headline-lg text-on-surface">Promociones</h1>
           <p className="text-secondary font-body-md text-sm">Ofertas y combos de las tiendas de Pucallpa</p>
         </div>
 
@@ -78,7 +78,7 @@ export default function Promotions() {
             <span className="material-symbols-outlined text-primary/60 text-[44px]" style={{ fontVariationSettings: "'FILL' 1" }}>local_offer</span>
             <h2 className="font-headline-sm text-lg text-on-surface">Muy pronto, las ofertas de las tiendas</h2>
             <p className="text-secondary font-body-md text-sm max-w-[42ch]">
-              Aún no hay promos publicadas. Cuando las tiendas activen sus ofertas, las verás acá.
+              Aún no hay promociones publicadas. Cuando las tiendas activen sus ofertas, las verás acá.
             </p>
             <div className="flex flex-wrap justify-center gap-2 mt-2">
               <Link href="/explore" className="bg-primary text-on-primary font-label-md text-sm font-bold px-5 py-2 rounded-full">

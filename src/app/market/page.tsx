@@ -285,7 +285,7 @@ export default function Home() {
       { name: 'Combos Comida',  icon: 'lunch_dining'    },
       { name: 'Packs Bebidas',  icon: 'celebration'     },
       { name: 'Menú Semanal',   icon: 'calendar_month'  },
-      { name: 'Ofertas Flash',  icon: 'bolt'            },
+      { name: 'Promociones flash', icon: 'bolt'            },
     ],
     'Comida': [
       { name: 'Menú del Día',   icon: 'set_meal'        },
@@ -341,7 +341,7 @@ export default function Home() {
   // hay ningun campo de "promo" en products todavia). Se llena solo con lo
   // que sí vino de una tienda dinamica.
   const [sections, setSections] = useState<{ id: string; title: string; link?: string; products: any[] }[]>([
-    { id: 'Combos & Promos', title: 'Promos & Combos 🏷️', link: '/promotions', products: [] },
+    { id: 'Combos & Promos', title: 'Promociones 🏷️', link: '/promotions', products: [] },
     { id: 'Comida',          title: 'Comida Destacada 🍱',                     products: [] },
     { id: 'Bebidas',         title: 'Bebidas & Piqueos 🥤',                    products: [] },
     { id: 'Mercado',         title: 'Mercado Fresco 🥬',                       products: [] },

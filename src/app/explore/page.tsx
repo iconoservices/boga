@@ -303,7 +303,7 @@ function ExploreContenido() {
       { name: 'Combos Comida',  icon: 'lunch_dining'    },
       { name: 'Packs Bebidas',  icon: 'celebration'     },
       { name: 'Menú Semanal',   icon: 'calendar_month'  },
-      { name: 'Ofertas Flash',  icon: 'bolt'            },
+      { name: 'Promociones flash', icon: 'bolt'            },
     ],
     'Comida': [
       { name: 'Menú del Día',   icon: 'set_meal'        },
@@ -366,7 +366,7 @@ function ExploreContenido() {
   type SectionType = { id: string, title: string, link?: string, products: { id?: string, slug?: string, priceNum?: number, name: string, price: string, original?: string, badge?: string, img: string, status?: string, store?: string, logo?: string }[] };
   // Sin productos de muestra: cada sección se llena con lo que hay en la base y la que queda vacía no se muestra.
   const [sections, setSections] = useState<SectionType[]>([
-    { id: 'Combos & Promos', title: 'Promos & Combos 🏷️', link: '/promotions', products: [] },
+    { id: 'Combos & Promos', title: 'Promociones 🏷️', link: '/promotions', products: [] },
     { id: 'Comida', title: 'Comida Destacada 🍱', products: [] },
     { id: 'Bebidas', title: 'Bebidas & Piqueos 🥤', products: [] },
     { id: 'Mercado', title: 'Mercado Fresco 🥬', products: [] },
@@ -442,7 +442,7 @@ function ExploreContenido() {
               </div>
               {([
                 { href: '/market', nombre: 'Comprar', icon: 'shopping_bag' },
-                { href: '/promotions', nombre: 'Promos', icon: 'loyalty' },
+                { href: '/promotions', nombre: 'Promociones', icon: 'loyalty' },
                 { href: '/explore?vista=servicios', nombre: 'Servicios', icon: 'handyman' },
               ] as const).map((g) => (
                 <Link
