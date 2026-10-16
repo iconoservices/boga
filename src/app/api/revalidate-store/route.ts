@@ -36,6 +36,12 @@ export async function POST(request: Request) {
 
   rutasCatalogo(slug).forEach((p) => { if (!p.includes('?')) revalidatePath(p); });
   revalidatePath('/'); // el Inicio se genera en el servidor con el catálogo
+  // Páginas de producto de esta tienda (/<tienda>/producto/<id>): su respaldo es de 12 h, así que al guardar se marcan
+  // para regenerarse en la próxima visita. Solo se regeneran las que alguien abra; no cuesta CPU hasta entonces.
+  try {
+    const { data: prods } = await supabaseComoUsuario.from('products').select('id').eq('store', slug).limit(2000);
+    (prods ?? []).forEach((p: { id: unknown }) => { if (p.id != null) revalidatePath(`/${slug}/producto/${p.id}`); });
+  } catch { /* si falla, queda el respaldo de 12 h */ }
   // Global (no por tienda): si esto tocó el módulo de Google, que el feed no se quede sirviendo la versión vieja hasta 1 hora.
   revalidatePath('/api/google-feed');
   revalidateTag('stores', { expire: 0 });

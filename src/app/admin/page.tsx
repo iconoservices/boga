@@ -4193,15 +4193,7 @@ function AdminDashboard({ user }: { user: User }) {
                         className="w-full px-3 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
                       />
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Hasta el día</label>
-                      <input
-                        type="date"
-                        value={newProduct.ofertaHasta}
-                        onChange={(e) => setNewProduct({...newProduct, ofertaHasta: e.target.value})}
-                        className="w-full px-3 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
-                      />
-                    </div>
+                    {/* La fecha «Hasta el día» es del módulo «Ofertas con fecha de vencimiento» (aparte). Hoy las ofertas son manuales. */}
                   </div>
                   {newProduct.precioOferta && parseFloat(newProduct.precioOferta) > 0 && parseFloat(newProduct.price) > 0 && (
                     <p className="text-xs mt-2 font-medium" style={{ color: parseFloat(newProduct.precioOferta) < parseFloat(newProduct.price) ? '#15803d' : '#b91c1c' }}>

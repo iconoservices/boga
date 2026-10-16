@@ -4,7 +4,7 @@
 // el editor de tienda del superadmin (los interruptores) y la página de Paquetes
 // (la tabla de niveles). Si se agrega un módulo, se agrega acá y en NIVELES.
 
-export type ModuloId = 'pos' | 'inventario' | 'google' | 'marca_blanca' | 'marketplace' | 'loyverse' | 'dominio_propio' | 'pasarela_pago' | 'promociones' | 'academia';
+export type ModuloId = 'pos' | 'inventario' | 'google' | 'marca_blanca' | 'marketplace' | 'loyverse' | 'dominio_propio' | 'pasarela_pago' | 'promociones' | 'academia' | 'ofertas_tiempo';
 export type Modulos = Partial<Record<ModuloId, boolean>> & {
   // (La ficha de Loyverse y su merchant_id ya NO viven aquí: `stores.modulos` es público. Ver lib/loyverseServidor.ts.)
   loyverse_last_sync?: string;
@@ -70,6 +70,14 @@ export const MODULOS: { id: ModuloId; label: string; icon: string; desc: string;
     label: 'Dominio propio personalizado (.com / .pe)',
     icon: 'language',
     desc: 'Permite conectar un dominio propio del cliente (ej. mitienda.pe) para abrir directo sin ver la marca Boga.',
+  },
+  {
+    id: 'ofertas_tiempo',
+    label: 'Ofertas con fecha de vencimiento',
+    icon: 'timer',
+    desc: 'Las ofertas de los productos terminan solas el día elegido. Sin este módulo las ofertas son manuales: duran hasta que el negocio las quita al editar el producto. Módulo aparte (de pago).',
+    // Registrado para poder cobrarlo; todavía no está conectado a las páginas (hoy las fechas no se respetan en ninguna tienda).
+    enDesarrollo: true,
   },
   {
     id: 'pasarela_pago',

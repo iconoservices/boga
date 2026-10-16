@@ -3,7 +3,9 @@
 // `price` es el precio normal. Si hay una oferta vigente, los endpoints públicos devuelven como `price`
 // el precio de oferta y como `price_anterior` el normal: así cada plantilla, el carrito y el pedido
 // cobran lo mismo sin tocar cada pantalla. Una oferta está vigente si su precio es mayor que 0 y menor
-// que el normal, y `oferta_hasta` (día de Perú, inclusive) no pasó.
+// que el normal. Las ofertas son MANUALES: duran hasta que el negocio las quite al editar el producto. La fecha
+// `oferta_hasta` (día de Perú, inclusive) solo se respeta con `conTiempo` (módulo «Ofertas con fecha de vencimiento»,
+// aparte y de pago; por ahora nadie lo pasa en true). Así las páginas guardadas no dependen del reloj.
 
 import { hoyLima } from '@/lib/fechaLima';
 
@@ -13,12 +15,12 @@ export const COLS_OFERTA = 'precio_oferta,oferta_hasta';
 type ConOferta = { price?: unknown; precio_oferta?: unknown; oferta_hasta?: unknown };
 
 /** Precio de oferta vigente hoy, o null si el producto no está en oferta. */
-export function precioOfertaVigente(p: ConOferta, hoy = hoyLima()): number | null {
+export function precioOfertaVigente(p: ConOferta, hoy = hoyLima(), conTiempo = false): number | null {
   const normal = Number(p.price) || 0;
   const oferta = Number(p.precio_oferta) || 0;
   if (!(oferta > 0) || !(oferta < normal)) return null;
   const hasta = typeof p.oferta_hasta === 'string' ? p.oferta_hasta.slice(0, 10) : '';
-  if (hasta && hasta < hoy) return null;
+  if (conTiempo && hasta && hasta < hoy) return null;
   return oferta;
 }
 

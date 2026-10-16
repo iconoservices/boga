@@ -17,7 +17,8 @@ import StoreRenderer from '../../StoreRenderer';
 // en vez de una página genérica aparte: antes había dos vistas del mismo producto, una con ruta y sin el
 // diseño de la tienda, y otra con el diseño pero sin ruta propia (el modal, solo un useState).
 
-export const revalidate = 300;
+// 12 h de respaldo: al guardar desde el panel, /api/revalidate-store refresca de inmediato las páginas de producto de esa tienda.
+export const revalidate = 43200;
 
 type Params = { slug: string; id: string };
 
