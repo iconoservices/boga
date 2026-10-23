@@ -15,7 +15,9 @@ export const metadata: Metadata = {
   description: 'Soluciones y productos de BogaHub para tu negocio: cartas digitales QR, tiendas online, apps y páginas web.',
 };
 
-export const revalidate = 30;
+// El Mostrador cambia con poca frecuencia (los productos son contenidos fijos de BogaHub, no del mercado).
+// 1 hora es suficiente; el superadmin puede forzar el refresco con el botón «Refrescar todo» si necesita.
+export const revalidate = 3600;
 
 export default async function MostradorPage() {
   let customBanners: Record<string, string> = {};

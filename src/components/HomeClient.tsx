@@ -38,6 +38,13 @@ type Slide = HomeSlide;
 // Construye la lista de slides con datos REALES: las promos que cargó el superadmin (la primera
 // abre el carrusel) intercaladas con las 2 notas más recientes de la Revista. Sin demos: si no
 // hay nada, la lista queda vacía y el banner no se muestra.
+const SLIDE_GUIA_2025: Slide = {
+  kicker: '★ Edición Anual · Pucallpa 2025',
+  title: 'Guía Comercial & Turística 2025 — Lo mejor de Pucallpa',
+  href: '/revista/guia-2025',
+  img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&q=80',
+};
+
 function armarSlides(notas: NotaHome[], promos: Slide[]): Slide[] {
   const rev: Slide[] = notas.slice(0, 2).map((n) => ({
     kicker: `Revista · ${n.kicker}`,
@@ -45,8 +52,8 @@ function armarSlides(notas: NotaHome[], promos: Slide[]): Slide[] {
     href: `/revista/${n.slug}`,
     img: n.img,
   }));
-  // El primer banner que cargó el superadmin va de primero; después se intercalan las notas de la Revista.
-  return [promos[0], rev[0], promos[1], rev[1], ...promos.slice(2)].filter(Boolean) as Slide[];
+  // Guía 2025 entra como slide en posición 2, igual que un banner pagado.
+  return [promos[0], rev[0], SLIDE_GUIA_2025, promos[1], rev[1], ...promos.slice(2)].filter(Boolean) as Slide[];
 }
 
 // Los 8 Portales de BogaHub — el lanzador de la ciudad. Un ícono por hub, cada
@@ -363,6 +370,7 @@ export default function HomeClient({ inicial }: { inicial: HomeData }) {
         </div>
       </div>
 
+
       {/* Portada rotativa + panel "Los 8 Portales de BogaHub" (lado a lado en escritorio) */}
       <div className="max-w-[1440px] mx-auto w-full lg:px-8 pt-0 lg:pt-6">
         <div className="lg:grid lg:grid-cols-[1.7fr_1fr] lg:gap-5 lg:items-stretch">
@@ -370,6 +378,7 @@ export default function HomeClient({ inicial }: { inicial: HomeData }) {
           <PortalesPanel />
         </div>
       </div>
+
 
       <main className="max-w-[1440px] mx-auto w-full flex flex-col gap-9 lg:gap-12 pt-3 pb-9 lg:pt-8 lg:pb-12 px-container-margin lg:px-8">
 

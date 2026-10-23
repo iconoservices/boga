@@ -117,12 +117,28 @@ export function armarInmuebles(alq: Aviso[], vta: AvisoVenta[]): InmuebleHome[] 
   ];
 }
 
+// Mezclador SOLO para el cliente (navegador): nunca debe ejecutarse en el servidor durante
+// la generación de páginas ISR/SSG porque Math.random() produce un resultado distinto cada vez,
+// lo que hace que Vercel detecte el HTML como «cambiado» y escriba en disco cada regeneración.
+export const clientMezclar = <T,>(a: T[]): T[] => [...a].sort(() => Math.random() - 0.5);
+
+// Mezclador DETERMINISTA para el servidor: ordena por un hash del id (o del nombre si no hay id)
+// para que, con los mismos datos de Supabase, el HTML de salida sea siempre idéntico.
+// Así Vercel no gasta Write Units si nada en la base de datos cambió.
+function hashCode(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+  return h;
+}
+function mezclarDeterminista<T>(a: T[]): T[] {
+  return [...a].sort((x, y) => hashCode(String((x as any)?.id ?? (Array.isArray(x) ? (x[0] as any)?.id : x))) - hashCode(String((y as any)?.id ?? (Array.isArray(y) ? (y[0] as any)?.id : y))));
+}
+
 // "Lo que se pide en Market" (productos de TODAS las categorías, repartidos por tienda en rondas para
 // que no domine la que tiene más) y "Tiendas de comida" (solo rubro comida/bebida, con su logo).
 export function armarCatalogoHome(dbStores: any[], dbProducts: any[]): { productos: ProductoHome[]; tiendasComida: TiendaComida[] } {
   const tiendasPorSlug: Record<string, any> = {};
   (dbStores || []).forEach((s) => { tiendasPorSlug[s.slug] = s; });
-  const mezclar = <T,>(a: T[]) => [...a].sort(() => Math.random() - 0.5);
 
   const items: ProductoHome[] = (dbProducts || [])
     .filter((p) => tiendasPorSlug[p.store] && p.image)
@@ -137,9 +153,11 @@ export function armarCatalogoHome(dbStores: any[], dbProducts: any[]): { product
       storeExternalUrl: tiendasPorSlug[p.store]?.external_url || undefined,
     }));
 
+  // Repartir en rondas (una por tienda) con orden determinista: así el servidor siempre
+  // produce el mismo HTML para los mismos datos y Vercel no escribe en disco innecesariamente.
   const porTienda: Record<string, ProductoHome[]> = {};
-  mezclar(items).forEach((it) => { (porTienda[it.storeSlug] ||= []).push(it); });
-  const colas = mezclar(Object.values(porTienda));
+  mezclarDeterminista(items).forEach((it) => { (porTienda[it.storeSlug] ||= []).push(it); });
+  const colas = mezclarDeterminista(Object.values(porTienda).map((arr) => arr));
   const productos: ProductoHome[] = [];
   while (productos.length < 12 && colas.some((c) => c.length)) {
     for (const c of colas) {
@@ -157,7 +175,8 @@ export function armarCatalogoHome(dbStores: any[], dbProducts: any[]): { product
       tagline: st.tagline || st.marketplace_category || '',
       logo: st.logo_image || '',
       externalUrl: st.external_url || undefined,
-      productos: mezclar((dbProducts || []).filter((p) => p.store === st.slug && p.image))
+      // En el servidor: orden determinista (sin Math.random). El cliente puede reordenar con clientMezclar si quiere variedad visual.
+      productos: mezclarDeterminista((dbProducts || []).filter((p) => p.store === st.slug && p.image))
         .slice(0, 3)
         .map((p) => ({ id: p.id, name: p.name, price: Number(p.price) || 0, priceAnterior: Number(p.price_anterior) > 0 ? Number(p.price_anterior) : undefined, image: p.image })),
     }))

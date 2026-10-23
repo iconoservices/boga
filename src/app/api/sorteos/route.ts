@@ -8,7 +8,8 @@ import { hoyLima } from '@/lib/fechaLima';
 // de tickets no es de lectura pública (lleva nombres y WhatsApp); aquí solo salen
 // números y, del ganador, el nombre abreviado y el número de ticket.
 
-export const revalidate = 60;
+// 5 min: el superadmin invalida el endpoint al guardar desde /superadmin/sorteos; 60 s era innecesariamente corto.
+export const revalidate = 300;
 
 export async function GET() {
   const admin = createClient(
@@ -76,6 +77,6 @@ export async function GET() {
 
   return NextResponse.json(
     { raffles },
-    { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300, stale-if-error=86400' } },
+    { headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=900, stale-if-error=86400' } },
   );
 }

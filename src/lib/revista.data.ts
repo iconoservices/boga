@@ -92,26 +92,30 @@ export async function getNotasPublicadas(): Promise<Nota[]> {
       .order('fecha', { ascending: false })
       .order('created_at', { ascending: false });
 
-    if (error || !data || data.length === 0) return NOTAS_SEED;
-    return (data as NotaFila[]).map(filaANota);
+    if (error || !data) return NOTAS_SEED;
+    const dbNotas = (data as NotaFila[]).map(filaANota);
+    const dbSlugs = new Set(dbNotas.map((n) => n.slug));
+    const seedRestantes = NOTAS_SEED.filter((n) => !dbSlugs.has(n.slug));
+    return [...dbNotas, ...seedRestantes];
   } catch {
     return NOTAS_SEED;
   }
 }
 
 export async function getNotaPublicadaBySlug(slug: string): Promise<Nota | undefined> {
-  const { data, error } = await supabase
-    .from('revista_notas')
-    .select('*')
-    .eq('slug', slug)
-    .eq('estado', 'publicada')
-    .maybeSingle();
+  try {
+    const { data, error } = await supabase
+      .from('revista_notas')
+      .select('*')
+      .eq('slug', slug)
+      .eq('estado', 'publicada')
+      .maybeSingle();
 
-  if (!error && data) return filaANota(data as NotaFila);
-  // Sin fila: solo caemos a la semilla si la tabla todavía no tiene nada.
-  const publicadas = await getNotasPublicadas();
-  if (publicadas === NOTAS_SEED) return seedBySlug(slug);
-  return undefined;
+    if (!error && data) return filaANota(data as NotaFila);
+  } catch {
+    // Si falla la consulta a BD, caemos al seed
+  }
+  return seedBySlug(slug);
 }
 
 export async function getNotaPublicadaById(id: string): Promise<Nota | undefined> {

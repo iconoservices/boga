@@ -7,13 +7,19 @@ import { purgeCloudflare, rutasCatalogo, hostsDeTienda } from '@/lib/cloudflare'
 // una vez la copia guardada del catálogo (la de Vercel y la de Cloudflare), en
 // vez de esperar los 2-5 min de la caché. Solo el dueño de esa tienda o un
 // superadmin.
+//
+// productId (opcional): si se envía, solo se invalida esa página de producto.
+// Sin él se invalida el catálogo completo de la tienda (al guardar la tienda
+// en sí, no un producto individual). Esto evita llamar a revalidatePath cientos
+// de veces cuando solo cambió un producto.
 
 export async function POST(request: Request) {
   const token = (request.headers.get('authorization') || '').replace('Bearer ', '');
   if (!token) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
   let slug: unknown;
-  try { ({ slug } = await request.json()); } catch { /* sin cuerpo */ }
+  let productId: unknown;
+  try { ({ slug, productId } = await request.json()); } catch { /* sin cuerpo */ }
   if (typeof slug !== 'string' || !slug) return NextResponse.json({ error: 'Falta slug' }, { status: 400 });
 
   const supabaseComoUsuario = createClient(
@@ -36,12 +42,21 @@ export async function POST(request: Request) {
 
   rutasCatalogo(slug).forEach((p) => { if (!p.includes('?')) revalidatePath(p); });
   revalidatePath('/'); // el Inicio se genera en el servidor con el catálogo
-  // Páginas de producto de esta tienda (/<tienda>/producto/<id>): su respaldo es de 12 h, así que al guardar se marcan
-  // para regenerarse en la próxima visita. Solo se regeneran las que alguien abra; no cuesta CPU hasta entonces.
-  try {
-    const { data: prods } = await supabaseComoUsuario.from('products').select('id').eq('store', slug).limit(2000);
-    (prods ?? []).forEach((p: { id: unknown }) => { if (p.id != null) revalidatePath(`/${slug}/producto/${p.id}`); });
-  } catch { /* si falla, queda el respaldo de 12 h */ }
+
+  if (typeof productId === 'string' && productId) {
+    // Solo se editó un producto: invalida únicamente su página propia.
+    // Esto es mucho más económico que invalidar los 200+ productos de la tienda.
+    revalidatePath(`/${slug}/producto/${productId}`);
+  } else {
+    // Se guardó la tienda entera (nombre, banner, módulos…): en ese caso sí
+    // regeneramos todas las páginas de producto, porque el tema y los datos de
+    // la tienda aparecen en cada una. Solo se regeneran cuando alguien las abra.
+    try {
+      const { data: prods } = await supabaseComoUsuario.from('products').select('id').eq('store', slug).limit(2000);
+      (prods ?? []).forEach((p: { id: unknown }) => { if (p.id != null) revalidatePath(`/${slug}/producto/${p.id}`); });
+    } catch { /* si falla, queda el respaldo de 12 h */ }
+  }
+
   // Global (no por tienda): si esto tocó el módulo de Google, que el feed no se quede sirviendo la versión vieja hasta 1 hora.
   revalidatePath('/api/google-feed');
   revalidateTag('stores', { expire: 0 });

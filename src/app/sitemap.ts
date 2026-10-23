@@ -8,7 +8,9 @@ import { RUTAS_PLANTILLA } from '@/lib/rutasTienda';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app';
 
-export const revalidate = 300;
+// Los buscadores leen el sitemap cada pocos días, no cada 5 minutos.
+// 24 h evita generar el XML completo (con todos los productos y tiendas) innecesariamente.
+export const revalidate = 86400;
 
 // Rutas fijas indexables. Las tiendas dinámicas (/[slug]) se agregan mas
 // abajo, leyendo los slugs activos de Supabase.

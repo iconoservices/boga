@@ -32,3 +32,20 @@ export async function refrescarTienda(slug: string): Promise<void> {
     /* si falla, el cambio igual se ve cuando venza la caché */
   }
 }
+
+// Refresca SOLO la página de un producto concreto (/slug/producto/id).
+// Mucho más barato que refrescarTienda cuando solo cambió un producto:
+// evita llamar a revalidatePath para todos los productos de la tienda.
+export async function refrescarProducto(slug: string, productId: string | number): Promise<void> {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session || !slug || !productId) return;
+    await fetch('/api/revalidate-store', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({ slug, productId: String(productId) }),
+    });
+  } catch {
+    /* si falla, el cambio igual se ve cuando venza la caché */
+  }
+}
