@@ -9,7 +9,17 @@
 export const EDICION = 'Edición 07 · Septiembre 2026';
 
 // Secciones = categorías del blog. "Portada" es la vista curada; el resto filtra.
-export const SECCIONES = ['Actualidad', 'Cultura', 'Lifestyle', 'Vida Social', 'Gastronomía', 'Naturaleza', 'Rutas'] as const;
+export const SECCIONES = [
+  'Actualidad',
+  'Crónicas & Exploración',
+  'Innovación & Historias',
+  'Cultura',
+  'Gastronomía',
+  'Naturaleza',
+  'Rutas',
+  'Lifestyle',
+  'Vida Social',
+] as const;
 
 export type Nota = {
   /** id de la fila en `revista_notas` (las de NOTAS_SEED traen su id viejo n3, r1…). */
@@ -37,7 +47,47 @@ export type Nota = {
 
 const NOTAS_RAW: Omit<Nota, 'slug'>[] = [
   {
-    id: 'n19', kicker: 'Naturaleza',
+    id: 'in1', destacado: true, kicker: 'Innovación & Historias',
+    titulo: 'Startup ucayalina BogaHub digitaliza comercios en la Amazonía',
+    dek: 'Una plataforma nacida en Pucallpa conecta pollerías, ferreterías, bodegas y servicios locales con sus clientes sin intermediarios ni comisiones abusivas.',
+    autor: 'Redacción BogaHub', fecha: '28 oct 2026', lectura: '4 min',
+    img: 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?w=1000&q=80',
+    imgCredito: 'Foto: BogaHub Digital',
+    cita: { texto: 'La Amazonía no necesita que le impongan modelos de afuera; necesita herramientas tecnológicas pensadas para su propio ritmo y su gente.', autor: 'Equipo BogaHub' },
+    cuerpo: [
+      'En una región donde el comercio late en calles vivas, ferias de productores y mercados que arrancan antes del amanecer, la tecnología tradicional de Lima o Silicon Valley solía sentirse lejana. Las comisiones del 25% o 30% que cobran las grandes aplicaciones de delivery devoraban el margen de las pollerías familiares y de los pequeños restaurantes de Pucallpa.',
+      'Frente a ese cuello de botella nació BogaHub: un ecosistema tecnológico diseñado desde el corazón de Ucayali. En lugar de encerrar al cliente en pasarelas complejas o intermediarios que retienen el dinero, BogaHub empodera al comerciante dándole su propia carta digital, catálogo interactivo y conexión directa e instantánea a WhatsApp.',
+      'Hoy, desde talleres de soldadura y ferreterías en Manantay hasta pollerías tradicionales en Callería y hospedajes frente a Yarinacocha, los negocios ucayalinos gestionan pedidos, cobran con Yape y Plin, y construyen comunidad digital con identidad 100% amazónica.',
+    ],
+  },
+  {
+    id: 'ce1', destacado: true, kicker: 'Crónicas & Exploración',
+    titulo: 'La fiebre del caucho en Ucayali: la era que transformó los ríos amazónicos',
+    dek: 'Auge, excesos y cicatrices de una bonanza que redibujó el mapa de la selva y convirtió a Pucallpa en el gran puerto fluvial del oriente.',
+    autor: 'Redacción BogaHub', fecha: '28 oct 2026', lectura: '5 min',
+    img: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1000&q=80',
+    imgCredito: 'Foto: Archivo Histórico Amazónico',
+    cuerpo: [
+      'A finales del siglo XIX y principios del XX, el mundo industrial descubrió que las llantas de automóviles, los cables submarinos y la maquinaria moderna dependían de una sustancia que brotaba de los árboles amazónicos: el látex de la siringa. De pronto, la cuenca del Ucayali se convirtió en el epicentro de una fiebre desmedida que atrajo aventureros, exploradores y barones del caucho.',
+      'Personajes como Carlos Fermín Fitzcarrald desafiaron la geografía buscando unir el río Ucayali con el Madre de Dios arrastrando embarcaciones enteras por el istmo selvático. Lanchas a vapor surcaban el río cargadas de mercancías europeas de lujo, mientras en las orillas se forjaba una historia compleja, marcada por la explotación de las poblaciones nativas pero también por el surgimiento de nuevos asentamientos que más tarde darían vida a las ciudades de hoy.',
+      'Cuando el monopolio amazónico colapsó tras el traslado clandestino de semillas a las plantaciones británicas en Asia, la fiebre se apagó. Sin embargo, el río ya no volvió a ser el mismo: el Ucayali quedó conectado para siempre con el comercio fluvial y las rutas que hoy definen la identidad de Pucallpa.',
+    ],
+  },
+  {
+    id: 'ce2', kicker: 'Crónicas & Exploración',
+    titulo: 'Pucallpa y Brasil: la ruta que busca abrir la frontera hacia Acre',
+    dek: 'Apenas 150 kilómetros separan a Pucallpa de Cruzeiro do Sul. Crónica de una conexión histórica entre el comercio, la selva y el anhelo bioceánico.',
+    autor: 'Redacción BogaHub', fecha: '27 oct 2026', lectura: '5 min',
+    img: 'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=1000&q=80',
+    imgCredito: 'Foto: Archivo de Fronteras',
+    cuerpo: [
+      'Pucallpa está más cerca en línea recta de Cruzeiro do Sul (en el estado brasileño de Acre) que de la propia costa peruana. Apenas unos 150 kilómetros de densa selva separan al principal puerto del Ucayali del extremo occidental de la red vial de Brasil. Una cercanía que durante décadas ha alimentado uno de los sueños geopolíticos y comerciales más discutidos del continente.',
+      'Desde hace generaciones, pequeños comerciantes, boteros y colonos han cruzado esta frontera viva a través de afluentes y senderos, intercambiando productos, café, artesanías y vivencias. Para el comercio pucallpino, una conexión consolidada significaría una salida directa al Atlántico y un mercado de millones de consumidores al alcance de la mano.',
+      'Al mismo tiempo, el debate entre el desarrollo económico y la protección de parques nacionales como la Sierra del Divisor y los territorios de pueblos originarios mantiene a esta ruta en el centro de todas las miradas. Un corredor de encuentro entre dos gigantes sudamericanos donde la naturaleza y el progreso negocian cada metro.',
+    ],
+  },
+  {
+    id: 'n19', kicker: 'Crónicas & Exploración',
     titulo: 'El río que hierve: Shanay-timpishka, a un viaje de Pucallpa',
     dek: 'Hasta 90 °C de agua en plena selva, sin un volcán a menos de 700 km. Los asháninka lo consideran sagrado; la ciencia todavía lo estudia.',
     autor: 'Redacción BogaHub', fecha: '05 sep 2026', lectura: '4 min',
@@ -51,7 +101,7 @@ const NOTAS_RAW: Omit<Nota, 'slug'>[] = [
     ],
   },
   {
-    id: 'n20', kicker: 'Naturaleza',
+    id: 'n20', kicker: 'Crónicas & Exploración',
     titulo: 'Parque Nacional Cordillera Azul: el muro verde detrás del Boquerón',
     dek: 'Más de 13.000 km² de selva de montaña entre cuatro regiones. Solo en aves se han contado más de 500 especies.',
     autor: 'Redacción BogaHub', fecha: '05 sep 2026', lectura: '3 min',
@@ -65,7 +115,7 @@ const NOTAS_RAW: Omit<Nota, 'slug'>[] = [
     ],
   },
   {
-    id: 'n13', kicker: 'Cultura',
+    id: 'n13', kicker: 'Crónicas & Exploración',
     fuente: { nombre: 'pucallpa.com', url: 'https://www.pucallpa.com/pucallpa/mitos-y-leyendas-de-la-selva.php' },
     titulo: 'Chullachaqui, yacumama y ayaymama: el bestiario que cuida (y asusta) la selva',
     dek: 'No son cuentos para niños: funcionan como un código de conducta. Cada criatura marca un límite —el monte, la cocha, la noche— que más vale respetar.',
@@ -143,7 +193,7 @@ const NOTAS_RAW: Omit<Nota, 'slug'>[] = [
     ],
   },
   {
-    id: 'n3', destacado: true, kicker: 'Vida Social',
+    id: 'n3', destacado: true, kicker: 'Innovación & Historias',
     titulo: 'La Feria de Emprendedores toma el bulevar de Yarinacocha',
     dek: 'La municipalidad distrital organiza ferias periódicas en el bulevar turístico, con decenas de stands de negocios locales.',
     autor: 'Redacción BogaHub', fecha: '01 sep 2026', lectura: '3 min',
@@ -191,7 +241,7 @@ const NOTAS_RAW: Omit<Nota, 'slug'>[] = [
     ],
   },
   {
-    id: 'n7', destacado: true, kicker: 'Naturaleza',
+    id: 'n7', destacado: true, kicker: 'Crónicas & Exploración',
     titulo: 'Boquerón del Padre Abad: el cañón de casi 70 cascadas',
     dek: 'A un par de horas de Pucallpa, el Velo de la Novia cae 101 metros en dos saltos. La Ducha del Diablo la descubrió un misionero en 1757.',
     autor: 'Redacción BogaHub', fecha: '28 ago 2026', lectura: '4 min',
@@ -367,7 +417,7 @@ const NOTAS_RAW: Omit<Nota, 'slug'>[] = [
     ],
   },
   {
-    id: 'n21', kicker: 'Actualidad',
+    id: 'n21', kicker: 'Crónicas & Exploración',
     titulo: 'La Federico Basadre: la única carretera que conecta Pucallpa con el resto del país',
     dek: 'Sin ella, Pucallpa seguiría llegándose solo por río o por aire. Se inauguró en 1943 y, más de 80 años después, todavía tiene un tramo sin asfaltar.',
     autor: 'Redacción BogaHub', fecha: '15 sep 2026', lectura: '3 min',
