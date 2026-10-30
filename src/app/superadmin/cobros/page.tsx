@@ -135,7 +135,7 @@ function armarMensajeWhatsApp({
       ? `${bloquePago}\n\nPor favor, envíanos la constancia por aquí para mantener tu tienda y catálogo activos sin interrupciones.`
       : `Puedes realizar tu pago por Yape, Plin o transferencia bancaria y enviarnos la constancia por aquí para mantener tu tienda y catálogo activos sin interrupciones.`;
 
-    return `Hola *${tiendaNombre}* 👋 Te saluda el equipo de BogaHub.\n\nTe recordamos que *hoy es la fecha de cobro* de la mensualidad de tu servicio de tienda digital (*${planNombre}*) por un monto de *${montoTxt}*.\n\n${textoPago}\n\n¡Muchas gracias por confiar en BogaHub! 🚀`;
+    return `Hola *${tiendaNombre}* 👋 Te saluda el equipo de BogaHub.\n\nTe recordamos que hoy *${fechaFmt}* es la fecha de cobro de tu mensualidad de tienda digital (*${planNombre}*) por un monto de *${montoTxt}*.\n\n${textoPago}\n\n¡Muchas gracias por confiar en BogaHub! 🚀`;
   }
 
   if (tipo === 'vence') {
@@ -144,7 +144,7 @@ function armarMensajeWhatsApp({
       ? `\n\nTe dejamos los datos de pago para cuando desees realizarlo:\n${bloquePago}`
       : '';
 
-    return `Hola *${tiendaNombre}* 👋 Te saluda el equipo de BogaHub.\n\nTe recordamos amablemente que tu mensualidad de tienda digital (*${planNombre}*) por *${montoTxt}* vencerá *${diasTxt}* (el ${fechaFmt}).${textoPago}\n\nTe avisamos con anticipación para que puedas programar tu pago tranquilamente. ¡Que tengas excelentes ventas! ✨`;
+    return `Hola *${tiendaNombre}* 👋 Te saluda el equipo de BogaHub.\n\nTe recordamos amablemente que tu mensualidad de tienda digital (*${planNombre}*) por *${montoTxt}* vencerá el *${fechaFmt}* (${diasTxt}).${textoPago}\n\nTe avisamos con anticipación para que puedas programar tu pago tranquilamente. ¡Que tengas excelentes ventas! ✨`;
   }
 
   if (tipo === 'vencido') {
@@ -1701,7 +1701,9 @@ function ModalWhatsAppCobro({
             </span>
             <div>
               <h3 className="font-bold text-sm text-[#191b23]">Mensaje de Cobro por WhatsApp</h3>
-              <p className="text-[10px] text-[#727785] font-semibold">{tienda.name} · {soles(monto)}/mes</p>
+              <p className="text-[10px] text-[#727785] font-semibold">
+                {tienda.name} · {soles(monto)}/mes {sub?.vence ? `· 📅 Vencimiento: ${sub.vence.split('-').reverse().join('/')}` : ''}
+              </p>
             </div>
           </div>
           <button onClick={onClose} aria-label="Cerrar" className="w-7 h-7 flex items-center justify-center hover:bg-[#e6e7f2] rounded-lg">
