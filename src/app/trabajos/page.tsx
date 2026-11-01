@@ -95,45 +95,45 @@ export default function Servicios() {
 
       <main className="max-w-[1440px] mx-auto px-container-margin lg:px-6 w-full pt-5 flex flex-col gap-6 pb-12">
 
-        {/* Encabezado */}
-        <div className="flex flex-col gap-1">
-          <h1 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">Trabajos</h1>
-          <p className="font-body-md text-secondary text-xs">Trabajo y gente de confianza en Pucallpa.</p>
-        </div>
+        {/* Encabezado + CTAs en una misma fila */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col gap-1 shrink-0">
+            <h1 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">Trabajos</h1>
+            <p className="font-body-md text-secondary text-xs">Trabajo y gente de confianza en Pucallpa.</p>
+          </div>
 
-        {/* CTAs — compactos, arriba y en una sola fila. "Gana dinero" va primero y marcado
-            como Próximamente: hoy solo capta interés por WhatsApp. El sistema completo
-            (?ref=, columna referido_por, panel) está en memoria: afiliados.md. */}
-        <div className="grid grid-cols-2 gap-2.5 -mt-2 sm:max-w-[460px]">
-          <a
-            href={waLink('51961000000', 'Hola BogaHub, quiero que me avisen cuando esté listo "Gana dinero con BogaHub" (recomendar negocios y choferes con comisión).')}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="Gana dinero con BogaHub (próximamente)"
-            className="rounded-xl bg-primary text-on-primary px-3 py-2.5 flex items-center gap-2.5 active:scale-[0.98] transition-transform"
-          >
-            <span className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-[18px]">payments</span>
-            </span>
-            <span className="flex flex-col min-w-0 leading-tight">
-              <span className="font-headline-sm text-[13px] truncate">Gana dinero</span>
-              <span className="text-[10px] font-bold uppercase tracking-wide text-on-primary/80">Próximamente</span>
-            </span>
-          </a>
-          <a
-            href={waLink('51961000000', 'Hola BogaHub, quiero publicar un aviso en Servicios de BogaHub (servicio / empleo).')}
-            target="_blank"
-            rel="noreferrer"
-            className="rounded-xl bg-inverse-surface text-inverse-on-surface px-3 py-2.5 flex items-center gap-2.5 active:scale-[0.98] transition-transform"
-          >
-            <span className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-inverse-primary text-[18px]">campaign</span>
-            </span>
-            <span className="flex flex-col min-w-0 leading-tight">
-              <span className="font-headline-sm text-[13px] truncate">Publica tu aviso</span>
-              <span className="text-[10px] font-bold uppercase tracking-wide text-inverse-on-surface/70">Gratis</span>
-            </span>
-          </a>
+          {/* CTAs */}
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 w-full sm:w-auto sm:min-w-[420px] lg:min-w-[480px]">
+            <a
+              href={waLink('51961000000', 'Hola BogaHub, quiero que me avisen cuando esté listo "Gana dinero con BogaHub" (recomendar negocios y choferes con comisión).')}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Gana dinero con BogaHub (próximamente)"
+              className="rounded-xl bg-primary text-on-primary px-3.5 py-2.5 flex items-center gap-2.5 active:scale-[0.98] hover:shadow-md transition-all shadow-sm"
+            >
+              <span className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[18px]">payments</span>
+              </span>
+              <span className="flex flex-col min-w-0 leading-tight">
+                <span className="font-headline-sm text-[13px] font-bold truncate">Gana dinero</span>
+                <span className="text-[10px] font-bold uppercase tracking-wide text-on-primary/80">Próximamente</span>
+              </span>
+            </a>
+            <a
+              href={waLink('51961000000', 'Hola BogaHub, quiero publicar un aviso en Servicios de BogaHub (servicio / empleo).')}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-xl bg-inverse-surface text-inverse-on-surface px-3.5 py-2.5 flex items-center gap-2.5 active:scale-[0.98] hover:shadow-md transition-all shadow-sm"
+            >
+              <span className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-inverse-primary text-[18px]">campaign</span>
+              </span>
+              <span className="flex flex-col min-w-0 leading-tight">
+                <span className="font-headline-sm text-[13px] font-bold truncate">Publica tu aviso</span>
+                <span className="text-[10px] font-bold uppercase tracking-wide text-inverse-on-surface/70">Gratis</span>
+              </span>
+            </a>
+          </div>
         </div>
 
         {/* Conmutador de vista */}
@@ -231,11 +231,11 @@ export default function Servicios() {
                         alt=""
                         loading="lazy"
                         referrerPolicy="no-referrer"
-                        className="w-24 h-16 rounded-lg object-cover object-top border border-surface-container-highest bg-surface-container-low"
+                        className="w-16 aspect-[3/4] rounded-lg object-cover object-top border border-surface-container-highest bg-surface-container-low"
                       />
                     </button>
                   ) : (
-                    <span className="w-24 h-16 rounded-lg flex items-center justify-center shrink-0" style={{ background: colorEmpleo(e.id) }}>
+                    <span className="w-16 aspect-[3/4] rounded-lg flex items-center justify-center shrink-0" style={{ background: colorEmpleo(e.id) }}>
                       <span className="material-symbols-outlined text-white text-[22px]">work</span>
                     </span>
                   )}
@@ -304,7 +304,7 @@ export default function Servicios() {
                     type="button"
                     onClick={() => setVisor(e)}
                     aria-label={`Ver imagen del aviso de ${e.puesto} en grande`}
-                    className="group relative w-36 h-24 rounded-xl overflow-hidden bg-surface-container-low shrink-0 border border-surface-container-highest active:scale-95 transition-transform"
+                    className="group relative w-28 sm:w-32 aspect-[3/4] rounded-xl overflow-hidden bg-surface-container-low shrink-0 border border-surface-container-highest active:scale-95 transition-transform"
                   >
                     <img src={e.img} alt={e.puesto} loading="lazy" referrerPolicy="no-referrer" className="w-full h-full object-cover object-top" />
                     <span className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors">
@@ -312,7 +312,7 @@ export default function Servicios() {
                     </span>
                   </button>
                 ) : (
-                  <div className="w-36 h-24 rounded-xl flex items-center justify-center shrink-0" style={{ background: colorEmpleo(e.id) }}>
+                  <div className="w-28 sm:w-32 aspect-[3/4] rounded-xl flex items-center justify-center shrink-0" style={{ background: colorEmpleo(e.id) }}>
                     <span className="material-symbols-outlined text-white text-[30px]">work</span>
                   </div>
                 )}
