@@ -95,11 +95,25 @@ export default function Servicios() {
 
       <main className="max-w-[1440px] mx-auto px-container-margin lg:px-6 w-full pt-5 flex flex-col gap-6 pb-12">
 
-        {/* Encabezado + CTAs en una misma fila */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex flex-col gap-1 shrink-0">
-            <h1 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">Trabajos</h1>
-            <p className="font-body-md text-secondary text-xs">Trabajo y gente de confianza en Pucallpa.</p>
+        {/* Barra superior: Conmutador de vista + CTAs */}
+        <h1 className="sr-only">Trabajos en Pucallpa</h1>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          {/* Conmutador de vista */}
+          <div className="flex gap-2">
+            {([['empleos', 'Empleos', 'work'], ['servicios', 'Oficios', 'construction']] as const).map(([id, label, icon]) => (
+              <button
+                key={id}
+                onClick={() => setVista(id)}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-label-md transition-all shadow-sm active:scale-95 ${
+                  vista === id
+                    ? 'bg-primary text-white border border-primary shadow-md'
+                    : 'bg-white border border-surface-container-highest text-secondary hover:shadow-md'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[16px]">{icon}</span>
+                {label}
+              </button>
+            ))}
           </div>
 
           {/* CTAs */}
@@ -134,24 +148,6 @@ export default function Servicios() {
               </span>
             </a>
           </div>
-        </div>
-
-        {/* Conmutador de vista */}
-        <div className="flex gap-2">
-          {([['empleos', 'Empleos', 'work'], ['servicios', 'Oficios', 'construction']] as const).map(([id, label, icon]) => (
-            <button
-              key={id}
-              onClick={() => setVista(id)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-label-md transition-all shadow-sm active:scale-95 ${
-                vista === id
-                  ? 'bg-primary text-white border border-primary shadow-md'
-                  : 'bg-white border border-surface-container-highest text-secondary hover:shadow-md'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[16px]">{icon}</span>
-              {label}
-            </button>
-          ))}
         </div>
 
         {/* Directorio de servicios */}
@@ -353,35 +349,7 @@ export default function Servicios() {
                     )}
                   </div>
 
-                  <div className="flex flex-col gap-2 pt-2 border-t border-surface-container-highest/60 mt-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5 ml-auto">
-                        {e.email && (
-                          <a
-                            href={`mailto:${e.email}?subject=${encodeURIComponent(`Postulación: ${e.puesto}`)}`}
-                            onClick={(ev) => ev.stopPropagation()}
-                            className="h-7 inline-flex items-center gap-1 bg-surface-container-low hover:bg-surface-container text-secondary text-[11px] font-label-md px-2.5 rounded-full border border-surface-container-highest active:scale-95 transition-transform"
-                          >
-                            <span className="material-symbols-outlined text-[13px]">mail</span>
-                            CV
-                          </a>
-                        )}
-                        {(e.link || e.wsp) && (
-                          <a
-                            href={e.link || waLink(e.wsp, `Hola, vi el aviso de "${e.puesto}" en ${e.negocio} por BogaHub. Me interesa postular.`)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(ev) => ev.stopPropagation()}
-                            className="h-7 inline-flex items-center justify-center gap-1 bg-primary text-white text-[11px] font-label-md px-3 rounded-full active:scale-95 hover:bg-primary/90 transition-transform shadow-xs"
-                          >
-                            {e.link ? 'Ver aviso' : 'Postular'}
-                            <span className="material-symbols-outlined text-[13px]">{e.link ? 'open_in_new' : 'arrow_forward'}</span>
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                    <AvisoSeguridadEmpleo />
-                  </div>
+                  
                 </div>
               </div>
               </React.Fragment>
