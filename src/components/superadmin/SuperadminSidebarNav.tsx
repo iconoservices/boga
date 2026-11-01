@@ -16,15 +16,15 @@ export const NAV_TABS = [
 ] as const;
 
 export const SUBRUTAS = [
-  { href: '/superadmin/usuarios',       icon: 'group',        label: 'Usuarios' },
-  { href: '/superadmin/plantillas',     icon: 'layers',       label: 'Plantillas' },
-  { href: '/superadmin/paquetes',       icon: 'inventory_2',  label: 'Paquetes' },
+  { href: '/superadmin/choferes',       icon: 'local_taxi',   label: 'Choferes' },
   { href: '/superadmin/cobros',         icon: 'payments',     label: 'Cobros' },
   { href: '/superadmin/banners',        icon: 'view_carousel', label: 'Banners de portada' },
+  { href: '/superadmin/plantillas',     icon: 'layers',       label: 'Plantillas' },
+  { href: '/superadmin/usuarios',       icon: 'group',        label: 'Usuarios' },
+  { href: '/superadmin/paquetes',       icon: 'inventory_2',  label: 'Paquetes' },
   { href: '/superadmin/revista',        icon: 'menu_book',    label: 'Revista' },
   { href: '/superadmin/editorial',      icon: 'campaign',     label: 'Estrategia Editorial' },
   { href: '/superadmin/notas',          icon: 'sticky_note_2',label: 'Notas internas' },
-  { href: '/superadmin/choferes',       icon: 'local_taxi',   label: 'Choferes' },
   { href: '/superadmin/alquileres',     icon: 'real_estate_agent', label: 'Inmuebles' },
   { href: '/superadmin/sorteos',        icon: 'casino', label: 'Sorteos' },
   { href: '/superadmin/notificaciones', icon: 'notifications', label: 'Notificaciones' },
