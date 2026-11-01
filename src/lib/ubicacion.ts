@@ -29,6 +29,33 @@ export function ubicacionActual(opts: { precisa?: boolean; esperaMs?: number } =
 /** Enlace de Google Maps a un punto (para mandarlo por WhatsApp). */
 export const enlaceMapa = (p: { lat: number; lng: number }) => `https://www.google.com/maps?q=${p.lat},${p.lng}`;
 
+/** Geocodificación inversa real para obtener la calle, barrio o ciudad del punto. */
+export async function direccionDePunto(p: { lat: number; lng: number }): Promise<string> {
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${p.lat}&lon=${p.lng}`, {
+      headers: { 'Accept-Language': 'es' },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const addr = data?.address;
+      if (addr) {
+        const road = addr.road || addr.pedestrian || addr.street;
+        const sub = addr.suburb || addr.neighbourhood || addr.residential || addr.village;
+        const city = addr.city || addr.town || 'Pucallpa';
+        if (road && sub) return `${road}, ${sub}`;
+        if (road) return `${road}, ${city}`;
+        if (sub) return `${sub}, ${city}`;
+      }
+      if (data?.display_name) {
+        return data.display_name.split(',').slice(0, 2).join(', ').trim();
+      }
+    }
+  } catch {
+    // Si falla o no hay conexión, se devuelve vacío
+  }
+  return '';
+}
+
 /**
  * Saca latitud y longitud de lo que alguien pega: "-8.3791, -74.5539", un enlace largo de Google Maps
  * (…/@-8.37,-74.55,17z · …?q=-8.37,-74.55 · …!3d-8.37!4d-74.55). Los enlaces cortos (maps.app.goo.gl) no

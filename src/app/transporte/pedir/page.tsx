@@ -20,6 +20,28 @@ export default function PedirTaxiPage() {
   // Si ya pidió antes, se rellenan sus datos (se leen recién en el navegador, no en el servidor).
   useEffect(() => {
     const previo = leerCliente();
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const qDestino = sp.get('destino');
+      const qOrigen = sp.get('origen') || sp.get('referencia');
+      const qTipo = sp.get('tipo');
+      const qZona = sp.get('zona');
+      const qLat = sp.get('lat');
+      const qLng = sp.get('lng');
+      if (qDestino) setDestino((d) => d || qDestino);
+      if (qOrigen) setReferencia((r) => r || qOrigen);
+      if (qTipo) setTipo((t) => t || qTipo);
+      if (qZona) setZona((z) => z || qZona);
+      if (qLat && qLng) {
+        const lat = parseFloat(qLat);
+        const lng = parseFloat(qLng);
+        if (!isNaN(lat) && !isNaN(lng)) {
+          setPunto({ lat, lng, precisionM: 10 });
+        }
+      }
+    } catch {
+      // fallback
+    }
     if (previo) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setNombre((n) => n || previo.nombre);

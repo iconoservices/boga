@@ -10,6 +10,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import AppHeader from '@/components/AppHeader';
+import AficheModal from '@/components/AficheModal';
 import { getEmpleoPorSlug, getEmpleosActivos } from '@/lib/chamba.data';
 import { slugEmpleo, haceCuanto, fechaAviso } from '@/lib/chamba';
 import PixelEvent from '@/components/PixelEvent';
@@ -180,29 +181,11 @@ export default async function EmpleoPage({ params }: Props) {
           <div className="lg:col-span-5 flex flex-col gap-3 lg:sticky lg:top-24">
             <div className="bg-white rounded-2xl border border-surface-container-highest p-3 sm:p-4 shadow-[0_10px_20px_rgba(0,0,0,0.03)] flex flex-col gap-3">
               {e.img ? (
-                <div className="relative rounded-xl overflow-hidden bg-surface-container-low border border-surface-container-highest group">
-                  <div className="w-full flex items-center justify-center bg-zinc-950/5 min-h-[300px] sm:min-h-[420px] max-h-[580px]">
-                    <img
-                      src={e.img}
-                      alt={`Afiche de ${e.puesto}`}
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-contain max-h-[580px]"
-                    />
-                  </div>
-                  <a
-                    href={e.img}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="absolute bottom-3 right-3 bg-black/70 hover:bg-black/85 text-white text-xs font-label-md px-3 py-1.5 rounded-lg flex items-center gap-1.5 backdrop-blur-sm transition-all shadow-md active:scale-95"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">fullscreen</span>
-                    Ver afiche completo
-                  </a>
-                </div>
+                <AficheModal imgSrc={e.img} altText={`Afiche de ${e.puesto}`} />
               ) : (
-                <div className="w-full min-h-[320px] sm:min-h-[420px] rounded-xl bg-gradient-to-br from-primary/10 via-surface-container-low to-primary/5 border border-primary/20 flex flex-col items-center justify-center p-6 text-center gap-3">
-                  <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center text-primary">
-                    <span className="material-symbols-outlined text-[32px]">work</span>
+                <div className="w-full min-h-[240px] sm:min-h-[380px] rounded-xl bg-gradient-to-br from-primary/10 via-surface-container-low to-primary/5 border border-primary/20 flex flex-col items-center justify-center p-6 text-center gap-3">
+                  <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-primary">
+                    <span className="material-symbols-outlined text-[30px]">work</span>
                   </div>
                   <p className="font-headline-sm text-sm font-bold text-on-surface">Aviso sin afiche gráfico</p>
                   <p className="text-secondary text-xs">Todos los detalles y requisitos están especificados en la ficha de la derecha.</p>
@@ -225,79 +208,75 @@ export default async function EmpleoPage({ params }: Props) {
           </div>
 
           {/* ── Columna derecha: Detalles, requisitos y postulación ── */}
-          <div className="lg:col-span-7 flex flex-col gap-5">
+          <div className="lg:col-span-7 flex flex-col gap-4">
             
-            {/* Tarjeta 1: Cabecera principal, métricas y acciones */}
-            <div className="bg-white rounded-2xl border border-surface-container-highest p-5 sm:p-7 shadow-[0_10px_20px_rgba(0,0,0,0.03)] flex flex-col gap-4">
+            {/* Tarjeta 1: Cabecera compacta con métricas unificadas en el mismo espacio */}
+            <div className="bg-white rounded-2xl border border-surface-container-highest p-4 sm:p-6 shadow-[0_10px_20px_rgba(0,0,0,0.03)] flex flex-col gap-3 sm:gap-3.5">
               {/* Negocio y zona */}
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-1.5">
                 {e.negocio && (
-                  <span className="inline-flex items-center gap-1.5 text-xs font-bold font-label-md text-primary bg-primary/10 px-3 py-1 rounded-full">
-                    <span className="material-symbols-outlined text-[15px]">store</span>
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold font-label-md text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">
+                    <span className="material-symbols-outlined text-[13px]">store</span>
                     {e.negocio}
                   </span>
                 )}
                 {e.zona && (
-                  <span className="inline-flex items-center gap-1.5 text-xs font-label-md text-secondary bg-surface-container-low px-3 py-1 rounded-full border border-surface-container-highest">
-                    <span className="material-symbols-outlined text-[15px]">location_on</span>
+                  <span className="inline-flex items-center gap-1 text-[11px] font-medium font-label-md text-secondary bg-surface-container-low px-2.5 py-0.5 rounded-full border border-surface-container-highest">
+                    <span className="material-symbols-outlined text-[13px]">location_on</span>
                     {e.zona}
                   </span>
                 )}
               </div>
 
               {/* Título del puesto */}
-              <h1 className="font-headline-lg text-2xl sm:text-3xl font-black text-on-surface leading-tight tracking-tight">
+              <h1 className="font-headline-lg text-xl sm:text-2xl font-black text-on-surface leading-tight tracking-tight">
                 {e.puesto}
               </h1>
 
-              {/* Fila de estadísticas / datos clave */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
-                {e.tipo && (
-                  <div className="bg-surface-container-low/80 rounded-xl p-3 border border-surface-container-highest flex flex-col gap-0.5">
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-secondary/70">Modalidad</span>
-                    <span className="text-xs font-bold text-on-surface flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[15px] text-primary">schedule</span>
-                      {e.tipo}
-                    </span>
-                  </div>
-                )}
-                {e.pago && (
-                  <div className="bg-emerald-50/80 rounded-xl p-3 border border-emerald-200/80 flex flex-col gap-0.5">
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-700/80">Sueldo / Pago</span>
-                    <span className="text-xs font-black text-emerald-800 flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[15px] text-emerald-600">payments</span>
-                      {e.pago}
-                    </span>
-                  </div>
-                )}
-                {(e.publicado || e.subido) && (
-                  <div className="bg-surface-container-low/80 rounded-xl p-3 border border-surface-container-highest flex flex-col gap-0.5 col-span-2 sm:col-span-1">
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-secondary/70">Publicación</span>
-                    <span className="text-xs font-semibold text-on-surface flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[15px] text-secondary">calendar_today</span>
-                      {fechaAviso(e.publicado) || haceCuanto(e.subido)}
-                    </span>
-                  </div>
-                )}
+              {/* Barra unificada: Modalidad, Sueldo y Fecha en el mismo espacio */}
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-2 py-2 px-2.5 rounded-xl bg-surface-container-low/75 border border-surface-container-highest items-center">
+                <div className="flex flex-col min-w-0 pr-1">
+                  <span className="text-[9px] uppercase font-bold tracking-wider text-secondary/70 truncate">Modalidad</span>
+                  <span className="text-[11px] sm:text-xs font-bold text-on-surface truncate flex items-center gap-1 mt-0.5" title={e.tipo || 'Completo'}>
+                    <span className="material-symbols-outlined text-[14px] text-primary shrink-0">schedule</span>
+                    <span className="truncate">{e.tipo || 'Completo'}</span>
+                  </span>
+                </div>
+
+                <div className="flex flex-col min-w-0 border-x border-surface-container-highest px-2">
+                  <span className="text-[9px] uppercase font-bold tracking-wider text-emerald-700/90 truncate">Sueldo / Pago</span>
+                  <span className="text-[11px] sm:text-xs font-black text-emerald-800 truncate flex items-center gap-1 mt-0.5" title={e.pago || 'Por confirmar'}>
+                    <span className="material-symbols-outlined text-[14px] text-emerald-600 shrink-0">payments</span>
+                    <span className="truncate">{e.pago || 'Por confirmar'}</span>
+                  </span>
+                </div>
+
+                <div className="flex flex-col min-w-0 pl-1">
+                  <span className="text-[9px] uppercase font-bold tracking-wider text-secondary/70 truncate">Publicación</span>
+                  <span className="text-[11px] sm:text-xs font-semibold text-secondary truncate flex items-center gap-1 mt-0.5" title={fechaAviso(e.publicado) || haceCuanto(e.subido)}>
+                    <span className="material-symbols-outlined text-[14px] text-secondary shrink-0">calendar_today</span>
+                    <span className="truncate">{fechaAviso(e.publicado) || haceCuanto(e.subido)}</span>
+                  </span>
+                </div>
               </div>
 
               {/* Botones de acción principales */}
-              <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
+              <div className="flex flex-col sm:flex-row gap-2 pt-1">
                 {link && (
                   <a
                     href={link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white text-sm sm:text-base font-bold py-3.5 px-6 rounded-xl shadow-md hover:shadow-lg transition-all active:scale-[0.99]"
+                    className="flex-1 flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white text-xs sm:text-sm font-bold py-2.5 sm:py-3 px-5 rounded-xl shadow-sm hover:shadow-md transition-all active:scale-[0.99]"
                   >
                     {e.link ? (
                       <>
-                        <span className="material-symbols-outlined text-[20px]">open_in_new</span>
+                        <span className="material-symbols-outlined text-[18px]">open_in_new</span>
                         Ver aviso oficial
                       </>
                     ) : (
                       <>
-                        <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>chat</span>
+                        <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>chat</span>
                         Postular por WhatsApp
                       </>
                     )}
@@ -306,9 +285,9 @@ export default async function EmpleoPage({ params }: Props) {
                 {e.email && (
                   <a
                     href={`mailto:${e.email}?subject=${encodeURIComponent(`Postulación: ${e.puesto}`)}`}
-                    className="flex items-center justify-center gap-2 bg-surface-container-low hover:bg-surface-container border border-surface-container-highest text-on-surface text-sm font-semibold py-3.5 px-5 rounded-xl transition-all"
+                    className="flex items-center justify-center gap-1.5 bg-surface-container-low hover:bg-surface-container border border-surface-container-highest text-on-surface text-xs sm:text-sm font-semibold py-2.5 sm:py-3 px-4 rounded-xl transition-all"
                   >
-                    <span className="material-symbols-outlined text-[20px] text-primary">mail</span>
+                    <span className="material-symbols-outlined text-[18px] text-primary">mail</span>
                     Enviar CV
                   </a>
                 )}

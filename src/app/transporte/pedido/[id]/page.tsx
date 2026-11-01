@@ -34,8 +34,23 @@ export default function PedidoTaxiPage() {
       if (res.status === 404) { setNoExiste(true); return; }
       if (!res.ok) return;
       const nuevo = (await res.json()) as Estado;
-      // Cuando un chofer acepta: vibra para avisar aunque la pantalla esté en segundo plano cerca.
-      if (estadoAnterior.current === 'buscando' && nuevo.estado === 'asignado') { try { navigator.vibrate?.([200, 100, 200]); } catch { /* sin vibración */ } }
+      // Cuando un chofer acepta: vibra y lanza notificación nativa con la data real
+      if (estadoAnterior.current === 'buscando' && nuevo.estado === 'asignado') {
+        try { navigator.vibrate?.([250, 150, 250, 150, 400]); } catch { /* sin vibración */ }
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+          const ch = nuevo.chofer;
+          const titulo = '🛺 ¡Chofer confirmado en camino!';
+          const cuerpo = ch
+            ? `${ch.nombre} (${ch.tipo} · Placa ${ch.placa || 'En camino'}) aceptó tu carrera a ${nuevo.destino || 'tu destino'}.`
+            : `Un chofer aceptó tu viaje a ${nuevo.destino || 'tu destino'}.`;
+          try {
+            new Notification(titulo, {
+              body: cuerpo,
+              icon: ch?.img || '/favicon.ico',
+            });
+          } catch {}
+        }
+      }
       estadoAnterior.current = nuevo.estado;
       setE(nuevo);
     } catch { /* sin red: se reintenta en 4 s */ }

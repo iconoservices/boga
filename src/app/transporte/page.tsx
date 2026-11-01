@@ -1,11 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
 import { fetchChoferes, type Chofer } from '@/lib/drivers';
 import { disponibleAhora, proximaApertura, resumenHorario } from '@/lib/horario';
-import { ubicacionActual, enlaceMapa } from '@/lib/ubicacion';
+import { ubicacionActual, enlaceMapa, direccionDePunto, type ErrorUbicacion } from '@/lib/ubicacion';
+import { zonaMasCercana } from '@/lib/zonasTransporte';
 
 // Taxi Seguro: por ahora es SOLO UN DIRECTORIO de choferes verificados
 // (mototaxi / auto / moto). No hay reserva ni pago dentro de la app todavía —
@@ -192,6 +195,288 @@ function DriverCard({ c, ahora }: { c: Chofer; ahora: Date }) {
   );
 }
 
+const TARIFAS_REFERENCIALES = [
+  {
+    origen: 'Centro / Plaza de Armas',
+    destino: 'Yarinacocha (Embarcadero)',
+    tipo: 'Mototaxi' as const,
+    precio: 'S/ 5.00 – S/ 7.00',
+    tiempo: '15-20 min',
+    icono: 'electric_rickshaw',
+    badge: 'Popular',
+  },
+  {
+    origen: 'Centro / Plaza de Armas',
+    destino: 'Open Plaza / Real Plaza',
+    tipo: 'Mototaxi' as const,
+    precio: 'S/ 3.50 – S/ 5.00',
+    tiempo: '8-10 min',
+    icono: 'electric_rickshaw',
+    badge: 'Céntrico',
+  },
+  {
+    origen: 'Centro / Plaza de Armas',
+    destino: 'Aeropuerto David Abenzur',
+    tipo: 'Auto' as const,
+    precio: 'S/ 10.00 – S/ 14.00',
+    tiempo: '12-15 min',
+    icono: 'directions_car',
+    badge: 'Confort / Aire',
+  },
+  {
+    origen: 'Manantay (Óvalo)',
+    destino: 'Hospital Regional de Pucallpa',
+    tipo: 'Mototaxi' as const,
+    precio: 'S/ 5.00 – S/ 7.00',
+    tiempo: '10-12 min',
+    icono: 'electric_rickshaw',
+    badge: 'Salud',
+  },
+];
+
+function QuickOrderCard() {
+  const router = useRouter();
+  const [origen, setOrigen] = useState('');
+  const [destino, setDestino] = useState('');
+  const [tipo, setTipo] = useState<'Mototaxi' | 'Auto' | 'Moto'>('Mototaxi');
+  const [punto, setPunto] = useState<{ lat: number; lng: number } | null>(null);
+  const [zona, setZona] = useState<string | null>(null);
+  const [ubicando, setUbicando] = useState(false);
+  const [notifActiva, setNotifActiva] = useState(false);
+
+  useEffect(() => {
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      setNotifActiva(true);
+    }
+  }, []);
+
+  const usarMiUbicacion = async () => {
+    setUbicando(true);
+    try {
+      const p = await ubicacionActual({ precisa: true, esperaMs: 8000 });
+      setPunto({ lat: p.lat, lng: p.lng });
+      const z = zonaMasCercana(p.lat, p.lng);
+      if (z) setZona(z.id);
+
+      // Geocodificación inversa real para dar la calle o zona exacta
+      const dir = await direccionDePunto(p);
+      if (dir) {
+        setOrigen(dir);
+      } else if (z) {
+        setOrigen(z.nombre);
+      } else {
+        setOrigen(`Pucallpa (${p.lat.toFixed(4)}, ${p.lng.toFixed(4)})`);
+      }
+    } catch (err) {
+      if (err === 'permiso-denegado') {
+        setOrigen('Permiso GPS bloqueado en navegador');
+      } else {
+        setOrigen('Plaza de Armas / Centro');
+      }
+    } finally {
+      setUbicando(false);
+    }
+  };
+
+  const pedirPermisoNotif = async () => {
+    if (typeof Notification === 'undefined') return;
+    try {
+      const res = await Notification.requestPermission();
+      if (res === 'granted') {
+        setNotifActiva(true);
+        new Notification('🛺 BogaHub · Taxi Seguro Pucallpa', {
+          body: '¡Avisos activados! Te notificaremos en tiempo real con la placa y datos del chofer que acepte tu viaje.',
+          icon: '/favicon.ico',
+        });
+      }
+    } catch {}
+  };
+
+  const handlePedir = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Si aún no se pidió permiso de notificación, pedirlo al enviar
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      try {
+        const res = await Notification.requestPermission();
+        if (res === 'granted') {
+          setNotifActiva(true);
+          new Notification('🛺 BogaHub · Taxi Seguro', {
+            body: `Buscando chofer para tu viaje hacia ${destino || 'tu destino'}... Te avisaremos con los datos del chofer al instante.`,
+            icon: '/favicon.ico',
+          });
+        }
+      } catch {}
+    }
+
+    const params = new URLSearchParams();
+    if (origen.trim()) params.set('origen', origen.trim());
+    if (destino.trim()) params.set('destino', destino.trim());
+    if (tipo) params.set('tipo', tipo);
+    if (punto) {
+      params.set('lat', String(punto.lat));
+      params.set('lng', String(punto.lng));
+    }
+    if (zona) params.set('zona', zona);
+    router.push(`/transporte/pedir?${params.toString()}`);
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border border-surface-container-highest shadow-[0_15px_30px_rgba(0,0,0,0.06)] p-5 flex flex-col gap-3.5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="w-8 h-8 rounded-xl flex items-center justify-center text-white shadow-sm" style={{ backgroundColor: VERDE }}>
+            <span className="material-symbols-outlined text-[19px]">local_taxi</span>
+          </span>
+          <div>
+            <h2 className="font-headline-sm text-sm lg:text-base font-extrabold text-on-surface leading-tight">
+              Pide tu taxi en segundos
+            </h2>
+            <p className="font-body-md text-[11px] text-secondary">
+              Avisamos a los choferes más cercanos
+            </p>
+          </div>
+        </div>
+        <span className="px-2 py-0.5 rounded-full font-label-md text-[10px] font-bold uppercase tracking-wider" style={{ backgroundColor: VERDE_SOFT, color: VERDE }}>
+          100% Directo
+        </span>
+      </div>
+
+      <form onSubmit={handlePedir} className="flex flex-col gap-2.5">
+        {/* Origen */}
+        <div className="relative">
+          <label className="block text-[11px] font-bold text-secondary mb-1">
+            Punto de recojo
+          </label>
+          <div className="relative flex items-center">
+            <span className="absolute left-3 text-secondary material-symbols-outlined text-[18px]">
+              my_location
+            </span>
+            <input
+              type="text"
+              value={origen}
+              onChange={(e) => setOrigen(e.target.value)}
+              placeholder="¿Dónde estás? Ej: Plaza de Armas..."
+              className="w-full pl-9 pr-24 py-2.5 rounded-xl border border-surface-container-highest text-xs font-semibold text-on-surface placeholder:text-secondary/60 focus:outline-none focus:border-primary bg-surface-container-lowest"
+            />
+            <button
+              type="button"
+              onClick={usarMiUbicacion}
+              disabled={ubicando}
+              className="absolute right-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all disabled:opacity-60 flex items-center gap-1 active:scale-95"
+              style={{ backgroundColor: VERDE_SOFT, color: VERDE }}
+            >
+              {ubicando ? (
+                'Buscando…'
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-[12px]">gps_fixed</span>
+                  GPS
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Destino */}
+        <div>
+          <label className="block text-[11px] font-bold text-secondary mb-1">
+            ¿A dónde vas?
+          </label>
+          <div className="relative flex items-center">
+            <span className="absolute left-3 text-secondary material-symbols-outlined text-[18px]">
+              location_on
+            </span>
+            <input
+              type="text"
+              value={destino}
+              onChange={(e) => setDestino(e.target.value)}
+              placeholder="Ej: Yarinacocha, Open Plaza, Hospital..."
+              className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-surface-container-highest text-xs font-semibold text-on-surface placeholder:text-secondary/60 focus:outline-none focus:border-primary bg-surface-container-lowest"
+            />
+          </div>
+        </div>
+
+        {/* Tipo de vehículo */}
+        <div>
+          <label className="block text-[11px] font-bold text-secondary mb-1">
+            Tipo de vehículo preferido
+          </label>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { id: 'Mototaxi' as const, label: 'Mototaxi', icon: 'electric_rickshaw' },
+              { id: 'Auto' as const, label: 'Auto', icon: 'directions_car' },
+              { id: 'Moto' as const, label: 'Moto', icon: 'two_wheeler' },
+            ].map((v) => (
+              <button
+                type="button"
+                key={v.id}
+                onClick={() => setTipo(v.id)}
+                className={`py-2 px-2 rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold transition-all border ${
+                  tipo === v.id
+                    ? 'text-white border-transparent shadow-sm'
+                    : 'bg-white text-secondary border-surface-container-highest hover:bg-surface-container-low'
+                }`}
+                style={tipo === v.id ? { backgroundColor: VERDE } : undefined}
+              >
+                <span className="material-symbols-outlined text-[16px]">{v.icon}</span>
+                <span>{v.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Aviso de notificaciones */}
+        <div className="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-surface-container-low text-[11px] text-secondary">
+          <span className="flex items-center gap-1.5 font-medium">
+            <span className="material-symbols-outlined text-[15px]" style={{ color: notifActiva ? VERDE : undefined }}>
+              {notifActiva ? 'notifications_active' : 'notifications'}
+            </span>
+            {notifActiva ? 'Avisos en pantalla activados' : 'Avisar cuando el chofer acepte'}
+          </span>
+          {!notifActiva && (
+            <button
+              type="button"
+              onClick={pedirPermisoNotif}
+              className="text-[10px] font-bold underline hover:text-primary"
+              style={{ color: VERDE }}
+            >
+              Activar avisos
+            </button>
+          )}
+        </div>
+
+        {/* Botón principal */}
+        <button
+          type="submit"
+          className="w-full mt-1 py-3 px-4 rounded-xl text-white font-label-md text-[13px] font-extrabold shadow-md active:scale-[0.98] transition-transform flex items-center justify-center gap-2 hover:opacity-95"
+          style={{ backgroundColor: VERDE }}
+        >
+          <span className="material-symbols-outlined text-[18px]">local_taxi</span>
+          Pedir un taxi ahora
+          <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+        </button>
+      </form>
+
+      {/* Mini métricas integradas al pie de la tarjeta */}
+      <div className="grid grid-cols-3 gap-1 pt-2.5 border-t border-surface-container text-center">
+        <div>
+          <span className="block font-headline-md text-[13px] font-extrabold" style={{ color: VERDE }}>100%</span>
+          <span className="block text-[9px] text-secondary font-medium uppercase tracking-wide leading-tight">Sin comisión</span>
+        </div>
+        <div className="border-x border-surface-container">
+          <span className="block font-headline-md text-[13px] font-extrabold text-primary">5 puntos</span>
+          <span className="block text-[9px] text-secondary font-medium uppercase tracking-wide leading-tight">DNI · SOAT · Placa</span>
+        </div>
+        <div>
+          <span className="block font-headline-md text-[13px] font-extrabold text-tertiary">4.9★</span>
+          <span className="block text-[9px] text-secondary font-medium uppercase tracking-wide leading-tight">+3,400 viajes</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function TaxiSeguro() {
   const { cartCount, setIsCartOpen } = useCart();
   const [filtro, setFiltro] = useState<Filtro>('Todos');
@@ -236,55 +521,87 @@ export default function TaxiSeguro() {
 
       <main className="max-w-[1440px] mx-auto px-container-margin lg:px-6 w-full pt-5 flex flex-col gap-6 pb-12">
 
-        {/* Encabezado + métricas */}
-        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
-          <div className="flex flex-col gap-1.5 max-w-xl">
-            <span className="inline-flex items-center gap-1.5 w-fit px-2.5 py-1 rounded-full bg-white shadow-sm font-label-md text-[10px] uppercase tracking-wider" style={{ color: VERDE }}>
-              <span className="material-symbols-outlined text-[13px]">local_taxi</span>
-              Seguridad vial ciudadana
-            </span>
-            <h1 className="font-headline-lg text-on-surface tracking-tight text-2xl lg:text-3xl">Muévete tranquilo por Pucallpa</h1>
-            <p className="text-secondary font-body-md text-sm">
-              Choferes verificados por la comunidad BogaHub. Los contactas directo por llamada o WhatsApp — sin tarifas ocultas ni comisiones a intermediarios.
-            </p>
-            <a
-              href="/transporte/pedir"
-              className="inline-flex items-center gap-2 w-fit mt-2 px-5 py-3 rounded-2xl text-white font-label-md text-[14px] font-extrabold shadow-md active:scale-95 transition-transform"
-              style={{ backgroundColor: VERDE }}
-            >
-              <span className="material-symbols-outlined text-[20px]">local_taxi</span>
-              Pedir un taxi ahora
-              <span className="text-[11px] font-bold opacity-80">· avisamos a los choferes más cercanos</span>
-            </a>
-            <a
-              href="/transporte/registro"
-              className="inline-flex items-center gap-1.5 w-fit mt-1 font-label-md text-[12px] font-bold hover:underline"
-              style={{ color: VERDE }}
-            >
-              <span className="material-symbols-outlined text-[16px]">badge</span>
-              ¿Manejas mototaxi, auto o moto? Postúlate al padrón
-              <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
-            </a>
-            <a
-              href="/transporte/chofer"
-              className="inline-flex items-center gap-1.5 w-fit font-label-md text-[12px] font-bold hover:underline text-secondary"
-            >
-              <span className="material-symbols-outlined text-[16px]">key</span>
-              ¿Ya eres chofer del padrón? Abre tu app
-            </a>
-          </div>
-          <div className="grid grid-cols-3 gap-3 bg-white rounded-2xl border border-surface-container-highest shadow-[0_15px_15px_rgba(0,0,0,0.04)] p-4 lg:w-[360px] shrink-0">
-            {[
-              { k: 'Sin comisiones', v: '100%', s: 'Pago directo', c: VERDE },
-              { k: 'Filtrados', v: '5 puntos', s: 'DNI · SOAT · Placa', c: 'var(--color-primary)' },
-              { k: 'Satisfacción', v: '4.9★', s: '+3,400 viajes', c: 'var(--color-tertiary)' },
-            ].map((m, i) => (
-              <div key={m.k} className={`flex flex-col ${i > 0 ? 'border-l border-surface-container pl-3' : ''}`}>
-                <span className="font-label-md text-[9px] text-secondary uppercase tracking-wide leading-tight">{m.k}</span>
-                <span className="font-headline-md text-[17px] font-extrabold leading-tight mt-0.5" style={{ color: m.c }}>{m.v}</span>
-                <span className="font-body-md text-[10px] text-secondary leading-tight">{m.s}</span>
+        {/* Hero: 2 columnas bien balanceadas en desktop para optimizar todo el espacio */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+          {/* Columna Izquierda: Mensaje y confianza */}
+          <div className="lg:col-span-7 flex flex-col gap-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white shadow-sm font-label-md text-[11px] font-bold uppercase tracking-wider" style={{ color: VERDE }}>
+                <span className="material-symbols-outlined text-[15px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
+                Padrón Cívico Vecinal · Pucallpa
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold text-secondary bg-surface-container-high">
+                <span className="material-symbols-outlined text-[14px]">local_taxi</span>
+                Taxi Seguro
+              </span>
+            </div>
+
+            <div>
+              <h1 className="font-headline-lg text-on-surface tracking-tight text-3xl lg:text-4xl font-extrabold leading-tight">
+                Muévete tranquilo por Pucallpa
+              </h1>
+              <p className="text-secondary font-body-md text-sm lg:text-base mt-2 leading-relaxed max-w-xl">
+                Choferes verificados por la comunidad BogaHub. Contacto directo por llamada o WhatsApp — sin tarifas ocultas ni comisiones abusivas a intermediarios.
+              </p>
+            </div>
+
+            {/* 3 pilares de confianza visuales */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+              <div className="bg-white rounded-xl border border-surface-container-highest p-3 flex items-start gap-2.5 shadow-sm">
+                <span className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: VERDE_SOFT, color: VERDE }}>
+                  <span className="material-symbols-outlined text-[18px]">verified</span>
+                </span>
+                <div className="flex flex-col min-w-0">
+                  <span className="font-label-md text-[12px] font-bold text-on-surface leading-tight">Filtrados</span>
+                  <span className="font-body-md text-[11px] text-secondary leading-snug mt-0.5">DNI, SOAT y antecedentes</span>
+                </div>
               </div>
-            ))}
+
+              <div className="bg-white rounded-xl border border-surface-container-highest p-3 flex items-start gap-2.5 shadow-sm">
+                <span className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: VERDE_SOFT, color: VERDE }}>
+                  <span className="material-symbols-outlined text-[18px]">payments</span>
+                </span>
+                <div className="flex flex-col min-w-0">
+                  <span className="font-label-md text-[12px] font-bold text-on-surface leading-tight">0% Comisión</span>
+                  <span className="font-body-md text-[11px] text-secondary leading-snug mt-0.5">Pagas directo en efectivo o Yape</span>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl border border-surface-container-highest p-3 flex items-start gap-2.5 shadow-sm">
+                <span className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: VERDE_SOFT, color: VERDE }}>
+                  <span className="material-symbols-outlined text-[18px]">bolt</span>
+                </span>
+                <div className="flex flex-col min-w-0">
+                  <span className="font-label-md text-[12px] font-bold text-on-surface leading-tight">Despacho Rápido</span>
+                  <span className="font-body-md text-[11px] text-secondary leading-snug mt-0.5">Aviso al chofer más cercano</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Enlaces y accesos secundarios */}
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <Link
+                href="/transporte/registro"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-surface-container-highest font-label-md text-[12px] font-bold shadow-sm hover:border-primary transition-colors"
+                style={{ color: VERDE }}
+              >
+                <span className="material-symbols-outlined text-[16px]">badge</span>
+                ¿Manejas mototaxi, auto o moto? Postúlate al padrón gratis
+                <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+              </Link>
+              <Link
+                href="/transporte/chofer"
+                className="inline-flex items-center gap-1 text-[12px] font-label-md font-bold text-secondary hover:text-on-surface transition-colors"
+              >
+                <span className="material-symbols-outlined text-[15px]">key</span>
+                Soy chofer · Abre tu app
+              </Link>
+            </div>
+          </div>
+
+          {/* Columna Derecha: Tarjeta de Pedido Rápido (Aprovecha todo el espacio en desktop) */}
+          <div className="lg:col-span-5 flex flex-col gap-3">
+            <QuickOrderCard />
           </div>
         </div>
 
@@ -333,21 +650,150 @@ export default function TaxiSeguro() {
             Cargando choferes verificados…
           </div>
         ) : lista.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-surface-container-highest p-10 text-center flex flex-col items-center justify-center gap-3 shadow-sm">
-            <div className="w-14 h-14 rounded-2xl bg-surface-container-low flex items-center justify-center text-primary">
-              <span className="material-symbols-outlined text-[28px]">local_taxi</span>
+          <div className="flex flex-col gap-6">
+            {/* Aviso de red de despacho activa */}
+            <div className="bg-white rounded-2xl border border-surface-container-highest p-4 lg:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+              <div className="flex items-center gap-3.5">
+                <span className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ backgroundColor: VERDE_SOFT, color: VERDE }}>
+                  <span className="material-symbols-outlined text-[24px]">cell_tower</span>
+                </span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-headline-sm text-sm lg:text-base font-bold text-on-surface">Red de choferes activa en Pucallpa</h3>
+                    <span className="relative flex w-2 h-2">
+                      <span className="absolute inline-flex w-full h-full rounded-full opacity-60 animate-ping" style={{ backgroundColor: VERDE }} />
+                      <span className="relative inline-flex w-2 h-2 rounded-full" style={{ backgroundColor: VERDE }} />
+                    </span>
+                  </div>
+                  <p className="text-secondary text-xs mt-0.5 max-w-xl">
+                    Aunque no veas choferes en lista abierta ahora, al enviar tu pedido notificamos al instante a los conductores empadronados más cercanos a tu ubicación.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/transporte/pedir"
+                className="shrink-0 px-4 py-2.5 rounded-xl text-white font-label-md text-xs font-bold shadow-md active:scale-95 transition-transform"
+                style={{ backgroundColor: VERDE }}
+              >
+                Pedir taxi ahora
+              </Link>
             </div>
-            <h3 className="font-headline-md text-base text-on-surface">No hay choferes activos todavía</h3>
-            <p className="text-secondary text-xs max-w-md leading-relaxed">
-              Estamos integrando conductores con DNI y documentos validados. Si manejas en la ciudad, sé de los primeros en aparecer en el padrón.
-            </p>
-            <a
-              href="/transporte/registro"
-              className="mt-2 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-on-primary text-xs font-bold shadow-sm hover:opacity-95 active:scale-95 transition-all"
-            >
-              <span className="material-symbols-outlined text-[16px]">badge</span>
-              Postularme al padrón gratis
-            </a>
+
+            {/* Tarifas comunitarias de referencia en Pucallpa */}
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
+                <div>
+                  <h2 className="font-headline-md text-base lg:text-lg text-on-surface font-extrabold">
+                    Tarifas comunitarias de referencia
+                  </h2>
+                  <p className="text-secondary text-xs mt-0.5">
+                    Precios justos de referencia acordados habitualmente en Pucallpa (100% sin comisiones)
+                  </p>
+                </div>
+                <Link href="/transporte/pedir" className="text-[12px] font-bold hover:underline shrink-0" style={{ color: VERDE }}>
+                  Pedir viaje personalizado →
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {TARIFAS_REFERENCIALES.map((t) => (
+                  <Link
+                    key={`${t.origen}-${t.destino}`}
+                    href={`/transporte/pedir?origen=${encodeURIComponent(t.origen)}&destino=${encodeURIComponent(t.destino)}&tipo=${encodeURIComponent(t.tipo)}`}
+                    className="group bg-white rounded-2xl border border-surface-container-highest p-4 flex flex-col justify-between gap-3 shadow-sm hover:shadow-md hover:border-primary transition-all active:scale-[0.99]"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: VERDE_SOFT, color: VERDE }}>
+                        <span className="material-symbols-outlined text-[20px]">{t.icono}</span>
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-surface-container-high text-secondary">
+                        {t.badge}
+                      </span>
+                    </div>
+
+                    <div>
+                      <div className="text-[11px] text-secondary font-medium flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-secondary/50" />
+                        {t.origen}
+                      </div>
+                      <div className="font-headline-sm text-sm font-bold text-on-surface mt-1 group-hover:text-primary transition-colors">
+                        {t.destino}
+                      </div>
+                    </div>
+
+                    <div className="pt-2.5 border-t border-surface-container flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] text-secondary uppercase font-semibold block leading-tight">Tarifa habitual</span>
+                        <span className="font-headline-md text-sm font-extrabold text-primary leading-tight mt-0.5 block">{t.precio}</span>
+                      </div>
+                      <span className="text-[11px] font-bold text-secondary group-hover:text-primary flex items-center gap-0.5">
+                        Pedir
+                        <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* ¿Cómo funciona Taxi Seguro? */}
+            <div className="bg-white rounded-2xl border border-surface-container-highest p-5 lg:p-6 flex flex-col gap-4 shadow-sm">
+              <h3 className="font-headline-md text-base font-extrabold text-on-surface">¿Cómo funciona Taxi Seguro en BogaHub?</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="flex items-start gap-3">
+                  <span className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-extrabold shrink-0" style={{ backgroundColor: VERDE }}>
+                    1
+                  </span>
+                  <div>
+                    <h4 className="font-headline-sm text-xs font-bold text-on-surface">Pides tu viaje</h4>
+                    <p className="text-secondary text-[11px] leading-relaxed mt-0.5">
+                      Indica tu punto de recojo y a dónde vas. Avisamos a las unidades más cercanas.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-extrabold shrink-0" style={{ backgroundColor: VERDE }}>
+                    2
+                  </span>
+                  <div>
+                    <h4 className="font-headline-sm text-xs font-bold text-on-surface">Chofer verificado te contacta</h4>
+                    <p className="text-secondary text-[11px] leading-relaxed mt-0.5">
+                      El conductor acepta y te llama o escribe por WhatsApp con sus datos y placa confirmados.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-extrabold shrink-0" style={{ backgroundColor: VERDE }}>
+                    3
+                  </span>
+                  <div>
+                    <h4 className="font-headline-sm text-xs font-bold text-on-surface">Pagas lo justo</h4>
+                    <p className="text-secondary text-[11px] leading-relaxed mt-0.5">
+                      Pagas en efectivo o Yape acordado directamente con el chofer. Cero cobros a intermediarios.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Banner para Choferes */}
+            <div className="rounded-2xl border border-surface-container-highest bg-surface-container-low p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-[28px] text-primary">badge</span>
+                <div>
+                  <h4 className="font-headline-sm text-sm font-bold text-on-surface">¿Tienes mototaxi, auto o moto en Pucallpa?</h4>
+                  <p className="text-secondary text-xs mt-0.5">
+                    Sé parte del padrón de confianza. No cobramos comisiones por carrera y te conectas con vecinos de toda la ciudad.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/transporte/registro"
+                className="shrink-0 px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold shadow-sm hover:opacity-95 active:scale-95 transition-all"
+              >
+                Postularme al padrón gratis
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
