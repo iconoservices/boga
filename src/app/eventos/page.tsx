@@ -93,10 +93,7 @@ export default function Eventos() {
 
         {/* Encabezado principal (en móvil va arriba; en desktop con carrusel va en la columna derecha) */}
         <header className={`flex flex-col gap-1.5 pt-1 ${carrusel.length > 0 ? 'lg:hidden' : ''}`}>
-          <div className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-wider">
-            <span className="material-symbols-outlined text-[18px]">calendar_month</span>
-            Eventos en Pucallpa
-          </div>
+          
           <h1 className="font-headline-lg font-black text-2xl sm:text-3xl text-on-surface tracking-tight leading-tight">
             ¿Qué hacer en Pucallpa hoy?
           </h1>
@@ -202,10 +199,7 @@ export default function Eventos() {
         <div className="flex flex-col gap-6 justify-center">
           {carrusel.length > 0 && (
             <header className="hidden lg:flex flex-col gap-2">
-              <div className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-wider">
-                <span className="material-symbols-outlined text-[18px]">calendar_month</span>
-                Eventos en Pucallpa
-              </div>
+              
               <h1 className="font-headline-lg font-black text-2xl lg:text-3xl text-on-surface tracking-tight leading-tight">
                 ¿Qué hacer en Pucallpa hoy?
               </h1>

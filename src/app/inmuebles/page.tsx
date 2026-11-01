@@ -65,67 +65,70 @@ export default function Inmuebles() {
 
       <main className="max-w-[1440px] mx-auto px-container-margin lg:px-6 w-full pt-5 flex flex-col gap-6 pb-14">
 
-        {/* Encabezado + Pestañas en una fila */}
-        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3 lg:gap-4 border-b border-surface-container-high pb-0">
-          <div className="flex flex-col gap-1 lg:pb-2.5">
-            <h1 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">Inmuebles 🏠</h1>
-            <p className="font-body-md text-secondary text-xs">
-              <span className="lg:hidden">Dónde vivir e invertir en Pucallpa.</span>
-              <span className="hidden lg:inline">Encuentra dónde vivir o invierte en terrenos, casas y lotes en Pucallpa.</span>
-            </p>
+        {/* Encabezado + Pestañas + CTA en una sola fila */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 min-w-0">
+            <div className="flex flex-col gap-0.5 shrink-0">
+              <h1 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">Inmuebles 🏠</h1>
+              <p className="font-body-md text-secondary text-xs">
+                <span className="lg:hidden">Dónde vivir e invertir en Pucallpa.</span>
+                <span className="hidden lg:inline">Encuentra dónde vivir o invierte en terrenos, casas y lotes en Pucallpa.</span>
+              </p>
+            </div>
+            {/* Pestañas Alquiler / Venta */}
+            <div className="flex border-b border-surface-container-high lg:border-none gap-1 shrink-0">
+              <button
+                onClick={() => setModo('alquiler')}
+                className={`px-4 py-2 font-headline-sm text-sm transition-all relative ${
+                  modo === 'alquiler' ? 'text-primary font-bold' : 'text-secondary hover:text-on-surface'
+                }`}
+              >
+                <span className="flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[18px]">bed</span>
+                  En Alquiler
+                </span>
+                {modo === 'alquiler' && <span className="absolute left-2 right-2 bottom-0 h-[3px] bg-primary rounded-full" />}
+              </button>
+              <button
+                onClick={() => setModo('venta')}
+                className={`px-4 py-2 font-headline-sm text-sm transition-all relative ${
+                  modo === 'venta' ? 'text-primary font-bold' : 'text-secondary hover:text-on-surface'
+                }`}
+              >
+                <span className="flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[18px]">sell</span>
+                  En Venta
+                </span>
+                {modo === 'venta' && <span className="absolute left-2 right-2 bottom-0 h-[3px] bg-primary rounded-full" />}
+              </button>
+            </div>
           </div>
-          <div className="flex gap-0 lg:shrink-0">
-            <button
-              onClick={() => setModo('alquiler')}
-              className={`flex-1 lg:flex-none px-5 py-2.5 font-headline-sm text-sm transition-all relative ${
-                modo === 'alquiler' ? 'text-primary' : 'text-secondary hover:text-on-surface'
-              }`}
-            >
-              <span className="flex items-center justify-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px]">bed</span>
-                En Alquiler
-              </span>
-              {modo === 'alquiler' && <span className="absolute left-0 right-0 -bottom-px h-[3px] bg-primary rounded-full" />}
-            </button>
-            <button
-              onClick={() => setModo('venta')}
-              className={`flex-1 lg:flex-none px-5 py-2.5 font-headline-sm text-sm transition-all relative ${
-                modo === 'venta' ? 'text-primary' : 'text-secondary hover:text-on-surface'
-              }`}
-            >
-              <span className="flex items-center justify-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px]">sell</span>
-                En Venta
-              </span>
-              {modo === 'venta' && <span className="absolute left-0 right-0 -bottom-px h-[3px] bg-primary rounded-full" />}
-            </button>
-          </div>
-        </div>
 
-        {/* CTA publicar */}
-        <a
-          href={waLink('51963000000', modo === 'alquiler'
-            ? 'Hola BogaHub, quiero publicar un alquiler (habitación / mini-dpto / casa / pensión).'
-            : 'Hola BogaHub, quiero publicar un inmueble en venta (terreno / lote / casa / chacra).'
-          )}
-          target="_blank"
-          rel="noreferrer"
-          className="relative overflow-hidden rounded-2xl bg-inverse-surface text-inverse-on-surface p-4 flex items-center gap-3 group"
-        >
-          <div className="absolute -right-8 -top-10 w-40 h-40 bg-primary/20 rounded-full blur-2xl pointer-events-none" aria-hidden="true" />
-          <div className="w-11 h-11 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-inverse-primary text-[22px]">
-              {modo === 'alquiler' ? 'add_home' : 'add_business'}
-            </span>
-          </div>
-          <div className="relative flex flex-col min-w-0 flex-1">
-            <span className="font-headline-sm text-sm leading-tight">
-              {modo === 'alquiler' ? '¿Tienes un cuarto o depa libre?' : '¿Vendes terreno, casa o lote?'}
-            </span>
-            <span className="text-inverse-on-surface/70 font-body-md text-xs mt-0.5">Publícalo gratis y recibe interesados por WhatsApp</span>
-          </div>
-          <span className="material-symbols-outlined text-inverse-on-surface/60 shrink-0 group-hover:translate-x-1 transition-transform">chevron_right</span>
-        </a>
+          {/* CTA publicar */}
+          <a
+            href={waLink('51963000000', modo === 'alquiler'
+              ? 'Hola BogaHub, quiero publicar un alquiler (habitación / mini-dpto / casa / pensión).'
+              : 'Hola BogaHub, quiero publicar un inmueble en venta (terreno / lote / casa / chacra).'
+            )}
+            target="_blank"
+            rel="noreferrer"
+            className="relative overflow-hidden rounded-2xl bg-inverse-surface text-inverse-on-surface px-4 py-2.5 flex items-center gap-3 group w-full lg:w-auto lg:min-w-[390px] lg:max-w-[440px] shrink-0 active:scale-[0.99] transition-transform shadow-sm"
+          >
+            <div className="absolute -right-8 -top-10 w-40 h-40 bg-primary/20 rounded-full blur-2xl pointer-events-none" aria-hidden="true" />
+            <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-inverse-primary text-[20px]">
+                {modo === 'alquiler' ? 'add_home' : 'add_business'}
+              </span>
+            </div>
+            <div className="relative flex flex-col min-w-0 flex-1">
+              <span className="font-headline-sm text-xs sm:text-sm font-bold leading-tight">
+                {modo === 'alquiler' ? '¿Tienes un cuarto o depa libre?' : '¿Vendes terreno, casa o lote?'}
+              </span>
+              <span className="text-inverse-on-surface/70 font-body-md text-[11px] sm:text-xs mt-0.5 line-clamp-1">Publícalo gratis y recibe interesados por WhatsApp</span>
+            </div>
+            <span className="material-symbols-outlined text-inverse-on-surface/60 shrink-0 group-hover:translate-x-1 transition-transform text-[18px]">chevron_right</span>
+          </a>
+        </div>
 
         {/* ──── MODO ALQUILER ──── */}
         {modo === 'alquiler' && (
