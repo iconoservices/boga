@@ -35,6 +35,19 @@ export default function AppHeader({
   const firstName = user?.user_metadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || null;
 
   // Use props if provided, otherwise use context
+  const handleShare = () => {
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      navigator.share({
+        title: typeof document !== 'undefined' ? document.title || 'BogaHub' : 'BogaHub',
+        text: 'Descubre Pucallpa en BogaHub',
+        url: typeof window !== 'undefined' ? window.location.href : '',
+      }).catch(() => {});
+    } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href);
+      alert('Enlace copiado ✅');
+    }
+  };
+
   const displayCartCount = propCartCount !== undefined ? propCartCount : contextCartCount;
   const handleCartClick = propOnCartClick || (() => setIsCartOpen(true));
 
@@ -154,9 +167,14 @@ export default function AppHeader({
             iconClass="text-secondary text-[21px]"
           />
 
-          <Link href="/profile?seccion=favoritos" title="Mis favoritos" className="w-9 h-9 hover:bg-surface-container-high transition-colors rounded-full active:scale-95 flex items-center justify-center">
-            <span className={`material-symbols-outlined text-[21px] ${pathname.startsWith('/orders') || pathname.includes('favoritos') ? 'text-primary' : 'text-secondary'}`} style={pathname.startsWith('/orders') ? { fontVariationSettings: "'FILL' 1" } : {}}>favorite</span>
-          </Link>
+          <button
+            onClick={handleShare}
+            title="Compartir"
+            aria-label="Compartir"
+            className="w-9 h-9 hover:bg-surface-container-high transition-colors rounded-full active:scale-95 flex items-center justify-center"
+          >
+            <span className="material-symbols-outlined text-secondary text-[21px]">share</span>
+          </button>
 
           {showCart && (
             <button

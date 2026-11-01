@@ -86,6 +86,14 @@ export default function Viajes() {
   // Solo rutas reales de /api/viajes (sin ejemplos: si no hay ninguna, se avisa).
   const [rutas, setRutas] = useState<Ruta[]>([]);
   const [cargado, setCargado] = useState(false);
+  const [wspBoga, setWspBoga] = useState('51987911213');
+
+  useEffect(() => {
+    fetch('/api/contacto')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.whatsapp) setWspBoga(d.whatsapp); })
+      .catch(() => {});
+  }, []);
   useEffect(() => {
     const m = new URLSearchParams(window.location.search).get('medio');
     if (m === 'fluvial' || m === 'terrestre') setFiltro(m);
@@ -118,7 +126,7 @@ export default function Viajes() {
 
         {/* Para agencias: arriba y compacto, así lo ve quien quiere anunciarse (antes estaba al final de la página) */}
         <a
-          href={waLink('51963000000', 'Hola BogaHub, soy agencia de transporte y quiero contactarme con ustedes para publicar en la sección Pasajes.')}
+          href={waLink(wspBoga, 'Hola BogaHub, soy agencia de transporte y quiero contactarme con ustedes para publicar en la sección Pasajes.')}
           target="_blank"
           rel="noreferrer"
           className="rounded-xl bg-inverse-surface text-inverse-on-surface px-3 py-2.5 flex items-center gap-2.5 active:scale-[0.99] transition-transform"

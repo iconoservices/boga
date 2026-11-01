@@ -46,6 +46,14 @@ export default function Inmuebles() {
   const [ventas, setVentas] = useState<AvisoVenta[]>([]);
   const [cargado, setCargado] = useState(false);
   const [ventaAbierta, setVentaAbierta] = useState<AvisoVenta | null>(null);
+  const [wspBoga, setWspBoga] = useState('51987911213');
+
+  useEffect(() => {
+    fetch('/api/contacto')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.whatsapp) setWspBoga(d.whatsapp); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     // Solo avisos reales (sin ejemplos): si no hay ninguno, se muestra un aviso.
@@ -106,7 +114,7 @@ export default function Inmuebles() {
 
           {/* CTA publicar */}
           <a
-            href={waLink('51963000000', modo === 'alquiler'
+            href={waLink(wspBoga, modo === 'alquiler'
               ? 'Hola BogaHub, quiero publicar un alquiler (habitación / mini-dpto / casa / pensión).'
               : 'Hola BogaHub, quiero publicar un inmueble en venta (terreno / lote / casa / chacra).'
             )}

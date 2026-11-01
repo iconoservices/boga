@@ -71,6 +71,14 @@ export default function Servicios() {
   const [servicios, setServicios] = useState<any[]>([]);
   const [empleos, setEmpleos] = useState<any[]>([]);
   const [cargado, setCargado] = useState(false);
+  const [wspBoga, setWspBoga] = useState('51987911213');
+
+  useEffect(() => {
+    fetch('/api/contacto')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.whatsapp) setWspBoga(d.whatsapp); })
+      .catch(() => {});
+  }, []);
   // Visor: la imagen del aviso se abre grande aquí mismo (no en otra página).
   const [visor, setVisor] = useState<any | null>(null);
   useEffect(() => {
@@ -119,7 +127,7 @@ export default function Servicios() {
           {/* CTAs */}
           <div className="grid grid-cols-2 gap-2.5 sm:gap-3 w-full sm:w-auto sm:min-w-[420px] lg:min-w-[480px]">
             <a
-              href={waLink('51961000000', 'Hola BogaHub, quiero que me avisen cuando esté listo "Gana dinero con BogaHub" (recomendar negocios y choferes con comisión).')}
+              href={waLink(wspBoga, 'Hola BogaHub, quiero que me avisen cuando esté listo "Gana dinero con BogaHub" (recomendar negocios y choferes con comisión).')}
               target="_blank"
               rel="noreferrer"
               aria-label="Gana dinero con BogaHub (próximamente)"
@@ -134,7 +142,7 @@ export default function Servicios() {
               </span>
             </a>
             <a
-              href={waLink('51961000000', 'Hola BogaHub, quiero publicar un aviso en Servicios de BogaHub (servicio / empleo).')}
+              href={waLink(wspBoga, 'Hola BogaHub, quiero publicar un aviso en Trabajos de BogaHub (servicio / empleo).')}
               target="_blank"
               rel="noreferrer"
               className="rounded-xl bg-inverse-surface text-inverse-on-surface px-3.5 py-2.5 flex items-center gap-2.5 active:scale-[0.98] hover:shadow-md transition-all shadow-sm"
