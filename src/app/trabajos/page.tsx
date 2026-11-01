@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { fetchChamba, haceCuanto, fechaAviso, slugEmpleo } from '@/lib/chamba';
 import PixelEvent from '@/components/PixelEvent';
 
@@ -60,6 +61,7 @@ function waLink(numero: string, texto: string) {
 }
 
 export default function Servicios() {
+  const router = useRouter();
   const { cartCount, setIsCartOpen } = useCart();
   // Arranca en "Empleos": los avisos de trabajo tienen más demanda que el
   // directorio de oficios.
@@ -204,7 +206,7 @@ export default function Servicios() {
 
         {/* Avisos de empleo */}
         {vista === 'empleos' && (
-          <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:items-start">
+          <div className="flex flex-col gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-4 sm:items-stretch">
             {cargado && empleos.length === 0 && (
               <div className="col-span-full bg-white rounded-2xl border border-dashed border-surface-container-highest p-8 text-center">
                 <span className="material-symbols-outlined text-secondary/40 text-[32px]">work</span>
@@ -267,79 +269,119 @@ export default function Servicios() {
                 </span>
               </Link>
 
-              {/* ── Desde sm: tarjeta con foto grande y todo a la vista ── */}
-              <div className="hidden sm:flex bg-white rounded-2xl p-4 shadow-[0_10px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest items-start gap-4">
+              {/* ── Desde sm: tarjeta con foto y todo a la vista (clickeable completa) ── */}
+              <div
+                role="link"
+                tabIndex={0}
+                onClick={(ev) => {
+                  const target = ev.target as HTMLElement;
+                  if (target.closest('a, button')) return;
+                  router.push(`/trabajos/${slugEmpleo(e)}`);
+                }}
+                onKeyDown={(ev) => {
+                  if (ev.key === 'Enter' || ev.key === ' ') {
+                    const target = ev.target as HTMLElement;
+                    if (target.closest('a, button')) return;
+                    ev.preventDefault();
+                    router.push(`/trabajos/${slugEmpleo(e)}`);
+                  }
+                }}
+                className="hidden sm:flex bg-white rounded-2xl p-4 shadow-[0_10px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest items-start gap-3.5 cursor-pointer hover:border-primary/40 hover:shadow-md transition-all group"
+              >
                 {e.img ? (
                   <button
                     type="button"
-                    onClick={() => setVisor(e)}
+                    onClick={(ev) => {
+                      ev.stopPropagation();
+                      setVisor(e);
+                    }}
                     aria-label={`Ver imagen del aviso de ${e.puesto} en grande`}
-                    className="group relative w-28 sm:w-32 aspect-[3/4] rounded-xl overflow-hidden bg-surface-container-low shrink-0 border border-surface-container-highest active:scale-95 transition-transform"
+                    className="group/img relative w-24 md:w-28 aspect-[3/4] rounded-xl overflow-hidden bg-surface-container-low shrink-0 border border-surface-container-highest active:scale-95 transition-transform"
                   >
                     <img src={e.img} alt={e.puesto} loading="lazy" referrerPolicy="no-referrer" className="w-full h-full object-cover object-top" />
-                    <span className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors">
-                      <span className="material-symbols-outlined text-white text-[26px] opacity-0 group-hover:opacity-100 transition-opacity">zoom_in</span>
+                    <span className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover/img:bg-black/30 transition-colors">
+                      <span className="material-symbols-outlined text-white text-[24px] opacity-0 group-hover/img:opacity-100 transition-opacity">zoom_in</span>
                     </span>
                   </button>
                 ) : (
-                  <div className="w-28 sm:w-32 aspect-[3/4] rounded-xl flex items-center justify-center shrink-0" style={{ background: colorEmpleo(e.id) }}>
-                    <span className="material-symbols-outlined text-white text-[30px]">work</span>
+                  <div className="w-24 md:w-28 aspect-[3/4] rounded-xl flex items-center justify-center shrink-0" style={{ background: colorEmpleo(e.id) }}>
+                    <span className="material-symbols-outlined text-white text-[28px]">work</span>
                   </div>
                 )}
 
-                <div className="flex flex-col min-w-0 flex-1 gap-2">
-                  <div className="flex flex-col min-w-0">
-                    <h2 className="font-headline-sm text-base text-on-surface leading-tight line-clamp-2">
-                      <Link href={`/trabajos/${slugEmpleo(e)}`} className="hover:text-primary transition-colors">
+                <div className="flex flex-col min-w-0 flex-1 gap-2 self-stretch justify-between">
+                  <div className="flex flex-col gap-1.5 min-w-0">
+                    <div className="flex flex-col min-w-0">
+                      <h2 className="font-headline-sm text-sm sm:text-[15px] font-bold text-on-surface leading-snug line-clamp-2 group-hover:text-primary transition-colors">
                         {e.puesto}
-                      </Link>
-                    </h2>
-                    <span className="text-secondary font-body-md text-xs line-clamp-1 mt-0.5">{[e.negocio, e.zona].filter(Boolean).join(' · ')}</span>
+                      </h2>
+                      <span className="text-secondary font-body-md text-xs line-clamp-1 mt-0.5">
+                        {[e.negocio, e.zona].filter(Boolean).join(' · ')}
+                      </span>
+                    </div>
+
+                    {/* Chips informativos */}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {e.tipo && (
+                        <span className="h-6 inline-flex items-center bg-surface-container-low text-secondary text-[10px] font-label-md px-2 rounded-full border border-surface-container-highest">
+                          {e.tipo}
+                        </span>
+                      )}
+                      {e.pago && (
+                        <span className="h-6 inline-flex items-center bg-emerald-50 text-emerald-700 font-bold text-[10px] font-label-md px-2 rounded-full border border-emerald-200/60">
+                          {e.pago}
+                        </span>
+                      )}
+                      {haceCuanto(e.subido) && (
+                        <span className="h-6 inline-flex items-center gap-1 bg-surface-container-low text-secondary text-[10px] font-label-md px-2 rounded-full border border-surface-container-highest">
+                          <span className="material-symbols-outlined text-[12px]">schedule</span>
+                          {haceCuantoCorto(e.subido)}
+                        </span>
+                      )}
+                      {fechaAviso(e.publicado) && (
+                        <span className="h-6 inline-flex items-center gap-1 bg-surface-container-low text-secondary text-[10px] font-label-md px-2 rounded-full border border-surface-container-highest">
+                          <span className="material-symbols-outlined text-[12px]">event</span>
+                          {fechaAviso(e.publicado)}
+                        </span>
+                      )}
+                    </div>
+
+                    {e.descripcion && (
+                      <p className="text-secondary font-body-md text-xs leading-relaxed line-clamp-2 mt-0.5">
+                        {e.descripcion}
+                      </p>
+                    )}
                   </div>
 
-                  {/* Todos los elementos de esta fila miden lo mismo (h-7, texto 11px) */}
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="h-7 inline-flex items-center bg-surface-container-low text-secondary text-[11px] font-label-md px-2.5 rounded-full border border-surface-container-highest">{e.tipo}</span>
-                    <span className="h-7 inline-flex items-center bg-primary-fixed text-primary text-[11px] font-label-md px-2.5 rounded-full">{e.pago}</span>
-                    {haceCuanto(e.subido) && (
-                      <span className="h-7 inline-flex items-center gap-1 bg-surface-container-low text-secondary text-[11px] font-label-md px-2.5 rounded-full border border-surface-container-highest">
-                        <span className="material-symbols-outlined text-[14px]">schedule</span>{haceCuantoCorto(e.subido)}
-                      </span>
-                    )}
-                    {fechaAviso(e.publicado) && (
-                      <span className="h-7 inline-flex items-center gap-1 bg-surface-container-low text-secondary text-[11px] font-label-md px-2.5 rounded-full border border-surface-container-highest">
-                        <span className="material-symbols-outlined text-[14px]">event</span>{fechaAviso(e.publicado)}
-                      </span>
-                    )}
-                    <span className="ml-auto flex items-center gap-1.5">
-                      {e.email && (
-                        <a
-                          href={`mailto:${e.email}?subject=${encodeURIComponent(`Postulación: ${e.puesto}`)}`}
-                          className="h-7 inline-flex items-center gap-1 bg-primary-fixed text-primary text-[11px] font-label-md px-3 rounded-full active:scale-95 transition-transform"
-                        >
-                          <span className="material-symbols-outlined text-[14px]">mail</span>
-                          Enviar CV
-                        </a>
-                      )}
-                      {(e.link || e.wsp) && (
-                        <a
-                          href={e.link || waLink(e.wsp, `Hola, vi el aviso de "${e.puesto}" en ${e.negocio} por BogaHub. Me interesa postular.`)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="h-7 inline-flex items-center justify-center gap-1 bg-primary text-white text-[11px] font-label-md px-3.5 rounded-full active:scale-95 transition-transform"
-                        >
-                          {e.link ? 'Ver aviso' : 'Postular'}
-                          <span className="material-symbols-outlined text-[14px]">{e.link ? 'open_in_new' : 'arrow_forward'}</span>
-                        </a>
-                      )}
-                    </span>
+                  <div className="flex flex-col gap-2 pt-2 border-t border-surface-container-highest/60 mt-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 ml-auto">
+                        {e.email && (
+                          <a
+                            href={`mailto:${e.email}?subject=${encodeURIComponent(`Postulación: ${e.puesto}`)}`}
+                            onClick={(ev) => ev.stopPropagation()}
+                            className="h-7 inline-flex items-center gap-1 bg-surface-container-low hover:bg-surface-container text-secondary text-[11px] font-label-md px-2.5 rounded-full border border-surface-container-highest active:scale-95 transition-transform"
+                          >
+                            <span className="material-symbols-outlined text-[13px]">mail</span>
+                            CV
+                          </a>
+                        )}
+                        {(e.link || e.wsp) && (
+                          <a
+                            href={e.link || waLink(e.wsp, `Hola, vi el aviso de "${e.puesto}" en ${e.negocio} por BogaHub. Me interesa postular.`)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(ev) => ev.stopPropagation()}
+                            className="h-7 inline-flex items-center justify-center gap-1 bg-primary text-white text-[11px] font-label-md px-3 rounded-full active:scale-95 hover:bg-primary/90 transition-transform shadow-xs"
+                          >
+                            {e.link ? 'Ver aviso' : 'Postular'}
+                            <span className="material-symbols-outlined text-[13px]">{e.link ? 'open_in_new' : 'arrow_forward'}</span>
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                    <AvisoSeguridadEmpleo />
                   </div>
-
-                  {e.descripcion && <DescripcionEmpleo texto={e.descripcion} />}
-                  <Link href={`/trabajos/${slugEmpleo(e)}`} className="self-start text-[11px] font-label-md text-primary underline">
-                    Ver ficha completa
-                  </Link>
-                  <AvisoSeguridadEmpleo />
                 </div>
               </div>
               </React.Fragment>
