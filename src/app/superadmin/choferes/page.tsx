@@ -49,6 +49,7 @@ export default function ChoferesAdmin() {
   const [choferes, setChoferes] = useState<DriverRow[]>([]);
   const [cargandoDatos, setCargandoDatos] = useState(true);
   const [ficha, setFicha] = useState<Ficha>(FICHA_VACIA);
+  const [mostrarForm, setMostrarForm] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [msg, setMsg] = useState('');
   const [uploadingImg, setUploadingImg] = useState(false);
@@ -107,6 +108,7 @@ export default function ChoferesAdmin() {
       horario: normalizarHorario(d.horario_semana) ?? {}, horario_texto: '',
     });
     setMsg('');
+    setMostrarForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -123,6 +125,7 @@ export default function ChoferesAdmin() {
     });
     await supabase.from('driver_requests').update({ status: 'approved' }).eq('id', p.id);
     setPostulaciones((prev) => prev.filter((x) => x.id !== p.id));
+    setMostrarForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -166,6 +169,7 @@ export default function ChoferesAdmin() {
     setGuardando(false);
     if (res.error) { setMsg(`Error: ${res.error.message}`); return; }
     setFicha(FICHA_VACIA);
+    setMostrarForm(false);
 
     // Un chofer nuevo sale con su enlace listo: se crea su acceso y se abre su panel para mandárselo por WhatsApp.
     const nuevoId = !ficha.id ? (res.data?.[0] as { id?: string } | undefined)?.id : undefined;
@@ -273,12 +277,47 @@ export default function ChoferesAdmin() {
 
       <main className="max-w-[900px] mx-auto px-container-margin py-8 flex flex-col gap-10">
 
-        {/* Formulario ficha */}
-        <section>
-          <h2 className="font-headline-md text-lg text-on-surface mb-3">
-            {ficha.id ? 'Editar chofer' : 'Agregar chofer'}
-          </h2>
-          <form onSubmit={guardar} className="flex flex-col gap-5">
+        {/* Botón para desplegar cuestionario (mientras no se apriete) */}
+        {!mostrarForm && !ficha.id && (
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-surface-container-lowest border border-surface-container-highest rounded-2xl p-5 shadow-sm">
+            <div>
+              <h2 className="font-headline-md text-lg font-bold text-on-surface">Choferes · Taxi Seguro</h2>
+              <p className="text-xs text-secondary mt-0.5">Directorio de choferes autorizados en BogaHub</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => { setFicha(FICHA_VACIA); setMsg(''); setMostrarForm(true); }}
+              className="flex items-center justify-center gap-2 bg-[#2170e4] hover:bg-[#1a5ec4] text-white font-bold text-sm px-5 py-2.5 rounded-xl shadow-sm active:scale-95 transition-all self-start sm:self-auto"
+            >
+              <span className="material-symbols-outlined text-[20px]">add</span>
+              Agregar chofer
+            </button>
+          </div>
+        )}
+
+        {/* Cuestionario / Formulario de chofer (solo visible al pulsar + o editar) */}
+        {(mostrarForm || ficha.id) && (
+          <section className="bg-surface-container-lowest border border-surface-container-highest rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col gap-5">
+            <div className="flex items-center justify-between pb-3 border-b border-surface-container-highest">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#2170e4] text-[22px]">
+                  {ficha.id ? 'edit' : 'person_add'}
+                </span>
+                <h2 className="font-headline-md text-lg font-bold text-on-surface">
+                  {ficha.id ? 'Editar chofer' : 'Agregar nuevo chofer'}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setFicha(FICHA_VACIA); setMsg(''); setMostrarForm(false); }}
+                className="flex items-center gap-1 text-xs font-semibold text-secondary hover:text-on-surface px-2.5 py-1.5 rounded-lg hover:bg-surface-container-high transition-colors"
+                title="Cerrar formulario"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+                Cerrar
+              </button>
+            </div>
+            <form onSubmit={guardar} className="flex flex-col gap-5">
             {/* Bloque 1: Datos del chofer */}
             <div className="bg-surface-container-lowest border border-surface-container-highest rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-4 pb-2 border-b border-surface-container-highest">
@@ -387,15 +426,14 @@ export default function ChoferesAdmin() {
               <button type="submit" disabled={guardando} className="bg-primary text-on-primary font-bold text-sm px-6 py-2.5 rounded-xl disabled:opacity-60 shadow-sm hover:opacity-95 transition-opacity">
                 {guardando ? 'Guardando…' : ficha.id ? 'Guardar cambios' : 'Agregar chofer'}
               </button>
-              {ficha.id && (
-                <button type="button" onClick={() => { setFicha(FICHA_VACIA); setMsg(''); }} className="text-sm text-secondary underline hover:text-on-surface">
-                  Cancelar edición
-                </button>
-              )}
+              <button type="button" onClick={() => { setFicha(FICHA_VACIA); setMsg(''); setMostrarForm(false); }} className="text-sm text-secondary underline hover:text-on-surface">
+                Cancelar
+              </button>
               {msg && <span className="text-xs font-bold text-primary">{msg}</span>}
             </div>
           </form>
-        </section>
+          </section>
+        )}
 
         {/* Postulaciones */}
         <section>
