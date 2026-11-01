@@ -832,6 +832,8 @@ export default function CobrosPage() {
         {vista === 'precios' && (<>
         {/* Precios: 3 planes (lo que incluye cada uno) + módulos que se suman */}
           <div className="flex flex-col gap-5">
+            {/* Contacto general / WhatsApp oficial de BogaHub */}
+            <ContactoBoga />
             <p className="text-xs text-[#424754]">
               El <b>precio de cada plan es el total</b> que paga la tienda por ese plan. Encima se suman los módulos que tenga prendidos (Ventas, Inventario, dominio propio…). Ejemplo: plan Negocio + Ventas + Inventario.
             </p>
@@ -1048,7 +1050,6 @@ export default function CobrosPage() {
               />
               <CatalogoOrdenado modulos={INITIAL_MODULES.filter((m) => m.buildStatus !== 'no_construido')} precioDeClave={precioDeClave} />
               <HistorialPromociones />
-              <ContactoBoga />
             </div>
           </div>
         </>)}

@@ -1,7 +1,8 @@
 'use client';
 
-// Contacto de Boga que se usa donde haga falta un asesor: hoy el botón flotante de WhatsApp de /negocios.
-// Se guarda en site_settings (clave 'whatsapp_asesor'). Si se deja vacío, el botón no aparece.
+// Contacto de Boga que se usa donde haga falta un asesor: botones de avisos,
+// trabajos, inmuebles, viajes, taxi y el botón flotante de /negocios.
+// Se guarda en site_settings (clave 'whatsapp_asesor').
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -30,33 +31,38 @@ export default function ContactoBoga() {
     setGuardando(false);
     if (error) { setMensaje('No se pudo guardar. ¿Corriste el SQL de site_settings en supabase_setup.sql?'); return; }
     setNumero(n);
-    setMensaje(n ? '✅ Guardado. El botón aparece en /negocios en unos minutos.' : '✅ Quitado. El botón ya no se muestra.');
+    setMensaje(n ? '✅ Guardado correctamente. Actualizado en toda la plataforma.' : '✅ Quitado.');
   };
 
   return (
-    <div className="p-4 bg-white border border-[#c2c6d6] rounded-md flex flex-col gap-2">
-      <h3 className="text-sm font-bold text-[#191b23]">Contacto de Boga</h3>
-      <p className="text-xs text-[#424754]">
-        WhatsApp del asesor. Con él aparece el botón flotante «¿Dudas? Habla con un asesor» en /negocios. Vacío = no se muestra.
-      </p>
-      <div className="flex flex-wrap items-center gap-2">
+    <div className="p-4 bg-white border border-[#c2c6d6] rounded-xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="flex flex-col gap-0.5">
+        <h3 className="text-sm font-bold text-[#191b23] flex items-center gap-2">
+          <span className="material-symbols-outlined text-[#0058be] text-[20px]">phone_in_talk</span>
+          Número general / WhatsApp de BogaHub
+        </h3>
+        <p className="text-xs text-[#424754]">
+          WhatsApp de contacto oficial (usado para publicar avisos, soporte y hablar con un asesor).
+        </p>
+        {mensaje && <p className="text-xs font-semibold text-emerald-700 mt-0.5">{mensaje}</p>}
+      </div>
+      <div className="flex items-center gap-2 shrink-0">
         <input
           type="tel"
           value={numero}
           onChange={(e) => setNumero(e.target.value)}
-          placeholder="987 654 321"
-          className="flex-1 min-w-[180px] h-10 px-3 rounded-md border border-[#c2c6d6] text-sm outline-none focus:border-[#0058be]"
+          placeholder="Ej. 987 654 321"
+          className="w-48 h-10 px-3 rounded-lg border border-[#c2c6d6] text-sm font-bold outline-none focus:border-[#0058be]"
         />
         <button
           type="button"
           onClick={guardar}
           disabled={guardando}
-          className="h-10 px-4 bg-[#0058be] text-white font-bold text-xs rounded-md disabled:opacity-60"
+          className="h-10 px-5 bg-[#0058be] hover:bg-[#0047a0] text-white font-bold text-xs rounded-lg disabled:opacity-60 transition-colors shadow-sm"
         >
           {guardando ? 'Guardando…' : 'Guardar'}
         </button>
       </div>
-      {mensaje && <p className="text-xs font-semibold text-[#424754]">{mensaje}</p>}
     </div>
   );
 }
