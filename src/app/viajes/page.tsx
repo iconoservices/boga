@@ -108,17 +108,17 @@ export default function Viajes() {
 
       <main className="max-w-[1440px] mx-auto px-container-margin lg:px-6 w-full pt-5 flex flex-col gap-6 pb-14">
 
+        <h1 className="sr-only">Pasajes</h1>
+
         <ViajesCabecera
           activo={filtro}
-          titulo="Viajes desde Pucallpa"
-          subtitulo="Rápidos por el río Ucayali, buses por la Federico Basadre y vuelos nacionales."
           onSelect={setFiltro}
           conteo={{ fluvial: conteo.fluvial, terrestre: conteo.terrestre }}
         />
 
         {/* Para agencias: arriba y compacto, así lo ve quien quiere anunciarse (antes estaba al final de la página) */}
         <a
-          href={waLink('51963000000', 'Hola BogaHub, soy agencia de transporte y quiero aparecer en la sección Viajes.')}
+          href={waLink('51963000000', 'Hola BogaHub, soy agencia de transporte y quiero contactarme con ustedes para publicar en la sección Pasajes.')}
           target="_blank"
           rel="noreferrer"
           className="rounded-xl bg-inverse-surface text-inverse-on-surface px-3 py-2.5 flex items-center gap-2.5 active:scale-[0.99] transition-transform"
@@ -128,7 +128,7 @@ export default function Viajes() {
           </span>
           <span className="flex flex-col min-w-0 flex-1 leading-tight">
             <span className="font-headline-sm text-[13px]">¿Eres agencia de transporte?</span>
-            <span className="text-[11px] text-inverse-on-surface/70 mt-0.5">Aparece aquí gratis y recibe pasajeros por WhatsApp</span>
+            <span className="text-[11px] text-inverse-on-surface/70 mt-0.5">Contáctate con nosotros para publicar tus rutas y recibir pasajeros</span>
           </span>
           <span className="material-symbols-outlined text-inverse-on-surface/60 shrink-0">chevron_right</span>
         </a>

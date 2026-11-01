@@ -23,8 +23,8 @@ const INACTIVO = 'bg-white border border-surface-container-highest text-secondar
 
 interface Props {
   activo: MedioViaje;
-  titulo: string;
-  subtitulo: string;
+  titulo?: string;
+  subtitulo?: string;
   /** Si viene, Todos/Fluvial/Terrestre filtran en la misma página (sin navegar). Si no, son enlaces a /viajes. */
   onSelect?: (m: MedioViaje) => void;
   /** Cantidad de rutas por medio; el número solo se muestra si es mayor que 0. */
@@ -34,17 +34,13 @@ interface Props {
 export default function ViajesCabecera({ activo, titulo, subtitulo, onSelect, conteo }: Props) {
   return (
     <>
-      {/* Encabezado + banner en una sola fila */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0c4a6e] to-[#1B8EBF] text-white px-5 py-4 flex items-center gap-4">
-        <div className="absolute -right-10 -top-10 w-48 h-48 bg-white/5 rounded-full blur-2xl pointer-events-none" aria-hidden="true" />
-        <span className="relative w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
-          <span className="material-symbols-outlined text-[28px]">{activo === 'aereo' ? 'flight_takeoff' : 'sailing'}</span>
-        </span>
-        <div className="relative min-w-0">
-          <h1 className="font-headline-lg text-xl lg:text-2xl font-extrabold leading-tight">{titulo}</h1>
-          <p className="font-body-md text-xs sm:text-sm text-white/80 leading-snug mt-0.5">{subtitulo}</p>
+      {/* Encabezado */}
+      {titulo && (
+        <div className="flex flex-col gap-1">
+          <h1 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">{titulo}</h1>
+          {subtitulo && <p className="font-body-md text-secondary text-xs">{subtitulo}</p>}
         </div>
-      </div>
+      )}
 
       {/* Botones por medio */}
       <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1" style={{ scrollbarWidth: 'none' }}>

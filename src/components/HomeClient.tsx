@@ -61,12 +61,12 @@ function armarSlides(notas: NotaHome[], promos: Slide[]): Slide[] {
 // como una categoría: "cómo te ayudamos", en lenguaje cercano.
 const PORTALES = [
   { href: '/explore',     label: 'Market',      icon: 'storefront',          sub: 'Te traemos pescado, carne y tienda', color: '#E8894A' },
+  { href: '/eventos',     label: 'Eventos',     icon: 'celebration',         sub: 'Te armamos el finde en la ciudad',   color: '#EBB05C' },
   { href: '/trabajos',   label: 'Trabajos',    icon: 'construction',        sub: 'Te conseguimos técnico o trabajo',   color: '#3E9B5F' },
-  { href: '/transporte', label: 'Taxi Seguro', icon: 'local_taxi',          sub: 'Te llevamos con chofer verificado',  color: '#E4655A' },
   { href: '/inmuebles',   label: 'Inmuebles',   icon: 'real_estate_agent',   sub: 'Te encontramos dónde vivir o invertir', color: '#8B7FD4' },
-  { href: '/viajes',      label: 'Viajes',      icon: 'directions_boat',     sub: 'Te conectamos con rápidos y buses',  color: '#1B8EBF' },
-  { href: '/eventos',     label: 'Agenda',      icon: 'celebration',         sub: 'Te armamos el finde en la ciudad',   color: '#EBB05C' },
   { href: '/sorteos',     label: 'Sorteos',     icon: 'confirmation_number', sub: 'Te hacemos ganar con tus compras',   color: '#2E9B76' },
+  { href: '/viajes',      label: 'Pasajes',     icon: 'directions_boat',     sub: 'Te conectamos con rápidos y buses',  color: '#1B8EBF' },
+  { href: '/transporte', label: 'Taxi Seguro', icon: 'local_taxi',          sub: 'Te llevamos con chofer verificado',  color: '#E4655A' },
   { href: '/revista',     label: 'Revista',     icon: 'menu_book',           sub: 'Te contamos la selva y sus historias', color: '#D97742' },
   { href: '/negocios',    label: 'Negocios',    icon: 'work',                sub: 'Te ponemos a vender por WhatsApp',   color: '#2F3B4C' },
 ];
@@ -444,7 +444,7 @@ export default function HomeClient({ inicial }: { inicial: HomeData }) {
         {/* Qué hacer en Pucallpa hoy — justo después de Market */}
         {queHacer.length > 0 && (
         <section className="flex flex-col gap-4">
-          <SectionHead title="Qué hacer en Pucallpa hoy" href="/eventos" cta="Ver agenda" />
+          <SectionHead title="Qué hacer en Pucallpa hoy" href="/eventos" cta="Ver eventos" />
           <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
             {queHacer.map((e) => (
               <Link href="/eventos" key={e.id} className="min-w-[220px] w-[220px] lg:min-w-[260px] lg:w-[260px] bg-white border border-surface-container-highest overflow-hidden shadow-sm rounded-2xl snap-start group flex flex-col">
@@ -580,7 +580,7 @@ export default function HomeClient({ inicial }: { inicial: HomeData }) {
         {/* Trabajos y oficios — solo datos reales; sin ninguno, no se muestra */}
         {(empleosHome.length > 0 || oficiosHome.length > 0) && (
         <section className="flex flex-col gap-4">
-          <SectionHead title="Trabajos y oficios" href="/trabajos" cta="Ver todo" />
+          <SectionHead title="Trabajos" href="/trabajos" cta="Ver todo" />
 
           {empleosHome.length > 0 && (
             <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
@@ -672,7 +672,7 @@ export default function HomeClient({ inicial }: { inicial: HomeData }) {
 
         {/* Viajes & Transporte — solo con rutas reales cargadas */}
         {viajesHome.length > 0 && (        <section className="flex flex-col gap-4">
-          <SectionHead title="Viajes desde Pucallpa" href="/viajes" cta="Ver rutas" />
+          <SectionHead title="Pasajes desde Pucallpa" href="/viajes" cta="Ver rutas" />
           <div className={CAROUSEL} style={{ scrollbarWidth: 'none' }}>
             {viajesHome.map((v) => (
               <Link href="/viajes" key={v.id} className="min-w-[250px] w-[250px] lg:min-w-[290px] lg:w-[290px] snap-start shrink-0 bg-white border border-surface-container-highest rounded-2xl overflow-hidden shadow-sm hover:border-primary/30 hover:shadow-md transition-all group flex items-center gap-3 p-3">

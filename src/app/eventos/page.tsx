@@ -95,7 +95,7 @@ export default function Eventos() {
         <header className={`flex flex-col gap-1.5 pt-1 ${carrusel.length > 0 ? 'lg:hidden' : ''}`}>
           <div className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-wider">
             <span className="material-symbols-outlined text-[18px]">calendar_month</span>
-            Agenda & Eventos en Pucallpa
+            Eventos en Pucallpa
           </div>
           <h1 className="font-headline-lg font-black text-2xl sm:text-3xl text-on-surface tracking-tight leading-tight">
             ¿Qué hacer en Pucallpa hoy?
@@ -204,7 +204,7 @@ export default function Eventos() {
             <header className="hidden lg:flex flex-col gap-2">
               <div className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-wider">
                 <span className="material-symbols-outlined text-[18px]">calendar_month</span>
-                Agenda & Eventos en Pucallpa
+                Eventos en Pucallpa
               </div>
               <h1 className="font-headline-lg font-black text-2xl lg:text-3xl text-on-surface tracking-tight leading-tight">
                 ¿Qué hacer en Pucallpa hoy?

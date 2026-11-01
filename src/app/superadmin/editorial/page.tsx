@@ -132,12 +132,12 @@ const PILARES: PilarEditorial[] = [
 
 const MODULOS_SISTEMA = [
   { icon: 'storefront', label: 'Market', path: '/market', desc: 'Restaurantes, tiendas y delivery local' },
-  { icon: 'calendar_month', label: 'Agenda & Eventos', path: '/eventos', desc: 'Conciertos, ferias y qué hacer hoy' },
+  { icon: 'calendar_month', label: 'Eventos', path: '/eventos', desc: 'Conciertos, ferias y qué hacer hoy' },
   { icon: 'home', label: 'Inmuebles', path: '/inmuebles', desc: 'Alquiler de cuartos, casas y terrenos' },
   { icon: 'casino', label: 'Sorteos', path: '/sorteos', desc: 'Rifas patrocinadas por comercios locales' },
   { icon: 'inventory_2', label: 'Productos', path: '/productos', desc: 'Catálogo de productos destacados' },
-  { icon: 'engineering', label: 'Trabajos & Oficios', path: '/trabajos', desc: 'Bolsa de empleo y técnicos recomendados' },
-  { icon: 'directions_boat', label: 'Viajes & Rutas', path: '/viajes', desc: 'Rápidos fluviales, lanchas y buses' },
+  { icon: 'engineering', label: 'Trabajos', path: '/trabajos', desc: 'Bolsa de empleo y técnicos recomendados' },
+  { icon: 'directions_boat', label: 'Pasajes', path: '/viajes', desc: 'Rápidos fluviales, lanchas y buses' },
   { icon: 'local_taxi', label: 'Taxi Seguro', path: '/transporte', desc: 'Mototaxis verificados y tarifas justas' },
   { icon: 'menu_book', label: 'Revista Cultural', path: '/revista', desc: 'Historias "Yo Soy de la Selva"' },
   { icon: 'work', label: 'Para Negocios', path: '/negocios', desc: 'Vende y digitaliza tu local en Boga' },
