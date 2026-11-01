@@ -50,6 +50,8 @@ export default function ChoferesAdmin() {
   const [cargandoDatos, setCargandoDatos] = useState(true);
   const [ficha, setFicha] = useState<Ficha>(FICHA_VACIA);
   const [mostrarForm, setMostrarForm] = useState(false);
+  type TabChoferes = 'postulaciones' | 'directorio' | 'repartidores' | 'pedidos';
+  const [tabActiva, setTabActiva] = useState<TabChoferes>('postulaciones');
   const [guardando, setGuardando] = useState(false);
   const [msg, setMsg] = useState('');
   const [uploadingImg, setUploadingImg] = useState(false);
@@ -435,7 +437,70 @@ export default function ChoferesAdmin() {
           </section>
         )}
 
-        {/* Postulaciones */}
+        {/* Barra de pestañas */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-surface-container-high">
+          <button
+            type="button"
+            onClick={() => setTabActiva('postulaciones')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 ${
+              tabActiva === 'postulaciones'
+                ? 'bg-[#2170e4] text-white shadow-sm'
+                : 'text-secondary hover:text-on-surface hover:bg-surface-container-high'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[18px]">assignment_ind</span>
+            Postulaciones pendientes
+            {postulaciones.length > 0 && (
+              <span className={`text-[11px] font-black px-2 py-0.5 rounded-full ${
+                tabActiva === 'postulaciones' ? 'bg-white/25 text-white' : 'bg-primary text-white'
+              }`}>
+                {postulaciones.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setTabActiva('directorio')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 ${
+              tabActiva === 'directorio'
+                ? 'bg-[#2170e4] text-white shadow-sm'
+                : 'text-secondary hover:text-on-surface hover:bg-surface-container-high'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[18px]">local_taxi</span>
+            Directorio ({choferes.filter((c) => c.tipo !== 'Repartidor').length})
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setTabActiva('repartidores')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 ${
+              tabActiva === 'repartidores'
+                ? 'bg-[#2170e4] text-white shadow-sm'
+                : 'text-secondary hover:text-on-surface hover:bg-surface-container-high'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[18px]">delivery_dining</span>
+            Repartidores ({choferes.filter((c) => c.tipo === 'Repartidor').length})
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setTabActiva('pedidos')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 ${
+              tabActiva === 'pedidos'
+                ? 'bg-[#2170e4] text-white shadow-sm'
+                : 'text-secondary hover:text-on-surface hover:bg-surface-container-high'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[18px]">receipt_long</span>
+            Pedidos de taxi ({pedidos.length})
+          </button>
+        </div>
+
+        {/* 1. Vista Postulaciones */}
+        {tabActiva === 'postulaciones' && (
         <section>
           <h2 className="font-headline-md text-lg text-on-surface mb-3">
             Postulaciones pendientes {postulaciones.length > 0 && <span className="text-primary">({postulaciones.length})</span>}
@@ -492,91 +557,139 @@ export default function ChoferesAdmin() {
             </div>
           )}
         </section>
+        )}
 
-        {/* Directorio de taxis y, aparte, los repartidores (de tiendas y de BogaHub) */}
-        {[
-          { titulo: 'Directorio', vacio: 'Todavía no hay choferes en el directorio. Agrega el primero con el formulario de arriba o aprobando una postulación pendiente.', lista: choferes.filter((c) => c.tipo !== 'Repartidor') },
-          { titulo: 'Repartidores', vacio: 'Todavía no hay repartidores. Los de BogaHub los agregas arriba con el tipo «Repartidor»; los de cada tienda los crea su dueño desde el pedido.', lista: choferes.filter((c) => c.tipo === 'Repartidor') },
-        ].map((grupo) => (
-        <section key={grupo.titulo}>
-          <h2 className="font-headline-md text-lg text-on-surface mb-3">{grupo.titulo} ({grupo.lista.length})</h2>
-          {cargandoDatos ? <p className="text-secondary text-sm">Cargando…</p> :
-            grupo.lista.length === 0 ? <p className="text-secondary text-sm">{grupo.vacio}</p> : (
-            <div className="flex flex-col gap-2">
-              {grupo.lista.map((d) => (
-                <div key={d.id} className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-3 flex flex-wrap items-center gap-3">
-                  <span className={`w-2 h-2 rounded-full shrink-0 ${d.status === 'activo' ? 'bg-primary' : 'bg-surface-container-highest'}`} />
-                  <div className="flex-1 min-w-[180px]">
-                    <p className="font-bold text-sm text-on-surface">
-                      {d.nombre} <span className="text-secondary font-normal">· {d.tipo} · {d.ciudad}</span>
-                      {d.dni && <span className="text-[11px] font-mono text-secondary ml-2">(DNI: {d.dni})</span>}
-                    </p>
-                    {d.tipo === 'Repartidor' && (
-                      <span className={`inline-block text-[11px] font-extrabold px-2 py-0.5 rounded-full border mb-0.5 ${d.store_slug ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
-                        {d.store_slug ? `🏪 Repartidor de la tienda «${d.store_slug}»` : '🛡 Repartidor BogaHub'}
-                      </span>
-                    )}
-                    <p className="text-xs text-secondary">{[d.comite, d.placa, d.ruta].filter(Boolean).join(' · ')}</p>
-                    {d.tipo !== 'Repartidor' && (() => {
-                      const h = normalizarHorario(d.horario_semana);
-                      if (!h) return <p className="text-[11px] text-amber-700 font-semibold mt-0.5">Sin horario cargado (no se marca disponible ni fuera de horario)</p>;
-                      const ahora = disponibleAhora(h);
-                      return (
-                        <p className="text-[11px] font-semibold mt-0.5" style={{ color: ahora ? VERDE : '#6b7280' }}>
-                          {ahora ? '🟢 Disponible ahora' : '⚪ Fuera de horario'} · {resumenHorario(h)}
+        {/* 2. Vista Directorio */}
+        {tabActiva === 'directorio' && (() => {
+          const lista = choferes.filter((c) => c.tipo !== 'Repartidor');
+          return (
+            <section>
+              <h2 className="font-headline-md text-lg text-on-surface mb-3">Directorio de Choferes ({lista.length})</h2>
+              {cargandoDatos ? <p className="text-secondary text-sm">Cargando…</p> :
+                lista.length === 0 ? <p className="text-secondary text-sm">Todavía no hay choferes en el directorio. Agrega el primero con el botón «Agregar chofer» de arriba o aprobando una postulación pendiente.</p> : (
+                <div className="flex flex-col gap-2">
+                  {lista.map((d) => (
+                    <div key={d.id} className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-3 flex flex-wrap items-center gap-3">
+                      <span className={`w-2 h-2 rounded-full shrink-0 ${d.status === 'activo' ? 'bg-primary' : 'bg-surface-container-highest'}`} />
+                      <div className="flex-1 min-w-[180px]">
+                        <p className="font-bold text-sm text-on-surface">
+                          {d.nombre} <span className="text-secondary font-normal">· {d.tipo} · {d.ciudad}</span>
+                          {d.dni && <span className="text-[11px] font-mono text-secondary ml-2">(DNI: {d.dni})</span>}
                         </p>
-                      );
-                    })()}
-                  </div>
-                  <button onClick={() => abrirApp(d)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest" style={{ color: VERDE }}>
-                    {accesos[d.id] ? (celulares[d.id] ? '📲 App ✓' : '📲 App') : '📲 Dar app'}
-                  </button>
-                  <button onClick={() => editar(d)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest text-on-surface">Editar</button>
-                  <button onClick={() => toggleStatus(d)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest text-secondary">
-                    {d.status === 'activo' ? 'Ocultar' : 'Mostrar'}
-                  </button>
-                  <button onClick={() => borrar(d)} className="text-xs font-bold px-3 py-1.5 rounded-lg text-red-600">Borrar</button>
-
-                  {appAbierta === d.id && accesos[d.id] && (() => {
-                    const a = accesos[d.id];
-                    const hace = (iso: string | null) => {
-                      if (!iso) return 'nunca';
-                      const m = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
-                      return m < 1 ? 'hace un momento' : m < 60 ? `hace ${m} min` : m < 1440 ? `hace ${Math.round(m / 60)} h` : `hace ${Math.round(m / 1440)} d`;
-                    };
-                    const wa = `https://wa.me/${(d.tel || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${String(d.nombre).split(' ')[0]}, este es tu enlace PERSONAL de la app de ${d.tipo === 'Repartidor' ? 'repartidores de BogaHub. Ábrelo desde tu celular, toca "Activar avisos" y así te llegan los pedidos que te asignen para entregar.' : 'choferes de BogaHub Taxi Seguro. Ábrelo desde tu celular, toca "Activar avisos" y así te llegan los pedidos de pasajeros cerca de ti.'} No lo compartas:\n\n${enlaceDe(a)}`)}`;
-                    return (
-                      <div className="basis-full mt-2 rounded-xl border border-surface-container-highest bg-surface-container-low p-3 flex flex-col gap-2">
-                        <p className="text-[11px] font-bold text-secondary uppercase tracking-wider">App del chofer · enlace privado</p>
-                        <input readOnly value={enlaceDe(a)} onFocus={(e) => e.currentTarget.select()} className="w-full text-[11px] font-mono bg-white border border-surface-container-highest rounded-lg px-2.5 py-2" />
-                        <div className="flex flex-wrap gap-2">
-                          <button onClick={() => copiarEnlace(a)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest bg-white">{copiado === d.id ? '✓ Copiado' : 'Copiar enlace'}</button>
-                          {d.tel && <a href={wa} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-lg text-white" style={{ background: VERDE }}>Enviar por WhatsApp</a>}
-                          <a href={`/transporte/chofer?ver=${d.id}`} target="_blank" rel="noreferrer" className="text-xs font-bold px-3 py-1.5 rounded-lg border border-blue-200 text-blue-700 bg-blue-50">👁 Ver como el chofer</a>
-                          <button onClick={() => regenerarEnlace(d)} className="text-xs font-bold px-3 py-1.5 rounded-lg text-red-600">Generar enlace nuevo</button>
-                        </div>
-                        <div className="flex gap-2">
-                          <input value={pegado} onChange={(e) => setPegado(e.target.value)} placeholder="Paradero: pega el link largo de Google Maps o las coordenadas" className="flex-1 min-w-0 text-[11px] bg-white border border-surface-container-highest rounded-lg px-2.5 py-2" />
-                          <button onClick={() => guardarParadero(d)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest bg-white">Guardar paradero</button>
-                        </div>
-                        <p className="text-[11px] text-secondary font-medium">
-                          Avisos: {celulares[d.id] ? `✓ ${celulares[d.id]} celular${celulares[d.id] === 1 ? '' : 'es'}` : '— todavía no los activó'}
-                          {' · '}Paradero: {a.base_lat != null ? '✓ guardado' : '— sin guardar'}
-                          {' · '}Vio la app: {hace(a.visto_at)}
-                          {' · '}Última ubicación: {hace(a.ubicado_at)}
-                          {a.pausado ? ' · ⏸ En pausa' : ''}
-                        </p>
+                        <p className="text-xs text-secondary">{[d.comite, d.placa, d.ruta].filter(Boolean).join(' · ')}</p>
+                        {(() => {
+                          const h = normalizarHorario(d.horario_semana);
+                          if (!h) return <p className="text-[11px] text-amber-700 font-semibold mt-0.5">Sin horario cargado (no se marca disponible ni fuera de horario)</p>;
+                          const ahora = disponibleAhora(h);
+                          return (
+                            <p className="text-[11px] font-semibold mt-0.5" style={{ color: ahora ? VERDE : '#6b7280' }}>
+                              {ahora ? '🟢 Disponible ahora' : '⚪ Fuera de horario'} · {resumenHorario(h)}
+                            </p>
+                          );
+                        })()}
                       </div>
-                    );
-                  })()}
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-        ))}
+                      <button onClick={() => abrirApp(d)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest" style={{ color: VERDE }}>
+                        {accesos[d.id] ? (celulares[d.id] ? '📲 App ✓' : '📲 App') : '📲 Dar app'}
+                      </button>
+                      <button onClick={() => editar(d)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest text-on-surface">Editar</button>
+                      <button onClick={() => toggleStatus(d)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest text-secondary">
+                        {d.status === 'activo' ? 'Ocultar' : 'Mostrar'}
+                      </button>
+                      <button onClick={() => borrar(d)} className="text-xs font-bold px-3 py-1.5 rounded-lg text-red-600">Borrar</button>
 
-        {/* Pedidos de taxi recientes */}
+                      {appAbierta === d.id && accesos[d.id] && (() => {
+                        const a = accesos[d.id];
+                        const c = celulares[d.id];
+                        const wa = `https://wa.me/${(d.tel || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${String(d.nombre).split(' ')[0]}, este es tu enlace PERSONAL de la app de choferes de BogaHub Taxi Seguro. Ábrelo desde tu celular, toca "Activar avisos" y así te llegan los pedidos de pasajeros cerca de ti. No lo compartas:\n\n${enlaceDe(a)}`)}`;
+                        return (
+                          <div className="w-full mt-2 pt-2 border-t border-surface-container-highest flex flex-col gap-2 bg-surface-container-low p-3 rounded-lg text-xs">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-bold text-on-surface">Enlace personal de la app</span>
+                              <span className="font-mono text-secondary text-[11px]">Token: {a.token.slice(0, 8)}…</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input readOnly value={enlaceDe(a)} className="flex-1 bg-surface-container-lowest border border-surface-container-highest rounded px-2 py-1 text-[11px] font-mono text-secondary" />
+                              <button type="button" onClick={() => copiar(enlaceDe(a))} className="px-2 py-1 rounded bg-surface-container-highest text-on-surface font-bold text-[11px]">Copiar</button>
+                              <a href={wa} target="_blank" rel="noreferrer" className="px-2 py-1 rounded text-white font-bold text-[11px]" style={{ backgroundColor: VERDE }}>Enviar por WhatsApp</a>
+                            </div>
+                            <div className="flex items-center justify-between text-[11px] text-secondary">
+                              <span>Avisos en el celular: <strong className="text-on-surface">{c ? `✅ Activos (${c.endpoint.slice(0, 24)}…)` : '❌ Todavía no los activó'}</strong></span>
+                              <button type="button" onClick={() => regenerarToken(d.id)} className="text-red-600 hover:underline">Revocar y crear nuevo enlace</button>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          );
+        })()}
+
+        {/* 3. Vista Repartidores */}
+        {tabActiva === 'repartidores' && (() => {
+          const lista = choferes.filter((c) => c.tipo === 'Repartidor');
+          return (
+            <section>
+              <h2 className="font-headline-md text-lg text-on-surface mb-3">Repartidores ({lista.length})</h2>
+              {cargandoDatos ? <p className="text-secondary text-sm">Cargando…</p> :
+                lista.length === 0 ? <p className="text-secondary text-sm">Todavía no hay repartidores. Los de BogaHub los agregas arriba con el tipo «Repartidor»; los de cada tienda los crea su dueño desde el pedido.</p> : (
+                <div className="flex flex-col gap-2">
+                  {lista.map((d) => (
+                    <div key={d.id} className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-3 flex flex-wrap items-center gap-3">
+                      <span className={`w-2 h-2 rounded-full shrink-0 ${d.status === 'activo' ? 'bg-primary' : 'bg-surface-container-highest'}`} />
+                      <div className="flex-1 min-w-[180px]">
+                        <p className="font-bold text-sm text-on-surface">
+                          {d.nombre} <span className="text-secondary font-normal">· {d.tipo} · {d.ciudad}</span>
+                          {d.dni && <span className="text-[11px] font-mono text-secondary ml-2">(DNI: {d.dni})</span>}
+                        </p>
+                        <span className={`inline-block text-[11px] font-extrabold px-2 py-0.5 rounded-full border mb-0.5 ${d.store_slug ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
+                          {d.store_slug ? `🏪 Repartidor de la tienda «${d.store_slug}»` : '🛡 Repartidor BogaHub'}
+                        </span>
+                        <p className="text-xs text-secondary">{[d.comite, d.placa, d.ruta].filter(Boolean).join(' · ')}</p>
+                      </div>
+                      <button onClick={() => abrirApp(d)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest" style={{ color: VERDE }}>
+                        {accesos[d.id] ? (celulares[d.id] ? '📲 App ✓' : '📲 App') : '📲 Dar app'}
+                      </button>
+                      <button onClick={() => editar(d)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest text-on-surface">Editar</button>
+                      <button onClick={() => toggleStatus(d)} className="text-xs font-bold px-3 py-1.5 rounded-lg border border-surface-container-highest text-secondary">
+                        {d.status === 'activo' ? 'Ocultar' : 'Mostrar'}
+                      </button>
+                      <button onClick={() => borrar(d)} className="text-xs font-bold px-3 py-1.5 rounded-lg text-red-600">Borrar</button>
+
+                      {appAbierta === d.id && accesos[d.id] && (() => {
+                        const a = accesos[d.id];
+                        const c = celulares[d.id];
+                        const wa = `https://wa.me/${(d.tel || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${String(d.nombre).split(' ')[0]}, este es tu enlace PERSONAL de la app de repartidores de BogaHub. Ábrelo desde tu celular, toca "Activar avisos" y así te llegan los pedidos que te asignen para entregar. No lo compartas:\n\n${enlaceDe(a)}`)}`;
+                        return (
+                          <div className="w-full mt-2 pt-2 border-t border-surface-container-highest flex flex-col gap-2 bg-surface-container-low p-3 rounded-lg text-xs">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-bold text-on-surface">Enlace personal de la app</span>
+                              <span className="font-mono text-secondary text-[11px]">Token: {a.token.slice(0, 8)}…</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input readOnly value={enlaceDe(a)} className="flex-1 bg-surface-container-lowest border border-surface-container-highest rounded px-2 py-1 text-[11px] font-mono text-secondary" />
+                              <button type="button" onClick={() => copiar(enlaceDe(a))} className="px-2 py-1 rounded bg-surface-container-highest text-on-surface font-bold text-[11px]">Copiar</button>
+                              <a href={wa} target="_blank" rel="noreferrer" className="px-2 py-1 rounded text-white font-bold text-[11px]" style={{ backgroundColor: VERDE }}>Enviar por WhatsApp</a>
+                            </div>
+                            <div className="flex items-center justify-between text-[11px] text-secondary">
+                              <span>Avisos en el celular: <strong className="text-on-surface">{c ? `✅ Activos (${c.endpoint.slice(0, 24)}…)` : '❌ Todavía no los activó'}</strong></span>
+                              <button type="button" onClick={() => regenerarToken(d.id)} className="text-red-600 hover:underline">Revocar y crear nuevo enlace</button>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          );
+        })()}
+
+        {/* 4. Vista Pedidos de taxi */}
+        {tabActiva === 'pedidos' && (
         <section>
           <h2 className="font-headline-md text-lg text-on-surface mb-3">Pedidos de taxi recientes</h2>
           {sinTablasTaxi && (
@@ -607,6 +720,7 @@ export default function ChoferesAdmin() {
             </div>
           )}
         </section>
+        )}
       </main>
 
       {/* Modal de Detalle completo de la Postulación */}
