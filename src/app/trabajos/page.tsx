@@ -71,8 +71,6 @@ export default function Servicios() {
   const [cargado, setCargado] = useState(false);
   // Visor: la imagen del aviso se abre grande aquí mismo (no en otra página).
   const [visor, setVisor] = useState<any | null>(null);
-  // Tarjetas de empleo desplegadas en móvil (por defecto van compactas).
-  const [abiertos, setAbiertos] = useState<Record<string, boolean>>({});
   useEffect(() => {
     if (!visor) return;
     const prev = document.body.style.overflow;
@@ -216,86 +214,58 @@ export default function Servicios() {
             )}
             {empleos.map((e) => (
               <React.Fragment key={e.id}>
-              {/* ── Móvil: tarjeta compacta (cuadrito de color, puesto, zona, flecha); toca para desplegar ── */}
-              <div className="sm:hidden bg-white rounded-2xl shadow-[0_10px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest overflow-hidden">
-                <div className="flex items-center gap-3 p-3">
-                  {e.img ? (
-                    <button
-                      type="button"
-                      onClick={() => setVisor(e)}
-                      aria-label={`Ver imagen del aviso de ${e.puesto} en grande`}
-                      className="shrink-0 active:scale-95 transition-transform"
-                    >
-                      <img
-                        src={e.img}
-                        alt=""
-                        loading="lazy"
-                        referrerPolicy="no-referrer"
-                        className="w-16 aspect-[3/4] rounded-lg object-cover object-top border border-surface-container-highest bg-surface-container-low"
-                      />
-                    </button>
-                  ) : (
-                    <span className="w-16 aspect-[3/4] rounded-lg flex items-center justify-center shrink-0" style={{ background: colorEmpleo(e.id) }}>
-                      <span className="material-symbols-outlined text-white text-[22px]">work</span>
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setAbiertos((prev) => ({ ...prev, [e.id]: !prev[e.id] }))}
-                    aria-expanded={!!abiertos[e.id]}
-                    className="flex-1 min-w-0 flex items-center gap-2 text-left"
-                  >
-                    <span className="flex flex-col min-w-0 flex-1">
-                      <h2 className="font-headline-sm text-sm text-on-surface leading-tight line-clamp-1">{e.puesto}</h2>
-                      <span className="text-secondary font-body-md text-xs line-clamp-1 mt-0.5">{[e.negocio, e.zona].filter(Boolean).join(' · ')}</span>
-                    </span>
-                    <span className={`material-symbols-outlined text-secondary/60 shrink-0 transition-transform duration-200 ${abiertos[e.id] ? 'rotate-90' : ''}`}>chevron_right</span>
-                  </button>
-                </div>
-
-                {abiertos[e.id] && (
-                  <div className="px-3 pb-3 pt-1 flex flex-col gap-3 border-t border-surface-container-high">
-                    {/* Todos los elementos de esta fila miden lo mismo (h-7, texto 11px) */}
-                    <div className="flex flex-wrap items-center gap-1.5 pt-2">
-                      <span className="h-7 inline-flex items-center bg-surface-container-low text-secondary text-[11px] font-label-md px-2.5 rounded-full border border-surface-container-highest">{e.tipo}</span>
-                      <span className="h-7 inline-flex items-center bg-primary-fixed text-primary text-[11px] font-label-md px-2.5 rounded-full">{e.pago}</span>
-                      {haceCuanto(e.subido) && (
-                        <span className="h-7 inline-flex items-center gap-1 bg-surface-container-low text-secondary text-[11px] font-label-md px-2.5 rounded-full border border-surface-container-highest">
-                          <span className="material-symbols-outlined text-[14px]">schedule</span>{haceCuantoCorto(e.subido)}
-                        </span>
-                      )}
-                      {/* La acción principal va al costado, en la misma fila */}
-                      {(e.link || e.wsp) && (
-                        <a
-                          href={e.link || waLink(e.wsp, `Hola, vi el aviso de "${e.puesto}" en ${e.negocio} por BogaHub. Me interesa postular.`)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="ml-auto h-7 inline-flex items-center justify-center gap-1 bg-primary text-white text-[11px] font-label-md px-3 rounded-full active:scale-95 transition-transform"
-                        >
-                          {e.link ? 'Ver aviso' : 'Postular'}
-                          <span className="material-symbols-outlined text-[14px]">{e.link ? 'open_in_new' : 'arrow_forward'}</span>
-                        </a>
-                      )}
-                    </div>
-                    {e.descripcion && <DescripcionEmpleo texto={e.descripcion} />}
-                    <Link href={`/trabajos/${slugEmpleo(e)}`} className="self-start text-[11px] font-label-md text-primary underline">
-                      Ver ficha completa
-                    </Link>
-                    <AvisoSeguridadEmpleo />
-                    <div className="flex gap-2">
-                      {e.email && (
-                        <a
-                          href={`mailto:${e.email}?subject=${encodeURIComponent(`Postulación: ${e.puesto}`)}`}
-                          className="flex items-center justify-center gap-1.5 bg-primary-fixed text-primary text-[13px] font-label-md px-3.5 py-2.5 rounded-full active:scale-95 transition-transform"
-                        >
-                          <span className="material-symbols-outlined text-[15px]">mail</span>
-                          CV
-                        </a>
-                      )}
-                    </div>
+              {/* ── Móvil: tarjeta compacta que abre directo la ficha del aviso ── */}
+              <Link
+                href={`/trabajos/${slugEmpleo(e)}`}
+                className="sm:hidden group bg-white rounded-2xl shadow-[0_10px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest p-3 flex items-center gap-3 active:scale-[0.99] hover:border-primary/30 transition-all"
+              >
+                {e.img ? (
+                  <div className="shrink-0 w-16 aspect-[3/4] rounded-lg overflow-hidden border border-surface-container-highest bg-surface-container-low">
+                    <img
+                      src={e.img}
+                      alt={e.puesto}
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover object-top"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-16 aspect-[3/4] rounded-lg flex items-center justify-center shrink-0" style={{ background: colorEmpleo(e.id) }}>
+                    <span className="material-symbols-outlined text-white text-[22px]">work</span>
                   </div>
                 )}
-              </div>
+
+                <div className="flex-1 min-w-0 flex flex-col justify-center gap-1">
+                  <h2 className="font-headline-sm text-sm font-bold text-on-surface leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+                    {e.puesto}
+                  </h2>
+                  <span className="text-secondary font-body-md text-xs line-clamp-1">
+                    {[e.negocio, e.zona].filter(Boolean).join(' · ')}
+                  </span>
+                  <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                    {e.tipo && (
+                      <span className="text-[10px] font-label-md text-secondary bg-surface-container-low px-2 py-0.5 rounded-full border border-surface-container-highest">
+                        {e.tipo}
+                      </span>
+                    )}
+                    {e.pago && (
+                      <span className="text-[10px] font-label-md text-primary font-bold bg-primary-fixed/60 px-2 py-0.5 rounded-full">
+                        {e.pago}
+                      </span>
+                    )}
+                    {haceCuanto(e.subido) && (
+                      <span className="text-[10px] font-label-md text-secondary/80 flex items-center gap-0.5">
+                        <span className="material-symbols-outlined text-[12px]">schedule</span>
+                        {haceCuantoCorto(e.subido)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <span className="material-symbols-outlined text-secondary/60 shrink-0 group-hover:translate-x-0.5 group-hover:text-primary transition-all">
+                  chevron_right
+                </span>
+              </Link>
 
               {/* ── Desde sm: tarjeta con foto grande y todo a la vista ── */}
               <div className="hidden sm:flex bg-white rounded-2xl p-4 shadow-[0_10px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest items-start gap-4">
@@ -319,7 +289,11 @@ export default function Servicios() {
 
                 <div className="flex flex-col min-w-0 flex-1 gap-2">
                   <div className="flex flex-col min-w-0">
-                    <h2 className="font-headline-sm text-base text-on-surface leading-tight line-clamp-2">{e.puesto}</h2>
+                    <h2 className="font-headline-sm text-base text-on-surface leading-tight line-clamp-2">
+                      <Link href={`/trabajos/${slugEmpleo(e)}`} className="hover:text-primary transition-colors">
+                        {e.puesto}
+                      </Link>
+                    </h2>
                     <span className="text-secondary font-body-md text-xs line-clamp-1 mt-0.5">{[e.negocio, e.zona].filter(Boolean).join(' · ')}</span>
                   </div>
 
