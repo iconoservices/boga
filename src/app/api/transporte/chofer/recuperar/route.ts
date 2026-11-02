@@ -71,3 +71,4 @@ export async function POST(request: Request) {
     tipo: driver.tipo,
   });
 }
+
