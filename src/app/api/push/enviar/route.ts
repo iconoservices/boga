@@ -78,7 +78,12 @@ export async function POST(request: Request) {
 
   const supabase = clienteServicio();
   if (!supabase) return NextResponse.json({ error: 'Servidor sin configurar (falta SUPABASE_SERVICE_ROLE_KEY)' }, { status: 500, headers: cors });
-  const pub = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY, priv = process.env.VAPID_PRIVATE_KEY;
+  const pub =
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
+    'BCHlBTLy-90LOpkE1YeoewrJ9ThN44RTOzsaVnMPL7QGD5Z4zFAV8zyGBKifaT_H4-WTUHu2634oVd2f8q4XROc';
+  const priv =
+    process.env.VAPID_PRIVATE_KEY ||
+    'BM23YK7WVQZ3P47CDS-uWkFusL_5OcJOKCHkgIJwW2Y';
   if (!pub || !priv) return NextResponse.json({ error: 'Faltan las claves VAPID en el servidor' }, { status: 500, headers: cors });
 
   const body = await request.json().catch(() => null) as { store_slug?: unknown; titulo?: unknown; cuerpo?: unknown; url?: unknown; prueba_endpoint?: unknown } | null;

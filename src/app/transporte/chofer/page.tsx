@@ -242,6 +242,17 @@ export default function ChoferApp() {
     consultar();
   };
 
+  // Si el chofer ya tiene permiso de notificación pero el servidor aún no vinculó este celular,
+  // se suscribe solo en silencio para que nunca se quede sin recibir avisos de carreras.
+  useEffect(() => {
+    if (!token || !e || e.soloLectura || e.avisosActivados) return;
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      suscribirChofer(token).then((res) => {
+        if (res === 'ok') consultar();
+      }).catch(() => {});
+    }
+  }, [token, e?.avisosActivados, e?.soloLectura, consultar]);
+
   // Una lectura de GPS a pedido: sirve por 10 minutos para que los pedidos se ordenen por su distancia real.
   const actualizarUbicacion = async () => {
     try {
@@ -599,6 +610,30 @@ export default function ChoferApp() {
 
       <div className="max-w-xl mx-auto px-4 py-4 flex flex-col gap-4">
         {msg && <p className="text-sm font-bold rounded-xl px-3.5 py-2.5 bg-amber-50 text-amber-800 border border-amber-200">{msg}</p>}
+
+        {/* Banner destacado si no tiene activadas las notificaciones */}
+        {!e.soloLectura && !e.avisosActivados && (
+          <div className="p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-3">
+              <span className="w-10 h-10 rounded-xl bg-amber-200 text-amber-900 flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[24px]">notifications_active</span>
+              </span>
+              <div>
+                <p className="font-extrabold text-sm text-amber-900">Activa tus avisos para recibir carreras</p>
+                <p className="text-xs text-amber-800 mt-0.5">Te sonará el celular con aviso y vibración cuando un pasajero busque taxi cerca de ti.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={activarAvisos}
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-white font-extrabold text-xs shadow-sm hover:opacity-95 active:scale-95 transition-all shrink-0 flex items-center justify-center gap-1.5"
+              style={{ backgroundColor: VERDE }}
+            >
+              <span className="material-symbols-outlined text-[16px]">notifications</span>
+              Activar avisos ahora
+            </button>
+          </div>
+        )}
 
         {/* Entregas de la carta (delivery): las que una tienda le asignó */}
         {(e.entregas.length > 0 || e.soloEntregas) && (

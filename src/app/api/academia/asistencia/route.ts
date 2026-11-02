@@ -89,7 +89,12 @@ export async function POST(request: Request) {
 }
 
 async function avisarAlPadre(db: NonNullable<ReturnType<typeof clienteServicio>>, alumnoId: string, nombre: string, academia: string, token: string, llegada: string) {
-  const pub = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY, priv = process.env.VAPID_PRIVATE_KEY;
+  const pub =
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
+    'BCHlBTLy-90LOpkE1YeoewrJ9ThN44RTOzsaVnMPL7QGD5Z4zFAV8zyGBKifaT_H4-WTUHu2634oVd2f8q4XROc';
+  const priv =
+    process.env.VAPID_PRIVATE_KEY ||
+    'BM23YK7WVQZ3P47CDS-uWkFusL_5OcJOKCHkgIJwW2Y';
   if (!pub || !priv) return;
   const { data: enlaces } = await db.from('alumno_push').select('endpoint').eq('alumno_id', alumnoId);
   if (!enlaces?.length) return;

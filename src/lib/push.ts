@@ -2,7 +2,9 @@
 // Una suscripción es del navegador; cada persona elige de qué tiendas quiere avisos (el servidor
 // guarda "quién sigue a quién"). Requiere NEXT_PUBLIC_VAPID_PUBLIC_KEY; la privada vive solo en el servidor.
 
-const CLAVE = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+const CLAVE =
+  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
+  'BCHlBTLy-90LOpkE1YeoewrJ9ThN44RTOzsaVnMPL7QGD5Z4zFAV8zyGBKifaT_H4-WTUHu2634oVd2f8q4XROc';
 const LLAVE_LOCAL = 'boga_push_sigue';
 
 export const hayClave = () => !!CLAVE;

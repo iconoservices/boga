@@ -112,7 +112,12 @@ export async function candidatosOrdenados(db: SupabaseClient, pedido: Pedido): P
 
 // ─── Avisos ───
 function vapidListo(): boolean {
-  const pub = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY, priv = process.env.VAPID_PRIVATE_KEY;
+  const pub =
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
+    'BCHlBTLy-90LOpkE1YeoewrJ9ThN44RTOzsaVnMPL7QGD5Z4zFAV8zyGBKifaT_H4-WTUHu2634oVd2f8q4XROc';
+  const priv =
+    process.env.VAPID_PRIVATE_KEY ||
+    'BM23YK7WVQZ3P47CDS-uWkFusL_5OcJOKCHkgIJwW2Y';
   if (!pub || !priv) return false;
   webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:jnmcsky@gmail.com', pub, priv);
   return true;
