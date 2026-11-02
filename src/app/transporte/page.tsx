@@ -457,22 +457,6 @@ function QuickOrderCard() {
           <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
         </button>
       </form>
-
-      {/* Mini métricas integradas al pie de la tarjeta */}
-      <div className="grid grid-cols-3 gap-1 pt-2.5 border-t border-surface-container text-center">
-        <div>
-          <span className="block font-headline-md text-[13px] font-extrabold" style={{ color: VERDE }}>100%</span>
-          <span className="block text-[9px] text-secondary font-medium uppercase tracking-wide leading-tight">Sin comisión</span>
-        </div>
-        <div className="border-x border-surface-container">
-          <span className="block font-headline-md text-[13px] font-extrabold text-primary">5 puntos</span>
-          <span className="block text-[9px] text-secondary font-medium uppercase tracking-wide leading-tight">DNI · SOAT · Placa</span>
-        </div>
-        <div>
-          <span className="block font-headline-md text-[13px] font-extrabold text-tertiary">4.9★</span>
-          <span className="block text-[9px] text-secondary font-medium uppercase tracking-wide leading-tight">+3,400 viajes</span>
-        </div>
-      </div>
     </div>
   );
 }
@@ -521,27 +505,28 @@ export default function TaxiSeguro() {
 
       <main className="max-w-[1440px] mx-auto px-container-margin lg:px-6 w-full pt-5 flex flex-col gap-6 pb-12">
 
-        {/* Hero: 2 columnas bien balanceadas en desktop para optimizar todo el espacio */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-          {/* Columna Izquierda: Mensaje y confianza */}
-          <div className="lg:col-span-7 flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <h1 className="sr-only">Taxi Seguro · Padrón Cívico Vecinal Pucallpa</h1>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white shadow-sm font-label-md text-[11px] font-bold uppercase tracking-wider" style={{ color: VERDE }}>
-                  <span className="material-symbols-outlined text-[15px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
-                  Padrón Cívico Vecinal · Pucallpa
-                </span>
-                <details className="group">
-                  <summary className="inline-flex items-center gap-1 text-[11px] font-semibold text-secondary hover:text-primary cursor-pointer select-none transition-colors list-none">
-                    <span>¿Cómo funciona?</span>
-                    <span className="material-symbols-outlined text-[15px] group-open:rotate-180 transition-transform">expand_more</span>
-                  </summary>
-                  <p className="text-secondary font-body-md text-xs sm:text-sm mt-1 leading-relaxed max-w-xl animate-in fade-in duration-200">
-                    Choferes verificados por la comunidad BogaHub. Contacto directo por llamada o WhatsApp — sin tarifas ocultas ni comisiones abusivas a intermediarios.
-                  </p>
-                </details>
-              </div>
+        {/* Sección Hero: Tarjeta de Pedido arriba y respaldo cívico abajo */}
+        <div className="flex flex-col gap-3.5 max-w-xl mx-auto w-full">
+          {/* Tarjeta de Pedido Rápido (Arriba) */}
+          <QuickOrderCard />
+
+          {/* Respaldo Cívico y Confianza (Abajo de la tarjeta) */}
+          <div className="flex flex-col gap-2.5">
+            <h1 className="sr-only">Taxi Seguro · Padrón Cívico Vecinal Pucallpa</h1>
+            <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white shadow-xs font-label-md text-[11px] font-bold uppercase tracking-wider" style={{ color: VERDE }}>
+                <span className="material-symbols-outlined text-[15px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
+                Padrón Cívico Vecinal · Pucallpa
+              </span>
+              <details className="group">
+                <summary className="inline-flex items-center gap-1 text-[11px] font-semibold text-secondary hover:text-primary cursor-pointer select-none transition-colors list-none">
+                  <span>¿Cómo funciona?</span>
+                  <span className="material-symbols-outlined text-[15px] group-open:rotate-180 transition-transform">expand_more</span>
+                </summary>
+                <p className="text-secondary font-body-md text-xs sm:text-sm mt-1 leading-relaxed animate-in fade-in duration-200">
+                  Choferes verificados por la comunidad BogaHub. Contacto directo por llamada o WhatsApp — sin tarifas ocultas ni comisiones abusivas a intermediarios.
+                </p>
+              </details>
             </div>
 
             {/* 3 pilares de confianza en la misma fila */}
@@ -578,29 +563,23 @@ export default function TaxiSeguro() {
             </div>
 
             {/* Enlaces y accesos secundarios */}
-            <div className="flex flex-wrap items-center gap-3 pt-1">
+            <div className="flex flex-wrap items-center justify-between gap-2 px-1 pt-0.5">
               <Link
                 href="/transporte/registro"
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-surface-container-highest font-label-md text-[12px] font-bold shadow-sm hover:border-primary transition-colors"
+                className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-bold hover:underline"
                 style={{ color: VERDE }}
               >
-                <span className="material-symbols-outlined text-[16px]">badge</span>
-                ¿Manejas mototaxi, auto o moto? Postúlate al padrón gratis
-                <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                <span className="material-symbols-outlined text-[14px]">badge</span>
+                ¿Manejas mototaxi, auto o moto? Postúlate al padrón gratis →
               </Link>
               <Link
                 href="/transporte/chofer"
-                className="inline-flex items-center gap-1 text-[12px] font-label-md font-bold text-secondary hover:text-on-surface transition-colors"
+                className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-medium text-secondary hover:text-on-surface transition-colors"
               >
-                <span className="material-symbols-outlined text-[15px]">key</span>
+                <span className="material-symbols-outlined text-[14px]">key</span>
                 Soy chofer · Abre tu app
               </Link>
             </div>
-          </div>
-
-          {/* Columna Derecha: Tarjeta de Pedido Rápido (Aprovecha todo el espacio en desktop) */}
-          <div className="lg:col-span-5 flex flex-col gap-3">
-            <QuickOrderCard />
           </div>
         </div>
 
