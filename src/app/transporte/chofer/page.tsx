@@ -50,6 +50,8 @@ export default function ChoferApp() {
   const [msg, setMsg] = useState('');
   const [resaltado, setResaltado] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState<string | null>(null);
+  const [sonidoSilenciado, setSonidoSilenciado] = useState(false);
+  const audioCtxRef = useRef<AudioContext | null>(null);
   const cantidadAntes = useRef(0);
   const entregasAntes = useRef(0);
   const [gps, setGps] = useState<'esperando' | 'ok' | 'denegado'>('esperando');
@@ -99,6 +101,41 @@ export default function ChoferApp() {
     setListo(true);
   }, []);
 
+  const sonarTimbrePedido = useCallback(() => {
+    try {
+      navigator.vibrate?.([300, 150, 300]);
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (!AudioCtx) return;
+      if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+        audioCtxRef.current = new AudioCtx();
+      }
+      const ctx = audioCtxRef.current;
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+
+      const ahora = ctx.currentTime;
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const g = ctx.createGain();
+
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(784, ahora);
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(1046.5, ahora + 0.12);
+
+      g.gain.setValueAtTime(0.25, ahora);
+      g.gain.exponentialRampToValueAtTime(0.01, ahora + 0.45);
+
+      osc1.connect(g);
+      osc2.connect(g);
+      g.connect(ctx.destination);
+
+      osc1.start(ahora);
+      osc1.stop(ahora + 0.12);
+      osc2.start(ahora + 0.12);
+      osc2.stop(ahora + 0.45);
+    } catch { /* el navegador puede bloquear el audio */ }
+  }, []);
+
   const consultar = useCallback(async () => {
     if (!token) return;
     try {
@@ -114,16 +151,10 @@ export default function ChoferApp() {
       if (res.status === 401) { setInvalido(true); return; }
       if (!res.ok) return;
       const nuevo = (await res.json()) as Estado;
-      // Llegó un pedido nuevo con la app abierta: pitido y vibración.
+      // Llegó un pedido nuevo con la app abierta: timbre de despacho y vibración.
       nuevo.entregas = nuevo.entregas ?? [];
       if (nuevo.pedidos.length > cantidadAntes.current || nuevo.entregas.length > entregasAntes.current) {
-        try {
-          navigator.vibrate?.([250, 120, 250]);
-          const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-          const osc = ctx.createOscillator(); const g = ctx.createGain();
-          osc.connect(g); g.connect(ctx.destination); osc.frequency.value = 880; g.gain.value = 0.15;
-          osc.start(); osc.stop(ctx.currentTime + 0.4);
-        } catch { /* el navegador puede bloquear el sonido */ }
+        if (!sonidoSilenciado) sonarTimbrePedido();
       }
       cantidadAntes.current = nuevo.pedidos.length;
       entregasAntes.current = nuevo.entregas.length;
@@ -143,7 +174,21 @@ export default function ChoferApp() {
         : nuevo.pedidos.length > 0 ? `(${nuevo.pedidos.length}) Taxi · Pedido nuevo` : 'Taxi · App del chofer';
       setE(nuevo);
     } catch { /* sin red: se reintenta */ }
-  }, [token]);
+  }, [token, sonarTimbrePedido, sonidoSilenciado]);
+
+  // Repique continuo de alerta mientras haya pedidos de taxi o entregas esperando aceptación
+  useEffect(() => {
+    const hayPendientes = !!e && !e.actual && (e.pedidos.length > 0 || e.entregas.some((x) => x.estado === 'Preparando' || x.estado === 'Listo'));
+    if (!hayPendientes || sonidoSilenciado) return;
+
+    const t = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        sonarTimbrePedido();
+      }
+    }, 2800);
+
+    return () => clearInterval(t);
+  }, [e, sonidoSilenciado, sonarTimbrePedido]);
 
   // Cada consulta cuesta una ida a la base: cada 5 s solo si hay pedidos o un viaje en curso; si no, cada 20 s
   // (los pedidos nuevos le llegan igual como notificación).
@@ -734,7 +779,27 @@ export default function ChoferApp() {
         {/* Pedidos disponibles */}
         {!e.actual && !e.soloEntregas && (
           <section className="flex flex-col gap-3">
-            <h2 className="text-sm font-extrabold uppercase tracking-wide text-gray-500">Pedidos para ti {e.pedidos.length > 0 && `(${e.pedidos.length})`}</h2>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-extrabold uppercase tracking-wide text-gray-500">Pedidos para ti {e.pedidos.length > 0 && `(${e.pedidos.length})`}</h2>
+                {e.pedidos.length > 0 && !sonidoSilenciado && (
+                  <span className="flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 animate-pulse">
+                    <span className="w-2 h-2 rounded-full bg-emerald-600 animate-ping" />
+                    Sonando
+                  </span>
+                )}
+              </div>
+              {e.pedidos.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setSonidoSilenciado((s) => !s)}
+                  className="text-xs font-bold px-2.5 py-1 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 flex items-center gap-1 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[16px]">{sonidoSilenciado ? 'volume_off' : 'volume_up'}</span>
+                  {sonidoSilenciado ? 'Reanudar timbre' : 'Silenciar'}
+                </button>
+              )}
+            </div>
             {e.pedidos.length === 0 ? (
               <div className="bg-white rounded-2xl border border-black/5 p-6 text-center text-sm text-gray-500 font-medium">
                 {e.pausado ? 'Estás en pausa.' : 'Todavía no hay pedidos. Deja esta pantalla abierta o activa los avisos: cuando alguien pida un taxi cerca, te suena.'}

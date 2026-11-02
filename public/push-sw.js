@@ -13,6 +13,8 @@ self.addEventListener('push', (event) => {
       tag: d.tag || 'bogahub',
       // Los pedidos de taxi piden atención: se quedan en pantalla hasta que el chofer los toque y vibran.
       requireInteraction: d.requireInteraction === true,
+      // Rich Push: si incluye imagen, Android muestra el banner/flyer grande completo
+      image: d.image || undefined,
       vibrate: Array.isArray(d.vibrate) ? d.vibrate : undefined,
       actions: Array.isArray(d.actions) ? d.actions : undefined,
       data: { url: d.url || '/', aceptar: d.aceptar || null },

@@ -30,6 +30,7 @@ export default function PanelNotificaciones({ opciones, superadmin = false }: { 
   const [titulo, setTitulo] = useState('');
   const [cuerpo, setCuerpo] = useState('');
   const [url, setUrl] = useState('');
+  const [imagen, setImagen] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [mensaje, setMensaje] = useState('');
   const [formAbierto, setFormAbierto] = useState(false); // solo aplica en el celular
@@ -83,7 +84,7 @@ export default function PanelNotificaciones({ opciones, superadmin = false }: { 
       const r = await fetch('/api/push/enviar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await token()}` },
-        body: JSON.stringify({ store_slug: slug, titulo, cuerpo, url, prueba_endpoint: sub.endpoint }),
+        body: JSON.stringify({ store_slug: slug, titulo, cuerpo, url, imagen: imagen.trim() || undefined, prueba_endpoint: sub.endpoint }),
       });
       const j = await r.json();
       setMensaje(r.ok ? '✅ Prueba enviada: debería llegarte en unos segundos.' : (j.error || 'No se pudo enviar la prueba'));
@@ -109,13 +110,13 @@ export default function PanelNotificaciones({ opciones, superadmin = false }: { 
       const r = await fetch('/api/push/enviar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await token()}` },
-        body: JSON.stringify({ store_slug: slug, titulo, cuerpo, url }),
+        body: JSON.stringify({ store_slug: slug, titulo, cuerpo, url, imagen: imagen.trim() || undefined }),
       });
       const j = await r.json();
       if (!r.ok) setMensaje(j.error || 'No se pudo enviar');
       else {
         setMensaje(`✅ Enviada a ${j.enviados} personas${j.fallidos ? ` (${j.fallidos} no la recibieron)` : ''}.`);
-        setTitulo(''); setCuerpo(''); setUrl('');
+        setTitulo(''); setCuerpo(''); setUrl(''); setImagen('');
         cargar();
       }
     } catch { setMensaje('No se pudo enviar'); }
@@ -213,6 +214,23 @@ export default function PanelNotificaciones({ opciones, superadmin = false }: { 
                 <input className={campo} maxLength={60} placeholder="Título (ej. 🔥 Ofertas del fin de semana)" value={titulo} onChange={(e) => setTitulo(e.target.value)} />
                 <textarea className={campo + ' min-h-[88px]'} maxLength={160} placeholder="Texto corto (máx. 160 caracteres)" value={cuerpo} onChange={(e) => setCuerpo(e.target.value)} />
                 <input className={campo} placeholder="A dónde lleva al tocarla (opcional, ej. /market). Vacío = inicio de la app" value={url} onChange={(e) => setUrl(e.target.value)} />
+                <div className="flex flex-col gap-1.5">
+                  <input className={campo} placeholder="Flyer o imagen (opcional, URL https://... o afiche publicitario)" value={imagen} onChange={(e) => setImagen(e.target.value)} />
+                  {imagen.trim() && (
+                    <div className="relative rounded-lg overflow-hidden border border-surface-container-highest max-h-36 bg-surface-container-lowest">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={imagen.trim()}
+                        alt="Vista previa flyer"
+                        className="w-full h-32 object-cover"
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                      />
+                      <span className="absolute bottom-1 right-2 text-[10px] bg-black/70 text-white font-bold px-1.5 py-0.5 rounded">
+                        Flyer en notificación
+                      </span>
+                    </div>
+                  )}
+                </div>
                 <div className="text-[11px] text-secondary">{titulo.length}/60 · {cuerpo.length}/160</div>
                 <button
                   onClick={enviar}

@@ -216,7 +216,8 @@ export async function avanzarOlas(db: SupabaseClient, pedidoId: string): Promise
         url: `/transporte/chofer?pedido=${pedidoId}`,
         tag: `taxi-${pedidoId}`,
         requireInteraction: true,
-        vibrate: [250, 120, 250, 120, 400],
+        // Patrón de vibración largo estilo llamada entrante para que el chofer lo sienta de inmediato
+        vibrate: [500, 150, 500, 150, 500, 150, 800, 250, 800, 250, 800],
         // Botón "Aceptar" dentro de la notificación (Android y computadora). El token va cifrado dentro del aviso:
         // solo el celular de ese chofer puede leerlo.
         actions: [{ action: 'aceptar', title: '✓ Aceptar viaje' }],

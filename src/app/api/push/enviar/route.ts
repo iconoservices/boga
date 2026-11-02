@@ -86,10 +86,20 @@ export async function POST(request: Request) {
     'BM23YK7WVQZ3P47CDS-uWkFusL_5OcJOKCHkgIJwW2Y';
   if (!pub || !priv) return NextResponse.json({ error: 'Faltan las claves VAPID en el servidor' }, { status: 500, headers: cors });
 
-  const body = await request.json().catch(() => null) as { store_slug?: unknown; titulo?: unknown; cuerpo?: unknown; url?: unknown; prueba_endpoint?: unknown } | null;
+  const body = await request.json().catch(() => null) as {
+    store_slug?: unknown;
+    titulo?: unknown;
+    cuerpo?: unknown;
+    url?: unknown;
+    imagen?: unknown;
+    image?: unknown;
+    prueba_endpoint?: unknown;
+  } | null;
   const slug = typeof body?.store_slug === 'string' ? body.store_slug : '';
   const titulo = typeof body?.titulo === 'string' ? body.titulo.trim() : '';
   const cuerpo = typeof body?.cuerpo === 'string' ? body.cuerpo.trim() : '';
+  const imagenRaw = typeof body?.imagen === 'string' ? body.imagen.trim() : typeof body?.image === 'string' ? body.image.trim() : '';
+  const imagen = imagenRaw.startsWith('http://') || imagenRaw.startsWith('https://') || imagenRaw.startsWith('/') ? imagenRaw : undefined;
   if (!/^[a-z0-9-]{1,80}$/.test(slug)) return NextResponse.json({ error: 'Falta la tienda' }, { status: 400, headers: cors });
   if (!titulo || titulo.length > 60) return NextResponse.json({ error: 'El título es obligatorio (máximo 60 caracteres)' }, { status: 400, headers: cors });
   if (!cuerpo || cuerpo.length > 160) return NextResponse.json({ error: 'El texto es obligatorio (máximo 160 caracteres)' }, { status: 400, headers: cors });
@@ -116,7 +126,7 @@ export async function POST(request: Request) {
     try {
       await webpush.sendNotification(
         { endpoint: propia.endpoint, keys: { p256dh: propia.p256dh, auth: propia.auth } },
-        JSON.stringify({ title: titulo, body: cuerpo, url, tag: `${slug}-prueba`, icon: iconoPrueba }),
+        JSON.stringify({ title: titulo, body: cuerpo, url, tag: `${slug}-prueba`, icon: iconoPrueba, image: imagen }),
         { TTL: 3600 },
       );
     } catch (e) {
@@ -165,7 +175,7 @@ export async function POST(request: Request) {
   }
 
   webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:jnmcsky@gmail.com', pub, priv);
-  const carga = JSON.stringify({ title: titulo, body: cuerpo, url, tag: `${slug}-campana`, icon });
+  const carga = JSON.stringify({ title: titulo, body: cuerpo, url, tag: `${slug}-campana`, icon, image: imagen });
 
   let enviados = 0, fallidos = 0;
   const muertas: string[] = [];
