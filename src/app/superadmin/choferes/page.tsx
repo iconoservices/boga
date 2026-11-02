@@ -609,12 +609,12 @@ export default function ChoferesAdmin() {
                             </div>
                             <div className="flex items-center gap-2">
                               <input readOnly value={enlaceDe(a)} className="flex-1 bg-surface-container-lowest border border-surface-container-highest rounded px-2 py-1 text-[11px] font-mono text-secondary" />
-                              <button type="button" onClick={() => copiar(enlaceDe(a))} className="px-2 py-1 rounded bg-surface-container-highest text-on-surface font-bold text-[11px]">Copiar</button>
+                              <button type="button" onClick={() => copiarEnlace(a)} className="px-2 py-1 rounded bg-surface-container-highest text-on-surface font-bold text-[11px]">{copiado === a.driver_id ? '✓ Copiado' : 'Copiar'}</button>
                               <a href={wa} target="_blank" rel="noreferrer" className="px-2 py-1 rounded text-white font-bold text-[11px]" style={{ backgroundColor: VERDE }}>Enviar por WhatsApp</a>
                             </div>
                             <div className="flex items-center justify-between text-[11px] text-secondary">
-                              <span>Avisos en el celular: <strong className="text-on-surface">{c ? `✅ Activos (${c.endpoint.slice(0, 24)}…)` : '❌ Todavía no los activó'}</strong></span>
-                              <button type="button" onClick={() => regenerarToken(d.id)} className="text-red-600 hover:underline">Revocar y crear nuevo enlace</button>
+                              <span>Avisos en el celular: <strong className="text-on-surface">{c ? `✅ Activos (${c} dispositivo${c > 1 ? 's' : ''})` : '❌ Todavía no los activó'}</strong></span>
+                              <button type="button" onClick={() => regenerarEnlace(d)} className="text-red-600 hover:underline">Revocar y crear nuevo enlace</button>
                             </div>
                           </div>
                         );
@@ -670,12 +670,12 @@ export default function ChoferesAdmin() {
                             </div>
                             <div className="flex items-center gap-2">
                               <input readOnly value={enlaceDe(a)} className="flex-1 bg-surface-container-lowest border border-surface-container-highest rounded px-2 py-1 text-[11px] font-mono text-secondary" />
-                              <button type="button" onClick={() => copiar(enlaceDe(a))} className="px-2 py-1 rounded bg-surface-container-highest text-on-surface font-bold text-[11px]">Copiar</button>
+                              <button type="button" onClick={() => copiarEnlace(a)} className="px-2 py-1 rounded bg-surface-container-highest text-on-surface font-bold text-[11px]">{copiado === a.driver_id ? '✓ Copiado' : 'Copiar'}</button>
                               <a href={wa} target="_blank" rel="noreferrer" className="px-2 py-1 rounded text-white font-bold text-[11px]" style={{ backgroundColor: VERDE }}>Enviar por WhatsApp</a>
                             </div>
                             <div className="flex items-center justify-between text-[11px] text-secondary">
-                              <span>Avisos en el celular: <strong className="text-on-surface">{c ? `✅ Activos (${c.endpoint.slice(0, 24)}…)` : '❌ Todavía no los activó'}</strong></span>
-                              <button type="button" onClick={() => regenerarToken(d.id)} className="text-red-600 hover:underline">Revocar y crear nuevo enlace</button>
+                              <span>Avisos en el celular: <strong className="text-on-surface">{c ? `✅ Activos (${c} dispositivo${c > 1 ? 's' : ''})` : '❌ Todavía no los activó'}</strong></span>
+                              <button type="button" onClick={() => regenerarEnlace(d)} className="text-red-600 hover:underline">Revocar y crear nuevo enlace</button>
                             </div>
                           </div>
                         );
