@@ -503,297 +503,259 @@ export default function TaxiSeguro() {
         </div>
       </div>
 
-      <main className="max-w-[1440px] mx-auto px-container-margin lg:px-6 w-full pt-5 flex flex-col gap-6 pb-12">
+      <main className="max-w-[1440px] mx-auto px-container-margin lg:px-6 w-full pt-5 flex flex-col gap-8 pb-12">
+        <h1 className="sr-only">Taxi Seguro · Padrón Cívico Vecinal Pucallpa</h1>
 
-        {/* Sección Hero: En móvil apilados (tarjeta arriba, respaldo abajo); en escritorio lado a lado */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-start max-w-xl lg:max-w-6xl mx-auto w-full">
-          {/* Columna 1: Tarjeta de Pedido Rápido */}
-          <div className="lg:col-span-6 xl:col-span-6 w-full">
+        {/* Distribución principal: 2 columnas en escritorio, apilado vertical en móvil */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start w-full">
+          {/* LADO IZQUIERDO: Tarjeta de Pedido Rápido + Datos cívicos y confianza debajo */}
+          <div className="lg:col-span-5 flex flex-col gap-4 w-full">
             <QuickOrderCard />
-          </div>
 
-          {/* Columna 2: Respaldo Cívico y Confianza */}
-          <div className="lg:col-span-6 xl:col-span-6 w-full flex flex-col gap-3.5 bg-white lg:bg-transparent rounded-2xl lg:rounded-none p-3 lg:p-0 border border-surface-container-highest lg:border-none shadow-xs lg:shadow-none">
-            <h1 className="sr-only">Taxi Seguro · Padrón Cívico Vecinal Pucallpa</h1>
+            {/* Respaldo Cívico y Confianza debajo del cuadro de búsqueda */}
+            <div className="flex flex-col gap-3.5 bg-white rounded-2xl p-4 border border-surface-container-highest shadow-xs">
+              {/* Cabecera del respaldo */}
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-lowest shadow-xs font-label-md text-[11px] sm:text-xs font-bold uppercase tracking-wider border border-surface-container-high" style={{ color: VERDE }}>
+                  <span className="material-symbols-outlined text-[15px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
+                  Padrón Cívico Vecinal · Pucallpa
+                </span>
+                <details className="group">
+                  <summary className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-semibold text-secondary hover:text-primary cursor-pointer select-none transition-colors list-none">
+                    <span>¿Cómo funciona?</span>
+                    <span className="material-symbols-outlined text-[15px] group-open:rotate-180 transition-transform">expand_more</span>
+                  </summary>
+                  <p className="text-secondary font-body-md text-xs sm:text-sm mt-2 leading-relaxed animate-in fade-in duration-200 bg-surface-container-lowest border border-surface-container-highest rounded-xl p-3">
+                    Choferes verificados por la comunidad BogaHub. Contacto directo por llamada o WhatsApp — sin tarifas ocultas ni comisiones abusivas a intermediarios.
+                  </p>
+                </details>
+              </div>
 
-            {/* Cabecera del respaldo */}
-            <div className="flex flex-wrap items-center justify-between gap-2 px-1">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white shadow-xs font-label-md text-[11px] sm:text-xs font-bold uppercase tracking-wider border border-surface-container-high" style={{ color: VERDE }}>
-                <span className="material-symbols-outlined text-[15px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
-                Padrón Cívico Vecinal · Pucallpa
-              </span>
-              <details className="group">
-                <summary className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-semibold text-secondary hover:text-primary cursor-pointer select-none transition-colors list-none">
-                  <span>¿Cómo funciona?</span>
-                  <span className="material-symbols-outlined text-[15px] group-open:rotate-180 transition-transform">expand_more</span>
-                </summary>
-                <p className="text-secondary font-body-md text-xs sm:text-sm mt-1.5 leading-relaxed animate-in fade-in duration-200 bg-surface-container-lowest border border-surface-container-highest rounded-xl p-3">
-                  Choferes verificados por la comunidad BogaHub. Contacto directo por llamada o WhatsApp — sin tarifas ocultas ni comisiones abusivas a intermediarios.
+              {/* Mensaje descriptivo */}
+              <div className="border-t border-surface-container-high/60 pt-3">
+                <h2 className="font-headline-sm text-sm sm:text-base font-bold text-on-surface mb-1">
+                  Muévete tranquilo con unidades verificadas
+                </h2>
+                <p className="text-secondary text-xs leading-relaxed">
+                  Cada conductor en Taxi Seguro pasa por revisión de DNI, antecedentes y SOAT vigente. Pides tu viaje al instante y tratas directo con el chofer sin comisiones.
                 </p>
-              </details>
-            </div>
-
-            {/* Texto de contexto visible en escritorio para dar solidez y balance */}
-            <div className="hidden lg:block bg-white rounded-2xl border border-surface-container-highest p-4 shadow-xs">
-              <h2 className="font-headline-sm text-base font-bold text-on-surface mb-1">
-                Muévete tranquilo con unidades verificadas
-              </h2>
-              <p className="text-secondary text-xs leading-relaxed">
-                Cada conductor en Taxi Seguro pasa por revisión de DNI, antecedentes y SOAT vigente. Pides tu viaje al instante y tratas directo con el chofer sin comisiones.
-              </p>
-            </div>
-
-            {/* 3 pilares de confianza: en móvil 3 en fila compactos; en escritorio 3 tarjetas enriquecidas */}
-            <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5 pt-0.5">
-              <div className="bg-white rounded-xl border border-surface-container-highest p-2 sm:p-3 flex items-center lg:items-start gap-1.5 sm:gap-2.5 shadow-xs min-w-0">
-                <span className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: VERDE_SOFT, color: VERDE }}>
-                  <span className="material-symbols-outlined text-[14px] sm:text-[18px]">verified</span>
-                </span>
-                <div className="flex flex-col min-w-0">
-                  <span className="font-label-md text-[10px] sm:text-xs font-bold text-on-surface leading-tight truncate">Filtrados</span>
-                  <span className="font-body-md text-[8.5px] sm:text-[11px] text-secondary leading-tight truncate lg:whitespace-normal">DNI y SOAT</span>
-                </div>
               </div>
 
-              <div className="bg-white rounded-xl border border-surface-container-highest p-2 sm:p-3 flex items-center lg:items-start gap-1.5 sm:gap-2.5 shadow-xs min-w-0">
-                <span className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: VERDE_SOFT, color: VERDE }}>
-                  <span className="material-symbols-outlined text-[14px] sm:text-[18px]">payments</span>
-                </span>
-                <div className="flex flex-col min-w-0">
-                  <span className="font-label-md text-[10px] sm:text-xs font-bold text-on-surface leading-tight truncate">0% Comisión</span>
-                  <span className="font-body-md text-[8.5px] sm:text-[11px] text-secondary leading-tight truncate lg:whitespace-normal">Pago directo</span>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl border border-surface-container-highest p-2 sm:p-3 flex items-center lg:items-start gap-1.5 sm:gap-2.5 shadow-xs min-w-0">
-                <span className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: VERDE_SOFT, color: VERDE }}>
-                  <span className="material-symbols-outlined text-[14px] sm:text-[18px]">bolt</span>
-                </span>
-                <div className="flex flex-col min-w-0">
-                  <span className="font-label-md text-[10px] sm:text-xs font-bold text-on-surface leading-tight truncate">Al instante</span>
-                  <span className="font-body-md text-[8.5px] sm:text-[11px] text-secondary leading-tight truncate lg:whitespace-normal">Aviso cercano</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Enlaces y accesos secundarios */}
-            <div className="flex flex-wrap items-center justify-between gap-2 px-1 pt-0.5 bg-white lg:bg-transparent rounded-xl lg:rounded-none p-2.5 lg:p-0 border lg:border-none border-surface-container-highest">
-              <Link
-                href="/transporte/registro"
-                className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold hover:underline"
-                style={{ color: VERDE }}
-              >
-                <span className="material-symbols-outlined text-[15px]">badge</span>
-                ¿Manejas mototaxi, auto o moto? Postúlate al padrón gratis →
-              </Link>
-              <Link
-                href="/transporte/chofer"
-                className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-medium text-secondary hover:text-on-surface transition-colors"
-              >
-                <span className="material-symbols-outlined text-[14px]">key</span>
-                Soy chofer · Abre tu app
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Filtros por tipo de vehículo */}
-        <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1" style={{ scrollbarWidth: 'none' }}>
-          {(['Todos', 'Mototaxi', 'Auto', 'Moto'] as Filtro[]).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFiltro(f)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-label-md shrink-0 transition-all shadow-sm active:scale-95 ${
-                filtro === f
-                  ? 'bg-primary text-white border border-primary shadow-md'
-                  : 'bg-white border border-surface-container-highest text-secondary hover:shadow-md'
-              }`}
-            >
-              {f !== 'Todos' && <span className="material-symbols-outlined text-[16px]">{ICONO[f]}</span>}
-              {f}
-              <span className={`ml-0.5 px-1.5 py-0.5 rounded text-[10px] ${filtro === f ? 'bg-white/20' : 'bg-surface-container-high text-secondary'}`}>
-                {cuenta(f)}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        {/* Cuántos están disponibles ahora */}
-        {!cargando && choferes.some((c) => c.horario) && (
-          <div className="flex flex-wrap items-center gap-3 -mt-2">
-            <span className="inline-flex items-center gap-1.5 text-[12px] font-label-md font-bold" style={{ color: VERDE }}>
-              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: VERDE }} />
-              {disponibles} {disponibles === 1 ? 'chofer disponible' : 'choferes disponibles'} ahora
-            </span>
-            <button
-              onClick={() => setSoloDisponibles((v) => !v)}
-              className={`px-3 py-1 rounded-full text-[11px] font-label-md border transition-all ${soloDisponibles ? 'text-white border-transparent' : 'bg-white text-secondary border-surface-container-highest'}`}
-              style={soloDisponibles ? { backgroundColor: VERDE } : undefined}
-            >
-              {soloDisponibles ? 'Mostrando solo disponibles' : 'Ver solo disponibles'}
-            </button>
-            <span className="text-[11px] text-secondary">Se actualiza sola según el horario de cada chofer (hora de Pucallpa).</span>
-          </div>
-        )}
-
-        {/* Directorio */}
-        {cargando ? (
-          <div className="p-12 text-center text-secondary text-sm">
-            Cargando choferes verificados…
-          </div>
-        ) : lista.length === 0 ? (
-          <div className="flex flex-col gap-6">
-            {/* Aviso de red de despacho activa */}
-            <div className="bg-white rounded-2xl border border-surface-container-highest p-4 lg:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
-              <div className="flex items-center gap-3.5">
-                <span className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ backgroundColor: VERDE_SOFT, color: VERDE }}>
-                  <span className="material-symbols-outlined text-[24px]">cell_tower</span>
-                </span>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-headline-sm text-sm lg:text-base font-bold text-on-surface">Red de choferes activa en Pucallpa</h3>
-                    <span className="relative flex w-2 h-2">
-                      <span className="absolute inline-flex w-full h-full rounded-full opacity-60 animate-ping" style={{ backgroundColor: VERDE }} />
-                      <span className="relative inline-flex w-2 h-2 rounded-full" style={{ backgroundColor: VERDE }} />
-                    </span>
+              {/* 3 pilares de confianza en 1 sola fila */}
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-2 pt-0.5">
+                <div className="bg-surface-container-lowest rounded-xl border border-surface-container-highest p-2 sm:p-2.5 flex items-center gap-1.5 sm:gap-2 shadow-xs min-w-0">
+                  <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: VERDE_SOFT, color: VERDE }}>
+                    <span className="material-symbols-outlined text-[14px] sm:text-[16px]">verified</span>
+                  </span>
+                  <div className="flex flex-col min-w-0">
+                    <span className="font-label-md text-[10px] sm:text-[11px] font-bold text-on-surface leading-tight truncate">Filtrados</span>
+                    <span className="font-body-md text-[8.5px] sm:text-[9.5px] text-secondary leading-tight truncate">DNI y SOAT</span>
                   </div>
-                  <p className="text-secondary text-xs mt-0.5 max-w-xl">
-                    Aunque no veas choferes en lista abierta ahora, al enviar tu pedido notificamos al instante a los conductores empadronados más cercanos a tu ubicación.
-                  </p>
+                </div>
+
+                <div className="bg-surface-container-lowest rounded-xl border border-surface-container-highest p-2 sm:p-2.5 flex items-center gap-1.5 sm:gap-2 shadow-xs min-w-0">
+                  <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: VERDE_SOFT, color: VERDE }}>
+                    <span className="material-symbols-outlined text-[14px] sm:text-[16px]">payments</span>
+                  </span>
+                  <div className="flex flex-col min-w-0">
+                    <span className="font-label-md text-[10px] sm:text-[11px] font-bold text-on-surface leading-tight truncate">0% Comisión</span>
+                    <span className="font-body-md text-[8.5px] sm:text-[9.5px] text-secondary leading-tight truncate">Pago directo</span>
+                  </div>
+                </div>
+
+                <div className="bg-surface-container-lowest rounded-xl border border-surface-container-highest p-2 sm:p-2.5 flex items-center gap-1.5 sm:gap-2 shadow-xs min-w-0">
+                  <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: VERDE_SOFT, color: VERDE }}>
+                    <span className="material-symbols-outlined text-[14px] sm:text-[16px]">bolt</span>
+                  </span>
+                  <div className="flex flex-col min-w-0">
+                    <span className="font-label-md text-[10px] sm:text-[11px] font-bold text-on-surface leading-tight truncate">Al instante</span>
+                    <span className="font-body-md text-[8.5px] sm:text-[9.5px] text-secondary leading-tight truncate">Aviso cercano</span>
+                  </div>
                 </div>
               </div>
-              <Link
-                href="/transporte/pedir"
-                className="shrink-0 px-4 py-2.5 rounded-xl text-white font-label-md text-xs font-bold shadow-md active:scale-95 transition-transform"
-                style={{ backgroundColor: VERDE }}
-              >
-                Pedir taxi ahora
-              </Link>
-            </div>
 
-            {/* Tarifas comunitarias de referencia en Pucallpa */}
-            <div className="flex flex-col gap-3">
-              <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
-                <div>
-                  <h2 className="font-headline-md text-base lg:text-lg text-on-surface font-extrabold">
-                    Tarifas comunitarias de referencia
-                  </h2>
-                  <p className="text-secondary text-xs mt-0.5">
-                    Precios justos de referencia acordados habitualmente en Pucallpa (100% sin comisiones)
-                  </p>
-                </div>
-                <Link href="/transporte/pedir" className="text-[12px] font-bold hover:underline shrink-0" style={{ color: VERDE }}>
-                  Pedir viaje personalizado →
+              {/* Enlaces para choferes abajo */}
+              <div className="flex flex-col gap-2 pt-2 border-t border-surface-container-high/60">
+                <Link
+                  href="/transporte/registro"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold hover:underline"
+                  style={{ color: VERDE }}
+                >
+                  <span className="material-symbols-outlined text-[16px]">badge</span>
+                  ¿Manejas mototaxi, auto o moto? Postúlate al padrón gratis →
+                </Link>
+                <Link
+                  href="/transporte/chofer"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-secondary hover:text-on-surface transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[15px]">key</span>
+                  Soy chofer · Abre tu app
                 </Link>
               </div>
+            </div>
+          </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                {TARIFAS_REFERENCIALES.map((t) => (
-                  <Link
-                    key={`${t.origen}-${t.destino}`}
-                    href={`/transporte/pedir?origen=${encodeURIComponent(t.origen)}&destino=${encodeURIComponent(t.destino)}&tipo=${encodeURIComponent(t.tipo)}`}
-                    className="group bg-white rounded-2xl border border-surface-container-highest p-4 flex flex-col justify-between gap-3 shadow-sm hover:shadow-md hover:border-primary transition-all active:scale-[0.99]"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: VERDE_SOFT, color: VERDE }}>
-                        <span className="material-symbols-outlined text-[20px]">{t.icono}</span>
-                      </span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-surface-container-high text-secondary">
-                        {t.badge}
-                      </span>
-                    </div>
+          {/* LADO DERECHO: Filtros de vehículo + Contador de disponibilidad + Directorio de choferes */}
+          <div className="lg:col-span-7 flex flex-col gap-4 w-full">
+            {/* Filtros por tipo de vehículo */}
+            <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1" style={{ scrollbarWidth: 'none' }}>
+              {(['Todos', 'Mototaxi', 'Auto', 'Moto'] as Filtro[]).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFiltro(f)}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-label-md shrink-0 transition-all shadow-sm active:scale-95 ${
+                    filtro === f
+                      ? 'bg-primary text-white border border-primary shadow-md'
+                      : 'bg-white border border-surface-container-highest text-secondary hover:shadow-md'
+                  }`}
+                >
+                  {f !== 'Todos' && <span className="material-symbols-outlined text-[16px]">{ICONO[f]}</span>}
+                  {f}
+                  <span className={`ml-0.5 px-1.5 py-0.5 rounded text-[10px] ${filtro === f ? 'bg-white/20' : 'bg-surface-container-high text-secondary'}`}>
+                    {cuenta(f)}
+                  </span>
+                </button>
+              ))}
+            </div>
 
+            {/* Cuántos están disponibles ahora */}
+            {!cargando && choferes.some((c) => c.horario) && (
+              <div className="flex flex-wrap items-center gap-2.5 bg-white p-3 rounded-xl border border-surface-container-highest shadow-xs">
+                <span className="inline-flex items-center gap-1.5 text-[12px] font-label-md font-bold" style={{ color: VERDE }}>
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: VERDE }} />
+                  {disponibles} {disponibles === 1 ? 'chofer disponible' : 'choferes disponibles'} ahora
+                </span>
+                <button
+                  onClick={() => setSoloDisponibles((v) => !v)}
+                  className={`px-3 py-1 rounded-full text-[11px] font-label-md border transition-all ${soloDisponibles ? 'text-white border-transparent' : 'bg-surface-container-low text-secondary border-surface-container-highest'}`}
+                  style={soloDisponibles ? { backgroundColor: VERDE } : undefined}
+                >
+                  {soloDisponibles ? 'Mostrando solo disponibles' : 'Ver solo disponibles'}
+                </button>
+                <span className="text-[11px] text-secondary w-full sm:w-auto">Se actualiza sola según el horario de cada chofer (hora de Pucallpa).</span>
+              </div>
+            )}
+
+            {/* Directorio de choferes */}
+            {cargando ? (
+              <div className="p-12 text-center text-secondary text-sm bg-white rounded-2xl border border-surface-container-highest shadow-xs">
+                Cargando choferes verificados…
+              </div>
+            ) : lista.length === 0 ? (
+              <div className="flex flex-col gap-4">
+                {/* Aviso de red de despacho activa */}
+                <div className="bg-white rounded-2xl border border-surface-container-highest p-4 lg:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+                  <div className="flex items-center gap-3.5">
+                    <span className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ backgroundColor: VERDE_SOFT, color: VERDE }}>
+                      <span className="material-symbols-outlined text-[24px]">cell_tower</span>
+                    </span>
                     <div>
-                      <div className="text-[11px] text-secondary font-medium flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-secondary/50" />
-                        {t.origen}
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-headline-sm text-sm lg:text-base font-bold text-on-surface">Red de choferes activa en Pucallpa</h3>
+                        <span className="relative flex w-2 h-2">
+                          <span className="absolute inline-flex w-full h-full rounded-full opacity-60 animate-ping" style={{ backgroundColor: VERDE }} />
+                          <span className="relative inline-flex w-2 h-2 rounded-full" style={{ backgroundColor: VERDE }} />
+                        </span>
                       </div>
-                      <div className="font-headline-sm text-sm font-bold text-on-surface mt-1 group-hover:text-primary transition-colors">
-                        {t.destino}
-                      </div>
+                      <p className="text-secondary text-xs mt-0.5 max-w-xl">
+                        Aunque no veas choferes en lista abierta ahora, al enviar tu pedido notificamos al instante a los conductores empadronados más cercanos a tu ubicación.
+                      </p>
                     </div>
-
-                    <div className="pt-2.5 border-t border-surface-container flex items-center justify-between">
-                      <div>
-                        <span className="text-[10px] text-secondary uppercase font-semibold block leading-tight">Tarifa habitual</span>
-                        <span className="font-headline-md text-sm font-extrabold text-primary leading-tight mt-0.5 block">{t.precio}</span>
-                      </div>
-                      <span className="text-[11px] font-bold text-secondary group-hover:text-primary flex items-center gap-0.5">
-                        Pedir
-                        <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-                      </span>
-                    </div>
+                  </div>
+                  <Link
+                    href="/transporte/pedir"
+                    className="shrink-0 px-4 py-2.5 rounded-xl text-white font-label-md text-xs font-bold shadow-md active:scale-95 transition-transform"
+                    style={{ backgroundColor: VERDE }}
+                  >
+                    Pedir taxi ahora
                   </Link>
+                </div>
+
+                {/* Tarifas comunitarias de referencia en Pucallpa */}
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
+                    <div>
+                      <h2 className="font-headline-md text-base lg:text-lg text-on-surface font-extrabold">
+                        Tarifas comunitarias de referencia
+                      </h2>
+                      <p className="text-secondary text-xs mt-0.5">
+                        Precios justos acordados habitualmente en Pucallpa (100% sin comisiones)
+                      </p>
+                    </div>
+                    <Link href="/transporte/pedir" className="text-[12px] font-bold hover:underline shrink-0" style={{ color: VERDE }}>
+                      Pedir viaje personalizado →
+                    </Link>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {TARIFAS_REFERENCIALES.map((t) => (
+                      <Link
+                        key={`${t.origen}-${t.destino}`}
+                        href={`/transporte/pedir?origen=${encodeURIComponent(t.origen)}&destino=${encodeURIComponent(t.destino)}&tipo=${encodeURIComponent(t.tipo)}`}
+                        className="group bg-white rounded-2xl border border-surface-container-highest p-4 flex flex-col justify-between gap-3 shadow-sm hover:shadow-md hover:border-primary transition-all active:scale-[0.99]"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: VERDE_SOFT, color: VERDE }}>
+                            <span className="material-symbols-outlined text-[20px]">{t.icono}</span>
+                          </span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-surface-container-high text-secondary">
+                            {t.badge}
+                          </span>
+                        </div>
+
+                        <div>
+                          <div className="text-[11px] text-secondary font-medium flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-secondary/50" />
+                            {t.origen}
+                          </div>
+                          <div className="font-headline-sm text-sm font-bold text-on-surface mt-1 group-hover:text-primary transition-colors">
+                            {t.destino}
+                          </div>
+                        </div>
+
+                        <div className="pt-2.5 border-t border-surface-container flex items-center justify-between">
+                          <div>
+                            <span className="text-[10px] text-secondary uppercase font-semibold block leading-tight">Tarifa habitual</span>
+                            <span className="font-headline-md text-sm font-extrabold text-primary leading-tight mt-0.5 block">{t.precio}</span>
+                          </div>
+                          <span className="text-[11px] font-bold text-secondary group-hover:text-primary flex items-center gap-0.5">
+                            Pedir
+                            <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                          </span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Banner para Choferes */}
+                <div className="rounded-2xl border border-surface-container-highest bg-surface-container-low p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <span className="material-symbols-outlined text-[28px] text-primary">badge</span>
+                    <div>
+                      <h4 className="font-headline-sm text-sm font-bold text-on-surface">¿Tienes mototaxi, auto o moto en Pucallpa?</h4>
+                      <p className="text-secondary text-xs mt-0.5">
+                        Sé parte del padrón de confianza. No cobramos comisiones por carrera y te conectas con vecinos de toda la ciudad.
+                      </p>
+                    </div>
+                  </div>
+                  <Link
+                    href="/transporte/registro"
+                    className="shrink-0 px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold shadow-sm hover:opacity-95 active:scale-95 transition-all"
+                  >
+                    Postularme al padrón gratis
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                {lista.map((c) => (
+                  <DriverCard key={c.id} c={c} ahora={ahora} />
                 ))}
               </div>
-            </div>
-
-            {/* ¿Cómo funciona Taxi Seguro? */}
-            <div className="bg-white rounded-2xl border border-surface-container-highest p-5 lg:p-6 flex flex-col gap-4 shadow-sm">
-              <h3 className="font-headline-md text-base font-extrabold text-on-surface">¿Cómo funciona Taxi Seguro en BogaHub?</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="flex items-start gap-3">
-                  <span className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-extrabold shrink-0" style={{ backgroundColor: VERDE }}>
-                    1
-                  </span>
-                  <div>
-                    <h4 className="font-headline-sm text-xs font-bold text-on-surface">Pides tu viaje</h4>
-                    <p className="text-secondary text-[11px] leading-relaxed mt-0.5">
-                      Indica tu punto de recojo y a dónde vas. Avisamos a las unidades más cercanas.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-extrabold shrink-0" style={{ backgroundColor: VERDE }}>
-                    2
-                  </span>
-                  <div>
-                    <h4 className="font-headline-sm text-xs font-bold text-on-surface">Chofer verificado te contacta</h4>
-                    <p className="text-secondary text-[11px] leading-relaxed mt-0.5">
-                      El conductor acepta y te llama o escribe por WhatsApp con sus datos y placa confirmados.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-extrabold shrink-0" style={{ backgroundColor: VERDE }}>
-                    3
-                  </span>
-                  <div>
-                    <h4 className="font-headline-sm text-xs font-bold text-on-surface">Pagas lo justo</h4>
-                    <p className="text-secondary text-[11px] leading-relaxed mt-0.5">
-                      Pagas en efectivo o Yape acordado directamente con el chofer. Cero cobros a intermediarios.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Banner para Choferes */}
-            <div className="rounded-2xl border border-surface-container-highest bg-surface-container-low p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-[28px] text-primary">badge</span>
-                <div>
-                  <h4 className="font-headline-sm text-sm font-bold text-on-surface">¿Tienes mototaxi, auto o moto en Pucallpa?</h4>
-                  <p className="text-secondary text-xs mt-0.5">
-                    Sé parte del padrón de confianza. No cobramos comisiones por carrera y te conectas con vecinos de toda la ciudad.
-                  </p>
-                </div>
-              </div>
-              <Link
-                href="/transporte/registro"
-                className="shrink-0 px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold shadow-sm hover:opacity-95 active:scale-95 transition-all"
-              >
-                Postularme al padrón gratis
-              </Link>
-            </div>
+            )}
           </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {lista.map((c) => (
-              <DriverCard key={c.id} c={c} ahora={ahora} />
-            ))}
-          </div>
-        )}
+        </div>
 
         {/* Planes fijos — próximamente */}
         <section className="rounded-2xl border border-surface-container-highest bg-white shadow-[0_15px_15px_rgba(0,0,0,0.04)] p-5 lg:p-6 flex flex-col gap-4 mt-2">
