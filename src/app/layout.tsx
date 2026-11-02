@@ -118,27 +118,7 @@ export default function RootLayout({
             __html: `(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window, document, "clarity", "script", "z6y3k78xah");`,
           }}
         />
-        {/* Travelpayouts / Emerald affiliate tracking script */}
-        <script
-          {...{
-            nowprocket: '',
-            'data-noptimize': '1',
-            'data-cfasync': 'false',
-            'data-wpfc-render': 'false',
-            'seraph-accel-crit': '1',
-            'data-no-defer': '1',
-            'data-cmp-ab': '2',
-          }}
-          dangerouslySetInnerHTML={{
-            __html: `(function () {
-      var script = document.createElement("script");
-      script.async = 1;
-      script.setAttribute("data-cmp-ab","2");
-      script.src = 'https://tp-em.com/NTc3NTYy.js?t=577562';
-      document.head.appendChild(script);
-  })();`,
-          }}
-        />
+
         <link
           href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Plus+Jakarta+Sans:wght@100..900&display=swap"
           rel="stylesheet"
