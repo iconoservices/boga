@@ -21,6 +21,7 @@ import { supabase } from '@/lib/supabase';
 import { ZONAS_TRANSPORTE } from '@/lib/zonasTransporte';
 import { ubicacionActual, mensajeUbicacion, type ErrorUbicacion } from '@/lib/ubicacion';
 import { suscribirChofer, esIOS, enModoApp, motivoError } from '@/lib/push';
+import { useEsSuperadmin } from '@/lib/superadmin';
 
 const VERDE = '#00875A';
 const CLAVE_TOKEN = 'boga_chofer_token';
@@ -54,6 +55,21 @@ export default function ChoferApp() {
   const [gps, setGps] = useState<'esperando' | 'ok' | 'denegado'>('esperando');
   const ultimoEnvio = useRef(0);
   const ultimoPunto = useRef<{ lat: number; lng: number } | null>(null);
+
+  const { esSuperadmin } = useEsSuperadmin();
+  const [identificador, setIdentificador] = useState('');
+  const [enlacePegado, setEnlacePegado] = useState('');
+  const [buscandoAcceso, setBuscandoAcceso] = useState(false);
+  const [errorAcceso, setErrorAcceso] = useState('');
+  const [choferesAdmin, setChoferesAdmin] = useState<{ id: string; nombre: string; tipo: string; placa: string | null }[]>([]);
+
+  useEffect(() => {
+    if (esSuperadmin) {
+      supabase.from('drivers').select('id,nombre,tipo,placa,status').eq('status', 'activo').order('nombre').then((res) => {
+        if (res.data) setChoferesAdmin(res.data);
+      });
+    }
+  }, [esSuperadmin]);
 
   // El enlace trae el token; se recuerda para la próxima vez. Si abrió la app sin él, se usa el recordado.
   useEffect(() => {
@@ -247,16 +263,194 @@ export default function ChoferApp() {
     consultar();
   };
 
+  const recuperarPorIdentificador = async (ev: React.FormEvent) => {
+    ev.preventDefault();
+    const val = identificador.trim();
+    if (!val) return;
+    setBuscandoAcceso(true);
+    setErrorAcceso('');
+    try {
+      const res = await fetch('/api/transporte/chofer/recuperar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identificador: val }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setErrorAcceso(data.error || 'No encontramos un chofer activo con ese número o DNI.');
+        setBuscandoAcceso(false);
+        return;
+      }
+      try { localStorage.setItem(CLAVE_TOKEN, data.token); } catch {}
+      const url = new URL(window.location.href);
+      url.searchParams.set('t', data.token);
+      window.history.replaceState({}, '', url.toString());
+      setInvalido(false);
+      setToken(data.token);
+    } catch {
+      setErrorAcceso('Error de conexión. Intenta de nuevo.');
+    } finally {
+      setBuscandoAcceso(false);
+    }
+  };
+
+  const entrarConEnlace = (ev: React.FormEvent) => {
+    ev.preventDefault();
+    const raw = enlacePegado.trim();
+    if (!raw) return;
+    let tok = raw;
+    if (raw.includes('t=')) {
+      const match = raw.match(/[?&]t=([a-f0-9]+)/i);
+      if (match) tok = match[1];
+    }
+    if (tok) {
+      try { localStorage.setItem(CLAVE_TOKEN, tok); } catch {}
+      const url = new URL(window.location.href);
+      url.searchParams.set('t', tok);
+      window.history.replaceState({}, '', url.toString());
+      setInvalido(false);
+      setToken(tok);
+    }
+  };
+
   if (!listo) return null;
   if (!token || invalido) {
     return (
-      <div className="min-h-screen bg-[#f7f9f8] flex items-center justify-center p-6 text-center">
-        <div className="max-w-sm">
-          <p className="text-4xl mb-3">🔒</p>
-          <h1 className="text-xl font-extrabold mb-2">Necesitas tu enlace de chofer</h1>
-          <p className="text-sm text-gray-600 font-medium">Tu enlace privado es tu llave: con él entras a tu app, sin usuario ni contraseña. BogaHub te lo envía por WhatsApp cuando te aprueban en el padrón. Ábrelo desde este celular y quedará guardado. Es personal: no lo compartas.</p>
-          <p className="text-sm text-gray-600 font-medium mt-3">¿Todavía no estás en el padrón?</p>
-          <Link href="/transporte/registro" className="inline-block mt-2 px-5 py-3 rounded-xl text-white font-bold" style={{ background: VERDE }}>Postularme como chofer</Link>
+      <div className="min-h-screen bg-[#f7f9f8] flex flex-col justify-center items-center p-4 sm:p-6">
+        <div className="w-full max-w-md bg-white border border-gray-200/80 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col gap-6">
+          <div className="text-center">
+            <div className="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center text-white mb-3 shadow-sm" style={{ backgroundColor: VERDE }}>
+              <span className="material-symbols-outlined text-[28px]">local_taxi</span>
+            </div>
+            <h1 className="text-xl font-extrabold text-gray-900">App del Chofer · Taxi Seguro</h1>
+            <p className="text-xs text-gray-500 font-medium mt-1">
+              Ingresa a tu app privada para recibir pedidos y notificaciones de pasajeros en Pucallpa
+            </p>
+          </div>
+
+          {/* Opción 1: Entrar con celular o DNI registrado */}
+          <form onSubmit={recuperarPorIdentificador} className="flex flex-col gap-3">
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1">
+                Ingresa con tu Celular / WhatsApp o DNI
+              </label>
+              <input
+                type="tel"
+                required
+                value={identificador}
+                onChange={(ev) => setIdentificador(ev.target.value)}
+                placeholder="Ej. 962000001 o 72345678"
+                className="w-full bg-[#f7f9f8] border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-900 outline-none focus:border-[#00875A] font-medium"
+              />
+              <p className="text-[11px] text-gray-400 mt-1">
+                Si ya estás en el padrón, buscaremos tu ficha y abriremos tu app directamente.
+              </p>
+            </div>
+
+            {errorAcceso && (
+              <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-medium">
+                {errorAcceso}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={buscandoAcceso}
+              className="w-full text-white font-bold text-sm py-3 rounded-xl shadow-sm hover:opacity-95 active:scale-[0.99] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+              style={{ backgroundColor: VERDE }}
+            >
+              {buscandoAcceso ? (
+                <>
+                  <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+                  Buscando en el padrón…
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-[18px]">key</span>
+                  Entrar a mi app
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Separador o enlace */}
+          <div className="relative flex items-center justify-center">
+            <div className="border-t border-gray-200 w-full" />
+            <span className="bg-white px-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider absolute">
+              o con tu enlace
+            </span>
+          </div>
+
+          {/* Opción 2: Pegar enlace o token */}
+          <form onSubmit={entrarConEnlace} className="flex flex-col gap-2">
+            <label className="block text-xs font-bold text-gray-700">
+              ¿Tienes tu enlace personal o token?
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={enlacePegado}
+                onChange={(ev) => setEnlacePegado(ev.target.value)}
+                placeholder="Pega aquí tu enlace de WhatsApp o token"
+                className="flex-1 bg-[#f7f9f8] border border-gray-300 rounded-xl px-3 py-2 text-xs text-gray-800 outline-none focus:border-[#00875A] font-mono"
+              />
+              <button
+                type="submit"
+                disabled={!enlacePegado.trim()}
+                className="px-4 py-2 bg-gray-900 text-white font-bold text-xs rounded-xl disabled:opacity-40 hover:bg-black transition-colors"
+              >
+                Abrir
+              </button>
+            </div>
+          </form>
+
+          {/* Opción 3: Superadmin mode */}
+          {esSuperadmin && (
+            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex flex-col gap-2.5 text-xs text-blue-950">
+              <div className="flex items-center gap-2 font-bold text-blue-900">
+                <span className="material-symbols-outlined text-[18px] text-blue-600">admin_panel_settings</span>
+                Modo Administrador
+              </div>
+              <p className="text-[11px] text-blue-800">
+                Tienes sesión de Superadmin iniciada. Puedes abrir la app de prueba de cualquier chofer o ir al panel:
+              </p>
+              {choferesAdmin.length > 0 && (
+                <select
+                  onChange={(ev) => {
+                    if (ev.target.value) {
+                      setInvalido(false);
+                      setToken(`ver:${ev.target.value}`);
+                    }
+                  }}
+                  className="w-full bg-white border border-blue-200 rounded-lg px-2.5 py-1.5 text-xs text-gray-900 font-medium outline-none"
+                  defaultValue=""
+                >
+                  <option value="" disabled>Selecciona un chofer para ver su app…</option>
+                  {choferesAdmin.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.nombre} · {c.tipo} {c.placa ? `(${c.placa})` : ''}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <div className="flex items-center justify-between pt-1">
+                <Link href="/superadmin/choferes" className="font-bold text-blue-700 hover:underline text-[11px]">
+                  Ir a /superadmin/choferes →
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* Footer: postular o volver */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-gray-100 text-xs">
+            <Link href="/transporte" className="text-gray-500 hover:text-gray-900 font-medium flex items-center gap-1">
+              <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+              Volver a Taxi Seguro
+            </Link>
+            <Link href="/transporte/registro" className="font-bold hover:underline" style={{ color: VERDE }}>
+              Postularme al padrón gratis →
+            </Link>
+          </div>
         </div>
       </div>
     );

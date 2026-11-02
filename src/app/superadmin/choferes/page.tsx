@@ -607,9 +607,11 @@ export default function ChoferesAdmin() {
                               <span className="font-bold text-on-surface">Enlace personal de la app</span>
                               <span className="font-mono text-secondary text-[11px]">Token: {a.token.slice(0, 8)}…</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <input readOnly value={enlaceDe(a)} className="flex-1 bg-surface-container-lowest border border-surface-container-highest rounded px-2 py-1 text-[11px] font-mono text-secondary" />
+                            <div className="flex flex-wrap items-center gap-2">
+                              <input readOnly value={enlaceDe(a)} className="flex-1 min-w-[200px] bg-surface-container-lowest border border-surface-container-highest rounded px-2 py-1 text-[11px] font-mono text-secondary" />
                               <button type="button" onClick={() => copiarEnlace(a)} className="px-2 py-1 rounded bg-surface-container-highest text-on-surface font-bold text-[11px]">{copiado === a.driver_id ? '✓ Copiado' : 'Copiar'}</button>
+                              <a href={enlaceDe(a)} target="_blank" rel="noreferrer" className="px-2.5 py-1 rounded bg-[#2170e4] text-white font-bold text-[11px] hover:bg-[#1a5ec4]">Abrir app ↗</a>
+                              <a href={`/transporte/chofer?ver=${d.id}`} target="_blank" rel="noreferrer" className="px-2.5 py-1 rounded bg-blue-50 border border-blue-200 text-blue-700 font-bold text-[11px] hover:bg-blue-100">👁 Ver como chofer</a>
                               <a href={wa} target="_blank" rel="noreferrer" className="px-2 py-1 rounded text-white font-bold text-[11px]" style={{ backgroundColor: VERDE }}>Enviar por WhatsApp</a>
                             </div>
                             <div className="flex items-center justify-between text-[11px] text-secondary">
@@ -668,9 +670,11 @@ export default function ChoferesAdmin() {
                               <span className="font-bold text-on-surface">Enlace personal de la app</span>
                               <span className="font-mono text-secondary text-[11px]">Token: {a.token.slice(0, 8)}…</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <input readOnly value={enlaceDe(a)} className="flex-1 bg-surface-container-lowest border border-surface-container-highest rounded px-2 py-1 text-[11px] font-mono text-secondary" />
+                            <div className="flex flex-wrap items-center gap-2">
+                              <input readOnly value={enlaceDe(a)} className="flex-1 min-w-[200px] bg-surface-container-lowest border border-surface-container-highest rounded px-2 py-1 text-[11px] font-mono text-secondary" />
                               <button type="button" onClick={() => copiarEnlace(a)} className="px-2 py-1 rounded bg-surface-container-highest text-on-surface font-bold text-[11px]">{copiado === a.driver_id ? '✓ Copiado' : 'Copiar'}</button>
+                              <a href={enlaceDe(a)} target="_blank" rel="noreferrer" className="px-2.5 py-1 rounded bg-[#2170e4] text-white font-bold text-[11px] hover:bg-[#1a5ec4]">Abrir app ↗</a>
+                              <a href={`/transporte/chofer?ver=${d.id}`} target="_blank" rel="noreferrer" className="px-2.5 py-1 rounded bg-blue-50 border border-blue-200 text-blue-700 font-bold text-[11px] hover:bg-blue-100">👁 Ver como chofer</a>
                               <a href={wa} target="_blank" rel="noreferrer" className="px-2 py-1 rounded text-white font-bold text-[11px]" style={{ backgroundColor: VERDE }}>Enviar por WhatsApp</a>
                             </div>
                             <div className="flex items-center justify-between text-[11px] text-secondary">
