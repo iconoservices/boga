@@ -525,14 +525,10 @@ export default function TaxiSeguro() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
           {/* Columna Izquierda: Mensaje y confianza */}
           <div className="lg:col-span-7 flex flex-col gap-4">
-            <div className="flex flex-wrap items-center gap-2">
+            <div>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white shadow-sm font-label-md text-[11px] font-bold uppercase tracking-wider" style={{ color: VERDE }}>
                 <span className="material-symbols-outlined text-[15px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
                 Padrón Cívico Vecinal · Pucallpa
-              </span>
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold text-secondary bg-surface-container-high">
-                <span className="material-symbols-outlined text-[14px]">local_taxi</span>
-                Taxi Seguro
               </span>
             </div>
 
@@ -540,9 +536,15 @@ export default function TaxiSeguro() {
               <h1 className="font-headline-lg text-on-surface tracking-tight text-3xl lg:text-4xl font-extrabold leading-tight">
                 Muévete tranquilo por Pucallpa
               </h1>
-              <p className="text-secondary font-body-md text-sm lg:text-base mt-2 leading-relaxed max-w-xl">
-                Choferes verificados por la comunidad BogaHub. Contacto directo por llamada o WhatsApp — sin tarifas ocultas ni comisiones abusivas a intermediarios.
-              </p>
+              <details className="mt-1.5 group">
+                <summary className="inline-flex items-center gap-1 text-xs font-semibold text-secondary hover:text-primary cursor-pointer select-none transition-colors list-none">
+                  <span>¿Cómo funciona el padrón?</span>
+                  <span className="material-symbols-outlined text-[16px] group-open:rotate-180 transition-transform">expand_more</span>
+                </summary>
+                <p className="text-secondary font-body-md text-xs sm:text-sm mt-1.5 leading-relaxed max-w-xl animate-in fade-in duration-200">
+                  Choferes verificados por la comunidad BogaHub. Contacto directo por llamada o WhatsApp — sin tarifas ocultas ni comisiones abusivas a intermediarios.
+                </p>
+              </details>
             </div>
 
             {/* 3 pilares de confianza visuales */}

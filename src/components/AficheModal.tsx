@@ -107,3 +107,4 @@ export default function AficheModal({ imgSrc, altText }: AficheModalProps) {
     </>
   );
 }
+
