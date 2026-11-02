@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const {
-      nombre, dni, whatsapp, tipo, placa, zona,
+      nombre, email, dni, whatsapp, tipo, placa, zona,
       ciudad, experiencia, horario, mensaje,
       foto_perfil, foto_vehiculo,
     } = body;
@@ -37,6 +37,7 @@ export async function POST(request: Request) {
 
     const fila: Record<string, unknown> = {
       nombre,
+      email: email ? String(email).trim().toLowerCase() : null,
       dni: dni || null,
       whatsapp,
       tipo: tipo || 'Mototaxi',
@@ -53,9 +54,10 @@ export async function POST(request: Request) {
     };
 
     let { data, error } = await supabase.from('driver_requests').insert(fila).select().single();
-    // Si la columna nueva todavía no existe en la base, se guarda igual con el horario en texto.
-    if (error && /horario_semana/.test(error.message)) {
-      delete fila.horario_semana;
+    // Si la columna nueva todavía no existe en la base, se guarda omitiendo el campo nuevo.
+    if (error && (/horario_semana/.test(error.message) || /email/.test(error.message))) {
+      if (/horario_semana/.test(error.message)) delete fila.horario_semana;
+      if (/email/.test(error.message)) delete fila.email;
       ({ data, error } = await supabase.from('driver_requests').insert(fila).select().single());
     }
 

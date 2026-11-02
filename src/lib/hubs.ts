@@ -9,12 +9,12 @@ export const HUBS: Hub[] = [
   { href: '/',            label: 'Inicio',      icon: 'home' },
   { href: '/explore',     label: 'Market',      icon: 'storefront' },
   { href: '/eventos',     label: 'Eventos',     icon: 'celebration' },
+  { href: '/transporte',  label: 'Taxi Seguro', icon: 'local_taxi' },
   { href: '/trabajos',    label: 'Trabajos',    icon: 'construction' },
   { href: '/viajes',      label: 'Pasajes',     icon: 'directions_boat' },
   { href: '/productos',   label: 'Productos',   icon: 'inventory_2' },
   { href: '/inmuebles',   label: 'Inmuebles',   icon: 'real_estate_agent' },
   { href: '/sorteos',     label: 'Sorteos',     icon: 'confirmation_number' },
-  { href: '/transporte', label: 'Taxi Seguro', icon: 'local_taxi' },
   { href: '/revista',     label: 'Revista',     long: 'Yo Soy de la Selva', icon: 'menu_book' },
   { href: '/negocios',    label: 'Negocios',    long: 'Para Negocios', icon: 'work', apart: true },
 ];

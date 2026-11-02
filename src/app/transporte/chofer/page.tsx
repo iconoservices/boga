@@ -61,7 +61,17 @@ export default function ChoferApp() {
   const [enlacePegado, setEnlacePegado] = useState('');
   const [buscandoAcceso, setBuscandoAcceso] = useState(false);
   const [errorAcceso, setErrorAcceso] = useState('');
+  const [noRegistrado, setNoRegistrado] = useState(false);
+  const [identificadorBuscado, setIdentificadorBuscado] = useState('');
+  const [cuentaEmail, setCuentaEmail] = useState<string | null>(null);
   const [choferesAdmin, setChoferesAdmin] = useState<{ id: string; nombre: string; tipo: string; placa: string | null }[]>([]);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      const em = data.session?.user?.email;
+      if (em) setCuentaEmail(em);
+    });
+  }, []);
 
   useEffect(() => {
     if (esSuperadmin) {
@@ -263,21 +273,25 @@ export default function ChoferApp() {
     consultar();
   };
 
-  const recuperarPorIdentificador = async (ev: React.FormEvent) => {
-    ev.preventDefault();
-    const val = identificador.trim();
-    if (!val) return;
+  const buscarYEntrar = async (val: string) => {
+    const limpio = val.trim();
+    if (!limpio) return;
     setBuscandoAcceso(true);
     setErrorAcceso('');
+    setNoRegistrado(false);
     try {
       const res = await fetch('/api/transporte/chofer/recuperar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identificador: val }),
+        body: JSON.stringify({ identificador: limpio }),
       });
       const data = await res.json();
       if (!res.ok || !data.ok) {
-        setErrorAcceso(data.error || 'No encontramos un chofer activo con ese número o DNI.');
+        if (data.noRegistrado) {
+          setNoRegistrado(true);
+          setIdentificadorBuscado(limpio);
+        }
+        setErrorAcceso(data.error || 'No encontramos un chofer activo con ese número, DNI o correo.');
         setBuscandoAcceso(false);
         return;
       }
@@ -286,12 +300,30 @@ export default function ChoferApp() {
       url.searchParams.set('t', data.token);
       window.history.replaceState({}, '', url.toString());
       setInvalido(false);
+      setNoRegistrado(false);
       setToken(data.token);
     } catch {
       setErrorAcceso('Error de conexión. Intenta de nuevo.');
     } finally {
       setBuscandoAcceso(false);
     }
+  };
+
+  const cerrarSesionChofer = () => {
+    try { localStorage.removeItem(CLAVE_TOKEN); } catch {}
+    const url = new URL(window.location.href);
+    url.searchParams.delete('t');
+    url.searchParams.delete('ver');
+    window.history.replaceState({}, '', url.pathname);
+    setToken(null);
+    setE(null);
+    setInvalido(true);
+    setMsg('');
+  };
+
+  const recuperarPorIdentificador = async (ev: React.FormEvent) => {
+    ev.preventDefault();
+    buscarYEntrar(identificador);
   };
 
   const entrarConEnlace = (ev: React.FormEvent) => {
@@ -328,18 +360,41 @@ export default function ChoferApp() {
             </p>
           </div>
 
-          {/* Opción 1: Entrar con celular o DNI registrado */}
+          {/* Si tiene sesión iniciada con correo o Google */}
+          {cuentaEmail && (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex flex-col gap-2 text-xs">
+              <div className="flex items-center gap-1.5 font-bold text-emerald-900">
+                <span className="material-symbols-outlined text-[18px]">account_circle</span>
+                Cuenta conectada: <span className="font-mono">{cuentaEmail}</span>
+              </div>
+              <p className="text-emerald-800 text-[11px]">
+                Detectamos tu correo de BogaHub. Puedes entrar directamente a tu panel de chofer:
+              </p>
+              <button
+                type="button"
+                onClick={() => buscarYEntrar(cuentaEmail)}
+                disabled={buscandoAcceso}
+                className="w-full text-white font-bold py-2.5 rounded-xl shadow-sm hover:opacity-95 transition-opacity flex items-center justify-center gap-1.5"
+                style={{ backgroundColor: VERDE }}
+              >
+                <span className="material-symbols-outlined text-[16px]">login</span>
+                Entrar con mi correo
+              </button>
+            </div>
+          )}
+
+          {/* Opción 1: Entrar con celular, DNI o correo registrado */}
           <form onSubmit={recuperarPorIdentificador} className="flex flex-col gap-3">
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1">
-                Ingresa con tu Celular / WhatsApp o DNI
+                Ingresa con tu Celular, DNI o Correo
               </label>
               <input
-                type="tel"
+                type="text"
                 required
                 value={identificador}
                 onChange={(ev) => setIdentificador(ev.target.value)}
-                placeholder="Ej. 962000001 o 72345678"
+                placeholder="Ej. 962000001, 72345678 o chofer@gmail.com"
                 className="w-full bg-[#f7f9f8] border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-900 outline-none focus:border-[#00875A] font-medium"
               />
               <p className="text-[11px] text-gray-400 mt-1">
@@ -347,11 +402,46 @@ export default function ChoferApp() {
               </p>
             </div>
 
-            {errorAcceso && (
+            {noRegistrado ? (
+              <div className="p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-950 flex flex-col gap-2.5">
+                <div className="flex items-center gap-2 font-bold text-amber-900 text-sm">
+                  <span className="material-symbols-outlined text-[20px] text-amber-600">person_off</span>
+                  No estás registrado en el padrón
+                </div>
+                <p className="text-xs text-amber-800 leading-relaxed font-medium">
+                  {identificadorBuscado ? (
+                    <>El identificador <strong>«{identificadorBuscado}»</strong> no figura en el padrón de choferes activos.</>
+                  ) : (
+                    <>Tu correo o cuenta no está registrada aún en el padrón de choferes.</>
+                  )}
+                </p>
+                <div className="bg-white/90 border border-amber-200 rounded-xl p-3 flex flex-col gap-2">
+                  <p className="text-xs font-bold text-gray-800">¿Quieres conducir con Taxi Seguro?</p>
+                  <p className="text-[11px] text-gray-500">
+                    Postúlate en minutos. Te contactaremos por WhatsApp para revisar tus documentos y sumarte al padrón.
+                  </p>
+                  <Link
+                    href={`/transporte/registro?email=${encodeURIComponent(identificadorBuscado.includes('@') ? identificadorBuscado : cuentaEmail || '')}&tel=${encodeURIComponent(!identificadorBuscado.includes('@') && identificadorBuscado.length >= 9 ? identificadorBuscado : '')}&dni=${encodeURIComponent(!identificadorBuscado.includes('@') && identificadorBuscado.length === 8 ? identificadorBuscado : '')}`}
+                    className="w-full py-2.5 px-4 rounded-xl text-white font-bold text-xs text-center shadow-sm hover:opacity-95 transition-opacity flex items-center justify-center gap-1.5"
+                    style={{ backgroundColor: VERDE }}
+                  >
+                    <span className="material-symbols-outlined text-[16px]">how_to_reg</span>
+                    Postularme como chofer aquí →
+                  </Link>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setNoRegistrado(false); setErrorAcceso(''); }}
+                  className="text-[11px] text-amber-800 hover:text-amber-950 underline text-center"
+                >
+                  Intentar con otro correo, DNI o celular
+                </button>
+              </div>
+            ) : errorAcceso ? (
               <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-medium">
                 {errorAcceso}
               </div>
-            )}
+            ) : null}
 
             <button
               type="submit"
@@ -403,6 +493,19 @@ export default function ChoferApp() {
               </button>
             </div>
           </form>
+
+          {/* Opción alternativa: Iniciar sesión con cuenta */}
+          {!cuentaEmail && (
+            <div className="pt-1 text-center">
+              <Link
+                href="/login?redirect=/transporte/chofer"
+                className="w-full py-2.5 px-3 rounded-xl border border-gray-200 hover:bg-gray-50 text-xs font-bold text-gray-700 inline-flex items-center justify-center gap-1.5 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[16px]">account_circle</span>
+                Iniciar sesión con tu cuenta de BogaHub o Google
+              </Link>
+            </div>
+          )}
 
           {/* Opción 3: Superadmin mode */}
           {esSuperadmin && (
@@ -471,15 +574,26 @@ export default function ChoferApp() {
         </div>
       )}
       <header className="text-white" style={{ background: VERDE }}>
-        <div className="max-w-xl mx-auto px-4 py-4">
-          <p className="text-xs font-bold opacity-80 uppercase tracking-wider">{e.soloEntregas ? 'BogaHub · App del repartidor' : 'Taxi Seguro · App del chofer'}</p>
-          <h1 className="text-xl font-extrabold">Hola, {e.chofer.nombre.split(' ')[0]}</h1>
-          <p className="text-xs opacity-80 font-medium">{[e.soloEntregas ? 'Repartidor' : e.chofer.tipo, e.chofer.placa].filter(Boolean).join(' · ')}</p>
-          {e.repartidorDe && (
-            <span className="inline-block mt-2 text-[11px] font-extrabold px-2.5 py-1 rounded-full bg-white/20 border border-white/40">
-              {e.repartidorDe.tipo === 'boga' ? '🛡 Repartidor BogaHub' : `🏪 Repartidor de ${e.repartidorDe.tienda}`}
-            </span>
-          )}
+        <div className="max-w-xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold opacity-80 uppercase tracking-wider">{e.soloEntregas ? 'BogaHub · App del repartidor' : 'Taxi Seguro · App del chofer'}</p>
+            <h1 className="text-xl font-extrabold">Hola, {e.chofer.nombre.split(' ')[0]}</h1>
+            <p className="text-xs opacity-80 font-medium">{[e.soloEntregas ? 'Repartidor' : e.chofer.tipo, e.chofer.placa].filter(Boolean).join(' · ')}</p>
+            {e.repartidorDe && (
+              <span className="inline-block mt-2 text-[11px] font-extrabold px-2.5 py-1 rounded-full bg-white/20 border border-white/40">
+                {e.repartidorDe.tipo === 'boga' ? '🛡 Repartidor BogaHub' : `🏪 Repartidor de ${e.repartidorDe.tienda}`}
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={cerrarSesionChofer}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 text-xs font-bold text-white transition-all border border-white/20 shrink-0"
+            title="Cerrar sesión de chofer o cambiar de cuenta"
+          >
+            <span className="material-symbols-outlined text-[16px]">logout</span>
+            Salir
+          </button>
         </div>
       </header>
 

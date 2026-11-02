@@ -16,6 +16,7 @@ const TIPOS = ['Mototaxi', 'Auto', 'Moto'];
 
 export default function RegistroChoferPage() {
   const [nombre, setNombre] = useState('');
+  const [email, setEmail] = useState('');
   const [dni, setDni] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [tipo, setTipo] = useState('');
@@ -32,6 +33,16 @@ export default function RegistroChoferPage() {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const em = params.get('email');
+    if (em) setEmail(em);
+    const d = params.get('dni');
+    if (d) setDni(d);
+    const tel = params.get('tel');
+    if (tel) setWhatsapp(tel);
+  }, []);
 
   const subirFoto = async (e: React.ChangeEvent<HTMLInputElement>, tipo: 'perfil' | 'vehiculo') => {
     const file = e.target.files?.[0];
@@ -79,7 +90,7 @@ export default function RegistroChoferPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          nombre, dni, whatsapp, tipo: tipo || null, placa: placa || null,
+          nombre, email: email ? email.trim().toLowerCase() : null, dni, whatsapp, tipo: tipo || null, placa: placa || null,
           zona: zona || null, ciudad: ciudad || null,
           experiencia: experiencia || null, horario_semana: horario,
           mensaje: mensaje || null,
@@ -174,6 +185,10 @@ export default function RegistroChoferPage() {
                 <div style={{ marginBottom: '14px' }}>
                   <label style={label}>Tu nombre completo</label>
                   <input type="text" required value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Luz Marina Rengifo" style={input} onFocus={onFocus} onBlur={onBlur} />
+                </div>
+                <div style={{ marginBottom: '14px' }}>
+                  <label style={label}>Correo electrónico <span style={{ fontWeight: 400, color: '#9fb3ab' }}>(opcional — para entrar a tu app y avisos)</span></label>
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu-correo@ejemplo.com" style={input} onFocus={onFocus} onBlur={onBlur} />
                 </div>
                 <div style={{ display: 'flex', gap: '10px', marginBottom: '14px' }}>
                   <div style={{ flex: 1 }}>

@@ -2367,3 +2367,12 @@ UPDATE public.planes_comerciales SET
   caracteristicas = '["Todo lo del plan Negocio","Catálogo de 1 001 a 5 000 productos","S/ 50 más al mes por cada 1 000 productos extra (hasta 3 000 → S/ 200, hasta 4 000 → S/ 250…)"]'::jsonb,
   updated_at = now()
 WHERE id = 'app_google';
+
+-- ============================================================
+-- CORREO ELECTRÓNICO PARA CHOFERES (Taxi Seguro)
+-- Permite vincular la cuenta del chofer a su correo/Google y notificaciones
+-- ============================================================
+ALTER TABLE public.drivers ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE public.driver_requests ADD COLUMN IF NOT EXISTS email TEXT;
+CREATE INDEX IF NOT EXISTS drivers_email_idx ON public.drivers (email);
+

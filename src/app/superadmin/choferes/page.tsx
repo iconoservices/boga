@@ -31,7 +31,7 @@ const horarioDe = (r: DriverRow): string => resumenHorario(normalizarHorario(r.h
 
 const FICHA_VACIA = {
   id: null as string | null,
-  nombre: '', dni: '', tipo: 'Mototaxi', comite: '', experiencia: '', placa: '', modelo: '',
+  nombre: '', email: '', dni: '', tipo: 'Mototaxi', comite: '', experiencia: '', placa: '', modelo: '',
   sellos: '[\n  { "label": "DNI Validado", "icon": "badge", "fuerte": true },\n  { "label": "SOAT Vigente", "icon": "health_and_safety", "fuerte": true }\n]',
   ruta: '', precio: '', paradero: '', resena: '', resena_autor: '',
   tel: '', img: '', veh_img: '', ciudad: 'pucallpa', orden: 0, status: 'activo',
@@ -100,7 +100,7 @@ export default function ChoferesAdmin() {
 
   const editar = (d: DriverRow) => {
     setFicha({
-      id: d.id, nombre: d.nombre ?? '', dni: d.dni ?? '', tipo: d.tipo ?? 'Mototaxi', comite: d.comite ?? '',
+      id: d.id, nombre: d.nombre ?? '', email: d.email ?? '', dni: d.dni ?? '', tipo: d.tipo ?? 'Mototaxi', comite: d.comite ?? '',
       experiencia: d.experiencia ?? '', placa: d.placa ?? '', modelo: d.modelo ?? '',
       sellos: JSON.stringify(d.sellos ?? [], null, 2),
       ruta: d.ruta ?? '', precio: d.precio ?? '', paradero: d.paradero ?? '',
@@ -117,7 +117,7 @@ export default function ChoferesAdmin() {
   const desdePostulacion = async (p: DriverRow) => {
     setFicha({
       ...FICHA_VACIA,
-      nombre: p.nombre ?? '', dni: p.dni ?? '', tipo: p.tipo || 'Mototaxi', placa: p.placa ?? '',
+      nombre: p.nombre ?? '', email: p.email ?? '', dni: p.dni ?? '', tipo: p.tipo || 'Mototaxi', placa: p.placa ?? '',
       comite: p.zona ?? '', experiencia: p.experiencia ?? '', tel: p.whatsapp ?? '',
       ciudad: p.ciudad || 'pucallpa',
       img: p.foto_perfil ?? '',
@@ -146,7 +146,7 @@ export default function ChoferesAdmin() {
     catch { setGuardando(false); setMsg('El campo "sellos" no es JSON válido.'); return; }
 
     const payload = {
-      nombre: ficha.nombre, dni: ficha.dni || null, tipo: ficha.tipo, comite: ficha.comite || null,
+      nombre: ficha.nombre, email: ficha.email ? ficha.email.trim().toLowerCase() : null, dni: ficha.dni || null, tipo: ficha.tipo, comite: ficha.comite || null,
       experiencia: ficha.experiencia || null, placa: ficha.placa || null, modelo: ficha.modelo || null,
       sellos, ruta: ficha.ruta || null, precio: ficha.precio || null, paradero: ficha.paradero || null,
       resena: ficha.resena || null, resena_autor: ficha.resena_autor || null, tel: ficha.tel || null,
@@ -159,12 +159,13 @@ export default function ChoferesAdmin() {
       ficha.id ? supabase.from('drivers').update(fila).eq('id', ficha.id).select('id') : supabase.from('drivers').insert(fila).select('id');
 
     let res = await guardarFila(payload);
-    // Si todavía no se corrió el SQL del horario, se guarda el resto de la ficha y se avisa.
+    // Si todavía no se corrió el SQL del horario o email, se guarda el resto de la ficha y se avisa.
     let sinColumna = false;
-    if (res.error && /horario_semana/.test(res.error.message)) {
-      const { horario_semana: _omitido, ...sinHorario } = payload;
-      void _omitido;
-      res = await guardarFila(sinHorario);
+    if (res.error && (/horario_semana/.test(res.error.message) || /email/.test(res.error.message))) {
+      const sinNuevas: Record<string, unknown> = { ...payload };
+      if (/horario_semana/.test(res.error.message)) delete sinNuevas.horario_semana;
+      if (/email/.test(res.error.message)) delete sinNuevas.email;
+      res = await guardarFila(sinNuevas);
       sinColumna = !res.error;
     }
 
@@ -336,6 +337,8 @@ export default function ChoferesAdmin() {
                   <input maxLength={8} value={ficha.dni} onChange={(e) => setFicha({ ...ficha, dni: e.target.value.replace(/\D/g, '') })} className={campo} placeholder="72345678" /></label>
                 <label className="flex flex-col gap-1 text-xs font-bold text-secondary">WhatsApp / Teléfono (E.164 sin +) *
                   <input required value={ficha.tel} onChange={(e) => setFicha({ ...ficha, tel: e.target.value })} className={campo} placeholder="51962000001" /></label>
+                <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Correo electrónico (para su cuenta y notificaciones)
+                  <input type="email" value={ficha.email} onChange={(e) => setFicha({ ...ficha, email: e.target.value })} className={campo} placeholder="chofer@ejemplo.com" /></label>
                 <label className="flex flex-col gap-1 text-xs font-bold text-secondary">Tipo de vehículo
                   <select value={ficha.tipo} onChange={(e) => setFicha({ ...ficha, tipo: e.target.value })} className={campo}>
                     {TIPOS.map((t) => <option key={t}>{t}</option>)}</select></label>
@@ -538,11 +541,15 @@ export default function ChoferesAdmin() {
                     <p className="font-bold text-sm text-on-surface">
                       {p.nombre} · <span className="text-secondary font-normal">{p.tipo}</span>
                       {p.dni && <span className="ml-2 text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-surface-container text-on-surface">🪪 DNI: {p.dni}</span>}
+                      {p.email && <span className="ml-2 text-[11px] font-medium text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">✉ {p.email}</span>}
                     </p>
                     <p className="text-xs text-secondary">{[p.zona, p.ciudad, p.placa, p.experiencia].filter(Boolean).join(' · ')}</p>
                     {horarioDe(p) && <p className="text-xs text-primary font-medium mt-0.5">🕒 {horarioDe(p)}</p>}
                     {p.mensaje && <p className="text-xs text-secondary mt-1 italic">“{p.mensaje}”</p>}
-                    <p className="text-xs text-secondary mt-1">WhatsApp: <a href={`https://wa.me/${p.whatsapp?.replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="text-primary hover:underline font-bold">{p.whatsapp}</a></p>
+                    <p className="text-xs text-secondary mt-1">
+                      WhatsApp: <a href={`https://wa.me/${p.whatsapp?.replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="text-primary hover:underline font-bold">{p.whatsapp}</a>
+                      {p.email && <span className="ml-3">Correo: <strong className="text-on-surface">{p.email}</strong></span>}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <button type="button" onClick={() => setDetalle(p)} className="flex items-center gap-1 text-xs font-bold px-3 py-2 rounded-lg border border-surface-container-highest text-on-surface hover:bg-surface-container-low transition-colors">
@@ -575,6 +582,7 @@ export default function ChoferesAdmin() {
                         <p className="font-bold text-sm text-on-surface">
                           {d.nombre} <span className="text-secondary font-normal">· {d.tipo} · {d.ciudad}</span>
                           {d.dni && <span className="text-[11px] font-mono text-secondary ml-2">(DNI: {d.dni})</span>}
+                          {d.email && <span className="text-[11px] font-medium text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full ml-2">✉ {d.email}</span>}
                         </p>
                         <p className="text-xs text-secondary">{[d.comite, d.placa, d.ruta].filter(Boolean).join(' · ')}</p>
                         {(() => {
@@ -645,6 +653,7 @@ export default function ChoferesAdmin() {
                         <p className="font-bold text-sm text-on-surface">
                           {d.nombre} <span className="text-secondary font-normal">· {d.tipo} · {d.ciudad}</span>
                           {d.dni && <span className="text-[11px] font-mono text-secondary ml-2">(DNI: {d.dni})</span>}
+                          {d.email && <span className="text-[11px] font-medium text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full ml-2">✉ {d.email}</span>}
                         </p>
                         <span className={`inline-block text-[11px] font-extrabold px-2 py-0.5 rounded-full border mb-0.5 ${d.store_slug ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
                           {d.store_slug ? `🏪 Repartidor de la tienda «${d.store_slug}»` : '🛡 Repartidor BogaHub'}
@@ -791,6 +800,12 @@ export default function ChoferesAdmin() {
                 </a>
               </div>
               <div className="bg-surface-container-low p-2.5 rounded-lg">
+                <span className="text-[10px] text-secondary font-bold uppercase block">✉ Correo</span>
+                <span className="font-medium text-on-surface truncate block" title={detalle.email || 'No registrado'}>
+                  {detalle.email || 'No registrado'}
+                </span>
+              </div>
+              <div className="bg-surface-container-low p-2.5 rounded-lg col-span-2">
                 <span className="text-[10px] text-secondary font-bold uppercase block">🕒 Horario habitual</span>
                 <span className="font-medium text-on-surface">{horarioDe(detalle) || 'No especificado'}</span>
               </div>
