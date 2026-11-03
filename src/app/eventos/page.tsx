@@ -92,13 +92,13 @@ export default function Eventos() {
       <main className="max-w-[1440px] mx-auto px-container-margin lg:px-6 w-full pt-4 flex flex-col gap-8 pb-14">
 
         {/* Encabezado principal (en móvil va arriba; en desktop con carrusel va en la columna derecha) */}
-        <header className={`flex flex-col gap-1.5 pt-1 ${carrusel.length > 0 ? 'lg:hidden' : ''}`}>
+        <header className={`flex flex-col gap-1 pt-1 ${carrusel.length > 0 ? 'lg:hidden' : ''}`}>
           
-          <h1 className="font-headline-lg font-black text-2xl sm:text-3xl text-on-surface tracking-tight leading-tight">
-            ¿Qué hacer en Pucallpa hoy?
+          <h1 className="font-headline-lg font-extrabold text-xl sm:text-2xl text-on-surface tracking-tight leading-tight">
+            Agenda y Eventos en Pucallpa
           </h1>
           <p className="font-body-md text-xs sm:text-sm text-secondary max-w-2xl leading-relaxed">
-            Cartelera completa de conciertos, festivales, ferias gastronómicas, eventos culturales, deporte y fiestas en Pucallpa y Yarinacocha.
+            Conciertos, festivales, ferias y cultura en Pucallpa y Yarinacocha.
           </p>
         </header>
 
@@ -195,23 +195,22 @@ export default function Eventos() {
         </section>
         )}
 
-        {/* Lado derecho en escritorio: Encabezado + Categorías */}
-        <div className="flex flex-col gap-6 justify-center">
+        {/* Lado derecho en escritorio: Encabezado compacto + Categorías */}
+        <div className="flex flex-col gap-4 justify-center">
           {carrusel.length > 0 && (
-            <header className="hidden lg:flex flex-col gap-2">
+            <header className="hidden lg:flex flex-col gap-1">
               
-              <h1 className="font-headline-lg font-black text-2xl lg:text-3xl text-on-surface tracking-tight leading-tight">
-                ¿Qué hacer en Pucallpa hoy?
+              <h1 className="font-headline-lg font-extrabold text-xl lg:text-2xl text-on-surface tracking-tight leading-tight">
+                Agenda y Eventos en Pucallpa
               </h1>
-              <p className="font-body-md text-xs sm:text-sm text-secondary leading-relaxed">
-                Cartelera completa de conciertos, festivales, ferias gastronómicas, eventos culturales, deporte y fiestas en Pucallpa y Yarinacocha.
+              <p className="font-body-md text-xs text-secondary leading-relaxed">
+                Conciertos, festivales, ferias y cultura en Pucallpa y Yarinacocha.
               </p>
             </header>
           )}
 
           {/* Categorías */}
-          <section className="flex flex-col gap-3">
-            <h2 className="font-headline-lg text-on-surface text-base sm:text-lg font-bold">Explora por categoría</h2>
+          <section className="flex flex-col gap-2">
             <div className="flex gap-4 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-1 lg:grid lg:grid-cols-5 lg:gap-x-2 lg:gap-y-3.5 lg:overflow-visible" style={{ scrollbarWidth: 'none' }}>
               <button
                 onClick={() => { setCat(null); irALaLista(); }}
@@ -247,12 +246,12 @@ export default function Eventos() {
 
         </div>
 
-        {/* A dónde ir — lugares para visitar */}
+        {/* Lugares para visitar */}
         <section className="flex flex-col gap-3">
           <div className="flex items-end justify-between">
             <div>
-              <h2 className="font-headline-lg text-on-surface">¿A dónde ir en Pucallpa? 🌴</h2>
-              <p className="text-secondary font-body-md text-xs mt-0.5">Lugares para visitar cualquier día, con o sin evento</p>
+              <h2 className="font-headline-lg text-on-surface">Lugares para visitar 🌴</h2>
+              <p className="text-secondary font-body-md text-xs mt-0.5">Sitios turísticos para conocer cualquier día del año</p>
             </div>
           </div>
           <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x scroll-pl-container-margin lg:scroll-pl-0" style={{ scrollbarWidth: 'none' }}>

@@ -57,16 +57,15 @@ export default function ViajesCabecera({ activo, titulo, subtitulo, onSelect, co
             </>
           );
 
-          // Vuelos siempre es su propia dirección.
-          if (m.id === 'aereo') {
-            return activo === 'aereo'
-              ? <span key={m.id} className={clase} aria-current="page">{contenido}</span>
-              : <Link key={m.id} href="/viajes/vuelos" className={clase}>{contenido}</Link>;
-          }
-          // Los otros filtran en /viajes; desde /viajes/vuelos llevan de vuelta ahí.
+          // Si onSelect viene provisto (en /viajes), todos los botones cambian la pestaña ahí mismo sin recargar ni saltar.
           if (onSelect) {
-            return <button key={m.id} onClick={() => onSelect(m.id)} className={clase}>{contenido}</button>;
+            return (
+              <button key={m.id} type="button" onClick={() => onSelect(m.id)} className={clase}>
+                {contenido}
+              </button>
+            );
           }
+          // Desde páginas externas (como /viajes/vuelos), llevan a /viajes con el filtro correspondiente.
           return (
             <Link key={m.id} href={m.id === 'todos' ? '/viajes' : `/viajes?medio=${m.id}`} className={clase}>
               {contenido}

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
 import ViajesCabecera from '@/components/ViajesCabecera';
+import VuelosWidget from '@/components/VuelosWidget';
 import { useCart } from '@/context/CartContext';
 import { fetchViajes } from '@/lib/viajes';
 import { fetchNotasRevista, type NotaCard } from '@/lib/revista';
@@ -96,7 +97,9 @@ export default function Viajes() {
   }, []);
   useEffect(() => {
     const m = new URLSearchParams(window.location.search).get('medio');
-    if (m === 'fluvial' || m === 'terrestre') setFiltro(m);
+    if (m === 'fluvial' || m === 'terrestre' || m === 'aereo' || m === 'vuelos') {
+      setFiltro(m === 'vuelos' ? 'aereo' : m);
+    }
   }, []);
   useEffect(() => {
     fetchViajes().then((rows) => { setRutas(rows); setCargado(true); });
@@ -141,13 +144,21 @@ export default function Viajes() {
           <span className="material-symbols-outlined text-inverse-on-surface/60 shrink-0">chevron_right</span>
         </a>
 
-        {/* Grilla de rutas */}
+        {/* Grilla de rutas y contenido según la pestaña seleccionada */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Puerta a los vuelos (el buscador vive en /viajes/vuelos) */}
+          {/* Si eligió Vuelos, muestra el cotizador directamente en esta misma página sin saltar */}
+          {filtro === 'aereo' && (
+            <div className="col-span-full">
+              <VuelosWidget primaryColor="B8130E" destinos={4} />
+            </div>
+          )}
+
+          {/* En "Todos", muestra el banner llamativo para cotizar vuelos */}
           {filtro === 'todos' && (
-            <Link
-              href="/viajes/vuelos"
-              className="col-span-full group relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#8a0d09] via-[#B8130E] to-[#d6281e] text-white p-4 sm:p-5 flex items-center gap-4 active:scale-[0.99] transition-transform"
+            <button
+              type="button"
+              onClick={() => setFiltro('aereo')}
+              className="col-span-full group relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#8a0d09] via-[#B8130E] to-[#d6281e] text-white p-4 sm:p-5 flex items-center gap-4 text-left active:scale-[0.99] transition-transform cursor-pointer"
             >
               <div className="absolute -right-8 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" aria-hidden="true" />
               <span className="relative w-12 h-12 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center shrink-0">
@@ -162,16 +173,18 @@ export default function Viajes() {
                 <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
               </span>
               <span className="relative sm:hidden material-symbols-outlined text-[22px] text-white/80">chevron_right</span>
-            </Link>
+            </button>
           )}
-          {cargado && lista.length === 0 && (
+
+          {/* Si eligió Fluvial o Terrestre y aún no hay rutas cargadas */}
+          {cargado && lista.length === 0 && (filtro === 'fluvial' || filtro === 'terrestre') && (
             <div className="col-span-full bg-white rounded-2xl border border-dashed border-surface-container-highest p-8 text-center">
-              <span className="material-symbols-outlined text-secondary/40 text-[32px]">directions_boat</span>
+              <span className="material-symbols-outlined text-secondary/40 text-[32px]">{filtro === 'fluvial' ? 'directions_boat' : 'directions_bus'}</span>
               <p className="font-headline-sm text-sm text-on-surface mt-2">
-                {rutas.length === 0 ? 'Todavía no hay rutas publicadas' : 'No hay rutas de este tipo por ahora'}
+                {`Próximamente: rutas ${filtro === 'fluvial' ? 'fluviales' : 'terrestres'} desde Pucallpa`}
               </p>
               <p className="text-secondary font-body-md text-xs mt-1">
-                {rutas.length === 0 ? 'Muy pronto: rápidos y buses desde Pucallpa.' : 'Prueba con otro medio de transporte.'}
+                Si eres empresa de transporte, contáctanos arriba para publicar tus horarios.
               </p>
             </div>
           )}
