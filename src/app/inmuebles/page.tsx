@@ -73,42 +73,83 @@ export default function Inmuebles() {
 
       <main className="max-w-[1440px] mx-auto px-container-margin lg:px-6 w-full pt-5 flex flex-col gap-6 pb-14">
 
-        {/* Encabezado + Pestañas + CTA en una sola fila */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 min-w-0">
-            <div className="flex flex-col gap-0.5 shrink-0">
-              <h1 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">Inmuebles 🏠</h1>
-            </div>
+        {/* Encabezado en una sola fila: Título + Pestañas + Filtros + CTA a la derecha */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div className="flex items-center gap-3 sm:gap-4 overflow-x-auto hide-scrollbar pb-1 lg:pb-0" style={{ scrollbarWidth: 'none' }}>
+            {/* Título Inmuebles */}
+            <h1 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl shrink-0 leading-tight">
+              Inmuebles 🏠
+            </h1>
+
+            <div className="h-4 w-px bg-surface-container-highest shrink-0" />
+
             {/* Pestañas Alquiler / Venta */}
-            <div className="flex border-b border-surface-container-high lg:border-none gap-1 shrink-0">
+            <div className="flex gap-1 shrink-0">
               <button
                 onClick={() => setModo('alquiler')}
-                className={`px-4 py-2 font-headline-sm text-sm transition-all relative ${
+                className={`px-3 py-1.5 font-headline-sm text-xs sm:text-sm transition-all relative ${
                   modo === 'alquiler' ? 'text-primary font-bold' : 'text-secondary hover:text-on-surface'
                 }`}
               >
                 <span className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[18px]">bed</span>
+                  <span className="material-symbols-outlined text-[17px]">bed</span>
                   En Alquiler
                 </span>
-                {modo === 'alquiler' && <span className="absolute left-2 right-2 bottom-0 h-[3px] bg-primary rounded-full" />}
+                {modo === 'alquiler' && <span className="absolute left-2 right-2 bottom-0 h-[2.5px] bg-primary rounded-full" />}
               </button>
               <button
                 onClick={() => setModo('venta')}
-                className={`px-4 py-2 font-headline-sm text-sm transition-all relative ${
+                className={`px-3 py-1.5 font-headline-sm text-xs sm:text-sm transition-all relative ${
                   modo === 'venta' ? 'text-primary font-bold' : 'text-secondary hover:text-on-surface'
                 }`}
               >
                 <span className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[18px]">sell</span>
+                  <span className="material-symbols-outlined text-[17px]">sell</span>
                   En Venta
                 </span>
-                {modo === 'venta' && <span className="absolute left-2 right-2 bottom-0 h-[3px] bg-primary rounded-full" />}
+                {modo === 'venta' && <span className="absolute left-2 right-2 bottom-0 h-[2.5px] bg-primary rounded-full" />}
               </button>
+            </div>
+
+            <div className="h-4 w-px bg-surface-container-highest shrink-0" />
+
+            {/* Filtros de la pestaña activa en la misma fila */}
+            <div className="flex items-center gap-2 shrink-0">
+              {modo === 'alquiler' ? (
+                FILTROS_ALQUILER.map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setFiltroAlq(f)}
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-label-md shrink-0 transition-all shadow-xs active:scale-95 ${
+                      filtroAlq === f
+                        ? 'bg-primary text-white border border-primary shadow-sm'
+                        : 'bg-white border border-surface-container-highest text-secondary hover:text-on-surface hover:shadow-xs'
+                    }`}
+                  >
+                    {f !== 'Todos' && <span className="material-symbols-outlined text-[15px]">{ICONO_ALQUILER[f as Tipo]}</span>}
+                    {f}
+                  </button>
+                ))
+              ) : (
+                FILTROS_VENTA.map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setFiltroVta(f)}
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-label-md shrink-0 transition-all shadow-xs active:scale-95 ${
+                      filtroVta === f
+                        ? 'bg-primary text-white border border-primary shadow-sm'
+                        : 'bg-white border border-surface-container-highest text-secondary hover:text-on-surface hover:shadow-xs'
+                    }`}
+                  >
+                    {f !== 'Todos' && <span className="material-symbols-outlined text-[15px]">{ICONO_VENTA[f as TipoVenta]}</span>}
+                    {f}
+                  </button>
+                ))
+              )}
             </div>
           </div>
 
-          {/* CTA publicar */}
+          {/* CTA publicar a la derecha */}
           <a
             href={waLink(wspBoga, modo === 'alquiler'
               ? 'Hola BogaHub, quiero publicar un alquiler (habitación / mini-dpto / casa / pensión).'
@@ -116,45 +157,21 @@ export default function Inmuebles() {
             )}
             target="_blank"
             rel="noreferrer"
-            className="relative overflow-hidden rounded-2xl bg-inverse-surface text-inverse-on-surface px-4 py-2.5 flex items-center gap-3 group w-full lg:w-auto lg:min-w-[390px] lg:max-w-[440px] shrink-0 active:scale-[0.99] transition-transform shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold bg-white hover:bg-surface-container-low border border-surface-container-highest text-secondary hover:text-on-surface transition-all shrink-0 shadow-xs active:scale-95 w-fit"
           >
-            <div className="absolute -right-8 -top-10 w-40 h-40 bg-primary/20 rounded-full blur-2xl pointer-events-none" aria-hidden="true" />
-            <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-inverse-primary text-[20px]">
-                {modo === 'alquiler' ? 'add_home' : 'add_business'}
-              </span>
-            </div>
-            <div className="relative flex flex-col min-w-0 flex-1">
-              <span className="font-headline-sm text-xs sm:text-sm font-bold leading-tight">
-                {modo === 'alquiler' ? '¿Tienes un cuarto o depa libre?' : '¿Vendes terreno, casa o lote?'}
-              </span>
-              <span className="text-inverse-on-surface/70 font-body-md text-[11px] sm:text-xs mt-0.5 line-clamp-1">Publícalo gratis y recibe interesados por WhatsApp</span>
-            </div>
-            <span className="material-symbols-outlined text-inverse-on-surface/60 shrink-0 group-hover:translate-x-1 transition-transform text-[18px]">chevron_right</span>
+            <span className="material-symbols-outlined text-[16px] text-primary">
+              {modo === 'alquiler' ? 'add_home' : 'add_business'}
+            </span>
+            <span>
+              {modo === 'alquiler' ? '¿Tienes un cuarto o depa libre? Publica aquí' : '¿Vendes terreno o casa? Publica aquí'}
+            </span>
+            <span className="material-symbols-outlined text-[14px]">chevron_right</span>
           </a>
         </div>
 
         {/* ──── MODO ALQUILER ──── */}
         {modo === 'alquiler' && (
           <>
-            {/* Filtros por tipo */}
-            <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1" style={{ scrollbarWidth: 'none' }}>
-              {FILTROS_ALQUILER.map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setFiltroAlq(f)}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-label-md shrink-0 transition-all shadow-sm active:scale-95 ${
-                    filtroAlq === f
-                      ? 'bg-primary text-white border border-primary shadow-md'
-                      : 'bg-white border border-surface-container-highest text-secondary hover:shadow-md'
-                  }`}
-                >
-                  {f !== 'Todos' && <span className="material-symbols-outlined text-[15px]">{ICONO_ALQUILER[f as Tipo]}</span>}
-                  {f}
-                </button>
-              ))}
-            </div>
-
             {/* Grilla de avisos de alquiler */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {cargado && listaAlq.length === 0 && (
@@ -225,24 +242,6 @@ export default function Inmuebles() {
         {/* ──── MODO VENTA ──── */}
         {modo === 'venta' && (
           <>
-            {/* Filtros por tipo */}
-            <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1" style={{ scrollbarWidth: 'none' }}>
-              {FILTROS_VENTA.map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setFiltroVta(f)}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-label-md shrink-0 transition-all shadow-sm active:scale-95 ${
-                    filtroVta === f
-                      ? 'bg-primary text-white border border-primary shadow-md'
-                      : 'bg-white border border-surface-container-highest text-secondary hover:shadow-md'
-                  }`}
-                >
-                  {f !== 'Todos' && <span className="material-symbols-outlined text-[15px]">{ICONO_VENTA[f as TipoVenta]}</span>}
-                  {f}
-                </button>
-              ))}
-            </div>
-
             {/* Grilla de avisos de venta */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {cargado && listaVta.length === 0 && (

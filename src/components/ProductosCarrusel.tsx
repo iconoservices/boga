@@ -118,3 +118,4 @@ export default function ProductosCarrusel({ productos, customBanners = {} }: Pro
     </div>
   );
 }
+
