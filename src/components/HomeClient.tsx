@@ -39,8 +39,8 @@ type Slide = HomeSlide;
 // abre el carrusel) intercaladas con las 2 notas más recientes de la Revista. Sin demos: si no
 // hay nada, la lista queda vacía y el banner no se muestra.
 const SLIDE_GUIA_2025: Slide = {
-  kicker: '★ Edición Anual · Pucallpa 2025',
-  title: 'Guía Comercial & Turística 2025 — Lo mejor de Pucallpa',
+  kicker: '★ Edición Anual · Pucallpa',
+  title: 'Guía Comercial & Turística — Lo mejor de Pucallpa',
   href: '/revista/guia-2025',
   img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&q=80',
 };

@@ -143,7 +143,7 @@ export default function Guia2025Page() {
                 Yo Soy de la Selva
               </Link>
               <span className="material-symbols-outlined text-[14px]">chevron_right</span>
-              <span style={{ color: ORO_CLARO }}>Guía 2025</span>
+              <span style={{ color: ORO_CLARO }}>Guía Turística</span>
             </div>
 
             {/* Título */}

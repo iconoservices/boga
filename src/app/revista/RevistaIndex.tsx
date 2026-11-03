@@ -105,15 +105,15 @@ function AnuncioGuia2025Sticky() {
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
           <div className="absolute top-2.5 left-2.5">
             <span
-              className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5"
+              className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 shadow-sm"
               style={{ backgroundColor: ORO, color: VERDE_OSC }}
             >
-              ★ Edición 2025
+              ★ Edición Anual
             </span>
           </div>
           <div className="absolute bottom-2.5 left-3 right-3 text-white">
             <p className="text-[10px] font-mono uppercase tracking-widest text-amber-300">
-              Pucallpa &middot; Directorio
+              Pucallpa &middot; Directorio Oficial
             </p>
             <h3 className="font-headline-sm font-black text-lg leading-tight drop-shadow-sm">
               Guía Comercial <span style={{ color: ORO_CLARO }}>&amp; Turística</span>
@@ -146,7 +146,7 @@ function AnuncioGuia2025Sticky() {
             style={{ backgroundColor: "#0f3d22", color: "#fef3c7" }}
           >
             <span className="material-symbols-outlined text-[15px]">menu_book</span>
-            Abrir Guía 2025
+            Abrir Guía Turística
             <span className="material-symbols-outlined text-[14px] transition-transform group-hover:translate-x-1">
               arrow_forward
             </span>
@@ -264,14 +264,14 @@ export default function RevistaIndex({ notas }: { notas: Nota[] }) {
               );
             })}
 
-            {/* Guía 2025 como tab especial */}
+            {/* Guía como tab especial */}
             <Link
               href="/revista/guia-2025"
-              className="shrink-0 border-l border-on-surface/12 px-4 py-3 font-headline-sm text-[13px] whitespace-nowrap flex items-center gap-1.5 transition-colors hover:opacity-80"
+              className="shrink-0 border-l border-on-surface/12 px-4 py-3 font-headline-sm text-[13px] whitespace-nowrap flex items-center gap-1.5 transition-colors hover:opacity-80 font-bold"
               style={{ color: "#0f3d22", backgroundColor: ORO + "22" }}
             >
               <span className="text-[11px]">★</span>
-              Guía 2025
+              Guía Turística
             </Link>
           </div>
         </nav>
