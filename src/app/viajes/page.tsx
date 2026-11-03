@@ -121,28 +121,25 @@ export default function Viajes() {
 
         <h1 className="sr-only">Pasajes</h1>
 
-        <ViajesCabecera
-          activo={filtro}
-          onSelect={setFiltro}
-          conteo={{ fluvial: conteo.fluvial, terrestre: conteo.terrestre }}
-        />
+        {/* Fila de navegación: Pestañas a la izquierda + Contacto para agencias a la derecha */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <ViajesCabecera
+            activo={filtro}
+            onSelect={setFiltro}
+            conteo={{ fluvial: conteo.fluvial, terrestre: conteo.terrestre }}
+          />
 
-        {/* Para agencias: arriba y compacto, así lo ve quien quiere anunciarse (antes estaba al final de la página) */}
-        <a
-          href={waLink(wspBoga, 'Hola BogaHub, soy agencia de transporte y quiero contactarme con ustedes para publicar en la sección Pasajes.')}
-          target="_blank"
-          rel="noreferrer"
-          className="rounded-xl bg-inverse-surface text-inverse-on-surface px-3 py-2.5 flex items-center gap-2.5 active:scale-[0.99] transition-transform"
-        >
-          <span className="w-9 h-9 rounded-lg bg-[#1B8EBF]/20 flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-[#1B8EBF] text-[20px]">add_business</span>
-          </span>
-          <span className="flex flex-col min-w-0 flex-1 leading-tight">
-            <span className="font-headline-sm text-[13px]">¿Eres agencia de transporte?</span>
-            <span className="text-[11px] text-inverse-on-surface/70 mt-0.5">Contáctate con nosotros para publicar tus rutas y recibir pasajeros</span>
-          </span>
-          <span className="material-symbols-outlined text-inverse-on-surface/60 shrink-0">chevron_right</span>
-        </a>
+          <a
+            href={waLink(wspBoga, 'Hola BogaHub, soy agencia de transporte y quiero contactarme con ustedes para publicar en la sección Pasajes.')}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold bg-white hover:bg-surface-container-low border border-surface-container-highest text-secondary hover:text-on-surface transition-all shrink-0 shadow-xs active:scale-95 w-fit"
+          >
+            <span className="material-symbols-outlined text-[16px] text-primary">add_business</span>
+            <span>¿Eres agencia de transporte? Publica aquí</span>
+            <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+          </a>
+        </div>
 
         {/* Grilla de rutas y contenido según la pestaña seleccionada */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
