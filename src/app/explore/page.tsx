@@ -28,8 +28,12 @@ function ExploreContenido() {
   const [activeCategory, setActiveCategory] = useState('Todas');
   const [viewMode, setViewMode] = useState<'products' | 'stores'>('products');
   // La barra de arriba (Explorar | Tiendas | Servicios) manda: ?vista=servicios muestra Servicios; sin ?vista se ve el feed de siempre (Explorar).
-  const vista = useSearchParams().get('vista');
+  const searchParams = useSearchParams();
+  const vista = searchParams.get('vista');
+  const qRaw = searchParams.get('q') || '';
+  const q = qRaw.trim().toLowerCase();
   const seccion: 'productos' | 'servicios' = vista === 'servicios' ? 'servicios' : 'productos';
+  const [allProducts, setAllProducts] = useState<any[]>([]);
   const [showAllSubCategories, setShowAllSubCategories] = useState(false);
   
   const { addToCart, cartCount, setIsCartOpen } = useCart();
@@ -151,6 +155,7 @@ function ExploreContenido() {
           return 'Mercado';
         };
 
+        const todosLosItems: any[] = [];
         filteredData.forEach((p: any) => {
           const storeDef = allStores[p.store];
           const storeCategory = storeDef?.marketplaceCategory?.toLowerCase() || '';
@@ -170,11 +175,14 @@ function ExploreContenido() {
             logo: storeDef?.logoImage || '',
             slug: p.store,
             externalUrl: storeDef?.externalUrl,
+            category: p.category || macroCat,
           };
+          todosLosItems.push(item);
           newSectionsProducts[macroCat].push(item);
           // Las ofertas también salen en la fila de Promos
           if ((enOferta || p.es_combo === true) && macroCat !== 'Combos & Promos') newSectionsProducts['Combos & Promos'].push(item);
         });
+        setAllProducts(todosLosItems);
 
         // Mezcla para que cada fila se vea variada: se baraja y se intercalan las tiendas
         // (una de cada una por vuelta) para no ver 12 productos seguidos de la misma tienda.
@@ -372,6 +380,23 @@ function ExploreContenido() {
     { id: 'Mercado', title: 'Mercado Fresco 🥬', products: [] },
   ]);
 
+  const productosFiltrados = q
+    ? allProducts.filter((p) =>
+        (p.name && p.name.toLowerCase().includes(q)) ||
+        (p.store && p.store.toLowerCase().includes(q)) ||
+        (p.category && p.category.toLowerCase().includes(q)) ||
+        (p.badge && p.badge.toLowerCase().includes(q))
+      )
+    : [];
+
+  const tiendasFiltradas = q
+    ? storeData.filter((s) =>
+        (s.name && s.name.toLowerCase().includes(q)) ||
+        (s.category && s.category.toLowerCase().includes(q)) ||
+        (s.macroCat && s.macroCat.toLowerCase().includes(q))
+      )
+    : [];
+
   return (
     <>
       <PedirCuentaModal abierto={pedirCuenta} onCerrar={() => setPedirCuenta(false)} motivo="guardar tus favoritos" volverA="/explore" />
@@ -382,9 +407,162 @@ function ExploreContenido() {
 
       <MarketSecciones />
 
-      {seccion === 'productos' && activeCategory !== 'Todas' && <MarketBannerSlider />}
+      {seccion === 'productos' && activeCategory !== 'Todas' && !q && <MarketBannerSlider />}
 
-      {seccion === 'servicios' ? (
+      {q ? (
+        <main className="max-w-[1440px] mx-auto px-container-margin w-full pt-6 pb-16 flex flex-col gap-8">
+          {/* Encabezado con conteo y botón para limpiar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-container-highest pb-4">
+            <div>
+              <h1 className="font-headline-md text-xl sm:text-2xl text-on-surface font-black">
+                Resultados para <span className="text-primary font-black">“{qRaw}”</span>
+              </h1>
+              <p className="text-xs text-secondary mt-1">
+                {productosFiltrados.length} {productosFiltrados.length === 1 ? 'producto encontrado' : 'productos encontrados'}
+                {tiendasFiltradas.length > 0 && ` · ${tiendasFiltradas.length} ${tiendasFiltradas.length === 1 ? 'tienda' : 'tiendas'}`}
+              </p>
+            </div>
+            <Link
+              href={vista ? `/explore?vista=${vista}` : '/explore'}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container border border-surface-container-highest text-xs font-bold text-secondary hover:text-on-surface hover:border-primary transition-all self-start sm:self-auto"
+            >
+              <span className="material-symbols-outlined text-[16px]">close</span>
+              Limpiar búsqueda
+            </Link>
+          </div>
+
+          {/* Tiendas que coinciden */}
+          {tiendasFiltradas.length > 0 && (
+            <section className="flex flex-col gap-3">
+              <h2 className="font-headline-sm text-sm uppercase tracking-wider text-secondary font-bold">
+                Tiendas
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                {tiendasFiltradas.map((store) => (
+                  <Link
+                    key={store.slug}
+                    href={hrefTienda(store.slug, store.externalUrl)}
+                    target={esFuera(hrefTienda(store.slug, store.externalUrl)) ? '_blank' : undefined}
+                    rel={esFuera(hrefTienda(store.slug, store.externalUrl)) ? 'noopener' : undefined}
+                    className="flex items-center gap-3 p-3.5 bg-white rounded-2xl border border-surface-container-highest shadow-xs hover:border-primary hover:shadow-md transition-all group"
+                  >
+                    <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-surface-container-highest bg-surface-container-low flex items-center justify-center">
+                      {store.logo ? (
+                        <img src={store.logo} className="w-full h-full object-cover" alt={store.name} />
+                      ) : (
+                        <span className="text-secondary font-headline-sm text-base font-bold">{store.name?.charAt(0)}</span>
+                      )}
+                    </div>
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <span className="font-headline-sm text-sm font-bold text-on-surface group-hover:text-primary transition-colors truncate">
+                        {store.name}
+                      </span>
+                      <span className="text-[11px] text-secondary truncate mt-0.5">
+                        {store.category}
+                      </span>
+                    </div>
+                    <span className="material-symbols-outlined text-secondary group-hover:text-primary transition-colors text-[20px]">
+                      chevron_right
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Productos que coinciden */}
+          {productosFiltrados.length > 0 && (
+            <section className="flex flex-col gap-3">
+              <h2 className="font-headline-sm text-sm uppercase tracking-wider text-secondary font-bold">
+                Productos
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 lg:gap-4">
+                {productosFiltrados.map((p, idx) => (
+                  <Link
+                    key={`${p.name}-${idx}`}
+                    href={hrefTienda(p.slug, p.externalUrl)}
+                    target={esFuera(hrefTienda(p.slug, p.externalUrl)) ? '_blank' : undefined}
+                    rel={esFuera(hrefTienda(p.slug, p.externalUrl)) ? 'noopener' : undefined}
+                    className="bg-white rounded-2xl shadow-[0_15px_15px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col border border-surface-container-highest hover:border-primary hover:shadow-md transition-all group"
+                  >
+                    <div className="relative aspect-square overflow-hidden bg-surface-container-low">
+                      <img className={`w-full h-full object-cover ${p.status === 'Agotado' ? 'grayscale opacity-60' : ''}`} src={p.img} alt={p.name} />
+                      <div className="absolute top-2 left-2 bg-[#dc3225] text-white text-[10px] font-black px-2 py-0.5 rounded-lg">{p.badge}</div>
+                      <button
+                        type="button"
+                        onClick={(e) => toggleFavorito(e, p)}
+                        aria-label={esFavorito(p.slug, p.id) ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+                        className="absolute top-2 right-2 w-8 h-8 bg-white/85 backdrop-blur rounded-full flex items-center justify-center shadow-sm active:scale-90 transition-transform z-10"
+                      >
+                        <span className="material-symbols-outlined text-[18px]" style={{ color: esFavorito(p.slug, p.id) ? '#dc2626' : undefined, fontVariationSettings: esFavorito(p.slug, p.id) ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
+                      </button>
+                      {p.store && (
+                        <div className="absolute bottom-2 left-2 bg-white/95 backdrop-blur-sm shadow-sm rounded-lg px-2 py-1 flex items-center gap-1 border border-surface-container-highest">
+                          {p.logo ? (
+                            <img loading="lazy" decoding="async" alt={p.store} className="w-3.5 h-3.5 rounded-full object-cover" src={p.logo} />
+                          ) : (
+                            <span className="w-3.5 h-3.5 rounded-full bg-surface-container-highest flex items-center justify-center text-[7px] font-bold text-secondary shrink-0">{p.store.charAt(0)}</span>
+                          )}
+                          <span className="text-[9px] font-label-md text-on-surface uppercase truncate max-w-[65px]">{p.store}</span>
+                        </div>
+                      )}
+                      {p.status === 'Agotado' && (
+                        <div className="absolute inset-0 bg-white/40 flex items-center justify-center backdrop-blur-[1px]">
+                          <span className="bg-black/85 text-white text-[10px] font-black px-2 py-0.5 rounded-full tracking-wider uppercase shadow-md">Agotado</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-3 flex flex-col flex-1 justify-between">
+                      <div>
+                        <h4 className={`font-headline-sm text-sm line-clamp-2 ${p.status === 'Agotado' ? 'text-secondary/50' : 'text-on-surface'}`}>{p.name}</h4>
+                        {p.original && <span className="text-secondary text-[11px] line-through">{p.original}</span>}
+                      </div>
+                      <div className="flex items-center justify-between pt-2 mt-auto">
+                        <span className={`font-price-lg text-primary text-base font-bold ${p.status === 'Agotado' ? 'text-secondary/50' : ''}`}>{p.price}</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleAddToCartWithAnim(p);
+                          }}
+                          className="w-8 h-8 rounded-full bg-primary-fixed text-primary flex items-center justify-center active:scale-90 transition-transform shadow-xs hover:scale-105"
+                          title="Agregar al carrito"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">
+                            {addedItems[p.name] ? 'done' : 'add'}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Sin resultados */}
+          {productosFiltrados.length === 0 && tiendasFiltradas.length === 0 && (
+            <div className="text-center py-20 flex flex-col items-center justify-center max-w-md mx-auto">
+              <div className="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center text-secondary mb-4">
+                <span className="material-symbols-outlined text-3xl">search_off</span>
+              </div>
+              <h2 className="font-headline-sm text-lg text-on-surface font-bold">
+                No encontramos resultados para “{qRaw}”
+              </h2>
+              <p className="text-xs text-secondary mt-1.5 leading-relaxed">
+                Prueba buscando por nombre de plato, producto o tienda (por ejemplo: <span className="font-semibold text-on-surface">cecina, hamburguesa, reloj, ropa, celular</span>).
+              </p>
+              <Link
+                href="/explore"
+                className="mt-6 px-5 py-2.5 bg-primary text-white rounded-full text-xs font-bold shadow-sm active:scale-95 transition-all hover:opacity-90"
+              >
+                Volver a Explorar Market
+              </Link>
+            </div>
+          )}
+        </main>
+      ) : seccion === 'servicios' ? (
         <main className="max-w-[1440px] mx-auto px-container-margin w-full pt-6 pb-12">
           <ServiciosContenido />
         </main>
