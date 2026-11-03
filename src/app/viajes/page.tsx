@@ -155,7 +155,7 @@ export default function Viajes() {
             <button
               type="button"
               onClick={() => setFiltro('aereo')}
-              className="col-span-full group relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#8a0d09] via-[#B8130E] to-[#d6281e] text-white p-4 sm:p-5 flex items-center gap-4 text-left active:scale-[0.99] transition-transform cursor-pointer"
+              className="col-span-full group relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#B8130E] to-[#cf211b] text-white p-4 sm:p-5 flex items-center gap-4 text-left active:scale-[0.99] transition-transform cursor-pointer"
             >
               <div className="absolute -right-8 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" aria-hidden="true" />
               <span className="relative w-12 h-12 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center shrink-0">

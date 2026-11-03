@@ -78,10 +78,6 @@ export default function Inmuebles() {
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 min-w-0">
             <div className="flex flex-col gap-0.5 shrink-0">
               <h1 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-lg sm:text-xl lg:text-2xl leading-tight">Inmuebles 🏠</h1>
-              <p className="font-body-md text-secondary text-xs">
-                <span className="lg:hidden">Dónde vivir e invertir en Pucallpa.</span>
-                <span className="hidden lg:inline">Encuentra dónde vivir o invierte en terrenos, casas y lotes en Pucallpa.</span>
-              </p>
             </div>
             {/* Pestañas Alquiler / Venta */}
             <div className="flex border-b border-surface-container-high lg:border-none gap-1 shrink-0">

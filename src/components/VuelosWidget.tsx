@@ -36,8 +36,8 @@ export default function VuelosWidget({
 
   return (
     <div className="relative overflow-hidden rounded-2xl bg-white border border-surface-container-highest shadow-md flex flex-col">
-      {/* Cabecera integrada: Rojo Boga + Acentos de Viaje */}
-      <div className="p-4 sm:p-5 bg-gradient-to-r from-[#8a0d09] via-[#B8130E] to-[#d6281e] text-white flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Cabecera integrada: Rojo Boga uniforme */}
+      <div className="p-4 sm:p-5 bg-gradient-to-r from-[#B8130E] to-[#cf211b] text-white flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-start gap-3">
           <div className="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center shrink-0 border border-white/20">
             <span className="material-symbols-outlined text-[26px] text-white">flight_takeoff</span>
