@@ -62,11 +62,11 @@ function armarSlides(notas: NotaHome[], promos: Slide[]): Slide[] {
 const PORTALES = [
   { href: '/explore',     label: 'Market',      icon: 'storefront',          sub: 'Te traemos pescado, carne y tienda', color: '#E8894A' },
   { href: '/eventos',     label: 'Eventos',     icon: 'celebration',         sub: 'Te armamos el finde en la ciudad',   color: '#EBB05C' },
-  { href: '/trabajos',   label: 'Trabajos',    icon: 'construction',        sub: 'Te conseguimos técnico o trabajo',   color: '#3E9B5F' },
+  { href: '/transporte',  label: 'Taxi Seguro', icon: 'local_taxi',          sub: 'Te llevamos con chofer verificado',  color: '#E4655A' },
+  { href: '/trabajos',    label: 'Trabajos',    icon: 'construction',        sub: 'Te conseguimos técnico o trabajo',   color: '#3E9B5F' },
+  { href: '/viajes',      label: 'Pasajes',     icon: 'directions_boat',     sub: 'Te conectamos con rápidos y buses',  color: '#1B8EBF' },
   { href: '/inmuebles',   label: 'Inmuebles',   icon: 'real_estate_agent',   sub: 'Te encontramos dónde vivir o invertir', color: '#8B7FD4' },
   { href: '/sorteos',     label: 'Sorteos',     icon: 'confirmation_number', sub: 'Te hacemos ganar con tus compras',   color: '#2E9B76' },
-  { href: '/viajes',      label: 'Pasajes',     icon: 'directions_boat',     sub: 'Te conectamos con rápidos y buses',  color: '#1B8EBF' },
-  { href: '/transporte', label: 'Taxi Seguro', icon: 'local_taxi',          sub: 'Te llevamos con chofer verificado',  color: '#E4655A' },
   { href: '/revista',     label: 'Revista',     icon: 'menu_book',           sub: 'Te contamos la selva y sus historias', color: '#D97742' },
   { href: '/negocios',    label: 'Negocios',    icon: 'work',                sub: 'Te ponemos a vender por WhatsApp',   color: '#2F3B4C' },
 ];

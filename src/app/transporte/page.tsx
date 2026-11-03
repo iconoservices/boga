@@ -508,91 +508,28 @@ export default function TaxiSeguro() {
 
         {/* Distribución principal: 2 columnas en escritorio, apilado vertical en móvil */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start w-full">
-          {/* LADO IZQUIERDO: Tarjeta de Pedido Rápido + Datos cívicos y confianza debajo */}
-          <div className="lg:col-span-5 flex flex-col gap-4 w-full">
-            <QuickOrderCard />
-
-            {/* Respaldo Cívico y Confianza debajo del cuadro de búsqueda */}
-            <div className="flex flex-col gap-3.5 bg-white rounded-2xl p-4 border border-surface-container-highest shadow-xs">
-              {/* Cabecera del respaldo */}
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-lowest shadow-xs font-label-md text-[11px] sm:text-xs font-bold uppercase tracking-wider border border-surface-container-high" style={{ color: VERDE }}>
-                  <span className="material-symbols-outlined text-[15px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
-                  Padrón Cívico Vecinal · Pucallpa
-                </span>
-                <details className="group">
-                  <summary className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-semibold text-secondary hover:text-primary cursor-pointer select-none transition-colors list-none">
-                    <span>¿Cómo funciona?</span>
-                    <span className="material-symbols-outlined text-[15px] group-open:rotate-180 transition-transform">expand_more</span>
-                  </summary>
-                  <p className="text-secondary font-body-md text-xs sm:text-sm mt-2 leading-relaxed animate-in fade-in duration-200 bg-surface-container-lowest border border-surface-container-highest rounded-xl p-3">
-                    Choferes verificados por la comunidad BogaHub. Contacto directo por llamada o WhatsApp — sin tarifas ocultas ni comisiones abusivas a intermediarios.
-                  </p>
-                </details>
-              </div>
-
-              {/* Mensaje descriptivo */}
-              <div className="border-t border-surface-container-high/60 pt-3">
-                <h2 className="font-headline-sm text-sm sm:text-base font-bold text-on-surface mb-1">
-                  Muévete tranquilo con unidades verificadas
-                </h2>
-                <p className="text-secondary text-xs leading-relaxed">
-                  Cada conductor en Taxi Seguro pasa por revisión de DNI, antecedentes y SOAT vigente. Pides tu viaje al instante y tratas directo con el chofer sin comisiones.
-                </p>
-              </div>
-
-              {/* 3 pilares de confianza en 1 sola fila */}
-              <div className="grid grid-cols-3 gap-1.5 sm:gap-2 pt-0.5">
-                <div className="bg-surface-container-lowest rounded-xl border border-surface-container-highest p-2 sm:p-2.5 flex items-center gap-1.5 sm:gap-2 shadow-xs min-w-0">
-                  <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: VERDE_SOFT, color: VERDE }}>
-                    <span className="material-symbols-outlined text-[14px] sm:text-[16px]">verified</span>
-                  </span>
-                  <div className="flex flex-col min-w-0">
-                    <span className="font-label-md text-[10px] sm:text-[11px] font-bold text-on-surface leading-tight truncate">Filtrados</span>
-                    <span className="font-body-md text-[8.5px] sm:text-[9.5px] text-secondary leading-tight truncate">DNI y SOAT</span>
-                  </div>
-                </div>
-
-                <div className="bg-surface-container-lowest rounded-xl border border-surface-container-highest p-2 sm:p-2.5 flex items-center gap-1.5 sm:gap-2 shadow-xs min-w-0">
-                  <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: VERDE_SOFT, color: VERDE }}>
-                    <span className="material-symbols-outlined text-[14px] sm:text-[16px]">payments</span>
-                  </span>
-                  <div className="flex flex-col min-w-0">
-                    <span className="font-label-md text-[10px] sm:text-[11px] font-bold text-on-surface leading-tight truncate">0% Comisión</span>
-                    <span className="font-body-md text-[8.5px] sm:text-[9.5px] text-secondary leading-tight truncate">Pago directo</span>
-                  </div>
-                </div>
-
-                <div className="bg-surface-container-lowest rounded-xl border border-surface-container-highest p-2 sm:p-2.5 flex items-center gap-1.5 sm:gap-2 shadow-xs min-w-0">
-                  <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: VERDE_SOFT, color: VERDE }}>
-                    <span className="material-symbols-outlined text-[14px] sm:text-[16px]">bolt</span>
-                  </span>
-                  <div className="flex flex-col min-w-0">
-                    <span className="font-label-md text-[10px] sm:text-[11px] font-bold text-on-surface leading-tight truncate">Al instante</span>
-                    <span className="font-body-md text-[8.5px] sm:text-[9.5px] text-secondary leading-tight truncate">Aviso cercano</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Enlaces para choferes abajo */}
-              <div className="flex flex-col gap-2 pt-2 border-t border-surface-container-high/60">
-                <Link
-                  href="/transporte/registro"
-                  className="inline-flex items-center gap-1.5 text-xs font-bold hover:underline"
-                  style={{ color: VERDE }}
-                >
-                  <span className="material-symbols-outlined text-[16px]">badge</span>
-                  ¿Manejas mototaxi, auto o moto? Postúlate al padrón gratis →
-                </Link>
-                <Link
-                  href="/transporte/chofer"
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-secondary hover:text-on-surface transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[15px]">key</span>
-                  Soy chofer · Abre tu app
-                </Link>
-              </div>
+          {/* LADO IZQUIERDO: Enlaces para choferes arriba + Tarjeta de Pedido Rápido */}
+          <div className="lg:col-span-5 flex flex-col gap-3 w-full">
+            {/* Accesos para choferes: postulación y app del chofer */}
+            <div className="bg-white rounded-2xl border border-surface-container-highest p-3 sm:p-3.5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <Link
+                href="/transporte/registro"
+                className="inline-flex items-center gap-1.5 text-xs font-bold hover:underline"
+                style={{ color: VERDE }}
+              >
+                <span className="material-symbols-outlined text-[17px]">badge</span>
+                ¿Manejas mototaxi, auto o moto? Postúlate al padrón gratis →
+              </Link>
+              <Link
+                href="/transporte/chofer"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-secondary hover:text-on-surface transition-colors shrink-0"
+              >
+                <span className="material-symbols-outlined text-[15px]">key</span>
+                Soy chofer · Abre tu app
+              </Link>
             </div>
+
+            <QuickOrderCard />
           </div>
 
           {/* LADO DERECHO: Filtros de vehículo + Contador de disponibilidad + Directorio de choferes */}
