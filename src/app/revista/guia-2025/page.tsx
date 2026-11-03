@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import AppHeader from "@/components/AppHeader";
+import RepisaGuias from "@/components/RepisaGuias";
 import {
   NEGOCIOS_2025,
   CATEGORIAS_2025,
@@ -136,57 +137,65 @@ export default function Guia2025Page() {
           {/* Banda dorada superior */}
           <div className="h-1.5 w-full" style={{ backgroundColor: ORO }} />
 
-          <div className="relative max-w-[1100px] mx-auto px-4 lg:px-8 py-10 lg:py-14 flex flex-col gap-4">
-            {/* Breadcrumb */}
-            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-white/50">
-              <Link href="/revista" className="hover:text-white transition-colors">
-                Yo Soy de la Selva
-              </Link>
-              <span className="material-symbols-outlined text-[14px]">chevron_right</span>
-              <span style={{ color: ORO_CLARO }}>Guía Turística</span>
-            </div>
+          <div className="relative max-w-[1200px] mx-auto px-4 lg:px-8 py-10 lg:py-14 flex flex-col lg:flex-row lg:items-center justify-between gap-8 lg:gap-12">
+            {/* Columna Izquierda: Información editorial */}
+            <div className="flex flex-col gap-4 max-w-[620px]">
+              {/* Breadcrumb */}
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-white/50">
+                <Link href="/revista" className="hover:text-white transition-colors">
+                  Yo Soy de la Selva
+                </Link>
+                <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+                <span style={{ color: ORO_CLARO }}>Guía Turística</span>
+              </div>
 
-            {/* Título */}
-            <div className="flex flex-col gap-2 max-w-[700px]">
-              <p
-                className="text-[11px] font-extrabold uppercase tracking-[0.35em]"
-                style={{ color: ORO }}
-              >
-                Edición Anual · Pucallpa & La Selva
-              </p>
-              <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-[0.95]">
-                Guía Comercial
-                <span style={{ color: ORO_CLARO }}> & Turística</span>
-                <br />
-                <span className="text-white/70 text-2xl sm:text-4xl font-light italic">Lo mejor de Pucallpa</span>
-                <span
-                  className="block text-4xl sm:text-6xl font-black mt-1"
+              {/* Título */}
+              <div className="flex flex-col gap-2">
+                <p
+                  className="text-[11px] font-extrabold uppercase tracking-[0.35em]"
                   style={{ color: ORO }}
                 >
-                  2025
-                </span>
-              </h1>
-              <p className="text-white/70 text-sm sm:text-base leading-relaxed max-w-[55ch] mt-2">
-                La selección definitiva de los mejores restaurantes, hoteles, tours, comercios y
-                servicios de Pucallpa — curados por el equipo de BogaHub para que encuentres
-                lo mejor de nuestra ciudad.
-              </p>
+                  Edición Anual · Pucallpa & La Selva
+                </p>
+                <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-[0.95]">
+                  Guía Comercial
+                  <span style={{ color: ORO_CLARO }}> & Turística</span>
+                  <br />
+                  <span className="text-white/70 text-2xl sm:text-4xl font-light italic">Lo mejor de Pucallpa</span>
+                  <span
+                    className="block text-4xl sm:text-6xl font-black mt-1"
+                    style={{ color: ORO }}
+                  >
+                    2025
+                  </span>
+                </h1>
+                <p className="text-white/70 text-sm sm:text-base leading-relaxed max-w-[55ch] mt-2">
+                  La selección definitiva de los mejores restaurantes, hoteles, tours, comercios y
+                  servicios de Pucallpa — curados por el equipo de BogaHub para que encuentres
+                  lo mejor de nuestra ciudad.
+                </p>
+              </div>
+
+              {/* Stats */}
+              <div className="flex flex-wrap gap-6 mt-4 pt-4 border-t border-white/15">
+                {[
+                  { n: NEGOCIOS_2025.length.toString(), l: "Negocios seleccionados" },
+                  { n: CATEGORIAS_2025.length.toString(), l: "Categorías" },
+                  { n: "2025", l: "Edición anual" },
+                ].map((s) => (
+                  <div key={s.l} className="flex flex-col">
+                    <span className="text-2xl font-black" style={{ color: ORO }}>
+                      {s.n}
+                    </span>
+                    <span className="text-[10px] text-white/50 uppercase tracking-wider">{s.l}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Stats */}
-            <div className="flex flex-wrap gap-6 mt-4 pt-4 border-t border-white/15">
-              {[
-                { n: NEGOCIOS_2025.length.toString(), l: "Negocios seleccionados" },
-                { n: CATEGORIAS_2025.length.toString(), l: "Categorías" },
-                { n: "2025", l: "Edición anual" },
-              ].map((s) => (
-                <div key={s.l} className="flex flex-col">
-                  <span className="text-2xl font-black" style={{ color: ORO }}>
-                    {s.n}
-                  </span>
-                  <span className="text-[10px] text-white/50 uppercase tracking-wider">{s.l}</span>
-                </div>
-              ))}
+            {/* Columna Derecha: Repisa de Libros Anuales */}
+            <div className="w-full lg:w-auto lg:shrink-0 flex justify-center pt-4 lg:pt-0">
+              <RepisaGuias anioActivo={2025} />
             </div>
           </div>
 
