@@ -16,6 +16,7 @@ export const NAV_TABS = [
 ] as const;
 
 export const SUBRUTAS = [
+  { href: '/superadmin/metricas',       icon: 'monitoring',   label: 'Clientes WhatsApp' },
   { href: '/superadmin/choferes',       icon: 'local_taxi',   label: 'Choferes' },
   { href: '/superadmin/cobros',         icon: 'payments',     label: 'Cobros' },
   { href: '/superadmin/banners',        icon: 'view_carousel', label: 'Banners de portada' },
@@ -48,57 +49,56 @@ const itemClass = (isActive: boolean) => `flex items-center gap-3 px-4 py-2.5 te
 const Logo = () => (
   <Link href="/superadmin" className="mb-6 px-2 py-1 block">
     <h1 className="text-xl font-bold tracking-tight text-[#0058be]">Boga Admin</h1>
-    <p className="text-[#424754] text-xs font-semibold opacity-70">Feature Control</p>
+    <span className="text-[10px] text-[#424754]/40 font-mono tracking-widest uppercase">Pucallpa</span>
   </Link>
 );
 
-// useSearchParams suspende en render de servidor (no hay query params en
-// build time) — la separamos en su propio componente para que el Suspense
-// de acá abajo alcance, y quien use <SuperadminSidebarNav /> no tenga que
-// envolverlo él mismo en cada subruta.
-function SidebarNavInner() {
+function SidebarNavContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const onDashboard = pathname === '/superadmin';
-  const dashboardTab = searchParams.get('tab') ?? 'tiendas';
+  const enDashboard = pathname === '/superadmin';
+  const tabActual = enDashboard ? (searchParams.get('tab') || 'tiendas') : null;
 
   return (
-    <>
+    <aside className="w-64 bg-[#f2f3fd] border-r border-[#c2c6d6]/40 p-4 shrink-0 hidden md:block select-none overflow-y-auto max-h-screen sticky top-0">
       <Logo />
-      <nav className="flex flex-col gap-1 flex-1 overflow-y-auto">
-        {NAV_TABS.map((n) => (
-          <Link
-            key={n.id}
-            href={`/superadmin?tab=${n.id}`}
-            className={itemClass(onDashboard && dashboardTab === n.id)}
-          >
-            <span className="material-symbols-outlined text-[18px]">{n.icon}</span>
-            {n.label}
-          </Link>
-        ))}
-        <div className="my-2 border-t border-[#c2c6d6]" />
-        {SUBRUTAS.map((s) => (
-          <Link key={s.href} href={s.href} className={itemClass(pathname.startsWith(s.href))}>
-            <span className="material-symbols-outlined text-[18px]">{s.icon}</span>
-            {s.label}
-          </Link>
-        ))}
+      <nav className="space-y-1">
+        {NAV_TABS.map((t) => {
+          const isActive = enDashboard && tabActual === t.id;
+          return (
+            <Link key={t.id} href={`/superadmin?tab=${t.id}`} className={itemClass(isActive)}>
+              <span className="material-symbols-outlined text-[20px]">{t.icon}</span>
+              <span>{t.label}</span>
+            </Link>
+          );
+        })}
+
+        <div className="pt-3 pb-1 px-4 text-[10px] font-mono uppercase tracking-widest text-[#424754]/40">
+          Módulos
+        </div>
+
+        {SUBRUTAS.map((r) => {
+          const isActive = pathname.startsWith(r.href);
+          return (
+            <Link key={r.href} href={r.href} className={itemClass(isActive)}>
+              <span className="material-symbols-outlined text-[20px]">{r.icon}</span>
+              <span>{r.label}</span>
+            </Link>
+          );
+        })}
       </nav>
-    </>
+    </aside>
   );
 }
 
 export default function SuperadminSidebarNav() {
   return (
-    <Suspense
-      fallback={
-        <>
-          <Logo />
-          <nav className="flex flex-col gap-1 flex-1 overflow-y-auto" />
-        </>
-      }
-    >
-      <SidebarNavInner />
+    <Suspense fallback={
+      <aside className="w-64 bg-[#f2f3fd] border-r border-[#c2c6d6]/40 p-4 shrink-0 hidden md:block">
+        <Logo />
+      </aside>
+    }>
+      <SidebarNavContent />
     </Suspense>
   );
 }

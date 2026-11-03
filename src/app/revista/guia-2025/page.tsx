@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import AppHeader from "@/components/AppHeader";
 import RepisaGuias from "@/components/RepisaGuias";
+import { trackWhatsappClick } from "@/lib/trackWhatsapp";
 import {
   NEGOCIOS_2025,
   CATEGORIAS_2025,
@@ -91,6 +92,7 @@ function TarjetaNegocio({ n, grande = false }: { n: Negocio2025; grande?: boolea
             href={wa}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackWhatsappClick({ slug: n.id || n.nombre.toLowerCase().replace(/\s+/g, "-"), tipo: "guia", metadata: { nombre: n.nombre, zona: n.zona, categoria: n.categoria } })}
             className="mt-auto flex items-center gap-1.5 text-[11px] font-bold text-white px-3 py-2 transition-all active:scale-95"
             style={{ backgroundColor: "#25D366" }}
           >

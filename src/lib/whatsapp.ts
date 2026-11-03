@@ -1,5 +1,6 @@
 import type { StoreConfig } from '@/lib/stores.config';
 import { registrarPedido, generarCodigoPedido, guardarMiPedido, type DatosPedido } from '@/lib/pedidos';
+import { trackWhatsappClick } from '@/lib/trackWhatsapp';
 
 /**
  * Abre WhatsApp con el pedido dirigido al numero de la tienda.
@@ -39,6 +40,18 @@ export function enviarPedidoPorWhatsApp(
 
 Mira el detalle de mi pedido (N° ${codigo.toUpperCase()}): ${sitio}/pedido/${codigo}`;
   }
+
+  // Registrar clic a WhatsApp para analítica y reporte mensual de clientes derivados
+  trackWhatsappClick({
+    slug: store.slug || 'tienda',
+    tipo: pedido ? 'pedido' : 'contacto',
+    metadata: {
+      tienda: store.name,
+      con_pedido: Boolean(pedido),
+      codigo_pedido: codigo,
+    },
+  });
+
   window.open(`https://wa.me/${numero}?text=${encodeURIComponent(texto)}`, '_blank');
   // Conversión para Google Analytics / Ads: el cliente mandó su pedido a la tienda (solo si GA está activo).
   if (pedido) (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.('event', 'generate_lead', { tipo: 'pedido', currency: 'PEN', tienda: store.slug });
