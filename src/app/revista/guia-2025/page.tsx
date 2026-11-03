@@ -143,7 +143,7 @@ export default function Guia2025Page() {
               {/* Breadcrumb */}
               <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-white/50">
                 <Link href="/revista" className="hover:text-white transition-colors">
-                  Yo Soy de la Selva
+                  De la Selva
                 </Link>
                 <span className="material-symbols-outlined text-[14px]">chevron_right</span>
                 <span style={{ color: ORO_CLARO }}>Guía Turística</span>
@@ -396,7 +396,7 @@ export default function Guia2025Page() {
             className="flex items-center gap-1.5 text-xs font-bold text-stone-500 hover:text-stone-800 transition-colors"
           >
             <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-            Volver a Yo Soy de la Selva
+            Volver a De la Selva
           </Link>
         </footer>
       </main>

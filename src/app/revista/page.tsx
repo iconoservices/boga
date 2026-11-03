@@ -13,14 +13,14 @@ import RevistaIndex from './RevistaIndex';
 export const revalidate = 300;
 
 export const metadata: Metadata = {
-  title: 'Yo Soy de la Selva · Revista de Pucallpa',
+  title: 'De la Selva · Revista de Pucallpa',
   description:
     'La revista digital de BogaHub: historias, cultura, gastronomía y rutas de Pucallpa y la ' +
     'Amazonía peruana. Notas de Actualidad, Cultura, Vida Social, Naturaleza y más.',
   alternates: { canonical: '/revista' },
   openGraph: {
     type: 'website',
-    title: 'Yo Soy de la Selva · Revista de Pucallpa',
+    title: 'De la Selva · Revista de Pucallpa',
     description:
       'Historias, cultura, gastronomía y rutas de Pucallpa y la Amazonía peruana, por BogaHub.',
     url: '/revista',

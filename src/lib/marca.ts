@@ -8,13 +8,13 @@ export const MARCA = {
   alias: ['Boga Market', 'Boga', 'Boga Hub'],
   descripcion:
     'BogaHub es la app de Pucallpa (Ucayali, Perú): tiendas y delivery, Taxi Seguro con choferes verificados, empleos y oficios, ' +
-    'inmuebles, viajes, agenda de eventos, sorteos y la Revista «Yo Soy de la Selva».',
+    'inmuebles, viajes, agenda de eventos, sorteos y la Revista «De la Selva».',
   ciudad: 'Pucallpa',
   region: 'Ucayali',
   pais: 'PE',
 } as const;
 
-// Páginas oficiales de BogaHub en otros sitios (Facebook de «Yo Soy de la Selva», Instagram, TikTok, Google Business Profile…).
+// Páginas oficiales de BogaHub en otros sitios (Facebook de «De la Selva», Instagram, TikTok, Google Business Profile…).
 // Pega aquí las direcciones completas: salen en los datos estructurados como `sameAs`, que es lo que usan las IAs y Google para
 // confirmar que esas cuentas y este sitio son la misma marca. Solo enlaces que sean realmente tuyos.
 export const REDES: string[] = [];

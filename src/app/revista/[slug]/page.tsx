@@ -113,7 +113,7 @@ export default async function ArticuloPage({ params }: Props) {
         '@type': 'BreadcrumbList',
         itemListElement: [
           { '@type': 'ListItem', position: 1, name: 'Inicio', item: SITE_URL },
-          { '@type': 'ListItem', position: 2, name: 'Yo Soy de la Selva', item: `${SITE_URL}/revista` },
+          { '@type': 'ListItem', position: 2, name: 'De la Selva', item: `${SITE_URL}/revista` },
           { '@type': 'ListItem', position: 3, name: nota.titulo, item: url },
         ],
       },
@@ -130,7 +130,7 @@ export default async function ArticuloPage({ params }: Props) {
           <div className="max-w-[720px] mx-auto px-container-margin lg:px-8 pt-6">
             <Link href="/revista" className="flex items-center gap-1.5 font-label-md text-[12px] uppercase tracking-wider text-secondary hover:text-on-surface transition-colors">
               <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-              Volver a Yo Soy de la Selva
+              Volver a De la Selva
             </Link>
             <span className="inline-block mt-5 font-label-md text-[11px] uppercase tracking-[0.25em]" style={{ color: VERDE_CLARO }}>
               {nota.kicker}

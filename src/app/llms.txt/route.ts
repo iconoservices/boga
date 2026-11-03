@@ -41,7 +41,7 @@ export async function GET() {
   L.push('');
 
   if (notas.length) {
-    L.push('## Revista «Yo Soy de la Selva» (notas recientes)');
+    L.push('## Revista «De la Selva» (notas recientes)');
     for (const n of notas.slice(0, 15)) L.push(`- [${n.titulo}](${SITIO}/revista/${n.slug})${n.dek ? `: ${n.dek}` : ''}`);
     L.push('');
   }

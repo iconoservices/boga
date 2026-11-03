@@ -274,8 +274,8 @@ export default function RevistaIndex({ notas }: { notas: Nota[] }) {
                   BogaHub · Revista
                 </p>
                 <h1 className="font-headline-lg font-black tracking-tighter leading-[0.88] text-[10vw] sm:text-4xl lg:text-5xl">
-                  Yo Soy{" "}
-                  <span style={{ color: ORO_CLARO }}>de la Selva</span>
+                  De la{" "}
+                  <span style={{ color: ORO_CLARO }}>Selva</span>
                 </h1>
               </button>
 
@@ -441,7 +441,7 @@ export default function RevistaIndex({ notas }: { notas: Nota[] }) {
 
           <footer className="mt-14 pt-6 border-t border-on-surface/15">
             <p className="font-label-md text-[11px] uppercase tracking-[0.25em] text-secondary">
-              Yo Soy de la Selva
+              De la Selva
             </p>
             <p className="font-body-md text-secondary/80 text-xs mt-2 max-w-[62ch] leading-relaxed">
               Revista oficial de BogaHub. Historias de Pucallpa y la Amazonía peruana, compiladas

@@ -10,7 +10,7 @@ import { uploadFile } from '@/lib/uploadClient';
 import { SECCIONES, slugify, NOTAS_SEED, fechaISO } from '@/lib/revista';
 import type { NotaFila } from '@/lib/revista.data';
 
-// Panel de gestión de la Revista ("Yo Soy de la Selva").
+// Panel de gestión de la Revista ("De la Selva").
 // - Redactores: crean y editan notas, las dejan en borrador / "en revisión".
 // - Superadmin: además publica/despublica y administra la lista de redactores.
 // Las fotos van a Cloudflare R2 vía /api/upload (carpeta "revista/").
@@ -364,7 +364,7 @@ export default function AdminRevista() {
 
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-2xl font-bold">Revista · Yo Soy de la Selva</h1>
+            <h1 className="text-2xl font-bold">Revista · De la Selva</h1>
             <p className="text-white/50 text-sm mt-1">
               {esSuperadmin
                 ? `Gestión completa de las ${notas.length} notas de la revista. Edita fotos, títulos o publica nuevas historias.`

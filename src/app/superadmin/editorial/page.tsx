@@ -118,7 +118,7 @@ const PILARES: PilarEditorial[] = [
     badgeColor: 'bg-rose-100 text-rose-800 border-rose-200',
     angulo: 'Historias de personajes locales, crónicas barriales, mitos amazónicos, orgullo selvático y cultura viva.',
     modulos: [
-      { label: '/revista (Yo Soy de la Selva)', href: '/revista' },
+      { label: '/revista (De la Selva)', href: '/revista' },
     ],
     ejemplosHooks: [
       '“El último maestro del bote de madera en Yarinacocha que resiste a la fibra de vidrio.”',
@@ -139,7 +139,7 @@ const MODULOS_SISTEMA = [
   { icon: 'engineering', label: 'Trabajos', path: '/trabajos', desc: 'Bolsa de empleo y técnicos recomendados' },
   { icon: 'directions_boat', label: 'Pasajes', path: '/viajes', desc: 'Rápidos fluviales, lanchas y buses' },
   { icon: 'local_taxi', label: 'Taxi Seguro', path: '/transporte', desc: 'Mototaxis verificados y tarifas justas' },
-  { icon: 'menu_book', label: 'Revista Cultural', path: '/revista', desc: 'Historias "Yo Soy de la Selva"' },
+  { icon: 'menu_book', label: 'Revista Cultural', path: '/revista', desc: 'Historias "De la Selva"' },
   { icon: 'work', label: 'Para Negocios', path: '/negocios', desc: 'Vende y digitaliza tu local en Boga' },
 ];
 
