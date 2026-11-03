@@ -15,7 +15,7 @@ export const HUBS: Hub[] = [
   { href: '/productos',   label: 'Productos',   icon: 'inventory_2' },
   { href: '/inmuebles',   label: 'Inmuebles',   icon: 'real_estate_agent' },
   { href: '/sorteos',     label: 'Sorteos',     icon: 'confirmation_number' },
-  { href: '/revista',     label: 'Revista',     long: 'Yo Soy de la Selva', icon: 'menu_book' },
+  { href: '/revista',     label: 'Revista',     icon: 'menu_book' },
   { href: '/negocios',    label: 'Negocios',    long: 'Para Negocios', icon: 'work', apart: true },
 ];
 

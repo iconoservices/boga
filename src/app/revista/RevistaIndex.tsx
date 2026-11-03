@@ -73,66 +73,128 @@ function ListaNotas({ notas, conLead = false }: { notas: Nota[]; conLead?: boole
   );
 }
 
-// ── Anuncio Publicitario Sticky de la Guía Comercial 2025 ─────────────────
+// ── Anuncio Publicitario Sticky de la Guía Turística (Estilo Libro 3D en Repisa) ──
 function AnuncioGuia2025Sticky() {
   const cats = CATEGORIAS_2025.slice(0, 5);
 
   return (
-    <aside className="sticky top-20 space-y-2">
-      {/* Etiqueta editorial */}
+    <aside className="sticky top-20 space-y-3">
+      {/* Etiqueta editorial superior */}
       <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-on-surface/50 px-1">
-        <span>Aviso · Guía Oficial</span>
+        <span className="flex items-center gap-1">
+          <span className="material-symbols-outlined text-[13px] text-amber-500">auto_stories</span>
+          Libro Oficial
+        </span>
         <span className="flex items-center gap-1 font-bold text-amber-600 dark:text-amber-400">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-          Destacado
+          Anuario
         </span>
       </div>
 
       <Link
         href="/revista/guia-2025"
-        className="group block relative overflow-hidden bg-surface-container-low border border-on-surface/15 shadow-sm transition-all hover:shadow-lg hover:border-amber-400/60"
+        className="group block relative overflow-hidden bg-gradient-to-b from-[#0f3d22] to-[#071c10] border border-[#e0a72e]/30 shadow-md transition-all duration-300 hover:shadow-2xl hover:border-[#e0a72e]/70 p-4 rounded-2xl"
       >
-        {/* Línea dorada superior */}
-        <div className="h-1" style={{ backgroundColor: ORO }} />
+        {/* Resplandor dorado de fondo */}
+        <div className="absolute -top-12 -right-12 w-32 h-32 bg-[#e0a72e]/15 rounded-full blur-2xl pointer-events-none" />
 
-        {/* Imagen publicitaria con badge */}
-        <div className="relative h-40 overflow-hidden bg-stone-900">
-          <img
-            src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&q=80"
-            alt="Guía Comercial Pucallpa 2025"
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-85"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
-          <div className="absolute top-2.5 left-2.5">
+        {/* ── Escenario 3D del Libro ── */}
+        <div className="relative flex flex-col items-center pt-2 pb-1">
+          {/* Badge flotante sobre el libro */}
+          <div className="mb-2 z-10 transition-transform duration-300 group-hover:-translate-y-1">
             <span
-              className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 shadow-sm"
+              className="text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-md"
               style={{ backgroundColor: ORO, color: VERDE_OSC }}
             >
               ★ Edición Anual
             </span>
           </div>
-          <div className="absolute bottom-2.5 left-3 right-3 text-white">
-            <p className="text-[10px] font-mono uppercase tracking-widest text-amber-300">
-              Pucallpa &middot; Directorio Oficial
-            </p>
-            <h3 className="font-headline-sm font-black text-lg leading-tight drop-shadow-sm">
-              Guía Comercial <span style={{ color: ORO_CLARO }}>&amp; Turística</span>
-            </h3>
+
+          {/* El Libro 3D */}
+          <div className="relative w-[160px] h-[225px] rounded-r-md rounded-l-xs overflow-hidden transition-all duration-300 shadow-[-8px_14px_28px_rgba(0,0,0,0.8),-1px_0_3px_rgba(0,0,0,0.4)] group-hover:-translate-y-2 group-hover:scale-105 group-hover:shadow-[-12px_20px_35px_rgba(0,0,0,0.9)] bg-gradient-to-br from-[#0c2f1b] via-[#14532d] to-[#092415]">
+            {/* Lomo / Pliegue del libro a la izquierda (sombra 3D) */}
+            <div
+              className="absolute inset-y-0 left-0 w-3.5 pointer-events-none z-20"
+              style={{
+                background:
+                  'linear-gradient(to right, rgba(255,255,255,0.25) 0%, rgba(0,0,0,0.35) 30%, rgba(255,255,255,0.1) 60%, rgba(0,0,0,0.5) 100%)',
+              }}
+            />
+
+            {/* Canto de páginas de papel blanco/marfil a la derecha */}
+            <div className="absolute inset-y-0.5 right-0 w-2 bg-gradient-to-r from-stone-400 via-amber-100 to-stone-400 border-l border-black/20 pointer-events-none z-10" />
+
+            {/* Imagen de fondo sutil con overlay */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&q=80"
+              alt="Guía Comercial Pucallpa"
+              className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-35 transition-transform duration-700 group-hover:scale-110"
+            />
+
+            {/* Marco dorado interior tipo encuadernación de lujo */}
+            <div className="absolute inset-2 border border-[#e0a72e]/50 rounded-xs pointer-events-none z-10 flex flex-col justify-between p-2 bg-black/10">
+              <div className="flex items-center justify-between border-b border-[#e0a72e]/30 pb-1">
+                <span className="text-[8px] font-mono tracking-widest uppercase text-white/70">
+                  Tomo I
+                </span>
+                <span className="text-[10px] font-black text-[#f4d978]">
+                  2025
+                </span>
+              </div>
+
+              <div className="text-center my-auto flex flex-col items-center py-1">
+                <span className="text-[7.5px] uppercase font-mono tracking-[0.2em] text-[#e0a72e] leading-tight font-bold">
+                  Guía Oficial
+                </span>
+                <span className="font-serif font-black text-[16px] leading-tight text-white drop-shadow-md mt-0.5">
+                  PUCALLPA
+                </span>
+                <div className="w-7 h-px bg-[#e0a72e]/60 my-1" />
+                <span className="text-[8.5px] text-[#f4d978] font-serif font-semibold leading-tight">
+                  Comercial &amp; Turística
+                </span>
+                <span className="text-[7.5px] italic text-white/70 font-serif leading-tight mt-0.5">
+                  Lo mejor de la Selva
+                </span>
+              </div>
+
+              <div className="border-t border-[#e0a72e]/30 pt-0.5 text-center">
+                <span className="text-[7.5px] font-mono uppercase text-[#e0a72e] tracking-widest font-semibold">
+                  BogaHub
+                </span>
+              </div>
+            </div>
+
+            {/* Listón / Marcapáginas dorado colgando por debajo */}
+            <div
+              className="absolute bottom-0 right-4 w-2.5 h-4 z-25 shadow-sm"
+              style={{
+                backgroundColor: ORO,
+                clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 75%, 0 100%)',
+              }}
+            />
+          </div>
+
+          {/* ── La Repisa de Madera ── */}
+          <div className="relative w-full max-w-[195px] mt-1">
+            <div className="h-2.5 w-full bg-gradient-to-r from-[#21130b] via-[#4d2c17] to-[#21130b] rounded-t-xs border-t border-[#875028] shadow-[inset_0_1px_2px_rgba(255,255,255,0.25)]" />
+            <div className="h-2 w-full bg-gradient-to-r from-[#140b07] via-[#2e1a0e] to-[#140b07] shadow-[0_8px_16px_rgba(0,0,0,0.8)]" />
           </div>
         </div>
 
-        {/* Contenido */}
-        <div className="p-4 bg-surface-container-lowest">
-          <p className="text-xs text-on-surface/80 leading-relaxed">
-            Restaurantes, hoteles, tours y comercios recomendados de Pucallpa en una sola guía digital.
+        {/* ── Descripción y Botón ── */}
+        <div className="mt-3 pt-3 border-t border-white/10 text-center">
+          <p className="text-xs text-white/80 leading-relaxed">
+            Restaurantes, hoteles, tours y comercios recomendados de Pucallpa en una sola guía oficial.
           </p>
 
           {/* Categorías como tags */}
-          <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-on-surface/10">
+          <div className="flex flex-wrap justify-center gap-1.5 mt-2.5">
             {cats.map((c) => (
               <span
                 key={c.id}
-                className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 bg-surface-container-high text-on-surface/80"
+                className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/10 text-white/90 border border-white/10"
               >
                 <span className="material-symbols-outlined text-[11px]">{c.icon}</span>
                 {c.id}
@@ -142,16 +204,15 @@ function AnuncioGuia2025Sticky() {
 
           {/* Botón CTA */}
           <div
-            className="mt-4 w-full py-2.5 px-3 flex items-center justify-center gap-2 font-headline-sm text-xs font-black tracking-wide transition-all group-hover:brightness-110 active:scale-[0.98]"
-            style={{ backgroundColor: "#0f3d22", color: "#fef3c7" }}
+            className="mt-3.5 w-full py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 font-headline-sm text-xs font-black tracking-wide transition-all bg-[#e0a72e] text-[#0f3d22] group-hover:bg-[#f4d978] shadow-lg active:scale-[0.98]"
           >
-            <span className="material-symbols-outlined text-[15px]">menu_book</span>
-            Abrir Guía Turística
+            <span className="material-symbols-outlined text-[16px]">menu_book</span>
+            Abrir y hojear la Guía
             <span className="material-symbols-outlined text-[14px] transition-transform group-hover:translate-x-1">
               arrow_forward
             </span>
           </div>
-          <p className="text-center text-[9px] text-on-surface/40 mt-2 font-mono uppercase tracking-wider">
+          <p className="text-center text-[9px] text-white/40 mt-1.5 font-mono uppercase tracking-wider">
             Acceso libre &middot; BogaHub
           </p>
         </div>
@@ -383,7 +444,7 @@ export default function RevistaIndex({ notas }: { notas: Nota[] }) {
               Yo Soy de la Selva
             </p>
             <p className="font-body-md text-secondary/80 text-xs mt-2 max-w-[62ch] leading-relaxed">
-              Revista digital de BogaHub. Historias de Pucallpa y la Amazonía peruana, compiladas
+              Revista oficial de BogaHub. Historias de Pucallpa y la Amazonía peruana, compiladas
               por el equipo de BogaHub a partir de fuentes públicas. Fotografías de Wikimedia
               Commons, acreditadas en cada nota.
             </p>

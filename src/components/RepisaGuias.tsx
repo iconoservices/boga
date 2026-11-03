@@ -283,3 +283,4 @@ export default function RepisaGuias({ anioActivo = 2025, onPostularClick, classN
     </div>
   );
 }
+
