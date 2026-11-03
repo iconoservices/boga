@@ -227,11 +227,6 @@ export default function RevistaIndex({ notas }: { notas: Nota[] }) {
 
   const irASeccion = (s: string) => {
     setSeccion(s);
-    if (s !== "Portada") {
-      document.getElementById("historias")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    } else {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
   };
 
   const tabs = ["Portada", ...SECCIONES];
@@ -299,7 +294,7 @@ export default function RevistaIndex({ notas }: { notas: Nota[] }) {
         </div>
 
         {/* ── NAV DE SECCIONES (sticky) ─────────────────────────────────── */}
-        <nav className="sticky top-0 z-30 bg-surface-container-lowest border-b border-on-surface/15 shadow-[0_4px_10px_rgba(0,0,0,0.03)]">
+        <nav className="sticky top-[80px] lg:top-[96px] z-30 bg-surface-container-lowest border-b border-on-surface/15 shadow-[0_4px_10px_rgba(0,0,0,0.03)]">
           <div
             className="max-w-[1100px] mx-auto flex items-stretch overflow-x-auto hide-scrollbar"
             style={{ scrollbarWidth: "none" }}
@@ -397,11 +392,13 @@ export default function RevistaIndex({ notas }: { notas: Nota[] }) {
               </div>
 
               {/* ── LISTA DE NOTAS (filtrable por sección) ───────────────── */}
-              <section id="historias" className="scroll-mt-16 pt-10">
-                <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-xl lg:text-2xl border-b border-on-surface/15 pb-3">
-                  {seccion === "Portada" ? "Últimas notas" : seccion}
-                </h2>
-                <div className="mt-8">
+              <section id="historias" className={seccion === "Portada" ? "pt-10" : "pt-6"}>
+                {seccion === "Portada" && (
+                  <h2 className="font-headline-lg font-extrabold tracking-tight text-on-surface text-xl lg:text-2xl border-b border-on-surface/15 pb-3">
+                    Últimas notas
+                  </h2>
+                )}
+                <div className={seccion === "Portada" ? "mt-8" : "mt-0"}>
                   <ListaNotas notas={notasSeccion} conLead={seccion === "Portada"} />
                 </div>
               </section>
