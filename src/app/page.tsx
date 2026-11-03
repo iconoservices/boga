@@ -1,14 +1,37 @@
+import type { Metadata } from 'next';
 import HomeClient from '@/components/HomeClient';
 import { cargarHome } from '@/lib/homeData';
 
-// "/" se genera en el servidor y se guarda: el visitante recibe el Inicio con sus secciones ya
-// dentro del HTML, en vez de esperar a que baje el JS, hidrate y pida 10 endpoints. Se regenera cada
-// 12 horas como respaldo (cada regeneración gasta CPU de Vercel aunque nada haya cambiado) y al instante
-// cuando alguien guarda desde el panel (los endpoints /api/revalidate* también refrescan "/").
 export const revalidate = 43200;
 
-// La dirección oficial del Inicio (antes no declaraba canonical y las variantes con ?utm_… podían contarse como páginas distintas).
-export const metadata = { alternates: { canonical: '/' } };
+export const metadata: Metadata = {
+  title: 'BogaHub · Directorio Comercial y Turístico | Todo Pucallpa en una sola plataforma',
+  description:
+    'El directorio comercial y turístico oficial de Pucallpa (Ucayali): encuentra comercios, restaurantes, hoteles, tours en Yarinacocha, servicios, alquileres, eventos y transporte en un solo lugar.',
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    locale: 'es_PE',
+    url: 'https://bogahub.app',
+    siteName: 'BogaHub',
+    title: 'BogaHub · Directorio Comercial y Turístico de Pucallpa',
+    description: 'Todo Pucallpa en una sola plataforma: comercios, servicios, turismo, eventos y mucho más.',
+    images: [
+      {
+        url: 'https://bogahub.app/og-directorio-pucallpa.jpg',
+        width: 1200,
+        height: 675,
+        alt: 'BogaHub · Directorio Comercial y Turístico de Pucallpa',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'BogaHub · Directorio Comercial y Turístico de Pucallpa',
+    description: 'Todo Pucallpa en una sola plataforma: comercios, servicios, turismo, eventos y mucho más.',
+    images: ['https://bogahub.app/og-directorio-pucallpa.jpg'],
+  },
+};
 
 export default async function HomePage() {
   const inicial = await cargarHome();

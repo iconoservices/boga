@@ -5,21 +5,22 @@ import AppFooter from '@/components/AppFooter';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app';
 const SITE_DESC =
-  'BogaHub es el sistema operativo digital de Pucallpa: comercio, movilidad segura, ' +
-  'trabajo, alquiler de viviendas, eventos y estilo de vida de la ciudad en una sola app.';
+  'Directorio Comercial y Turístico de Pucallpa (Ucayali, Perú): comercios, restaurantes, hoteles, tours, ' +
+  'movilidad segura, alquiler de inmuebles, agenda de eventos y servicios en una sola plataforma.';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'BogaHub · Todo Pucallpa en una app',
+    default: 'BogaHub · Directorio Comercial y Turístico | Todo Pucallpa en una sola plataforma',
     template: '%s · BogaHub',
   },
   description: SITE_DESC,
   applicationName: 'BogaHub',
   keywords: [
-    'Pucallpa', 'Ucayali', 'delivery Pucallpa', 'restaurantes Pucallpa',
-    'qué hacer en Pucallpa', 'eventos Pucallpa', 'inmuebles Pucallpa',
-    'viajes Pucallpa', 'rápidos Pucallpa', 'transporte fluvial Ucayali',
+    'Pucallpa', 'Ucayali', 'directorio comercial Pucallpa', 'directorio turístico Pucallpa',
+    'guía turística Pucallpa', 'hoteles en Pucallpa', 'restaurantes Pucallpa', 'delivery Pucallpa',
+    'qué hacer en Pucallpa', 'eventos Pucallpa', 'turismo Ucayali', 'Yarinacocha',
+    'inmuebles Pucallpa', 'alquiler Pucallpa', 'viajes Pucallpa', 'rápidos Pucallpa',
     'mototaxi seguro', 'trabajo Pucallpa', 'marketplace Pucallpa', 'BogaHub',
   ],
   // OJO: no poner `alternates.canonical` acá — se hereda a TODAS las rutas y
@@ -30,13 +31,22 @@ export const metadata: Metadata = {
     locale: 'es_PE',
     url: SITE_URL,
     siteName: 'BogaHub',
-    title: 'BogaHub · Todo Pucallpa en una app',
-    description: SITE_DESC,
+    title: 'BogaHub · Directorio Comercial y Turístico de Pucallpa',
+    description: 'Todo Pucallpa en una sola plataforma: comercios, servicios, turismo, gastronomía, eventos y mucho más.',
+    images: [
+      {
+        url: `${SITE_URL}/og-directorio-pucallpa.jpg`,
+        width: 1200,
+        height: 675,
+        alt: 'BogaHub · Directorio Comercial y Turístico de Pucallpa',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'BogaHub · Todo Pucallpa en una app',
-    description: SITE_DESC,
+    title: 'BogaHub · Directorio Comercial y Turístico de Pucallpa',
+    description: 'Todo Pucallpa en una sola plataforma: comercios, servicios, turismo, gastronomía, eventos y mucho más.',
+    images: [`${SITE_URL}/og-directorio-pucallpa.jpg`],
   },
   robots: {
     index: true,

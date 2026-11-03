@@ -332,7 +332,7 @@ export default function HomeClient({ inicial }: { inicial: HomeData }) {
       {
         '@type': 'WebSite',
         '@id': `${SITE_URL}#sitio`,
-        name: 'BogaHub · Todo Pucallpa en una app',
+        name: 'BogaHub · Directorio Comercial y Turístico de Pucallpa',
         url: SITE_URL,
         inLanguage: 'es-PE',
         publisher: { '@id': `${SITE_URL}#organizacion` },

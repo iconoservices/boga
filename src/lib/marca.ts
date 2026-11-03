@@ -5,10 +5,10 @@ export const SITIO = (process.env.NEXT_PUBLIC_SITE_URL || 'https://bogahub.app')
 
 export const MARCA = {
   nombre: 'BogaHub',
-  alias: ['Boga Market', 'Boga', 'Boga Hub'],
+  alias: ['Boga Market', 'Boga', 'Boga Hub', 'Directorio Comercial Pucallpa', 'Directorio Turístico Pucallpa'],
   descripcion:
-    'BogaHub es la app de Pucallpa (Ucayali, Perú): tiendas y delivery, Taxi Seguro con choferes verificados, empleos y oficios, ' +
-    'inmuebles, viajes, agenda de eventos, sorteos y la Revista «De la Selva».',
+    'Directorio Comercial y Turístico de Pucallpa (Ucayali, Perú): comercios, restaurantes, hoteles, tours, ' +
+    'delivery, Taxi Seguro con choferes verificados, empleos, inmuebles, viajes, agenda de eventos y la Revista «De la Selva». Todo Pucallpa en una sola plataforma.',
   ciudad: 'Pucallpa',
   region: 'Ucayali',
   pais: 'PE',

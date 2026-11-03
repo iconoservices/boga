@@ -10,7 +10,8 @@ export const revalidate = 3600;
 
 const SECCIONES: [string, string, string][] = [
   ['Market', '/market', 'Tiendas de Pucallpa: comida, moda, mercado, salud y servicios. Cada tienda tiene su carta, precios y pedido por WhatsApp.'],
-  ['Explorar tiendas', '/explore', 'Directorio de negocios de Pucallpa con su carta y su WhatsApp.'],
+  ['Directorio Comercial', '/explore', 'Directorio de comercios y negocios de Pucallpa con su carta y su WhatsApp.'],
+  ['Guía Turística & Comercial', '/revista/guia-2025', 'Directorio y guía turística oficial de Pucallpa: hoteles, gastronomía típica, tours en Yarinacocha y comercios.'],
   ['Taxi Seguro', '/transporte', 'Choferes verificados (mototaxi, auto y moto) para moverte por Pucallpa.'],
   ['Trabajos y oficios', '/trabajos', 'Bolsa de empleo de Pucallpa y directorio de técnicos y oficios (electricistas, gasfiteros y más).'],
   ['Inmuebles', '/inmuebles', 'Alquiler y venta de cuartos, mini-departamentos, casas y terrenos en Pucallpa.'],
