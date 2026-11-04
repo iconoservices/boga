@@ -15,9 +15,9 @@ export function enviarPedidoPorWhatsApp(
   /** Si es un pedido de carrito, también se guarda en el panel del dueño. Los mensajes de consulta o reserva no lo pasan. */
   pedido?: DatosPedido,
 ): boolean {
-  const numero = (store.whatsapp || '').replace(/\D/g, '');
+  const rawNum = (store.whatsapp || '').replace(/\D/g, '');
 
-  if (!numero) {
+  if (!rawNum) {
     alert(
       `${store.name} todavía no configuró su WhatsApp de pedidos.\n\n` +
       'Si administrás esta tienda, agregalo en el panel:\n' +
@@ -25,6 +25,9 @@ export function enviarPedidoPorWhatsApp(
     );
     return false;
   }
+
+  // Si tiene 9 dígitos (celular típico de Perú), anteponer código de país 51
+  const numero = rawNum.length === 9 ? `51${rawNum}` : rawNum;
 
   // Pedido de carrito: se le da un código, se guarda con él y el mensaje lleva el enlace al detalle (/pedido/<código>).
   let codigo: string | undefined;
