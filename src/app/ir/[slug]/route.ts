@@ -49,3 +49,4 @@ export async function GET(
   // Si no tiene WhatsApp configurado todavía, derivar al catálogo de la tienda
   return NextResponse.redirect(new URL(`/${slugLimpio}`, req.url), 302);
 }
+

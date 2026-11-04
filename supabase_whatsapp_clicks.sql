@@ -36,3 +36,4 @@ create policy "Lectura de clicks para superadmin y anon"
   on public.whatsapp_clicks
   for select
   using (true);
+

@@ -510,3 +510,4 @@ create policy "Lectura de clicks para superadmin y anon"
     </div>
   );
 }
+

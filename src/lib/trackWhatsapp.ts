@@ -32,3 +32,4 @@ export function trackWhatsappClick(data: {
     // Silencioso para no interferir con la navegación del usuario
   }
 }
+
