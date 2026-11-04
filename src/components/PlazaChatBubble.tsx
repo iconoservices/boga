@@ -62,19 +62,6 @@ function formatShortName(raw: string): string {
   return `${cap(words[0])} ${words[words.length - 1].charAt(0).toUpperCase()}.`;
 }
 
-function formatRelativeTime(dateStr?: string): string {
-  if (!dateStr) return 'Reciente';
-  try {
-    const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
-    if (diff < 60) return 'Hace un momento';
-    if (diff < 3600) return `Hace ${Math.floor(diff / 60)} min`;
-    if (diff < 86400) return `Hace ${Math.floor(diff / 3600)} h`;
-    return `Hace ${Math.floor(diff / 86400)} d`;
-  } catch {
-    return 'Reciente';
-  }
-}
-
 const FALLBACK_MESSAGES: PlazaMessage[] = [
   {
     id: 1,
@@ -190,29 +177,30 @@ export default function PlazaChatBubble() {
   }, []);
 
   useEffect(() => {
-    if (isOpen) {
-      cargarMensajes();
+    cargarMensajes();
 
-      // Suscribirse en tiempo real a nuevos mensajes entrantes
-      const canal = supabase
-        .channel('plaza_live_feed')
-        .on(
-          'postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'plaza_messages' },
-          (payload) => {
-            const nuevo = payload.new as PlazaMessage;
-            setMessages((prev) => {
-              if (prev.some((m) => String(m.id) === String(nuevo.id))) return prev;
-              return [...prev, nuevo];
-            });
+    // Suscribirse en tiempo real a nuevos mensajes entrantes (incluso con chat cerrado)
+    const canal = supabase
+      .channel('plaza_live_feed')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'plaza_messages' },
+        (payload) => {
+          const nuevo = payload.new as PlazaMessage;
+          setMessages((prev) => {
+            if (prev.some((m) => String(m.id) === String(nuevo.id))) return prev;
+            return [...prev, nuevo];
+          });
+          if (!isOpen) {
+            setHasNewBadge(true);
           }
-        )
-        .subscribe();
+        }
+      )
+      .subscribe();
 
-      return () => {
-        supabase.removeChannel(canal);
-      };
-    }
+    return () => {
+      supabase.removeChannel(canal);
+    };
   }, [isOpen, cargarMensajes]);
 
   // Scroll suave al último mensaje
@@ -346,7 +334,7 @@ export default function PlazaChatBubble() {
   return (
     <>
       {/* 🔴 Botón Burbuja Flotante */}
-      <aside aria-label="Plaza BogaHub" className="contents">
+      <aside aria-label="Chat Boga" className="contents">
         <div
           className={`fixed z-40 transition-all duration-300 ${
             isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'
@@ -354,7 +342,7 @@ export default function PlazaChatBubble() {
         >
           <button
             onClick={() => setIsOpen(true)}
-            aria-label="Abrir Plaza BogaHub"
+            aria-label="Abrir Chat Boga"
             className="group relative flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-primary via-[#d82a20] to-[#b3140c] text-white rounded-full shadow-[0_8px_25px_rgba(184,19,14,0.4)] hover:shadow-[0_12px_32px_rgba(184,19,14,0.6)] active:scale-95 transition-all duration-200 border border-white/20"
           >
             <div className="relative flex items-center justify-center">
@@ -366,7 +354,7 @@ export default function PlazaChatBubble() {
             </div>
 
             <span className="font-bold text-xs tracking-wide hidden sm:inline">
-              Plaza Pucallpa
+              Chat Boga
             </span>
 
             {hasNewBadge && (
@@ -388,7 +376,7 @@ export default function PlazaChatBubble() {
           />
 
           <section
-            aria-label="Plaza BogaHub Comunidad"
+            aria-label="Chat Boga Comunidad"
             className="relative z-10 pointer-events-auto w-full sm:w-[430px] h-[86vh] sm:h-[620px] max-h-[92vh] bg-white dark:bg-[#1a191d] border border-gray-200/80 dark:border-white/10 rounded-t-[32px] sm:rounded-3xl shadow-[0_-12px_45px_rgba(0,0,0,0.35)] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-200"
           >
             {/* Tirador móvil */}
@@ -405,7 +393,7 @@ export default function PlazaChatBubble() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-extrabold text-[15px] text-gray-900 dark:text-white tracking-tight">
-                      Plaza BogaHub
+                      Chat Boga
                     </h3>
                     <span className="inline-flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-semibold text-[10px] px-2 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800/40">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -451,11 +439,11 @@ export default function PlazaChatBubble() {
             </div>
 
             {/* Lista de Mensajes */}
-            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 bg-gradient-to-b from-gray-50/40 to-white dark:from-[#17161a] dark:to-[#1a191d]">
+            <div className="flex-1 overflow-y-auto px-4 pt-4 pb-3 space-y-3.5 bg-gradient-to-b from-gray-50/40 to-white dark:from-[#17161a] dark:to-[#1a191d]">
               {cargando && messages.length === 0 ? (
                 <div className="h-full flex items-center justify-center text-gray-400 text-xs gap-2">
                   <span className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
-                  Cargando mensajes de la plaza...
+                  Cargando mensajes del chat...
                 </div>
               ) : filteredMessages.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center p-6 text-gray-500">
@@ -517,8 +505,9 @@ export default function PlazaChatBubble() {
                             ) : null}
                           </div>
 
-                          <span className="text-[10px] text-gray-400 font-normal shrink-0">
-                            {formatRelativeTime(msg.created_at)}
+                          <span className="inline-flex items-center gap-0.5 text-[10px] text-gray-400 dark:text-gray-500 font-medium shrink-0">
+                            <span className="material-symbols-outlined text-[12px] text-primary">location_on</span>
+                            Pucallpa
                           </span>
                         </div>
 

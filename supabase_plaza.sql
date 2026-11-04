@@ -57,3 +57,4 @@ values
   ('Gerson V.', 'Conductor', 'bg-blue-600', 'preguntas', 'Paso libre por la Federico Basadre km 60, todo despejado y sin lluvia por ahora.', 9, now() - interval '1 hour'),
   ('Camila S.', 'Exploradora', 'bg-purple-600', 'general', 'Qué lindo atardecer en Yarinacocha hoy día 🌅 Selva hermosa.', 12, now() - interval '30 minutes')
 on conflict do nothing;
+
