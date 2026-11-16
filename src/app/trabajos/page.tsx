@@ -455,9 +455,9 @@ export default function Servicios() {
                     Crea tu tienda con tu propia marca en 2 minutos usando los productos de proveedores locales de Pucallpa. Compártelo en tus estados de WhatsApp o redes sociales y gana tu propio margen de ganancia sin comprar mercadería por adelantado.
                   </p>
                   <Link
-                    href="/negocios/registro?i=revendedor"
+                    href="/revendedores"
                     onClick={() => setModalGanaDinero(false)}
-                    className="mt-1 inline-flex items-center justify-center gap-1.5 bg-primary text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-sm hover:shadow active:scale-95 transition-all text-center"
+                    className="mt-1 inline-flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-sm hover:shadow active:scale-95 transition-all text-center"
                   >
                     <span>Crear Mi Tienda de Reventa</span>
                     <span className="material-symbols-outlined text-[16px]">arrow_forward</span>

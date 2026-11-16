@@ -7,12 +7,14 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import RegistroNegocio from '@/components/RegistroNegocio';
 import { PLANES, type Plan } from '@/lib/planesNegocios';
 
 const VALID = ['tienda', 'marketplace', 'ambos', 'revendedor'];
 
 export default function RegistroNegocioPage() {
+  const router = useRouter();
   const [interest, setInterest] = useState('');
   // Plan elegido en los botones "Empezar" de /negocios (?nivel=carta|app|app_google&plan=anual).
   const [plan, setPlan] = useState<Plan | null>(null);
@@ -22,12 +24,16 @@ export default function RegistroNegocioPage() {
     try {
       const q = new URLSearchParams(window.location.search);
       const i = q.get('i');
+      if (i === 'revendedor') {
+        router.replace('/revendedores');
+        return;
+      }
       if (i && VALID.includes(i)) setInterest(i);
       const n = PLANES.find((p) => p.id === q.get('nivel'));
       if (n && !n.pronto) setPlan(n);
       setAnual(q.get('plan') === 'anual');
     } catch { /* noop */ }
-  }, []);
+  }, [router]);
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', backgroundColor: '#fff' }}>
