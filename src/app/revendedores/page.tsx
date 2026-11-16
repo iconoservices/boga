@@ -18,10 +18,7 @@ export default function RevendedoresHomePage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
 
-  // Conmutador de la Home: 'reventa' o 'afiliados'
-  const [opcionHome, setOpcionHome] = useState<'reventa' | 'afiliados'>('reventa');
-
-  // Modal para crear la tienda (evita tener el formulario a la mitad en la pantalla)
+  // Modal para crear la tienda de reventa (Popup centrado)
   const [modalRegistro, setModalRegistro] = useState(false);
 
   // Datos para registrar tienda
@@ -246,7 +243,7 @@ export default function RevendedoresHomePage() {
       {/* ── Banner si ya tiene tienda creada ── */}
       {tiendaExistente && (
         <div className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white px-4 py-2 text-xs shadow-xs">
-          <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-center sm:text-left">
               <span className="material-symbols-outlined text-emerald-200 text-lg">storefront</span>
               <span>
@@ -263,268 +260,232 @@ export default function RevendedoresHomePage() {
         </div>
       )}
 
-      {/* ── Contenido Principal (DISEÑO UNIFICADO / UNO SOLO) ── */}
-      <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 py-8 w-full flex flex-col items-center">
-        {/* Conmutador de Opciones Centrado */}
-        <div className="flex items-center justify-center mb-8">
-          <div className="inline-flex p-1.5 bg-slate-200/80 rounded-2xl gap-1">
-            <button
-              type="button"
-              onClick={() => setOpcionHome('reventa')}
-              className={`px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 cursor-pointer ${
-                opcionHome === 'reventa'
-                  ? 'bg-white text-emerald-800 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[18px]">storefront</span>
-              <span>1. Catálogo de Reventa (Dropshipping)</span>
-              <span className="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full font-bold">Sin inversión</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setOpcionHome('afiliados')}
-              className={`px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-2 cursor-pointer ${
-                opcionHome === 'afiliados'
-                  ? 'bg-white text-emerald-800 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[18px]">volunteer_activism</span>
-              <span>2. Programa de Afiliados</span>
-              <span className="bg-teal-100 text-teal-800 text-[10px] px-2 py-0.5 rounded-full font-bold">Bono efectivo</span>
-            </button>
-          </div>
+      {/* ── Contenido Principal (UNA SOLA VISTA: AMBAS OPCIONES JUNTAS) ── */}
+      <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 py-10 w-full flex flex-col items-center">
+        {/* Cabecera Principal de la Página */}
+        <div className="text-center max-w-3xl mb-10">
+          <span className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full mb-3">
+            <span className="material-symbols-outlined text-[15px]">payments</span>
+            Oportunidades de Ingresos en Pucallpa
+          </span>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+            Gana dinero desde tu celular con{' '}
+            <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+              BogaHub
+            </span>
+          </h1>
+          <p className="mt-3 text-slate-600 text-sm sm:text-base leading-relaxed">
+            Descubre las <b>2 formas oficiales</b> en que puedes generar ingresos hoy mismo sin jefes y sin horarios. Elige la que mejor se adapte a ti o <b>haz ambas al mismo tiempo</b>.
+          </p>
         </div>
 
-        {/* ── OPCIÓN 1: DROPSHIPPING / REVENTA (UNO SOLO, SIN MITADES) ── */}
-        {opcionHome === 'reventa' && (
-          <div className="w-full flex flex-col items-center text-center animate-in fade-in max-w-3xl">
-            {/* Pill de contexto */}
-            <span className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full mb-3">
-              <span className="material-symbols-outlined text-[15px]">payments</span>
-              Emprende en Pucallpa sin stock
-            </span>
+        {/* ── LAS 2 FORMAS DE GANAR DINERO EN UNA SOLA VISTA ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 w-full items-stretch">
+          
+          {/* ════════════════════════════════════════════════════════════════
+              FORMA 1: CATÁLOGO DE REVENTA / DROPSHIPPING LOCAL
+             ════════════════════════════════════════════════════════════════ */}
+          <div className="bg-white rounded-3xl border-2 border-emerald-500/80 shadow-md p-6 sm:p-8 flex flex-col justify-between gap-6 relative overflow-hidden">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 font-extrabold text-[11px] px-3 py-1 rounded-full">
+                  <span className="material-symbols-outlined text-[15px]">storefront</span>
+                  Opción 1 · Catálogo de Reventa
+                </span>
+                <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
+                  Sin inversión
+                </span>
+              </div>
 
-            {/* Título y Subtítulo Centrales */}
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
-              Gana dinero vendiendo productos locales{' '}
-              <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent block sm:inline">
-                sin comprar mercadería
-              </span>
-            </h1>
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug">
+                  Vende productos de tiendas locales con tu propia marca
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
+                  Crea tu catálogo online en 2 minutos. En tu <b>Panel de Control</b> eliges qué productos vender de tiendas aliadas de Pucallpa (relojes, lentes, moda) y defines tu margen de ganancia.
+                </p>
+              </div>
 
-            <p className="mt-4 text-slate-600 text-sm sm:text-base leading-relaxed max-w-2xl">
-              Crea tu tienda con tu propia marca en 2 minutos. Luego ingresarás directamente a tu <b>Panel de Control</b> para seleccionar qué productos vender de tiendas aliadas de Pucallpa y definir tu propio margen de ganancia.
-            </p>
+              {/* Beneficios de Opción 1 */}
+              <div className="flex flex-col gap-2 pt-1 text-xs">
+                <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-200/70">
+                  <span className="material-symbols-outlined text-emerald-600 text-lg shrink-0">check_circle</span>
+                  <div>
+                    <span className="font-bold text-slate-900">0 inversión en mercadería:</span>
+                    <span className="text-slate-500 ml-1">No compras stock por adelantado. El proveedor lo tiene listo en Pucallpa.</span>
+                  </div>
+                </div>
 
-            {/* Botón Principal de Llamado a la Acción (Centrado y Grande) */}
-            <div className="mt-7 flex flex-col items-center gap-2 w-full sm:w-auto">
+                <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-200/70">
+                  <span className="material-symbols-outlined text-emerald-600 text-lg shrink-0">check_circle</span>
+                  <div>
+                    <span className="font-bold text-slate-900">Tú pones tu ganancia:</span>
+                    <span className="text-slate-500 ml-1">Regulas +10%, +15%, +20% o el margen que prefieras por cada producto.</span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-200/70">
+                  <span className="material-symbols-outlined text-emerald-600 text-lg shrink-0">check_circle</span>
+                  <div>
+                    <span className="font-bold text-slate-900">Pedidos a tu WhatsApp:</span>
+                    <span className="text-slate-500 ml-1">Tus clientes te escriben y pagan a ti directamente por Yape o Plin.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Acción de Opción 1 */}
+            <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
               {tiendaExistente ? (
-                <div className="flex flex-col sm:flex-row items-center gap-3">
+                <div className="flex flex-col gap-2">
                   <Link
                     href="/revendedores/panel"
-                    className="w-full sm:w-auto py-3.5 px-8 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-sm sm:text-base shadow-lg shadow-emerald-600/25 transition active:scale-95 flex items-center justify-center gap-2"
+                    className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm text-center shadow-md transition flex items-center justify-center gap-2"
                   >
-                    <span className="material-symbols-outlined text-xl">dashboard</span>
+                    <span className="material-symbols-outlined text-lg">dashboard</span>
                     <span>Ingresar a Mi Panel ({tiendaExistente.nombreTienda}) →</span>
                   </Link>
                   <button
                     type="button"
                     onClick={() => setModalRegistro(true)}
-                    className="text-xs font-bold text-slate-500 hover:text-slate-800 py-2 px-3 rounded-xl hover:bg-slate-100 transition cursor-pointer"
+                    className="text-center text-xs font-bold text-slate-500 hover:text-slate-800 transition py-1 cursor-pointer"
                   >
-                    + Crear otra tienda
+                    + Registrar otra tienda
                   </button>
                 </div>
               ) : !user ? (
-                <div className="flex flex-col items-center gap-2">
+                <div className="flex flex-col gap-2">
                   <Link
                     href="/login?redirect=/revendedores"
-                    className="py-3.5 px-8 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-sm sm:text-base shadow-lg shadow-emerald-600/25 transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm text-center shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <span className="material-symbols-outlined text-xl">lock_open</span>
+                    <span className="material-symbols-outlined text-lg">lock_open</span>
                     <span>Iniciar Sesión para Crear Mi Tienda →</span>
                   </Link>
-                  <p className="text-[11px] text-slate-500">
-                    Tu tienda quedará vinculada a tu correo para que puedas ingresar desde tu celular o laptop.
+                  <p className="text-[11px] text-slate-400 text-center">
+                    🔒 Vinculado a tu correo para ingresar desde cualquier celular o PC.
                   </p>
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-2">
+                <div className="flex flex-col gap-2">
                   <button
                     type="button"
                     onClick={() => setModalRegistro(true)}
-                    className="py-4 px-10 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-base shadow-lg shadow-emerald-600/25 transition active:scale-95 flex items-center justify-center gap-2.5 cursor-pointer"
+                    className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-xs sm:text-sm text-center shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <span className="material-symbols-outlined text-2xl">rocket_launch</span>
+                    <span className="material-symbols-outlined text-xl">rocket_launch</span>
                     <span>Crear Mi Tienda de Reventa →</span>
                   </button>
-                  <p className="text-xs text-emerald-800 font-semibold flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    Sesión iniciada con: <b>{user.email}</b>
+                  <p className="text-[11px] text-emerald-800 font-semibold text-center flex items-center justify-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    Sesión iniciada: <b>{user.email}</b>
                   </p>
                 </div>
               )}
             </div>
+          </div>
 
-            {/* 3 Beneficios en Grilla Amplia */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full mt-12 text-left">
-              <div className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs flex flex-col gap-2.5 hover:border-emerald-300 transition">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
-                  <span className="material-symbols-outlined text-2xl">inventory_2</span>
-                </div>
-                <h3 className="font-extrabold text-slate-900 text-sm sm:text-base">0 inversión en mercadería</h3>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  No arriesgas dinero comprando stock por adelantado. Las tiendas aliadas de Pucallpa tienen el producto listo.
+          {/* ════════════════════════════════════════════════════════════════
+              FORMA 2: PROGRAMA DE AFILIADOS BOGAHUB
+             ════════════════════════════════════════════════════════════════ */}
+          <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 flex flex-col justify-between gap-6 hover:border-teal-400 transition">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1.5 bg-teal-100 text-teal-800 font-extrabold text-[11px] px-3 py-1 rounded-full">
+                  <span className="material-symbols-outlined text-[15px]">volunteer_activism</span>
+                  Opción 2 · Programa de Afiliados
+                </span>
+                <span className="bg-teal-50 text-teal-700 border border-teal-200 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
+                  Bono en efectivo
+                </span>
+              </div>
+
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug">
+                  Recomienda negocios y choferes locales y cobra tu bono
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
+                  ¿Tienes amigos o conocidos con un negocio o vehículo? Conéctalos con BogaHub y <b>gana un bono en efectivo directo</b> a tu cuenta por cada comercio o conductor activado.
                 </p>
               </div>
 
-              <div className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs flex flex-col gap-2.5 hover:border-emerald-300 transition">
-                <div className="w-10 h-10 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center font-bold">
-                  <span className="material-symbols-outlined text-2xl">attach_money</span>
+              {/* Beneficios de Opción 2 */}
+              <div className="flex flex-col gap-2 pt-1 text-xs">
+                <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-200/70">
+                  <span className="material-symbols-outlined text-teal-600 text-lg shrink-0">check_circle</span>
+                  <div>
+                    <span className="font-bold text-slate-900">Comercios y Tiendas:</span>
+                    <span className="text-slate-500 ml-1">Restaurantes, pollerías, bodegas o boutiques. Cobras tu bono apenas publiquen su menú o catálogo.</span>
+                  </div>
                 </div>
-                <h3 className="font-extrabold text-slate-900 text-sm sm:text-base">Tú pones tu ganancia</h3>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  En tu panel regulas tu margen: +10%, +15%, +20% o el monto que tú decidas sobre el costo del proveedor.
-                </p>
-              </div>
 
-              <div className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs flex flex-col gap-2.5 hover:border-emerald-300 transition">
-                <div className="w-10 h-10 rounded-2xl bg-orange-100 text-orange-700 flex items-center justify-center font-bold">
-                  <span className="material-symbols-outlined text-2xl">chat</span>
+                <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-200/70">
+                  <span className="material-symbols-outlined text-teal-600 text-lg shrink-0">check_circle</span>
+                  <div>
+                    <span className="font-bold text-slate-900">Conductores (Taxi / Mototaxi):</span>
+                    <span className="text-slate-500 ml-1">Invita a choferes a recibir carreras seguras con Boga Taxi y gana tu comisión por activación.</span>
+                  </div>
                 </div>
-                <h3 className="font-extrabold text-slate-900 text-sm sm:text-base">Pedidos a tu WhatsApp</h3>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Tus clientes te escriben a ti, te pagan a ti por Yape o Plin, y la tienda aliada despacha el pedido.
-                </p>
+
+                <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-200/70">
+                  <span className="material-symbols-outlined text-teal-600 text-lg shrink-0">check_circle</span>
+                  <div>
+                    <span className="font-bold text-slate-900">Pagos al instante por Yape o Plin:</span>
+                    <span className="text-slate-500 ml-1">Sin trámites complejos. El equipo de BogaHub valida el referido y te transfiere directo.</span>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Paso a paso de cómo funciona */}
-            <div className="w-full mt-10 p-6 sm:p-7 rounded-3xl bg-white border border-slate-200/80 shadow-xs text-left flex flex-col gap-4">
-              <h3 className="text-sm sm:text-base font-extrabold text-slate-900 flex items-center gap-2">
-                <span className="material-symbols-outlined text-emerald-600">route</span>
-                <span>¿Cómo funciona el proceso de venta en Pucallpa?</span>
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-slate-600">
-                <div className="flex items-start gap-2.5">
-                  <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0">1</span>
-                  <span><b>Creas tu tienda:</b> En 1 minuto le pones nombre a tu catálogo y eliges los productos de la tienda aliada.</span>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0">2</span>
-                  <span><b>Compartes tu enlace:</b> Lo publicas en tus estados de WhatsApp, Facebook, TikTok o se lo mandas a tus amigos.</span>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0">3</span>
-                  <span><b>Cobras tu ganancia:</b> El cliente te paga el precio final, pagas el costo al proveedor y te quedas con la diferencia.</span>
-                </div>
-              </div>
+            {/* Acción de Opción 2 */}
+            <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
+              <a
+                href={waLink(
+                  wspBoga,
+                  `Hola BogaHub! Quiero postular como afiliado para recomendar negocios y choferes en Pucallpa y ganar bonos en efectivo.${user?.email ? ` (Mi correo: ${user.email})` : ''}`
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3.5 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs sm:text-sm text-center shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-lg">chat</span>
+                <span>Coordinar Afiliación por WhatsApp con Asesor →</span>
+              </a>
+              <p className="text-[11px] text-slate-400 text-center">
+                Atención rápida · Te explicamos los montos de bono por comercio o chofer.
+              </p>
             </div>
           </div>
-        )}
 
-        {/* ── OPCIÓN 2: PROGRAMA DE AFILIADOS ── */}
-        {opcionHome === 'afiliados' && (
-          <div className="max-w-4xl mx-auto w-full py-2 animate-in fade-in">
-            <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-md flex flex-col gap-6">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-5">
-                <div>
-                  <span className="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full mb-2">
-                    <span className="material-symbols-outlined text-[13px]">payments</span>
-                    Programa de Afiliados Oficial BogaHub
-                  </span>
-                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-tight">
-                    Gana bonos en efectivo recomendando negocios y choferes
-                  </h2>
-                  <p className="mt-1 text-slate-600 text-xs sm:text-sm">
-                    Recomienda comercios o conductores en Pucallpa y recibe tu bono directo a Yape o Plin por cada activación confirmada.
-                  </p>
-                </div>
-                <div className="shrink-0">
-                  <span className="bg-teal-100 text-teal-900 border border-teal-300 text-xs font-bold px-3 py-1 rounded-xl flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-teal-600 animate-ping"></span>
-                    Bonos ilimitados
-                  </span>
-                </div>
-              </div>
+        </div>
 
-              {/* 2 Tarjetas de Recomendación */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-col justify-between gap-4">
-                  <div className="flex flex-col gap-2">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
-                      <span className="material-symbols-outlined text-xl">storefront</span>
-                    </div>
-                    <h3 className="font-extrabold text-slate-900 text-sm sm:text-base">Recomienda Comercios Locales</h3>
-                    <p className="text-xs text-slate-600 leading-relaxed">
-                      Restaurantes, pollerías, bodegas, boutiques de moda o servicios. Conectamos su negocio con miles de pucallpinos.
-                    </p>
-                    <div className="text-[11px] text-emerald-800 font-bold bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg">
-                      💰 Bono en efectivo directo por comercio activado
-                    </div>
-                  </div>
-                  <a
-                    href={waLink(
-                      wspBoga,
-                      `Hola BogaHub! Quiero recomendar un comercio local para que forme parte de BogaHub y coordinar mi bono de afiliado.${user?.email ? ` (Mi correo: ${user.email})` : ''}`
-                    )}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full inline-flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs shadow-xs transition"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">chat</span>
-                    <span>Recomendar Comercio por WhatsApp</span>
-                  </a>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-col justify-between gap-4">
-                  <div className="flex flex-col gap-2">
-                    <div className="w-10 h-10 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold">
-                      <span className="material-symbols-outlined text-xl">local_taxi</span>
-                    </div>
-                    <h3 className="font-extrabold text-slate-900 text-sm sm:text-base">Recomienda Choferes (Taxi / Mototaxi)</h3>
-                    <p className="text-xs text-slate-600 leading-relaxed">
-                      Conductores con brevete y vehículo propio que quieran carreras seguras con tarifas justas y pagos al instante.
-                    </p>
-                    <div className="text-[11px] text-teal-800 font-bold bg-teal-50 border border-teal-200 px-2 py-1 rounded-lg">
-                      🚗 Bono por cada conductor verificado y activado
-                    </div>
-                  </div>
-                  <a
-                    href={waLink(
-                      wspBoga,
-                      `Hola BogaHub! Quiero recomendar a un conductor de taxi o mototaxi para Boga Taxi y coordinar mi bono de afiliado.${user?.email ? ` (Mi correo: ${user.email})` : ''}`
-                    )}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full inline-flex items-center justify-center gap-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs shadow-xs transition"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">chat</span>
-                    <span>Recomendar Chofer por WhatsApp</span>
-                  </a>
-                </div>
-              </div>
-
-              {/* 3 Pasos */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center sm:text-left pt-3 border-t border-slate-100">
-                <div className="flex items-start gap-2.5 text-xs text-slate-600">
-                  <span className="w-6 h-6 rounded-full bg-slate-200 text-slate-800 font-bold flex items-center justify-center shrink-0 text-xs">1</span>
-                  <span>Contactas a tu conocido o dueño del local.</span>
-                </div>
-                <div className="flex items-start gap-2.5 text-xs text-slate-600">
-                  <span className="w-6 h-6 rounded-full bg-slate-200 text-slate-800 font-bold flex items-center justify-center shrink-0 text-xs">2</span>
-                  <span>El equipo de BogaHub valida y da de alta su cuenta.</span>
-                </div>
-                <div className="flex items-start gap-2.5 text-xs text-slate-600">
-                  <span className="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center shrink-0 text-xs">3</span>
-                  <span><b>Recibes tu bono por Yape / Plin al instante.</b></span>
-                </div>
-              </div>
+        {/* ── SECCIÓN INFORMATIVA: PUEDES HACER AMBAS ── */}
+        <div className="w-full mt-10 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-lg flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-4 text-center sm:text-left">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
+              <span className="material-symbols-outlined text-3xl">lightbulb</span>
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-black">¿Cuál opción elegir? ¡Puedes hacer ambas!</h3>
+              <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-xl leading-relaxed">
+                Muchos emprendedores de Pucallpa tienen su catálogo de productos en WhatsApp para ventas del día a día, y cuando visitan negocios o toman un taxi, los afilian y cobran bonos adicionales.
+              </p>
             </div>
           </div>
-        )}
+          <button
+            type="button"
+            onClick={() => {
+              if (!user) {
+                router.push('/login?redirect=/revendedores');
+              } else {
+                setModalRegistro(true);
+              }
+            }}
+            className="w-full sm:w-auto py-3 px-6 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm shadow-md transition shrink-0 cursor-pointer"
+          >
+            Empezar Ahora Gratis
+          </button>
+        </div>
       </main>
 
       {/* ── MODAL POPUP PARA CREAR LA TIENDA (LIMPIO Y CENTRADO) ── */}
