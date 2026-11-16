@@ -115,6 +115,57 @@ async function cargarTienda(slug: string) {
         hideHeroText: dbStore.hide_hero_text === true,
         perfilEmpresa: normalizarPerfilEmpresa(dbStore.perfil_empresa) ?? undefined,
       };
+    } else {
+      // Si no existe aún en stores, revisar si es una solicitud de revendedor aprobada en Boga Network
+      const { data: sol } = await supabase
+        .from('store_requests')
+        .select('*')
+        .eq('status', 'approved')
+        .ilike('business_name', slug)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (sol) {
+        const tmpl = getTemplate('default');
+        return {
+          slug: slug,
+          name: sol.business_name,
+          tagline: sol.description || 'Tienda de Reventa Oficial en Boga Network',
+          marketplaceCategory: sol.category || 'Tienda de Reventa',
+          template: 'default' as any,
+          heroImage: tmpl?.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
+          heroImages: undefined,
+          reservaActiva: false,
+          heroAlt: sol.business_name,
+          iconImage: tmpl?.iconImage || undefined,
+          theme: tmpl?.theme || DEFAULT_THEME,
+          categories: tmpl?.categories || [],
+          logoImage: undefined,
+          whatsapp: sol.whatsapp || undefined,
+          modulos: undefined,
+          igvIncluido: false,
+          showDemoProducts: false,
+          zona: sol.city || undefined,
+          direccion: undefined,
+          horario: undefined,
+          rating: undefined,
+          metodosPago: undefined,
+          monedas: [],
+          entrega: 'ambos' as const,
+          facebook: undefined,
+          instagram: undefined,
+          tiktok: undefined,
+          subdominioActivo: undefined,
+          appPropia: false,
+          pushActivo: undefined,
+          latitud: undefined,
+          longitud: undefined,
+          mostrarUbicacion: false,
+          hideHeroText: false,
+          perfilEmpresa: undefined,
+        };
+      }
     }
   } catch (err) {
     console.error('Error fetching dynamic store:', err);

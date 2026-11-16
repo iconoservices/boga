@@ -94,17 +94,29 @@ export async function POST(request: Request) {
         })
         .eq('id', existing[0].id);
     } else {
-      await admin.from('stores').insert({
+      const payload: Record<string, any> = {
         name: business_name,
         slug: baseSlug,
         status: 'active',
         plan: 'revendedor',
         whatsapp: whatsapp || null,
         owner_email: email || null,
-        city: city || 'pucallpa',
-        category: 'Tienda de Reventa',
+        marketplace_category: 'Tienda de Reventa',
         tagline: 'Tienda de Reventa Oficial en Boga Network',
-      });
+        template: 'default',
+        zona: city || 'pucallpa',
+      };
+      const { error: insErr } = await admin.from('stores').insert(payload);
+      if (insErr) {
+        console.error('Error insertando en stores:', insErr);
+        // Reintentar sin columnas opcionales si alguna no existiera
+        await admin.from('stores').insert({
+          name: business_name,
+          slug: baseSlug,
+          status: 'active',
+          whatsapp: whatsapp || null,
+        });
+      }
     }
 
     return NextResponse.json({ ok: true, mensaje: `Tienda "${business_name}" activada (Verde)` });

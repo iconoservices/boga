@@ -47,6 +47,30 @@ export default function RevendedorPanelPage() {
   const [pestañaActiva, setPestañaActiva] = useState<'catalogo' | 'preview' | 'afiliados' | 'ajustes'>('catalogo');
   const [modalAvisoAsesor, setModalAvisoAsesor] = useState(false);
   const [estadoTienda, setEstadoTienda] = useState<'desactivada' | 'activa'>('desactivada');
+  const [copiado, setCopiado] = useState(false);
+
+  // Link público y slug de la tienda
+  const slugTienda = (nombreTienda || 'tienda')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+
+  const [origin, setOrigin] = useState('https://bogahub.app');
+  useEffect(() => {
+    if (typeof window !== 'undefined') setOrigin(window.location.origin);
+  }, []);
+
+  const linkTienda = `${origin}/${slugTienda}`;
+
+  const copiarLink = () => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(linkTienda);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2500);
+    }
+  };
 
   // Catálogo y filtros
   const [tiendasAliadas, setTiendasAliadas] = useState<TiendaAliada[]>([]);
@@ -405,14 +429,37 @@ export default function RevendedorPanelPage() {
               <span className="hidden sm:inline">Nueva tienda</span>
             </button>
 
-            <button
-              type="button"
-              onClick={() => setModalAvisoAsesor(true)}
-              className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm transition active:scale-95 cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-[16px]">chat</span>
-              <span>Asegurar activación con Asesor</span>
-            </button>
+            {estadoTienda === 'activa' ? (
+              <div className="flex items-center gap-1.5">
+                <a
+                  href={`/${slugTienda}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-xl shadow-xs transition active:scale-95"
+                >
+                  <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                  <span>Ver Mi Tienda</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={copiarLink}
+                  className="inline-flex items-center gap-1 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-bold px-2.5 py-2 rounded-xl shadow-2xs transition cursor-pointer"
+                  title="Copiar link de mi tienda"
+                >
+                  <span className="material-symbols-outlined text-[16px]">{copiado ? 'check' : 'content_copy'}</span>
+                  <span className="hidden sm:inline">{copiado ? '¡Copiado!' : 'Copiar Link'}</span>
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setModalAvisoAsesor(true)}
+                className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm transition active:scale-95 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[16px]">chat</span>
+                <span>Asegurar activación con Asesor</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -433,6 +480,49 @@ export default function RevendedorPanelPage() {
             >
               Avisar al asesor para que la acepte →
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Banner de Tienda Activa con Enlace Público ── */}
+      {estadoTienda === 'activa' && (
+        <div className="bg-emerald-50/90 border-b border-emerald-200 px-4 py-2.5 text-xs">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-emerald-950 font-medium truncate">
+              <span className="material-symbols-outlined text-emerald-600 text-[20px] shrink-0">verified</span>
+              <span className="truncate">
+                <b>¡Tu tienda está ACTIVA en Boga Market!</b> Link oficial:{' '}
+                <a
+                  href={`/${slugTienda}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono font-bold text-emerald-800 underline ml-1"
+                >
+                  {linkTienda}
+                </a>
+              </span>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={copiarLink}
+                className="px-2.5 py-1 rounded-lg bg-white border border-emerald-300 text-emerald-800 font-bold hover:bg-emerald-100/50 transition cursor-pointer flex items-center gap-1 shadow-2xs text-[11px]"
+              >
+                <span className="material-symbols-outlined text-[14px]">{copiado ? 'check' : 'content_copy'}</span>
+                <span>{copiado ? '¡Copiado!' : 'Copiar'}</span>
+              </button>
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(
+                  `¡Hola! Ya abrí mi tienda virtual "${nombreTienda}". Puedes ver mi catálogo y hacer pedidos directo aquí: ${linkTienda}`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-2.5 py-1 rounded-lg bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold transition flex items-center gap-1 shadow-xs text-[11px]"
+              >
+                <span className="material-symbols-outlined text-[14px]">share</span>
+                <span>Compartir</span>
+              </a>
+            </div>
           </div>
         </div>
       )}
@@ -467,9 +557,16 @@ export default function RevendedorPanelPage() {
           >
             <span className="material-symbols-outlined text-[18px]">visibility</span>
             <span>2. Vista Previa de Mi Tienda</span>
-            <span className="bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-              Privada
-            </span>
+            {estadoTienda === 'activa' ? (
+              <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Pública
+              </span>
+            ) : (
+              <span className="bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                Privada
+              </span>
+            )}
           </button>
 
           <button
@@ -499,9 +596,15 @@ export default function RevendedorPanelPage() {
           >
             <span className="material-symbols-outlined text-[18px]">settings</span>
             <span>4. Ajustes & Cuenta</span>
-            <span className="bg-slate-200 text-slate-700 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-              En gris
-            </span>
+            {estadoTienda === 'activa' ? (
+              <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                Activa
+              </span>
+            ) : (
+              <span className="bg-slate-200 text-slate-700 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                En gris
+              </span>
+            )}
           </button>
         </div>
       </div>
@@ -756,24 +859,72 @@ export default function RevendedorPanelPage() {
           </div>
         )}
 
-        {/* ══ PESTAÑA 2: VISTA PREVIA DE MI TIENDA (PRIVADA) ══ */}
+        {/* ══ PESTAÑA 2: VISTA PREVIA DE MI TIENDA ══ */}
         {pestañaActiva === 'preview' && (
           <div className="max-w-4xl mx-auto flex flex-col gap-5 animate-in fade-in">
-            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5 text-amber-900 font-medium">
-                <span className="material-symbols-outlined text-amber-700 text-xl shrink-0">visibility</span>
-                <span>
-                  <b>Simulación Privada:</b> Así verán tus clientes tu catálogo en internet una vez que el administrador active tu tienda.
-                </span>
+            {estadoTienda === 'activa' ? (
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <span className="material-symbols-outlined text-2xl">verified</span>
+                  </div>
+                  <div>
+                    <p className="font-extrabold text-sm text-emerald-950 flex items-center gap-2">
+                      ¡Tu tienda está ACTIVA y pública en internet!
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    </p>
+                    <p className="text-emerald-700 mt-0.5">
+                      Link público:{' '}
+                      <a
+                        href={`/${slugTienda}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono font-bold underline text-emerald-900"
+                      >
+                        {linkTienda}
+                      </a>
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={copiarLink}
+                    className="px-3 py-1.5 rounded-xl bg-white border border-emerald-300 text-emerald-800 font-bold hover:bg-emerald-100/50 transition cursor-pointer flex items-center gap-1.5 shadow-2xs text-xs"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">{copiado ? 'check' : 'content_copy'}</span>
+                    <span>{copiado ? '¡Copiado!' : 'Copiar Link'}</span>
+                  </button>
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(
+                      `¡Hola! Ya abrí mi tienda virtual "${nombreTienda}". Puedes ver mi catálogo y hacer pedidos directo aquí: ${linkTienda}`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3.5 py-1.5 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold transition flex items-center gap-1.5 shadow-xs text-xs"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">share</span>
+                    <span>Compartir en WhatsApp</span>
+                  </a>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setModalAvisoAsesor(true)}
-                className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-3.5 py-1.5 rounded-xl text-xs transition shrink-0 cursor-pointer"
-              >
-                Solicitar Activación
-              </button>
-            </div>
+            ) : (
+              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 text-amber-900 font-medium">
+                  <span className="material-symbols-outlined text-amber-700 text-xl shrink-0">visibility</span>
+                  <span>
+                    <b>Simulación Privada:</b> Así verán tus clientes tu catálogo en internet una vez que el administrador active tu tienda.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setModalAvisoAsesor(true)}
+                  className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-3.5 py-1.5 rounded-xl text-xs transition shrink-0 cursor-pointer"
+                >
+                  Solicitar Activación
+                </button>
+              </div>
+            )}
 
             <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
               <div className="p-6 bg-gradient-to-r from-slate-900 to-slate-800 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1019,31 +1170,72 @@ export default function RevendedorPanelPage() {
                 )}
               </div>
 
-              <div className="p-4 rounded-2xl bg-slate-100 border border-slate-200 text-xs flex gap-3.5 items-start">
-                <span className="material-symbols-outlined text-slate-500 text-2xl shrink-0">info</span>
-                <div className="text-slate-600 leading-relaxed">
-                  <p className="font-bold text-slate-900 mb-1">
-                    ¿Por qué mi tienda aparece en gris (desactivada)?
-                  </p>
-                  <p>
-                    Tu tienda se encuentra en <b>modo borrador privado</b>. Esto te permite importar productos, cambiar tus márgenes y ver la vista previa sin que nadie te moleste.
-                  </p>
-                  <p className="mt-2">
-                    Para que la tienda pase a <b>Activa (Verde)</b> y los clientes puedan encontrarte en Boga Market y pedirte por WhatsApp, el administrador de Boga Network debe aceptar y validar tu solicitud.
-                  </p>
+              {estadoTienda === 'activa' ? (
+                <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-emerald-900 flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-emerald-700 text-lg">check_circle</span>
+                      Tu tienda está activa y visible en Boga Market
+                    </span>
+                    <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
+                      Online
+                    </span>
+                  </div>
+                  <div className="p-3 bg-white rounded-xl border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-[10px] text-slate-400 uppercase font-black tracking-wider">Tu Enlace Público Oficial:</p>
+                      <p className="font-mono font-bold text-slate-900 text-xs sm:text-sm truncate">{linkTienda}</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={copiarLink}
+                        className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold transition flex items-center gap-1 text-xs cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-[15px]">{copiado ? 'check' : 'content_copy'}</span>
+                        <span>{copiado ? 'Copiado' : 'Copiar'}</span>
+                      </button>
+                      <a
+                        href={`/${slugTienda}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition flex items-center gap-1 text-xs shadow-xs"
+                      >
+                        <span className="material-symbols-outlined text-[15px]">open_in_new</span>
+                        <span>Abrir Tienda</span>
+                      </a>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <>
+                  <div className="p-4 rounded-2xl bg-slate-100 border border-slate-200 text-xs flex gap-3.5 items-start">
+                    <span className="material-symbols-outlined text-slate-500 text-2xl shrink-0">info</span>
+                    <div className="text-slate-600 leading-relaxed">
+                      <p className="font-bold text-slate-900 mb-1">
+                        ¿Por qué mi tienda aparece en gris (desactivada)?
+                      </p>
+                      <p>
+                        Tu tienda se encuentra en <b>modo borrador privado</b>. Esto te permite importar productos, cambiar tus márgenes y ver la vista previa sin que nadie te moleste.
+                      </p>
+                      <p className="mt-2">
+                        Para que la tienda pase a <b>Activa (Verde)</b> y los clientes puedan encontrarte en Boga Market y pedirte por WhatsApp, el administrador de Boga Network debe aceptar y validar tu solicitud.
+                      </p>
+                    </div>
+                  </div>
 
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={() => setModalAvisoAsesor(true)}
-                  className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-base">chat</span>
-                  <span>Avisar al Asesor para que la acepte y active</span>
-                </button>
-              </div>
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setModalAvisoAsesor(true)}
+                      className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-base">chat</span>
+                      <span>Avisar al Asesor para que la acepte y active</span>
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-xs flex flex-col gap-4">
