@@ -288,3 +288,26 @@ body:has(#tienda-splash) #boga-splash { display: none; }
   -ms-overflow-style: none !important;
   scrollbar-width: none !important;
 }
+
+/* Animaciones llamativas para botón de Boga Network (movimiento + brillo + burbujas) */
+@keyframes btn-shimmer {
+  0% { transform: translateX(-150%) skewX(-20deg); }
+  25%, 100% { transform: translateX(250%) skewX(-20deg); }
+}
+
+@keyframes bubble-float-1 {
+  0%, 100% { transform: translateY(0px) scale(0.9); opacity: 0.35; }
+  50% { transform: translateY(-7px) scale(1.15); opacity: 0.85; }
+}
+
+@keyframes bubble-float-2 {
+  0%, 100% { transform: translateY(0px) scale(1); opacity: 0.3; }
+  50% { transform: translateY(-10px) scale(1.25); opacity: 0.95; }
+}
+
+@keyframes gentle-wiggle {
+  0%, 82%, 100% { transform: rotate(0deg) scale(1); }
+  86% { transform: rotate(-1.5deg) scale(1.02); }
+  92% { transform: rotate(1.5deg) scale(1.02); }
+  96% { transform: rotate(0deg) scale(1); }
+}

@@ -129,15 +129,39 @@ export default function Servicios() {
             <Link
               href="/network"
               aria-label="Boga Network · Reventa y Afiliados"
-              className="rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 text-white px-3.5 py-2.5 flex items-center gap-2.5 active:scale-[0.98] hover:shadow-lg hover:shadow-emerald-600/25 transition-all shadow-sm text-left border border-emerald-500/30 group"
+              className="rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 text-white px-3.5 py-2.5 flex items-center gap-2.5 active:scale-[0.98] hover:shadow-xl hover:shadow-emerald-600/30 transition-all shadow-md text-left border border-emerald-400/40 group relative overflow-hidden ring-1 ring-emerald-400/30"
+              style={{ animation: 'gentle-wiggle 6s ease-in-out infinite' }}
             >
-              <span className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              {/* Rayo de luz brillante / Shimmer que cruza suavemente */}
+              <span
+                className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none"
+                style={{ animation: 'btn-shimmer 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite' }}
+              />
+
+              {/* Burbujitas animadas flotando */}
+              <span
+                className="absolute w-2 h-2 rounded-full bg-emerald-200/60 pointer-events-none"
+                style={{ right: '18%', bottom: '20%', animation: 'bubble-float-1 3s ease-in-out infinite' }}
+              />
+              <span
+                className="absolute w-3 h-3 rounded-full bg-teal-200/50 pointer-events-none"
+                style={{ right: '8%', top: '15%', animation: 'bubble-float-2 4s ease-in-out infinite' }}
+              />
+              <span
+                className="absolute w-1.5 h-1.5 rounded-full bg-white/70 pointer-events-none"
+                style={{ left: '42%', bottom: '15%', animation: 'bubble-float-1 2.5s ease-in-out infinite 1s' }}
+              />
+
+              <span className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform relative z-10 shadow-xs">
                 <span className="material-symbols-outlined text-[19px] text-white">payments</span>
               </span>
-              <span className="flex flex-col min-w-0 leading-tight">
+              <span className="flex flex-col min-w-0 leading-tight relative z-10">
                 <span className="font-headline-sm text-[13px] font-bold truncate flex items-center gap-1.5">
                   Boga Network
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span>
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-200" />
+                  </span>
                 </span>
                 <span className="text-[10px] font-semibold text-emerald-100 tracking-wide truncate">Reventa & Afiliados</span>
               </span>

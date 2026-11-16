@@ -44,8 +44,8 @@ export default function RevendedorPanelPage() {
   const [tieneTienda, setTieneTienda] = useState(false);
   const [wspBoga, setWspBoga] = useState('51987911213');
 
-  // Estado del panel
-  const [pestañaActiva, setPestañaActiva] = useState<'inicio' | 'catalogo' | 'preview' | 'afiliados' | 'ajustes'>('inicio');
+  // Estado del panel (Pestañas limpias por tienda)
+  const [pestañaActiva, setPestañaActiva] = useState<'inicio' | 'preview' | 'afiliados' | 'ajustes'>('inicio');
   const [modalAvisoAsesor, setModalAvisoAsesor] = useState(false);
   const [modalCrearTienda, setModalCrearTienda] = useState(false);
   const [nuevoNombreTienda, setNuevoNombreTienda] = useState('');
@@ -66,6 +66,9 @@ export default function RevendedorPanelPage() {
   // Modal para administrar productos y precios de una tienda específica
   const [tiendaSeleccionadaParaEditar, setTiendaSeleccionadaParaEditar] = useState<any | null>(null);
   const [modalAdminTiendaCatalogo, setModalAdminTiendaCatalogo] = useState(false);
+  const [tiendaProveedoraModal, setTiendaProveedoraModal] = useState<string>('delva');
+  const [productosModalDisponibles, setProductosModalDisponibles] = useState<ProductoProveedor[]>([]);
+  const [cargandoProductosModal, setCargandoProductosModal] = useState(false);
   const [prodsElegidosModal, setProdsElegidosModal] = useState<Set<string | number>>(new Set());
   const [margenModal, setMargenModal] = useState<number>(15);
   const [preciosModal, setPreciosModal] = useState<Record<string, number>>({});
@@ -439,10 +442,47 @@ export default function RevendedorPanelPage() {
   };
 
   // ── FUNCIONES DE ADMINISTRACIÓN DE CATÁLOGO Y PRECIOS POR TIENDA (MODAL) ──
+  const handleCambiarProveedorModal = async (nuevoSlug: string) => {
+    setTiendaProveedoraModal(nuevoSlug);
+    setFiltroCatModal('todas');
+    setCargandoProductosModal(true);
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, name, price, category, image, store, status')
+        .eq('store', nuevoSlug)
+        .order('name')
+        .limit(100);
+
+      if (!error && data) {
+        const prods: ProductoProveedor[] = data.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          price: Number(p.price) || 0,
+          category: p.category || 'General',
+          image: p.image,
+          store: p.store,
+        }));
+        setProductosModalDisponibles(prods);
+        setProdsElegidosModal(new Set(prods.map((x) => x.id)));
+        setPreciosModal({});
+      } else {
+        setProductosModalDisponibles([]);
+        setProdsElegidosModal(new Set());
+      }
+    } catch {
+      setProductosModalDisponibles([]);
+    } finally {
+      setCargandoProductosModal(false);
+    }
+  };
+
   const abrirModalAdminTienda = async (tiendaItem: any) => {
     setTiendaSeleccionadaParaEditar(tiendaItem);
     setBusquedaModal('');
     setFiltroCatModal('todas');
+    setCargandoProductosModal(true);
+    setModalAdminTiendaCatalogo(true);
 
     const sSlug = (tiendaItem.business_name || tiendaItem.name || nombreTienda || '')
       .toLowerCase()
@@ -451,34 +491,84 @@ export default function RevendedorPanelPage() {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
 
+    let prov = tiendaItem.tienda_proveedora || tiendaSeleccionada || 'delva';
+    let marg = margenPorcentaje;
+    let elegidos: (string | number)[] = [];
+    let precios: Record<string, number> = {};
+
     try {
       const res = await fetch(`/api/network/tienda?slug=${sSlug}`);
       const data = await res.json();
       if (data.ok && data.tienda) {
-        setMargenModal(typeof data.tienda.margenPorcentaje === 'number' ? data.tienda.margenPorcentaje : margenPorcentaje);
-        if (Array.isArray(data.tienda.productosSeleccionados) && data.tienda.productosSeleccionados.length > 0) {
-          setProdsElegidosModal(new Set(data.tienda.productosSeleccionados));
-        } else {
-          setProdsElegidosModal(new Set(productosSeleccionados));
-        }
+        if (data.tienda.tiendaProveedora) prov = data.tienda.tiendaProveedora;
+        if (typeof data.tienda.margenPorcentaje === 'number') marg = data.tienda.margenPorcentaje;
+        if (Array.isArray(data.tienda.productosSeleccionados)) elegidos = data.tienda.productosSeleccionados;
         if (data.tienda.preciosPersonalizados && typeof data.tienda.preciosPersonalizados === 'object') {
-          setPreciosModal(data.tienda.preciosPersonalizados);
-        } else {
-          setPreciosModal(preciosPersonalizados);
+          precios = data.tienda.preciosPersonalizados;
         }
-      } else {
-        setMargenModal(margenPorcentaje);
-        setProdsElegidosModal(new Set(productosSeleccionados));
-        setPreciosModal({ ...preciosPersonalizados });
       }
     } catch {
-      setMargenModal(margenPorcentaje);
-      setProdsElegidosModal(new Set(productosSeleccionados));
-      setPreciosModal({ ...preciosPersonalizados });
+      // Usar defaults
     }
 
-    setModalAdminTiendaCatalogo(true);
+    setTiendaProveedoraModal(prov);
+    setMargenModal(marg);
+    setPreciosModal(precios);
+
+    // Cargar catálogo del proveedor vinculado a esta tienda
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, name, price, category, image, store, status')
+        .eq('store', prov)
+        .order('name')
+        .limit(100);
+
+      if (!error && data) {
+        const prods: ProductoProveedor[] = data.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          price: Number(p.price) || 0,
+          category: p.category || 'General',
+          image: p.image,
+          store: p.store,
+        }));
+        setProductosModalDisponibles(prods);
+
+        if (elegidos.length > 0) {
+          setProdsElegidosModal(new Set(elegidos));
+        } else {
+          setProdsElegidosModal(new Set(prods.map((x) => x.id)));
+        }
+      } else {
+        setProductosModalDisponibles([]);
+        setProdsElegidosModal(new Set());
+      }
+    } catch {
+      setProductosModalDisponibles([]);
+    } finally {
+      setCargandoProductosModal(false);
+    }
   };
+
+  const categoriasModal = useMemo(() => {
+    const prods = productosModalDisponibles.length > 0 ? productosModalDisponibles : productosDisponibles;
+    const map: Record<string, number> = {};
+    prods.forEach((p) => {
+      const cat = (p.category || 'General').trim();
+      map[cat] = (map[cat] || 0) + 1;
+    });
+    return Object.entries(map).map(([name, count]) => ({ name, count }));
+  }, [productosModalDisponibles, productosDisponibles]);
+
+  const productosModalFiltrados = useMemo(() => {
+    const prods = productosModalDisponibles.length > 0 ? productosModalDisponibles : productosDisponibles;
+    return prods.filter((p) => {
+      const matchesSearch = !busquedaModal.trim() || p.name.toLowerCase().includes(busquedaModal.toLowerCase());
+      const matchesCat = filtroCatModal === 'todas' || (p.category && p.category.trim().toLowerCase() === filtroCatModal.toLowerCase());
+      return matchesSearch && matchesCat;
+    });
+  }, [productosModalDisponibles, productosDisponibles, busquedaModal, filtroCatModal]);
 
   const calcularPrecioModal = (costoBase: number, prodId: string | number) => {
     const key = String(prodId);
@@ -548,7 +638,7 @@ export default function RevendedorPanelPage() {
           whatsapp: tiendaSeleccionadaParaEditar.whatsapp || whatsapp,
           ciudad: tiendaSeleccionadaParaEditar.city || ciudad,
           margenPorcentaje: margenModal,
-          tiendaSeleccionada,
+          tiendaSeleccionada: tiendaProveedoraModal,
           productosSeleccionados: Array.from(prodsElegidosModal),
           preciosPersonalizados: preciosModal,
         }),
@@ -556,6 +646,7 @@ export default function RevendedorPanelPage() {
 
       if (targetNombre === nombreTienda) {
         setMargenPorcentaje(margenModal);
+        setTiendaSeleccionada(tiendaProveedoraModal);
         setProductosSeleccionados(new Set(prodsElegidosModal));
         setPreciosPersonalizados(preciosModal);
       }
@@ -789,24 +880,7 @@ export default function RevendedorPanelPage() {
             </span>
           </button>
 
-          {/* PESTAÑA 2: CATÁLOGO & PRODUCTOS */}
-          <button
-            type="button"
-            onClick={() => setPestañaActiva('catalogo')}
-            className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${
-              pestañaActiva === 'catalogo'
-                ? 'border-emerald-600 text-emerald-700'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[18px]">inventory_2</span>
-            <span>2. Catálogo & Productos</span>
-            <span className="bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-              {productosSeleccionados.size}
-            </span>
-          </button>
-
-          {/* PESTAÑA 3: MIS TIENDAS */}
+          {/* PESTAÑA 2: MIS TIENDAS */}
           <button
             type="button"
             onClick={() => setPestañaActiva('preview')}
@@ -817,7 +891,7 @@ export default function RevendedorPanelPage() {
             }`}
           >
             <span className="material-symbols-outlined text-[18px]">store</span>
-            <span>3. Mis Tiendas</span>
+            <span>2. Mis Tiendas</span>
             {estadoTienda === 'activa' ? (
               <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -830,7 +904,7 @@ export default function RevendedorPanelPage() {
             )}
           </button>
 
-          {/* PESTAÑA 4: AFILIADOS */}
+          {/* PESTAÑA 3: GANAR CON AFILIADOS */}
           <button
             type="button"
             onClick={() => setPestañaActiva('afiliados')}
@@ -841,13 +915,13 @@ export default function RevendedorPanelPage() {
             }`}
           >
             <span className="material-symbols-outlined text-[18px]">volunteer_activism</span>
-            <span>4. Ganar con Afiliados</span>
+            <span>3. Ganar con Afiliados</span>
             <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
               Bono en efectivo
             </span>
           </button>
 
-          {/* PESTAÑA 5: AJUSTES & CUENTA */}
+          {/* PESTAÑA 4: AJUSTES & CUENTA */}
           <button
             type="button"
             onClick={() => setPestañaActiva('ajustes')}
@@ -858,7 +932,7 @@ export default function RevendedorPanelPage() {
             }`}
           >
             <span className="material-symbols-outlined text-[18px]">settings</span>
-            <span>5. Ajustes & Cuenta</span>
+            <span>4. Ajustes & Cuenta</span>
             {estadoTienda === 'activa' ? (
               <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
                 Activa
@@ -871,23 +945,6 @@ export default function RevendedorPanelPage() {
           </button>
         </div>
       </div>
-
-      {/* ── Acceso Rápido para Administrar Tiendas (Ubicado Abajo de Pestañas) ── */}
-      {estadoTienda === 'activa' && pestañaActiva !== 'preview' && (
-        <div className="bg-emerald-50/70 border-b border-emerald-100/80 px-4 sm:px-8 py-2 text-xs w-full flex items-center gap-2 text-emerald-950 font-medium shadow-2xs">
-          <span className="material-symbols-outlined text-emerald-600 text-[18px] shrink-0">store</span>
-          <span className="truncate">
-            ¿Quieres administrar o ver tus tiendas de reventa?
-          </span>
-          <button
-            type="button"
-            onClick={() => setPestañaActiva('preview')}
-            className="font-black text-emerald-700 hover:text-emerald-900 underline cursor-pointer shrink-0"
-          >
-            Haz clic aquí para ir a Mis Tiendas →
-          </button>
-        </div>
-      )}
 
       {/* ── Contenido Principal a Pantalla Completa (Sin Marco Limitante) ── */}
       <main className="flex-1 w-full px-4 sm:px-8 xl:px-10 py-6">
@@ -994,16 +1051,8 @@ export default function RevendedorPanelPage() {
                   <div className="flex flex-col gap-2 pt-2 border-t border-slate-100">
                     <button
                       type="button"
-                      onClick={() => setPestañaActiva('catalogo')}
-                      className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">tune</span>
-                      <span>Configurar Catálogo & Márgenes</span>
-                    </button>
-                    <button
-                      type="button"
                       onClick={() => setPestañaActiva('preview')}
-                      className="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                      className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
                     >
                       <span className="material-symbols-outlined text-[16px]">store</span>
                       <span>Administrar Mis Tiendas</span>
@@ -1049,11 +1098,11 @@ export default function RevendedorPanelPage() {
                   <div className="flex flex-col gap-2 pt-2 border-t border-slate-100">
                     <button
                       type="button"
-                      onClick={() => setPestañaActiva('catalogo')}
+                      onClick={() => setPestañaActiva('preview')}
                       className="w-full py-2.5 px-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-black text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
                     >
-                      <span className="material-symbols-outlined text-[16px]">visibility</span>
-                      <span>Explorar Productos para Recomendar</span>
+                      <span className="material-symbols-outlined text-[16px]">store</span>
+                      <span>Ver Productos en Mis Tiendas</span>
                     </button>
                     <a
                       href={`https://wa.me/?text=${encodeURIComponent(
@@ -1147,10 +1196,10 @@ export default function RevendedorPanelPage() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setPestañaActiva('catalogo')}
+                    onClick={() => setPestañaActiva('preview')}
                     className="mt-3 text-[11px] font-bold text-emerald-700 hover:underline text-left cursor-pointer"
                   >
-                    Ir a Catálogo →
+                    Ir a Mis Tiendas →
                   </button>
                 </div>
 
@@ -1195,387 +1244,6 @@ export default function RevendedorPanelPage() {
                   </button>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* ══ PESTAÑA 2: CATÁLOGO & PRODUCTOS (LAYOUT IZQ: OPCIONES | DER: PRODS) ══ */}
-        {pestañaActiva === 'catalogo' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* COLUMNA IZQUIERDA: OPCIONES & FILTROS */}
-            <div className="lg:col-span-4 flex flex-col gap-4">
-              {/* 1. Proveedor */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-emerald-600 text-[16px]">storefront</span>
-                    <span>Tienda Proveedora en Pucallpa</span>
-                  </label>
-                  <span className="text-[10px] font-bold text-slate-500">
-                    {tiendasAliadas.length} aliada{tiendasAliadas.length === 1 ? '' : 's'}
-                  </span>
-                </div>
-                <select
-                  value={tiendaSeleccionada}
-                  onChange={(e) => setTiendaSeleccionada(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:border-emerald-500 bg-slate-50"
-                >
-                  {tiendasAliadas.map((t) => (
-                    <option key={t.slug} value={t.slug}>
-                      {t.name} ({t.category || 'Variados'})
-                    </option>
-                  ))}
-                </select>
-                <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">
-                  Los productos que elijas saldrán del inventario de este proveedor local con entrega rápida en Pucallpa.
-                </p>
-              </div>
-
-              {/* 2. Margen de Ganancia */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-emerald-600 text-[16px]">trending_up</span>
-                    <span>Tu Margen de Ganancia</span>
-                  </label>
-                  <span className="text-xs font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                    +{margenPorcentaje}%
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-500 mb-2.5">
-                  Este porcentaje se suma al costo del proveedor. Tú cobras el precio final a tu cliente y te quedas con la ganancia.
-                </p>
-                <div className="grid grid-cols-5 gap-1.5">
-                  {[0, 10, 15, 20, 25].map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => cambiarMargen(m)}
-                      className={`py-1.5 rounded-lg text-xs font-bold transition cursor-pointer text-center ${
-                        margenPorcentaje === m
-                          ? 'bg-emerald-600 text-white shadow-xs'
-                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                      }`}
-                    >
-                      {m === 0 ? '0%' : `+${m}%`}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Botón de Guardar Cambios en la Tienda */}
-                <div className="mt-3.5 pt-3 border-t border-slate-100 flex flex-col gap-2">
-                  <button
-                    type="button"
-                    onClick={guardarEnServidor}
-                    disabled={guardandoEnNube}
-                    className={`w-full py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-xs active:scale-98 ${
-                      hayCambiosSinGuardar
-                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white ring-2 ring-emerald-300 shadow-md animate-pulse'
-                        : guardadoExitoso
-                        ? 'bg-emerald-100 text-emerald-800'
-                        : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-[16px]">
-                      {guardandoEnNube ? 'progress_activity' : guardadoExitoso ? 'check_circle' : hayCambiosSinGuardar ? 'cloud_upload' : 'check'}
-                    </span>
-                    <span>
-                      {guardandoEnNube
-                        ? 'Guardando cambios...'
-                        : guardadoExitoso
-                        ? '¡Guardado en tu tienda!'
-                        : hayCambiosSinGuardar
-                        ? '💾 Guardar Cambios'
-                        : 'Todo guardado en tu tienda'}
-                    </span>
-                  </button>
-
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 px-1">
-                    <span>
-                      {hayCambiosSinGuardar ? '● Hay cambios pendientes' : 'Sincronizado'}
-                    </span>
-                    <a
-                      href={`/${slugTienda}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-slate-500 hover:text-emerald-700 font-bold flex items-center gap-0.5"
-                    >
-                      <span>Ver tienda</span>
-                      <span className="material-symbols-outlined text-[12px]">open_in_new</span>
-                    </a>
-                  </div>
-                </div>
-              </div>
-
-              {/* 3. Categorías de la Tienda (Conteo dinámico) */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs">
-                <div className="flex items-center justify-between mb-2.5">
-                  <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-emerald-600 text-[16px]">category</span>
-                    <span>Categorías de {tiendasAliadas.find((t) => t.slug === tiendaSeleccionada)?.name || 'la tienda'}</span>
-                  </label>
-                  <span className="text-[10px] text-slate-400 font-bold">
-                    {categoriasDisponibles.length} rubros
-                  </span>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setFiltroCategoria('todas')}
-                    className={`flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-bold transition text-left cursor-pointer ${
-                      filtroCategoria === 'todas'
-                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                        : 'text-slate-600 hover:bg-slate-100'
-                    }`}
-                  >
-                    <span>Todas las categorías</span>
-                    <span className="bg-slate-200 text-slate-700 text-[10px] px-1.5 py-0.5 rounded-full">
-                      {productosDisponibles.length}
-                    </span>
-                  </button>
-                  {categoriasDisponibles.map((cat) => (
-                    <button
-                      key={cat.name}
-                      type="button"
-                      onClick={() => setFiltroCategoria(cat.name)}
-                      className={`flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-bold transition text-left cursor-pointer ${
-                        filtroCategoria.toLowerCase() === cat.name.toLowerCase()
-                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                          : 'text-slate-600 hover:bg-slate-100'
-                      }`}
-                    >
-                      <span className="truncate">{cat.name}</span>
-                      <span className="bg-slate-200 text-slate-700 text-[10px] px-1.5 py-0.5 rounded-full">
-                        {cat.count}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 4. Resumen de Selección */}
-              <div className="bg-emerald-50/70 rounded-2xl border border-emerald-200/80 p-4 text-xs">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-bold text-emerald-950">Productos seleccionados:</span>
-                  <span className="font-black text-emerald-700 text-sm">
-                    {productosSeleccionados.size} de {productosDisponibles.length}
-                  </span>
-                </div>
-                <p className="text-[11px] text-emerald-900/80 leading-snug">
-                  Solo los productos marcados aparecerán en tu catálogo público para tus clientes.
-                </p>
-              </div>
-            </div>
-
-            {/* COLUMNA DERECHA: GRILLA DE PRODUCTOS */}
-            <div className="lg:col-span-8 flex flex-col gap-4">
-              {/* Selector de tienda activa si tiene más de 1 */}
-              {tiendasUsuario.length > 1 && (
-                <div className="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-3 sm:p-4 flex items-center justify-between gap-3 shadow-2xs">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="material-symbols-outlined text-emerald-700 text-xl shrink-0">store</span>
-                    <div className="min-w-0">
-                      <p className="text-xs font-black text-emerald-950 truncate">
-                        Configurando catálogo para: <span className="underline">{nombreTienda}</span>
-                      </p>
-                      <p className="text-[11px] text-emerald-800/80 truncate">
-                        Los productos y precios que elijas aquí aplican a este catálogo oficial.
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setPestañaActiva('preview')}
-                    className="px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold text-xs transition shrink-0 cursor-pointer"
-                  >
-                    Ver todas mis tiendas →
-                  </button>
-                </div>
-              )}
-
-              {/* Barra de Búsqueda y Selección Rápida */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-3 sm:p-4 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div className="relative w-full sm:w-72">
-                  <span className="material-symbols-outlined text-slate-400 absolute left-3 top-2.5 text-[18px]">
-                    search
-                  </span>
-                  <input
-                    type="text"
-                    placeholder="Buscar producto..."
-                    value={busqueda}
-                    onChange={(e) => setBusqueda(e.target.value)}
-                    className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-emerald-500 bg-slate-50"
-                  />
-                </div>
-
-                <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
-                  <button
-                    type="button"
-                    onClick={seleccionarTodosProductos}
-                    className="text-xs font-bold text-emerald-700 hover:text-emerald-800 px-2 py-1.5 rounded-lg hover:bg-emerald-50 transition cursor-pointer"
-                  >
-                    Marcar todos ({productosDisponibles.length})
-                  </button>
-                  <span className="text-slate-300">|</span>
-                  <button
-                    type="button"
-                    onClick={deseleccionarTodosProductos}
-                    className="text-xs font-bold text-slate-500 hover:text-slate-700 px-2 py-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer"
-                  >
-                    Desmarcar todos
-                  </button>
-
-                  {/* Botón Guardar Cambios en Grilla */}
-                  <button
-                    type="button"
-                    onClick={guardarEnServidor}
-                    disabled={guardandoEnNube}
-                    className={`ml-1 px-3.5 py-1.5 rounded-xl font-black text-xs flex items-center gap-1.5 transition cursor-pointer shadow-xs active:scale-95 ${
-                      hayCambiosSinGuardar
-                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white ring-2 ring-emerald-300 shadow-sm animate-pulse'
-                        : guardadoExitoso
-                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
-                        : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-[16px]">
-                      {guardandoEnNube ? 'progress_activity' : guardadoExitoso ? 'check' : hayCambiosSinGuardar ? 'save' : 'done_all'}
-                    </span>
-                    <span>
-                      {guardandoEnNube
-                        ? 'Guardando...'
-                        : guardadoExitoso
-                        ? '¡Guardado!'
-                        : hayCambiosSinGuardar
-                        ? 'Guardar Cambios'
-                        : 'Guardado'}
-                    </span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Listado de Productos */}
-              {cargandoProductos ? (
-                <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center flex flex-col items-center justify-center gap-2">
-                  <span className="material-symbols-outlined text-3xl text-emerald-600 animate-spin">
-                    progress_activity
-                  </span>
-                  <p className="text-xs text-slate-500 font-medium">Cargando productos de la tienda aliada...</p>
-                </div>
-              ) : productosFiltrados.length === 0 ? (
-                <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-                  <span className="material-symbols-outlined text-4xl text-slate-300 mb-2">inventory_2</span>
-                  <p className="text-sm font-bold text-slate-700">No hay productos con este filtro</p>
-                  <p className="text-xs text-slate-400 mt-1">Prueba con otra categoría o borra el término de búsqueda.</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                  {productosFiltrados.map((prod) => {
-                    const isSelected = productosSeleccionados.has(prod.id);
-                    const precioPersonalizado = preciosPersonalizados[String(prod.id)];
-                    const esPersonalizado = precioPersonalizado !== undefined && precioPersonalizado > 0;
-                    const precioPVP = calcularPrecio(prod.price, prod.id);
-                    const ganancia = calcularGanancia(prod.price, prod.id);
-
-                    return (
-                      <div
-                        key={prod.id}
-                        onClick={() => toggleProducto(prod.id)}
-                        className={`rounded-2xl border p-3 flex flex-col justify-between transition cursor-pointer bg-white relative select-none ${
-                          isSelected
-                            ? 'border-emerald-500 shadow-sm ring-1 ring-emerald-500'
-                            : 'border-slate-200 opacity-60 hover:opacity-90'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">
-                            {prod.category || 'General'}
-                          </span>
-                          <div
-                            className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 transition ${
-                              isSelected ? 'bg-emerald-600 text-white' : 'border border-slate-300 bg-white'
-                            }`}
-                          >
-                            {isSelected && (
-                              <span className="material-symbols-outlined text-[15px] font-bold">check</span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2.5 mb-2.5">
-                          {prod.image ? (
-                            <img
-                              src={prod.image}
-                              alt={prod.name}
-                              className="w-12 h-12 object-cover rounded-xl bg-slate-100 shrink-0 border border-slate-100"
-                            />
-                          ) : (
-                            <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
-                              <span className="material-symbols-outlined text-xl">image</span>
-                            </div>
-                          )}
-                          <h4 className="text-xs font-bold text-slate-900 line-clamp-2 leading-snug">
-                            {prod.name}
-                          </h4>
-                        </div>
-
-                        {/* Espacio para editar los precios de los productos */}
-                        <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-100 text-xs flex flex-col gap-1.5 mt-auto">
-                          <div className="flex items-center justify-between text-slate-500 text-[11px]">
-                            <span>Costo proveedor:</span>
-                            <span className="font-semibold">S/ {prod.price.toFixed(2)}</span>
-                          </div>
-
-                          <div
-                            className="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-200/60"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <label className="text-slate-800 font-bold text-xs flex items-center gap-1">
-                              <span>Precio cliente:</span>
-                              {esPersonalizado && (
-                                <span className="text-[9px] bg-emerald-100 text-emerald-800 font-black px-1 rounded">
-                                  Manual
-                                </span>
-                              )}
-                            </label>
-                            <div className="flex items-center gap-1">
-                              <span className="text-xs text-slate-400 font-bold">S/</span>
-                              <input
-                                type="number"
-                                step="0.5"
-                                min={prod.price}
-                                value={precioPersonalizado !== undefined ? precioPersonalizado : precioPVP}
-                                onChange={(e) => {
-                                  const val = parseFloat(e.target.value);
-                                  handleEditarPrecioGlobal(prod.id, isNaN(val) ? 0 : val);
-                                }}
-                                className="w-20 px-2 py-0.5 text-right font-black text-xs rounded-lg border border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-emerald-950 shadow-2xs"
-                              />
-                              {esPersonalizado && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleResetPrecioGlobal(prod.id)}
-                                  title="Restablecer al margen porcentual"
-                                  className="text-slate-400 hover:text-red-500 p-0.5 cursor-pointer"
-                                >
-                                  <span className="material-symbols-outlined text-[14px]">close</span>
-                                </button>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between text-[11px] text-emerald-800 font-bold pt-1 border-t border-slate-200/60">
-                            <span>Tu ganancia:</span>
-                            <span className="bg-emerald-100 text-emerald-900 px-1.5 py-0.2 rounded font-black">
-                              +S/ {ganancia}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
             </div>
           </div>
         )}
@@ -2180,8 +1848,95 @@ export default function RevendedorPanelPage() {
               </button>
             </div>
 
-            {/* Barra de Controles Rápidos (Margen general + Búsqueda + Filtros) */}
-            <div className="p-3 sm:p-4 bg-white border-b border-slate-200 flex flex-col md:flex-row items-center justify-between gap-3 shrink-0">
+            {/* 1. Proveedor Aliado */}
+            <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[19px]">storefront</span>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs font-bold text-slate-800">
+                      Tienda Proveedora en Pucallpa:
+                    </label>
+                    <span className="text-[10px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded-md border border-slate-200">
+                      {tiendasAliadas.length} aliada{tiendasAliadas.length === 1 ? '' : 's'}
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-slate-500 block leading-tight mt-0.5">
+                    Los productos de esta tienda saldrán del inventario de este comercio local.
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <select
+                  value={tiendaProveedoraModal}
+                  onChange={(e) => handleCambiarProveedorModal(e.target.value)}
+                  disabled={cargandoProductosModal}
+                  className="w-full sm:w-auto px-3.5 py-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-white focus:outline-none focus:border-emerald-500 shadow-2xs text-slate-800 cursor-pointer"
+                >
+                  {tiendasAliadas.map((aliada) => (
+                    <option key={aliada.slug} value={aliada.slug}>
+                      {aliada.name} ({aliada.category || 'Aliada'})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* 2. Categorías de la Tienda Proveedora (Chips Horizontales) */}
+            <div className="px-4 py-2.5 bg-white border-b border-slate-200 flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0">
+              <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 shrink-0 mr-1">
+                <span className="material-symbols-outlined text-[15px] text-emerald-600">category</span>
+                <span>Categorías de {tiendasAliadas.find((t) => t.slug === tiendaProveedoraModal)?.name || tiendaProveedoraModal}:</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFiltroCatModal('todas')}
+                className={`px-3 py-1 rounded-xl text-xs font-bold shrink-0 transition flex items-center gap-1.5 cursor-pointer ${
+                  filtroCatModal === 'todas'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                <span>Todas las categorías</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
+                    filtroCatModal === 'todas' ? 'bg-emerald-800 text-white' : 'bg-slate-200 text-slate-700'
+                  }`}
+                >
+                  {productosModalDisponibles.length}
+                </span>
+              </button>
+              {categoriasModal.map((cat) => {
+                const isSelected = filtroCatModal.toLowerCase() === cat.name.toLowerCase();
+                return (
+                  <button
+                    key={cat.name}
+                    type="button"
+                    onClick={() => setFiltroCatModal(cat.name)}
+                    className={`px-3 py-1 rounded-xl text-xs font-bold shrink-0 transition flex items-center gap-1.5 cursor-pointer ${
+                      isSelected
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    <span>{cat.name}</span>
+                    <span
+                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
+                        isSelected ? 'bg-emerald-800 text-white' : 'bg-slate-200 text-slate-700'
+                      }`}
+                    >
+                      {cat.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* 3. Barra de Controles Rápidos (Margen general + Búsqueda + Filtros) */}
+            <div className="p-3 sm:p-4 bg-slate-50/70 border-b border-slate-200 flex flex-col md:flex-row items-center justify-between gap-3 shrink-0">
               {/* Margen general */}
               <div className="flex items-center gap-2 w-full md:w-auto">
                 <span className="text-xs font-bold text-slate-700 shrink-0">Margen base:</span>
@@ -2211,7 +1966,7 @@ export default function RevendedorPanelPage() {
                   placeholder="Buscar en catálogo..."
                   value={busquedaModal}
                   onChange={(e) => setBusquedaModal(e.target.value)}
-                  className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-emerald-500 bg-slate-50"
+                  className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-emerald-500 bg-white"
                 />
               </div>
 
@@ -2219,10 +1974,10 @@ export default function RevendedorPanelPage() {
               <div className="flex items-center gap-2 text-xs font-bold shrink-0">
                 <button
                   type="button"
-                  onClick={() => setProdsElegidosModal(new Set(productosDisponibles.map((p) => p.id)))}
+                  onClick={() => setProdsElegidosModal(new Set(productosModalDisponibles.map((p) => p.id)))}
                   className="text-emerald-700 hover:underline cursor-pointer"
                 >
-                  Marcar todos ({productosDisponibles.length})
+                  Marcar todos ({productosModalDisponibles.length})
                 </button>
                 <span className="text-slate-300">|</span>
                 <button
@@ -2240,14 +1995,19 @@ export default function RevendedorPanelPage() {
 
             {/* Grilla de Productos con Edición de Precio */}
             <div className="overflow-y-auto p-4 sm:p-6 flex-1 bg-slate-50">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                {productosDisponibles
-                  .filter((p) => {
-                    const matchesSearch = !busquedaModal.trim() || p.name.toLowerCase().includes(busquedaModal.toLowerCase());
-                    const matchesCat = filtroCatModal === 'todas' || (p.category && p.category.toLowerCase() === filtroCatModal.toLowerCase());
-                    return matchesSearch && matchesCat;
-                  })
-                  .map((prod) => {
+              {cargandoProductosModal ? (
+                <div className="py-20 flex flex-col items-center justify-center gap-3 text-slate-400">
+                  <span className="material-symbols-outlined text-3xl animate-spin text-emerald-600">progress_activity</span>
+                  <span className="text-xs font-bold">Cargando catálogo del proveedor...</span>
+                </div>
+              ) : productosModalFiltrados.length === 0 ? (
+                <div className="py-20 text-center text-slate-400">
+                  <span className="material-symbols-outlined text-4xl mb-2 text-slate-300">inventory_2</span>
+                  <p className="text-xs font-bold">No se encontraron productos en esta categoría o búsqueda.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                  {productosModalFiltrados.map((prod) => {
                     const isSelected = prodsElegidosModal.has(prod.id);
                     const precioPersonalizado = preciosModal[String(prod.id)];
                     const esPersonalizado = precioPersonalizado !== undefined && precioPersonalizado > 0;
@@ -2351,7 +2111,8 @@ export default function RevendedorPanelPage() {
                       </div>
                     );
                   })}
-              </div>
+                </div>
+              )}
             </div>
 
             {/* Footer con Botón de Guardado */}
