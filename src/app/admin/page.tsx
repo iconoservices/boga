@@ -28,6 +28,7 @@ import { moverStock, registrarMovimientos, stockIlimitado, devolverStockDePedido
 import PedidosTab, { type Pedido } from '@/components/admin/PedidosTab';
 import CategoriasTab from '@/components/admin/CategoriasTab';
 import CerrarOtrasSesiones from '@/components/CerrarOtrasSesiones';
+import ModalImportarCatalogo from '@/components/admin/ModalImportarCatalogo';
 import HistorialStock from '@/components/admin/HistorialStock';
 import LoyverseSyncModal from '@/components/admin/LoyverseSyncModal';
 import MiPlan from '@/components/admin/MiPlan';
@@ -216,6 +217,7 @@ function AdminDashboard({ user }: { user: User }) {
   useEffect(() => { setTablaPagina(1); }, [searchQuery, selectedFilterCategory, selectedStore, precioMin, precioMax, filtroEstado, tablaOrden, tablaTamano]);
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>('inicio');
   // La pestaña vive también en la dirección (/admin/pedidos): la dirección manda al entrar y con "atrás", y cada cambio de pestaña la actualiza.
   const pathname = usePathname();
@@ -487,7 +489,7 @@ function AdminDashboard({ user }: { user: User }) {
   const [isStoreEditorOpen, setIsStoreEditorOpen] = useState(false);
   const [editingStoreSlug, setEditingStoreSlug] = useState<string | null>(null);
   const [isStoreSaving, setIsStoreSaving] = useState(false);
-  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '', show_demo_products: false, reserva_activa: false, hide_hero_text: false, igv_incluido: false, zona: '', direccion: '', horario: '', rating: '', metodos_pago: [] as string[], monedas: [] as { codigo: string; simbolo: string; tasa: string }[], facebook: '', instagram: '', tiktok: '', latitud: null as number | null, longitud: null as number | null, mostrar_ubicacion: false, entrega: 'ambos' as 'delivery' | 'recojo' | 'ambos', perfil_empresa: {} as PerfilEmpresa });
+  const [storeForm, setStoreForm] = useState({ name: '', tagline: '', marketplace_category: '', whatsapp: '', show_demo_products: false, reserva_activa: false, hide_hero_text: false, igv_incluido: false, zona: '', direccion: '', horario: '', rating: '', metodos_pago: [] as string[], monedas: [] as { codigo: string; simbolo: string; tasa: string }[], facebook: '', instagram: '', tiktok: '', latitud: null as number | null, longitud: null as number | null, mostrar_ubicacion: false, entrega: 'ambos' as 'delivery' | 'recojo' | 'ambos', perfil_empresa: {} as PerfilEmpresa, permite_revendedores: false, notas_revendedores: '', es_revendedor: false, tienda_proveedora: null as string | null, modo_pedidos_reventa: 'revendedor' as 'revendedor' | 'proveedor_referido' });
   // Constructor de horario a golpe de clic: arma el texto de storeForm.horario a partir de los días
   // y la hora elegidos, en vez de que el dueño tenga que escribirlo a mano. El campo de texto sigue
   // ahí para ajustarlo o escribir algo distinto (ej. "Cerramos los feriados").
@@ -1021,6 +1023,11 @@ function AdminDashboard({ user }: { user: User }) {
       mostrar_ubicacion: dbData?.mostrar_ubicacion === true,
       entrega: dbData?.entrega === 'delivery' || dbData?.entrega === 'recojo' ? dbData.entrega : 'ambos',
       perfil_empresa: normalizarPerfilEmpresa(dbData?.perfil_empresa) ?? {},
+      permite_revendedores: dbData?.permite_revendedores === true,
+      notas_revendedores: dbData?.notas_revendedores || '',
+      es_revendedor: dbData?.es_revendedor === true,
+      tienda_proveedora: dbData?.tienda_proveedora || null,
+      modo_pedidos_reventa: dbData?.modo_pedidos_reventa || 'revendedor',
     });
     // El constructor de horario arranca en blanco: no intenta adivinar los días/hora desde el texto libre que ya tenía.
     setHorarioBloques([BLOQUE_VACIO]);
@@ -1115,6 +1122,11 @@ function AdminDashboard({ user }: { user: User }) {
         instagram: storeForm.instagram || null,
         tiktok: storeForm.tiktok || null,
         categories: storeCategories,
+        permite_revendedores: storeForm.permite_revendedores,
+        notas_revendedores: storeForm.notas_revendedores || null,
+        es_revendedor: storeForm.es_revendedor,
+        tienda_proveedora: storeForm.tienda_proveedora || null,
+        modo_pedidos_reventa: storeForm.modo_pedidos_reventa || 'revendedor',
       };
       // Perfil de empresa: solo se manda en tiendas con esa plantilla o que ya tenían uno (así guardar otra tienda no depende del SQL).
       const tienePerfilEmpresa = stores[editingStoreSlug]?.template === 'empresa' || !!dbStores.find((x: any) => x.slug === editingStoreSlug)?.perfil_empresa;
@@ -1169,7 +1181,7 @@ function AdminDashboard({ user }: { user: User }) {
       // en vez de perder todo el guardado. Paso exactamente esto con `whatsapp`:
       // el panel quedo sin poder guardar NADA de ninguna tienda hasta correr la
       // migracion. Columnas opcionales porque llegaron despues del lanzamiento.
-      const columnasOpcionales = ['igv_incluido', 'show_demo_products', 'hide_hero_text', 'zona', 'direccion', 'horario', 'rating', 'metodos_pago', 'categories', 'facebook', 'instagram', 'tiktok', 'latitud', 'longitud', 'mostrar_ubicacion', 'perfil_empresa', 'monedas', 'hero_images', 'reserva_activa'];
+      const columnasOpcionales = ['igv_incluido', 'show_demo_products', 'hide_hero_text', 'zona', 'direccion', 'horario', 'rating', 'metodos_pago', 'categories', 'facebook', 'instagram', 'tiktok', 'latitud', 'longitud', 'mostrar_ubicacion', 'perfil_empresa', 'monedas', 'hero_images', 'reserva_activa', 'permite_revendedores', 'notas_revendedores', 'es_revendedor', 'tienda_proveedora', 'modo_pedidos_reventa'];
       const columnasFaltantes: string[] = [];
       let faltante = columnasOpcionales.find((col) => col in upsertData && new RegExp(col).test(error?.message || ''));
       while (error && faltante) {
@@ -2257,7 +2269,16 @@ function AdminDashboard({ user }: { user: User }) {
                 </button>
               </div>
             ) : activeTab === 'products' ? (
-              <div className="flex items-center gap-2 w-full md:w-auto">
+              <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setIsImportModalOpen(true)}
+                  className="flex items-center justify-center gap-1.5 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2.5 rounded-md font-bold text-sm shadow-xs transition-all w-full md:w-auto cursor-pointer"
+                  title="Copiar productos de un proveedor o de tu otra tienda"
+                >
+                  <span className="material-symbols-outlined text-[18px] text-primary">handshake</span>
+                  Importar de Tienda Aliada
+                </button>
                 <button
                   onClick={() => { resetForm(); setIsModalOpen(true); }}
                   className="flex items-center justify-center gap-2 bg-[var(--tienda-color)] text-white px-5 py-2.5 rounded-md font-bold shadow-lg shadow-[var(--tienda-color)]/20 hover:shadow-[var(--tienda-color)]/30 transition-all hover:-translate-y-0.5 active:translate-y-0 w-full md:w-auto"
@@ -5578,6 +5599,78 @@ function AdminDashboard({ user }: { user: User }) {
                   </span>
                 </label>
               </div>
+
+              {/* Red de Revendedores (Dropshipping B2B) */}
+              <div className="pt-4 border-t border-gray-100 space-y-3">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={storeForm.permite_revendedores}
+                    onChange={e => setStoreForm({ ...storeForm, permite_revendedores: e.target.checked })}
+                    className="mt-0.5 w-4 h-4 shrink-0 accent-black"
+                  />
+                  <span>
+                    <span className="block text-sm font-bold text-gray-800 flex items-center gap-1.5">
+                      🤝 Permitir catálogo para revendedores (Dropshipping)
+                    </span>
+                    <span className="block text-xs text-gray-500 mt-1">
+                      Otros comerciantes y emprendedores de Pucallpa podrán crear una tienda con tus productos para ayudarte a vender más.
+                    </span>
+                  </span>
+                </label>
+
+                {storeForm.permite_revendedores && (
+                  <div className="pl-7 space-y-1.5 animate-in fade-in">
+                    <label className="block text-xs font-bold text-gray-700">
+                      Bono, comisión o condiciones para revendedores (opcional):
+                    </label>
+                    <input
+                      type="text"
+                      value={storeForm.notas_revendedores}
+                      onChange={e => setStoreForm({ ...storeForm, notas_revendedores: e.target.value })}
+                      placeholder="Ej: 15% de comisión por venta, o precio mayorista por interno"
+                      className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-md text-xs font-medium focus:bg-white focus:outline-none focus:border-black"
+                    />
+                  </div>
+                )}
+
+                {/* Si la tienda es revendedora o importó de otra tienda */}
+                {(storeForm.es_revendedor || storeForm.tienda_proveedora) && (
+                  <div className="p-3.5 rounded-xl bg-blue-50/70 border border-blue-100 text-xs text-blue-900 space-y-2">
+                    <p className="font-bold flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[16px]">info</span>
+                      Esta tienda es revendedora de: <span className="underline font-black">{storeForm.tienda_proveedora}</span>
+                    </p>
+                    <p className="text-[11px] text-blue-800">
+                      ¿A qué WhatsApp prefieres que lleguen los pedidos de tus clientes?
+                    </p>
+                    <div className="space-y-1.5 pt-1">
+                      <label className="flex items-center gap-2 cursor-pointer font-medium text-xs">
+                        <input
+                          type="radio"
+                          name="modo_pedidos_reventa"
+                          value="revendedor"
+                          checked={storeForm.modo_pedidos_reventa !== 'proveedor_referido'}
+                          onChange={() => setStoreForm({ ...storeForm, modo_pedidos_reventa: 'revendedor' })}
+                          className="accent-primary"
+                        />
+                        <span>A mi WhatsApp directo (Yo atiendo y gano mi margen)</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer font-medium text-xs">
+                        <input
+                          type="radio"
+                          name="modo_pedidos_reventa"
+                          value="proveedor_referido"
+                          checked={storeForm.modo_pedidos_reventa === 'proveedor_referido'}
+                          onChange={() => setStoreForm({ ...storeForm, modo_pedidos_reventa: 'proveedor_referido' })}
+                          className="accent-primary"
+                        />
+                        <span>Directo al Proveedor (con mi código de referido en el mensaje)</span>
+                      </label>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Footer: en celular "Guardar" va arriba y a todo el ancho; Cancelar y Reiniciar diseño debajo, a mitades */}
@@ -5730,6 +5823,18 @@ function AdminDashboard({ user }: { user: User }) {
           </div>
         </div>
       )}
+
+      {/* Modal de Importación de Catálogo (Red de Revendedores / Dropshipping / Remate) */}
+      <ModalImportarCatalogo
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        targetStoreSlug={selectedStore === 'all' ? (focusedStore || Object.keys(stores)[0] || '') : selectedStore}
+        targetStoreName={stores[selectedStore === 'all' ? (focusedStore || Object.keys(stores)[0] || '') : selectedStore]?.name}
+        userStores={dbStores.map((s: any) => ({ slug: s.slug, name: s.name }))}
+        onProductosImportados={() => {
+          fetchProducts();
+        }}
+      />
 
       {/* Mobile Floating Action Button (FAB) */}
       {activeTab === 'products' && (

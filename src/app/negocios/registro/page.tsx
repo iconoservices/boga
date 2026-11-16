@@ -10,7 +10,7 @@ import Link from 'next/link';
 import RegistroNegocio from '@/components/RegistroNegocio';
 import { PLANES, type Plan } from '@/lib/planesNegocios';
 
-const VALID = ['tienda', 'marketplace', 'ambos'];
+const VALID = ['tienda', 'marketplace', 'ambos', 'revendedor'];
 
 export default function RegistroNegocioPage() {
   const [interest, setInterest] = useState('');

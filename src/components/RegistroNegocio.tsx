@@ -21,6 +21,7 @@ const INTERESES = [
   { value: 'tienda',      label: 'Solo mi tienda propia (catálogo + link para compartir)' },
   { value: 'marketplace', label: 'Aparecer en Boga Market (que me descubran clientes nuevos)' },
   { value: 'ambos',       label: 'Ambos' },
+  { value: 'revendedor',  label: '🤝 Tienda de Reventa (Dropshipping: vender productos de tiendas aliadas)' },
 ];
 
 const ACCENT = '#b8130e'; // rojo BogaHub (= --color-primary)
@@ -221,6 +222,11 @@ export default function RegistroNegocio({
                 <option value="" disabled>Selecciona una opción</option>
                 {INTERESES.map((i) => <option key={i.value} value={i.value}>{i.label}</option>)}
               </select>
+              {interest === 'revendedor' && (
+                <p style={{ marginTop: '6px', fontSize: '11px', color: '#1d4ed8', fontWeight: 600 }}>
+                  ✨ Modalidad Revendedor: Podrás elegir productos de proveedores aliados de Pucallpa y venderlos con tu propia marca sin comprar mercadería por adelantado.
+                </p>
+              )}
             </div>
 
             <div style={{ marginBottom: '14px' }}>

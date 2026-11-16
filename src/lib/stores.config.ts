@@ -79,6 +79,12 @@ export interface StoreConfig {
   hideHeroText?: boolean;
   /** Plantilla "empresa": presentación, políticas, clientes y correo. Ver lib/perfilEmpresa.ts. */
   perfilEmpresa?: import('./perfilEmpresa').PerfilEmpresa;
+  /** Red de revendedores / Catálogo compartido (Dropshipping B2B). */
+  permiteRevendedores?: boolean;
+  notasRevendedores?: string;
+  esRevendedor?: boolean;
+  tiendaProveedora?: string;
+  modoPedidosReventa?: 'revendedor' | 'proveedor_referido';
 }
 
 // Las tiendas viven en Supabase, no aca. Cada consumidor las carga por su lado:
