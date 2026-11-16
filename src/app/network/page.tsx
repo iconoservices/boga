@@ -272,7 +272,7 @@ export default function BogaNetworkHomePage() {
               Boga Network
             </span>
           </h1>
-          <p className="text-xs sm:text-sm text-slate-600 mt-1.5 max-w-4xl mx-auto leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-600 mt-1.5 w-full mx-auto leading-relaxed sm:whitespace-nowrap">
             Descubre las <b>2 formas oficiales</b> de generar ingresos hoy mismo sin jefes ni horarios. Elige la que mejor se adapte a ti o combina ambas.
           </p>
         </div>

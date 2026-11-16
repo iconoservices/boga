@@ -51,27 +51,31 @@ export default function SuperadminNetworkPage() {
     }
   }, [cargando, esSuperadmin, router]);
 
+  const getAuthToken = async () => {
+    const { data } = await supabase.auth.getSession();
+    return data?.session?.access_token || '';
+  };
+
   const cargarDatos = useCallback(async () => {
     setCargandoDatos(true);
     try {
-      // 1. Cargar solicitudes de revendedores
-      const { data: reqData, error: reqErr } = await supabase
-        .from('store_requests')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const token = await getAuthToken();
+      const res = await fetch('/api/superadmin/network', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
 
-      if (!reqErr && reqData) {
-        setSolicitudes(reqData as SolicitudRevendedor[]);
-      }
+      if (res.ok) {
+        const d = await res.json();
+        setSolicitudes(d.solicitudes || []);
+        setStores(d.stores || []);
+      } else {
+        // Fallback directo a supabase si la api estuviera restringida
+        const { data: reqData } = await supabase
+          .from('store_requests')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-      // 2. Cargar tiendas existentes
-      const { data: storeData } = await supabase
-        .from('stores')
-        .select('id, name, slug, status, whatsapp, owner_email, plan, created_at')
-        .order('created_at', { ascending: false });
-
-      if (storeData) {
-        setStores(storeData as TiendaStore[]);
+        if (reqData) setSolicitudes(reqData as SolicitudRevendedor[]);
       }
     } catch (err) {
       console.warn('Error al cargar datos en superadmin/network:', err);
@@ -93,53 +97,27 @@ export default function SuperadminNetworkPage() {
     setMensajeExito('');
 
     try {
-      // 1. Actualizar solicitud a approved
-      await supabase
-        .from('store_requests')
-        .update({ status: 'approved' })
-        .eq('id', sol.id);
-
-      // 2. Generar slug único limpio
-      const baseSlug = (sol.business_name || 'tienda')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
-
-      // Verificar si ya existe en stores
-      const { data: storeExistente } = await supabase
-        .from('stores')
-        .select('id, status')
-        .or(`name.ilike.${sol.business_name},slug.eq.${baseSlug}`)
-        .limit(1);
-
-      if (storeExistente && storeExistente.length > 0) {
-        // Actualizar a activa
-        await supabase
-          .from('stores')
-          .update({
-            status: 'active',
-            owner_email: sol.email || undefined,
-            whatsapp: sol.whatsapp || undefined,
-          })
-          .eq('id', storeExistente[0].id);
-      } else {
-        // Crear tienda en stores
-        await supabase.from('stores').insert({
-          name: sol.business_name,
-          slug: baseSlug,
-          status: 'active',
-          plan: 'revendedor',
+      const token = await getAuthToken();
+      const res = await fetch('/api/superadmin/network', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          accion: 'activar',
+          id: sol.id,
+          business_name: sol.business_name,
           whatsapp: sol.whatsapp,
-          owner_email: sol.email,
-          city: sol.city || 'pucallpa',
-          category: 'Tienda de Reventa',
-          tagline: 'Tienda de Reventa Oficial en Boga Network',
-        });
-      }
+          email: sol.email,
+          city: sol.city,
+        }),
+      });
 
-      setMensajeExito(`¡Tienda "${sol.business_name}" activada con éxito (Verde en Market)!`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al activar');
+
+      setMensajeExito(data.mensaje || `¡Tienda "${sol.business_name}" activada con éxito (Verde en Market)!`);
       await cargarDatos();
     } catch (err: any) {
       alert('Error al activar la tienda: ' + err.message);
@@ -154,18 +132,24 @@ export default function SuperadminNetworkPage() {
     setMensajeExito('');
 
     try {
-      await supabase
-        .from('store_requests')
-        .update({ status: 'pending' })
-        .eq('id', sol.id);
+      const token = await getAuthToken();
+      const res = await fetch('/api/superadmin/network', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          accion: 'desactivar',
+          id: sol.id,
+          business_name: sol.business_name,
+        }),
+      });
 
-      // Actualizar en stores si existe
-      await supabase
-        .from('stores')
-        .update({ status: 'inactive' })
-        .ilike('name', sol.business_name);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al desactivar');
 
-      setMensajeExito(`Tienda "${sol.business_name}" puesta en modo borrador (Gris).`);
+      setMensajeExito(data.mensaje || `Tienda "${sol.business_name}" puesta en modo borrador (Gris).`);
       await cargarDatos();
     } catch (err: any) {
       alert('Error: ' + err.message);
@@ -179,9 +163,27 @@ export default function SuperadminNetworkPage() {
     if (!confirm(`¿Eliminar definitivamente la solicitud de "${sol.business_name}"?`)) return;
 
     setAccionEnCurso(sol.id);
+    setMensajeExito('');
+
     try {
-      await supabase.from('store_requests').delete().eq('id', sol.id);
-      setMensajeExito(`Solicitud de "${sol.business_name}" eliminada.`);
+      const token = await getAuthToken();
+      const res = await fetch('/api/superadmin/network', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          accion: 'eliminar',
+          id: sol.id,
+          business_name: sol.business_name,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al eliminar');
+
+      setMensajeExito(data.mensaje || `Solicitud de "${sol.business_name}" eliminada.`);
       await cargarDatos();
     } catch (err: any) {
       alert('Error al eliminar: ' + err.message);
@@ -533,3 +535,4 @@ export default function SuperadminNetworkPage() {
     </div>
   );
 }
+
