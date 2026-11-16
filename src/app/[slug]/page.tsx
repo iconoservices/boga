@@ -113,6 +113,10 @@ export default async function StorePage({ params, searchParams }: Props) {
         mostrarUbicacion: false,
         hideHeroText: false,
         perfilEmpresa: undefined,
+        plan: undefined,
+        esRevendedor: undefined,
+        tiendaProveedora: undefined,
+        modoPedidosReventa: undefined,
       };
     } else {
       notFound();
@@ -122,8 +126,8 @@ export default async function StorePage({ params, searchParams }: Props) {
   // Datos de negocio local y carta en el HTML (para buscadores e IAs que no ejecutan JavaScript). No en la vista previa.
   return (
     <>
-      <StoreRenderer store={store} />
-      {preview !== 'true' && <GeoTienda store={store} />}
+      <StoreRenderer store={store!} />
+      {preview !== 'true' && <GeoTienda store={store!} />}
     </>
   );
 }

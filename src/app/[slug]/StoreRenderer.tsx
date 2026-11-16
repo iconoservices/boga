@@ -43,6 +43,7 @@ const TerrenosCampoTemplate = dynamic(() => import('@/templates/terrenos/Terreno
 const RackTemplate = dynamic(() => import('@/templates/rack/RackTemplate'));
 const UniformesTemplate = dynamic(() => import('@/templates/uniformes/UniformesTemplate'));
 const HeladosTemplate = dynamic(() => import('@/templates/helados/HeladosTemplate'));
+const NetworkTemplate = dynamic(() => import('@/templates/network/NetworkTemplate'));
 
 interface Props {
   store: StoreConfig;
@@ -145,7 +146,15 @@ export default function StoreRenderer({ store: initialStore, initialProductId, i
   }, []);
 
   const template = (() => {
+  // Tiendas de Boga Network (Reventa / Dropshipping): usan su plantilla oficial especializada
+  if (store.template === 'network' || store.template === 'revendedor' || store.plan === 'revendedor' || store.esRevendedor === true) {
+    return <NetworkTemplate store={store} initialProductId={initialProductId} initialTab={initialTab} />;
+  }
+
   switch (store.template) {
+    case 'network':
+    case 'revendedor':
+      return <NetworkTemplate store={store} initialProductId={initialProductId} initialTab={initialTab} />;
     case 'default':
       return <MenuDirectoTemplate store={store} initialProductId={initialProductId} initialTab={initialTab} />;
     case 'sunset':

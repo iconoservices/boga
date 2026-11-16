@@ -59,6 +59,35 @@ export interface TemplateConfig {
 }
 
 const TEMPLATES: Record<string, TemplateConfig> = {
+  network: {
+    id: 'network',
+    name: 'Boga Network (Reventa)',
+    category: 'Dropshipping & Red',
+    heroImage: '',
+    heroAlt: 'Boga Network Tienda Oficial',
+    theme: {
+      primary: '#059669',
+      onPrimary: '#ffffff',
+      primaryContainer: '#10b981',
+      secondary: '#0f172a',
+      secondaryContainer: '#1e293b',
+      background: '#f8fafc',
+      surface: '#ffffff',
+      surfaceContainer: '#f1f5f9',
+      surfaceContainerLow: '#f8fafc',
+      surfaceContainerLowest: '#ffffff',
+      surfaceContainerHigh: '#e2e8f0',
+      onBackground: '#0f172a',
+      onSurface: '#0f172a',
+      onSurfaceVariant: '#475569',
+      outlineVariant: '#cbd5e1',
+      fontHeadline: "'Inter', sans-serif",
+      fontBody: "'Inter', sans-serif",
+      fontLabel: "'Inter', sans-serif",
+    },
+    categories: [],
+    demoProducts: [],
+  },
   default: {
     id: 'default',
     name: 'Default Minimal',

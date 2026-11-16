@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -48,6 +48,8 @@ export default function RevendedorPanelPage() {
   const [modalAvisoAsesor, setModalAvisoAsesor] = useState(false);
   const [estadoTienda, setEstadoTienda] = useState<'desactivada' | 'activa'>('desactivada');
   const [copiado, setCopiado] = useState(false);
+  const [guardandoEnNube, setGuardandoEnNube] = useState(false);
+  const [guardadoExitoso, setGuardadoExitoso] = useState(false);
 
   // Link público y slug de la tienda
   const slugTienda = (nombreTienda || 'tienda')
@@ -156,6 +158,31 @@ export default function RevendedorPanelPage() {
             } catch (e) {
               console.warn('Error leyendo preferencias locales:', e);
             }
+
+            // Sincronizar también con la configuración guardada en el servidor
+            const sSlug = (req.business_name || '')
+              .toLowerCase()
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '')
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/(^-|-$)/g, '');
+
+            fetch(`/api/network/tienda?slug=${sSlug}`)
+              .then((r) => r.json())
+              .then((res) => {
+                if (res.ok && res.tienda) {
+                  if (typeof res.tienda.margenPorcentaje === 'number') {
+                    setMargenPorcentaje(res.tienda.margenPorcentaje);
+                  }
+                  if (res.tienda.tiendaProveedora) {
+                    setTiendaSeleccionada(res.tienda.tiendaProveedora);
+                  }
+                  if (Array.isArray(res.tienda.productosSeleccionados) && res.tienda.productosSeleccionados.length > 0) {
+                    setProductosSeleccionados(new Set(res.tienda.productosSeleccionados));
+                  }
+                }
+              })
+              .catch(() => {});
           } else {
             // NO EXISTE EN SUPABASE (Fue borrada por el Superadmin)
             try {
@@ -197,7 +224,35 @@ export default function RevendedorPanelPage() {
     }
   }, [user, authLoading]);
 
-  // Persistir cambios en localStorage
+  // Guardar configuración en la base de datos (para que la tienda pública la use siempre)
+  const guardarEnServidor = useCallback(async () => {
+    if (!tieneTienda || !nombreTienda) return;
+    setGuardandoEnNube(true);
+    try {
+      await fetch('/api/network/tienda', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slug: slugTienda,
+          nombreTienda,
+          nombre,
+          whatsapp,
+          ciudad,
+          margenPorcentaje,
+          tiendaSeleccionada,
+          productosSeleccionados: Array.from(productosSeleccionados),
+        }),
+      });
+      setGuardadoExitoso(true);
+      setTimeout(() => setGuardadoExitoso(false), 2500);
+    } catch (e) {
+      console.warn('Error guardando tienda en servidor:', e);
+    } finally {
+      setGuardandoEnNube(false);
+    }
+  }, [tieneTienda, nombreTienda, slugTienda, nombre, whatsapp, ciudad, margenPorcentaje, tiendaSeleccionada, productosSeleccionados]);
+
+  // Persistir cambios en localStorage y en el servidor
   useEffect(() => {
     if (!tieneTienda || !nombreTienda) return;
     try {
@@ -215,7 +270,13 @@ export default function RevendedorPanelPage() {
       }
       localStorage.setItem('boga_revendedor_draft', payload);
     } catch {}
-  }, [tieneTienda, nombre, whatsapp, nombreTienda, ciudad, margenPorcentaje, tiendaSeleccionada, productosSeleccionados, user]);
+
+    const timer = setTimeout(() => {
+      guardarEnServidor();
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, [tieneTienda, nombre, whatsapp, nombreTienda, ciudad, margenPorcentaje, tiendaSeleccionada, productosSeleccionados, user, guardarEnServidor]);
 
   // Cargar productos del proveedor seleccionado (SIN filtro is_available para que carguen todos los productos de delva)
   useEffect(() => {
@@ -672,6 +733,39 @@ export default function RevendedorPanelPage() {
                       {m === 0 ? '0%' : `+${m}%`}
                     </button>
                   ))}
+                </div>
+
+                {/* Indicador de sincronización con la tienda online */}
+                <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                  {guardandoEnNube ? (
+                    <span className="text-slate-500 font-medium flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[13px] animate-spin text-emerald-600">progress_activity</span>
+                      Sincronizando con tienda online...
+                    </span>
+                  ) : guardadoExitoso ? (
+                    <span className="text-emerald-700 font-bold flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[14px] text-emerald-600">check_circle</span>
+                      ¡Actualizado en tu tienda pública!
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={guardarEnServidor}
+                      className="text-emerald-700 hover:text-emerald-800 font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-[13px]">cloud_done</span>
+                      Guardar en tienda online
+                    </button>
+                  )}
+                  <a
+                    href={`/${slugTienda}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-slate-400 hover:text-emerald-700 font-bold flex items-center gap-0.5"
+                  >
+                    <span>Ver</span>
+                    <span className="material-symbols-outlined text-[13px]">open_in_new</span>
+                  </a>
                 </div>
               </div>
 

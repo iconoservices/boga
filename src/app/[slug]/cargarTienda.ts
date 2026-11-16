@@ -2,6 +2,7 @@ import { normalizarPerfilEmpresa } from '@/lib/perfilEmpresa';
 import { normalizarMonedas } from '@/lib/monedas';
 import { getTemplate } from '@/lib/templates.config';
 import type { StoreTheme } from '@/lib/templates.config';
+import type { StoreConfig } from '@/lib/stores.config';
 import { temaDesdePaleta } from '@/lib/paleta';
 import { tieneAppPropia } from '@/lib/appPropia';
 import { supabase } from '@/lib/supabase';
@@ -49,7 +50,7 @@ async function extractThemeFromImage(imageUrl: string): Promise<StoreTheme | nul
   }
 }
 
-async function cargarTienda(slug: string) {
+async function cargarTienda(slug: string): Promise<StoreConfig | null> {
   try {
     const { data: dbStore } = await supabase
       .from('stores')
@@ -114,6 +115,10 @@ async function cargarTienda(slug: string) {
         mostrarUbicacion: dbStore.mostrar_ubicacion === true,
         hideHeroText: dbStore.hide_hero_text === true,
         perfilEmpresa: normalizarPerfilEmpresa(dbStore.perfil_empresa) ?? undefined,
+        plan: dbStore.plan || undefined,
+        esRevendedor: dbStore.es_revendedor === true || dbStore.plan === 'revendedor' || dbStore.template === 'network',
+        tiendaProveedora: dbStore.tienda_proveedora || 'delva',
+        modoPedidosReventa: dbStore.modo_pedidos_reventa || 'revendedor',
       };
     } else {
       // Si no existe aún en stores, revisar si es una solicitud de revendedor aprobada en Boga Network
@@ -127,18 +132,18 @@ async function cargarTienda(slug: string) {
         .maybeSingle();
 
       if (sol) {
-        const tmpl = getTemplate('default');
+        const tmpl = getTemplate('network') || getTemplate('default');
         return {
           slug: slug,
           name: sol.business_name,
-          tagline: sol.description || 'Tienda de Reventa Oficial en Boga Network',
+          tagline: sol.description || 'Tienda Oficial · Boga Network',
           marketplaceCategory: sol.category || 'Tienda de Reventa',
-          template: 'default' as any,
-          heroImage: tmpl?.heroImage || 'https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=1200&q=80',
+          template: 'network' as any,
+          heroImage: '',
           heroImages: undefined,
           reservaActiva: false,
           heroAlt: sol.business_name,
-          iconImage: tmpl?.iconImage || undefined,
+          iconImage: undefined,
           theme: tmpl?.theme || DEFAULT_THEME,
           categories: tmpl?.categories || [],
           logoImage: undefined,
@@ -146,7 +151,7 @@ async function cargarTienda(slug: string) {
           modulos: undefined,
           igvIncluido: false,
           showDemoProducts: false,
-          zona: sol.city || undefined,
+          zona: sol.city || 'pucallpa',
           direccion: undefined,
           horario: undefined,
           rating: undefined,
@@ -164,6 +169,10 @@ async function cargarTienda(slug: string) {
           mostrarUbicacion: false,
           hideHeroText: false,
           perfilEmpresa: undefined,
+          plan: 'revendedor',
+          esRevendedor: true,
+          tiendaProveedora: 'delva',
+          modoPedidosReventa: 'revendedor',
         };
       }
     }

@@ -89,6 +89,10 @@ export async function POST(request: Request) {
         .from('stores')
         .update({
           status: 'active',
+          template: 'network',
+          plan: 'revendedor',
+          es_revendedor: true,
+          tienda_proveedora: 'delva',
           owner_email: email || undefined,
           whatsapp: whatsapp || undefined,
         })
@@ -99,11 +103,13 @@ export async function POST(request: Request) {
         slug: baseSlug,
         status: 'active',
         plan: 'revendedor',
+        es_revendedor: true,
+        tienda_proveedora: 'delva',
         whatsapp: whatsapp || null,
         owner_email: email || null,
         marketplace_category: 'Tienda de Reventa',
         tagline: 'Tienda de Reventa Oficial en Boga Network',
-        template: 'default',
+        template: 'network',
         zona: city || 'pucallpa',
       };
       const { error: insErr } = await admin.from('stores').insert(payload);
@@ -114,6 +120,7 @@ export async function POST(request: Request) {
           name: business_name,
           slug: baseSlug,
           status: 'active',
+          template: 'network',
           whatsapp: whatsapp || null,
         });
       }
