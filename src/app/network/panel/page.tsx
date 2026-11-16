@@ -642,31 +642,18 @@ export default function RevendedorPanelPage() {
 
       {/* ── Acceso Rápido para Administrar Tiendas (Ubicado Abajo de Pestañas) ── */}
       {estadoTienda === 'activa' && pestañaActiva !== 'preview' && (
-        <div className="bg-emerald-50/70 border-b border-emerald-100/80 px-4 sm:px-8 py-2 text-xs w-full flex items-center justify-between gap-3 shadow-2xs">
-          <div className="flex items-center gap-2 text-emerald-950 font-medium truncate">
-            <span className="material-symbols-outlined text-emerald-600 text-[18px] shrink-0">store</span>
-            <span className="truncate">
-              ¿Quieres administrar o ver tus tiendas de reventa?
-            </span>
-            <button
-              type="button"
-              onClick={() => setPestañaActiva('preview')}
-              className="font-black text-emerald-700 hover:text-emerald-900 underline cursor-pointer shrink-0"
-            >
-              Haz clic aquí para ir a Mis Tiendas →
-            </button>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <a
-              href={`/${slugTienda}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-emerald-800 hover:text-emerald-950 font-bold flex items-center gap-1 text-[11px]"
-            >
-              <span className="truncate max-w-[120px] sm:max-w-none">/{slugTienda}</span>
-              <span className="material-symbols-outlined text-[13px]">open_in_new</span>
-            </a>
-          </div>
+        <div className="bg-emerald-50/70 border-b border-emerald-100/80 px-4 sm:px-8 py-2 text-xs w-full flex items-center gap-2 text-emerald-950 font-medium shadow-2xs">
+          <span className="material-symbols-outlined text-emerald-600 text-[18px] shrink-0">store</span>
+          <span className="truncate">
+            ¿Quieres administrar o ver tus tiendas de reventa?
+          </span>
+          <button
+            type="button"
+            onClick={() => setPestañaActiva('preview')}
+            className="font-black text-emerald-700 hover:text-emerald-900 underline cursor-pointer shrink-0"
+          >
+            Haz clic aquí para ir a Mis Tiendas →
+          </button>
         </div>
       )}
 
@@ -781,15 +768,14 @@ export default function RevendedorPanelPage() {
                       <span className="material-symbols-outlined text-[16px]">tune</span>
                       <span>Configurar Catálogo & Márgenes</span>
                     </button>
-                    <a
-                      href={`/${slugTienda}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      type="button"
+                      onClick={() => setPestañaActiva('preview')}
                       className="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer text-center"
                     >
-                      <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-                      <span>Ver Mi Tienda Online</span>
-                    </a>
+                      <span className="material-symbols-outlined text-[16px]">store</span>
+                      <span>Administrar Mis Tiendas</span>
+                    </button>
                   </div>
                 </div>
 
