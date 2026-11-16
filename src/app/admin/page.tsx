@@ -2270,6 +2270,37 @@ function AdminDashboard({ user }: { user: User }) {
               </div>
             ) : activeTab === 'products' ? (
               <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
+                {selectedStore !== 'all' && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const tiendaActual = dbStores.find((s: any) => s.slug === selectedStore);
+                      const estaActivo = tiendaActual?.permite_revendedores === true || selectedStore === 'delva';
+                      const nuevoEstado = !estaActivo;
+                      const { error } = await supabase.from('stores').update({ permite_revendedores: nuevoEstado }).eq('slug', selectedStore);
+                      if (!error) {
+                        setDbStores(prev => prev.map((s: any) => s.slug === selectedStore ? { ...s, permite_revendedores: nuevoEstado } : s));
+                      }
+                    }}
+                    className={`flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-md font-bold text-xs border transition-all cursor-pointer ${
+                      (dbStores.find((s: any) => s.slug === selectedStore)?.permite_revendedores === true || selectedStore === 'delva')
+                        ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                        : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                    }`}
+                    title="Permitir que revendedores de BogaHub vendan los productos de esta tienda"
+                  >
+                    <span className={`w-2 h-2 rounded-full ${
+                      (dbStores.find((s: any) => s.slug === selectedStore)?.permite_revendedores === true || selectedStore === 'delva')
+                        ? 'bg-emerald-500 animate-pulse'
+                        : 'bg-gray-400'
+                    }`} />
+                    <span>
+                      {(dbStores.find((s: any) => s.slug === selectedStore)?.permite_revendedores === true || selectedStore === 'delva')
+                        ? 'Compartiendo con revendedores'
+                        : 'Compartir con revendedores: No'}
+                    </span>
+                  </button>
+                )}
                 <button
                   onClick={() => { resetForm(); setIsModalOpen(true); }}
                   className="flex items-center justify-center gap-2 bg-[var(--tienda-color)] text-white px-5 py-2.5 rounded-md font-bold shadow-lg shadow-[var(--tienda-color)]/20 hover:shadow-[var(--tienda-color)]/30 transition-all hover:-translate-y-0.5 active:translate-y-0 w-full md:w-auto cursor-pointer"
