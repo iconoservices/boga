@@ -453,7 +453,7 @@ export default function RevendedorPanelPage() {
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col selection:bg-emerald-500 selection:text-white">
       {/* ── Barra Superior del Admin del Revendedor ── */}
       <header className="sticky top-0 z-30 w-full bg-white/95 backdrop-blur-md border-b border-slate-200 shrink-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+        <div className="w-full px-4 sm:px-8 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2">
               <img src="/logo-mark.svg" alt="Boga Network" className="w-7 h-7" />
@@ -520,7 +520,7 @@ export default function RevendedorPanelPage() {
       {/* ── Banner de Estado en Gris / Borrador ── */}
       {estadoTienda === 'desactivada' && (
         <div className="bg-slate-100 border-b border-slate-200 px-4 py-2 text-xs">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="w-full px-4 sm:px-8 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-slate-700 font-medium">
               <span className="material-symbols-outlined text-slate-500 text-[18px] shrink-0">pause_circle</span>
               <span>
@@ -537,52 +537,9 @@ export default function RevendedorPanelPage() {
         </div>
       )}
 
-      {/* ── Banner de Tienda Activa con Enlace Público ── */}
-      {estadoTienda === 'activa' && (
-        <div className="bg-emerald-50/90 border-b border-emerald-200 px-4 py-2.5 text-xs">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div className="flex items-center gap-2 text-emerald-950 font-medium truncate">
-              <span className="material-symbols-outlined text-emerald-600 text-[20px] shrink-0">verified</span>
-              <span className="truncate">
-                <b>¡Tu tienda está ACTIVA en Boga Market!</b> Link oficial:{' '}
-                <a
-                  href={`/${slugTienda}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-mono font-bold text-emerald-800 underline ml-1"
-                >
-                  {linkTienda}
-                </a>
-              </span>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={copiarLink}
-                className="px-2.5 py-1 rounded-lg bg-white border border-emerald-300 text-emerald-800 font-bold hover:bg-emerald-100/50 transition cursor-pointer flex items-center gap-1 shadow-2xs text-[11px]"
-              >
-                <span className="material-symbols-outlined text-[14px]">{copiado ? 'check' : 'content_copy'}</span>
-                <span>{copiado ? '¡Copiado!' : 'Copiar'}</span>
-              </button>
-              <a
-                href={`https://wa.me/?text=${encodeURIComponent(
-                  `¡Hola! Ya abrí mi tienda virtual "${nombreTienda}". Puedes ver mi catálogo y hacer pedidos directo aquí: ${linkTienda}`
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-2.5 py-1 rounded-lg bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold transition flex items-center gap-1 shadow-xs text-[11px]"
-              >
-                <span className="material-symbols-outlined text-[14px]">share</span>
-                <span>Compartir</span>
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Barra de Pestañas: Continuidad de Opciones para Ganar Dinero ── */}
-      <div className="bg-white border-b border-slate-200 sticky top-14 z-20 shadow-2xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex gap-3 sm:gap-5 overflow-x-auto no-scrollbar">
+      {/* ── Barra de Pestañas a Pantalla Completa (Sin Marco y Sin Barra de Scroll) ── */}
+      <div className="bg-white border-b border-slate-200 sticky top-14 z-20 shadow-2xs w-full">
+        <div className="w-full px-4 sm:px-8 flex items-center gap-2 sm:gap-4 overflow-x-auto no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {/* PESTAÑA 1: INICIO & FORMAS DE GANAR */}
           <button
             type="button"
@@ -683,8 +640,38 @@ export default function RevendedorPanelPage() {
         </div>
       </div>
 
-      {/* ── Contenido Principal según Pestaña ── */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full">
+      {/* ── Acceso Rápido para Administrar Tiendas (Ubicado Abajo de Pestañas) ── */}
+      {estadoTienda === 'activa' && pestañaActiva !== 'preview' && (
+        <div className="bg-emerald-50/70 border-b border-emerald-100/80 px-4 sm:px-8 py-2 text-xs w-full flex items-center justify-between gap-3 shadow-2xs">
+          <div className="flex items-center gap-2 text-emerald-950 font-medium truncate">
+            <span className="material-symbols-outlined text-emerald-600 text-[18px] shrink-0">store</span>
+            <span className="truncate">
+              ¿Quieres administrar o ver tus tiendas de reventa?
+            </span>
+            <button
+              type="button"
+              onClick={() => setPestañaActiva('preview')}
+              className="font-black text-emerald-700 hover:text-emerald-900 underline cursor-pointer shrink-0"
+            >
+              Haz clic aquí para ir a Mis Tiendas →
+            </button>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <a
+              href={`/${slugTienda}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-800 hover:text-emerald-950 font-bold flex items-center gap-1 text-[11px]"
+            >
+              <span className="truncate max-w-[120px] sm:max-w-none">/{slugTienda}</span>
+              <span className="material-symbols-outlined text-[13px]">open_in_new</span>
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* ── Contenido Principal a Pantalla Completa (Sin Marco Limitante) ── */}
+      <main className="flex-1 w-full px-4 sm:px-8 xl:px-10 py-6">
         {/* ══ PESTAÑA 1: INICIO Y FORMAS DE GANAR DINERO (PANEL PRINCIPAL) ══ */}
         {pestañaActiva === 'inicio' && (
           <div className="flex flex-col gap-6">

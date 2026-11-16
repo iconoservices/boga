@@ -277,3 +277,14 @@ body:has(#tienda-splash) #boga-splash { display: none; }
 @keyframes boga-splash-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
 @keyframes boga-splash-gira { to { transform: rotate(360deg); } }
 @keyframes boga-splash-barra { 0% { transform: translateX(-100%); } 100% { transform: translateX(320%); } }
+
+/* Utilidad para ocultar barras de desplazamiento nativas pero mantener scroll */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}

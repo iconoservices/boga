@@ -123,8 +123,17 @@ export default function BogaNetworkHomePage() {
       return;
     }
 
-    if (!nombre.trim() || !whatsapp.trim() || !nombreTienda.trim()) {
-      setErrorMsg('Por favor completa todos los campos requeridos.');
+    const cleanWsp = whatsapp.replace(/\D/g, '');
+    if (!nombre.trim()) {
+      setErrorMsg('Por favor ingresa tu nombre completo.');
+      return;
+    }
+    if (!whatsapp.trim() || cleanWsp.length < 9) {
+      setErrorMsg('El número de WhatsApp es obligatorio (mínimo 9 dígitos) para poder contactarnos y recibir pedidos.');
+      return;
+    }
+    if (!nombreTienda.trim() || nombreTienda.trim().length < 2) {
+      setErrorMsg('El nombre de la tienda es obligatorio para crear tu catálogo oficial.');
       return;
     }
 
@@ -489,19 +498,25 @@ export default function BogaNetworkHomePage() {
               </div>
               <div>
                 <h3 className="text-base font-extrabold text-slate-900">Crear Mi Tienda de Reventa</h3>
-                <p className="text-xs text-slate-500 font-medium">Solo 4 datos para ingresar a tu panel de control</p>
+                <p className="text-xs text-slate-500 font-medium">WhatsApp y nombre de tienda obligatorios para poder contactarnos</p>
               </div>
+            </div>
+
+            {/* Aviso de campos obligatorios para contactar */}
+            <div className="p-2.5 rounded-xl bg-emerald-50/90 border border-emerald-200/80 text-[11px] text-emerald-950 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[16px] text-emerald-600 shrink-0">contact_phone</span>
+              <span><b>Obligatorio:</b> Tu número de WhatsApp y nombre de tienda son requeridos para poder contactarte y activar tus pedidos.</span>
             </div>
 
             {/* Badge de cuenta vinculada */}
             {user?.email && (
-              <div className="p-2.5 rounded-xl bg-emerald-50/80 border border-emerald-200/70 text-xs flex items-center justify-between">
+              <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/70 text-xs flex items-center justify-between">
                 <div className="flex items-center gap-2 truncate">
                   <span className="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center text-[10px] uppercase shrink-0">
                     {user.email.charAt(0)}
                   </span>
                   <div className="truncate">
-                    <p className="text-[10px] text-emerald-800 uppercase font-black">Cuenta vinculada:</p>
+                    <p className="text-[10px] text-slate-500 uppercase font-black">Cuenta vinculada:</p>
                     <p className="font-bold text-slate-800 truncate">{user.email}</p>
                   </div>
                 </div>
@@ -512,8 +527,9 @@ export default function BogaNetworkHomePage() {
             )}
 
             {errorMsg && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-semibold">
-                {errorMsg}
+              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-semibold flex items-center gap-2">
+                <span className="material-symbols-outlined text-[16px] text-red-600 shrink-0">error</span>
+                <span>{errorMsg}</span>
               </div>
             )}
 
@@ -544,6 +560,10 @@ export default function BogaNetworkHomePage() {
                     onChange={(e) => setWhatsapp(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 bg-slate-50"
                   />
+                  <p className="text-[10px] text-emerald-700 font-bold mt-1 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[12px]">call</span>
+                    Obligatorio para que podamos contactarte (9 dígitos)
+                  </p>
                 </div>
               </div>
 
@@ -556,7 +576,7 @@ export default function BogaNetworkHomePage() {
                     <input
                       type="text"
                       required
-                      placeholder="Ej: Camila Store, Ofertas Pucallpa"
+                      placeholder="Ej: Camila Store, Ofertas"
                       value={nombreTienda}
                       onChange={(e) => setNombreTienda(e.target.value)}
                       className="w-full px-3 py-2 pr-12 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 bg-slate-50"
@@ -565,8 +585,8 @@ export default function BogaNetworkHomePage() {
                       bm
                     </span>
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    Se añade &ldquo;bm&rdquo; al final para identificar que es catálogo oficial de Boga Market.
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    Obligatorio para tu enlace público oficial. Se añade &ldquo;bm&rdquo; al final.
                   </p>
                 </div>
                 <div>
