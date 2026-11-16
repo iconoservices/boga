@@ -67,6 +67,9 @@ export default function NetworkTemplate({ store, initialProductId }: Props) {
         : []
     )
   );
+  const [preciosPersonalizados, setPreciosPersonalizados] = useState<Record<string, number>>(
+    (store.modulos as any)?.preciosPersonalizados || {}
+  );
 
   // 1. Cargar configuración guardada de la tienda desde el endpoint API
   useEffect(() => {
@@ -82,6 +85,9 @@ export default function NetworkTemplate({ store, initialProductId }: Props) {
           if (t.tiendaProveedora) setTiendaProveedora(t.tiendaProveedora);
           if (Array.isArray(t.productosSeleccionados) && t.productosSeleccionados.length > 0) {
             setProductosFiltradosIds(new Set(t.productosSeleccionados));
+          }
+          if (t.preciosPersonalizados && typeof t.preciosPersonalizados === 'object') {
+            setPreciosPersonalizados(t.preciosPersonalizados);
           }
         }
       })
@@ -126,8 +132,11 @@ export default function NetworkTemplate({ store, initialProductId }: Props) {
       });
   }, [tiendaProveedora, initialProductId]);
 
-  // Calcular precio final con margen
-  const calcularPrecio = (costoBase: number) => {
+  // Calcular precio final con margen o precio personalizado
+  const calcularPrecio = (costoBase: number, prodId?: string | number) => {
+    if (prodId && preciosPersonalizados[String(prodId)] && preciosPersonalizados[String(prodId)] > 0) {
+      return Number(preciosPersonalizados[String(prodId)]).toFixed(2);
+    }
     const factor = 1 + (margenPorcentaje || 0) / 100;
     const final = Math.round(costoBase * factor * 10) / 10;
     return final.toFixed(2);
@@ -136,7 +145,7 @@ export default function NetworkTemplate({ store, initialProductId }: Props) {
   // Funciones del Carrito
   const agregarAlCarrito = (prod: ProductoRed, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    const precioFinal = Number(calcularPrecio(prod.price));
+    const precioFinal = Number(calcularPrecio(prod.price, prod.id));
     setCarrito((prev) => {
       const actual = prev[prod.id];
       return {
@@ -243,7 +252,7 @@ export default function NetworkTemplate({ store, initialProductId }: Props) {
   // Enviar mensaje directo de 1 solo producto por WhatsApp
   const pedirPorWhatsApp = (prod: ProductoRed, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    const precio = calcularPrecio(prod.price);
+    const precio = calcularPrecio(prod.price, prod.id);
     const num = whatsappNumero.replace(/\D/g, '');
     const cleanNum = num.startsWith('51') ? num : `51${num}`;
     const texto = `¡Hola ${store.name}! Quiero pedir el producto: *${prod.name}* (Precio: S/ ${precio}).\n\n¿Tienen disponibilidad para envío en ${ciudad}?`;
@@ -402,7 +411,7 @@ export default function NetworkTemplate({ store, initialProductId }: Props) {
           /* Grid de Productos */
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4.5">
             {productosVisibles.map((prod) => {
-              const precio = calcularPrecio(prod.price);
+              const precio = calcularPrecio(prod.price, prod.id);
               const enCarrito = carrito[prod.id];
 
               return (
@@ -564,7 +573,7 @@ export default function NetworkTemplate({ store, initialProductId }: Props) {
                   {productoModal.name}
                 </h2>
                 <div className="text-xl sm:text-2xl font-black text-emerald-700 mt-1">
-                  S/ {calcularPrecio(productoModal.price)}
+                  S/ {calcularPrecio(productoModal.price, productoModal.id)}
                 </div>
               </div>
 

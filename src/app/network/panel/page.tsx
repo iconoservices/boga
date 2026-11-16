@@ -56,6 +56,23 @@ export default function RevendedorPanelPage() {
   const [guardandoEnNube, setGuardandoEnNube] = useState(false);
   const [guardadoExitoso, setGuardadoExitoso] = useState(false);
 
+  // Precios personalizados: { [productoId]: precioPVP }
+  const [preciosPersonalizados, setPreciosPersonalizados] = useState<Record<string, number>>({});
+
+  // Lista de todas las tiendas creadas por el revendedor
+  const [tiendasUsuario, setTiendasUsuario] = useState<any[]>([]);
+  const [tiendaCopiadaSlug, setTiendaCopiadaSlug] = useState<string | null>(null);
+
+  // Modal para administrar productos y precios de una tienda específica
+  const [tiendaSeleccionadaParaEditar, setTiendaSeleccionadaParaEditar] = useState<any | null>(null);
+  const [modalAdminTiendaCatalogo, setModalAdminTiendaCatalogo] = useState(false);
+  const [prodsElegidosModal, setProdsElegidosModal] = useState<Set<string | number>>(new Set());
+  const [margenModal, setMargenModal] = useState<number>(15);
+  const [preciosModal, setPreciosModal] = useState<Record<string, number>>({});
+  const [busquedaModal, setBusquedaModal] = useState('');
+  const [filtroCatModal, setFiltroCatModal] = useState('todas');
+  const [guardandoCatalogoModal, setGuardandoCatalogoModal] = useState(false);
+
   // Link público y slug de la tienda
   const slugTienda = (nombreTienda || 'tienda')
     .toLowerCase()
@@ -76,6 +93,14 @@ export default function RevendedorPanelPage() {
       navigator.clipboard.writeText(linkTienda);
       setCopiado(true);
       setTimeout(() => setCopiado(false), 2500);
+    }
+  };
+
+  const copiarLinkDeTienda = (slug: string) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(`${origin}/${slug}`);
+      setTiendaCopiadaSlug(slug);
+      setTimeout(() => setTiendaCopiadaSlug(null), 2500);
     }
   };
 
@@ -133,13 +158,13 @@ export default function RevendedorPanelPage() {
     if (user?.email) {
       supabase
         .from('store_requests')
-        .select('business_name, contact_name, whatsapp, city, description, status')
+        .select('id, business_name, contact_name, whatsapp, city, description, status, created_at')
         .eq('email', user.email)
         .eq('interest', 'revendedor')
         .order('created_at', { ascending: false })
-        .limit(1)
         .then(({ data, error }) => {
           if (!error && data && data.length > 0 && data[0].business_name) {
+            setTiendasUsuario(data);
             const req = data[0];
             setNombreTienda(req.business_name);
             setNombre(req.contact_name || user.user_metadata?.full_name || '');
@@ -159,6 +184,9 @@ export default function RevendedorPanelPage() {
                 if (p.tiendaSeleccionada) setTiendaSeleccionada(p.tiendaSeleccionada);
                 if (p.productosSeleccionados && Array.isArray(p.productosSeleccionados)) {
                   setProductosSeleccionados(new Set(p.productosSeleccionados));
+                }
+                if (p.preciosPersonalizados && typeof p.preciosPersonalizados === 'object') {
+                  setPreciosPersonalizados(p.preciosPersonalizados);
                 }
               }
             } catch (e) {
@@ -186,6 +214,9 @@ export default function RevendedorPanelPage() {
                   if (Array.isArray(res.tienda.productosSeleccionados) && res.tienda.productosSeleccionados.length > 0) {
                     setProductosSeleccionados(new Set(res.tienda.productosSeleccionados));
                   }
+                  if (res.tienda.preciosPersonalizados && typeof res.tienda.preciosPersonalizados === 'object') {
+                    setPreciosPersonalizados(res.tienda.preciosPersonalizados);
+                  }
                 }
               })
               .catch(() => {});
@@ -197,6 +228,7 @@ export default function RevendedorPanelPage() {
             } catch {}
             setTieneTienda(false);
             setNombreTienda('');
+            setTiendasUsuario([]);
           }
           setCargandoDatos(false);
         });
@@ -216,7 +248,11 @@ export default function RevendedorPanelPage() {
             if (p.productosSeleccionados && Array.isArray(p.productosSeleccionados)) {
               setProductosSeleccionados(new Set(p.productosSeleccionados));
             }
+            if (p.preciosPersonalizados && typeof p.preciosPersonalizados === 'object') {
+              setPreciosPersonalizados(p.preciosPersonalizados);
+            }
             setTieneTienda(true);
+            setTiendasUsuario([{ business_name: p.nombreTienda, contact_name: p.nombre, city: p.ciudad, status: 'desactivada' }]);
           } else {
             setTieneTienda(false);
           }
@@ -247,6 +283,7 @@ export default function RevendedorPanelPage() {
           margenPorcentaje,
           tiendaSeleccionada,
           productosSeleccionados: Array.from(productosSeleccionados),
+          preciosPersonalizados,
         }),
       });
       setGuardadoExitoso(true);
@@ -257,7 +294,7 @@ export default function RevendedorPanelPage() {
     } finally {
       setGuardandoEnNube(false);
     }
-  }, [tieneTienda, nombreTienda, slugTienda, nombre, whatsapp, ciudad, margenPorcentaje, tiendaSeleccionada, productosSeleccionados]);
+  }, [tieneTienda, nombreTienda, slugTienda, nombre, whatsapp, ciudad, margenPorcentaje, tiendaSeleccionada, productosSeleccionados, preciosPersonalizados]);
 
   // Persistir cambios en localStorage de manera inmediata y segura (sin consumir lecturas/escrituras en BD)
   useEffect(() => {
@@ -339,15 +376,41 @@ export default function RevendedorPanelPage() {
     });
   }, [productosDisponibles, filtroCategoria, busqueda]);
 
-  const calcularPrecio = (base: number) => {
+  const calcularPrecio = (base: number, prodId?: string | number) => {
+    if (prodId && preciosPersonalizados[String(prodId)] && preciosPersonalizados[String(prodId)] > 0) {
+      return Number(preciosPersonalizados[String(prodId)]).toFixed(2);
+    }
     const aumento = 1 + margenPorcentaje / 100;
     const final = Math.round(base * aumento * 10) / 10;
     return final.toFixed(2);
   };
 
-  const calcularGanancia = (base: number) => {
-    const final = parseFloat(calcularPrecio(base));
-    return (final - base).toFixed(2);
+  const calcularGanancia = (base: number, prodId?: string | number) => {
+    const final = parseFloat(calcularPrecio(base, prodId));
+    const ganancia = final - base;
+    return (ganancia > 0 ? ganancia : 0).toFixed(2);
+  };
+
+  const handleEditarPrecioGlobal = (prodId: string | number, nuevoPrecio: number) => {
+    setPreciosPersonalizados((prev) => {
+      const next = { ...prev };
+      if (nuevoPrecio <= 0 || isNaN(nuevoPrecio)) {
+        delete next[String(prodId)];
+      } else {
+        next[String(prodId)] = nuevoPrecio;
+      }
+      return next;
+    });
+    setHayCambiosSinGuardar(true);
+  };
+
+  const handleResetPrecioGlobal = (prodId: string | number) => {
+    setPreciosPersonalizados((prev) => {
+      const next = { ...prev };
+      delete next[String(prodId)];
+      return next;
+    });
+    setHayCambiosSinGuardar(true);
   };
 
   const toggleProducto = (id: string | number) => {
@@ -373,6 +436,138 @@ export default function RevendedorPanelPage() {
   const cambiarMargen = (m: number) => {
     setMargenPorcentaje(m);
     setHayCambiosSinGuardar(true);
+  };
+
+  // ── FUNCIONES DE ADMINISTRACIÓN DE CATÁLOGO Y PRECIOS POR TIENDA (MODAL) ──
+  const abrirModalAdminTienda = async (tiendaItem: any) => {
+    setTiendaSeleccionadaParaEditar(tiendaItem);
+    setBusquedaModal('');
+    setFiltroCatModal('todas');
+
+    const sSlug = (tiendaItem.business_name || tiendaItem.name || nombreTienda || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+
+    try {
+      const res = await fetch(`/api/network/tienda?slug=${sSlug}`);
+      const data = await res.json();
+      if (data.ok && data.tienda) {
+        setMargenModal(typeof data.tienda.margenPorcentaje === 'number' ? data.tienda.margenPorcentaje : margenPorcentaje);
+        if (Array.isArray(data.tienda.productosSeleccionados) && data.tienda.productosSeleccionados.length > 0) {
+          setProdsElegidosModal(new Set(data.tienda.productosSeleccionados));
+        } else {
+          setProdsElegidosModal(new Set(productosSeleccionados));
+        }
+        if (data.tienda.preciosPersonalizados && typeof data.tienda.preciosPersonalizados === 'object') {
+          setPreciosModal(data.tienda.preciosPersonalizados);
+        } else {
+          setPreciosModal(preciosPersonalizados);
+        }
+      } else {
+        setMargenModal(margenPorcentaje);
+        setProdsElegidosModal(new Set(productosSeleccionados));
+        setPreciosModal({ ...preciosPersonalizados });
+      }
+    } catch {
+      setMargenModal(margenPorcentaje);
+      setProdsElegidosModal(new Set(productosSeleccionados));
+      setPreciosModal({ ...preciosPersonalizados });
+    }
+
+    setModalAdminTiendaCatalogo(true);
+  };
+
+  const calcularPrecioModal = (costoBase: number, prodId: string | number) => {
+    const key = String(prodId);
+    if (preciosModal[key] && preciosModal[key] > 0) {
+      return Number(preciosModal[key]).toFixed(2);
+    }
+    const factor = 1 + (margenModal || 0) / 100;
+    const final = Math.round(costoBase * factor * 10) / 10;
+    return final.toFixed(2);
+  };
+
+  const calcularGananciaModal = (costoBase: number, prodId: string | number) => {
+    const pvp = Number(calcularPrecioModal(costoBase, prodId));
+    const ganancia = pvp - costoBase;
+    return (ganancia > 0 ? ganancia : 0).toFixed(2);
+  };
+
+  const toggleProductoModal = (prodId: string | number) => {
+    setProdsElegidosModal((prev) => {
+      const next = new Set(prev);
+      if (next.has(prodId)) next.delete(prodId);
+      else next.add(prodId);
+      return next;
+    });
+  };
+
+  const handleCambiarPrecioModal = (prodId: string | number, nuevoPrecio: number) => {
+    setPreciosModal((prev) => {
+      const next = { ...prev };
+      if (nuevoPrecio <= 0 || isNaN(nuevoPrecio)) {
+        delete next[String(prodId)];
+      } else {
+        next[String(prodId)] = nuevoPrecio;
+      }
+      return next;
+    });
+  };
+
+  const handleResetPrecioModal = (prodId: string | number) => {
+    setPreciosModal((prev) => {
+      const next = { ...prev };
+      delete next[String(prodId)];
+      return next;
+    });
+  };
+
+  const handleGuardarCatalogoModal = async () => {
+    if (!tiendaSeleccionadaParaEditar) return;
+    setGuardandoCatalogoModal(true);
+
+    const targetNombre = tiendaSeleccionadaParaEditar.business_name || tiendaSeleccionadaParaEditar.name || nombreTienda;
+    const targetSlug = (targetNombre || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+
+    try {
+      await fetch('/api/network/tienda', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slug: targetSlug,
+          nombreTienda: targetNombre,
+          nombre,
+          whatsapp: tiendaSeleccionadaParaEditar.whatsapp || whatsapp,
+          ciudad: tiendaSeleccionadaParaEditar.city || ciudad,
+          margenPorcentaje: margenModal,
+          tiendaSeleccionada,
+          productosSeleccionados: Array.from(prodsElegidosModal),
+          preciosPersonalizados: preciosModal,
+        }),
+      });
+
+      if (targetNombre === nombreTienda) {
+        setMargenPorcentaje(margenModal);
+        setProductosSeleccionados(new Set(prodsElegidosModal));
+        setPreciosPersonalizados(preciosModal);
+      }
+
+      setGuardadoExitoso(true);
+      setTimeout(() => setGuardadoExitoso(false), 2500);
+      setModalAdminTiendaCatalogo(false);
+    } catch (e) {
+      console.warn('Error guardando catálogo de tienda:', e);
+    } finally {
+      setGuardandoCatalogoModal(false);
+    }
   };
 
   const handleGuardarNuevaTienda = async (e: React.FormEvent) => {
@@ -1174,6 +1369,30 @@ export default function RevendedorPanelPage() {
 
             {/* COLUMNA DERECHA: GRILLA DE PRODUCTOS */}
             <div className="lg:col-span-8 flex flex-col gap-4">
+              {/* Selector de tienda activa si tiene más de 1 */}
+              {tiendasUsuario.length > 1 && (
+                <div className="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-3 sm:p-4 flex items-center justify-between gap-3 shadow-2xs">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="material-symbols-outlined text-emerald-700 text-xl shrink-0">store</span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-black text-emerald-950 truncate">
+                        Configurando catálogo para: <span className="underline">{nombreTienda}</span>
+                      </p>
+                      <p className="text-[11px] text-emerald-800/80 truncate">
+                        Los productos y precios que elijas aquí aplican a este catálogo oficial.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPestañaActiva('preview')}
+                    className="px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold text-xs transition shrink-0 cursor-pointer"
+                  >
+                    Ver todas mis tiendas →
+                  </button>
+                </div>
+              )}
+
               {/* Barra de Búsqueda y Selección Rápida */}
               <div className="bg-white rounded-2xl border border-slate-200 p-3 sm:p-4 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div className="relative w-full sm:w-72">
@@ -1253,8 +1472,10 @@ export default function RevendedorPanelPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
                   {productosFiltrados.map((prod) => {
                     const isSelected = productosSeleccionados.has(prod.id);
-                    const precioPVP = calcularPrecio(prod.price);
-                    const ganancia = calcularGanancia(prod.price);
+                    const precioPersonalizado = preciosPersonalizados[String(prod.id)];
+                    const esPersonalizado = precioPersonalizado !== undefined && precioPersonalizado > 0;
+                    const precioPVP = calcularPrecio(prod.price, prod.id);
+                    const ganancia = calcularGanancia(prod.price, prod.id);
 
                     return (
                       <div
@@ -1298,21 +1519,57 @@ export default function RevendedorPanelPage() {
                           </h4>
                         </div>
 
-                        <div className="bg-slate-50 rounded-xl p-2 border border-slate-100 text-xs flex flex-col gap-1 mt-auto">
+                        {/* Espacio para editar los precios de los productos */}
+                        <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-100 text-xs flex flex-col gap-1.5 mt-auto">
                           <div className="flex items-center justify-between text-slate-500 text-[11px]">
                             <span>Costo proveedor:</span>
                             <span className="font-semibold">S/ {prod.price.toFixed(2)}</span>
                           </div>
-                          <div className="flex items-center justify-between text-slate-900 font-extrabold">
-                            <span>Precio al cliente:</span>
-                            <span className="text-emerald-700 font-black">S/ {precioPVP}</span>
-                          </div>
-                          {margenPorcentaje > 0 && (
-                            <div className="flex items-center justify-between text-[10px] text-emerald-800 font-bold pt-1 border-t border-slate-200/60">
-                              <span>Tu ganancia:</span>
-                              <span className="bg-emerald-100 px-1.5 py-0.2 rounded">+S/ {ganancia}</span>
+
+                          <div
+                            className="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-200/60"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <label className="text-slate-800 font-bold text-xs flex items-center gap-1">
+                              <span>Precio cliente:</span>
+                              {esPersonalizado && (
+                                <span className="text-[9px] bg-emerald-100 text-emerald-800 font-black px-1 rounded">
+                                  Manual
+                                </span>
+                              )}
+                            </label>
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs text-slate-400 font-bold">S/</span>
+                              <input
+                                type="number"
+                                step="0.5"
+                                min={prod.price}
+                                value={precioPersonalizado !== undefined ? precioPersonalizado : precioPVP}
+                                onChange={(e) => {
+                                  const val = parseFloat(e.target.value);
+                                  handleEditarPrecioGlobal(prod.id, isNaN(val) ? 0 : val);
+                                }}
+                                className="w-20 px-2 py-0.5 text-right font-black text-xs rounded-lg border border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-emerald-950 shadow-2xs"
+                              />
+                              {esPersonalizado && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleResetPrecioGlobal(prod.id)}
+                                  title="Restablecer al margen porcentual"
+                                  className="text-slate-400 hover:text-red-500 p-0.5 cursor-pointer"
+                                >
+                                  <span className="material-symbols-outlined text-[14px]">close</span>
+                                </button>
+                              )}
                             </div>
-                          )}
+                          </div>
+
+                          <div className="flex items-center justify-between text-[11px] text-emerald-800 font-bold pt-1 border-t border-slate-200/60">
+                            <span>Tu ganancia:</span>
+                            <span className="bg-emerald-100 text-emerald-900 px-1.5 py-0.2 rounded font-black">
+                              +S/ {ganancia}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     );
@@ -1346,77 +1603,116 @@ export default function RevendedorPanelPage() {
               </button>
             </div>
 
-            {/* Tarjeta de Tienda Activa ("Ese largo") */}
-            <div
-              onClick={() => window.open(`/${slugTienda}`, '_blank')}
-              className="group bg-white rounded-3xl border border-slate-200 hover:border-emerald-500 p-5 sm:p-6 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-5 relative overflow-hidden"
-            >
-              <div className="flex items-center gap-4 min-w-0">
-                <div className="w-14 h-14 rounded-2xl bg-emerald-600 group-hover:bg-emerald-500 text-white font-black text-2xl flex items-center justify-center shrink-0 shadow-md ring-2 ring-emerald-100 transition">
-                  {(nombreTienda || 'T').slice(0, 1).toUpperCase()}
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-base sm:text-lg font-black text-slate-900 group-hover:text-emerald-700 transition capitalize flex items-baseline gap-1">
-                      <span>{nombreTienda.replace(/\s+bm$/i, '')}</span>
-                      <span className="text-slate-400 font-bold text-xs lowercase">bm</span>
-                    </h3>
-                    {estadoTienda === 'activa' ? (
-                      <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        Pública
-                      </span>
-                    ) : (
-                      <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                        En borrador (Privada)
-                      </span>
-                    )}
+            {/* Lista de Tiendas de Reventa */}
+            <div className="flex flex-col gap-4">
+              {(tiendasUsuario.length > 0
+                ? tiendasUsuario
+                : [{ business_name: nombreTienda, contact_name: nombre, city: ciudad, status: estadoTienda }]
+              ).map((t, idx) => {
+                const tNombre = t.business_name || t.name || nombreTienda || 'Mi Tienda bm';
+                const tSlug = (tNombre || 'tienda')
+                  .toLowerCase()
+                  .normalize('NFD')
+                  .replace(/[\u0300-\u036f]/g, '')
+                  .replace(/[^a-z0-9]+/g, '-')
+                  .replace(/(^-|-$)/g, '');
+                const tLink = `${origin}/${tSlug}`;
+                const tEstado = t.status === 'approved' || (tNombre === nombreTienda && estadoTienda === 'activa') ? 'activa' : 'desactivada';
+
+                return (
+                  <div
+                    key={t.id || tSlug || idx}
+                    className="group bg-white rounded-3xl border border-slate-200 hover:border-emerald-500 p-5 sm:p-6 shadow-sm hover:shadow-md transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-5 relative overflow-hidden"
+                  >
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className="w-14 h-14 rounded-2xl bg-emerald-600 group-hover:bg-emerald-500 text-white font-black text-2xl flex items-center justify-center shrink-0 shadow-md ring-2 ring-emerald-100 transition">
+                        {(tNombre || 'T').slice(0, 1).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="text-base sm:text-lg font-black text-slate-900 group-hover:text-emerald-700 transition capitalize flex items-baseline gap-1">
+                            <span>{tNombre.replace(/\s+bm$/i, '')}</span>
+                            <span className="text-slate-400 font-bold text-xs lowercase">bm</span>
+                          </h3>
+                          {tEstado === 'activa' ? (
+                            <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                              Pública
+                            </span>
+                          ) : (
+                            <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                              En borrador (Privada)
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="text-xs text-slate-500 mt-1 truncate">
+                          {t.contact_name || nombre ? `Catálogo de ${t.contact_name || nombre} · ` : ''}Envíos en {t.city || ciudad}
+                        </p>
+
+                        <a
+                          href={`/${tSlug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-mono font-bold text-emerald-800 mt-1.5 flex items-center gap-1 hover:underline"
+                        >
+                          <span>{tLink}</span>
+                          <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+                        </a>
+                      </div>
+                    </div>
+
+                    <div
+                      className="flex items-center gap-2 shrink-0 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100 flex-wrap"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* BOTÓN PROMINENTE QUE ABRE EL ADMINISTRADOR DE PRODUCTOS Y PRECIOS */}
+                      <button
+                        type="button"
+                        onClick={() => abrirModalAdminTienda(t)}
+                        className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs flex items-center gap-1.5 shadow-xs transition active:scale-95 cursor-pointer"
+                        title="Administrar qué productos y qué precios tiene esta tienda"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">tune</span>
+                        <span>Administrar Catálogo & Precios</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => copiarLinkDeTienda(tSlug)}
+                        className="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">
+                          {tiendaCopiadaSlug === tSlug ? 'check' : 'content_copy'}
+                        </span>
+                        <span>{tiendaCopiadaSlug === tSlug ? '¡Copiado!' : 'Copiar Link'}</span>
+                      </button>
+
+                      <a
+                        href={`https://wa.me/?text=${encodeURIComponent(
+                          `¡Hola! Ya abrí mi tienda virtual "${tNombre}". Puedes ver mi catálogo y hacer pedidos directo aquí: ${tLink}`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3.5 py-2 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-black text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+                      >
+                        <IconoWhatsApp className="w-4 h-4 text-white" />
+                        <span>Compartir</span>
+                      </a>
+
+                      <a
+                        href={`/${tSlug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition"
+                      >
+                        <span>Abrir Tienda</span>
+                        <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
+                      </a>
+                    </div>
                   </div>
-
-                  <p className="text-xs text-slate-500 mt-1 truncate">
-                    {nombre ? `Catálogo de ${nombre} · ` : ''}Envíos en {ciudad} · {productosSeleccionados.size} productos (Margen +{margenPorcentaje}%)
-                  </p>
-
-                  <p className="text-xs font-mono font-bold text-emerald-800 mt-1.5 flex items-center gap-1 group-hover:underline">
-                    <span>{linkTienda}</span>
-                    <span className="material-symbols-outlined text-[14px]">open_in_new</span>
-                  </p>
-                </div>
-              </div>
-
-              <div
-                className="flex items-center gap-2 shrink-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-100"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button
-                  type="button"
-                  onClick={copiarLink}
-                  className="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-[16px]">{copiado ? 'check' : 'content_copy'}</span>
-                  <span>{copiado ? '¡Copiado!' : 'Copiar Link'}</span>
-                </button>
-                <a
-                  href={`https://wa.me/?text=${encodeURIComponent(
-                    `¡Hola! Ya abrí mi tienda virtual "${nombreTienda} bm". Puedes ver mi catálogo y hacer pedidos directo aquí: ${linkTienda}`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3.5 py-2 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-black text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
-                >
-                  <IconoWhatsApp className="w-4 h-4 text-white" />
-                  <span>Compartir</span>
-                </a>
-                <a
-                  href={`/${slugTienda}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition"
-                >
-                  <span>Abrir Tienda</span>
-                  <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
-                </a>
-              </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -1844,6 +2140,255 @@ export default function RevendedorPanelPage() {
           </div>
         </div>
       )}
+      {/* ── MODAL: ADMINISTRAR PRODUCTOS Y PRECIOS DE UNA TIENDA ESPECÍFICA ── */}
+      {modalAdminTiendaCatalogo && tiendaSeleccionadaParaEditar && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in"
+          onClick={() => setModalAdminTiendaCatalogo(false)}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden text-slate-900 animate-in zoom-in-95"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header del Modal */}
+            <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-50/80 flex items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white font-black text-lg flex items-center justify-center shrink-0 shadow-sm">
+                  {(tiendaSeleccionadaParaEditar.business_name || 'T').charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-base sm:text-lg font-black text-slate-900 truncate">
+                      {tiendaSeleccionadaParaEditar.business_name || tiendaSeleccionadaParaEditar.name}
+                    </h3>
+                    <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-full shrink-0">
+                      Editando Catálogo & Precios
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    Marca qué productos vender en esta tienda y ajusta sus precios finales.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setModalAdminTiendaCatalogo(false)}
+                className="w-8 h-8 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 flex items-center justify-center cursor-pointer transition shrink-0"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+
+            {/* Barra de Controles Rápidos (Margen general + Búsqueda + Filtros) */}
+            <div className="p-3 sm:p-4 bg-white border-b border-slate-200 flex flex-col md:flex-row items-center justify-between gap-3 shrink-0">
+              {/* Margen general */}
+              <div className="flex items-center gap-2 w-full md:w-auto">
+                <span className="text-xs font-bold text-slate-700 shrink-0">Margen base:</span>
+                <div className="grid grid-cols-5 gap-1">
+                  {[0, 10, 15, 20, 25].map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setMargenModal(m)}
+                      className={`px-2 py-1 rounded-lg text-xs font-black transition cursor-pointer ${
+                        margenModal === m
+                          ? 'bg-emerald-600 text-white shadow-xs'
+                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      }`}
+                    >
+                      +{m}%
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Búsqueda */}
+              <div className="relative w-full md:w-64">
+                <span className="material-symbols-outlined text-slate-400 absolute left-2.5 top-2 text-[17px]">search</span>
+                <input
+                  type="text"
+                  placeholder="Buscar en catálogo..."
+                  value={busquedaModal}
+                  onChange={(e) => setBusquedaModal(e.target.value)}
+                  className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-emerald-500 bg-slate-50"
+                />
+              </div>
+
+              {/* Acciones de selección */}
+              <div className="flex items-center gap-2 text-xs font-bold shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setProdsElegidosModal(new Set(productosDisponibles.map((p) => p.id)))}
+                  className="text-emerald-700 hover:underline cursor-pointer"
+                >
+                  Marcar todos ({productosDisponibles.length})
+                </button>
+                <span className="text-slate-300">|</span>
+                <button
+                  type="button"
+                  onClick={() => setProdsElegidosModal(new Set())}
+                  className="text-slate-500 hover:underline cursor-pointer"
+                >
+                  Desmarcar
+                </button>
+                <span className="bg-emerald-50 text-emerald-900 px-2 py-0.5 rounded-full text-[11px] font-black border border-emerald-200">
+                  {prodsElegidosModal.size} elegidos
+                </span>
+              </div>
+            </div>
+
+            {/* Grilla de Productos con Edición de Precio */}
+            <div className="overflow-y-auto p-4 sm:p-6 flex-1 bg-slate-50">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                {productosDisponibles
+                  .filter((p) => {
+                    const matchesSearch = !busquedaModal.trim() || p.name.toLowerCase().includes(busquedaModal.toLowerCase());
+                    const matchesCat = filtroCatModal === 'todas' || (p.category && p.category.toLowerCase() === filtroCatModal.toLowerCase());
+                    return matchesSearch && matchesCat;
+                  })
+                  .map((prod) => {
+                    const isSelected = prodsElegidosModal.has(prod.id);
+                    const precioPersonalizado = preciosModal[String(prod.id)];
+                    const esPersonalizado = precioPersonalizado !== undefined && precioPersonalizado > 0;
+                    const precioCalculado = calcularPrecioModal(prod.price, prod.id);
+                    const ganancia = calcularGananciaModal(prod.price, prod.id);
+
+                    return (
+                      <div
+                        key={prod.id}
+                        onClick={() => toggleProductoModal(prod.id)}
+                        className={`rounded-2xl border p-3 flex flex-col justify-between transition cursor-pointer bg-white relative select-none ${
+                          isSelected
+                            ? 'border-emerald-500 shadow-sm ring-1 ring-emerald-500'
+                            : 'border-slate-200 opacity-60 hover:opacity-90'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">
+                            {prod.category || 'General'}
+                          </span>
+                          <div
+                            className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 transition ${
+                              isSelected ? 'bg-emerald-600 text-white' : 'border border-slate-300 bg-white'
+                            }`}
+                          >
+                            {isSelected && (
+                              <span className="material-symbols-outlined text-[15px] font-bold">check</span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2.5 mb-2.5">
+                          {prod.image ? (
+                            <img
+                              src={prod.image}
+                              alt={prod.name}
+                              className="w-12 h-12 object-cover rounded-xl bg-slate-100 shrink-0 border border-slate-100"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
+                              <span className="material-symbols-outlined text-xl">image</span>
+                            </div>
+                          )}
+                          <h4 className="text-xs font-bold text-slate-900 line-clamp-2 leading-snug">
+                            {prod.name}
+                          </h4>
+                        </div>
+
+                        {/* Espacio para editar los precios de los productos */}
+                        <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-100 text-xs flex flex-col gap-1.5 mt-auto">
+                          <div className="flex items-center justify-between text-slate-500 text-[11px]">
+                            <span>Costo proveedor:</span>
+                            <span className="font-semibold">S/ {prod.price.toFixed(2)}</span>
+                          </div>
+
+                          <div
+                            className="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-200/60"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <label className="text-slate-800 font-bold text-xs flex items-center gap-1">
+                              <span>Precio cliente:</span>
+                              {esPersonalizado && (
+                                <span className="text-[9px] bg-emerald-100 text-emerald-800 font-black px-1 rounded">
+                                  Manual
+                                </span>
+                              )}
+                            </label>
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs text-slate-400 font-bold">S/</span>
+                              <input
+                                type="number"
+                                step="0.5"
+                                min={prod.price}
+                                value={precioPersonalizado !== undefined ? precioPersonalizado : precioCalculado}
+                                onChange={(e) => {
+                                  const val = parseFloat(e.target.value);
+                                  handleCambiarPrecioModal(prod.id, isNaN(val) ? 0 : val);
+                                }}
+                                className="w-20 px-2 py-0.5 text-right font-black text-xs rounded-lg border border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-emerald-950 shadow-2xs"
+                              />
+                              {esPersonalizado && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleResetPrecioModal(prod.id)}
+                                  title="Restablecer al margen porcentual"
+                                  className="text-slate-400 hover:text-red-500 p-0.5 cursor-pointer"
+                                >
+                                  <span className="material-symbols-outlined text-[14px]">close</span>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between text-[11px] text-emerald-800 font-bold pt-1 border-t border-slate-200/60">
+                            <span>Tu ganancia:</span>
+                            <span className="bg-emerald-100 text-emerald-900 px-1.5 py-0.2 rounded font-black">
+                              +S/ {ganancia}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+
+            {/* Footer con Botón de Guardado */}
+            <div className="p-4 border-t border-slate-200 bg-white flex items-center justify-between gap-3 shrink-0">
+              <span className="text-xs text-slate-500 hidden sm:inline">
+                {prodsElegidosModal.size} productos activos para esta tienda
+              </span>
+
+              <div className="flex items-center gap-2 ml-auto">
+                <button
+                  type="button"
+                  onClick={() => setModalAdminTiendaCatalogo(false)}
+                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-xs font-bold transition cursor-pointer"
+                >
+                  Cerrar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleGuardarCatalogoModal}
+                  disabled={guardandoCatalogoModal}
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md transition cursor-pointer flex items-center gap-2 active:scale-95 disabled:opacity-60"
+                >
+                  <span className="material-symbols-outlined text-[18px]">
+                    {guardandoCatalogoModal ? 'progress_activity' : 'save'}
+                  </span>
+                  <span>
+                    {guardandoCatalogoModal
+                      ? 'Guardando...'
+                      : `Guardar Catálogo & Precios`}
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {hayCambiosSinGuardar && (
         <div className="fixed bottom-4 inset-x-4 max-w-lg mx-auto z-40 bg-slate-900 text-white p-3.5 sm:p-4 rounded-2xl shadow-2xl border border-slate-700 flex items-center justify-between gap-3 animate-in slide-in-from-bottom-5">
           <div className="flex items-center gap-2.5 min-w-0">

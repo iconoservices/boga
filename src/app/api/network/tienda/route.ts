@@ -40,6 +40,7 @@ export async function GET(request: Request) {
   const margenPorcentaje = typeof modulos.margenPorcentaje === 'number' ? modulos.margenPorcentaje : 15;
   const tiendaProveedora = store?.tienda_proveedora || modulos.tiendaSeleccionada || 'delva';
   const productosSeleccionados = Array.isArray(modulos.productosSeleccionados) ? modulos.productosSeleccionados : [];
+  const preciosPersonalizados = (modulos.preciosPersonalizados && typeof modulos.preciosPersonalizados === 'object') ? modulos.preciosPersonalizados : {};
 
   return NextResponse.json({
     ok: true,
@@ -52,6 +53,7 @@ export async function GET(request: Request) {
       tiendaProveedora,
       margenPorcentaje,
       productosSeleccionados,
+      preciosPersonalizados,
       status: store?.status || (requestRow?.status === 'approved' ? 'active' : 'inactive'),
       tagline: store?.tagline || (nombreContacto ? `Catálogo de ${nombreContacto} · Envíos en ${ciudad}` : `Catálogo Oficial · Envíos en ${ciudad}`),
       template: store?.template || 'network',
@@ -78,6 +80,7 @@ export async function POST(request: Request) {
     margenPorcentaje,
     tiendaSeleccionada,
     productosSeleccionados,
+    preciosPersonalizados,
   } = body;
 
   const cleanSlug = (slug || nombreTienda || 'tienda')
@@ -92,6 +95,7 @@ export async function POST(request: Request) {
   const modulosPayload = {
     margenPorcentaje: typeof margenPorcentaje === 'number' ? margenPorcentaje : 15,
     productosSeleccionados: Array.isArray(productosSeleccionados) ? productosSeleccionados : [],
+    preciosPersonalizados: (preciosPersonalizados && typeof preciosPersonalizados === 'object') ? preciosPersonalizados : {},
     tiendaSeleccionada: tiendaSeleccionada || 'delva',
     nombreContacto: nombre || '',
     ciudad: ciudad || 'pucallpa',
