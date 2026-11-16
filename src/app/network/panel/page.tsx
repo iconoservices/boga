@@ -491,28 +491,7 @@ export default function RevendedorPanelPage() {
               <span className="hidden sm:inline">Nueva tienda</span>
             </button>
 
-            {estadoTienda === 'activa' ? (
-              <div className="flex items-center gap-1.5">
-                <a
-                  href={`/${slugTienda}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-xl shadow-xs transition active:scale-95"
-                >
-                  <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-                  <span>Ver Mi Tienda</span>
-                </a>
-                <button
-                  type="button"
-                  onClick={copiarLink}
-                  className="inline-flex items-center gap-1 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-bold px-2.5 py-2 rounded-xl shadow-2xs transition cursor-pointer"
-                  title="Copiar link de mi tienda"
-                >
-                  <span className="material-symbols-outlined text-[16px]">{copiado ? 'check' : 'content_copy'}</span>
-                  <span className="hidden sm:inline">{copiado ? '¡Copiado!' : 'Copiar Link'}</span>
-                </button>
-              </div>
-            ) : (
+            {estadoTienda !== 'activa' && (
               <button
                 type="button"
                 onClick={() => setModalAvisoAsesor(true)}

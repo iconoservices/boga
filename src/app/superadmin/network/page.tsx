@@ -30,6 +30,10 @@ type TiendaStore = {
   owner_email?: string;
   plan?: string;
   created_at?: string;
+  tienda_proveedora?: string;
+  modulos?: Record<string, any>;
+  es_revendedor?: boolean;
+  template?: string;
 };
 
 export default function SuperadminNetworkPage() {
@@ -43,6 +47,11 @@ export default function SuperadminNetworkPage() {
   const [filtroEstado, setFiltroEstado] = useState<'todos' | 'pendientes' | 'activas'>('todos');
   const [accionEnCurso, setAccionEnCurso] = useState<string | null>(null);
   const [mensajeExito, setMensajeExito] = useState('');
+  const [tiendaDetalle, setTiendaDetalle] = useState<{
+    solicitud: SolicitudRevendedor;
+    store?: TiendaStore;
+  } | null>(null);
+  const [linkCopiado, setLinkCopiado] = useState(false);
 
   // Redirigir si no es superadmin
   useEffect(() => {
@@ -230,6 +239,50 @@ export default function SuperadminNetworkPage() {
   const totalActivas = solicitudesRevendedores.filter((s) => s.status === 'approved').length;
   const totalPendientes = solicitudesRevendedores.filter((s) => s.status !== 'approved').length;
 
+  const encontrarStore = (sol: SolicitudRevendedor) => {
+    return stores.find((st) => {
+      if (st.slug && sol.business_name) {
+        const slugBuscado = sol.business_name
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)/g, '');
+        if (
+          st.slug === slugBuscado ||
+          st.slug === `${slugBuscado}-bm` ||
+          st.slug.replace(/-bm$/, '') === slugBuscado
+        ) {
+          return true;
+        }
+      }
+      if (st.whatsapp && sol.whatsapp && st.whatsapp.replace(/\D/g, '') === sol.whatsapp.replace(/\D/g, '')) {
+        return true;
+      }
+      if (st.owner_email && sol.email && st.owner_email.toLowerCase() === sol.email.toLowerCase()) {
+        return true;
+      }
+      return false;
+    });
+  };
+
+  const obtenerSlug = (sol: SolicitudRevendedor, st?: TiendaStore) => {
+    if (st?.slug) return st.slug;
+    return (sol.business_name || 'tienda')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+  };
+
+  const copiarLinkTienda = (slug: string) => {
+    const url = typeof window !== 'undefined' ? `${window.location.origin}/${slug}` : `/${slug}`;
+    navigator.clipboard.writeText(url);
+    setLinkCopiado(true);
+    setTimeout(() => setLinkCopiado(false), 2000);
+  };
+
   return (
     <div className="min-h-screen bg-[#f9f9ff] flex">
       <aside className="hidden md:flex flex-col h-screen w-64 bg-[#f2f3fd] border-r border-[#c2c6d6] p-4 gap-2 shrink-0 sticky top-0">
@@ -406,15 +459,18 @@ export default function SuperadminNetworkPage() {
                   const cleanWsp = sol.whatsapp?.replace(/\D/g, '') || '';
                   const numWsp = cleanWsp.length === 9 ? `51${cleanWsp}` : cleanWsp;
                   const fecha = sol.created_at ? new Date(sol.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Reciente';
+                  const st = encontrarStore(sol);
+                  const slug = obtenerSlug(sol, st);
 
                   return (
                     <div
                       key={sol.id}
-                      className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/60 transition"
+                      onClick={() => setTiendaDetalle({ solicitud: sol, store: st })}
+                      className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-emerald-50/40 transition cursor-pointer group"
                     >
                       {/* Información de la tienda */}
-                      <div className="flex items-start gap-3.5 min-w-0">
-                        <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 font-bold ${
+                      <div className="flex items-start gap-3.5 min-w-0 flex-1">
+                        <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 font-bold transition group-hover:scale-105 shadow-2xs ${
                           estaActiva ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
                         }`}>
                           <span className="material-symbols-outlined text-[22px]">
@@ -424,8 +480,11 @@ export default function SuperadminNetworkPage() {
 
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-extrabold text-sm text-slate-900 truncate">
-                              {sol.business_name}
+                            <h3 className="font-extrabold text-sm text-slate-900 group-hover:text-emerald-700 transition flex items-center gap-1.5">
+                              <span>{sol.business_name}</span>
+                              <span className="material-symbols-outlined text-[15px] opacity-0 group-hover:opacity-100 transition text-emerald-600">
+                                visibility
+                              </span>
                             </h3>
                             {estaActiva ? (
                               <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1">
@@ -441,6 +500,9 @@ export default function SuperadminNetworkPage() {
                             <span className="text-[10px] text-slate-400 capitalize">
                               · {sol.city || 'Pucallpa'}
                             </span>
+                            <span className="text-[11px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200/60 hidden sm:inline">
+                              /{slug}
+                            </span>
                           </div>
 
                           <div className="flex items-center gap-3 mt-1 text-xs text-slate-600 flex-wrap">
@@ -455,17 +517,10 @@ export default function SuperadminNetworkPage() {
                               </span>
                             )}
                             {sol.whatsapp && (
-                              <a
-                                href={`https://wa.me/${numWsp}?text=${encodeURIComponent(
-                                  `Hola ${sol.contact_name}! Te saludamos del equipo de Boga Network respecto a tu tienda "${sol.business_name}".`
-                                )}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-slate-700 hover:text-emerald-700 font-semibold flex items-center gap-1 hover:underline"
-                              >
+                              <span className="text-slate-700 font-semibold flex items-center gap-1">
                                 <span className="material-symbols-outlined text-[14px] text-[#25D366]">chat</span>
                                 {sol.whatsapp}
-                              </a>
+                              </span>
                             )}
                             <span className="text-[10px] text-slate-400">
                               Registrado: {fecha}
@@ -475,7 +530,29 @@ export default function SuperadminNetworkPage() {
                       </div>
 
                       {/* Botones de acción */}
-                      <div className="flex items-center gap-2 shrink-0 self-end md:self-center flex-wrap">
+                      <div className="flex items-center gap-2 shrink-0 self-end md:self-center flex-wrap" onClick={(e) => e.stopPropagation()}>
+                        {/* Botón Ver Detalles */}
+                        <button
+                          type="button"
+                          onClick={() => setTiendaDetalle({ solicitud: sol, store: st })}
+                          className="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow-2xs"
+                          title="Ver todos los detalles de esta tienda"
+                        >
+                          <span className="material-symbols-outlined text-[16px] text-emerald-600">info</span>
+                          <span>Detalles</span>
+                        </button>
+
+                        {/* Botón Abrir Tienda */}
+                        <a
+                          href={`/${slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 transition cursor-pointer shadow-2xs"
+                          title="Abrir tienda en nueva pestaña"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">open_in_new</span>
+                        </a>
+
                         {/* Botón WhatsApp directo */}
                         {sol.whatsapp && (
                           <a
@@ -484,7 +561,7 @@ export default function SuperadminNetworkPage() {
                             )}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:text-[#25D366] hover:bg-emerald-50 transition cursor-pointer"
+                            className="p-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:text-[#25D366] hover:bg-emerald-50 transition cursor-pointer shadow-2xs"
                             title="Escribir por WhatsApp"
                           >
                             <span className="material-symbols-outlined text-[18px]">chat</span>
@@ -509,7 +586,7 @@ export default function SuperadminNetworkPage() {
                             className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-xs transition cursor-pointer disabled:opacity-50 flex items-center gap-1"
                           >
                             <span className="material-symbols-outlined text-[16px]">check</span>
-                            <span>{accionEnCurso === sol.id ? 'Activando...' : 'Activar Tienda (Verde)'}</span>
+                            <span>{accionEnCurso === sol.id ? 'Activando...' : 'Activar (Verde)'}</span>
                           </button>
                         )}
 
@@ -530,6 +607,251 @@ export default function SuperadminNetworkPage() {
               </div>
             )}
           </div>
+
+          {/* ══ MODAL DE DETALLES DE LA TIENDA REVENDEDORA ══ */}
+          {tiendaDetalle && (() => {
+            const sol = tiendaDetalle.solicitud;
+            const st = tiendaDetalle.store;
+            const estaActiva = sol.status === 'approved';
+            const cleanWsp = sol.whatsapp?.replace(/\D/g, '') || '';
+            const numWsp = cleanWsp.length === 9 ? `51${cleanWsp}` : cleanWsp;
+            const slug = obtenerSlug(sol, st);
+            const fecha = sol.created_at ? new Date(sol.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Reciente';
+
+            // Margen y proveedor desde modulos
+            const mod = (st?.modulos as any) || {};
+            const proveedor = st?.tienda_proveedora || mod.tiendaProveedora || 'Delva';
+            const tipoMargen = mod.tipo_margen || 'porcentaje';
+            const valorMargen = mod.margen_ganancia || 15;
+            const margenTexto = tipoMargen === 'fijo' ? `S/ ${Number(valorMargen).toFixed(2)} por producto` : `+${valorMargen}% sobre precio proveedor`;
+            const productosCount = Array.isArray(mod.productos_seleccionados) ? `${mod.productos_seleccionados.length} seleccionados` : 'Todos del catálogo (41+)';
+
+            return (
+              <div
+                className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
+                onClick={() => setTiendaDetalle(null)}
+              >
+                <div
+                  className="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 animate-in zoom-in-95 flex flex-col"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Cabecera del Modal */}
+                  <div className="p-5 sm:p-6 border-b border-slate-100 flex items-start justify-between bg-slate-50/80">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-xl shadow-xs shrink-0 ${
+                        estaActiva ? 'bg-emerald-600 text-white' : 'bg-slate-300 text-slate-700'
+                      }`}>
+                        {sol.business_name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h2 className="text-base sm:text-lg font-black text-slate-900">
+                            {sol.business_name}
+                          </h2>
+                          {estaActiva ? (
+                            <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                              Activa (Verde)
+                            </span>
+                          ) : (
+                            <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                              Desactivada (Gris)
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-500 font-medium mt-0.5">
+                          Tienda de Reventa · {sol.city || 'Pucallpa'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setTiendaDetalle(null)}
+                      className="w-8 h-8 rounded-full bg-white hover:bg-slate-200 text-slate-500 flex items-center justify-center transition cursor-pointer border border-slate-200"
+                    >
+                      <span className="material-symbols-outlined text-lg">close</span>
+                    </button>
+                  </div>
+
+                  {/* Contenido del Modal */}
+                  <div className="p-5 sm:p-6 flex flex-col gap-4">
+                    {/* 1. Enlace Oficial y Accesos Rápidos */}
+                    <div className="bg-emerald-50/80 border border-emerald-200/80 rounded-2xl p-4 flex flex-col gap-2.5">
+                      <span className="text-[11px] font-bold text-emerald-900 uppercase tracking-wider flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[16px] text-emerald-700">link</span>
+                        Enlace de la Tienda
+                      </span>
+                      <div className="flex items-center justify-between gap-2 bg-white px-3 py-2 rounded-xl border border-emerald-200 text-xs font-mono text-emerald-900">
+                        <span className="truncate">{typeof window !== 'undefined' ? `${window.location.origin}/${slug}` : `/${slug}`}</span>
+                        <button
+                          type="button"
+                          onClick={() => copiarLinkTienda(slug)}
+                          className="px-2 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-lg text-[11px] font-bold shrink-0 transition cursor-pointer flex items-center gap-1"
+                        >
+                          <span className="material-symbols-outlined text-[13px]">{linkCopiado ? 'check' : 'content_copy'}</span>
+                          <span>{linkCopiado ? '¡Copiado!' : 'Copiar'}</span>
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <a
+                          href={`/${slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                          <span>Abrir Tienda</span>
+                        </a>
+                        <a
+                          href="/network/panel"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="py-2.5 px-3 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">dashboard</span>
+                          <span>Panel Revendedor</span>
+                        </a>
+                      </div>
+                    </div>
+
+                    {/* 2. Ficha del Revendedor */}
+                    <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 flex flex-col gap-3">
+                      <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[16px] text-slate-400">person</span>
+                        Datos del Revendedor
+                      </span>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <span className="text-slate-400 block text-[11px]">Responsable:</span>
+                          <span className="font-bold text-slate-900">{sol.contact_name}</span>
+                        </div>
+
+                        <div>
+                          <span className="text-slate-400 block text-[11px]">Email:</span>
+                          <span className="font-semibold text-slate-800">{sol.email || 'No registrado'}</span>
+                        </div>
+
+                        <div>
+                          <span className="text-slate-400 block text-[11px]">WhatsApp:</span>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="font-bold text-slate-900">{sol.whatsapp || 'Sin número'}</span>
+                            {sol.whatsapp && (
+                              <a
+                                href={`https://wa.me/${numWsp}?text=${encodeURIComponent(
+                                  `Hola ${sol.contact_name}! Te saludamos de Boga Network respecto a tu tienda "${sol.business_name}".`
+                                )}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 bg-[#25D366] hover:bg-[#20ba5a] text-white text-[10px] font-bold px-2 py-0.5 rounded-lg transition"
+                              >
+                                <span className="material-symbols-outlined text-[12px]">chat</span>
+                                <span>Escribir</span>
+                              </a>
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <span className="text-slate-400 block text-[11px]">Ciudad de Entrega:</span>
+                          <span className="font-semibold text-slate-800 capitalize">{sol.city || 'Pucallpa'}</span>
+                        </div>
+
+                        <div>
+                          <span className="text-slate-400 block text-[11px]">Fecha de Registro:</span>
+                          <span className="text-slate-700">{fecha}</span>
+                        </div>
+
+                        <div>
+                          <span className="text-slate-400 block text-[11px]">Categoría:</span>
+                          <span className="text-slate-700">{sol.category || sol.interest || 'Tienda de Reventa'}</span>
+                        </div>
+                      </div>
+
+                      {sol.description && (
+                        <div className="pt-2 border-t border-slate-200/60 text-xs text-slate-600">
+                          <span className="text-slate-400 block text-[11px]">Notas / Descripción:</span>
+                          <p className="mt-0.5 italic">{sol.description}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 3. Configuración de Boga Network */}
+                    <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 flex flex-col gap-3">
+                      <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[16px] text-slate-400">tune</span>
+                        Configuración de Reventa
+                      </span>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                        <div>
+                          <span className="text-slate-400 block text-[11px]">Proveedor Aliado:</span>
+                          <span className="font-bold text-slate-900 capitalize">{proveedor}</span>
+                        </div>
+
+                        <div>
+                          <span className="text-slate-400 block text-[11px]">Margen de Ganancia:</span>
+                          <span className="font-bold text-emerald-700">{margenTexto}</span>
+                        </div>
+
+                        <div>
+                          <span className="text-slate-400 block text-[11px]">Productos Activos:</span>
+                          <span className="font-semibold text-slate-800">{productosCount}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 4. Acciones de Control Superadmin */}
+                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap">
+                      {estaActiva ? (
+                        <button
+                          type="button"
+                          disabled={accionEnCurso === sol.id}
+                          onClick={() => {
+                            handleDesactivar(sol);
+                            setTiendaDetalle(null);
+                          }}
+                          className="px-4 py-2 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">pause</span>
+                          <span>Poner en Gris (Desactivar)</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={accionEnCurso === sol.id}
+                          onClick={() => {
+                            handleActivar(sol);
+                            setTiendaDetalle(null);
+                          }}
+                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-xs transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">check</span>
+                          <span>Activar Tienda (Poner en Verde)</span>
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        disabled={accionEnCurso === sol.id}
+                        onClick={() => {
+                          handleEliminar(sol);
+                          setTiendaDetalle(null);
+                        }}
+                        className="px-3 py-2 rounded-xl text-red-600 hover:bg-red-50 text-xs font-bold transition cursor-pointer flex items-center gap-1"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">delete</span>
+                        <span>Eliminar Registro</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </main>
       </div>
     </div>

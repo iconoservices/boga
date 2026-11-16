@@ -33,7 +33,7 @@ export async function GET(request: Request) {
 
   const [{ data: solicitudes, error: errSol }, { data: stores, error: errStores }] = await Promise.all([
     admin.from('store_requests').select('*').order('created_at', { ascending: false }),
-    admin.from('stores').select('id, name, slug, status, whatsapp, owner_email, plan, created_at').order('created_at', { ascending: false }),
+    admin.from('stores').select('id, name, slug, status, whatsapp, owner_email, plan, created_at, tienda_proveedora, modulos, es_revendedor, template').order('created_at', { ascending: false }),
   ]);
 
   if (errSol) {
