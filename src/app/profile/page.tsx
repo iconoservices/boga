@@ -51,6 +51,10 @@ export default function ProfilePage() {
   const [isSavingPassword, setIsSavingPassword] = useState(false);
   const [passwordSaved, setPasswordSaved] = useState(false);
 
+  // Boga Network
+  const [networkStoreName, setNetworkStoreName] = useState<string>('');
+  const [hasNetworkStore, setHasNetworkStore] = useState(false);
+
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordError(null);
@@ -96,6 +100,34 @@ export default function ProfilePage() {
           setUser((u) => ({ ...u, isMerchant: true, merchantStoreName: nombre }));
         }
       });
+
+    // ¿Esta cuenta tiene tienda(s) de revendedor en Boga Network?
+    if (authUser.email) {
+      supabase
+        .from('store_requests')
+        .select('business_name')
+        .eq('email', authUser.email)
+        .eq('interest', 'revendedor')
+        .order('created_at', { ascending: false })
+        .then(({ data }) => {
+          if (data && data.length > 0 && data[0].business_name) {
+            setHasNetworkStore(true);
+            const nombre = data.length === 1 ? data[0].business_name : `${data[0].business_name} y ${data.length - 1} más`;
+            setNetworkStoreName(nombre);
+          }
+        });
+    }
+
+    try {
+      const raw = typeof window !== 'undefined' ? localStorage.getItem(`boga_revendedor_draft_${authUser.id}`) || localStorage.getItem('boga_revendedor_draft') : null;
+      if (raw) {
+        const p = JSON.parse(raw);
+        if (p.nombreTienda) {
+          setHasNetworkStore(true);
+          setNetworkStoreName((prev) => prev || p.nombreTienda);
+        }
+      }
+    } catch {}
   }, [authLoading, authUser, router]);
 
   const initials = (user.name || '?').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
@@ -163,12 +195,13 @@ export default function ProfilePage() {
           ))}
         </div>
 
-        {/* Superadmin + Tienda — tarjetas que son el botón entero, en la misma fila */}
-        {(isSuperadmin || user.isMerchant) && (() => {
-          const par = isSuperadmin && user.isMerchant;
+        {/* Superadmin + Tienda + Boga Network — tarjetas de acceso directo según rol */}
+        {(() => {
+          const itemsCount = (isSuperadmin ? 1 : 0) + (user.isMerchant ? 1 : 0) + (hasNetworkStore ? 1 : 0);
           const tarjeta = 'rounded-xl shadow-md text-white flex items-center gap-2 p-2.5 min-w-0 active:scale-[0.98] hover:brightness-110 transition-all';
+          if (itemsCount === 0) return null;
           return (
-            <div className={`grid gap-3 ${par ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            <div className={`grid gap-3 ${itemsCount >= 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
               {/* Superadmin — atajo a TODAS las tiendas, no solo la propia */}
               {isSuperadmin && (
                 <Link href="/superadmin" className={`bg-gradient-to-r from-[#1a1a1a] to-[#333] ${tarjeta}`}>
@@ -179,7 +212,7 @@ export default function ProfilePage() {
                     <p className="text-white/70 text-[9px] font-bold uppercase tracking-wider leading-tight whitespace-nowrap">Super Admin</p>
                     <p className="font-bold text-xs text-white truncate leading-tight mt-0.5">Tiendas</p>
                   </div>
-                  {!par && <span className="material-symbols-outlined text-white/60 text-[18px] shrink-0">chevron_right</span>}
+                  {itemsCount === 1 && <span className="material-symbols-outlined text-white/60 text-[18px] shrink-0">chevron_right</span>}
                 </Link>
               )}
 
@@ -193,7 +226,21 @@ export default function ProfilePage() {
                     <p className="text-white/70 text-[9px] font-bold uppercase tracking-wider leading-tight whitespace-nowrap">Tu tienda</p>
                     <p className="font-bold text-xs text-white truncate leading-tight mt-0.5">{user.merchantStoreName}</p>
                   </div>
-                  {!par && <span className="material-symbols-outlined text-white/60 text-[18px] shrink-0">chevron_right</span>}
+                  {itemsCount === 1 && <span className="material-symbols-outlined text-white/60 text-[18px] shrink-0">chevron_right</span>}
+                </Link>
+              )}
+
+              {/* Boga Network · Tienda de Reventa */}
+              {hasNetworkStore && (
+                <Link href="/network/panel" className={`bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 ${tarjeta}`}>
+                  <div className="w-8 h-8 bg-white/15 rounded-lg flex items-center justify-center shrink-0 backdrop-blur-md">
+                    <span className="material-symbols-outlined text-white text-[18px]">payments</span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-emerald-100/80 text-[9px] font-bold uppercase tracking-wider leading-tight whitespace-nowrap">Boga Network · Reventa</p>
+                    <p className="font-bold text-xs text-white truncate leading-tight mt-0.5">{networkStoreName || 'Mis Tiendas'}</p>
+                  </div>
+                  {itemsCount === 1 && <span className="material-symbols-outlined text-white/60 text-[18px] shrink-0">chevron_right</span>}
                 </Link>
               )}
             </div>
@@ -212,6 +259,23 @@ export default function ProfilePage() {
             <div className="min-w-0 flex-1">
               <p className="text-white/70 text-[9px] font-bold uppercase tracking-wider leading-tight whitespace-nowrap">¿Tienes un negocio?</p>
               <p className="font-bold text-xs text-white truncate leading-tight mt-0.5">Crea tu carta digital gratis</p>
+            </div>
+            <span className="material-symbols-outlined text-white/60 text-[18px] shrink-0">chevron_right</span>
+          </Link>
+        )}
+
+        {/* CTA para Boga Network si todavía no tiene tienda de reventa */}
+        {!hasNetworkStore && (
+          <Link
+            href="/network"
+            className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-xl shadow-md text-white flex items-center gap-2 p-2.5 min-w-0 active:scale-[0.98] hover:brightness-110 transition-all"
+          >
+            <div className="w-8 h-8 bg-white/15 rounded-lg flex items-center justify-center shrink-0 backdrop-blur-md">
+              <span className="material-symbols-outlined text-white text-[18px]">payments</span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-emerald-100/80 text-[9px] font-bold uppercase tracking-wider leading-tight whitespace-nowrap">¿Quieres ganar dinero?</p>
+              <p className="font-bold text-xs text-white truncate leading-tight mt-0.5">Crea tu tienda de reventa sin inversión</p>
             </div>
             <span className="material-symbols-outlined text-white/60 text-[18px] shrink-0">chevron_right</span>
           </Link>

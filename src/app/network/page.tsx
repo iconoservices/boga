@@ -349,38 +349,32 @@ export default function BogaNetworkHomePage() {
               </div>
             </div>
 
-            {/* Botón de acción Opción 1 */}
-            <div className="pt-1 flex flex-col gap-2">
-              {cuentaExistente ? (
-                <Link
-                  href="/network/panel"
-                  className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-xs sm:text-sm shadow-md shadow-emerald-600/20 transition active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <span className="material-symbols-outlined text-lg">dashboard</span>
-                  <span>Ingresar a Mi Panel de Control →</span>
-                </Link>
-              ) : user ? (
-                <button
-                  type="button"
-                  onClick={() => setModalRegistro(true)}
-                  className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-xs sm:text-sm shadow-md shadow-emerald-600/20 active:scale-95 transition flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-lg">badge</span>
-                  <span>Activar Mi Cuenta de Dropshipping →</span>
-                </button>
-              ) : (
-                <Link
-                  href="/login?redirect=/network"
-                  className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-xs sm:text-sm shadow-md shadow-emerald-600/20 active:scale-95 transition flex items-center justify-center gap-2 text-center"
-                >
-                  <span className="material-symbols-outlined text-lg">login</span>
-                  <span>Iniciar Sesión para Empezar →</span>
-                </Link>
-              )}
-              <p className="text-[11px] text-slate-400 text-center sm:text-left">
-                🔒 Sin costos ocultos · No compras mercadería por adelantado · Empiezas hoy
-              </p>
-            </div>
+            {/* Botón de acción Opción 1 (solo para usuarios nuevos sin cuenta de revendedor) */}
+            {!cuentaExistente && (
+              <div className="pt-1 flex flex-col gap-2">
+                {user ? (
+                  <button
+                    type="button"
+                    onClick={() => setModalRegistro(true)}
+                    className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-xs sm:text-sm shadow-md shadow-emerald-600/20 active:scale-95 transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-lg">badge</span>
+                    <span>Activar Mi Cuenta de Dropshipping →</span>
+                  </button>
+                ) : (
+                  <Link
+                    href="/login?redirect=/network"
+                    className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-xs sm:text-sm shadow-md shadow-emerald-600/20 active:scale-95 transition flex items-center justify-center gap-2 text-center"
+                  >
+                    <span className="material-symbols-outlined text-lg">login</span>
+                    <span>Iniciar Sesión para Empezar →</span>
+                  </Link>
+                )}
+                <p className="text-[11px] text-slate-400 text-center sm:text-left">
+                  🔒 Sin costos ocultos · No compras mercadería por adelantado · Empiezas hoy
+                </p>
+              </div>
+            )}
           </div>
 
           {/* ════════════════════════════════════════════════════════════════
@@ -437,25 +431,6 @@ export default function BogaNetworkHomePage() {
                   <p className="text-[11px] text-slate-500 mt-1">Sin trámites complejos. El equipo valida el referido y te transfiere directo.</p>
                 </div>
               </div>
-            </div>
-
-            {/* Botón de acción Opción 2 */}
-            <div className="pt-1 flex flex-col gap-2">
-              <a
-                href={waLink(
-                  wspBoga,
-                  `Hola Boga Network! Quiero postular como afiliado para recomendar negocios y choferes en Pucallpa y ganar bonos en efectivo.${user?.email ? ` (Mi correo: ${user.email})` : ''}`
-                )}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-3.5 px-6 rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-black text-xs sm:text-sm text-center shadow-md shadow-teal-600/20 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-              >
-                <span className="material-symbols-outlined text-lg">chat</span>
-                <span>Coordinar Afiliación por WhatsApp con Asesor →</span>
-              </a>
-              <p className="text-[11px] text-slate-400 text-center sm:text-left">
-                Atención rápida · Te explicamos los montos de bono por comercio o chofer
-              </p>
             </div>
           </div>
 

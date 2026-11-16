@@ -55,6 +55,7 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
   // ¿Esta cuenta es dueña de alguna tienda? Igual que "Tu tienda" en el perfil de BogaHub:
   // un acceso directo a su panel, sin tener que pasar por "Acceso staff".
   const [tiendasPropias, setTiendasPropias] = useState<string[]>([]);
+  const [tiendasNetwork, setTiendasNetwork] = useState<string[]>([]);
   const { esSuperadmin } = useEsSuperadmin();
 
   // Enlace a BogaHub: en producción va a bogahub.app; en local (localhost o tienda.localhost) vuelve al localhost de la raíz.
@@ -66,13 +67,43 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
     }
   }, []);
   useEffect(() => {
-    if (!user?.id) { setTiendasPropias([]); return; }
+    if (!user?.id) {
+      setTiendasPropias([]);
+      setTiendasNetwork([]);
+      return;
+    }
     let vivo = true;
     supabase.from('stores').select('name').eq('user_id', user.id).then(({ data }) => {
       if (vivo) setTiendasPropias((data || []).map((x: any) => x.name));
     });
+
+    if (user.email) {
+      supabase
+        .from('store_requests')
+        .select('business_name')
+        .eq('email', user.email)
+        .eq('interest', 'revendedor')
+        .order('created_at', { ascending: false })
+        .then(({ data }) => {
+          if (vivo && data && data.length > 0) {
+            const names = data.map((x: any) => x.business_name).filter(Boolean);
+            if (names.length > 0) setTiendasNetwork(names);
+          }
+        });
+    }
+
+    try {
+      const raw = typeof window !== 'undefined' ? localStorage.getItem(`boga_revendedor_draft_${user.id}`) || localStorage.getItem('boga_revendedor_draft') : null;
+      if (raw) {
+        const p = JSON.parse(raw);
+        if (p.nombreTienda) {
+          setTiendasNetwork((prev) => (prev.length > 0 ? prev : [p.nombreTienda]));
+        }
+      }
+    } catch {}
+
     return () => { vivo = false; };
-  }, [user?.id]);
+  }, [user?.id, user?.email]);
 
   // Sincronizar datos si el usuario de Supabase / Google está conectado
   useEffect(() => {
@@ -537,6 +568,25 @@ export default function CustomerSessionModal({ storeSlug, storeName }: Props) {
                     <span className="block text-[9px] font-bold uppercase tracking-wider text-white/70 leading-tight">Administra tu tienda</span>
                     <span className="block text-xs font-bold truncate leading-tight mt-0.5">
                       {tiendasPropias.length === 1 ? tiendasPropias[0] : `${tiendasPropias[0]} y ${tiendasPropias.length - 1} más`}
+                    </span>
+                  </span>
+                  <span className="material-symbols-outlined text-white/70 text-[20px] shrink-0">chevron_right</span>
+                </Link>
+              )}
+
+              {/* Boga Network · Tienda de Reventa */}
+              {user && tiendasNetwork.length > 0 && (
+                <Link
+                  href="/network/panel"
+                  className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 text-white shadow-md shadow-emerald-600/20 active:scale-[0.98] transition-all"
+                >
+                  <span className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[20px]">payments</span>
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[9px] font-bold uppercase tracking-wider text-emerald-100 leading-tight">Boga Network · Reventa</span>
+                    <span className="block text-xs font-bold truncate leading-tight mt-0.5">
+                      {tiendasNetwork.length === 1 ? tiendasNetwork[0] : `${tiendasNetwork[0]} y ${tiendasNetwork.length - 1} más`}
                     </span>
                   </span>
                   <span className="material-symbols-outlined text-white/70 text-[20px] shrink-0">chevron_right</span>
