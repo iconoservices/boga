@@ -67,3 +67,4 @@ export default async function AppleIcon({ params }: { params: Promise<{ slug: st
     { ...size }
   );
 }
+

@@ -67,3 +67,4 @@ export default async function Icon({ params }: { params: Promise<{ slug: string 
     { ...size }
   );
 }
+
