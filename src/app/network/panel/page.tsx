@@ -45,7 +45,7 @@ export default function RevendedorPanelPage() {
   const [wspBoga, setWspBoga] = useState('51987911213');
 
   // Estado del panel (Pestañas limpias por tienda)
-  const [pestañaActiva, setPestañaActiva] = useState<'inicio' | 'preview' | 'afiliados' | 'ajustes'>('inicio');
+  const [pestañaActiva, setPestañaActiva] = useState<'inicio' | 'productos' | 'preview' | 'afiliados' | 'ajustes'>('inicio');
   const [modalAvisoAsesor, setModalAvisoAsesor] = useState(false);
   const [modalCrearTienda, setModalCrearTienda] = useState(false);
   const [nuevoNombreTienda, setNuevoNombreTienda] = useState('');
@@ -904,7 +904,24 @@ export default function RevendedorPanelPage() {
             </span>
           </button>
 
-          {/* PESTAÑA 2: MIS TIENDAS */}
+          {/* PESTAÑA 2: PRODUCTOS DE AFILIADO */}
+          <button
+            type="button"
+            onClick={() => setPestañaActiva('productos')}
+            className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${
+              pestañaActiva === 'productos'
+                ? 'border-sky-600 text-sky-700'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[18px]">loyalty</span>
+            <span>2. Productos de Afiliado</span>
+            <span className="bg-sky-100 text-sky-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+              Comisión por Venta
+            </span>
+          </button>
+
+          {/* PESTAÑA 3: MIS TIENDAS */}
           <button
             type="button"
             onClick={() => setPestañaActiva('preview')}
@@ -915,7 +932,7 @@ export default function RevendedorPanelPage() {
             }`}
           >
             <span className="material-symbols-outlined text-[18px]">store</span>
-            <span>2. Mis Tiendas</span>
+            <span>3. Mis Tiendas</span>
             {estadoTienda === 'activa' ? (
               <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -928,7 +945,7 @@ export default function RevendedorPanelPage() {
             )}
           </button>
 
-          {/* PESTAÑA 3: GANAR CON AFILIADOS */}
+          {/* PESTAÑA 4: GANAR CON AFILIADOS */}
           <button
             type="button"
             onClick={() => setPestañaActiva('afiliados')}
@@ -939,13 +956,13 @@ export default function RevendedorPanelPage() {
             }`}
           >
             <span className="material-symbols-outlined text-[18px]">volunteer_activism</span>
-            <span>3. Ganar con Afiliados</span>
+            <span>4. Ganar con Afiliados</span>
             <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
               Bono en efectivo
             </span>
           </button>
 
-          {/* PESTAÑA 4: AJUSTES & CUENTA */}
+          {/* PESTAÑA 5: AJUSTES & CUENTA */}
           <button
             type="button"
             onClick={() => setPestañaActiva('ajustes')}
@@ -956,7 +973,7 @@ export default function RevendedorPanelPage() {
             }`}
           >
             <span className="material-symbols-outlined text-[18px]">settings</span>
-            <span>4. Ajustes & Cuenta</span>
+            <span>5. Ajustes & Cuenta</span>
             {estadoTienda === 'activa' ? (
               <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
                 Activa
@@ -1122,7 +1139,7 @@ export default function RevendedorPanelPage() {
                   <div className="flex flex-col gap-2 pt-2 border-t border-slate-100">
                     <button
                       type="button"
-                      onClick={() => setModalProductosReferidos(true)}
+                      onClick={() => setPestañaActiva('productos')}
                       className="w-full py-2.5 px-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-black text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
                     >
                       <span className="material-symbols-outlined text-[16px]">loyalty</span>
@@ -1272,7 +1289,245 @@ export default function RevendedorPanelPage() {
           </div>
         )}
 
-        {/* ══ PESTAÑA 2: MIS TIENDAS (LISTA DE TIENDAS VINCULADAS) ══ */}
+        {/* ══ PESTAÑA 2: PRODUCTOS DE AFILIADO (COMISIÓN POR VENTA) ══ */}
+        {pestañaActiva === 'productos' && (
+          <div className="w-full flex flex-col gap-6 animate-in fade-in">
+            {/* Banner Principal de la Pestaña */}
+            <div className="bg-gradient-to-r from-sky-600 via-sky-700 to-blue-800 rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div className="relative z-10 max-w-3xl">
+                <span className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-xs text-white text-[11px] font-black px-3 py-1 rounded-full mb-3 shadow-xs">
+                  <span className="material-symbols-outlined text-[15px]">loyalty</span>
+                  Links de Afiliado · Comisión Directa en Efectivo
+                </span>
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight leading-tight">
+                  Productos Disponibles para Recomendar y Ganar
+                </h2>
+                <p className="mt-2 text-white/90 text-xs sm:text-sm leading-relaxed max-w-2xl">
+                  Elige cualquier producto, copia tu enlace exclusivo o compártelo directo a WhatsApp. Al concretarse la venta, recibes tu ganancia neta en soles sin invertir en mercadería ni encargarte del despacho.
+                </p>
+              </div>
+
+              {/* Badges de Resumen */}
+              <div className="relative z-10 grid grid-cols-3 gap-2.5 shrink-0 sm:flex sm:items-center">
+                <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 border border-white/15 text-center min-w-[110px]">
+                  <span className="text-[10px] text-sky-200 font-bold block uppercase tracking-wider">Catálogo</span>
+                  <span className="text-sm font-black text-white mt-0.5 block">{productosDisponibles.length} ítems</span>
+                  <span className="text-[10px] text-white/70">Listos para venta</span>
+                </div>
+                <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 border border-white/15 text-center min-w-[110px]">
+                  <span className="text-[10px] text-emerald-200 font-bold block uppercase tracking-wider">Tu Margen</span>
+                  <span className="text-sm font-black text-emerald-300 mt-0.5 block">+{margenPorcentaje}%</span>
+                  <span className="text-[10px] text-white/70">Ganancia neta</span>
+                </div>
+                <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 border border-white/15 text-center min-w-[110px]">
+                  <span className="text-[10px] text-sky-200 font-bold block uppercase tracking-wider">Despacho</span>
+                  <span className="text-sm font-black text-white mt-0.5 block">Inmediato</span>
+                  <span className="text-[10px] text-white/70">En Pucallpa</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Barra de Búsqueda y Filtro de Categorías */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+              <div className="relative flex-1">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">
+                  search
+                </span>
+                <input
+                  type="text"
+                  placeholder="Buscar producto por nombre..."
+                  value={busquedaReferidos}
+                  onChange={(e) => setBusquedaReferidos(e.target.value)}
+                  className="w-full pl-9 pr-8 py-2.5 bg-slate-50 hover:bg-slate-100/60 focus:bg-white rounded-xl border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-hidden focus:border-sky-500 shadow-2xs transition"
+                />
+                {busquedaReferidos && (
+                  <button
+                    type="button"
+                    onClick={() => setBusquedaReferidos('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">close</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Categorías chips */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                <button
+                  type="button"
+                  onClick={() => setFiltroCatReferidos('todas')}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
+                    filtroCatReferidos === 'todas'
+                      ? 'bg-sky-600 text-white shadow-xs'
+                      : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  Todas ({productosDisponibles.length})
+                </button>
+                {categoriasDisponibles.map((cat) => (
+                  <button
+                    key={cat.name}
+                    type="button"
+                    onClick={() => setFiltroCatReferidos(cat.name)}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
+                      filtroCatReferidos.toLowerCase() === cat.name.toLowerCase()
+                        ? 'bg-sky-600 text-white shadow-xs'
+                        : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    {cat.name} ({cat.count})
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Listado de Productos Grid */}
+            <div>
+              {cargandoProductos ? (
+                <div className="py-20 text-center text-slate-500 bg-white rounded-3xl border border-slate-200">
+                  <span className="material-symbols-outlined text-4xl animate-spin text-sky-600">progress_activity</span>
+                  <p className="text-xs font-bold mt-2">Cargando catálogo de productos...</p>
+                </div>
+              ) : productosReferidosFiltrados.length === 0 ? (
+                <div className="py-20 text-center text-slate-400 bg-white rounded-3xl border border-slate-200">
+                  <span className="material-symbols-outlined text-5xl text-slate-300">search_off</span>
+                  <p className="text-sm font-bold text-slate-700 mt-2">No se encontraron productos</p>
+                  <p className="text-xs text-slate-500 mt-1">Prueba con otra palabra o categoría.</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBusquedaReferidos('');
+                      setFiltroCatReferidos('todas');
+                    }}
+                    className="mt-4 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition cursor-pointer"
+                  >
+                    Limpiar filtros
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+                  {productosReferidosFiltrados.map((prod) => {
+                    const precioCliente = calcularPrecio(prod.price, prod.id);
+                    const ganancia = calcularGanancia(prod.price, prod.id);
+                    const linkProd = `${origin}/${slugTienda}/producto/${prod.id}`;
+                    const esCopiado = prodReferidoCopiadoId === prod.id;
+                    const textoWsp = `¡Hola! Te recomiendo este producto en Pucallpa con entrega inmediata:\n\n*${prod.name}*\n💰 Precio: S/ ${precioCliente}\n\n👉 Pídelo directo aquí:\n${linkProd}`;
+
+                    return (
+                      <div
+                        key={prod.id}
+                        className="bg-white rounded-3xl border border-slate-200/90 shadow-xs hover:shadow-md transition p-4 sm:p-5 flex flex-col justify-between gap-3 group"
+                      >
+                        {/* Fila superior: Texto a la izquierda y Foto a la derecha */}
+                        <div className="flex items-start justify-between gap-3 sm:gap-4">
+                          {/* Izquierda: Texto, badges y precios */}
+                          <div className="flex-1 min-w-0 flex flex-col justify-between">
+                            <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                              <span className="bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-lg truncate max-w-[130px]">
+                                {prod.category || prod.store || 'Producto'}
+                              </span>
+                              <span className="bg-emerald-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-2xs">
+                                <span className="material-symbols-outlined text-[13px]">monetization_on</span>
+                                <span>+S/ {ganancia}</span>
+                              </span>
+                            </div>
+
+                            <h4 className="text-xs sm:text-sm font-black text-slate-900 line-clamp-2 leading-snug" title={prod.name}>
+                              {prod.name}
+                            </h4>
+
+                            {/* Precios y Ganancia */}
+                            <div className="mt-2.5 p-2 bg-emerald-50/70 rounded-xl border border-emerald-100/80 flex items-center gap-3">
+                              <div>
+                                <span className="text-[9px] uppercase font-bold text-slate-500 block">Precio</span>
+                                <span className="text-xs font-black text-slate-900">S/ {precioCliente}</span>
+                              </div>
+                              <div className="border-l border-emerald-200/80 pl-3">
+                                <span className="text-[9px] uppercase font-extrabold text-emerald-700 block">Tu Ganancia</span>
+                                <span className="text-xs font-black text-emerald-700">+S/ {ganancia}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Derecha: Imagen más chica */}
+                          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-slate-100 overflow-hidden shrink-0 relative border border-slate-100 shadow-2xs">
+                            {prod.image ? (
+                              <img
+                                src={prod.image}
+                                alt={prod.name}
+                                className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLImageElement).src =
+                                    'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&q=80';
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                <span className="material-symbols-outlined text-3xl">image</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Fila inferior: Link y Botones de acción */}
+                        <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
+                          <div className="bg-slate-50 rounded-xl px-2.5 py-1.5 border border-slate-200/80">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
+                              Link de Afiliado Personalizado
+                            </span>
+                            <p className="text-[11px] text-sky-700 font-mono truncate select-all">
+                              {linkProd}
+                            </p>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <button
+                              type="button"
+                              onClick={() => copiarLinkProductoReferido(prod.id)}
+                              className={`w-full py-2 px-2.5 rounded-xl font-black text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs active:scale-95 ${
+                                esCopiado
+                                  ? 'bg-emerald-600 text-white'
+                                  : 'bg-sky-600 hover:bg-sky-700 text-white'
+                              }`}
+                            >
+                              <span className="material-symbols-outlined text-[15px]">
+                                {esCopiado ? 'check_circle' : 'content_copy'}
+                              </span>
+                              <span className="truncate">{esCopiado ? '¡Copiado!' : 'Copiar Link'}</span>
+                            </button>
+
+                            <a
+                              href={`https://wa.me/?text=${encodeURIComponent(textoWsp)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full py-2 px-2.5 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#128C7E] font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                            >
+                              <IconoWhatsApp className="w-3.5 h-3.5 shrink-0" />
+                              <span className="truncate">WhatsApp</span>
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Footer con tip pro */}
+            <div className="bg-slate-100 border border-slate-200/80 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-amber-500 text-3xl">lightbulb</span>
+                <div className="text-xs">
+                  <p className="font-extrabold text-slate-900">¿Cómo vender más con tus links de afiliado?</p>
+                  <p className="text-slate-600">Publica 1 producto por la mañana y otro por la tarde en tus Estados de WhatsApp. Con solo 2 ventas al día puedes generar más de <b>S/ 600 al mes</b> en ganancias netas directas.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ══ PESTAÑA 3: MIS TIENDAS (LISTA DE TIENDAS VINCULADAS) ══ */}
         {pestañaActiva === 'preview' && (
           <div className="w-full flex flex-col gap-6 animate-in fade-in">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
@@ -1409,7 +1664,7 @@ export default function RevendedorPanelPage() {
           </div>
         )}
 
-        {/* ══ PESTAÑA 3: GANAR CON AFILIADOS (OPCIONES CONTINUAS DE DINERO) ══ */}
+        {/* ══ PESTAÑA 4: GANAR CON AFILIADOS (OPCIONES CONTINUAS DE DINERO) ══ */}
         {pestañaActiva === 'afiliados' && (
           <div className="w-full flex flex-col gap-6 animate-in fade-in">
             <div className="bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -1573,7 +1828,7 @@ export default function RevendedorPanelPage() {
 
                 <button
                   type="button"
-                  onClick={() => setModalProductosReferidos(true)}
+                  onClick={() => setPestañaActiva('productos')}
                   className="w-full inline-flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-4 rounded-xl text-xs shadow-sm transition active:scale-95 cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-[18px]">open_in_new</span>
@@ -1601,7 +1856,7 @@ export default function RevendedorPanelPage() {
           </div>
         )}
 
-        {/* ══ PESTAÑA 4: AJUSTES & ESTADO (TIENDA EN GRIS / ACTIVACIÓN) ══ */}
+        {/* ══ PESTAÑA 5: AJUSTES & ESTADO (TIENDA EN GRIS / ACTIVACIÓN) ══ */}
         {pestañaActiva === 'ajustes' && (
           <div className="max-w-2xl mx-auto flex flex-col gap-6 animate-in fade-in">
             <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-xs flex flex-col gap-4">
@@ -2347,7 +2602,7 @@ export default function RevendedorPanelPage() {
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {productosReferidosFiltrados.map((prod) => {
                     const precioCliente = calcularPrecio(prod.price, prod.id);
                     const ganancia = calcularGanancia(prod.price, prod.id);
@@ -2358,11 +2613,41 @@ export default function RevendedorPanelPage() {
                     return (
                       <div
                         key={prod.id}
-                        className="bg-white rounded-2xl border border-slate-200 shadow-xs hover:shadow-md transition overflow-hidden flex flex-col justify-between group"
+                        className="bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition p-3.5 sm:p-4 flex flex-col justify-between gap-3 group"
                       >
-                        <div>
-                          {/* Imagen con badges */}
-                          <div className="relative aspect-4/3 bg-slate-100 overflow-hidden">
+                        {/* Fila superior: Texto a la izquierda y Foto a la derecha */}
+                        <div className="flex items-start justify-between gap-3">
+                          {/* Izquierda: Texto, badges y precios */}
+                          <div className="flex-1 min-w-0 flex flex-col justify-between">
+                            <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                              <span className="bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-lg truncate max-w-[120px]">
+                                {prod.category || prod.store || 'Producto'}
+                              </span>
+                              <span className="bg-emerald-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-2xs">
+                                <span className="material-symbols-outlined text-[13px]">monetization_on</span>
+                                <span>+S/ {ganancia}</span>
+                              </span>
+                            </div>
+
+                            <h4 className="text-xs font-black text-slate-900 line-clamp-2 leading-snug" title={prod.name}>
+                              {prod.name}
+                            </h4>
+
+                            {/* Precios y Ganancia */}
+                            <div className="mt-2 p-1.5 bg-emerald-50/70 rounded-xl border border-emerald-100/80 flex items-center gap-2.5">
+                              <div>
+                                <span className="text-[9px] uppercase font-bold text-slate-500 block">Precio</span>
+                                <span className="text-xs font-black text-slate-900">S/ {precioCliente}</span>
+                              </div>
+                              <div className="border-l border-emerald-200/80 pl-2.5">
+                                <span className="text-[9px] uppercase font-extrabold text-emerald-700 block">Tu Ganancia</span>
+                                <span className="text-xs font-black text-emerald-700">+S/ {ganancia}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Derecha: Imagen más chica */}
+                          <div className="w-22 h-22 sm:w-24 sm:h-24 rounded-xl bg-slate-100 overflow-hidden shrink-0 relative border border-slate-100 shadow-2xs">
                             {prod.image ? (
                               <img
                                 src={prod.image}
@@ -2375,78 +2660,46 @@ export default function RevendedorPanelPage() {
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-slate-300">
-                                <span className="material-symbols-outlined text-4xl">image</span>
+                                <span className="material-symbols-outlined text-3xl">image</span>
                               </div>
                             )}
-
-                            {/* Badge categoría / proveedor */}
-                            <span className="absolute top-2 left-2 bg-slate-900/75 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-lg max-w-[140px] truncate">
-                              {prod.category || prod.store || 'Producto'}
-                            </span>
-
-                            {/* Badge ganancia neta */}
-                            <span className="absolute top-2 right-2 bg-emerald-600 text-white text-[11px] font-black px-2.5 py-1 rounded-full shadow-md flex items-center gap-1">
-                              <span className="material-symbols-outlined text-[14px]">monetization_on</span>
-                              <span>+S/ {ganancia}</span>
-                            </span>
-                          </div>
-
-                          {/* Info producto */}
-                          <div className="p-3.5 pb-2">
-                            <h4 className="text-xs font-black text-slate-900 line-clamp-2 leading-snug" title={prod.name}>
-                              {prod.name}
-                            </h4>
-
-                            {/* Precios y comisión */}
-                            <div className="mt-2.5 p-2 bg-emerald-50/70 rounded-xl border border-emerald-100/80 flex items-center justify-between">
-                              <div>
-                                <span className="text-[10px] uppercase font-bold text-slate-500 block">Precio Cliente</span>
-                                <span className="text-xs font-black text-slate-900">S/ {precioCliente}</span>
-                              </div>
-                              <div className="text-right">
-                                <span className="text-[10px] uppercase font-extrabold text-emerald-700 block">Tu Ganancia Neta</span>
-                                <span className="text-sm font-black text-emerald-700">+S/ {ganancia}</span>
-                              </div>
-                            </div>
-
-                            {/* Caja con el enlace */}
-                            <div className="mt-2.5 bg-slate-50 rounded-xl p-2 border border-slate-200/80">
-                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
-                                Link de Afiliado Personalizado
-                              </span>
-                              <p className="text-[11px] text-sky-700 font-mono truncate select-all">
-                                {linkProd}
-                              </p>
-                            </div>
                           </div>
                         </div>
 
-                        {/* Botones de acción */}
-                        <div className="p-3.5 pt-0 flex flex-col gap-1.5 mt-2">
-                          <button
-                            type="button"
-                            onClick={() => copiarLinkProductoReferido(prod.id)}
-                            className={`w-full py-2 px-3 rounded-xl font-black text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs active:scale-95 ${
-                              esCopiado
-                                ? 'bg-emerald-600 text-white'
-                                : 'bg-sky-600 hover:bg-sky-700 text-white'
-                            }`}
-                          >
-                            <span className="material-symbols-outlined text-[16px]">
-                              {esCopiado ? 'check_circle' : 'content_copy'}
-                            </span>
-                            <span>{esCopiado ? '¡Link Copiado!' : 'Copiar Link de Referido'}</span>
-                          </button>
+                        {/* Fila inferior: Link y Botones de acción */}
+                        <div className="pt-2 border-t border-slate-100 flex flex-col gap-1.5">
+                          <div className="bg-slate-50 rounded-lg px-2 py-1 border border-slate-200/80">
+                            <p className="text-[10px] text-sky-700 font-mono truncate select-all">
+                              {linkProd}
+                            </p>
+                          </div>
 
-                          <a
-                            href={`https://wa.me/?text=${encodeURIComponent(textoWsp)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="w-full py-1.5 px-3 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#128C7E] font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer text-center"
-                          >
-                            <IconoWhatsApp className="w-3.5 h-3.5" />
-                            <span>Compartir en WhatsApp</span>
-                          </a>
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              type="button"
+                              onClick={() => copiarLinkProductoReferido(prod.id)}
+                              className={`w-full py-1.5 px-2 rounded-lg font-black text-xs transition flex items-center justify-center gap-1 cursor-pointer shadow-2xs active:scale-95 ${
+                                esCopiado
+                                  ? 'bg-emerald-600 text-white'
+                                  : 'bg-sky-600 hover:bg-sky-700 text-white'
+                              }`}
+                            >
+                              <span className="material-symbols-outlined text-[14px]">
+                                {esCopiado ? 'check_circle' : 'content_copy'}
+                              </span>
+                              <span className="truncate">{esCopiado ? '¡Copiado!' : 'Copiar'}</span>
+                            </button>
+
+                            <a
+                              href={`https://wa.me/?text=${encodeURIComponent(textoWsp)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full py-1.5 px-2 rounded-lg bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#128C7E] font-bold text-xs transition flex items-center justify-center gap-1 cursor-pointer text-center"
+                            >
+                              <IconoWhatsApp className="w-3.5 h-3.5 shrink-0" />
+                              <span className="truncate">WhatsApp</span>
+                            </a>
+                          </div>
                         </div>
                       </div>
                     );
