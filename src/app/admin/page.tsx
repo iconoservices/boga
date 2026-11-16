@@ -2271,17 +2271,8 @@ function AdminDashboard({ user }: { user: User }) {
             ) : activeTab === 'products' ? (
               <div className="flex items-center gap-2 w-full md:w-auto flex-wrap">
                 <button
-                  type="button"
-                  onClick={() => setIsImportModalOpen(true)}
-                  className="flex items-center justify-center gap-1.5 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2.5 rounded-md font-bold text-sm shadow-xs transition-all w-full md:w-auto cursor-pointer"
-                  title="Copiar productos de un proveedor o de tu otra tienda"
-                >
-                  <span className="material-symbols-outlined text-[18px] text-primary">handshake</span>
-                  Importar de Tienda Aliada
-                </button>
-                <button
                   onClick={() => { resetForm(); setIsModalOpen(true); }}
-                  className="flex items-center justify-center gap-2 bg-[var(--tienda-color)] text-white px-5 py-2.5 rounded-md font-bold shadow-lg shadow-[var(--tienda-color)]/20 hover:shadow-[var(--tienda-color)]/30 transition-all hover:-translate-y-0.5 active:translate-y-0 w-full md:w-auto"
+                  className="flex items-center justify-center gap-2 bg-[var(--tienda-color)] text-white px-5 py-2.5 rounded-md font-bold shadow-lg shadow-[var(--tienda-color)]/20 hover:shadow-[var(--tienda-color)]/30 transition-all hover:-translate-y-0.5 active:translate-y-0 w-full md:w-auto cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-[18px]">add</span>
                   Nuevo Producto
