@@ -1291,98 +1291,132 @@ export default function RevendedorPanelPage() {
 
         {/* ══ PESTAÑA 2: PRODUCTOS DE AFILIADO (COMISIÓN POR VENTA) ══ */}
         {pestañaActiva === 'productos' && (
-          <div className="w-full flex flex-col gap-6 animate-in fade-in">
-            {/* Banner Principal de la Pestaña */}
-            <div className="bg-gradient-to-r from-sky-600 via-sky-700 to-blue-800 rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-              <div className="relative z-10 max-w-3xl">
-                <span className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-xs text-white text-[11px] font-black px-3 py-1 rounded-full mb-3 shadow-xs">
+          <div className="w-full flex flex-col lg:flex-row gap-6 items-start animate-in fade-in">
+            {/* Columna Izquierda: Información, Búsqueda y Filtro de Categorías */}
+            <div className="w-full lg:w-80 xl:w-96 shrink-0 flex flex-col gap-4 lg:sticky lg:top-28">
+              {/* Tarjeta Informativa / Banner Lateral */}
+              <div className="bg-gradient-to-br from-sky-600 via-sky-700 to-blue-800 rounded-3xl p-5 sm:p-6 text-white shadow-lg relative overflow-hidden">
+                <span className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-xs text-white text-[11px] font-black px-2.5 py-1 rounded-full mb-2.5 shadow-2xs">
                   <span className="material-symbols-outlined text-[15px]">loyalty</span>
-                  Links de Afiliado · Comisión Directa en Efectivo
+                  Links de Afiliado
                 </span>
-                <h2 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight leading-tight">
-                  Productos Disponibles para Recomendar y Ganar
+                <h2 className="text-lg sm:text-xl font-black tracking-tight leading-tight">
+                  Productos Disponibles para Recomendar
                 </h2>
-                <p className="mt-2 text-white/90 text-xs sm:text-sm leading-relaxed max-w-2xl">
-                  Elige cualquier producto, copia tu enlace exclusivo o compártelo directo a WhatsApp. Al concretarse la venta, recibes tu ganancia neta en soles sin invertir en mercadería ni encargarte del despacho.
+                <p className="mt-2 text-white/90 text-xs leading-relaxed">
+                  Copia tu enlace exclusivo o compártelo directo a WhatsApp. Al venderse, recibes tu ganancia neta en soles sin invertir en mercadería.
                 </p>
+
+                {/* Resumen métricas */}
+                <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-white/20">
+                  <div className="bg-white/10 rounded-xl p-2 text-center">
+                    <span className="text-[9px] text-sky-200 font-bold block uppercase">Catálogo</span>
+                    <span className="text-xs font-black text-white mt-0.5 block">{productosDisponibles.length}</span>
+                    <span className="text-[9px] text-white/70">ítems</span>
+                  </div>
+                  <div className="bg-white/10 rounded-xl p-2 text-center">
+                    <span className="text-[9px] text-emerald-200 font-bold block uppercase">Margen</span>
+                    <span className="text-xs font-black text-emerald-300 mt-0.5 block">+{margenPorcentaje}%</span>
+                    <span className="text-[9px] text-white/70">neto</span>
+                  </div>
+                  <div className="bg-white/10 rounded-xl p-2 text-center">
+                    <span className="text-[9px] text-sky-200 font-bold block uppercase">Envío</span>
+                    <span className="text-xs font-black text-white mt-0.5 block">Local</span>
+                    <span className="text-[9px] text-white/70">Pucallpa</span>
+                  </div>
+                </div>
               </div>
 
-              {/* Badges de Resumen */}
-              <div className="relative z-10 grid grid-cols-3 gap-2.5 shrink-0 sm:flex sm:items-center">
-                <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 border border-white/15 text-center min-w-[110px]">
-                  <span className="text-[10px] text-sky-200 font-bold block uppercase tracking-wider">Catálogo</span>
-                  <span className="text-sm font-black text-white mt-0.5 block">{productosDisponibles.length} ítems</span>
-                  <span className="text-[10px] text-white/70">Listos para venta</span>
+              {/* Buscador */}
+              <div className="bg-white rounded-2xl border border-slate-200 p-3 shadow-xs">
+                <div className="relative">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">
+                    search
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Buscar producto..."
+                    value={busquedaReferidos}
+                    onChange={(e) => setBusquedaReferidos(e.target.value)}
+                    className="w-full pl-9 pr-8 py-2 bg-slate-50 hover:bg-slate-100/60 focus:bg-white rounded-xl border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-hidden focus:border-sky-500 shadow-2xs transition"
+                  />
+                  {busquedaReferidos && (
+                    <button
+                      type="button"
+                      onClick={() => setBusquedaReferidos('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">close</span>
+                    </button>
+                  )}
                 </div>
-                <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 border border-white/15 text-center min-w-[110px]">
-                  <span className="text-[10px] text-emerald-200 font-bold block uppercase tracking-wider">Tu Margen</span>
-                  <span className="text-sm font-black text-emerald-300 mt-0.5 block">+{margenPorcentaje}%</span>
-                  <span className="text-[10px] text-white/70">Ganancia neta</span>
+              </div>
+
+              {/* Categorías */}
+              <div className="bg-white rounded-2xl border border-slate-200 p-3.5 shadow-xs flex flex-col gap-1.5">
+                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider px-1">
+                  Categorías
+                </span>
+                <div className="flex flex-wrap lg:flex-col gap-1.5 max-h-[35vh] lg:max-h-[45vh] overflow-y-auto scrollbar-none">
+                  <button
+                    type="button"
+                    onClick={() => setFiltroCatReferidos('todas')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-between text-left ${
+                      filtroCatReferidos === 'todas'
+                        ? 'bg-sky-600 text-white shadow-xs'
+                        : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span>Todas las categorías</span>
+                    <span className="text-[10px] opacity-80">({productosDisponibles.length})</span>
+                  </button>
+                  {categoriasDisponibles.map((cat) => (
+                    <button
+                      key={cat.name}
+                      type="button"
+                      onClick={() => setFiltroCatReferidos(cat.name)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-between text-left ${
+                        filtroCatReferidos.toLowerCase() === cat.name.toLowerCase()
+                          ? 'bg-sky-600 text-white shadow-xs'
+                          : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      <span className="truncate mr-2">{cat.name}</span>
+                      <span className="text-[10px] opacity-80 shrink-0">({cat.count})</span>
+                    </button>
+                  ))}
                 </div>
-                <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 border border-white/15 text-center min-w-[110px]">
-                  <span className="text-[10px] text-sky-200 font-bold block uppercase tracking-wider">Despacho</span>
-                  <span className="text-sm font-black text-white mt-0.5 block">Inmediato</span>
-                  <span className="text-[10px] text-white/70">En Pucallpa</span>
-                </div>
+              </div>
+
+              {/* Tip Pro */}
+              <div className="bg-amber-50 border border-amber-200/80 rounded-2xl p-3.5 text-xs text-amber-900 flex items-start gap-2.5">
+                <span className="material-symbols-outlined text-amber-600 text-[20px] shrink-0 mt-0.5">lightbulb</span>
+                <p className="text-[11px] leading-relaxed">
+                  <b>Tip pro:</b> Publica 1 producto en tus Estados de WhatsApp en la mañana y otro en la tarde para multiplicar tus ventas.
+                </p>
               </div>
             </div>
 
-            {/* Barra de Búsqueda y Filtro de Categorías */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-              <div className="relative flex-1">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">
-                  search
+            {/* Columna Derecha: Listado de Productos */}
+            <div className="flex-1 min-w-0 flex flex-col gap-4">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-xs font-bold text-slate-600">
+                  Mostrando <strong className="text-slate-900">{productosReferidosFiltrados.length}</strong> productos listos para compartir
                 </span>
-                <input
-                  type="text"
-                  placeholder="Buscar producto por nombre..."
-                  value={busquedaReferidos}
-                  onChange={(e) => setBusquedaReferidos(e.target.value)}
-                  className="w-full pl-9 pr-8 py-2.5 bg-slate-50 hover:bg-slate-100/60 focus:bg-white rounded-xl border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-hidden focus:border-sky-500 shadow-2xs transition"
-                />
-                {busquedaReferidos && (
+                {(busquedaReferidos || filtroCatReferidos !== 'todas') && (
                   <button
                     type="button"
-                    onClick={() => setBusquedaReferidos('')}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    onClick={() => {
+                      setBusquedaReferidos('');
+                      setFiltroCatReferidos('todas');
+                    }}
+                    className="text-xs font-bold text-sky-600 hover:underline cursor-pointer"
                   >
-                    <span className="material-symbols-outlined text-[16px]">close</span>
+                    Limpiar filtros
                   </button>
                 )}
               </div>
 
-              {/* Categorías chips */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-                <button
-                  type="button"
-                  onClick={() => setFiltroCatReferidos('todas')}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
-                    filtroCatReferidos === 'todas'
-                      ? 'bg-sky-600 text-white shadow-xs'
-                      : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
-                  }`}
-                >
-                  Todas ({productosDisponibles.length})
-                </button>
-                {categoriasDisponibles.map((cat) => (
-                  <button
-                    key={cat.name}
-                    type="button"
-                    onClick={() => setFiltroCatReferidos(cat.name)}
-                    className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
-                      filtroCatReferidos.toLowerCase() === cat.name.toLowerCase()
-                        ? 'bg-sky-600 text-white shadow-xs'
-                        : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    {cat.name} ({cat.count})
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Listado de Productos Grid */}
-            <div>
               {cargandoProductos ? (
                 <div className="py-20 text-center text-slate-500 bg-white rounded-3xl border border-slate-200">
                   <span className="material-symbols-outlined text-4xl animate-spin text-sky-600">progress_activity</span>
@@ -1405,7 +1439,7 @@ export default function RevendedorPanelPage() {
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
                   {productosReferidosFiltrados.map((prod) => {
                     const precioCliente = calcularPrecio(prod.price, prod.id);
                     const ganancia = calcularGanancia(prod.price, prod.id);
@@ -1512,17 +1546,6 @@ export default function RevendedorPanelPage() {
                   })}
                 </div>
               )}
-            </div>
-
-            {/* Footer con tip pro */}
-            <div className="bg-slate-100 border border-slate-200/80 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-amber-500 text-3xl">lightbulb</span>
-                <div className="text-xs">
-                  <p className="font-extrabold text-slate-900">¿Cómo vender más con tus links de afiliado?</p>
-                  <p className="text-slate-600">Publica 1 producto por la mañana y otro por la tarde en tus Estados de WhatsApp. Con solo 2 ventas al día puedes generar más de <b>S/ 600 al mes</b> en ganancias netas directas.</p>
-                </div>
-              </div>
             </div>
           </div>
         )}

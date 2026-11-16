@@ -142,7 +142,7 @@ export default function ProfilePage() {
     return (
       <>
         <AppHeader cartCount={0} />
-        <main className="max-w-[640px] mx-auto px-container-margin pt-20 pb-12 flex items-center justify-center text-secondary text-sm">
+        <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-12 flex items-center justify-center text-secondary text-sm">
           {authLoading ? 'Cargando tu perfil…' : 'Redirigiendo a inicio de sesión…'}
         </main>
       </>
@@ -161,125 +161,146 @@ export default function ProfilePage() {
         cartCount={0}
       />
 
-      <main className="max-w-[640px] mx-auto px-container-margin pt-6 pb-12 flex flex-col gap-3">
-        
-        {/* Hero / Avatar Card */}
-        <div className="bg-gradient-to-r from-on-surface to-inverse-surface rounded-2xl p-4 flex items-center gap-3 shadow-md text-white">
-          <div className="w-11 h-11 rounded-full bg-gradient-to-r from-primary to-primary-container flex items-center justify-center shrink-0 shadow-md">
-            <span className="font-bold text-lg text-white">{initials}</span>
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-16">
+        <div className="flex flex-col lg:grid lg:grid-cols-12 lg:gap-8 items-start">
+          
+          {/* Columna Izquierda: Avatar y Navegación */}
+          <div className="w-full lg:col-span-4 flex flex-col gap-4 lg:sticky lg:top-24">
+            {/* Hero / Avatar Card */}
+            <div className="bg-gradient-to-r from-on-surface to-inverse-surface rounded-2xl p-4 sm:p-5 flex items-center gap-3.5 shadow-md text-white">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-primary to-primary-container flex items-center justify-center shrink-0 shadow-md">
+                <span className="font-bold text-lg text-white">{initials}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white/50 text-[10px] uppercase tracking-wider mb-0.5 font-bold">Bienvenido 👋</p>
+                <h1 className="font-bold text-base text-white leading-tight truncate">{user.name}</h1>
+                <p className="text-white/40 text-[11px] mt-0.5 truncate">
+                  {user.email}
+                </p>
+                <p className="text-white/30 text-[10px] mt-0.5 truncate">
+                  Miembro desde {user.joinedDate}
+                </p>
+              </div>
+            </div>
+
+            {/* Selector: Mi Perfil · Favoritos · Ajustes */}
+            <div className="flex lg:flex-col gap-1.5 bg-surface-container p-1.5 rounded-2xl border border-surface-container-highest shadow-inner">
+              {navTabs.map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveSection(tab.key)}
+                  className={`flex-1 lg:flex-initial py-2.5 px-3.5 rounded-xl font-bold text-xs flex items-center lg:justify-start justify-center gap-2 transition-all active:scale-95 cursor-pointer ${
+                    activeSection === tab.key
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'text-secondary opacity-70 hover:opacity-100 hover:bg-surface-container-high'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">{tab.icon}</span>
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-white/50 text-[10px] uppercase tracking-wider mb-0.5 font-bold">Bienvenido 👋</p>
-            <h1 className="font-bold text-base text-white leading-tight truncate">{user.name}</h1>
-            <p className="text-white/40 text-[11px] mt-0.5 truncate">
-              {user.email} · Miembro desde {user.joinedDate}
-            </p>
-          </div>
-        </div>
 
-        {/* Selector: Mi Perfil · Ajustes · Pedidos */}
-        <div className="flex gap-1 bg-surface-container p-1 rounded-xl border border-surface-container-highest shadow-inner">
-          {navTabs.map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveSection(tab.key)}
-              className={`flex-1 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 ${
-                activeSection === tab.key
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'text-secondary opacity-60 hover:opacity-100'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[16px]">{tab.icon}</span>
-              {tab.label}
-            </button>
-          ))}
-        </div>
+          {/* Columna Derecha: Accesos Directos de Gestión y Contenido */}
+          <div className="w-full lg:col-span-8 flex flex-col gap-5 mt-4 lg:mt-0">
+            {/* Accesos de Gestión Rediseñados Limpios */}
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] font-extrabold text-secondary/70 uppercase tracking-wider px-1">
+                Accesos y Espacios de Gestión
+              </span>
 
-        {/* Superadmin + Tienda + Boga Network — tarjetas de acceso directo según rol */}
-        {(() => {
-          const itemsCount = (isSuperadmin ? 1 : 0) + (user.isMerchant ? 1 : 0) + (hasNetworkStore ? 1 : 0);
-          const tarjeta = 'rounded-xl shadow-md text-white flex items-center gap-2 p-2.5 min-w-0 active:scale-[0.98] hover:brightness-110 transition-all';
-          if (itemsCount === 0) return null;
-          return (
-            <div className={`grid gap-3 ${itemsCount >= 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
-              {/* Superadmin — atajo a TODAS las tiendas, no solo la propia */}
-              {isSuperadmin && (
-                <Link href="/superadmin" className={`bg-gradient-to-r from-[#1a1a1a] to-[#333] ${tarjeta}`}>
-                  <div className="w-8 h-8 bg-white/15 rounded-lg flex items-center justify-center shrink-0 backdrop-blur-md">
-                    <span className="material-symbols-outlined text-white text-[18px]">admin_panel_settings</span>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-white/70 text-[9px] font-bold uppercase tracking-wider leading-tight whitespace-nowrap">Super Admin</p>
-                    <p className="font-bold text-xs text-white truncate leading-tight mt-0.5">Tiendas</p>
-                  </div>
-                  {itemsCount === 1 && <span className="material-symbols-outlined text-white/60 text-[18px] shrink-0">chevron_right</span>}
-                </Link>
-              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {/* Superadmin */}
+                {isSuperadmin && (
+                  <Link
+                    href="/superadmin"
+                    className="bg-white hover:bg-slate-50 border border-slate-200/90 rounded-2xl p-3.5 shadow-2xs hover:shadow-md transition-all flex items-center justify-between gap-3 group active:scale-[0.98]"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition">
+                        <span className="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider block">Panel General</span>
+                        <span className="text-xs font-black text-slate-900 truncate block mt-0.5">Super Admin</span>
+                      </div>
+                    </div>
+                    <span className="material-symbols-outlined text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition text-[18px] shrink-0">chevron_right</span>
+                  </Link>
+                )}
 
-              {/* Tienda propia */}
-              {user.isMerchant && (
-                <Link href="/admin" className={`bg-gradient-to-r from-primary to-primary-container ${tarjeta}`}>
-                  <div className="w-8 h-8 bg-white/15 rounded-lg flex items-center justify-center shrink-0 backdrop-blur-md">
-                    <span className="material-symbols-outlined text-white text-[18px]">storefront</span>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-white/70 text-[9px] font-bold uppercase tracking-wider leading-tight whitespace-nowrap">Tu tienda</p>
-                    <p className="font-bold text-xs text-white truncate leading-tight mt-0.5">{user.merchantStoreName}</p>
-                  </div>
-                  {itemsCount === 1 && <span className="material-symbols-outlined text-white/60 text-[18px] shrink-0">chevron_right</span>}
-                </Link>
-              )}
+                {/* Tienda propia */}
+                {user.isMerchant ? (
+                  <Link
+                    href="/admin"
+                    className="bg-white hover:bg-red-50/40 border border-red-200/80 rounded-2xl p-3.5 shadow-2xs hover:shadow-md transition-all flex items-center justify-between gap-3 group active:scale-[0.98]"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-red-600 text-white flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition">
+                        <span className="material-symbols-outlined text-[20px]">storefront</span>
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-[9px] font-extrabold text-red-600 uppercase tracking-wider block">Tu Negocio</span>
+                        <span className="text-xs font-black text-slate-900 truncate block mt-0.5">{user.merchantStoreName}</span>
+                      </div>
+                    </div>
+                    <span className="material-symbols-outlined text-slate-400 group-hover:text-red-600 group-hover:translate-x-0.5 transition text-[18px] shrink-0">chevron_right</span>
+                  </Link>
+                ) : (
+                  <Link
+                    href="/negocios"
+                    className="bg-gradient-to-r from-red-50 to-orange-50/50 hover:from-red-100/80 hover:to-orange-100/80 border border-red-200/70 rounded-2xl p-3.5 shadow-2xs transition-all flex items-center justify-between gap-3 group active:scale-[0.98]"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-red-600/10 text-red-600 flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-[20px]">add_business</span>
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-[9px] font-extrabold text-red-600 uppercase tracking-wider block">¿Tienes un negocio?</span>
+                        <span className="text-xs font-black text-slate-900 truncate block mt-0.5">Crear carta digital</span>
+                      </div>
+                    </div>
+                    <span className="material-symbols-outlined text-red-400 group-hover:text-red-600 group-hover:translate-x-0.5 transition text-[18px] shrink-0">chevron_right</span>
+                  </Link>
+                )}
 
-              {/* Boga Network · Tienda de Reventa */}
-              {hasNetworkStore && (
-                <Link href="/network/panel" className={`bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 ${tarjeta}`}>
-                  <div className="w-8 h-8 bg-white/15 rounded-lg flex items-center justify-center shrink-0 backdrop-blur-md">
-                    <span className="material-symbols-outlined text-white text-[18px]">payments</span>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-emerald-100/80 text-[9px] font-bold uppercase tracking-wider leading-tight whitespace-nowrap">Boga Network · Reventa</p>
-                    <p className="font-bold text-xs text-white truncate leading-tight mt-0.5">{networkStoreName || 'Mis Tiendas'}</p>
-                  </div>
-                  {itemsCount === 1 && <span className="material-symbols-outlined text-white/60 text-[18px] shrink-0">chevron_right</span>}
-                </Link>
-              )}
+                {/* Boga Network · Tienda de Reventa */}
+                {hasNetworkStore ? (
+                  <Link
+                    href="/network/panel"
+                    className="bg-white hover:bg-emerald-50/40 border border-emerald-200/80 rounded-2xl p-3.5 shadow-2xs hover:shadow-md transition-all flex items-center justify-between gap-3 group active:scale-[0.98]"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition">
+                        <span className="material-symbols-outlined text-[20px]">payments</span>
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-[9px] font-extrabold text-emerald-700 uppercase tracking-wider block">Boga Network</span>
+                        <span className="text-xs font-black text-slate-900 truncate block mt-0.5">{networkStoreName || 'Mis Tiendas'}</span>
+                      </div>
+                    </div>
+                    <span className="material-symbols-outlined text-slate-400 group-hover:text-emerald-700 group-hover:translate-x-0.5 transition text-[18px] shrink-0">chevron_right</span>
+                  </Link>
+                ) : (
+                  <Link
+                    href="/network"
+                    className="bg-gradient-to-r from-emerald-50 to-teal-50/50 hover:from-emerald-100/80 hover:to-teal-100/80 border border-emerald-200/70 rounded-2xl p-3.5 shadow-2xs transition-all flex items-center justify-between gap-3 group active:scale-[0.98]"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-600/10 text-emerald-700 flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-[20px]">payments</span>
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-[9px] font-extrabold text-emerald-700 uppercase tracking-wider block">Boga Network</span>
+                        <span className="text-xs font-black text-slate-900 truncate block mt-0.5">Gana dinero revendiendo</span>
+                      </div>
+                    </div>
+                    <span className="material-symbols-outlined text-emerald-400 group-hover:text-emerald-700 group-hover:translate-x-0.5 transition text-[18px] shrink-0">chevron_right</span>
+                  </Link>
+                )}
+              </div>
             </div>
-          );
-        })()}
-
-        {/* No-merchant CTA — mismo formato que Super Admin / Tu tienda */}
-        {!user.isMerchant && (
-          <Link
-            href="/negocios"
-            className="bg-gradient-to-r from-primary to-primary-container rounded-xl shadow-md text-white flex items-center gap-2 p-2.5 min-w-0 active:scale-[0.98] hover:brightness-110 transition-all"
-          >
-            <div className="w-8 h-8 bg-white/15 rounded-lg flex items-center justify-center shrink-0 backdrop-blur-md">
-              <span className="material-symbols-outlined text-white text-[18px]">add_business</span>
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-white/70 text-[9px] font-bold uppercase tracking-wider leading-tight whitespace-nowrap">¿Tienes un negocio?</p>
-              <p className="font-bold text-xs text-white truncate leading-tight mt-0.5">Crea tu carta digital gratis</p>
-            </div>
-            <span className="material-symbols-outlined text-white/60 text-[18px] shrink-0">chevron_right</span>
-          </Link>
-        )}
-
-        {/* CTA para Boga Network si todavía no tiene tienda de reventa */}
-        {!hasNetworkStore && (
-          <Link
-            href="/network"
-            className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-xl shadow-md text-white flex items-center gap-2 p-2.5 min-w-0 active:scale-[0.98] hover:brightness-110 transition-all"
-          >
-            <div className="w-8 h-8 bg-white/15 rounded-lg flex items-center justify-center shrink-0 backdrop-blur-md">
-              <span className="material-symbols-outlined text-white text-[18px]">payments</span>
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-emerald-100/80 text-[9px] font-bold uppercase tracking-wider leading-tight whitespace-nowrap">¿Quieres ganar dinero?</p>
-              <p className="font-bold text-xs text-white truncate leading-tight mt-0.5">Crea tu tienda de reventa sin inversión</p>
-            </div>
-            <span className="material-symbols-outlined text-white/60 text-[18px] shrink-0">chevron_right</span>
-          </Link>
-        )}
 
         {/* SECTION: Mi Perfil */}
         {activeSection === 'perfil' && (
@@ -426,6 +447,8 @@ export default function ProfilePage() {
           </div>
         )}
 
+          </div>
+        </div>
       </main>
 
       {showPasswordModal && (
