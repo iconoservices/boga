@@ -55,21 +55,7 @@ export default function BogaNetworkHomePage() {
         if (metaName) setNombre(metaName);
       }
 
-      // 1. Revisar si hay un borrador guardado en localStorage
-      try {
-        const draft = localStorage.getItem('boga_revendedor_draft');
-        if (draft) {
-          const parsed = JSON.parse(draft);
-          if (parsed?.nombreTienda) {
-            setTiendaExistente({ nombreTienda: parsed.nombreTienda, nombre: parsed.nombre || '' });
-            return;
-          }
-        }
-      } catch {
-        // noop
-      }
-
-      // 2. Revisar si ya tiene una tienda de reventa en store_requests en Supabase
+      // Si el usuario tiene sesión, la base de datos es la única fuente de la verdad
       if (user.email) {
         supabase
           .from('store_requests')
@@ -79,13 +65,31 @@ export default function BogaNetworkHomePage() {
           .order('created_at', { ascending: false })
           .limit(1)
           .then(({ data, error }) => {
-            if (!error && data && data.length > 0) {
+            if (!error && data && data.length > 0 && data[0].business_name) {
               setTiendaExistente({
                 nombreTienda: data[0].business_name,
                 nombre: data[0].contact_name,
               });
+            } else {
+              // Si no existe en la base de datos (fue borrada por el admin o no tiene), limpiar cache local
+              try {
+                localStorage.removeItem('boga_revendedor_draft');
+                if (user?.id) localStorage.removeItem(`boga_revendedor_draft_${user.id}`);
+              } catch {}
+              setTiendaExistente(null);
             }
           });
+      } else {
+        // Solo para usuario anónimo: revisar borrador temporal
+        try {
+          const draft = localStorage.getItem('boga_revendedor_draft');
+          if (draft) {
+            const parsed = JSON.parse(draft);
+            if (parsed?.nombreTienda) {
+              setTiendaExistente({ nombreTienda: parsed.nombreTienda, nombre: parsed.nombre || '' });
+            }
+          }
+        } catch {}
       }
     }
   }, [user, authLoading, nombre]);

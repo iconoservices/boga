@@ -95,58 +95,80 @@ export default function RevendedorPanelPage() {
   useEffect(() => {
     if (authLoading) return;
 
-    let cargado = false;
     const userDraftKey = user ? `boga_revendedor_draft_${user.id}` : null;
 
-    try {
-      const raw = typeof window !== 'undefined'
-        ? ((userDraftKey && localStorage.getItem(userDraftKey)) || localStorage.getItem('boga_revendedor_draft'))
-        : null;
-
-      if (raw) {
-        const p = JSON.parse(raw);
-        if (p.nombreTienda && p.whatsapp) {
-          setNombre(p.nombre || '');
-          setWhatsapp(p.whatsapp || '');
-          setNombreTienda(p.nombreTienda || '');
-          setCiudad(p.ciudad || 'pucallpa');
-          if (p.margenPorcentaje !== undefined) setMargenPorcentaje(p.margenPorcentaje);
-          if (p.tiendaSeleccionada) setTiendaSeleccionada(p.tiendaSeleccionada);
-          if (p.productosSeleccionados && Array.isArray(p.productosSeleccionados)) {
-            setProductosSeleccionados(new Set(p.productosSeleccionados));
-          }
-          setTieneTienda(true);
-          cargado = true;
-          setCargandoDatos(false);
-        }
-      }
-    } catch (e) {
-      console.warn('Error leyendo borrador:', e);
-    }
-
-    // Si no estaba en localStorage y el usuario tiene sesión, consultar Supabase
-    if (!cargado && user?.email) {
+    // Si el usuario tiene sesión, la base de datos es la única fuente de la verdad
+    if (user?.email) {
       supabase
         .from('store_requests')
-        .select('business_name, contact_name, whatsapp, city, description')
+        .select('business_name, contact_name, whatsapp, city, description, status')
         .eq('email', user.email)
         .eq('interest', 'revendedor')
         .order('created_at', { ascending: false })
         .limit(1)
         .then(({ data, error }) => {
-          if (!error && data && data.length > 0) {
+          if (!error && data && data.length > 0 && data[0].business_name) {
             const req = data[0];
-            if (req.business_name) {
-              setNombreTienda(req.business_name);
-              setNombre(req.contact_name || user.user_metadata?.full_name || '');
-              setWhatsapp(req.whatsapp || '');
-              if (req.city) setCiudad(req.city);
-              setTieneTienda(true);
+            setNombreTienda(req.business_name);
+            setNombre(req.contact_name || user.user_metadata?.full_name || '');
+            setWhatsapp(req.whatsapp || '');
+            if (req.city) setCiudad(req.city);
+            if (req.status === 'approved') setEstadoTienda('activa');
+            setTieneTienda(true);
+
+            // Cargar preferencias locales (márgenes y productos elegidos)
+            try {
+              const raw = typeof window !== 'undefined'
+                ? ((userDraftKey && localStorage.getItem(userDraftKey)) || localStorage.getItem('boga_revendedor_draft'))
+                : null;
+              if (raw) {
+                const p = JSON.parse(raw);
+                if (p.margenPorcentaje !== undefined) setMargenPorcentaje(p.margenPorcentaje);
+                if (p.tiendaSeleccionada) setTiendaSeleccionada(p.tiendaSeleccionada);
+                if (p.productosSeleccionados && Array.isArray(p.productosSeleccionados)) {
+                  setProductosSeleccionados(new Set(p.productosSeleccionados));
+                }
+              }
+            } catch (e) {
+              console.warn('Error leyendo preferencias locales:', e);
             }
+          } else {
+            // NO EXISTE EN SUPABASE (Fue borrada por el Superadmin)
+            try {
+              if (userDraftKey) localStorage.removeItem(userDraftKey);
+              localStorage.removeItem('boga_revendedor_draft');
+            } catch {}
+            setTieneTienda(false);
+            setNombreTienda('');
           }
           setCargandoDatos(false);
         });
-    } else if (!cargado) {
+    } else {
+      // Usuario anónimo / sin sesión: revisar borrador temporal en localStorage
+      try {
+        const raw = typeof window !== 'undefined' ? localStorage.getItem('boga_revendedor_draft') : null;
+        if (raw) {
+          const p = JSON.parse(raw);
+          if (p.nombreTienda && p.whatsapp) {
+            setNombre(p.nombre || '');
+            setWhatsapp(p.whatsapp || '');
+            setNombreTienda(p.nombreTienda || '');
+            setCiudad(p.ciudad || 'pucallpa');
+            if (p.margenPorcentaje !== undefined) setMargenPorcentaje(p.margenPorcentaje);
+            if (p.tiendaSeleccionada) setTiendaSeleccionada(p.tiendaSeleccionada);
+            if (p.productosSeleccionados && Array.isArray(p.productosSeleccionados)) {
+              setProductosSeleccionados(new Set(p.productosSeleccionados));
+            }
+            setTieneTienda(true);
+          } else {
+            setTieneTienda(false);
+          }
+        } else {
+          setTieneTienda(false);
+        }
+      } catch {
+        setTieneTienda(false);
+      }
       setCargandoDatos(false);
     }
   }, [user, authLoading]);

@@ -132,8 +132,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: delErr.message }, { status: 500 });
     }
 
+    if (business_name) {
+      await admin.from('stores').delete().ilike('name', business_name);
+    }
+
     return NextResponse.json({ ok: true, mensaje: `Solicitud eliminada con éxito` });
   }
 
   return NextResponse.json({ error: 'Acción no reconocida' }, { status: 400 });
 }
+
