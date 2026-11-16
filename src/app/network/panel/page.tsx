@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { CIUDADES } from '@/lib/ciudades';
+import IconoWhatsApp from '@/templates/shared/IconoWhatsApp';
 
 function waLink(numero: string, texto: string) {
   const clean = numero.replace(/\D/g, '');
@@ -616,8 +617,8 @@ export default function RevendedorPanelPage() {
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <span className="material-symbols-outlined text-[18px]">visibility</span>
-            <span>2. Vista Previa de Mi Tienda</span>
+            <span className="material-symbols-outlined text-[18px]">store</span>
+            <span>2. Mis Tiendas</span>
             {estadoTienda === 'activa' ? (
               <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -953,164 +954,98 @@ export default function RevendedorPanelPage() {
           </div>
         )}
 
-        {/* ══ PESTAÑA 2: VISTA PREVIA DE MI TIENDA ══ */}
+        {/* ══ PESTAÑA 2: MIS TIENDAS (LISTA DE TIENDAS VINCULADAS) ══ */}
         {pestañaActiva === 'preview' && (
           <div className="max-w-4xl mx-auto flex flex-col gap-5 animate-in fade-in">
-            {estadoTienda === 'activa' ? (
-              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                    <span className="material-symbols-outlined text-2xl">verified</span>
-                  </div>
-                  <div>
-                    <p className="font-extrabold text-sm text-emerald-950 flex items-center gap-2">
-                      ¡Tu tienda está ACTIVA y pública en internet!
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    </p>
-                    <p className="text-emerald-700 mt-0.5">
-                      Link público:{' '}
-                      <a
-                        href={`/${slugTienda}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-mono font-bold underline text-emerald-900"
-                      >
-                        {linkTienda}
-                      </a>
-                    </p>
-                  </div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
+              <div>
+                <h2 className="text-base sm:text-lg font-black text-slate-900">
+                  Mis Tiendas de Reventa
+                </h2>
+                <p className="text-xs text-slate-500">
+                  Toca la tienda para abrirla directamente en internet o compartir tu enlace oficial.
+                </p>
+              </div>
+
+              <Link
+                href="/network"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-xs transition active:scale-95 shrink-0"
+              >
+                <span className="material-symbols-outlined text-[16px]">add</span>
+                <span>Crear otra tienda</span>
+              </Link>
+            </div>
+
+            {/* Tarjeta de Tienda Activa ("Ese largo") */}
+            <div
+              onClick={() => window.open(`/${slugTienda}`, '_blank')}
+              className="group bg-white rounded-3xl border border-slate-200 hover:border-emerald-500 p-5 sm:p-6 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-5 relative overflow-hidden"
+            >
+              <div className="flex items-center gap-4 min-w-0">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-600 group-hover:bg-emerald-500 text-white font-black text-2xl flex items-center justify-center shrink-0 shadow-md ring-2 ring-emerald-100 transition">
+                  {(nombreTienda || 'T').slice(0, 1).toUpperCase()}
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    type="button"
-                    onClick={copiarLink}
-                    className="px-3 py-1.5 rounded-xl bg-white border border-emerald-300 text-emerald-800 font-bold hover:bg-emerald-100/50 transition cursor-pointer flex items-center gap-1.5 shadow-2xs text-xs"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">{copiado ? 'check' : 'content_copy'}</span>
-                    <span>{copiado ? '¡Copiado!' : 'Copiar Link'}</span>
-                  </button>
-                  <a
-                    href={`https://wa.me/?text=${encodeURIComponent(
-                      `¡Hola! Ya abrí mi tienda virtual "${nombreTienda}". Puedes ver mi catálogo y hacer pedidos directo aquí: ${linkTienda}`
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3.5 py-1.5 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold transition flex items-center gap-1.5 shadow-xs text-xs"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">share</span>
-                    <span>Compartir en WhatsApp</span>
-                  </a>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-base sm:text-lg font-black text-slate-900 group-hover:text-emerald-700 transition capitalize flex items-baseline gap-1">
+                      <span>{nombreTienda.replace(/\s+bm$/i, '')}</span>
+                      <span className="text-slate-400 font-bold text-xs lowercase">bm</span>
+                    </h3>
+                    {estadoTienda === 'activa' ? (
+                      <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        Pública
+                      </span>
+                    ) : (
+                      <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        En borrador (Privada)
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-xs text-slate-500 mt-1 truncate">
+                    {nombre ? `Catálogo de ${nombre} · ` : ''}Envíos en {ciudad} · {productosSeleccionados.size} productos (Margen +{margenPorcentaje}%)
+                  </p>
+
+                  <p className="text-xs font-mono font-bold text-emerald-800 mt-1.5 flex items-center gap-1 group-hover:underline">
+                    <span>{linkTienda}</span>
+                    <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+                  </p>
                 </div>
               </div>
-            ) : (
-              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5 text-amber-900 font-medium">
-                  <span className="material-symbols-outlined text-amber-700 text-xl shrink-0">visibility</span>
-                  <span>
-                    <b>Simulación Privada:</b> Así verán tus clientes tu catálogo en internet una vez que el administrador active tu tienda.
-                  </span>
-                </div>
+
+              <div
+                className="flex items-center gap-2 shrink-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-100"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <button
                   type="button"
-                  onClick={() => setModalAvisoAsesor(true)}
-                  className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-3.5 py-1.5 rounded-xl text-xs transition shrink-0 cursor-pointer"
+                  onClick={copiarLink}
+                  className="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
                 >
-                  Solicitar Activación
+                  <span className="material-symbols-outlined text-[16px]">{copiado ? 'check' : 'content_copy'}</span>
+                  <span>{copiado ? '¡Copiado!' : 'Copiar Link'}</span>
                 </button>
-              </div>
-            )}
-
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-              <div className="p-6 bg-gradient-to-r from-slate-900 to-slate-800 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center font-black text-xl shadow-md">
-                    {nombreTienda.slice(0, 1).toUpperCase()}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-lg font-black">{nombreTienda}</h2>
-                      <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                        Tienda Oficial
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-300 mt-0.5">
-                      Catálogo de {nombre} · Envíos en {ciudad}
-                    </p>
-                  </div>
-                </div>
-
                 <a
-                  href={waLink(whatsapp, `Hola ${nombreTienda}, quiero consultar por un producto de tu catálogo.`)}
+                  href={`https://wa.me/?text=${encodeURIComponent(
+                    `¡Hola! Ya abrí mi tienda virtual "${nombreTienda} bm". Puedes ver mi catálogo y hacer pedidos directo aquí: ${linkTienda}`
+                  )}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-[#25D366] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md hover:bg-[#20ba5a] transition"
+                  className="px-3.5 py-2 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-black text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
                 >
-                  <span className="material-symbols-outlined text-[18px]">chat</span>
-                  <span>Pedir al WhatsApp: {whatsapp}</span>
+                  <IconoWhatsApp className="w-4 h-4 text-white" />
+                  <span>Compartir</span>
                 </a>
-              </div>
-
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-extrabold text-slate-900">
-                    Productos Disponibles ({prodsElegidos.length})
-                  </h3>
-                  <span className="text-xs text-slate-500">Precios finales para clientes</span>
-                </div>
-
-                {prodsElegidos.length === 0 ? (
-                  <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                    <p className="text-xs text-slate-500 font-semibold">
-                      Aún no has marcado productos para tu tienda.
-                    </p>
-                    <button
-                      onClick={() => setPestañaActiva('catalogo')}
-                      className="mt-2 text-xs font-bold text-emerald-700 underline cursor-pointer"
-                    >
-                      Ir a elegir productos →
-                    </button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5">
-                    {prodsElegidos.map((prod) => (
-                      <div
-                        key={prod.id}
-                        className="bg-white rounded-2xl border border-slate-100 p-2.5 shadow-2xs flex flex-col justify-between"
-                      >
-                        <div className="aspect-square rounded-xl bg-slate-100 overflow-hidden mb-2">
-                          {prod.image ? (
-                            <img src={prod.image} alt={prod.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-slate-300">
-                              <span className="material-symbols-outlined text-2xl">image</span>
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
-                            {prod.category}
-                          </span>
-                          <h4 className="text-xs font-bold text-slate-900 line-clamp-1">{prod.name}</h4>
-                          <p className="text-sm font-black text-emerald-700 mt-1">
-                            S/ {calcularPrecio(prod.price)}
-                          </p>
-                        </div>
-                        <a
-                          href={waLink(
-                            whatsapp,
-                            `Hola ${nombreTienda}! Quiero comprar "${prod.name}" a S/ ${calcularPrecio(prod.price)}.`
-                          )}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-2.5 w-full py-1.5 rounded-lg bg-[#25D366]/15 hover:bg-[#25D366] text-[#128C7E] hover:text-white text-[11px] font-bold text-center transition flex items-center justify-center gap-1"
-                        >
-                          <span className="material-symbols-outlined text-[14px]">chat</span>
-                          <span>Pedir</span>
-                        </a>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <a
+                  href={`/${slugTienda}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition"
+                >
+                  <span>Abrir Tienda</span>
+                  <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
+                </a>
               </div>
             </div>
           </div>

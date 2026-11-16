@@ -52,10 +52,15 @@ async function extractThemeFromImage(imageUrl: string): Promise<StoreTheme | nul
 
 async function cargarTienda(slug: string): Promise<StoreConfig | null> {
   try {
+    const cleanSlug = slug.toLowerCase().trim();
+    const slugSinBm = cleanSlug.replace(/-bm$/, '');
+    const slugConBm = cleanSlug.endsWith('-bm') ? cleanSlug : `${cleanSlug}-bm`;
+
     const { data: dbStore } = await supabase
       .from('stores')
       .select('*')
-      .eq('slug', slug)
+      .or(`slug.eq.${cleanSlug},slug.eq.${slugSinBm},slug.eq.${slugConBm}`)
+      .limit(1)
       .maybeSingle();
 
     if (dbStore) {
@@ -126,7 +131,7 @@ async function cargarTienda(slug: string): Promise<StoreConfig | null> {
         .from('store_requests')
         .select('*')
         .eq('status', 'approved')
-        .ilike('business_name', slug)
+        .or(`business_name.ilike.%${slugSinBm}%,business_name.ilike.%${cleanSlug}%`)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();

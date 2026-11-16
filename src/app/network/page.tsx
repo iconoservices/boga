@@ -130,11 +130,14 @@ export default function BogaNetworkHomePage() {
 
     setIsLoading(true);
 
+    const nombreTiendaSinBm = nombreTienda.replace(/\s+bm$/i, '').trim();
+    const nombreTiendaFinal = `${nombreTiendaSinBm} bm`;
+
     try {
       // Registrar solicitud con interest = 'revendedor'
       const { error } = await supabase.from('store_requests').insert({
         contact_name: nombre.trim(),
-        business_name: nombreTienda.trim(),
+        business_name: nombreTiendaFinal,
         whatsapp: whatsapp.trim(),
         city: ciudad,
         interest: 'revendedor',
@@ -157,7 +160,7 @@ export default function BogaNetworkHomePage() {
         JSON.stringify({
           nombre: nombre.trim(),
           whatsapp: whatsapp.trim(),
-          nombreTienda: nombreTienda.trim(),
+          nombreTienda: nombreTiendaFinal,
           ciudad,
           email: user.email,
           createdAt: new Date().toISOString(),
@@ -549,14 +552,22 @@ export default function BogaNetworkHomePage() {
                   <label className="block text-xs font-bold text-slate-700 mb-1">
                     Nombre para tu tienda <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej: Camila Store, Ofertas Pucallpa"
-                    value={nombreTienda}
-                    onChange={(e) => setNombreTienda(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 bg-slate-50"
-                  />
+                  <div className="relative flex items-center">
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ej: Camila Store, Ofertas Pucallpa"
+                      value={nombreTienda}
+                      onChange={(e) => setNombreTienda(e.target.value)}
+                      className="w-full px-3 py-2 pr-12 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 bg-slate-50"
+                    />
+                    <span className="absolute right-3 text-xs font-bold text-slate-400 select-none pointer-events-none">
+                      bm
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Se añade &ldquo;bm&rdquo; al final para identificar que es catálogo oficial de Boga Market.
+                  </p>
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1">

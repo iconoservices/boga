@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import type { StoreConfig } from '@/lib/stores.config';
 import { supabase } from '@/lib/supabase';
+import IconoWhatsApp from '@/templates/shared/IconoWhatsApp';
 
 interface Props {
   store: StoreConfig;
@@ -193,8 +194,9 @@ export default function NetworkTemplate({ store, initialProductId }: Props) {
 
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white capitalize">
-                    {store.name}
+                  <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white capitalize flex items-baseline gap-1.5">
+                    <span>{store.name.replace(/\s+bm$/i, '').trim()}</span>
+                    <span className="text-slate-400 font-bold text-xs sm:text-sm lowercase tracking-normal">bm</span>
                   </h1>
                   <span className="inline-flex items-center gap-1 bg-emerald-950/80 text-emerald-400 border border-emerald-500/40 text-[11px] font-black px-2.5 py-0.5 rounded-full select-none">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -208,18 +210,6 @@ export default function NetworkTemplate({ store, initialProductId }: Props) {
                     : `Catálogo Oficial en Boga Network · Envíos en ${ciudad}`}
                 </p>
               </div>
-            </div>
-
-            {/* Botón WhatsApp de Cabecera */}
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={abrirWhatsAppGeneral}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold text-xs sm:text-sm px-4.5 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl shadow-md transition active:scale-95 cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[20px]">chat</span>
-                <span>Pedir al WhatsApp: {whatsappNumero}</span>
-              </button>
             </div>
           </div>
         </div>
@@ -353,10 +343,10 @@ export default function NetworkTemplate({ store, initialProductId }: Props) {
                     <button
                       type="button"
                       onClick={(e) => pedirPorWhatsApp(prod, e)}
-                      className="mt-2 w-full py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-800 hover:text-white font-extrabold text-xs flex items-center justify-center gap-1.5 border border-emerald-200/80 transition active:scale-95 cursor-pointer"
+                      className="mt-2.5 w-full py-2.5 px-3 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-black text-xs flex items-center justify-center gap-2 shadow-xs transition active:scale-95 cursor-pointer"
                     >
-                      <span className="material-symbols-outlined text-[16px]">chat</span>
-                      <span>Pedir</span>
+                      <IconoWhatsApp className="w-4 h-4 text-white" />
+                      <span>Pedir al WhatsApp</span>
                     </button>
                   </div>
                 </div>
@@ -436,7 +426,7 @@ export default function NetworkTemplate({ store, initialProductId }: Props) {
                 onClick={() => pedirPorWhatsApp(productoModal)}
                 className="w-full py-3.5 px-4 rounded-2xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
               >
-                <span className="material-symbols-outlined text-[20px]">chat</span>
+                <IconoWhatsApp className="w-5 h-5 text-white" />
                 <span>Pedir por WhatsApp ahora (S/ {calcularPrecio(productoModal.price)})</span>
               </button>
             </div>
@@ -459,3 +449,4 @@ export default function NetworkTemplate({ store, initialProductId }: Props) {
     </div>
   );
 }
+

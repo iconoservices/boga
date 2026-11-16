@@ -101,11 +101,15 @@ export async function POST(request: Request) {
     ? `Catálogo de ${nombre} · Envíos en ${ciudad || 'pucallpa'}`
     : `Catálogo Oficial en Boga Network · Envíos en ${ciudad || 'pucallpa'}`;
 
-  // Actualizar o insertar en stores
+  const slugSinBm = cleanSlug.replace(/-bm$/, '');
+  const slugConBm = cleanSlug.endsWith('-bm') ? cleanSlug : `${cleanSlug}-bm`;
+
+  // Actualizar o insertar en stores (reconociendo con o sin -bm)
   const { data: existing } = await admin
     .from('stores')
     .select('id, slug')
-    .eq('slug', cleanSlug)
+    .or(`slug.eq.${cleanSlug},slug.eq.${slugSinBm},slug.eq.${slugConBm}`)
+    .limit(1)
     .maybeSingle();
 
   if (existing) {
@@ -159,3 +163,4 @@ export async function POST(request: Request) {
     slug: cleanSlug,
   });
 }
+
