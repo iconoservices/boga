@@ -21,3 +21,4 @@ alter table public.products add column if not exists en_market boolean default t
 create index if not exists idx_stores_permite_revendedores on public.stores (permite_revendedores) where permite_revendedores = true;
 create index if not exists idx_products_proveedor_store on public.products (proveedor_store);
 create index if not exists idx_stores_tienda_proveedora on public.stores (tienda_proveedora);
+
