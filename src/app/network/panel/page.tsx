@@ -47,6 +47,10 @@ export default function RevendedorPanelPage() {
   // Estado del panel
   const [pestañaActiva, setPestañaActiva] = useState<'inicio' | 'catalogo' | 'preview' | 'afiliados' | 'ajustes'>('inicio');
   const [modalAvisoAsesor, setModalAvisoAsesor] = useState(false);
+  const [modalCrearTienda, setModalCrearTienda] = useState(false);
+  const [nuevoNombreTienda, setNuevoNombreTienda] = useState('');
+  const [guardandoTienda, setGuardandoTienda] = useState(false);
+  const [errorTiendaModal, setErrorTiendaModal] = useState('');
   const [estadoTienda, setEstadoTienda] = useState<'desactivada' | 'activa'>('desactivada');
   const [copiado, setCopiado] = useState(false);
   const [guardandoEnNube, setGuardandoEnNube] = useState(false);
@@ -371,14 +375,47 @@ export default function RevendedorPanelPage() {
     setHayCambiosSinGuardar(true);
   };
 
-  const handleRegistrarOtra = () => {
-    if (confirm('¿Deseas salir de este panel para registrar una nueva tienda de reventa?')) {
-      try {
-        if (user?.id) localStorage.removeItem(`boga_revendedor_draft_${user.id}`);
-        localStorage.removeItem('boga_revendedor_draft');
-      } catch {}
-      router.push('/network');
+  const handleGuardarNuevaTienda = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorTiendaModal('');
+    if (!nuevoNombreTienda.trim() || nuevoNombreTienda.trim().length < 2) {
+      setErrorTiendaModal('Por favor escribe un nombre para tu tienda.');
+      return;
     }
+
+    setGuardandoTienda(true);
+    const nombreTiendaSinBm = nuevoNombreTienda.replace(/\s+bm$/i, '').trim();
+    const nombreFinal = `${nombreTiendaSinBm} bm`;
+
+    try {
+      if (user?.email) {
+        await supabase.from('store_requests').insert({
+          contact_name: nombre.trim() || user.user_metadata?.full_name || 'Revendedor',
+          business_name: nombreFinal,
+          whatsapp: whatsapp.trim(),
+          city: ciudad,
+          interest: 'revendedor',
+          email: user.email,
+          category: 'revendedor',
+          description: 'Tienda creada desde el Panel de Revendedor',
+        });
+      }
+    } catch (e: any) {
+      console.warn('Error al guardar en Supabase:', e);
+    }
+
+    setNombreTienda(nombreFinal);
+    setTieneTienda(true);
+    setGuardandoTienda(false);
+    setModalCrearTienda(false);
+    setNuevoNombreTienda('');
+    setGuardadoExitoso(true);
+    setTimeout(() => setGuardadoExitoso(false), 2500);
+  };
+
+  const handleRegistrarOtra = () => {
+    setPestañaActiva('preview');
+    setModalCrearTienda(true);
   };
 
   // ── ESTADO DE CARGA ──
@@ -1299,13 +1336,14 @@ export default function RevendedorPanelPage() {
                 </p>
               </div>
 
-              <Link
-                href="/network"
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-xs transition active:scale-95 shrink-0"
+              <button
+                type="button"
+                onClick={() => setModalCrearTienda(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-xs transition active:scale-95 shrink-0 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[16px]">add</span>
                 <span>Crear otra tienda</span>
-              </Link>
+              </button>
             </div>
 
             {/* Tarjeta de Tienda Activa ("Ese largo") */}
@@ -1727,7 +1765,85 @@ export default function RevendedorPanelPage() {
           </div>
         </div>
       )}
-      {/* ── BARRA FLOTANTE DE CAMBIOS SIN GUARDAR ── */}
+      {/* ── MODAL CENTRADO: Crear / Nueva Tienda de Reventa (Dentro del Panel) ── */}
+      {modalCrearTienda && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in"
+          onClick={() => setModalCrearTienda(false)}
+        >
+          <div
+            className="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl relative border border-slate-100 flex flex-col gap-4 text-slate-900"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setModalCrearTienda(false)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-800 flex items-center justify-center transition cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-lg">close</span>
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-2xl">storefront</span>
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900">Crear Nueva Tienda Virtual</h3>
+                <p className="text-xs text-slate-500 font-medium">Asigna un nombre a tu nuevo catálogo de ventas</p>
+              </div>
+            </div>
+
+            {errorTiendaModal && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-semibold flex items-center gap-2">
+                <span className="material-symbols-outlined text-[16px] text-red-600 shrink-0">error</span>
+                <span>{errorTiendaModal}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleGuardarNuevaTienda} className="flex flex-col gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Nombre para tu tienda <span className="text-red-500">*</span>
+                </label>
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej: Camila Store, Moda Express"
+                    value={nuevoNombreTienda}
+                    onChange={(e) => setNuevoNombreTienda(e.target.value)}
+                    className="w-full px-3 py-2 pr-12 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 bg-slate-50"
+                  />
+                  <span className="absolute right-3 text-xs font-bold text-slate-400 select-none pointer-events-none">
+                    bm
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-500 mt-1">
+                  Se añade &ldquo;bm&rdquo; al final para identificar que es catálogo oficial.
+                </p>
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setModalCrearTienda(false)}
+                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-xs font-bold transition cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={guardandoTienda}
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition cursor-pointer disabled:opacity-60 flex items-center gap-1.5"
+                >
+                  <span className="material-symbols-outlined text-[16px]">check</span>
+                  <span>{guardandoTienda ? 'Creando...' : 'Crear Tienda'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       {hayCambiosSinGuardar && (
         <div className="fixed bottom-4 inset-x-4 max-w-lg mx-auto z-40 bg-slate-900 text-white p-3.5 sm:p-4 rounded-2xl shadow-2xl border border-slate-700 flex items-center justify-between gap-3 animate-in slide-in-from-bottom-5">
           <div className="flex items-center gap-2.5 min-w-0">

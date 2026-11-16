@@ -18,13 +18,12 @@ export default function BogaNetworkHomePage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
 
-  // Modal para crear la tienda de reventa (Popup centrado)
+  // Modal para activar cuenta de dropshipping (Popup neutro de contacto)
   const [modalRegistro, setModalRegistro] = useState(false);
 
-  // Datos para registrar tienda
+  // Datos para registrar cuenta
   const [nombre, setNombre] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
-  const [nombreTienda, setNombreTienda] = useState('');
   const [ciudad, setCiudad] = useState('pucallpa');
   const [detectando, setDetectando] = useState(false);
   const [geoAviso, setGeoAviso] = useState('');
@@ -32,8 +31,8 @@ export default function BogaNetworkHomePage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [wspBoga, setWspBoga] = useState('51987911213');
 
-  // Tienda existente detectada
-  const [tiendaExistente, setTiendaExistente] = useState<{ nombreTienda: string; nombre: string } | null>(null);
+  // Cuenta existente detectada
+  const [cuentaExistente, setCuentaExistente] = useState<{ nombre: string; nombreTienda?: string } | null>(null);
 
   useEffect(() => {
     document.title = 'Boga Network · Reventa & Afiliados';
@@ -45,7 +44,7 @@ export default function BogaNetworkHomePage() {
       .catch(() => {});
   }, []);
 
-  // Detectar si el usuario ya tiene una tienda creada para ofrecerle acceso directo al Panel
+  // Detectar si el usuario ya tiene cuenta de revendedor para ofrecerle acceso directo al Panel
   useEffect(() => {
     if (authLoading) return;
 
@@ -59,24 +58,26 @@ export default function BogaNetworkHomePage() {
       if (user.email) {
         supabase
           .from('store_requests')
-          .select('business_name, contact_name')
+          .select('business_name, contact_name, whatsapp, city')
           .eq('email', user.email)
           .eq('interest', 'revendedor')
           .order('created_at', { ascending: false })
           .limit(1)
           .then(({ data, error }) => {
-            if (!error && data && data.length > 0 && data[0].business_name) {
-              setTiendaExistente({
-                nombreTienda: data[0].business_name,
-                nombre: data[0].contact_name,
+            if (!error && data && data.length > 0) {
+              setCuentaExistente({
+                nombre: data[0].contact_name || user.user_metadata?.full_name || '',
+                nombreTienda: data[0].business_name || '',
               });
+              if (data[0].contact_name) setNombre(data[0].contact_name);
+              if (data[0].whatsapp) setWhatsapp(data[0].whatsapp);
+              if (data[0].city) setCiudad(data[0].city);
             } else {
-              // Si no existe en la base de datos (fue borrada por el admin o no tiene), limpiar cache local
               try {
                 localStorage.removeItem('boga_revendedor_draft');
                 if (user?.id) localStorage.removeItem(`boga_revendedor_draft_${user.id}`);
               } catch {}
-              setTiendaExistente(null);
+              setCuentaExistente(null);
             }
           });
       } else {
@@ -85,8 +86,8 @@ export default function BogaNetworkHomePage() {
           const draft = localStorage.getItem('boga_revendedor_draft');
           if (draft) {
             const parsed = JSON.parse(draft);
-            if (parsed?.nombreTienda) {
-              setTiendaExistente({ nombreTienda: parsed.nombreTienda, nombre: parsed.nombre || '' });
+            if (parsed?.whatsapp || parsed?.nombre) {
+              setCuentaExistente({ nombre: parsed.nombre || '', nombreTienda: parsed.nombreTienda || '' });
             }
           }
         } catch {}
@@ -113,8 +114,8 @@ export default function BogaNetworkHomePage() {
     }
   };
 
-  // Crear la tienda de reventa e ingresar directo al panel
-  const handleCrearTienda = async (e: React.FormEvent) => {
+  // Activar la cuenta de dropshipping e ingresar al panel (creación de tiendas se hace dentro del panel)
+  const handleActivarCuenta = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
@@ -132,27 +133,22 @@ export default function BogaNetworkHomePage() {
       setErrorMsg('El número de WhatsApp es obligatorio (mínimo 9 dígitos) para poder contactarnos y recibir pedidos.');
       return;
     }
-    if (!nombreTienda.trim() || nombreTienda.trim().length < 2) {
-      setErrorMsg('El nombre de la tienda es obligatorio para crear tu catálogo oficial.');
-      return;
-    }
 
     setIsLoading(true);
 
-    const nombreTiendaSinBm = nombreTienda.replace(/\s+bm$/i, '').trim();
-    const nombreTiendaFinal = `${nombreTiendaSinBm} bm`;
+    const nombreTiendaProvisional = `${nombre.trim()} bm`;
 
     try {
       // Registrar solicitud con interest = 'revendedor'
       const { error } = await supabase.from('store_requests').insert({
         contact_name: nombre.trim(),
-        business_name: nombreTiendaFinal,
+        business_name: nombreTiendaProvisional,
         whatsapp: whatsapp.trim(),
         city: ciudad,
         interest: 'revendedor',
         email: user.email || '',
         category: 'revendedor',
-        description: 'Tienda de reventa / Dropshipping creada desde Boga Network',
+        description: 'Cuenta de dropshipping / revendedor activada desde Boga Network',
       });
 
       if (error) {
@@ -164,17 +160,18 @@ export default function BogaNetworkHomePage() {
 
     // Guardar el borrador local para inicializar el panel
     try {
-      localStorage.setItem(
-        'boga_revendedor_draft',
-        JSON.stringify({
-          nombre: nombre.trim(),
-          whatsapp: whatsapp.trim(),
-          nombreTienda: nombreTiendaFinal,
-          ciudad,
-          email: user.email,
-          createdAt: new Date().toISOString(),
-        })
-      );
+      const draftData = {
+        nombre: nombre.trim(),
+        whatsapp: whatsapp.trim(),
+        nombreTienda: nombreTiendaProvisional,
+        ciudad,
+        email: user.email,
+        createdAt: new Date().toISOString(),
+      };
+      localStorage.setItem('boga_revendedor_draft', JSON.stringify(draftData));
+      if (user?.id) {
+        localStorage.setItem(`boga_revendedor_draft_${user.id}`, JSON.stringify(draftData));
+      }
     } catch {
       // noop
     }
@@ -199,7 +196,7 @@ export default function BogaNetworkHomePage() {
           </Link>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            {tiendaExistente ? (
+            {cuentaExistente ? (
               <Link
                 href="/network/panel"
                 className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-xs transition"
@@ -254,14 +251,14 @@ export default function BogaNetworkHomePage() {
         </div>
       </header>
 
-      {/* ── Banner si ya tiene tienda creada ── */}
-      {tiendaExistente && (
+      {/* ── Banner si ya tiene cuenta activa ── */}
+      {cuentaExistente && (
         <div className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white px-4 py-2.5 text-xs shadow-xs">
           <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-center sm:text-left">
-              <span className="material-symbols-outlined text-emerald-200 text-lg">storefront</span>
+              <span className="material-symbols-outlined text-emerald-200 text-lg">verified_user</span>
               <span>
-                Ya tienes registrada tu tienda <b>&quot;{tiendaExistente.nombreTienda}&quot;</b>. Entra a tu panel para administrar productos y ganancias.
+                Ya tienes tu cuenta de revendedor activa en Boga Network. Entra a tu panel para administrar tus tiendas y ganancias.
               </span>
             </div>
             <Link
@@ -354,31 +351,22 @@ export default function BogaNetworkHomePage() {
 
             {/* Botón de acción Opción 1 */}
             <div className="pt-1 flex flex-col gap-2">
-              {tiendaExistente ? (
-                <div className="flex flex-col sm:flex-row items-center gap-2">
-                  <Link
-                    href="/network/panel"
-                    className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-xs sm:text-sm shadow-md shadow-emerald-600/20 transition active:scale-95 flex items-center justify-center gap-2"
-                  >
-                    <span className="material-symbols-outlined text-lg">dashboard</span>
-                    <span>Ingresar a Mi Panel ({tiendaExistente.nombreTienda}) →</span>
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => setModalRegistro(true)}
-                    className="text-xs font-bold text-slate-500 hover:text-emerald-700 underline py-1 px-2 cursor-pointer shrink-0"
-                  >
-                    + Registrar otra
-                  </button>
-                </div>
+              {cuentaExistente ? (
+                <Link
+                  href="/network/panel"
+                  className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-xs sm:text-sm shadow-md shadow-emerald-600/20 transition active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-lg">dashboard</span>
+                  <span>Ingresar a Mi Panel de Control →</span>
+                </Link>
               ) : user ? (
                 <button
                   type="button"
                   onClick={() => setModalRegistro(true)}
                   className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-xs sm:text-sm shadow-md shadow-emerald-600/20 active:scale-95 transition flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <span className="material-symbols-outlined text-lg">storefront</span>
-                  <span>Crear Mi Tienda de Reventa →</span>
+                  <span className="material-symbols-outlined text-lg">badge</span>
+                  <span>Activar Mi Cuenta de Dropshipping →</span>
                 </button>
               ) : (
                 <Link
@@ -386,7 +374,7 @@ export default function BogaNetworkHomePage() {
                   className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-xs sm:text-sm shadow-md shadow-emerald-600/20 active:scale-95 transition flex items-center justify-center gap-2 text-center"
                 >
                   <span className="material-symbols-outlined text-lg">login</span>
-                  <span>Iniciar Sesión para Crear Tienda →</span>
+                  <span>Iniciar Sesión para Empezar →</span>
                 </Link>
               )}
               <p className="text-[11px] text-slate-400 text-center sm:text-left">
@@ -474,7 +462,7 @@ export default function BogaNetworkHomePage() {
         </div>
       </main>
 
-      {/* ── MODAL CENTRADO: Formulario de Creación de Tienda de Reventa ── */}
+      {/* ── MODAL CENTRADO: Activación de Cuenta de Dropshipping (Neutro - Solo Contacto) ── */}
       {modalRegistro && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in"
@@ -494,18 +482,18 @@ export default function BogaNetworkHomePage() {
 
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-2xl">storefront</span>
+                <span className="material-symbols-outlined text-2xl">badge</span>
               </div>
               <div>
-                <h3 className="text-base font-extrabold text-slate-900">Crear Mi Tienda de Reventa</h3>
-                <p className="text-xs text-slate-500 font-medium">WhatsApp y nombre de tienda obligatorios para poder contactarnos</p>
+                <h3 className="text-base font-extrabold text-slate-900">Activar Cuenta de Dropshipping</h3>
+                <p className="text-xs text-slate-500 font-medium">Ingresa tus datos de contacto para acceder a tu panel de control</p>
               </div>
             </div>
 
             {/* Aviso de campos obligatorios para contactar */}
             <div className="p-2.5 rounded-xl bg-emerald-50/90 border border-emerald-200/80 text-[11px] text-emerald-950 flex items-center gap-2">
               <span className="material-symbols-outlined text-[16px] text-emerald-600 shrink-0">contact_phone</span>
-              <span><b>Obligatorio:</b> Tu número de WhatsApp y nombre de tienda son requeridos para poder contactarte y activar tus pedidos.</span>
+              <span><b>Obligatorio:</b> Tu número de WhatsApp y nombre completo son requeridos para poder contactarte y coordinar con el equipo.</span>
             </div>
 
             {/* Badge de cuenta vinculada */}
@@ -533,7 +521,7 @@ export default function BogaNetworkHomePage() {
               </div>
             )}
 
-            <form onSubmit={handleCrearTienda} className="flex flex-col gap-3">
+            <form onSubmit={handleActivarCuenta} className="flex flex-col gap-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
@@ -550,7 +538,7 @@ export default function BogaNetworkHomePage() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Tu WhatsApp de pedidos <span className="text-red-500">*</span>
+                    Tu WhatsApp de contacto <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="tel"
@@ -567,54 +555,31 @@ export default function BogaNetworkHomePage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Nombre para tu tienda <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative flex items-center">
-                    <input
-                      type="text"
-                      required
-                      placeholder="Ej: Camila Store, Ofertas"
-                      value={nombreTienda}
-                      onChange={(e) => setNombreTienda(e.target.value)}
-                      className="w-full px-3 py-2 pr-12 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 bg-slate-50"
-                    />
-                    <span className="absolute right-3 text-xs font-bold text-slate-400 select-none pointer-events-none">
-                      bm
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-slate-500 mt-1">
-                    Obligatorio para tu enlace público oficial. Se añade &ldquo;bm&rdquo; al final.
-                  </p>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-bold text-slate-700">Tu ciudad / distrito</label>
-                    <button
-                      type="button"
-                      onClick={handleDetectarCiudad}
-                      disabled={detectando}
-                      className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-0.5 cursor-pointer"
-                    >
-                      <span className="material-symbols-outlined text-[12px]">my_location</span>
-                      {detectando ? 'Ubicando...' : 'Ubicar GPS'}
-                    </button>
-                  </div>
-                  <select
-                    value={ciudad}
-                    onChange={(e) => setCiudad(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 bg-slate-50"
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-slate-700">Tu ciudad / distrito</label>
+                  <button
+                    type="button"
+                    onClick={handleDetectarCiudad}
+                    disabled={detectando}
+                    className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-0.5 cursor-pointer"
                   >
-                    {CIUDADES.map((c) => (
-                      <option key={c.slug} value={c.slug}>
-                        {c.nombre} ({c.region})
-                      </option>
-                    ))}
-                  </select>
-                  {geoAviso && <p className="text-[10px] text-amber-600 mt-1">{geoAviso}</p>}
+                    <span className="material-symbols-outlined text-[12px]">my_location</span>
+                    {detectando ? 'Ubicando...' : 'Ubicar GPS'}
+                  </button>
                 </div>
+                <select
+                  value={ciudad}
+                  onChange={(e) => setCiudad(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 bg-slate-50"
+                >
+                  {CIUDADES.map((c) => (
+                    <option key={c.slug} value={c.slug}>
+                      {c.nombre} ({c.region})
+                    </option>
+                  ))}
+                </select>
+                {geoAviso && <p className="text-[10px] text-amber-600 mt-1">{geoAviso}</p>}
               </div>
 
               <div className="pt-2">
@@ -624,16 +589,16 @@ export default function BogaNetworkHomePage() {
                   className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-extrabold text-sm shadow-md shadow-emerald-600/20 active:scale-[0.99] transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                 >
                   {isLoading ? (
-                    <span>Creando tu tienda...</span>
+                    <span>Activando tu cuenta...</span>
                   ) : (
                     <>
-                      <span>Crear Tienda e Ingresar al Panel</span>
+                      <span>Activar Cuenta e Ingresar al Panel</span>
                       <span className="material-symbols-outlined text-base">arrow_forward</span>
                     </>
                   )}
                 </button>
                 <p className="text-center text-[10px] text-slate-400 mt-2">
-                  🔒 Sin costos ocultos · No compras mercadería por adelantado · Empiezas hoy
+                  🔒 Sin costos ocultos · Dentro del panel podrás crear y administrar tus tiendas
                 </p>
               </div>
             </form>
