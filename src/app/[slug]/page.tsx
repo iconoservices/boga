@@ -18,11 +18,20 @@ export async function generateMetadata({ params }: Omit<Props, 'searchParams'>) 
   const store = await getDynamicStore(slug);
   if (!store) return { title: 'Tienda no encontrada' };
   
-  const iconUrl = store.logoImage || store.iconImage || store.heroImage || BOGA_DEFAULT_ICON;
-  // Chrome y Firefox de iPhone no pueden instalar apps y su menú Compartir muestra el ícono de la página (apple-touch-icon):
-  // ahí va el LOGO de la tienda (no la foto del banner: suele ser WebP y ese ícono no siempre lo lee). Safari sí instala y sigue con su regla.
+  // Icono para la pestaña del navegador:
+  // Si la tienda subió su logo, se usa su imagen.
+  // Mientras no tenga imagen subida, se usan las letras/inicial de la tienda con fondo oficial.
+  const nombreLimpio = store.name.replace(/\s*bm$/i, '').trim();
+  const inicial = (nombreLimpio.charAt(0) || 'T').toUpperCase();
+  const colorFondo = (store.theme as any)?.primaryColor || '#059669';
+
+  const svgFavicon = `data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="${colorFondo}"/><text x="50%" y="54%" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="38" fill="#ffffff" text-anchor="middle" dominant-baseline="middle">${inicial}</text></svg>`
+  )}`;
+
+  const iconUrl = store.logoImage || store.iconImage || svgFavicon;
   const uaIOSNoSafari = /CriOS|FxiOS|EdgiOS/i.test((await headers()).get('user-agent') || '');
-  const iconoApple = uaIOSNoSafari ? iconUrl : (store.appPropia ? iconUrl : '/apple-touch-icon.png');
+  const iconoApple = store.logoImage || store.iconImage || (uaIOSNoSafari ? iconUrl : (store.appPropia ? iconUrl : '/apple-touch-icon.png'));
   
   return {
     // Chrome/Firefox de iPhone muestran el título de la página en su menú Compartir: solo el nombre (como Safari, que lee og:title).
@@ -56,11 +65,13 @@ export async function generateMetadata({ params }: Omit<Props, 'searchParams'>) 
     // del iPhone (apple-touch-icon): sin subdominio ni dominio propio se instala BogaHub, con el ícono de Boga.
     icons: {
       icon: [
-        { url: iconUrl, sizes: 'any' },
-        { url: iconUrl, sizes: '192x192', type: 'image/png' },
-        { url: iconUrl, sizes: '512x512', type: 'image/png' },
+        { url: iconUrl, type: store.logoImage || store.iconImage ? 'image/png' : 'image/svg+xml' },
+        ...(store.logoImage || store.iconImage ? [
+          { url: iconUrl, sizes: '192x192', type: 'image/png' },
+          { url: iconUrl, sizes: '512x512', type: 'image/png' },
+        ] : []),
       ],
-      apple: [{ url: iconoApple, sizes: '180x180', type: 'image/png' }],
+      apple: [{ url: iconoApple, sizes: '180x180' }],
     },
     // Nombre en el inicio del iPhone: con subdominio propio es SU app, con su nombre (si no, queda "BogaHub", el del layout).
     ...(store.appPropia

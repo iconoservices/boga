@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const iconSrc = dbLogo || dbHero || tmpl?.iconImage || tmpl?.heroImage || BOGA_DEFAULT_ICON;
+  const iconSrc = dbLogo || dbHero || (storeSlug ? `/api/tienda-icono?slug=${storeSlug}` : null) || tmpl?.iconImage || tmpl?.heroImage || BOGA_DEFAULT_ICON;
   const iconType = mimeFromUrl(iconSrc);
 
   const displayName = storeName || tmpl?.name || 'Boga Dash';
