@@ -127,8 +127,8 @@ export default function Servicios() {
           {/* CTAs */}
           <div className="grid grid-cols-2 gap-2.5 sm:gap-3 w-full sm:w-auto sm:min-w-[420px] lg:min-w-[480px]">
             <Link
-              href="/revendedores"
-              aria-label="Gana dinero con BogaHub"
+              href="/network"
+              aria-label="Boga Network · Reventa y Afiliados"
               className="rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 text-white px-3.5 py-2.5 flex items-center gap-2.5 active:scale-[0.98] hover:shadow-lg hover:shadow-emerald-600/25 transition-all shadow-sm text-left border border-emerald-500/30 group"
             >
               <span className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
@@ -136,7 +136,7 @@ export default function Servicios() {
               </span>
               <span className="flex flex-col min-w-0 leading-tight">
                 <span className="font-headline-sm text-[13px] font-bold truncate flex items-center gap-1.5">
-                  Gana dinero
+                  Boga Network
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span>
                 </span>
                 <span className="text-[10px] font-semibold text-emerald-100 tracking-wide truncate">Reventa & Afiliados</span>

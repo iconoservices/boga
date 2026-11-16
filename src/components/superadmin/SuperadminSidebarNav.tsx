@@ -16,6 +16,7 @@ export const NAV_TABS = [
 ] as const;
 
 export const SUBRUTAS = [
+  { href: '/superadmin/network',        icon: 'hub',          label: 'Boga Network (Reventa)' },
   { href: '/superadmin/metricas',       icon: 'monitoring',   label: 'Clientes WhatsApp' },
   { href: '/superadmin/choferes',       icon: 'local_taxi',   label: 'Choferes' },
   { href: '/superadmin/cobros',         icon: 'payments',     label: 'Cobros' },

@@ -25,7 +25,7 @@ export default function RegistroNegocioPage() {
       const q = new URLSearchParams(window.location.search);
       const i = q.get('i');
       if (i === 'revendedor') {
-        router.replace('/revendedores');
+        router.replace('/network');
         return;
       }
       if (i && VALID.includes(i)) setInterest(i);

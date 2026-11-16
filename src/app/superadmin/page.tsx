@@ -1499,13 +1499,22 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                   <h2 className="text-xl font-extrabold text-[#191b23] tracking-tight">Gestión de Tiendas</h2>
                   <p className="text-xs text-[#424754]">Monitorea y administra el ecosistema global de comercios.</p>
                 </div>
-                <button
-                  onClick={handleOpenCreateStore}
-                  className="bg-[#0058be] hover:bg-[#2170e4] text-white px-4 py-2.5 rounded-md font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95 shrink-0"
-                >
-                  <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>add</span>
-                  Registrar Nueva Tienda
-                </button>
+                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                  <Link
+                    href="/superadmin/network"
+                    className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 px-3.5 py-2.5 rounded-md font-bold text-xs flex items-center gap-1.5 transition-all shadow-2xs shrink-0"
+                  >
+                    <span className="material-symbols-outlined text-sm text-emerald-700">hub</span>
+                    Tiendas Revendedoras (Network)
+                  </Link>
+                  <button
+                    onClick={handleOpenCreateStore}
+                    className="bg-[#0058be] hover:bg-[#2170e4] text-white px-4 py-2.5 rounded-md font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95 shrink-0"
+                  >
+                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>add</span>
+                    Registrar Nueva Tienda
+                  </button>
+                </div>
               </div>
 
               {/* Solicitudes Pendientes (formulario público /vende-con-boga) */}
