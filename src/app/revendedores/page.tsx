@@ -65,6 +65,28 @@ export default function RevendedoresPage() {
       })
       .catch(() => {});
 
+    // Restaurar sesión de tienda creada previamente en este navegador
+    try {
+      const guardado = typeof window !== 'undefined' ? localStorage.getItem('boga_revendedor_draft') : null;
+      if (guardado) {
+        const p = JSON.parse(guardado);
+        if (p.nombreTienda && p.whatsapp) {
+          setNombre(p.nombre || '');
+          setWhatsapp(p.whatsapp || '');
+          setNombreTienda(p.nombreTienda || '');
+          setCiudad(p.ciudad || 'pucallpa');
+          if (p.margenPorcentaje !== undefined) setMargenPorcentaje(p.margenPorcentaje);
+          if (p.tiendaSeleccionada) setTiendaSeleccionada(p.tiendaSeleccionada);
+          if (p.productosSeleccionados && Array.isArray(p.productosSeleccionados)) {
+            setProductosSeleccionados(new Set(p.productosSeleccionados));
+          }
+          setModoPanel(true);
+        }
+      }
+    } catch (e) {
+      console.warn('Error leyendo borrador de revendedor:', e);
+    }
+
     // Cargar tiendas aliadas que permiten revendedores
     supabase
       .from('stores')
@@ -82,10 +104,29 @@ export default function RevendedoresPage() {
         }));
         setTiendasAliadas(mapped);
         if (mapped.length > 0) {
-          setTiendaSeleccionada(mapped[0].slug);
+          setTiendaSeleccionada((prev) => prev || mapped[0].slug);
         }
       });
   }, []);
+
+  // Guardar automáticamente los cambios de productos/margen en localStorage
+  useEffect(() => {
+    if (!modoPanel || !nombreTienda) return;
+    try {
+      localStorage.setItem(
+        'boga_revendedor_draft',
+        JSON.stringify({
+          nombre,
+          whatsapp,
+          nombreTienda,
+          ciudad,
+          margenPorcentaje,
+          tiendaSeleccionada,
+          productosSeleccionados: Array.from(productosSeleccionados),
+        })
+      );
+    } catch {}
+  }, [modoPanel, nombre, whatsapp, nombreTienda, ciudad, margenPorcentaje, tiendaSeleccionada, productosSeleccionados]);
 
   // Cargar productos de la tienda aliada elegida
   useEffect(() => {
@@ -177,8 +218,38 @@ export default function RevendedoresPage() {
       ciudad,
     });
 
+    // Guardar en localStorage para que en siguientes visitas entre directo al panel
+    try {
+      localStorage.setItem(
+        'boga_revendedor_draft',
+        JSON.stringify({
+          nombre: nombre.trim(),
+          whatsapp: whatsapp.trim(),
+          nombreTienda: nombreTienda.trim(),
+          ciudad: ciudad || 'pucallpa',
+          margenPorcentaje,
+          tiendaSeleccionada,
+          productosSeleccionados: Array.from(productosSeleccionados),
+        })
+      );
+    } catch {}
+
     // Entrar al Panel de Revendedor
     setModoPanel(true);
+  };
+
+  const handleRegistrarOtra = () => {
+    if (confirm('¿Deseas salir de este panel para registrar una nueva tienda de reventa?')) {
+      try {
+        localStorage.removeItem('boga_revendedor_draft');
+      } catch {}
+      setModoPanel(false);
+      setNombre('');
+      setWhatsapp('');
+      setNombreTienda('');
+      setCiudad('pucallpa');
+      setPestañaActiva('catalogo');
+    }
   };
 
   const calcularPrecio = (base: number) => {
@@ -235,6 +306,16 @@ export default function RevendedoresPage() {
             </div>
 
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleRegistrarOtra}
+                title="Salir y registrar otra tienda"
+                className="text-xs font-semibold text-slate-500 hover:text-slate-800 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-[15px]">add_business</span>
+                <span className="hidden sm:inline">Nueva tienda</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => setModalAvisoAsesor(true)}
@@ -771,6 +852,18 @@ export default function RevendedoresPage() {
                     <label className="block font-bold text-slate-500 mb-1">Ciudad / Distrito</label>
                     <p className="font-bold text-slate-900 text-sm capitalize">{ciudad}</p>
                   </div>
+                </div>
+
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                  <span className="text-xs text-slate-500">¿Quieres salir o registrar otra tienda?</span>
+                  <button
+                    type="button"
+                    onClick={handleRegistrarOtra}
+                    className="text-xs font-bold text-red-600 hover:text-red-700 hover:underline cursor-pointer flex items-center gap-1"
+                  >
+                    <span className="material-symbols-outlined text-[15px]">logout</span>
+                    Registrar otra tienda
+                  </button>
                 </div>
               </div>
             </div>
