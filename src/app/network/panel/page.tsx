@@ -45,7 +45,7 @@ export default function RevendedorPanelPage() {
   const [wspBoga, setWspBoga] = useState('51987911213');
 
   // Estado del panel
-  const [pestañaActiva, setPestañaActiva] = useState<'catalogo' | 'preview' | 'afiliados' | 'ajustes'>('catalogo');
+  const [pestañaActiva, setPestañaActiva] = useState<'inicio' | 'catalogo' | 'preview' | 'afiliados' | 'ajustes'>('inicio');
   const [modalAvisoAsesor, setModalAvisoAsesor] = useState(false);
   const [estadoTienda, setEstadoTienda] = useState<'desactivada' | 'activa'>('desactivada');
   const [copiado, setCopiado] = useState(false);
@@ -581,8 +581,26 @@ export default function RevendedorPanelPage() {
       )}
 
       {/* ── Barra de Pestañas: Continuidad de Opciones para Ganar Dinero ── */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex gap-4 sm:gap-6 overflow-x-auto">
+      <div className="bg-white border-b border-slate-200 sticky top-14 z-20 shadow-2xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex gap-3 sm:gap-5 overflow-x-auto no-scrollbar">
+          {/* PESTAÑA 1: INICIO & FORMAS DE GANAR */}
+          <button
+            type="button"
+            onClick={() => setPestañaActiva('inicio')}
+            className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${
+              pestañaActiva === 'inicio'
+                ? 'border-emerald-600 text-emerald-700'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[18px]">payments</span>
+            <span>1. Formas de Ganar</span>
+            <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-black">
+              Principal
+            </span>
+          </button>
+
+          {/* PESTAÑA 2: CATÁLOGO & PRODUCTOS */}
           <button
             type="button"
             onClick={() => setPestañaActiva('catalogo')}
@@ -593,12 +611,13 @@ export default function RevendedorPanelPage() {
             }`}
           >
             <span className="material-symbols-outlined text-[18px]">inventory_2</span>
-            <span>1. Catálogo & Productos</span>
+            <span>2. Catálogo & Productos</span>
             <span className="bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
               {productosSeleccionados.size}
             </span>
           </button>
 
+          {/* PESTAÑA 3: MIS TIENDAS */}
           <button
             type="button"
             onClick={() => setPestañaActiva('preview')}
@@ -609,7 +628,7 @@ export default function RevendedorPanelPage() {
             }`}
           >
             <span className="material-symbols-outlined text-[18px]">store</span>
-            <span>2. Mis Tiendas</span>
+            <span>3. Mis Tiendas</span>
             {estadoTienda === 'activa' ? (
               <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -622,6 +641,7 @@ export default function RevendedorPanelPage() {
             )}
           </button>
 
+          {/* PESTAÑA 4: AFILIADOS */}
           <button
             type="button"
             onClick={() => setPestañaActiva('afiliados')}
@@ -632,12 +652,13 @@ export default function RevendedorPanelPage() {
             }`}
           >
             <span className="material-symbols-outlined text-[18px]">volunteer_activism</span>
-            <span>3. Ganar con Afiliados</span>
+            <span>4. Ganar con Afiliados</span>
             <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
               Bono en efectivo
             </span>
           </button>
 
+          {/* PESTAÑA 5: AJUSTES & CUENTA */}
           <button
             type="button"
             onClick={() => setPestañaActiva('ajustes')}
@@ -648,7 +669,7 @@ export default function RevendedorPanelPage() {
             }`}
           >
             <span className="material-symbols-outlined text-[18px]">settings</span>
-            <span>4. Ajustes & Cuenta</span>
+            <span>5. Ajustes & Cuenta</span>
             {estadoTienda === 'activa' ? (
               <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
                 Activa
@@ -664,7 +685,316 @@ export default function RevendedorPanelPage() {
 
       {/* ── Contenido Principal según Pestaña ── */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full">
-        {/* ══ PESTAÑA 1: CATÁLOGO & PRODUCTOS (LAYOUT IZQ: OPCIONES | DER: PRODS) ══ */}
+        {/* ══ PESTAÑA 1: INICIO Y FORMAS DE GANAR DINERO (PANEL PRINCIPAL) ══ */}
+        {pestañaActiva === 'inicio' && (
+          <div className="flex flex-col gap-6">
+            {/* 1. Banner Principal de Bienvenida y Estado del Negocio */}
+            <div className="bg-gradient-to-br from-slate-900 via-slate-850 to-emerald-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden border border-slate-800">
+              <div className="absolute -right-10 -bottom-10 w-72 h-72 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
+
+              <div className="relative z-10 max-w-3xl">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="bg-emerald-500/20 text-emerald-400 text-xs font-black px-3 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    Panel de Control Principal · Boga Network
+                  </span>
+                  <span className="text-slate-400 text-xs hidden sm:inline">Pucallpa, Perú</span>
+                </div>
+
+                <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                  ¡Hola, {nombre || 'Emprendedor'}! 👋
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed">
+                  Bienvenido a tu centro de ingresos. Aquí tienes las <b>formas activas de ganar dinero</b> con tu tienda de reventa y con la red comercial de BogaHub, sin necesidad de invertir capital en mercadería.
+                </p>
+
+                {/* Métricas rápidas */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+                  <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 border border-white/10">
+                    <span className="text-[11px] text-slate-400 font-bold block">Tu Tienda:</span>
+                    <span className="text-sm font-black text-white truncate block mt-0.5">{nombreTienda || 'tiRI bm'}</span>
+                    <span className="text-[10px] text-emerald-400 font-bold">● Activa en internet</span>
+                  </div>
+
+                  <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 border border-white/10">
+                    <span className="text-[11px] text-slate-400 font-bold block">Tu Margen:</span>
+                    <span className="text-sm font-black text-emerald-300 block mt-0.5">+{margenPorcentaje}%</span>
+                    <span className="text-[10px] text-slate-400">Ganancia neta</span>
+                  </div>
+
+                  <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 border border-white/10">
+                    <span className="text-[11px] text-slate-400 font-bold block">Productos Listos:</span>
+                    <span className="text-sm font-black text-white block mt-0.5">{productosSeleccionados.size} ítems</span>
+                    <span className="text-[10px] text-slate-400">En tu catálogo</span>
+                  </div>
+
+                  <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 border border-white/10">
+                    <span className="text-[11px] text-slate-400 font-bold block">Proveedor Aliado:</span>
+                    <span className="text-sm font-black text-white block mt-0.5 capitalize">{tiendaSeleccionada}</span>
+                    <span className="text-[10px] text-emerald-400">Stock en Pucallpa</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. LAS 3 FORMAS DE GANAR DINERO */}
+            <div className="flex flex-col gap-3">
+              <div>
+                <h2 className="text-lg sm:text-xl font-black text-slate-900 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-emerald-600">payments</span>
+                  <span>Formas de Ganar Dinero en Boga Network</span>
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Elige la estrategia que prefieras o combínalas para multiplicar tus ingresos mensuales:
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
+                {/* FORMA 1: CREA Y VENDE CON TU TIENDA VIRTUAL */}
+                <div className="bg-white rounded-3xl border-2 border-emerald-500/20 p-5 sm:p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between group relative overflow-hidden">
+                  <div className="absolute top-0 right-0 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-bl-xl shadow-2xs">
+                    Tu Tienda Propia
+                  </div>
+
+                  <div>
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mb-4 group-hover:scale-110 transition shadow-2xs">
+                      <span className="material-symbols-outlined text-2xl">storefront</span>
+                    </div>
+
+                    <h3 className="text-base font-black text-slate-900 leading-snug">
+                      1. Crea y Vende con tu Tienda Virtual
+                    </h3>
+
+                    <p className="text-xs text-slate-600 leading-relaxed mt-2">
+                      Tienes tu propia tienda online oficial (<b>{nombreTienda || 'tiRI bm'}</b>) con catálogo completo de productos de proveedores de Pucallpa con entrega local.
+                    </p>
+
+                    <div className="bg-slate-50 rounded-2xl p-3.5 my-4 border border-slate-100 text-xs flex flex-col gap-2">
+                      <div className="flex items-start gap-2">
+                        <span className="material-symbols-outlined text-[16px] text-emerald-600 shrink-0 mt-0.5">check_circle</span>
+                        <span className="text-slate-700">Tú fijas tu propio margen de ganancia (ej. <b>+{margenPorcentaje}%</b>).</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="material-symbols-outlined text-[16px] text-emerald-600 shrink-0 mt-0.5">check_circle</span>
+                        <span className="text-slate-700">Tus clientes arman carrito y te piden directo a tu <b>WhatsApp</b>.</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="material-symbols-outlined text-[16px] text-emerald-600 shrink-0 mt-0.5">check_circle</span>
+                        <span className="text-slate-700"><b>Cero inversión previa:</b> tú solo compras al proveedor cuando ya te pagaron.</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2 pt-2 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => setPestañaActiva('catalogo')}
+                      className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">tune</span>
+                      <span>Configurar Catálogo & Márgenes</span>
+                    </button>
+                    <a
+                      href={`/${slugTienda}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                      <span>Ver Mi Tienda Online</span>
+                    </a>
+                  </div>
+                </div>
+
+                {/* FORMA 2: RECOMIENDA PRODUCTOS INDIVIDUALES */}
+                <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between group relative overflow-hidden">
+                  <div className="absolute top-0 right-0 bg-sky-600 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-bl-xl shadow-2xs">
+                    Venta Rápida
+                  </div>
+
+                  <div>
+                    <div className="w-12 h-12 rounded-2xl bg-sky-100 text-sky-700 flex items-center justify-center mb-4 group-hover:scale-110 transition shadow-2xs">
+                      <span className="material-symbols-outlined text-2xl">loyalty</span>
+                    </div>
+
+                    <h3 className="text-base font-black text-slate-900 leading-snug">
+                      2. Recomienda Productos Individuales
+                    </h3>
+
+                    <p className="text-xs text-slate-600 leading-relaxed mt-2">
+                      No necesitas que el cliente revise todo el catálogo. Puedes promocionar <b>productos individuales</b> de alta demanda directamente en tus redes.
+                    </p>
+
+                    <div className="bg-slate-50 rounded-2xl p-3.5 my-4 border border-slate-100 text-xs flex flex-col gap-2">
+                      <div className="flex items-start gap-2">
+                        <span className="material-symbols-outlined text-[16px] text-sky-600 shrink-0 mt-0.5">check_circle</span>
+                        <span className="text-slate-700">Ideal para publicar en <b>Estados de WhatsApp</b> e historias.</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="material-symbols-outlined text-[16px] text-sky-600 shrink-0 mt-0.5">check_circle</span>
+                        <span className="text-slate-700">Eliges 1 producto estrella del día (relojes, lentes, accesorios).</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="material-symbols-outlined text-[16px] text-sky-600 shrink-0 mt-0.5">check_circle</span>
+                        <span className="text-slate-700">El cliente te escribe directo a comprar ese producto exacto.</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2 pt-2 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => setPestañaActiva('catalogo')}
+                      className="w-full py-2.5 px-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-black text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">visibility</span>
+                      <span>Explorar Productos para Recomendar</span>
+                    </button>
+                    <a
+                      href={`https://wa.me/?text=${encodeURIComponent(
+                        `¡Hola! Te comparto algunos de los productos más pedidos con entrega inmediata en Pucallpa: ${linkTienda}`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2 px-3 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#128C7E] font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">share</span>
+                      <span>Compartir Catálogo en WhatsApp</span>
+                    </a>
+                  </div>
+                </div>
+
+                {/* FORMA 3: RECOMIENDA BOGAHUB Y BOGA NETWORK */}
+                <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between group relative overflow-hidden">
+                  <div className="absolute top-0 right-0 bg-purple-600 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-bl-xl shadow-2xs">
+                    Bonos en Efectivo
+                  </div>
+
+                  <div>
+                    <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center mb-4 group-hover:scale-110 transition shadow-2xs">
+                      <span className="material-symbols-outlined text-2xl">volunteer_activism</span>
+                    </div>
+
+                    <h3 className="text-base font-black text-slate-900 leading-snug">
+                      3. Recomienda BogaHub & Boga Network
+                    </h3>
+
+                    <p className="text-xs text-slate-600 leading-relaxed mt-2">
+                      Gana dinero en efectivo sin vender productos físicos, recomendando la plataforma a amigos o comercios locales.
+                    </p>
+
+                    <div className="bg-slate-50 rounded-2xl p-3.5 my-4 border border-slate-100 text-xs flex flex-col gap-2">
+                      <div className="flex items-start gap-2">
+                        <span className="material-symbols-outlined text-[16px] text-purple-600 shrink-0 mt-0.5">check_circle</span>
+                        <span className="text-slate-700"><b>Invita Revendedores:</b> Amigos que creen su tienda te generan bonos en efectivo.</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="material-symbols-outlined text-[16px] text-purple-600 shrink-0 mt-0.5">check_circle</span>
+                        <span className="text-slate-700"><b>Comercios BogaHub:</b> Recomienda negocios de Pucallpa para digitalizarse.</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="material-symbols-outlined text-[16px] text-purple-600 shrink-0 mt-0.5">check_circle</span>
+                        <span className="text-slate-700">Ingresos adicionales mientras tu red crece semana a semana.</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2 pt-2 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => setPestañaActiva('afiliados')}
+                      className="w-full py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">qr_code_scanner</span>
+                      <span>Ver Mi Link de Afiliados y Bonos</span>
+                    </button>
+                    <a
+                      href="https://bogahub.app"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">explore</span>
+                      <span>Explorar BogaHub Pucallpa</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Guía de Inicio Rápido en 3 Pasos */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-2xs">
+              <h3 className="text-sm font-extrabold text-slate-900 mb-4 flex items-center gap-2">
+                <span className="material-symbols-outlined text-emerald-600 text-[20px]">rocket_launch</span>
+                <span>Plan de Acción Rápido: Cómo hacer tus primeras ventas hoy</span>
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col justify-between">
+                  <div>
+                    <span className="w-7 h-7 rounded-full bg-emerald-600 text-white font-black text-xs flex items-center justify-center mb-2 shadow-2xs">
+                      1
+                    </span>
+                    <h4 className="font-bold text-xs text-slate-900">Ajusta tu Margen & Catálogo</h4>
+                    <p className="text-[11px] text-slate-500 mt-1">
+                      Elige los productos que más te gusten y define tu porcentaje de ganancia (15% recomendado).
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPestañaActiva('catalogo')}
+                    className="mt-3 text-[11px] font-bold text-emerald-700 hover:underline text-left cursor-pointer"
+                  >
+                    Ir a Catálogo →
+                  </button>
+                </div>
+
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col justify-between">
+                  <div>
+                    <span className="w-7 h-7 rounded-full bg-emerald-600 text-white font-black text-xs flex items-center justify-center mb-2 shadow-2xs">
+                      2
+                    </span>
+                    <h4 className="font-bold text-xs text-slate-900">Publica en Estados de WhatsApp</h4>
+                    <p className="text-[11px] text-slate-500 mt-1">
+                      Comparte el enlace de tu tienda o producto estrella con tus contactos de Pucallpa.
+                    </p>
+                  </div>
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(
+                      `¡Hola! Visita mi tienda virtual oficial: ${linkTienda}`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 text-[11px] font-bold text-emerald-700 hover:underline text-left"
+                  >
+                    Compartir ahora →
+                  </a>
+                </div>
+
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col justify-between">
+                  <div>
+                    <span className="w-7 h-7 rounded-full bg-emerald-600 text-white font-black text-xs flex items-center justify-center mb-2 shadow-2xs">
+                      3
+                    </span>
+                    <h4 className="font-bold text-xs text-slate-900">Recibe Pedidos y Cobra Ganancia</h4>
+                    <p className="text-[11px] text-slate-500 mt-1">
+                      Tu cliente te pide al WhatsApp, el proveedor entrega localmente y tú te quedas con tu margen neto.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPestañaActiva('preview')}
+                    className="mt-3 text-[11px] font-bold text-emerald-700 hover:underline text-left cursor-pointer"
+                  >
+                    Ver mi Tienda →
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ══ PESTAÑA 2: CATÁLOGO & PRODUCTOS (LAYOUT IZQ: OPCIONES | DER: PRODS) ══ */}
         {pestañaActiva === 'catalogo' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* COLUMNA IZQUIERDA: OPCIONES & FILTROS */}
