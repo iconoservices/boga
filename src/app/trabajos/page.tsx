@@ -72,7 +72,6 @@ export default function Servicios() {
   const [empleos, setEmpleos] = useState<any[]>([]);
   const [cargado, setCargado] = useState(false);
   const [wspBoga, setWspBoga] = useState('51987911213');
-  const [modalGanaDinero, setModalGanaDinero] = useState(false);
 
   useEffect(() => {
     fetch('/api/contacto')
@@ -127,11 +126,10 @@ export default function Servicios() {
 
           {/* CTAs */}
           <div className="grid grid-cols-2 gap-2.5 sm:gap-3 w-full sm:w-auto sm:min-w-[420px] lg:min-w-[480px]">
-            <button
-              type="button"
-              onClick={() => setModalGanaDinero(true)}
+            <Link
+              href="/revendedores"
               aria-label="Gana dinero con BogaHub"
-              className="rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 text-white px-3.5 py-2.5 flex items-center gap-2.5 active:scale-[0.98] hover:shadow-lg hover:shadow-emerald-600/25 transition-all shadow-sm text-left cursor-pointer border border-emerald-500/30 group"
+              className="rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 text-white px-3.5 py-2.5 flex items-center gap-2.5 active:scale-[0.98] hover:shadow-lg hover:shadow-emerald-600/25 transition-all shadow-sm text-left border border-emerald-500/30 group"
             >
               <span className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                 <span className="material-symbols-outlined text-[19px] text-white">payments</span>
@@ -143,7 +141,7 @@ export default function Servicios() {
                 </span>
                 <span className="text-[10px] font-semibold text-emerald-100 tracking-wide truncate">Reventa & Afiliados</span>
               </span>
-            </button>
+            </Link>
             <a
               href={waLink(wspBoga, 'Hola BogaHub, quiero publicar un aviso en Trabajos de BogaHub (servicio / empleo).')}
               target="_blank"
@@ -411,87 +409,6 @@ export default function Servicios() {
           </div>
         )}
 
-        {/* Modal: Gana Dinero con BogaHub */}
-        {modalGanaDinero && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in"
-            onClick={() => setModalGanaDinero(false)}
-          >
-            <div
-              className="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl relative border border-gray-100 flex flex-col gap-5 text-gray-900"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                type="button"
-                onClick={() => setModalGanaDinero(false)}
-                className="absolute top-4 right-4 w-9 h-9 rounded-full bg-gray-100 text-gray-500 hover:text-gray-900 flex items-center justify-center transition cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[20px]">close</span>
-              </button>
-
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary to-orange-500 text-white flex items-center justify-center shadow-sm shrink-0">
-                  <span className="material-symbols-outlined text-[26px]">payments</span>
-                </div>
-                <div>
-                  <h3 className="text-lg font-black tracking-tight">Gana dinero con BogaHub</h3>
-                  <p className="text-xs text-gray-500 font-medium">Opciones para generar ingresos desde tu celular en Pucallpa</p>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-3.5">
-                {/* Opción 1: Dropshipping / Reventa */}
-                <div className="p-4 rounded-2xl border-2 border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-primary">
-                      <span className="material-symbols-outlined text-[18px]">handshake</span>
-                      Opción 1 · Catálogo de Reventa (Dropshipping)
-                    </span>
-                    <span className="bg-primary text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-                      Sin inversión
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-700 leading-relaxed font-medium">
-                    Crea tu tienda con tu propia marca en 2 minutos usando los productos de proveedores locales de Pucallpa. Compártelo en tus estados de WhatsApp o redes sociales y gana tu propio margen de ganancia sin comprar mercadería por adelantado.
-                  </p>
-                  <Link
-                    href="/revendedores"
-                    onClick={() => setModalGanaDinero(false)}
-                    className="mt-1 inline-flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-sm hover:shadow active:scale-95 transition-all text-center"
-                  >
-                    <span>Crear Mi Tienda de Reventa</span>
-                    <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                  </Link>
-                </div>
-
-                {/* Opción 2: Recomienda y gana comisión */}
-                <div className="p-4 rounded-2xl border border-gray-200 bg-gray-50/70 hover:bg-gray-100 transition-colors flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-800">
-                      <span className="material-symbols-outlined text-[18px] text-emerald-600">volunteer_activism</span>
-                      Opción 2 · Programa de Afiliados
-                    </span>
-                    <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                      Bono en efectivo
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-600 leading-relaxed">
-                    ¿Conoces un restaurante, bodega, tienda de ropa o chofer que aún no está en BogaHub? Recomiéndalo y gana un bono en efectivo directo por cada comercio o conductor activado.
-                  </p>
-                  <a
-                    href={waLink(wspBoga, 'Hola BogaHub, quiero postular como afiliado para recomendar negocios y choferes.')}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-1 inline-flex items-center justify-center gap-1.5 bg-white border border-gray-200 text-gray-800 font-bold text-xs py-2 px-4 rounded-xl hover:bg-gray-50 active:scale-95 transition-all text-center"
-                  >
-                    <span>Coordinar por WhatsApp con Asesor</span>
-                    <span className="material-symbols-outlined text-[16px]">chat</span>
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </main>
     </>
   );
