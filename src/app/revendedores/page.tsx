@@ -30,7 +30,7 @@ interface ProductoProveedor {
 }
 
 export default function RevendedoresPage() {
-  // Datos del formulario
+  // Datos del formulario de alta
   const [nombre, setNombre] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [nombreTienda, setNombreTienda] = useState('');
@@ -43,16 +43,19 @@ export default function RevendedoresPage() {
 
   // Estado del panel del revendedor
   const [modoPanel, setModoPanel] = useState(false);
-  const [pestañaActiva, setPestañaActiva] = useState<'catalogo' | 'preview'>('catalogo');
+  const [pestañaActiva, setPestañaActiva] = useState<'catalogo' | 'preview' | 'ajustes'>('catalogo');
   const [modalAvisoAsesor, setModalAvisoAsesor] = useState(false);
+  const [estadoTienda, setEstadoTienda] = useState<'desactivada' | 'activa'>('desactivada');
 
-  // Tiendas aliadas y productos para importar
+  // Filtros y catálogo
   const [tiendasAliadas, setTiendasAliadas] = useState<TiendaAliada[]>([]);
   const [tiendaSeleccionada, setTiendaSeleccionada] = useState<string>('');
   const [productosDisponibles, setProductosDisponibles] = useState<ProductoProveedor[]>([]);
   const [cargandoProductos, setCargandoProductos] = useState(false);
   const [productosSeleccionados, setProductosSeleccionados] = useState<Set<string | number>>(new Set());
   const [margenPorcentaje, setMargenPorcentaje] = useState<number>(15);
+  const [filtroCategoria, setFiltroCategoria] = useState<string>('todas');
+  const [busqueda, setBusqueda] = useState<string>('');
 
   useEffect(() => {
     fetch('/api/contacto')
@@ -75,7 +78,7 @@ export default function RevendedoresPage() {
           name: s.name,
           category: s.marketplace_category || 'General',
           logo: s.logo_image,
-          notas: s.notas_revendedores || 'Tienda aliada disponible para reventa',
+          notas: s.notas_revendedores || 'Tienda aliada verificada en Pucallpa',
         }));
         setTiendasAliadas(mapped);
         if (mapped.length > 0) {
@@ -88,11 +91,14 @@ export default function RevendedoresPage() {
   useEffect(() => {
     if (!tiendaSeleccionada || !modoPanel) return;
     setCargandoProductos(true);
+    setFiltroCategoria('todas');
+    setBusqueda('');
+
     supabase
       .from('products')
       .select('id, name, price, category, image, store')
       .eq('store', tiendaSeleccionada)
-      .limit(60)
+      .limit(80)
       .then(({ data, error }) => {
         if (!error && data) {
           const prods = data as ProductoProveedor[];
@@ -103,6 +109,28 @@ export default function RevendedoresPage() {
         setCargandoProductos(false);
       });
   }, [tiendaSeleccionada, modoPanel]);
+
+  // Categorías de la tienda proveedora actual (con conteo dinámico)
+  const categoriasDisponibles = useMemo(() => {
+    const map: Record<string, number> = {};
+    productosDisponibles.forEach((p) => {
+      const cat = (p.category || 'General').trim();
+      map[cat] = (map[cat] || 0) + 1;
+    });
+    return Object.entries(map).map(([name, count]) => ({ name, count }));
+  }, [productosDisponibles]);
+
+  // Productos filtrados por categoría y búsqueda
+  const productosFiltrados = useMemo(() => {
+    return productosDisponibles.filter((p) => {
+      const catMatches =
+        filtroCategoria === 'todas' ||
+        (p.category && p.category.trim().toLowerCase() === filtroCategoria.toLowerCase());
+      const searchMatches =
+        !busqueda.trim() || p.name.toLowerCase().includes(busqueda.toLowerCase());
+      return catMatches && searchMatches;
+    });
+  }, [productosDisponibles, filtroCategoria, busqueda]);
 
   const handleDetectarCiudad = async () => {
     setDetectando(true);
@@ -149,7 +177,7 @@ export default function RevendedoresPage() {
       ciudad,
     });
 
-    // Cambiar al Espacio / Panel del Revendedor
+    // Entrar al Panel de Revendedor
     setModoPanel(true);
   };
 
@@ -174,7 +202,7 @@ export default function RevendedoresPage() {
   };
 
   // ──────────────────────────────────────────────────────────────────────────
-  // PANTALLA 2: PANEL DE REVENDEDOR (BORRADOR + VISTA PREVIA)
+  // PANTALLA 2: PANEL DE REVENDEDOR CON LAYOUT OPCIONES (IZQ) / PRODUCTOS (DER)
   // ──────────────────────────────────────────────────────────────────────────
   if (modoPanel) {
     const prodsElegidos = productosDisponibles.filter((p) => productosSeleccionados.has(p.id));
@@ -183,7 +211,7 @@ export default function RevendedoresPage() {
       <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col selection:bg-emerald-500 selection:text-white">
         {/* Barra Superior del Panel */}
         <header className="sticky top-0 z-30 w-full bg-white/95 backdrop-blur-md border-b border-slate-200 shrink-0">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Link href="/" className="flex items-center gap-2">
                 <img src="/logo-mark.svg" alt="BogaHub" className="w-7 h-7" />
@@ -192,10 +220,17 @@ export default function RevendedoresPage() {
               <div className="h-4 w-px bg-slate-200 hidden sm:block" />
               <div className="flex items-center gap-2">
                 <span className="font-bold text-slate-900 text-sm sm:text-base">{nombreTienda}</span>
-                <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                  Borrador privado
-                </span>
+                {estadoTienda === 'desactivada' ? (
+                  <span className="bg-slate-100 text-slate-600 border border-slate-300 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                    Desactivada (En gris / Borrador)
+                  </span>
+                ) : (
+                  <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Activa en Boga Market
+                  </span>
+                )}
               </div>
             </div>
 
@@ -212,38 +247,40 @@ export default function RevendedoresPage() {
           </div>
         </header>
 
-        {/* Banner de Aviso de Activación */}
-        <div className="bg-gradient-to-r from-amber-50 via-amber-100/60 to-emerald-50 border-b border-amber-200/80 px-4 py-2.5">
-          <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-            <div className="flex items-center gap-2 text-amber-950 font-medium">
-              <span className="material-symbols-outlined text-amber-700 text-[18px] shrink-0">info</span>
-              <span>
-                <b>Modo Borrador:</b> Tu tienda está creada pero aún no se muestra en Boga Market. Avisa a soporte para activar tu link público.
-              </span>
+        {/* Banner de Estado en Gris / Borrador */}
+        {estadoTienda === 'desactivada' && (
+          <div className="bg-slate-100 border-b border-slate-200 px-4 py-2 text-xs">
+            <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-slate-700 font-medium">
+                <span className="material-symbols-outlined text-slate-500 text-[18px] shrink-0">pause_circle</span>
+                <span>
+                  <b>Tienda en gris (desactivada):</b> Aún no aparece en Boga Market ni recibe pedidos hasta que el admin acepte tu solicitud.
+                </span>
+              </div>
+              <button
+                onClick={() => setModalAvisoAsesor(true)}
+                className="font-bold text-emerald-700 hover:text-emerald-900 underline text-left shrink-0 cursor-pointer"
+              >
+                Avisar al asesor para que la acepte →
+              </button>
             </div>
-            <button
-              onClick={() => setModalAvisoAsesor(true)}
-              className="font-bold text-emerald-800 underline hover:text-emerald-950 text-left shrink-0 cursor-pointer"
-            >
-              Confirmar activación por WhatsApp →
-            </button>
           </div>
-        </div>
+        )}
 
-        {/* Conmutador de Pestañas */}
+        {/* Conmutador de Pestañas (Catálogo / Vista Previa / Ajustes) */}
         <div className="bg-white border-b border-slate-200">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 flex gap-4">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 flex gap-4 sm:gap-6 overflow-x-auto">
             <button
               type="button"
               onClick={() => setPestañaActiva('catalogo')}
-              className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-2 border-b-2 transition cursor-pointer ${
+              className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${
                 pestañaActiva === 'catalogo'
                   ? 'border-emerald-600 text-emerald-700'
                   : 'border-transparent text-slate-500 hover:text-slate-800'
               }`}
             >
               <span className="material-symbols-outlined text-[18px]">inventory_2</span>
-              <span>1. Elegir Productos y Margen</span>
+              <span>1. Catálogo & Productos</span>
               <span className="bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
                 {productosSeleccionados.size}
               </span>
@@ -252,7 +289,7 @@ export default function RevendedoresPage() {
             <button
               type="button"
               onClick={() => setPestañaActiva('preview')}
-              className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-2 border-b-2 transition cursor-pointer ${
+              className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${
                 pestañaActiva === 'preview'
                   ? 'border-emerald-600 text-emerald-700'
                   : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -260,28 +297,48 @@ export default function RevendedoresPage() {
             >
               <span className="material-symbols-outlined text-[18px]">visibility</span>
               <span>2. Vista Previa de Mi Tienda</span>
-              <span className="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+              <span className="bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
                 Privada
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setPestañaActiva('ajustes')}
+              className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${
+                pestañaActiva === 'ajustes'
+                  ? 'border-emerald-600 text-emerald-700'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">settings</span>
+              <span>3. Ajustes & Estado</span>
+              <span className="bg-slate-200 text-slate-700 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                En gris
               </span>
             </button>
           </div>
         </div>
 
-        {/* ── CONTENIDO DE LAS PESTAÑAS ── */}
-        <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 py-6 w-full">
-          {pestañaActiva === 'catalogo' ? (
-            /* PESTAÑA 1: CATÁLOGO DE PRODUCTOS */
-            <div className="flex flex-col gap-6">
-              {/* Controles de Tienda Aliada y Margen */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex-1">
+        {/* ── CONTENIDO PRINCIPAL SEGÚN PESTAÑA ── */}
+        <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full">
+          {/* ══════════════════════════════════════════════════════════════════
+              PESTAÑA 1: CATÁLOGO (IZQUIERDA: OPCIONES / DERECHA: PRODUCTOS)
+             ══════════════════════════════════════════════════════════════════ */}
+          {pestañaActiva === 'catalogo' && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              
+              {/* ── LADO IZQUIERDO: Opciones y Filtros ── */}
+              <div className="lg:col-span-4 flex flex-col gap-4 lg:sticky lg:top-20">
+                {/* 1. Tienda Proveedora */}
+                <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs">
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Tienda Proveedora Aliada en Pucallpa
+                    Tienda Proveedora en Pucallpa
                   </label>
                   <select
                     value={tiendaSeleccionada}
                     onChange={(e) => setTiendaSeleccionada(e.target.value)}
-                    className="w-full sm:max-w-xs px-3 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm bg-slate-50 focus:outline-none focus:border-emerald-500 font-medium"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm bg-slate-50 focus:outline-none focus:border-emerald-500 font-semibold"
                   >
                     {tiendasAliadas.map((t) => (
                       <option key={t.slug} value={t.slug}>
@@ -289,69 +346,189 @@ export default function RevendedoresPage() {
                       </option>
                     ))}
                   </select>
+                  <p className="text-[11px] text-slate-400 mt-1.5">
+                    Proveedor verificado con entrega local y stock disponible.
+                  </p>
                 </div>
 
-                {/* Ajuste de margen rápido */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Tu Margen de Ganancia: <span className="text-emerald-600 font-extrabold">+{margenPorcentaje}%</span>
-                  </label>
-                  <div className="flex items-center gap-1.5">
-                    {[0, 10, 15, 20, 25].map((pct) => (
+                {/* 2. Tu Margen de Ganancia */}
+                <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-bold text-slate-700">Tu Margen de Ganancia</label>
+                    <span className="text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
+                      +{margenPorcentaje}%
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1.5 mb-2">
+                    {[0, 10, 15, 20, 25, 30].map((pct) => (
                       <button
                         key={pct}
                         type="button"
                         onClick={() => setMargenPorcentaje(pct)}
-                        className={`text-xs px-2.5 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                        className={`text-xs py-1.5 rounded-lg font-bold transition cursor-pointer ${
                           margenPorcentaje === pct
-                            ? 'bg-emerald-600 text-white shadow-xs'
+                            ? 'bg-emerald-600 text-white shadow-2xs'
                             : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                         }`}
                       >
-                        {pct === 0 ? 'Sin margen' : `+${pct}%`}
+                        {pct === 0 ? '0% (Costo)' : `+${pct}%`}
                       </button>
                     ))}
                   </div>
+                  <div className="p-2 rounded-xl bg-slate-50 border border-slate-200/80 text-[11px] text-slate-600">
+                    💡 Ejemplo: Producto de <b>S/ 50.00</b> → Lo vendes a <b>S/ {calcularPrecio(50)}</b> (Ganas <b>+S/ {calcularGanancia(50)}</b>).
+                  </div>
+                </div>
+
+                {/* 3. Categorías de la Tienda (Filtro Vertical) */}
+                <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs">
+                  <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-slate-100">
+                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+                      Categorías ({categoriasDisponibles.length})
+                    </h4>
+                    {filtroCategoria !== 'todas' && (
+                      <button
+                        type="button"
+                        onClick={() => setFiltroCategoria('todas')}
+                        className="text-[11px] font-bold text-emerald-600 hover:underline cursor-pointer"
+                      >
+                        Ver todas
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-1 max-h-56 overflow-y-auto pr-1">
+                    <button
+                      type="button"
+                      onClick={() => setFiltroCategoria('todas')}
+                      className={`w-full px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-between transition cursor-pointer text-left ${
+                        filtroCategoria === 'todas'
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                          : 'text-slate-600 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-[16px]">grid_view</span>
+                        Todas las categorías
+                      </span>
+                      <span className="text-[10px] font-semibold bg-white px-2 py-0.5 rounded-full border border-slate-200">
+                        {productosDisponibles.length}
+                      </span>
+                    </button>
+
+                    {categoriasDisponibles.map((c) => {
+                      const isActiva = filtroCategoria.toLowerCase() === c.name.toLowerCase();
+                      return (
+                        <button
+                          key={c.name}
+                          type="button"
+                          onClick={() => setFiltroCategoria(c.name)}
+                          className={`w-full px-3 py-2 rounded-xl text-xs font-medium flex items-center justify-between transition cursor-pointer text-left ${
+                            isActiva
+                              ? 'bg-emerald-50 text-emerald-800 font-bold border border-emerald-200'
+                              : 'text-slate-600 hover:bg-slate-50'
+                          }`}
+                        >
+                          <span className="truncate">{c.name}</span>
+                          <span className="text-[10px] font-semibold bg-white px-2 py-0.5 rounded-full border border-slate-200 shrink-0">
+                            {c.count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 4. Resumen de Estado */}
+                <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-500 font-medium">Estado de la tienda:</span>
+                    <span className="text-[11px] font-bold text-slate-500 bg-slate-100 border border-slate-300 px-2 py-0.5 rounded-md">
+                      ⚪ Desactivada
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 leading-tight">
+                    Tu tienda está en gris (inactiva) hasta que el admin acepte tu solicitud.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setModalAvisoAsesor(true)}
+                    className="w-full py-2 px-3 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-sm">chat</span>
+                    <span>Avisar al Asesor para Activar</span>
+                  </button>
                 </div>
               </div>
 
-              {/* Lista de Productos Disponibles */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                  <div>
-                    <h3 className="font-extrabold text-sm text-slate-900">
-                      Productos de la Tienda Aliada
-                    </h3>
-                    <p className="text-xs text-slate-500">
-                      Selecciona los productos que quieres que aparezcan en tu catálogo
-                    </p>
+              {/* ── LADO DERECHO: Productos Ordenados ── */}
+              <div className="lg:col-span-8 flex flex-col gap-4">
+                {/* Barra de Búsqueda y Acciones Rápidas */}
+                <div className="bg-white rounded-2xl border border-slate-200 p-3.5 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div className="relative w-full sm:max-w-xs">
+                    <span className="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[18px]">
+                      search
+                    </span>
+                    <input
+                      type="text"
+                      placeholder="Buscar producto..."
+                      value={busqueda}
+                      onChange={(e) => setBusqueda(e.target.value)}
+                      className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-emerald-500 bg-slate-50/50"
+                    />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setProductosSeleccionados(new Set(productosDisponibles.map((p) => p.id)))}
-                      className="text-xs font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer"
-                    >
-                      Marcar todos
-                    </button>
-                    <span className="text-slate-300">·</span>
-                    <button
-                      type="button"
-                      onClick={() => setProductosSeleccionados(new Set())}
-                      className="text-xs font-bold text-slate-500 hover:text-slate-700 cursor-pointer"
-                    >
-                      Desmarcar
-                    </button>
+
+                  <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                    <span className="text-xs text-slate-500 font-medium">
+                      <b>{productosFiltrados.length}</b> productos en{' '}
+                      <span className="font-bold text-slate-900 uppercase">
+                        {filtroCategoria === 'todas' ? 'Todo' : filtroCategoria}
+                      </span>
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setProductosSeleccionados((prev) => {
+                            const next = new Set(prev);
+                            productosFiltrados.forEach((p) => next.add(p.id));
+                            return next;
+                          })
+                        }
+                        className="text-xs font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer"
+                      >
+                        Marcar categoría
+                      </button>
+                      <span className="text-slate-300">·</span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setProductosSeleccionados((prev) => {
+                            const next = new Set(prev);
+                            productosFiltrados.forEach((p) => next.delete(p.id));
+                            return next;
+                          })
+                        }
+                        className="text-xs font-bold text-slate-500 hover:text-slate-700 cursor-pointer"
+                      >
+                        Desmarcar
+                      </button>
+                    </div>
                   </div>
                 </div>
 
+                {/* Grid de Productos */}
                 {cargandoProductos ? (
-                  <div className="py-12 text-center text-slate-400 text-xs">Cargando productos de la tienda...</div>
-                ) : productosDisponibles.length === 0 ? (
-                  <div className="py-12 text-center text-slate-400 text-xs">Esta tienda aún no tiene productos registrados.</div>
+                  <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400 text-xs">
+                    Cargando productos de la tienda aliada...
+                  </div>
+                ) : productosFiltrados.length === 0 ? (
+                  <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400 text-xs">
+                    No se encontraron productos en esta categoría o búsqueda.
+                  </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
-                    {productosDisponibles.map((p) => {
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5">
+                    {productosFiltrados.map((p) => {
                       const isSelected = productosSeleccionados.has(p.id);
                       const basePrice = Number(p.price) || 0;
                       const ventaPrice = calcularPrecio(basePrice);
@@ -361,13 +538,14 @@ export default function RevendedoresPage() {
                         <div
                           key={p.id}
                           onClick={() => toggleProducto(p.id)}
-                          className={`p-3 rounded-xl border transition cursor-pointer flex gap-3 ${
+                          className={`p-3 rounded-2xl border transition cursor-pointer flex gap-3 relative ${
                             isSelected
-                              ? 'border-emerald-500 bg-emerald-50/20 shadow-2xs'
-                              : 'border-slate-200 bg-white opacity-70 hover:opacity-100'
+                              ? 'border-emerald-500 bg-emerald-50/25 shadow-2xs ring-1 ring-emerald-500/20'
+                              : 'border-slate-200 bg-white opacity-60 hover:opacity-100'
                           }`}
                         >
-                          <div className="w-16 h-16 rounded-lg bg-slate-100 overflow-hidden shrink-0 border border-slate-200">
+                          {/* Foto */}
+                          <div className="w-18 h-18 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200">
                             {p.image ? (
                               <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
                             ) : (
@@ -376,29 +554,31 @@ export default function RevendedoresPage() {
                               </div>
                             )}
                           </div>
+
+                          {/* Info */}
                           <div className="min-w-0 flex-1 flex flex-col justify-between">
                             <div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase truncate">
+                              <div className="flex items-center justify-between mb-0.5">
+                                <span className="text-[10px] font-extrabold text-slate-400 uppercase truncate">
                                   {p.category || 'General'}
                                 </span>
                                 <input
                                   type="checkbox"
                                   checked={isSelected}
                                   onChange={() => {}}
-                                  className="rounded text-emerald-600 focus:ring-emerald-500"
+                                  className="rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
                                 />
                               </div>
-                              <p className="font-bold text-xs text-slate-900 truncate leading-snug">{p.name}</p>
+                              <p className="font-bold text-xs text-slate-900 line-clamp-2 leading-snug">{p.name}</p>
                             </div>
 
-                            <div className="flex items-baseline justify-between mt-1 pt-1 border-t border-slate-100">
+                            <div className="flex items-baseline justify-between mt-2 pt-1 border-t border-slate-100">
                               <div>
                                 <span className="text-[10px] text-slate-400 block leading-none">Precio venta</span>
-                                <span className="font-extrabold text-xs text-slate-900">S/ {ventaPrice}</span>
+                                <span className="font-extrabold text-xs sm:text-sm text-slate-900">S/ {ventaPrice}</span>
                               </div>
                               {margenPorcentaje > 0 && (
-                                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">
+                                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-md">
                                   +S/ {ganancia}
                                 </span>
                               )}
@@ -410,10 +590,10 @@ export default function RevendedoresPage() {
                   </div>
                 )}
 
-                {/* Barra de acción inferior */}
-                <div className="mt-6 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                {/* Footer flotante con botón a Vista Previa */}
+                <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
                   <span className="text-xs text-slate-600 font-medium">
-                    Tienes <b>{productosSeleccionados.size} productos</b> listos para tu tienda.
+                    Tienes <b>{productosSeleccionados.size} productos seleccionados</b> listos para tu tienda.
                   </span>
                   <button
                     type="button"
@@ -425,9 +605,14 @@ export default function RevendedoresPage() {
                   </button>
                 </div>
               </div>
+
             </div>
-          ) : (
-            /* PESTAÑA 2: VISTA PREVIA DE LA TIENDA */
+          )}
+
+          {/* ══════════════════════════════════════════════════════════════════
+              PESTAÑA 2: VISTA PREVIA DE LA TIENDA (PRIVADA / MOCKUP)
+             ══════════════════════════════════════════════════════════════════ */}
+          {pestañaActiva === 'preview' && (
             <div className="flex flex-col gap-4">
               {/* Aviso flotante de vista previa */}
               <div className="bg-slate-900 text-white rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
@@ -436,7 +621,7 @@ export default function RevendedoresPage() {
                   <div>
                     <h4 className="font-bold text-xs sm:text-sm">Vista previa privada para clientes</h4>
                     <p className="text-[11px] text-slate-400">
-                      Esta pestaña es tu maqueta: así verán tu catálogo tus clientes una vez activado por el asesor.
+                      Esta pestaña es tu maqueta: así verán tu catálogo tus clientes una vez aceptada por el asesor.
                     </p>
                   </div>
                 </div>
@@ -445,7 +630,7 @@ export default function RevendedoresPage() {
                   onClick={() => setModalAvisoAsesor(true)}
                   className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold text-xs px-3.5 py-2 rounded-xl transition cursor-pointer shrink-0"
                 >
-                  Activar link oficial
+                  Activar tienda oficial
                 </button>
               </div>
 
@@ -477,7 +662,7 @@ export default function RevendedoresPage() {
 
                   {prodsElegidos.length === 0 ? (
                     <div className="py-12 text-center text-slate-400 text-xs">
-                      No has seleccionado productos aún. Ve a la pestaña "Elegir Productos" para agregarlos.
+                      No has seleccionado productos aún. Ve a la pestaña "Catálogo & Productos" para agregarlos.
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -506,6 +691,86 @@ export default function RevendedoresPage() {
                       ))}
                     </div>
                   )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ══════════════════════════════════════════════════════════════════
+              PESTAÑA 3: AJUSTES & ESTADO (EXPLICACIÓN CLARA DEL ESTADO EN GRIS)
+             ══════════════════════════════════════════════════════════════════ */}
+          {pestañaActiva === 'ajustes' && (
+            <div className="max-w-3xl mx-auto flex flex-col gap-5">
+              {/* Card de Estado Principal */}
+              <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-xs flex flex-col gap-5">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                  <div>
+                    <h3 className="text-base font-extrabold text-slate-900">Estado de la Tienda en Boga Market</h3>
+                    <p className="text-xs text-slate-500">Control de visibilidad y activación pública</p>
+                  </div>
+                  {estadoTienda === 'desactivada' ? (
+                    <span className="bg-slate-100 text-slate-600 border border-slate-300 font-bold text-xs px-3 py-1 rounded-full flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                      Desactivada (En gris)
+                    </span>
+                  ) : (
+                    <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs px-3 py-1 rounded-full flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                      Activa en Boga Market
+                    </span>
+                  )}
+                </div>
+
+                {/* Explicación Visual en Gris */}
+                <div className="p-4 rounded-2xl bg-slate-100 border border-slate-200 text-xs flex gap-3.5 items-start">
+                  <span className="material-symbols-outlined text-slate-500 text-2xl shrink-0">info</span>
+                  <div className="text-slate-600 leading-relaxed">
+                    <p className="font-bold text-slate-900 mb-1">
+                      ¿Por qué mi tienda aparece en gris (desactivada)?
+                    </p>
+                    <p>
+                      Tu tienda se encuentra en <b>modo borrador privado</b>. Esto te permite importar productos, cambiar tus márgenes y ver la vista previa sin que nadie te moleste.
+                    </p>
+                    <p className="mt-2">
+                      Para que la tienda pase a <b>Activa (Verde)</b> y los clientes puedan encontrarte en Boga Market y pedirte por WhatsApp, el administrador de BogaHub debe aceptar y validar tu solicitud.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Botón para solicitar activación */}
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setModalAvisoAsesor(true)}
+                    className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-base">chat</span>
+                    <span>Avisar al Asesor para que la acepte y active</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Card de Datos de la Tienda */}
+              <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-xs flex flex-col gap-4">
+                <h3 className="text-base font-extrabold text-slate-900">Datos de tu Cuenta de Reventa</h3>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <label className="block font-bold text-slate-500 mb-1">Nombre de la tienda</label>
+                    <p className="font-bold text-slate-900 text-sm">{nombreTienda}</p>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-500 mb-1">Responsable</label>
+                    <p className="font-bold text-slate-900 text-sm">{nombre}</p>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-500 mb-1">WhatsApp de pedidos</label>
+                    <p className="font-bold text-slate-900 text-sm">{whatsapp}</p>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-500 mb-1">Ciudad / Distrito</label>
+                    <p className="font-bold text-slate-900 text-sm capitalize">{ciudad}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -560,14 +825,14 @@ export default function RevendedoresPage() {
               </div>
 
               <p className="text-xs text-slate-600 leading-relaxed">
-                Al enviar este mensaje, el asesor validará tu cuenta en la base de datos y activará tu catálogo para que recibas pedidos sin trabas.
+                Al enviar este mensaje, el asesor validará tu cuenta en la base de datos y activará tu catálogo para que tu tienda pase de <b>gris a verde</b> y puedas recibir pedidos sin trabas.
               </p>
 
               <div className="flex flex-col gap-2 pt-1">
                 <a
                   href={waLink(
                     wspBoga,
-                    `Hola BogaHub! Acabo de crear mi tienda de reventa "${nombreTienda}" a nombre de ${nombre} (WhatsApp: ${whatsapp}, Ciudad: ${ciudad}). Quiero asegurar la activación de mi tienda para empezar a vender.`
+                    `Hola BogaHub! Acabo de crear mi tienda de reventa "${nombreTienda}" a nombre de ${nombre} (WhatsApp: ${whatsapp}, Ciudad: ${ciudad}). Quiero asegurar la activación de mi tienda para que pase de gris a activa y empezar a vender.`
                   )}
                   target="_blank"
                   rel="noopener noreferrer"
