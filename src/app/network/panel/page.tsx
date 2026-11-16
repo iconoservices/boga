@@ -1274,7 +1274,7 @@ export default function RevendedorPanelPage() {
 
         {/* ══ PESTAÑA 2: MIS TIENDAS (LISTA DE TIENDAS VINCULADAS) ══ */}
         {pestañaActiva === 'preview' && (
-          <div className="max-w-4xl mx-auto flex flex-col gap-5 animate-in fade-in">
+          <div className="w-full flex flex-col gap-6 animate-in fade-in">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
               <div>
                 <h2 className="text-base sm:text-lg font-black text-slate-900">
@@ -1411,23 +1411,42 @@ export default function RevendedorPanelPage() {
 
         {/* ══ PESTAÑA 3: GANAR CON AFILIADOS (OPCIONES CONTINUAS DE DINERO) ══ */}
         {pestañaActiva === 'afiliados' && (
-          <div className="max-w-4xl mx-auto flex flex-col gap-6 animate-in fade-in">
-            <div className="bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
-              <div className="relative z-10 max-w-xl">
+          <div className="w-full flex flex-col gap-6 animate-in fade-in">
+            <div className="bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div className="relative z-10 max-w-3xl">
                 <span className="inline-flex items-center gap-1 bg-white/20 backdrop-blur-xs text-white text-[11px] font-extrabold px-2.5 py-0.5 rounded-full mb-3">
                   <span className="material-symbols-outlined text-[14px]">payments</span>
                   Ingresos Adicionales en Efectivo
                 </span>
-                <h2 className="text-xl sm:text-2xl font-black tracking-tight leading-tight">
-                  Multiplica tus ganancias recomendando negocios y choferes
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight leading-tight">
+                  Multiplica tus ganancias recomendando negocios, choferes y productos
                 </h2>
-                <p className="mt-2 text-white/90 text-xs sm:text-sm leading-relaxed">
-                  Además de vender productos con tu catálogo de revendedor, puedes ganar bonos en efectivo directo a tu Yape o Plin por cada comercio o conductor que invites a la plataforma.
+                <p className="mt-2 text-white/90 text-xs sm:text-sm leading-relaxed max-w-2xl">
+                  Además de vender productos con tu catálogo de revendedor, puedes ganar bonos en efectivo y comisiones directas a tu Yape o Plin por cada comercio, conductor o producto individual recomendado.
                 </p>
+              </div>
+
+              {/* Badges de resumen en el banner para aprovechar el ancho */}
+              <div className="relative z-10 grid grid-cols-3 gap-2.5 shrink-0 sm:flex sm:items-center">
+                <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 border border-white/15 text-center min-w-[110px]">
+                  <span className="text-[10px] text-emerald-200 font-bold block uppercase tracking-wider">Comercios</span>
+                  <span className="text-sm font-black text-white mt-0.5 block">Bono Yape</span>
+                  <span className="text-[10px] text-white/70">Por activación</span>
+                </div>
+                <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 border border-white/15 text-center min-w-[110px]">
+                  <span className="text-[10px] text-teal-200 font-bold block uppercase tracking-wider">Choferes</span>
+                  <span className="text-sm font-black text-white mt-0.5 block">Bono Directo</span>
+                  <span className="text-[10px] text-white/70">Taxi/Mototaxi</span>
+                </div>
+                <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 border border-white/15 text-center min-w-[110px]">
+                  <span className="text-[10px] text-sky-200 font-bold block uppercase tracking-wider">Productos</span>
+                  <span className="text-sm font-black text-white mt-0.5 block">+S/ Comisión</span>
+                  <span className="text-[10px] text-white/70">Por cada venta</span>
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 items-stretch">
               {/* Tarjeta 1: Recomendar Comercios */}
               <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs flex flex-col justify-between gap-5 hover:border-emerald-300 transition">
                 <div className="flex flex-col gap-3">
@@ -2221,7 +2240,7 @@ export default function RevendedorPanelPage() {
       {/* ══ MODAL DE PRODUCTOS CON LINKS DE REFERIDOS Y GANANCIA CLARA ══ */}
       {modalProductosReferidos && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto animate-in fade-in">
-          <div className="bg-white w-full max-w-4xl max-h-[92vh] rounded-3xl shadow-2xl border border-slate-100 flex flex-col overflow-hidden my-auto">
+          <div className="bg-white w-full max-w-5xl max-h-[92vh] rounded-3xl shadow-2xl border border-slate-100 flex flex-col overflow-hidden my-auto">
             {/* Cabecera del Modal */}
             <div className="p-4 sm:p-5 border-b border-slate-100 bg-gradient-to-r from-sky-50 via-white to-sky-50 flex items-start justify-between gap-3 shrink-0">
               <div>
