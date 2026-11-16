@@ -84,6 +84,7 @@ export default function RevendedorPanelPage() {
   const [margenPorcentaje, setMargenPorcentaje] = useState<number>(15);
   const [filtroCategoria, setFiltroCategoria] = useState<string>('todas');
   const [busqueda, setBusqueda] = useState<string>('');
+  const [hayCambiosSinGuardar, setHayCambiosSinGuardar] = useState(false);
 
   useEffect(() => {
     fetch('/api/contacto')
@@ -245,6 +246,7 @@ export default function RevendedorPanelPage() {
         }),
       });
       setGuardadoExitoso(true);
+      setHayCambiosSinGuardar(false);
       setTimeout(() => setGuardadoExitoso(false), 2500);
     } catch (e) {
       console.warn('Error guardando tienda en servidor:', e);
@@ -253,7 +255,7 @@ export default function RevendedorPanelPage() {
     }
   }, [tieneTienda, nombreTienda, slugTienda, nombre, whatsapp, ciudad, margenPorcentaje, tiendaSeleccionada, productosSeleccionados]);
 
-  // Persistir cambios en localStorage y en el servidor
+  // Persistir cambios en localStorage de manera inmediata y segura (sin consumir lecturas/escrituras en BD)
   useEffect(() => {
     if (!tieneTienda || !nombreTienda) return;
     try {
@@ -271,13 +273,7 @@ export default function RevendedorPanelPage() {
       }
       localStorage.setItem('boga_revendedor_draft', payload);
     } catch {}
-
-    const timer = setTimeout(() => {
-      guardarEnServidor();
-    }, 1200);
-
-    return () => clearTimeout(timer);
-  }, [tieneTienda, nombre, whatsapp, nombreTienda, ciudad, margenPorcentaje, tiendaSeleccionada, productosSeleccionados, user, guardarEnServidor]);
+  }, [tieneTienda, nombre, whatsapp, nombreTienda, ciudad, margenPorcentaje, tiendaSeleccionada, productosSeleccionados, user]);
 
   // Cargar productos del proveedor seleccionado (SIN filtro is_available para que carguen todos los productos de delva)
   useEffect(() => {
@@ -357,6 +353,22 @@ export default function RevendedorPanelPage() {
       else next.add(id);
       return next;
     });
+    setHayCambiosSinGuardar(true);
+  };
+
+  const seleccionarTodosProductos = () => {
+    setProductosSeleccionados(new Set(productosDisponibles.map((p) => p.id)));
+    setHayCambiosSinGuardar(true);
+  };
+
+  const deseleccionarTodosProductos = () => {
+    setProductosSeleccionados(new Set());
+    setHayCambiosSinGuardar(true);
+  };
+
+  const cambiarMargen = (m: number) => {
+    setMargenPorcentaje(m);
+    setHayCambiosSinGuardar(true);
   };
 
   const handleRegistrarOtra = () => {
@@ -703,7 +715,7 @@ export default function RevendedorPanelPage() {
                     <button
                       key={m}
                       type="button"
-                      onClick={() => setMargenPorcentaje(m)}
+                      onClick={() => cambiarMargen(m)}
                       className={`py-1.5 rounded-lg text-xs font-bold transition cursor-pointer text-center ${
                         margenPorcentaje === m
                           ? 'bg-emerald-600 text-white shadow-xs'
@@ -715,37 +727,48 @@ export default function RevendedorPanelPage() {
                   ))}
                 </div>
 
-                {/* Indicador de sincronización con la tienda online */}
-                <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                  {guardandoEnNube ? (
-                    <span className="text-slate-500 font-medium flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[13px] animate-spin text-emerald-600">progress_activity</span>
-                      Sincronizando con tienda online...
-                    </span>
-                  ) : guardadoExitoso ? (
-                    <span className="text-emerald-700 font-bold flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[14px] text-emerald-600">check_circle</span>
-                      ¡Actualizado en tu tienda pública!
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={guardarEnServidor}
-                      className="text-emerald-700 hover:text-emerald-800 font-bold flex items-center gap-1 cursor-pointer"
-                    >
-                      <span className="material-symbols-outlined text-[13px]">cloud_done</span>
-                      Guardar en tienda online
-                    </button>
-                  )}
-                  <a
-                    href={`/${slugTienda}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-slate-400 hover:text-emerald-700 font-bold flex items-center gap-0.5"
+                {/* Botón de Guardar Cambios en la Tienda */}
+                <div className="mt-3.5 pt-3 border-t border-slate-100 flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={guardarEnServidor}
+                    disabled={guardandoEnNube}
+                    className={`w-full py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-xs active:scale-98 ${
+                      hayCambiosSinGuardar
+                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white ring-2 ring-emerald-300 shadow-md animate-pulse'
+                        : guardadoExitoso
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                    }`}
                   >
-                    <span>Ver</span>
-                    <span className="material-symbols-outlined text-[13px]">open_in_new</span>
-                  </a>
+                    <span className="material-symbols-outlined text-[16px]">
+                      {guardandoEnNube ? 'progress_activity' : guardadoExitoso ? 'check_circle' : hayCambiosSinGuardar ? 'cloud_upload' : 'check'}
+                    </span>
+                    <span>
+                      {guardandoEnNube
+                        ? 'Guardando cambios...'
+                        : guardadoExitoso
+                        ? '¡Guardado en tu tienda!'
+                        : hayCambiosSinGuardar
+                        ? '💾 Guardar Cambios'
+                        : 'Todo guardado en tu tienda'}
+                    </span>
+                  </button>
+
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 px-1">
+                    <span>
+                      {hayCambiosSinGuardar ? '● Hay cambios pendientes' : 'Sincronizado'}
+                    </span>
+                    <a
+                      href={`/${slugTienda}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-slate-500 hover:text-emerald-700 font-bold flex items-center gap-0.5"
+                    >
+                      <span>Ver tienda</span>
+                      <span className="material-symbols-outlined text-[12px]">open_in_new</span>
+                    </a>
+                  </div>
                 </div>
               </div>
 
@@ -826,21 +849,48 @@ export default function RevendedorPanelPage() {
                   />
                 </div>
 
-                <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
                   <button
                     type="button"
-                    onClick={() => setProductosSeleccionados(new Set(productosDisponibles.map((p) => p.id)))}
-                    className="text-xs font-bold text-emerald-700 hover:text-emerald-800 px-2.5 py-1.5 rounded-lg hover:bg-emerald-50 transition cursor-pointer"
+                    onClick={seleccionarTodosProductos}
+                    className="text-xs font-bold text-emerald-700 hover:text-emerald-800 px-2 py-1.5 rounded-lg hover:bg-emerald-50 transition cursor-pointer"
                   >
                     Marcar todos ({productosDisponibles.length})
                   </button>
                   <span className="text-slate-300">|</span>
                   <button
                     type="button"
-                    onClick={() => setProductosSeleccionados(new Set())}
-                    className="text-xs font-bold text-slate-500 hover:text-slate-700 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+                    onClick={deseleccionarTodosProductos}
+                    className="text-xs font-bold text-slate-500 hover:text-slate-700 px-2 py-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer"
                   >
                     Desmarcar todos
+                  </button>
+
+                  {/* Botón Guardar Cambios en Grilla */}
+                  <button
+                    type="button"
+                    onClick={guardarEnServidor}
+                    disabled={guardandoEnNube}
+                    className={`ml-1 px-3.5 py-1.5 rounded-xl font-black text-xs flex items-center gap-1.5 transition cursor-pointer shadow-xs active:scale-95 ${
+                      hayCambiosSinGuardar
+                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white ring-2 ring-emerald-300 shadow-sm animate-pulse'
+                        : guardadoExitoso
+                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
+                        : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[16px]">
+                      {guardandoEnNube ? 'progress_activity' : guardadoExitoso ? 'check' : hayCambiosSinGuardar ? 'save' : 'done_all'}
+                    </span>
+                    <span>
+                      {guardandoEnNube
+                        ? 'Guardando...'
+                        : guardadoExitoso
+                        ? '¡Guardado!'
+                        : hayCambiosSinGuardar
+                        ? 'Guardar Cambios'
+                        : 'Guardado'}
+                    </span>
                   </button>
                 </div>
               </div>
@@ -1372,6 +1422,34 @@ export default function RevendedorPanelPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+      {/* ── BARRA FLOTANTE DE CAMBIOS SIN GUARDAR ── */}
+      {hayCambiosSinGuardar && (
+        <div className="fixed bottom-4 inset-x-4 max-w-lg mx-auto z-40 bg-slate-900 text-white p-3.5 sm:p-4 rounded-2xl shadow-2xl border border-slate-700 flex items-center justify-between gap-3 animate-in slide-in-from-bottom-5">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs font-black text-white truncate">
+                Tienes cambios sin guardar
+              </p>
+              <p className="text-[11px] text-slate-400 truncate">
+                {productosSeleccionados.size} productos · Margen +{margenPorcentaje}%
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={guardarEnServidor}
+            disabled={guardandoEnNube}
+            className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition cursor-pointer shrink-0 shadow-md flex items-center gap-1.5 active:scale-95"
+          >
+            <span className="material-symbols-outlined text-[16px]">
+              {guardandoEnNube ? 'progress_activity' : 'cloud_upload'}
+            </span>
+            <span>{guardandoEnNube ? 'Guardando...' : 'Guardar Cambios'}</span>
+          </button>
         </div>
       )}
     </div>
