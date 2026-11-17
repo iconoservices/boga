@@ -8,18 +8,15 @@ import { useAuth } from '@/context/AuthContext';
 import { CIUDADES } from '@/lib/ciudades';
 import { detectarCiudad } from '@/lib/geo';
 
-function waLink(numero: string, texto: string) {
-  const clean = numero.replace(/\D/g, '');
-  const num = clean.length === 9 ? `51${clean}` : clean;
-  return `https://wa.me/${num}?text=${encodeURIComponent(texto)}`;
-}
+const LINK_GRUPO_WHATSAPP = 'https://chat.whatsapp.com/ClozDTrFdhH8cqJPziBYKQ';
 
 export default function BogaNetworkHomePage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
 
-  // Modal para activar cuenta de dropshipping (Popup neutro de contacto)
+  // Modal para activar cuenta de network
   const [modalRegistro, setModalRegistro] = useState(false);
+  const [pasoRegistro, setPasoRegistro] = useState<'form' | 'exito'>('form');
 
   // Datos para registrar cuenta
   const [nombre, setNombre] = useState('');
@@ -29,22 +26,15 @@ export default function BogaNetworkHomePage() {
   const [geoAviso, setGeoAviso] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [wspBoga, setWspBoga] = useState('51987911213');
 
   // Cuenta existente detectada
   const [cuentaExistente, setCuentaExistente] = useState<{ nombre: string; nombreTienda?: string } | null>(null);
 
   useEffect(() => {
-    document.title = 'Boga Network · Reventa & Afiliados';
-    fetch('/api/contacto')
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d: any) => {
-        if (d?.whatsapp) setWspBoga(d.whatsapp);
-      })
-      .catch(() => {});
+    document.title = 'Boga Network · Gana Dinero desde tu Celular en Pucallpa';
   }, []);
 
-  // Detectar si el usuario ya tiene cuenta de revendedor para ofrecerle acceso directo al Panel
+  // Detectar si el usuario ya tiene cuenta de revendedor
   useEffect(() => {
     if (authLoading) return;
 
@@ -54,7 +44,6 @@ export default function BogaNetworkHomePage() {
         if (metaName) setNombre(metaName);
       }
 
-      // Si el usuario tiene sesión, la base de datos es la única fuente de la verdad
       if (user.email) {
         supabase
           .from('store_requests')
@@ -81,7 +70,6 @@ export default function BogaNetworkHomePage() {
             }
           });
       } else {
-        // Solo para usuario anónimo: revisar borrador temporal
         try {
           const draft = localStorage.getItem('boga_revendedor_draft');
           if (draft) {
@@ -114,7 +102,7 @@ export default function BogaNetworkHomePage() {
     }
   };
 
-  // Activar la cuenta de dropshipping e ingresar al panel (creación de tiendas se hace dentro del panel)
+  // Activar la cuenta de dropshipping
   const handleActivarCuenta = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
@@ -130,12 +118,11 @@ export default function BogaNetworkHomePage() {
       return;
     }
     if (!whatsapp.trim() || cleanWsp.length < 9) {
-      setErrorMsg('El número de WhatsApp es obligatorio (mínimo 9 dígitos) para poder contactarnos y recibir pedidos.');
+      setErrorMsg('El número de WhatsApp es obligatorio (mínimo 9 dígitos) para comunicarnos y validar tu cuenta.');
       return;
     }
 
     setIsLoading(true);
-
     const nombreTiendaProvisional = `${nombre.trim()} bm`;
 
     try {
@@ -177,13 +164,36 @@ export default function BogaNetworkHomePage() {
     }
 
     setIsLoading(false);
-    setModalRegistro(false);
-    router.push('/network/panel');
+    setPasoRegistro('exito');
+  };
+
+  const abrirModalActivacion = () => {
+    if (cuentaExistente) {
+      router.push('/network/panel');
+    } else if (user) {
+      setPasoRegistro('form');
+      setModalRegistro(true);
+    } else {
+      router.push('/login?redirect=/network');
+    }
+  };
+
+  const irAPanelPestaña = (tab: 'preview' | 'productos' | 'afiliados') => {
+    if (!user) {
+      router.push(`/login?redirect=${encodeURIComponent(`/network/panel?tab=${tab}`)}`);
+      return;
+    }
+    if (cuentaExistente) {
+      router.push(`/network/panel?tab=${tab}`);
+    } else {
+      setPasoRegistro('form');
+      setModalRegistro(true);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
-      {/* ── Barra Superior Slim con Autenticación y Acceso al Panel ── */}
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
+      {/* ── Barra Superior Slim ── */}
       <header className="sticky top-0 z-30 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 shrink-0">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
@@ -258,7 +268,7 @@ export default function BogaNetworkHomePage() {
             <div className="flex items-center gap-2 text-center sm:text-left">
               <span className="material-symbols-outlined text-emerald-200 text-lg">verified_user</span>
               <span>
-                Ya tienes tu cuenta de revendedor activa en Boga Network. Entra a tu panel para administrar tus tiendas y ganancias.
+                Ya tienes tu cuenta activa en Boga Network. Entra a tu panel para ver tus tiendas, productos y ganancias.
               </span>
             </div>
             <Link
@@ -271,180 +281,292 @@ export default function BogaNetworkHomePage() {
         </div>
       )}
 
-      {/* ── Contenido Principal (DISEÑO LIMPIO, COMPACTO Y BALANCEADO) ── */}
-      <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 w-full flex flex-col items-center">
-        {/* Cabecera Principal Compacta */}
-        <div className="w-full text-center mb-7 sm:mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold mb-2">
+      {/* ── Contenido Principal (CTA ARRIBA + 3 FORMAS DE GANAR CLARAS Y VISUALES) ── */}
+      <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 w-full flex flex-col items-start">
+        {/* 1. Cabecera Principal y BOTÓN DE ACTIVAR ALINEADO A LA IZQUIERDA */}
+        <div className="w-full text-left max-w-3xl mb-7">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold mb-3">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span>Oportunidades de Ingresos · Pucallpa</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+
+          <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
             Gana dinero desde tu celular con{' '}
-            <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 bg-clip-text text-transparent">
               Boga Network
             </span>
           </h1>
-          <p className="text-xs sm:text-sm text-slate-600 mt-1.5 w-full mx-auto leading-relaxed sm:whitespace-nowrap">
-            Descubre las <b>2 formas oficiales</b> de generar ingresos hoy mismo sin jefes ni horarios. Elige la que mejor se adapte a ti o combina ambas.
+
+          <p className="text-xs sm:text-sm text-slate-600 mt-2 max-w-2xl leading-relaxed">
+            Descubre las <b>3 formas oficiales</b> de generar ingresos hoy mismo sin jefes ni horarios. Elige la que mejor se adapte a ti o combina las tres.
+          </p>
+
+          {/* ══ BOTÓN DESTACADO ALINEADO A LA IZQUIERDA ══ */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-start gap-3 w-full sm:w-auto mt-5 mb-2.5">
+            <button
+              type="button"
+              onClick={abrirModalActivacion}
+              className="py-3.5 px-7 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-sm shadow-md shadow-emerald-600/25 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 text-center shrink-0"
+            >
+              <span className="material-symbols-outlined text-[20px]">badge</span>
+              <span>{cuentaExistente ? 'Entrar a Mi Panel de Control →' : 'Activar Mi Cuenta Network →'}</span>
+            </button>
+
+            <a
+              href={LINK_GRUPO_WHATSAPP}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="py-3.5 px-5 rounded-2xl bg-[#25D366]/15 hover:bg-[#25D366]/25 text-[#128C7E] font-black text-xs sm:text-sm border border-[#25D366]/30 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 text-center shrink-0"
+            >
+              <span className="material-symbols-outlined text-[19px]">chat</span>
+              <span>Únete al Grupo WhatsApp</span>
+            </a>
+          </div>
+
+          <p className="text-[11px] text-slate-400 font-medium">
+            🔒 Sin costos ocultos · Cero inversión en mercadería · Pagos directos
           </p>
         </div>
 
-        {/* ── LAS 2 FORMAS DE GANAR DINERO: 2 COLUMNAS PERFECTAMENTE SIMÉTRICAS ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 w-full items-start">
+        {/* ── 2. LAS 3 FORMAS DE GANAR DINERO: 3 COLUMNAS SIMÉTRICAS Y ULTRA CLARAS ── */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 w-full items-stretch mt-2">
           
-          {/* ════════════════════════════════════════════════════════════════
-              COLUMNA 1 (IZQUIERDA): CATÁLOGO DE REVENTA / DROPSHIPPING LOCAL
-             ════════════════════════════════════════════════════════════════ */}
-          <div className="flex flex-col gap-4 text-left">
-            <div>
-              <div className="flex items-center justify-between gap-2 border-b border-slate-200/80 pb-2.5">
+          {/* ════ TARJETA 1: CREA Y VENDE CON TU TIENDA VIRTUAL ════ */}
+          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-xs flex flex-col justify-between gap-4 hover:border-emerald-300 hover:shadow-md transition">
+            <div className="flex flex-col gap-3.5">
+              <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
                 <div className="flex items-center gap-2">
                   <span className="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs font-black shrink-0">
                     1
                   </span>
-                  <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
-                    Catálogo de Reventa (Dropshipping)
+                  <h2 className="text-sm sm:text-base font-black text-slate-900 tracking-tight leading-snug">
+                    Tienda Virtual Propia
                   </h2>
                 </div>
-                <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider shrink-0">
-                  Sin inversión
+                <span className="bg-emerald-100 text-emerald-800 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
+                  Tu Marca
                 </span>
               </div>
-              <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                Crea tu catálogo con tu marca en 2 minutos. Vende productos de tiendas aliadas de Pucallpa (moda, lentes, relojes) sin comprar stock y define tu ganancia.
-              </p>
+
+              {/* Caja de Ganancia */}
+              <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-2xl p-3 flex items-center justify-between gap-2">
+                <div>
+                  <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider block">Tu Margen</span>
+                  <span className="text-lg font-black text-emerald-700 block leading-tight">+15% a +25%</span>
+                  <span className="text-[9px] text-slate-500">sobre cada producto</span>
+                </div>
+                <div className="text-right bg-white/80 px-2.5 py-1.5 rounded-xl border border-emerald-200/60 shrink-0">
+                  <span className="text-[8px] font-bold text-slate-500 block uppercase">Estimado</span>
+                  <span className="text-xs font-black text-slate-900 block leading-tight">S/ 600 - 1,200</span>
+                  <span className="text-[8px] text-emerald-700 font-bold">mes</span>
+                </div>
+              </div>
+
+              {/* Beneficios directos */}
+              <div className="flex flex-col gap-2 text-xs">
+                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                  <span className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[18px]">storefront</span>
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-extrabold text-slate-900 text-xs">Catálogo con tu marca</p>
+                    <p className="text-[10px] text-slate-500 leading-tight">Link propio con fotos y precios.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                  <span className="w-8 h-8 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[18px]">inventory_2</span>
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-extrabold text-slate-900 text-xs">Cero inversión previa</p>
+                    <p className="text-[10px] text-slate-500 leading-tight">Proveedor despacha en Pucallpa.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                  <span className="w-8 h-8 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[18px]">shopping_cart</span>
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-extrabold text-slate-900 text-xs">Pedidos a tu WhatsApp</p>
+                    <p className="text-[10px] text-slate-500 leading-tight">Arman carrito y te pagan a ti.</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* 3 Pastillas compactas limpias */}
-            <div className="flex flex-col gap-2.5">
-              <div className="flex items-center gap-3 p-3 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
-                <span className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-[22px]">inventory_2</span>
-                </span>
-                <div className="min-w-0">
-                  <p className="text-xs sm:text-sm font-bold text-slate-900 leading-none">0 inversión en mercadería</p>
-                  <p className="text-[11px] text-slate-500 mt-1">No compras stock por adelantado. El proveedor local despacha.</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 p-3 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
-                <span className="w-10 h-10 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-[22px]">attach_money</span>
-                </span>
-                <div className="min-w-0">
-                  <p className="text-xs sm:text-sm font-bold text-slate-900 leading-none">Tú pones tu margen</p>
-                  <p className="text-[11px] text-slate-500 mt-1">Regula +10%, +15%, +20% o lo que prefieras ganar por venta.</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 p-3 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
-                <span className="w-10 h-10 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-[22px]">chat</span>
-                </span>
-                <div className="min-w-0">
-                  <p className="text-xs sm:text-sm font-bold text-slate-900 leading-none">Pedidos directos a tu WhatsApp</p>
-                  <p className="text-[11px] text-slate-500 mt-1">Tus clientes te escriben y te pagan a ti directamente.</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Botón de acción Opción 1 (solo para usuarios nuevos sin cuenta de revendedor) */}
-            {!cuentaExistente && (
-              <div className="pt-1 flex flex-col gap-2">
-                {user ? (
-                  <button
-                    type="button"
-                    onClick={() => setModalRegistro(true)}
-                    className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-xs sm:text-sm shadow-md shadow-emerald-600/20 active:scale-95 transition flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-lg">badge</span>
-                    <span>Activar Mi Cuenta de Dropshipping →</span>
-                  </button>
-                ) : (
-                  <Link
-                    href="/login?redirect=/network"
-                    className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-xs sm:text-sm shadow-md shadow-emerald-600/20 active:scale-95 transition flex items-center justify-center gap-2 text-center"
-                  >
-                    <span className="material-symbols-outlined text-lg">login</span>
-                    <span>Iniciar Sesión para Empezar →</span>
-                  </Link>
-                )}
-                <p className="text-[11px] text-slate-400 text-center sm:text-left">
-                  🔒 Sin costos ocultos · No compras mercadería por adelantado · Empiezas hoy
-                </p>
-              </div>
-            )}
+            <button
+              type="button"
+              onClick={() => irAPanelPestaña('preview')}
+              className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+            >
+              <span className="material-symbols-outlined text-[16px]">store</span>
+              <span>{cuentaExistente ? 'Ir a Mis Tiendas Virtuales →' : 'Crear Tienda Virtual →'}</span>
+            </button>
           </div>
 
-          {/* ════════════════════════════════════════════════════════════════
-              COLUMNA 2 (DERECHA): PROGRAMA DE AFILIADOS BOGA NETWORK
-             ════════════════════════════════════════════════════════════════ */}
-          <div className="flex flex-col gap-4 text-left">
-            <div>
-              <div className="flex items-center justify-between gap-2 border-b border-slate-200/80 pb-2.5">
+          {/* ════ TARJETA 2: RECOMIENDA PRODUCTOS INDIVIDUALES ════ */}
+          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-xs flex flex-col justify-between gap-4 hover:border-sky-300 hover:shadow-md transition">
+            <div className="flex flex-col gap-3.5">
+              <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
                 <div className="flex items-center gap-2">
-                  <span className="w-7 h-7 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center text-xs font-black shrink-0">
+                  <span className="w-7 h-7 rounded-xl bg-sky-100 text-sky-800 flex items-center justify-center text-xs font-black shrink-0">
                     2
                   </span>
-                  <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
-                    Programa de Afiliados
+                  <h2 className="text-sm sm:text-base font-black text-slate-900 tracking-tight leading-snug">
+                    Productos Individuales
                   </h2>
                 </div>
-                <span className="bg-teal-100 text-teal-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider shrink-0">
-                  Bono en efectivo
+                <span className="bg-sky-100 text-sky-800 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
+                  Venta Rápida
                 </span>
               </div>
-              <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                ¿Conoces negocios o personas con vehículo en Pucallpa? Conéctalos con Boga Network y cobra un bono directo por cada uno activado.
-              </p>
+
+              {/* Caja de Ganancia */}
+              <div className="bg-gradient-to-r from-sky-500/10 to-blue-500/10 border border-sky-500/20 rounded-2xl p-3 flex items-center justify-between gap-2">
+                <div>
+                  <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider block">Comisión Directa</span>
+                  <span className="text-lg font-black text-sky-800 block leading-tight">+S/ 10 a S/ 35</span>
+                  <span className="text-[9px] text-slate-500">por producto vendido</span>
+                </div>
+                <div className="text-right bg-white/80 px-2.5 py-1.5 rounded-xl border border-sky-200/60 shrink-0">
+                  <span className="text-[8px] font-bold text-slate-500 block uppercase">En Estados</span>
+                  <span className="text-xs font-black text-slate-900 block leading-tight">1 Clic</span>
+                  <span className="text-[8px] text-sky-700 font-bold">compartir</span>
+                </div>
+              </div>
+
+              {/* Beneficios directos */}
+              <div className="flex flex-col gap-2 text-xs">
+                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                  <span className="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[18px]">loyalty</span>
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-extrabold text-slate-900 text-xs">Links de Afiliado</p>
+                    <p className="text-[10px] text-slate-500 leading-tight">Enlace directo a 1 producto exacto.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                  <span className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[18px]">bolt</span>
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-extrabold text-slate-900 text-xs">Productos de alta demanda</p>
+                    <p className="text-[10px] text-slate-500 leading-tight">Relojes, lentes, gadgets con stock.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                  <span className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[18px]">share</span>
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-extrabold text-slate-900 text-xs">Para Estados de WhatsApp</p>
+                    <p className="text-[10px] text-slate-500 leading-tight">Publicas 1 al día y cobras en soles.</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* 3 Pastillas compactas limpias */}
-            <div className="flex flex-col gap-2.5">
-              <div className="flex items-center gap-3 p-3 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
-                <span className="w-10 h-10 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-[22px]">store</span>
+            <button
+              type="button"
+              onClick={() => irAPanelPestaña('productos')}
+              className="w-full py-2.5 px-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-black text-xs shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+            >
+              <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+              <span>{cuentaExistente ? 'Ir a Productos de Afiliado →' : 'Recomendar Productos →'}</span>
+            </button>
+          </div>
+
+          {/* ════ TARJETA 3: PROGRAMA DE AFILIADOS & BONOS EN EFECTIVO ════ */}
+          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-xs flex flex-col justify-between gap-4 hover:border-purple-300 hover:shadow-md transition">
+            <div className="flex flex-col gap-3.5">
+              <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-7 h-7 rounded-xl bg-purple-100 text-purple-800 flex items-center justify-center text-xs font-black shrink-0">
+                    3
+                  </span>
+                  <h2 className="text-sm sm:text-base font-black text-slate-900 tracking-tight leading-snug">
+                    Bonos por Recomendación
+                  </h2>
+                </div>
+                <span className="bg-purple-100 text-purple-800 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
+                  Bono Efectivo
                 </span>
-                <div className="min-w-0">
-                  <p className="text-xs sm:text-sm font-bold text-slate-900 leading-none">Comercios y Tiendas Locales</p>
-                  <p className="text-[11px] text-slate-500 mt-1">Restaurantes, bodegas o boutiques al publicar su menú o catálogo.</p>
+              </div>
+
+              {/* Caja de Ganancia */}
+              <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-3 flex items-center justify-between gap-2">
+                <div>
+                  <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider block">Bono Directo</span>
+                  <span className="text-lg font-black text-purple-800 block leading-tight">+S/ 20 a S/ 50</span>
+                  <span className="text-[9px] text-slate-500">por cada referido activo</span>
+                </div>
+                <div className="text-right bg-white/80 px-2.5 py-1.5 rounded-xl border border-purple-200/60 shrink-0">
+                  <span className="text-[8px] font-bold text-slate-500 block uppercase">Pago directo</span>
+                  <span className="text-xs font-black text-purple-800 block leading-tight">Yape / Plin</span>
+                  <span className="text-[8px] text-purple-700 font-bold">inmediato</span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 p-3 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
-                <span className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-[22px]">local_taxi</span>
-                </span>
-                <div className="min-w-0">
-                  <p className="text-xs sm:text-sm font-bold text-slate-900 leading-none">Conductores (Taxi / Mototaxi)</p>
-                  <p className="text-[11px] text-slate-500 mt-1">Invita a choferes a recibir carreras con Boga Taxi y gana tu comisión.</p>
+              {/* Beneficios directos */}
+              <div className="flex flex-col gap-2 text-xs">
+                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                  <span className="w-8 h-8 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[18px]">store</span>
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-extrabold text-slate-900 text-xs">Comercios locales</p>
+                    <p className="text-[10px] text-slate-500 leading-tight">Pollerías, boutiques, bodegas.</p>
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex items-center gap-3 p-3 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
-                <span className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-[22px]">payments</span>
-                </span>
-                <div className="min-w-0">
-                  <p className="text-xs sm:text-sm font-bold text-slate-900 leading-none">Pagos al instante por Yape o Plin</p>
-                  <p className="text-[11px] text-slate-500 mt-1">Sin trámites complejos. El equipo valida el referido y te transfiere directo.</p>
+                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                  <span className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[18px]">local_taxi</span>
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-extrabold text-slate-900 text-xs">Choferes (Taxi / Mototaxi)</p>
+                    <p className="text-[10px] text-slate-500 leading-tight">Conéctalos con Boga Taxi.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                  <span className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[18px]">group_add</span>
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-extrabold text-slate-900 text-xs">Nuevos Revendedores</p>
+                    <p className="text-[10px] text-slate-500 leading-tight">Ganas comisiones de su red.</p>
+                  </div>
                 </div>
               </div>
             </div>
+
+            <button
+              type="button"
+              onClick={() => irAPanelPestaña('afiliados')}
+              className="w-full py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+            >
+              <span className="material-symbols-outlined text-[16px]">group_add</span>
+              <span>{cuentaExistente ? 'Ir a Programa de Afiliados →' : 'Empezar con Afiliados →'}</span>
+            </button>
           </div>
 
         </div>
       </main>
 
-      {/* ── MODAL CENTRADO: Activación de Cuenta de Dropshipping (Neutro - Solo Contacto) ── */}
+      {/* ── MODAL: Activación de Cuenta y Confirmación con Grupo de WhatsApp ── */}
       {modalRegistro && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in"
           onClick={() => setModalRegistro(false)}
         >
           <div
-            className="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl relative border border-slate-100 flex flex-col gap-4 text-slate-900"
+            className="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl relative border border-slate-100 flex flex-col gap-4 text-slate-900 animate-in zoom-in-95"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -455,128 +577,159 @@ export default function BogaNetworkHomePage() {
               <span className="material-symbols-outlined text-lg">close</span>
             </button>
 
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-2xl">badge</span>
-              </div>
-              <div>
-                <h3 className="text-base font-extrabold text-slate-900">Activar Cuenta de Dropshipping</h3>
-                <p className="text-xs text-slate-500 font-medium">Ingresa tus datos de contacto para acceder a tu panel de control</p>
-              </div>
-            </div>
-
-            {/* Aviso de campos obligatorios para contactar */}
-            <div className="p-2.5 rounded-xl bg-emerald-50/90 border border-emerald-200/80 text-[11px] text-emerald-950 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[16px] text-emerald-600 shrink-0">contact_phone</span>
-              <span><b>Obligatorio:</b> Tu número de WhatsApp y nombre completo son requeridos para poder contactarte y coordinar con el equipo.</span>
-            </div>
-
-            {/* Badge de cuenta vinculada */}
-            {user?.email && (
-              <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/70 text-xs flex items-center justify-between">
-                <div className="flex items-center gap-2 truncate">
-                  <span className="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center text-[10px] uppercase shrink-0">
-                    {user.email.charAt(0)}
-                  </span>
-                  <div className="truncate">
-                    <p className="text-[10px] text-slate-500 uppercase font-black">Cuenta vinculada:</p>
-                    <p className="font-bold text-slate-800 truncate">{user.email}</p>
+            {pasoRegistro === 'form' ? (
+              <>
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-2xl">badge</span>
+                  </div>
+                  <div>
+                    <h3 className="text-base font-extrabold text-slate-900">Activar Mi Cuenta Network</h3>
+                    <p className="text-xs text-slate-500 font-medium">Completa tus datos para ingresar al panel y unirte a la red</p>
                   </div>
                 </div>
-                <span className="text-[10px] font-bold text-emerald-700 bg-white px-2 py-0.5 rounded-full border border-emerald-200 shrink-0">
-                  Verificado ✓
-                </span>
-              </div>
-            )}
 
-            {errorMsg && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-semibold flex items-center gap-2">
-                <span className="material-symbols-outlined text-[16px] text-red-600 shrink-0">error</span>
-                <span>{errorMsg}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleActivarCuenta} className="flex flex-col gap-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Tu nombre completo <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej: Camila Salazar"
-                    value={nombre}
-                    onChange={(e) => setNombre(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 bg-slate-50"
-                  />
+                <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200/80 text-[11px] text-emerald-950 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[16px] text-emerald-600 shrink-0">contact_phone</span>
+                  <span><b>Contacto directo:</b> Revisaremos tu solicitud y usaremos tu WhatsApp para validar tu cuenta.</span>
                 </div>
+
+                {errorMsg && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-semibold flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[16px] text-red-600 shrink-0">error</span>
+                    <span>{errorMsg}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleActivarCuenta} className="flex flex-col gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Tu nombre completo <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ej: Camila Salazar"
+                        value={nombre}
+                        onChange={(e) => setNombre(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 bg-slate-50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Tu WhatsApp de contacto <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="tel"
+                        required
+                        placeholder="Ej: 987 654 321"
+                        value={whatsapp}
+                        onChange={(e) => setWhatsapp(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 bg-slate-50"
+                      />
+                      <p className="text-[10px] text-emerald-700 font-bold mt-1">
+                        Número de 9 dígitos de celular
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-bold text-slate-700">Tu ciudad / distrito</label>
+                      <button
+                        type="button"
+                        onClick={handleDetectarCiudad}
+                        disabled={detectando}
+                        className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-0.5 cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-[12px]">my_location</span>
+                        {detectando ? 'Ubicando...' : 'Ubicar GPS'}
+                      </button>
+                    </div>
+                    <select
+                      value={ciudad}
+                      onChange={(e) => setCiudad(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 bg-slate-50"
+                    >
+                      {CIUDADES.map((c) => (
+                        <option key={c.slug} value={c.slug}>
+                          {c.nombre} ({c.region})
+                        </option>
+                      ))}
+                    </select>
+                    {geoAviso && <p className="text-[10px] text-amber-600 mt-1">{geoAviso}</p>}
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-sm shadow-md shadow-emerald-600/20 active:scale-[0.99] transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                    >
+                      {isLoading ? (
+                        <span>Activando tu cuenta...</span>
+                      ) : (
+                        <>
+                          <span>Activar Cuenta y Continuar</span>
+                          <span className="material-symbols-outlined text-base">arrow_forward</span>
+                        </>
+                      )}
+                    </button>
+                    <p className="text-center text-[10px] text-slate-400 mt-2">
+                      🔒 Sin costos ocultos · Al activar podrás ingresar a tu panel
+                    </p>
+                  </div>
+                </form>
+              </>
+            ) : (
+              /* PANTALLA DE ÉXITO: MENSAJE CLARO Y BOTÓN DEL GRUPO DE WHATSAPP */
+              <div className="flex flex-col items-center text-center gap-4 py-2 animate-in fade-in">
+                <div className="w-16 h-16 rounded-3xl bg-[#25D366]/15 text-[#25D366] flex items-center justify-center shadow-xs">
+                  <span className="material-symbols-outlined text-4xl">check_circle</span>
+                </div>
+
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Tu WhatsApp de contacto <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="Ej: 987 654 321"
-                    value={whatsapp}
-                    onChange={(e) => setWhatsapp(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 bg-slate-50"
-                  />
-                  <p className="text-[10px] text-emerald-700 font-bold mt-1 flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[12px]">call</span>
-                    Obligatorio para que podamos contactarte (9 dígitos)
+                  <h3 className="text-xl font-black text-slate-900 tracking-tight">
+                    ¡Solicitud Recibida con Éxito! 🚀
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 mt-2 max-w-sm leading-relaxed">
+                    Revisaremos tu solicitud y usaremos tu número de WhatsApp (<b>{whatsapp}</b>) para comunicarnos contigo y validar tu cuenta.
                   </p>
                 </div>
-              </div>
 
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-bold text-slate-700">Tu ciudad / distrito</label>
-                  <button
-                    type="button"
-                    onClick={handleDetectarCiudad}
-                    disabled={detectando}
-                    className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-0.5 cursor-pointer"
+                <div className="w-full bg-emerald-50 border border-emerald-200/80 rounded-2xl p-4 text-xs text-emerald-950 flex flex-col gap-2.5">
+                  <div className="flex items-center gap-2 text-emerald-800 font-extrabold text-sm justify-center">
+                    <span className="material-symbols-outlined text-[#25D366]">groups</span>
+                    <span>Grupo Oficial de Emprendedores</span>
+                  </div>
+                  <p className="text-slate-600 text-xs">
+                    Únete a nuestra comunidad oficial en WhatsApp para novedades de productos, tips de venta y soporte directo:
+                  </p>
+                  <a
+                    href={LINK_GRUPO_WHATSAPP}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3 px-4 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-black text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                   >
-                    <span className="material-symbols-outlined text-[12px]">my_location</span>
-                    {detectando ? 'Ubicando...' : 'Ubicar GPS'}
-                  </button>
+                    <span className="material-symbols-outlined text-xl">chat</span>
+                    <span>Unirme al Grupo Oficial de WhatsApp</span>
+                  </a>
                 </div>
-                <select
-                  value={ciudad}
-                  onChange={(e) => setCiudad(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 bg-slate-50"
-                >
-                  {CIUDADES.map((c) => (
-                    <option key={c.slug} value={c.slug}>
-                      {c.nombre} ({c.region})
-                    </option>
-                  ))}
-                </select>
-                {geoAviso && <p className="text-[10px] text-amber-600 mt-1">{geoAviso}</p>}
-              </div>
 
-              <div className="pt-2">
                 <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-extrabold text-sm shadow-md shadow-emerald-600/20 active:scale-[0.99] transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                  type="button"
+                  onClick={() => {
+                    setModalRegistro(false);
+                    router.push('/network/panel');
+                  }}
+                  className="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs sm:text-sm transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                 >
-                  {isLoading ? (
-                    <span>Activando tu cuenta...</span>
-                  ) : (
-                    <>
-                      <span>Activar Cuenta e Ingresar al Panel</span>
-                      <span className="material-symbols-outlined text-base">arrow_forward</span>
-                    </>
-                  )}
+                  <span>Continuar a Mi Panel de Control</span>
+                  <span className="material-symbols-outlined text-base">arrow_forward</span>
                 </button>
-                <p className="text-center text-[10px] text-slate-400 mt-2">
-                  🔒 Sin costos ocultos · Dentro del panel podrás crear y administrar tus tiendas
-                </p>
               </div>
-            </form>
+            )}
           </div>
         </div>
       )}

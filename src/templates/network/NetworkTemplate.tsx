@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import type { StoreConfig } from '@/lib/stores.config';
 import { supabase } from '@/lib/supabase';
 import IconoWhatsApp from '@/templates/shared/IconoWhatsApp';
+import { registrarPedido, generarCodigoPedido, guardarMiPedido } from '@/lib/pedidos';
 
 interface Props {
   store: StoreConfig;
@@ -197,13 +198,47 @@ export default function NetworkTemplate({ store, initialProductId }: Props) {
     [itemsCarrito]
   );
 
-  // Enviar pedido completo del carrito por WhatsApp
+  // Función unificada para enviar por WhatsApp (soporta número celular o enlace de Grupo)
+  const enviarPorWhatsApp = (texto: string) => {
+    if (whatsappNumero.includes('chat.whatsapp.com')) {
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        navigator.clipboard.writeText(texto);
+        setToastMensaje('¡Detalle del pedido copiado! Pégalo en el grupo.');
+        setTimeout(() => setToastMensaje(null), 3500);
+      }
+      const url = whatsappNumero.startsWith('http') ? whatsappNumero : `https://${whatsappNumero}`;
+      window.open(url, '_blank');
+    } else {
+      const num = whatsappNumero.replace(/\D/g, '');
+      const cleanNum = num.startsWith('51') ? num : `51${num}`;
+      window.open(`https://wa.me/${cleanNum}?text=${encodeURIComponent(texto)}`, '_blank');
+    }
+  };
+
+  // Enviar pedido completo del carrito por WhatsApp y registrar en el sistema
   const enviarPedidoCarritoWhatsApp = () => {
     if (itemsCarrito.length === 0) return;
-    const num = whatsappNumero.replace(/\D/g, '');
-    const cleanNum = num.startsWith('51') ? num : `51${num}`;
 
-    let texto = `¡Hola ${store.name}! Quiero realizar el siguiente pedido desde su catálogo online:\n\n🛒 *DETALLE DEL PEDIDO:*\n`;
+    const codigo = generarCodigoPedido();
+    registrarPedido(
+      store.slug,
+      {
+        items: itemsCarrito.map((it) => ({
+          id: String(it.producto.id),
+          quantity: it.qty,
+        })),
+        cliente: {
+          nombre: nombreCliente.trim() || undefined,
+          telefono: '',
+          direccion: direccionCliente.trim() || undefined,
+          entrega: 'delivery',
+        },
+      },
+      codigo
+    );
+    guardarMiPedido({ codigo, tienda: store.name, slug: store.slug });
+
+    let texto = `¡Hola ${store.name}! Quiero realizar el siguiente pedido desde su catálogo online:\n\n🛒 *DETALLE DEL PEDIDO (N° ${codigo.toUpperCase()}):*\n`;
     itemsCarrito.forEach((it) => {
       texto += `• ${it.qty}x ${it.producto.name} - S/ ${(it.qty * it.precioFinal).toFixed(2)}\n`;
     });
@@ -215,8 +250,9 @@ export default function NetworkTemplate({ store, initialProductId }: Props) {
     if (direccionCliente.trim()) {
       texto += `\n🏠 *Dirección:* ${direccionCliente.trim()}`;
     }
+    texto += `\n\n_Pedido registrado en Boga Network (Ref: #${codigo.toUpperCase()})_`;
 
-    window.open(`https://wa.me/${cleanNum}?text=${encodeURIComponent(texto)}`, '_blank');
+    enviarPorWhatsApp(texto);
   };
 
   // Filtrar productos seleccionados por el revendedor
@@ -249,14 +285,24 @@ export default function NetworkTemplate({ store, initialProductId }: Props) {
     return Object.entries(mapa).map(([nombre, count]) => ({ nombre, count }));
   }, [productos, productosFiltradosIds]);
 
-  // Enviar mensaje directo de 1 solo producto por WhatsApp
+  // Enviar mensaje directo de 1 solo producto por WhatsApp y registrar pedido
   const pedirPorWhatsApp = (prod: ProductoRed, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     const precio = calcularPrecio(prod.price, prod.id);
-    const num = whatsappNumero.replace(/\D/g, '');
-    const cleanNum = num.startsWith('51') ? num : `51${num}`;
-    const texto = `¡Hola ${store.name}! Quiero pedir el producto: *${prod.name}* (Precio: S/ ${precio}).\n\n¿Tienen disponibilidad para envío en ${ciudad}?`;
-    window.open(`https://wa.me/${cleanNum}?text=${encodeURIComponent(texto)}`, '_blank');
+    const codigo = generarCodigoPedido();
+
+    registrarPedido(
+      store.slug,
+      {
+        items: [{ id: String(prod.id), quantity: 1 }],
+        cliente: { entrega: 'delivery' },
+      },
+      codigo
+    );
+    guardarMiPedido({ codigo, tienda: store.name, slug: store.slug });
+
+    const texto = `¡Hola ${store.name}! Quiero pedir el producto: *${prod.name}* (Precio: S/ ${precio}).\n📦 *Pedido N°:* ${codigo.toUpperCase()}\n\n¿Tienen disponibilidad para entrega en ${ciudad}?`;
+    enviarPorWhatsApp(texto);
   };
 
   const inicial = (store.name || 'T').trim().charAt(0).toUpperCase();

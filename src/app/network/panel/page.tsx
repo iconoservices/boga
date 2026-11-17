@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { CIUDADES } from '@/lib/ciudades';
@@ -31,8 +31,9 @@ interface ProductoProveedor {
   store: string;
 }
 
-export default function RevendedorPanelPage() {
+function RevendedorPanelContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
 
   // Datos de la tienda del revendedor
@@ -45,7 +46,7 @@ export default function RevendedorPanelPage() {
   const [wspBoga, setWspBoga] = useState('51987911213');
 
   // Estado del panel (Pestañas limpias por tienda)
-  const [pestañaActiva, setPestañaActiva] = useState<'inicio' | 'productos' | 'preview' | 'afiliados' | 'ajustes'>('inicio');
+  const [pestañaActiva, setPestañaActiva] = useState<'inicio' | 'productos' | 'ventas' | 'preview' | 'afiliados' | 'ajustes'>('inicio');
   const [modalAvisoAsesor, setModalAvisoAsesor] = useState(false);
   const [modalCrearTienda, setModalCrearTienda] = useState(false);
   const [nuevoNombreTienda, setNuevoNombreTienda] = useState('');
@@ -55,6 +56,34 @@ export default function RevendedorPanelPage() {
   const [copiado, setCopiado] = useState(false);
   const [guardandoEnNube, setGuardandoEnNube] = useState(false);
   const [guardadoExitoso, setGuardadoExitoso] = useState(false);
+
+  // Leer pestaña desde query parameter (ej: ?tab=ventas, ?tab=preview, etc.)
+  useEffect(() => {
+    const tabParam = searchParams?.get('tab');
+    if (tabParam && ['inicio', 'productos', 'ventas', 'preview', 'afiliados', 'ajustes'].includes(tabParam)) {
+      setPestañaActiva(tabParam as any);
+    }
+  }, [searchParams]);
+
+  // Pedidos y control de recaudación en tiempo real
+  const [pedidos, setPedidos] = useState<any[]>([]);
+  const [cargandoPedidos, setCargandoPedidos] = useState(false);
+  const [resumenVentas, setResumenVentas] = useState({
+    totalRecaudado: 0,
+    gananciasCobradas: 0,
+    gananciasPendientes: 0,
+    totalPedidos: 0,
+    pedidosEntregados: 0,
+    pedidosPendientes: 0,
+  });
+  const [filtroEstadoPedido, setFiltroEstadoPedido] = useState<'todos' | 'Pendiente' | 'Entregado' | 'Cancelado'>('todos');
+  const [cambiandoEstadoId, setCambiandoEstadoId] = useState<string | null>(null);
+
+  // Edición de WhatsApp / Enlace de Grupo de WhatsApp
+  const [whatsappEditando, setWhatsappEditando] = useState('');
+  const [guardandoWhatsapp, setGuardandoWhatsapp] = useState(false);
+  const [whatsappGuardadoExito, setWhatsappGuardadoExito] = useState(false);
+  const [whatsappModal, setWhatsappModal] = useState('');
 
   // Precios personalizados: { [productoId]: precioPVP }
   const [preciosPersonalizados, setPreciosPersonalizados] = useState<Record<string, number>>({});
@@ -324,6 +353,149 @@ export default function RevendedorPanelPage() {
       localStorage.setItem('boga_revendedor_draft', payload);
     } catch {}
   }, [tieneTienda, nombre, whatsapp, nombreTienda, ciudad, margenPorcentaje, tiendaSeleccionada, productosSeleccionados, user]);
+
+  // Sincronizar input de WhatsApp
+  useEffect(() => {
+    if (whatsapp) setWhatsappEditando(whatsapp);
+  }, [whatsapp]);
+
+  // Cargar pedidos y resumen de recaudación en vivo
+  const cargarPedidos = useCallback(async () => {
+    if (!slugTienda) return;
+    setCargandoPedidos(true);
+    try {
+      const todosLosSlugs = Array.from(
+        new Set([
+          slugTienda,
+          ...tiendasUsuario.map((t) =>
+            (t.business_name || t.name || '')
+              .toLowerCase()
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '')
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/(^-|-$)/g, '')
+          ),
+        ])
+      )
+        .filter(Boolean)
+        .join(',');
+
+      const res = await fetch(`/api/network/pedidos?slug=${encodeURIComponent(todosLosSlugs || slugTienda)}`);
+      const data = await res.json();
+      if (data.ok) {
+        setPedidos(data.pedidos || []);
+        setResumenVentas(
+          data.resumen || {
+            totalRecaudado: 0,
+            gananciasCobradas: 0,
+            gananciasPendientes: 0,
+            totalPedidos: 0,
+            pedidosEntregados: 0,
+            pedidosPendientes: 0,
+          }
+        );
+      }
+    } catch (err) {
+      console.error('Error cargando pedidos:', err);
+    } finally {
+      setCargandoPedidos(false);
+    }
+  }, [slugTienda, tiendasUsuario]);
+
+  useEffect(() => {
+    if (tieneTienda && slugTienda) {
+      cargarPedidos();
+    }
+  }, [tieneTienda, slugTienda, cargarPedidos]);
+
+  // Cambiar estado de un pedido (ej: marcar como Entregado y sumar dinero en mano)
+  const handleCambiarEstadoPedido = async (id: string, nuevoEstado: string) => {
+    setCambiandoEstadoId(id);
+    try {
+      const res = await fetch('/api/network/pedidos', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: nuevoEstado }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setPedidos((prev) =>
+          prev.map((p) => (p.id === id ? { ...p, status: nuevoEstado } : p))
+        );
+        cargarPedidos();
+      } else {
+        alert('No se pudo actualizar el estado: ' + (data.error || 'Error'));
+      }
+    } catch {
+      alert('Error de conexión');
+    } finally {
+      setCambiandoEstadoId(null);
+    }
+  };
+
+  // Crear un pedido de prueba / manual
+  const handleCrearPedidoPrueba = async (nombreProducto?: string, precio?: number) => {
+    try {
+      const total = precio || 55.0;
+      const res = await fetch('/api/network/pedidos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          store: slugTienda,
+          customer_name: 'María Flores (WhatsApp)',
+          customer_phone: '961234567',
+          customer_address: 'Jr. Ucayali 450, Pucallpa',
+          items: [{ name: nombreProducto || 'Reloj Clásico Elegante Delva', quantity: 1, price: total }],
+          total_amount: total,
+          status: 'Pendiente',
+        }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        await cargarPedidos();
+      }
+    } catch (err) {
+      console.error('Error creando pedido de prueba:', err);
+    }
+  };
+
+  // Guardar WhatsApp o Link de Grupo desde Ajustes
+  const handleGuardarNuevoWhatsapp = async () => {
+    setGuardandoWhatsapp(true);
+    try {
+      const nuevo = whatsappEditando.trim();
+      setWhatsapp(nuevo);
+      await fetch('/api/network/tienda', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slug: slugTienda,
+          nombreTienda,
+          nombre,
+          whatsapp: nuevo,
+          ciudad,
+          margenPorcentaje,
+          tiendaSeleccionada,
+          productosSeleccionados: Array.from(productosSeleccionados),
+          preciosPersonalizados,
+        }),
+      });
+      setWhatsappGuardadoExito(true);
+      setTimeout(() => setWhatsappGuardadoExito(false), 2500);
+    } catch {
+      alert('Error al guardar el nuevo WhatsApp');
+    } finally {
+      setGuardandoWhatsapp(false);
+    }
+  };
+
+  // Filtro de pedidos
+  const pedidosFiltrados = useMemo(() => {
+    if (filtroEstadoPedido === 'todos') return pedidos;
+    if (filtroEstadoPedido === 'Pendiente')
+      return pedidos.filter((p) => p.status !== 'Entregado' && p.status !== 'Cancelado');
+    return pedidos.filter((p) => p.status === filtroEstadoPedido);
+  }, [pedidos, filtroEstadoPedido]);
 
   // Cargar productos del proveedor seleccionado (SIN filtro is_available para que carguen todos los productos de delva)
   useEffect(() => {
@@ -824,8 +996,36 @@ export default function RevendedorPanelPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Pill de ganancias recaudadas en tiempo real */}
+            <button
+              type="button"
+              onClick={() => setPestañaActiva('ventas')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-black transition cursor-pointer shadow-2xs"
+              title="Ver mis ventas y dinero recaudado"
+            >
+              <span className="material-symbols-outlined text-[16px] text-emerald-600">payments</span>
+              <span>Ganancias: S/ {resumenVentas.gananciasCobradas.toFixed(2)}</span>
+              {resumenVentas.pedidosPendientes > 0 && (
+                <span className="bg-amber-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold ml-0.5">
+                  {resumenVentas.pedidosPendientes} por cobrar
+                </span>
+              )}
+            </button>
+
+            {/* Botón Grupo Oficial de WhatsApp */}
+            <a
+              href="https://chat.whatsapp.com/ClozDTrFdhH8cqJPziBYKQ"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:inline-flex items-center gap-1.5 bg-[#25D366]/15 hover:bg-[#25D366]/25 text-[#128C7E] font-bold text-xs px-3 py-1.5 rounded-xl border border-[#25D366]/30 transition"
+              title="Unirte al grupo oficial de WhatsApp de revendedores"
+            >
+              <IconoWhatsApp className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">Grupo WhatsApp</span>
+            </a>
+
             {user?.email && (
-              <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-slate-600 text-xs font-medium">
+              <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-slate-600 text-xs font-medium">
                 <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                 <span className="truncate max-w-[150px]">{user.email}</span>
               </div>
@@ -854,10 +1054,10 @@ export default function RevendedorPanelPage() {
               <button
                 type="button"
                 onClick={() => setModalAvisoAsesor(true)}
-                className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm transition active:scale-95 cursor-pointer"
+                className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-xs transition active:scale-95 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[16px]">chat</span>
-                <span>Asegurar activación con Asesor</span>
+                <span className="hidden sm:inline">Asegurar activación</span>
               </button>
             )}
           </div>
@@ -921,7 +1121,29 @@ export default function RevendedorPanelPage() {
             </span>
           </button>
 
-          {/* PESTAÑA 3: MIS TIENDAS */}
+          {/* PESTAÑA 3: MIS VENTAS & GANANCIAS */}
+          <button
+            type="button"
+            onClick={() => setPestañaActiva('ventas')}
+            className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${
+              pestañaActiva === 'ventas'
+                ? 'border-emerald-600 text-emerald-700'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+            <span>3. Mis Ventas & Ganancias</span>
+            <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-black">
+              S/ {resumenVentas.gananciasCobradas.toFixed(2)}
+            </span>
+            {resumenVentas.pedidosPendientes > 0 && (
+              <span className="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                {resumenVentas.pedidosPendientes} pendientes
+              </span>
+            )}
+          </button>
+
+          {/* PESTAÑA 4: MIS TIENDAS */}
           <button
             type="button"
             onClick={() => setPestañaActiva('preview')}
@@ -932,7 +1154,7 @@ export default function RevendedorPanelPage() {
             }`}
           >
             <span className="material-symbols-outlined text-[18px]">store</span>
-            <span>3. Mis Tiendas</span>
+            <span>4. Mis Tiendas</span>
             {estadoTienda === 'activa' ? (
               <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -945,7 +1167,7 @@ export default function RevendedorPanelPage() {
             )}
           </button>
 
-          {/* PESTAÑA 4: GANAR CON AFILIADOS */}
+          {/* PESTAÑA 5: GANAR CON AFILIADOS */}
           <button
             type="button"
             onClick={() => setPestañaActiva('afiliados')}
@@ -956,13 +1178,13 @@ export default function RevendedorPanelPage() {
             }`}
           >
             <span className="material-symbols-outlined text-[18px]">volunteer_activism</span>
-            <span>4. Ganar con Afiliados</span>
+            <span>5. Ganar con Afiliados</span>
             <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
               Bono en efectivo
             </span>
           </button>
 
-          {/* PESTAÑA 5: AJUSTES & CUENTA */}
+          {/* PESTAÑA 6: AJUSTES & CUENTA */}
           <button
             type="button"
             onClick={() => setPestañaActiva('ajustes')}
@@ -973,7 +1195,7 @@ export default function RevendedorPanelPage() {
             }`}
           >
             <span className="material-symbols-outlined text-[18px]">settings</span>
-            <span>5. Ajustes & Cuenta</span>
+            <span>6. Ajustes & Cuenta</span>
             {estadoTienda === 'activa' ? (
               <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
                 Activa
@@ -1550,7 +1772,398 @@ export default function RevendedorPanelPage() {
           </div>
         )}
 
-        {/* ══ PESTAÑA 3: MIS TIENDAS (LISTA DE TIENDAS VINCULADAS) ══ */}
+        {/* ══ PESTAÑA 3: MIS VENTAS & GANANCIAS EN TIEMPO REAL ══ */}
+        {pestañaActiva === 'ventas' && (
+          <div className="w-full flex flex-col gap-6 animate-in fade-in">
+            {/* Header de la pestaña */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold mb-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Control de Recaudación y Entregas
+                </div>
+                <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+                  Mis Ventas & Ganancias en Mano
+                </h2>
+                <p className="text-xs text-slate-500">
+                  Monitorea los pedidos recibidos por WhatsApp, entrega los productos y marca cada pedido para cobrar tu margen.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => cargarPedidos()}
+                  disabled={cargandoPedidos}
+                  className="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-2xs disabled:opacity-50"
+                  title="Actualizar pedidos"
+                >
+                  <span className={`material-symbols-outlined text-[16px] ${cargandoPedidos ? 'animate-spin' : ''}`}>
+                    refresh
+                  </span>
+                  <span>{cargandoPedidos ? 'Actualizando...' : 'Actualizar'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleCrearPedidoPrueba()}
+                  className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
+                  title="Crear un pedido de prueba para ver el flujo"
+                >
+                  <span className="material-symbols-outlined text-[16px]">add_circle</span>
+                  <span>+ Simular Pedido</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 4 Métricas de Recaudación */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <div className="bg-white rounded-3xl p-4 sm:p-5 border border-emerald-200/90 shadow-2xs flex flex-col justify-between">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] sm:text-xs font-bold text-emerald-800 uppercase tracking-wider">
+                    Ganancias Cobradas
+                  </span>
+                  <span className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[18px]">verified</span>
+                  </span>
+                </div>
+                <div className="mt-3">
+                  <span className="text-xl sm:text-3xl font-black text-emerald-700 block leading-tight">
+                    S/ {resumenVentas.gananciasCobradas.toFixed(2)}
+                  </span>
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">
+                    {resumenVentas.pedidosEntregados} pedidos entregados
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-3xl p-4 sm:p-5 border border-amber-200/90 shadow-2xs flex flex-col justify-between">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] sm:text-xs font-bold text-amber-800 uppercase tracking-wider">
+                    Ganancias por Cobrar
+                  </span>
+                  <span className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[18px]">pending</span>
+                  </span>
+                </div>
+                <div className="mt-3">
+                  <span className="text-xl sm:text-3xl font-black text-amber-700 block leading-tight">
+                    S/ {resumenVentas.gananciasPendientes.toFixed(2)}
+                  </span>
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">
+                    {resumenVentas.pedidosPendientes} pedidos en curso
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-2xs flex flex-col justify-between">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    Total Facturado
+                  </span>
+                  <span className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[18px]">receipt_long</span>
+                  </span>
+                </div>
+                <div className="mt-3">
+                  <span className="text-xl sm:text-3xl font-black text-slate-900 block leading-tight">
+                    S/ {resumenVentas.totalRecaudado.toFixed(2)}
+                  </span>
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">
+                    Venta bruta acumulada
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-2xs flex flex-col justify-between">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    Total Pedidos
+                  </span>
+                  <span className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[18px]">inventory_2</span>
+                  </span>
+                </div>
+                <div className="mt-3">
+                  <span className="text-xl sm:text-3xl font-black text-slate-900 block leading-tight">
+                    {resumenVentas.totalPedidos}
+                  </span>
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">
+                    {resumenVentas.pedidosEntregados} cerrados con éxito
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Guía rápida de cómo funciona la recaudación */}
+            <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-white rounded-3xl p-4 sm:p-5 border border-emerald-200/80 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <span className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <span className="material-symbols-outlined text-xl">help</span>
+                </span>
+                <div>
+                  <h3 className="text-xs sm:text-sm font-extrabold text-slate-900">
+                    ¿Cómo funciona la entrega y el cobro de tu ganancia?
+                  </h3>
+                  <p className="text-[11px] sm:text-xs text-slate-600 mt-0.5 leading-relaxed">
+                    1. El cliente pide por WhatsApp → 2. El proveedor despacha o coordinas la entrega → 3. Tocas <b>"✓ Marcar como Entregado"</b> aquí y el dinero de tu margen se suma inmediatamente a tus ganancias en mano.
+                  </p>
+                </div>
+              </div>
+
+              <a
+                href="https://chat.whatsapp.com/ClozDTrFdhH8cqJPziBYKQ"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs font-black flex items-center gap-1.5 shrink-0 transition active:scale-95 shadow-xs"
+              >
+                <IconoWhatsApp className="w-4 h-4" />
+                <span>Soporte en Grupo WhatsApp</span>
+              </a>
+            </div>
+
+            {/* Filtros de Estado */}
+            <div className="flex items-center justify-between gap-2 border-b border-slate-200 pb-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFiltroEstadoPedido('todos')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                    filtroEstadoPedido === 'todos'
+                      ? 'bg-slate-900 text-white'
+                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  Todos ({pedidos.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFiltroEstadoPedido('Pendiente')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                    filtroEstadoPedido === 'Pendiente'
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  Pendientes ({resumenVentas.pedidosPendientes})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFiltroEstadoPedido('Entregado')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                    filtroEstadoPedido === 'Entregado'
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  Entregados ({resumenVentas.pedidosEntregados})
+                </button>
+              </div>
+
+              <span className="text-[11px] text-slate-400 hidden sm:inline">
+                Mostrando {pedidosFiltrados.length} pedidos
+              </span>
+            </div>
+
+            {/* Listado de Pedidos */}
+            {pedidosFiltrados.length === 0 ? (
+              <div className="bg-white rounded-3xl p-8 sm:p-12 border border-slate-200 text-center flex flex-col items-center justify-center max-w-lg mx-auto w-full">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3">
+                  <span className="material-symbols-outlined text-3xl">inbox</span>
+                </div>
+                <h3 className="text-base font-extrabold text-slate-900">
+                  {filtroEstadoPedido === 'todos'
+                    ? 'Aún no tienes pedidos registrados'
+                    : `No hay pedidos en estado "${filtroEstadoPedido}"`}
+                </h3>
+                <p className="text-xs text-slate-500 mt-1 max-w-sm leading-relaxed">
+                  Cuando tus clientes armen su carrito o te pidan por WhatsApp desde tu tienda o enlaces de afiliado, aparecerán aquí automáticamente.
+                </p>
+                <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleCrearPedidoPrueba()}
+                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                  >
+                    + Simular un pedido de prueba
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPestañaActiva('preview')}
+                    className="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition cursor-pointer"
+                  >
+                    Ver mis tiendas y links
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {pedidosFiltrados.map((ped) => {
+                  const items = Array.isArray(ped.items) ? ped.items : [];
+                  const total = Number(ped.total_amount) || 0;
+                  const ganancia = Number(ped.ganancia_estimada) || total * 0.15;
+                  const esEntregado = ped.status === 'Entregado';
+                  const fechaStr = ped.created_at
+                    ? new Date(ped.created_at).toLocaleString('es-PE', {
+                        day: '2-digit',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })
+                    : 'Reciente';
+
+                  return (
+                    <div
+                      key={ped.id}
+                      className={`bg-white rounded-3xl p-5 border flex flex-col justify-between gap-4 transition shadow-2xs ${
+                        esEntregado
+                          ? 'border-emerald-200 hover:border-emerald-300'
+                          : 'border-slate-200 hover:border-slate-300'
+                      }`}
+                    >
+                      {/* Cabecera del pedido */}
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                          <div>
+                            <span className="font-mono text-xs font-extrabold text-slate-800">
+                              #{String(ped.id).slice(0, 8).toUpperCase()}
+                            </span>
+                            <span className="text-[10px] text-slate-400 block">{fechaStr}</span>
+                          </div>
+
+                          <span
+                            className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full capitalize ${
+                              esEntregado
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : ped.status === 'Cancelado'
+                                ? 'bg-red-100 text-red-800'
+                                : 'bg-amber-100 text-amber-800'
+                            }`}
+                          >
+                            {ped.status || 'Pendiente'}
+                          </span>
+                        </div>
+
+                        {/* Datos del Cliente */}
+                        <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100 flex flex-col gap-1 text-xs">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-bold text-slate-900 truncate">
+                              {ped.customer_name || 'Cliente WhatsApp'}
+                            </span>
+                            {ped.customer_phone && (
+                              <a
+                                href={waLink(
+                                  ped.customer_phone,
+                                  `¡Hola ${ped.customer_name || ''}! Te escribo respecto a tu pedido #${String(
+                                    ped.id
+                                  )
+                                    .slice(0, 6)
+                                    .toUpperCase()} en Boga Network.`
+                                )}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[10px] font-bold text-emerald-700 hover:underline flex items-center gap-0.5 shrink-0"
+                              >
+                                <IconoWhatsApp className="w-3 h-3" />
+                                <span>Chatear</span>
+                              </a>
+                            )}
+                          </div>
+                          {ped.customer_phone && (
+                            <span className="text-[11px] text-slate-500 font-mono">
+                              Tel: {ped.customer_phone}
+                            </span>
+                          )}
+                          {ped.customer_address && (
+                            <span className="text-[11px] text-slate-500 truncate">
+                              📍 {ped.customer_address}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Productos */}
+                        <div className="flex flex-col gap-1.5 text-xs">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            Productos ({items.length})
+                          </span>
+                          <div className="max-h-28 overflow-y-auto flex flex-col gap-1 pr-1">
+                            {items.map((it: any, idx: number) => (
+                              <div
+                                key={idx}
+                                className="flex items-center justify-between text-[11px] py-1 border-b border-slate-50 last:border-0"
+                              >
+                                <span className="text-slate-700 truncate pr-2">
+                                  {it.quantity || 1}x {it.name || it.id || 'Producto'}
+                                </span>
+                                <span className="font-bold text-slate-900 shrink-0 font-mono">
+                                  S/ {(Number(it.price) * (Number(it.quantity) || 1)).toFixed(2)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Caja de Total y Ganancia */}
+                        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-3 border border-emerald-200/80 flex items-center justify-between gap-2">
+                          <div>
+                            <span className="text-[10px] text-slate-500 block">Total a Cobrar</span>
+                            <span className="text-base font-black text-slate-900 font-mono leading-tight">
+                              S/ {total.toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[9px] font-extrabold text-emerald-800 uppercase tracking-wider block">
+                              Tu Ganancia Neta
+                            </span>
+                            <span className="text-sm font-black text-emerald-700 font-mono leading-tight">
+                              +S/ {ganancia.toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Botón de acción */}
+                      <div className="pt-1">
+                        {esEntregado ? (
+                          <div className="w-full py-2 px-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-between">
+                            <span className="flex items-center gap-1.5">
+                              <span className="material-symbols-outlined text-[16px] text-emerald-600">
+                                check_circle
+                              </span>
+                              <span>Entregado & Cobrado</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleCambiarEstadoPedido(ped.id, 'Pendiente')}
+                              disabled={cambiandoEstadoId === ped.id}
+                              className="text-[10px] text-slate-400 hover:text-slate-700 underline cursor-pointer"
+                            >
+                              Cambiar
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleCambiarEstadoPedido(ped.id, 'Entregado')}
+                            disabled={cambiandoEstadoId === ped.id}
+                            className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95 disabled:opacity-50"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">check</span>
+                            <span>
+                              {cambiandoEstadoId === ped.id ? 'Guardando...' : '✓ Marcar como Entregado'}
+                            </span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ══ PESTAÑA 4: MIS TIENDAS (LISTA DE TIENDAS VINCULADAS) ══ */}
         {pestañaActiva === 'preview' && (
           <div className="w-full flex flex-col gap-6 animate-in fade-in">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
@@ -1982,9 +2595,44 @@ export default function RevendedorPanelPage() {
                   <label className="block font-bold text-slate-500 mb-1">Cuenta vinculada (Correo)</label>
                   <p className="font-bold text-emerald-800 text-sm">{user?.email || 'Guardado local'}</p>
                 </div>
-                <div>
-                  <label className="block font-bold text-slate-500 mb-1">WhatsApp de pedidos</label>
-                  <p className="font-bold text-slate-900 text-sm">{whatsapp}</p>
+                <div className="sm:col-span-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block font-bold text-slate-800 text-xs">
+                      WhatsApp de pedidos o Enlace de Grupo
+                    </label>
+                    <span className="text-[10px] text-slate-500 font-medium">
+                      Celular (9 dígitos) o enlace `chat.whatsapp.com/...`
+                    </span>
+                  </div>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <div className="relative flex-1">
+                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-emerald-600">
+                        <IconoWhatsApp className="w-4 h-4" />
+                      </span>
+                      <input
+                        type="text"
+                        value={whatsappEditando}
+                        onChange={(e) => setWhatsappEditando(e.target.value)}
+                        placeholder="Ej: 987654321 o https://chat.whatsapp.com/ClozDTrFdhH8cqJPziBYKQ"
+                        className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 bg-white font-medium"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleGuardarNuevoWhatsapp}
+                      disabled={guardandoWhatsapp || !whatsappEditando.trim()}
+                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50 shrink-0"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">save</span>
+                      <span>{guardandoWhatsapp ? 'Guardando...' : 'Guardar WhatsApp'}</span>
+                    </button>
+                  </div>
+                  {whatsappGuardadoExito && (
+                    <p className="text-[11px] text-emerald-700 font-bold mt-1.5 flex items-center gap-1 animate-in fade-in">
+                      <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                      <span>WhatsApp actualizado con éxito para todos tus pedidos.</span>
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block font-bold text-slate-500 mb-1">Ciudad / Distrito</label>
@@ -2780,5 +3428,20 @@ export default function RevendedorPanelPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function RevendedorPanelPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+          <span className="w-10 h-10 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mb-3" />
+          <p className="text-xs font-bold text-slate-700">Cargando Panel...</p>
+        </div>
+      }
+    >
+      <RevendedorPanelContent />
+    </Suspense>
   );
 }
