@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { CIUDADES } from '@/lib/ciudades';
 import { detectarCiudad } from '@/lib/geo';
 import IconoWhatsApp from '@/templates/shared/IconoWhatsApp';
+import { stockIlimitado } from '@/lib/stock';
 
 function waLink(numero: string, texto: string) {
   const clean = numero.replace(/\D/g, '');
@@ -563,11 +564,12 @@ function RevendedorPanelContent() {
 
       const mapProds = new Map<string | number, any>();
 
-      // Helper para verificar stock
-      const verificarAgotado = (p: any) =>
-        p.status === 'Agotado' ||
-        p.status === 'Inactivo' ||
-        (typeof p.stock === 'number' && p.stock <= 0 && p.status !== 'Activo');
+      // Helper para verificar stock respetando productos ilimitados del admin
+      const verificarAgotado = (p: any) => {
+        if (p.status === 'Agotado' || p.status === 'Inactivo') return true;
+        if (stockIlimitado(p)) return false;
+        return typeof p.stock === 'number' && p.stock <= 0;
+      };
 
       // Primero productos con bono de afiliados de cualquier tienda aliada
       dataAfiliados.forEach((p: any) => {

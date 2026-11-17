@@ -5,6 +5,7 @@ import type { StoreConfig } from '@/lib/stores.config';
 import { supabase } from '@/lib/supabase';
 import IconoWhatsApp from '@/templates/shared/IconoWhatsApp';
 import { registrarPedido, generarCodigoPedido, guardarMiPedido } from '@/lib/pedidos';
+import { stockIlimitado } from '@/lib/stock';
 
 interface Props {
   store: StoreConfig;
@@ -117,7 +118,7 @@ export default function NetworkTemplate({ store, initialProductId }: Props) {
           const esAgotado =
             p.status === 'Agotado' ||
             p.status === 'Inactivo' ||
-            (typeof p.stock === 'number' && p.stock <= 0 && p.status !== 'Activo');
+            (!stockIlimitado(p) && typeof p.stock === 'number' && p.stock <= 0);
 
           return {
             id: String(p.id),
