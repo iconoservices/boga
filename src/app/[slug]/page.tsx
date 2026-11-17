@@ -1,6 +1,7 @@
 import { getTemplate } from '@/lib/templates.config';
 import { BOGA_DEFAULT_ICON } from '@/lib/stores.config';
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import StoreRenderer from './StoreRenderer';
 import GeoTienda from '@/components/GeoTienda';
 import { headers } from 'next/headers';
@@ -134,6 +135,79 @@ export default async function StorePage({ params, searchParams }: Props) {
     }
   }
   
+  // Si la tienda está desactivada / en pausa / en gris
+  if (store.status === 'inactive' || store.status === 'pending') {
+    // Si el dueño o admin entra en modo vista previa (?preview=true), la ve con aviso
+    if (preview === 'true') {
+      return (
+        <>
+          <div className="bg-amber-400 text-slate-950 px-4 py-2.5 text-center text-xs font-black sticky top-0 z-50 shadow-md flex items-center justify-center gap-2">
+            <span className="material-symbols-outlined text-[16px]">visibility</span>
+            <span>MODO VISTA PREVIA: Esta tienda está desactivada (en gris). Tus clientes no pueden ver tus productos hasta que la pongas en verde.</span>
+          </div>
+          <StoreRenderer store={store!} />
+        </>
+      );
+    }
+
+    // Para el público general: pantalla limpia de tienda en pausa
+    const cleanWsp = store.whatsapp?.replace(/\D/g, '') || '';
+    const numWsp = cleanWsp.length === 9 ? `51${cleanWsp}` : cleanWsp;
+
+    return (
+      <div className="min-h-screen bg-[#f9f9ff] flex flex-col items-center justify-center p-4 sm:p-6 text-center font-sans">
+        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl p-8 sm:p-12 max-w-md w-full flex flex-col items-center animate-in fade-in">
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4">
+            <span className="material-symbols-outlined text-4xl">storefront</span>
+          </div>
+
+          <span className="bg-amber-100 text-amber-800 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider mb-2">
+            Tienda en Pausa / Borrador
+          </span>
+
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            {store.name}
+          </h1>
+
+          <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+            Esta tienda virtual se encuentra temporalmente en modo borrador o en pausa. En este momento no está recibiendo pedidos directos.
+          </p>
+
+          <div className="mt-6 flex flex-col gap-2.5 w-full">
+            {store.whatsapp && (
+              <a
+                href={`https://wa.me/${numWsp}?text=${encodeURIComponent(
+                  `¡Hola! Estuve visitando tu tienda "${store.name}". ¿Tienes productos disponibles para entrega?`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3 px-4 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">chat</span>
+                <span>Consultar por WhatsApp</span>
+              </a>
+            )}
+
+            <Link
+              href="/market"
+              className="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[18px]">shopping_bag</span>
+              <span>Explorar Tiendas en Boga Market</span>
+            </Link>
+
+            <Link
+              href="/network/panel"
+              className="w-full py-2.5 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
+            >
+              <span>Soy el dueño (Ir a mi Panel Network)</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Datos de negocio local y carta en el HTML (para buscadores e IAs que no ejecutan JavaScript). No en la vista previa.
   return (
     <>

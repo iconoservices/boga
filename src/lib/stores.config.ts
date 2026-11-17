@@ -85,6 +85,8 @@ export interface StoreConfig {
   esRevendedor?: boolean;
   tiendaProveedora?: string;
   modoPedidosReventa?: 'revendedor' | 'proveedor_referido';
+  /** Estado de la tienda: 'active' (en verde, pública) | 'inactive' (en gris, borrador) | 'pending' */
+  status?: string;
 }
 
 // Las tiendas viven en Supabase, no aca. Cada consumidor las carga por su lado:

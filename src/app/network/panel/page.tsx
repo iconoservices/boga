@@ -32,6 +32,9 @@ interface ProductoProveedor {
   store: string;
   description?: string;
   afiliadoComision?: number | null;
+  status?: string;
+  stock?: number;
+  agotado?: boolean;
 }
 
 function RevendedorPanelContent() {
@@ -543,14 +546,14 @@ function RevendedorPanelContent() {
 
     const promTienda = supabase
       .from('products')
-      .select('id, name, price, category, image, store, status, description')
+      .select('id, name, price, category, image, store, status, description, stock')
       .eq('store', tiendaSeleccionada)
       .order('name')
       .limit(100);
 
     const promAfiliados = supabase
       .from('products')
-      .select('id, name, price, category, image, store, status, description')
+      .select('id, name, price, category, image, store, status, description, stock')
       .ilike('description', '%[afiliado:%')
       .limit(150);
 
@@ -559,6 +562,12 @@ function RevendedorPanelContent() {
       const dataAfiliados = resAfiliados.status === 'fulfilled' ? ((resAfiliados.value as any)?.data || []) : [];
 
       const mapProds = new Map<string | number, any>();
+
+      // Helper para verificar stock
+      const verificarAgotado = (p: any) =>
+        p.status === 'Agotado' ||
+        p.status === 'Inactivo' ||
+        (typeof p.stock === 'number' && p.stock <= 0 && p.status !== 'Activo');
 
       // Primero productos con bono de afiliados de cualquier tienda aliada
       dataAfiliados.forEach((p: any) => {
@@ -573,6 +582,9 @@ function RevendedorPanelContent() {
           store: p.store,
           description: p.description,
           afiliadoComision: comision,
+          status: p.status,
+          stock: p.stock,
+          agotado: verificarAgotado(p),
         });
       });
 
@@ -590,16 +602,21 @@ function RevendedorPanelContent() {
             store: p.store,
             description: p.description,
             afiliadoComision: comision,
+            status: p.status,
+            stock: p.stock,
+            agotado: verificarAgotado(p),
           });
         }
       });
 
       const prods = Array.from(mapProds.values());
-      // Ordenar: primero productos con bono de afiliado de mayor a menor
+      // Ordenar: primero productos en stock, agotados al final, y con mayor bono
       prods.sort((a, b) => {
+        if (a.agotado && !b.agotado) return 1;
+        if (!a.agotado && b.agotado) return -1;
         const bonA = a.afiliadoComision || 0;
         const bonB = b.afiliadoComision || 0;
-        if (bonA !== bonB) return bonB - bonA;
+        if (bonB !== bonA) return bonB - bonA;
         return a.name.localeCompare(b.name);
       });
 
@@ -1447,68 +1464,13 @@ function RevendedorPanelContent() {
         {/* ══ PESTAÑA 1: INICIO (HOME PRINCIPAL UNIFICADO) ══ */}
         {pestañaActiva === 'inicio' && (
           <div className="max-w-7xl mx-auto flex flex-col gap-6 animate-in fade-in">
-            {/* 1. Si el usuario tiene tienda activa o borrador, mostramos su Banner de Bienvenida y Métricas */}
-            {user && tieneTienda && (
-              <div className="bg-gradient-to-br from-slate-900 via-slate-850 to-emerald-950 text-white rounded-3xl p-5 sm:p-7 shadow-xl relative overflow-hidden border border-slate-800">
-                <div className="absolute -right-10 -bottom-10 w-72 h-72 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
-
-                <div className="relative z-10 max-w-4xl">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="bg-emerald-500/20 text-emerald-400 text-xs font-black px-3 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                      Panel de Control Principal · Boga Network
-                    </span>
-                    <span className="text-slate-400 text-xs hidden sm:inline">Pucallpa, Perú</span>
-                  </div>
-
-                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight">
-                    ¡Hola, {nombre || user.user_metadata?.full_name || 'Emprendedor'}! 👋
-                  </h1>
-                  <p className="text-xs sm:text-sm text-slate-300 mt-1.5 leading-relaxed">
-                    Bienvenido a tu centro de ingresos. Aquí tienes las <b>formas activas de ganar dinero</b> con tu tienda de reventa y con la red comercial de BogaHub, sin necesidad de invertir capital en mercadería.
-                  </p>
-
-                  {/* Métricas rápidas */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mt-4 sm:mt-5">
-                    <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 border border-white/10">
-                      <span className="text-[10px] text-slate-400 font-bold block uppercase">Tu Tienda:</span>
-                      <span className="text-xs sm:text-sm font-black text-white truncate block mt-0.5" title={nombreTienda}>{nombreTienda || 'Mi Tienda'}</span>
-                      {estadoTienda === 'activa' ? (
-                        <span className="text-[10px] text-emerald-400 font-bold">● Activa en internet</span>
-                      ) : (
-                        <span className="text-[10px] text-amber-300 font-bold">○ Privada / Borrador</span>
-                      )}
-                    </div>
-
-                    <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 border border-white/10">
-                      <span className="text-[10px] text-slate-400 font-bold block uppercase">Tu Margen:</span>
-                      <span className="text-xs sm:text-sm font-black text-emerald-300 block mt-0.5">+{margenPorcentaje}%</span>
-                      <span className="text-[10px] text-slate-400">Ganancia neta</span>
-                    </div>
-
-                    <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 border border-white/10">
-                      <span className="text-[10px] text-slate-400 font-bold block uppercase">Productos Listos:</span>
-                      <span className="text-xs sm:text-sm font-black text-white block mt-0.5">{productosSeleccionados.size} ítems</span>
-                      <span className="text-[10px] text-slate-400">En tu catálogo</span>
-                    </div>
-
-                    <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 border border-white/10">
-                      <span className="text-[10px] text-slate-400 font-bold block uppercase">Proveedor Aliado:</span>
-                      <span className="text-xs sm:text-sm font-black text-white block mt-0.5 capitalize">{tiendaSeleccionada}</span>
-                      <span className="text-[10px] text-emerald-400">Stock en Pucallpa</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* 2. EL DISEÑO PRINCIPAL DEL HOME (2 COLUMNAS: IZQUIERDA PRESENTACIÓN, DERECHA LAS 3 TARJETAS) */}
+            {/* DISEÑO PRINCIPAL DEL HOME: 2 COLUMNAS (IZQUIERDA PRESENTACIÓN Y MÉTRICAS, DERECHA LAS OPCIONES) */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start w-full">
-              {/* ── COLUMNA IZQUIERDA: HERO, BOTONES Y BENEFICIOS ── */}
+              {/* ── COLUMNA IZQUIERDA: HERO, BIENVENIDA, MÉTRICAS Y BOTONES ── */}
               <div className="lg:col-span-5 lg:sticky lg:top-24 flex flex-col items-start gap-4 text-left">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>Oportunidades de Ingresos · Pucallpa</span>
+                  <span>{user ? `¡Hola, ${nombre || user.user_metadata?.full_name || 'Emprendedor'}! 👋` : 'Oportunidades de Ingresos · Pucallpa'}</span>
                 </div>
 
                 <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-tight">
@@ -1519,8 +1481,51 @@ function RevendedorPanelContent() {
                 </h2>
 
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Descubre las formas oficiales de generar ingresos hoy mismo sin jefes ni horarios. Elige la que mejor se adapte a ti o combínalas.
+                  {user && cuentaActiva
+                    ? 'Bienvenido a tu centro de ingresos. Aquí tienes las formas oficiales de generar ganancias recomendando productos o con tu propia tienda virtual, sin invertir en mercadería.'
+                    : 'Descubre las formas oficiales de generar ingresos hoy mismo sin jefes ni horarios. Elige la que mejor se adapte a ti o combínalas.'}
                 </p>
+
+                {/* Métricas rápidas integradas si el usuario tiene tienda */}
+                {user && tieneTienda && (
+                  <div className="grid grid-cols-2 gap-2 w-full">
+                    <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-2.5">
+                      <span className="text-[9px] text-slate-400 font-bold block uppercase">Tu Tienda:</span>
+                      <span className="text-xs font-black text-slate-900 truncate block mt-0.5" title={nombreTienda}>
+                        {nombreTienda || 'Mi Tienda'}
+                      </span>
+                      {estadoTienda === 'activa' ? (
+                        <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1 mt-0.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          Activa en internet
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-amber-700 font-bold flex items-center gap-1 mt-0.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                          En Borrador (Gris)
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-2.5">
+                      <span className="text-[9px] text-slate-400 font-bold block uppercase">Tu Margen:</span>
+                      <span className="text-xs font-black text-emerald-700 block mt-0.5">+{margenPorcentaje}%</span>
+                      <span className="text-[10px] text-slate-500">Ganancia neta</span>
+                    </div>
+
+                    <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-2.5">
+                      <span className="text-[9px] text-slate-400 font-bold block uppercase">Catálogo:</span>
+                      <span className="text-xs font-black text-slate-900 block mt-0.5">{productosSeleccionados.size || 42} productos</span>
+                      <span className="text-[10px] text-slate-500">Listos para vender</span>
+                    </div>
+
+                    <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-2.5">
+                      <span className="text-[9px] text-slate-400 font-bold block uppercase">Proveedor:</span>
+                      <span className="text-xs font-black text-slate-900 block mt-0.5 capitalize">{tiendaSeleccionada}</span>
+                      <span className="text-[10px] text-emerald-600 font-semibold">Stock en Pucallpa</span>
+                    </div>
+                  </div>
+                )}
 
                 {/* Botones de acción principales */}
                 <div className="flex flex-col gap-2.5 w-full mt-1">
@@ -2185,7 +2190,11 @@ function RevendedorPanelContent() {
                     return (
                       <div
                         key={prod.id}
-                        className="bg-white rounded-3xl border border-slate-200/90 shadow-xs hover:shadow-md transition p-4 sm:p-5 flex flex-col justify-between gap-3 group"
+                        className={`rounded-3xl border shadow-xs hover:shadow-md transition p-4 sm:p-5 flex flex-col justify-between gap-3 group ${
+                          prod.agotado
+                            ? 'bg-slate-50/70 border-slate-200 opacity-65'
+                            : 'bg-white border-slate-200/90'
+                        }`}
                       >
                         {/* Fila superior: Texto a la izquierda y Foto a la derecha */}
                         <div className="flex items-start justify-between gap-3 sm:gap-4">
@@ -2201,7 +2210,12 @@ function RevendedorPanelContent() {
                                   <span>{prod.store}</span>
                                 </span>
                               )}
-                              {prod.afiliadoComision ? (
+                              {prod.agotado ? (
+                                <span className="bg-rose-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-2xs">
+                                  <span className="material-symbols-outlined text-[13px]">block</span>
+                                  <span>Sin Stock / Agotado</span>
+                                </span>
+                              ) : prod.afiliadoComision ? (
                                 <span className="bg-amber-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-2xs">
                                   <span className="material-symbols-outlined text-[13px]">verified</span>
                                   <span>Bono {prod.afiliadoComision}% (+S/ {ganancia})</span>
@@ -2235,6 +2249,11 @@ function RevendedorPanelContent() {
 
                           {/* Derecha: Imagen más chica */}
                           <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-slate-100 overflow-hidden shrink-0 relative border border-slate-100 shadow-2xs">
+                            {prod.agotado && (
+                              <div className="absolute top-1.5 left-1.5 z-10 bg-rose-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 shadow-xs">
+                                Agotado
+                              </div>
+                            )}
                             {prod.image ? (
                               <img
                                 src={prod.image}
@@ -2255,7 +2274,12 @@ function RevendedorPanelContent() {
 
                         {/* Fila inferior: Link y Botones de acción */}
                         <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
-                          {cuentaActiva ? (
+                          {prod.agotado ? (
+                            <div className="bg-rose-50 border border-rose-200/80 rounded-xl p-2.5 text-center text-xs text-rose-700 font-bold flex items-center justify-center gap-1.5">
+                              <span className="material-symbols-outlined text-[16px] text-rose-600">inventory_2</span>
+                              <span>Producto sin stock en tienda proveedora (No disponible)</span>
+                            </div>
+                          ) : cuentaActiva ? (
                             <>
                               <div className="bg-slate-50 rounded-xl px-2.5 py-1.5 border border-slate-200/80">
                                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">

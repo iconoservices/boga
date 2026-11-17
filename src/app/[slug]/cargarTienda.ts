@@ -124,13 +124,13 @@ async function cargarTienda(slug: string): Promise<StoreConfig | null> {
         esRevendedor: dbStore.es_revendedor === true || dbStore.plan === 'revendedor' || dbStore.template === 'network',
         tiendaProveedora: dbStore.tienda_proveedora || 'delva',
         modoPedidosReventa: dbStore.modo_pedidos_reventa || 'revendedor',
+        status: dbStore.status || 'active',
       };
     } else {
-      // Si no existe aún en stores, revisar si es una solicitud de revendedor aprobada en Boga Network
+      // Si no existe aún en stores, revisar si es una solicitud de revendedor en Boga Network
       const { data: sol } = await supabase
         .from('store_requests')
         .select('*')
-        .eq('status', 'approved')
         .or(`business_name.ilike.%${slugSinBm}%,business_name.ilike.%${cleanSlug}%`)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -178,6 +178,7 @@ async function cargarTienda(slug: string): Promise<StoreConfig | null> {
           esRevendedor: true,
           tiendaProveedora: 'delva',
           modoPedidosReventa: 'revendedor',
+          status: sol.status === 'approved' ? 'active' : 'inactive',
         };
       }
     }

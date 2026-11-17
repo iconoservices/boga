@@ -21,6 +21,9 @@ interface ProductoRed {
   images?: string[];
   description?: string;
   store: string;
+  status?: string;
+  stock?: number;
+  agotado?: boolean;
 }
 
 interface ItemCarrito {
@@ -102,7 +105,7 @@ export default function NetworkTemplate({ store, initialProductId }: Props) {
 
     supabase
       .from('products')
-      .select('id, name, price, category, image, images, description, store, status')
+      .select('id, name, price, category, image, images, description, store, status, stock')
       .eq('store', prov)
       .order('name')
       .limit(150)
@@ -110,16 +113,33 @@ export default function NetworkTemplate({ store, initialProductId }: Props) {
         if (error) {
           console.error('Error cargando productos de red:', error);
         }
-        const prods: ProductoRed[] = (data || []).map((p: any) => ({
-          id: String(p.id),
-          name: p.name,
-          price: Number(p.price) || 0,
-          category: p.category || 'General',
-          image: p.image || (Array.isArray(p.images) && p.images[0]) || undefined,
-          images: Array.isArray(p.images) ? p.images : p.image ? [p.image] : [],
-          description: p.description || '',
-          store: p.store,
-        }));
+        const prods: ProductoRed[] = (data || []).map((p: any) => {
+          const esAgotado =
+            p.status === 'Agotado' ||
+            p.status === 'Inactivo' ||
+            (typeof p.stock === 'number' && p.stock <= 0 && p.status !== 'Activo');
+
+          return {
+            id: String(p.id),
+            name: p.name,
+            price: Number(p.price) || 0,
+            category: p.category || 'General',
+            image: p.image || (Array.isArray(p.images) && p.images[0]) || undefined,
+            images: Array.isArray(p.images) ? p.images : p.image ? [p.image] : [],
+            description: p.description || '',
+            store: p.store,
+            status: p.status,
+            stock: p.stock,
+            agotado: esAgotado,
+          };
+        });
+
+        // Ordenar: productos en stock primero
+        prods.sort((a, b) => {
+          if (a.agotado && !b.agotado) return 1;
+          if (!a.agotado && b.agotado) return -1;
+          return a.name.localeCompare(b.name);
+        });
 
         setProductos(prods);
 
@@ -464,11 +484,19 @@ export default function NetworkTemplate({ store, initialProductId }: Props) {
                 <div
                   key={prod.id}
                   onClick={() => setProductoModal(prod)}
-                  className="bg-white rounded-2xl border border-slate-200/90 p-3 sm:p-3.5 flex flex-col justify-between transition-all hover:shadow-md hover:border-emerald-300 group select-none cursor-pointer"
+                  className={`bg-white rounded-2xl border p-3 sm:p-3.5 flex flex-col justify-between transition-all hover:shadow-md group select-none cursor-pointer ${
+                    prod.agotado ? 'opacity-70 border-slate-200' : 'border-slate-200/90 hover:border-emerald-300'
+                  }`}
                 >
                   <div>
                     {/* Imagen del Producto */}
                     <div className="w-full aspect-square rounded-xl bg-slate-50 overflow-hidden relative mb-2.5">
+                      {prod.agotado && (
+                        <div className="absolute top-2 left-2 z-10 bg-rose-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-md uppercase tracking-wider flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                          Agotado
+                        </div>
+                      )}
                       {prod.image ? (
                         <img
                           src={prod.image}
@@ -501,35 +529,44 @@ export default function NetworkTemplate({ store, initialProductId }: Props) {
                     </div>
 
                     <div className="flex items-center gap-1.5 mt-2.5">
-                      {/* Botón WhatsApp de Verdad */}
-                      <button
-                        type="button"
-                        onClick={(e) => pedirPorWhatsApp(prod, e)}
-                        className="flex-1 py-2 px-2 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-xs transition active:scale-95 cursor-pointer truncate"
-                        title="Pedir este producto directo al WhatsApp"
-                      >
-                        <IconoWhatsApp className="w-3.5 h-3.5 shrink-0 text-white" />
-                        <span className="truncate">Pedir</span>
-                      </button>
+                      {prod.agotado ? (
+                        <div className="w-full py-2 px-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-400 font-bold text-xs flex items-center justify-center gap-1 cursor-not-allowed">
+                          <span className="material-symbols-outlined text-[15px]">block</span>
+                          <span>Sin Stock</span>
+                        </div>
+                      ) : (
+                        <>
+                          {/* Botón WhatsApp de Verdad */}
+                          <button
+                            type="button"
+                            onClick={(e) => pedirPorWhatsApp(prod, e)}
+                            className="flex-1 py-2 px-2 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-xs transition active:scale-95 cursor-pointer truncate"
+                            title="Pedir este producto directo al WhatsApp"
+                          >
+                            <IconoWhatsApp className="w-3.5 h-3.5 shrink-0 text-white" />
+                            <span className="truncate">Pedir</span>
+                          </button>
 
-                      {/* Botón + para agregar al Carrito */}
-                      <button
-                        type="button"
-                        onClick={(e) => agregarAlCarrito(prod, e)}
-                        className={`w-9 h-9 shrink-0 rounded-xl font-bold flex items-center justify-center shadow-xs transition active:scale-95 cursor-pointer relative ${
-                          enCarrito
-                            ? 'bg-emerald-600 text-white ring-2 ring-emerald-200'
-                            : 'bg-slate-900 hover:bg-slate-800 text-white'
-                        }`}
-                        title="Agregar al carrito (+)"
-                      >
-                        <span className="material-symbols-outlined text-[18px]">add</span>
-                        {enCarrito && (
-                          <span className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 bg-emerald-500 text-white text-[10px] font-black rounded-full flex items-center justify-center ring-2 ring-white">
-                            {enCarrito.qty}
-                          </span>
-                        )}
-                      </button>
+                          {/* Botón + para agregar al Carrito */}
+                          <button
+                            type="button"
+                            onClick={(e) => agregarAlCarrito(prod, e)}
+                            className={`w-9 h-9 shrink-0 rounded-xl font-bold flex items-center justify-center shadow-xs transition active:scale-95 cursor-pointer relative ${
+                              enCarrito
+                                ? 'bg-emerald-600 text-white ring-2 ring-emerald-200'
+                                : 'bg-slate-900 hover:bg-slate-800 text-white'
+                            }`}
+                            title="Agregar al carrito (+)"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">add</span>
+                            {enCarrito && (
+                              <span className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 bg-emerald-500 text-white text-[10px] font-black rounded-full flex items-center justify-center ring-2 ring-white">
+                                {enCarrito.qty}
+                              </span>
+                            )}
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -641,26 +678,35 @@ export default function NetworkTemplate({ store, initialProductId }: Props) {
 
               {/* Botones del Modal: WhatsApp Directo o Agregar al Carrito */}
               <div className="flex flex-col sm:flex-row gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => pedirPorWhatsApp(productoModal)}
-                  className="flex-1 py-3 px-4 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-                >
-                  <IconoWhatsApp className="w-4 h-4 text-white" />
-                  <span>Pedir directo al WhatsApp</span>
-                </button>
+                {productoModal.agotado ? (
+                  <div className="w-full py-3 px-4 rounded-xl bg-slate-100 border border-slate-200 text-slate-400 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-not-allowed">
+                    <span className="material-symbols-outlined text-[18px]">block</span>
+                    <span>Producto temporalmente sin stock (Agotado en proveedor)</span>
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => pedirPorWhatsApp(productoModal)}
+                      className="flex-1 py-3 px-4 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                    >
+                      <IconoWhatsApp className="w-4 h-4 text-white" />
+                      <span>Pedir directo al WhatsApp</span>
+                    </button>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    agregarAlCarrito(productoModal);
-                    setProductoModal(null);
-                  }}
-                  className="py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 shrink-0"
-                >
-                  <span className="material-symbols-outlined text-[18px]">add_shopping_cart</span>
-                  <span>+ Agregar al Carrito</span>
-                </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        agregarAlCarrito(productoModal);
+                        setProductoModal(null);
+                      }}
+                      className="py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 shrink-0"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">add_shopping_cart</span>
+                      <span>+ Agregar al Carrito</span>
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>

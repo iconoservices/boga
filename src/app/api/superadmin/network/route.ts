@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { revalidatePath, revalidateTag } from 'next/cache';
 
 function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -86,12 +87,14 @@ export async function POST(request: Request) {
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
+    const slugSinBm = baseSlug.replace(/-bm$/, '');
+    const nameSinBm = (business_name || '').replace(/\s+bm$/i, '').trim();
 
     // 3. Revisar si existe en stores
     const { data: existing } = await admin
       .from('stores')
       .select('id, slug, status')
-      .or(`name.ilike.${business_name},slug.eq.${baseSlug}`)
+      .or(`name.ilike.${business_name},name.ilike.${nameSinBm},slug.eq.${baseSlug},slug.eq.${slugSinBm},slug.eq.${slugSinBm}-bm`)
       .limit(1);
 
     if (existing && existing.length > 0) {
@@ -136,6 +139,12 @@ export async function POST(request: Request) {
       }
     }
 
+    try {
+      revalidateTag('stores', { expire: 0 });
+      if (baseSlug) revalidatePath(`/${baseSlug}`);
+      if (slugSinBm) revalidatePath(`/${slugSinBm}`);
+    } catch {}
+
     return NextResponse.json({ ok: true, mensaje: `Tienda "${business_name}" activada (Verde)` });
   }
 
@@ -148,9 +157,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, mensaje: `Perfil de afiliado puesto en revisión (Gris)` });
     }
 
+    const baseSlug = business_name
+      ? business_name
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)/g, '')
+      : '';
+    const slugSinBm = baseSlug ? baseSlug.replace(/-bm$/, '') : '';
+    const nameSinBm = (business_name || '').replace(/\s+bm$/i, '').trim();
+
     if (business_name) {
-      await admin.from('stores').update({ status: 'inactive' }).ilike('name', business_name);
+      await admin
+        .from('stores')
+        .update({ status: 'inactive' })
+        .or(`name.ilike.${business_name},name.ilike.${nameSinBm},slug.eq.${baseSlug},slug.eq.${slugSinBm},slug.eq.${slugSinBm}-bm`);
     }
+
+    try {
+      revalidateTag('stores', { expire: 0 });
+      if (baseSlug) revalidatePath(`/${baseSlug}`);
+      if (slugSinBm) revalidatePath(`/${slugSinBm}`);
+    } catch {}
 
     return NextResponse.json({ ok: true, mensaje: `Tienda "${business_name}" puesta en gris` });
   }
@@ -165,9 +194,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: delErr.message }, { status: 500 });
     }
 
+    const baseSlug = business_name
+      ? business_name
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)/g, '')
+      : '';
+    const slugSinBm = baseSlug ? baseSlug.replace(/-bm$/, '') : '';
+    const nameSinBm = (business_name || '').replace(/\s+bm$/i, '').trim();
+
     if (!esPerfil && business_name) {
-      await admin.from('stores').delete().ilike('name', business_name);
+      await admin
+        .from('stores')
+        .delete()
+        .or(`name.ilike.${business_name},name.ilike.${nameSinBm},slug.eq.${baseSlug},slug.eq.${slugSinBm},slug.eq.${slugSinBm}-bm`);
     }
+
+    try {
+      revalidateTag('stores', { expire: 0 });
+      if (baseSlug) revalidatePath(`/${baseSlug}`);
+      if (slugSinBm) revalidatePath(`/${slugSinBm}`);
+    } catch {}
 
     return NextResponse.json({ ok: true, mensaje: `Registro eliminado con éxito` });
   }
