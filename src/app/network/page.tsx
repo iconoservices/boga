@@ -281,279 +281,307 @@ export default function BogaNetworkHomePage() {
         </div>
       )}
 
-      {/* ── Contenido Principal (CTA ARRIBA + 3 FORMAS DE GANAR CLARAS Y VISUALES) ── */}
-      <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 w-full flex flex-col items-start">
-        {/* 1. Cabecera Principal y BOTÓN DE ACTIVAR ALINEADO A LA IZQUIERDA */}
-        <div className="w-full text-left max-w-3xl mb-7">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold mb-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Oportunidades de Ingresos · Pucallpa</span>
-          </div>
-
-          <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
-            Gana dinero desde tu celular con{' '}
-            <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 bg-clip-text text-transparent">
-              Boga Network
-            </span>
-          </h1>
-
-          <p className="text-xs sm:text-sm text-slate-600 mt-2 max-w-2xl leading-relaxed">
-            Descubre las <b>3 formas oficiales</b> de generar ingresos hoy mismo sin jefes ni horarios. Elige la que mejor se adapte a ti o combina las tres.
-          </p>
-
-          {/* ══ BOTÓN DESTACADO ALINEADO A LA IZQUIERDA ══ */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-start gap-3 w-full sm:w-auto mt-5 mb-2.5">
-            <button
-              type="button"
-              onClick={abrirModalActivacion}
-              className="py-3.5 px-7 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-sm shadow-md shadow-emerald-600/25 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 text-center shrink-0"
-            >
-              <span className="material-symbols-outlined text-[20px]">badge</span>
-              <span>{cuentaExistente ? 'Entrar a Mi Panel de Control →' : 'Activar Mi Cuenta Network →'}</span>
-            </button>
-
-            <a
-              href={LINK_GRUPO_WHATSAPP}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="py-3.5 px-5 rounded-2xl bg-[#25D366]/15 hover:bg-[#25D366]/25 text-[#128C7E] font-black text-xs sm:text-sm border border-[#25D366]/30 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 text-center shrink-0"
-            >
-              <span className="material-symbols-outlined text-[19px]">chat</span>
-              <span>Únete al Grupo WhatsApp</span>
-            </a>
-          </div>
-
-          <p className="text-[11px] text-slate-400 font-medium">
-            🔒 Sin costos ocultos · Cero inversión en mercadería · Pagos directos
-          </p>
-        </div>
-
-        {/* ── 2. LAS 3 FORMAS DE GANAR DINERO: 3 COLUMNAS SIMÉTRICAS Y ULTRA CLARAS ── */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 w-full items-stretch mt-2">
+      {/* ── Contenido Principal (3 TARJETAS A LA IZQUIERDA Y TEXTO A LA DERECHA) ── */}
+      <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start w-full">
           
-          {/* ════ TARJETA 1: CREA Y VENDE CON TU TIENDA VIRTUAL ════ */}
-          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-xs flex flex-col justify-between gap-4 hover:border-emerald-300 hover:shadow-md transition">
-            <div className="flex flex-col gap-3.5">
-              <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
-                <div className="flex items-center gap-2">
-                  <span className="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs font-black shrink-0">
-                    1
+          {/* ════ COLUMNA IZQUIERDA: LAS 3 TARJETAS DE OPORTUNIDADES ════ */}
+          <div className="order-2 lg:order-1 lg:col-span-7 flex flex-col gap-4">
+            
+            {/* ════ TARJETA 1: CREA Y VENDE CON TU TIENDA VIRTUAL ════ */}
+            <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-xs flex flex-col justify-between gap-4 hover:border-emerald-300 hover:shadow-md transition">
+              <div className="flex flex-col gap-3.5">
+                <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs font-black shrink-0">
+                      1
+                    </span>
+                    <h2 className="text-sm sm:text-base font-black text-slate-900 tracking-tight leading-snug">
+                      Tienda Virtual Propia
+                    </h2>
+                  </div>
+                  <span className="bg-emerald-100 text-emerald-800 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
+                    Tu Marca
                   </span>
-                  <h2 className="text-sm sm:text-base font-black text-slate-900 tracking-tight leading-snug">
-                    Tienda Virtual Propia
-                  </h2>
                 </div>
-                <span className="bg-emerald-100 text-emerald-800 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
-                  Tu Marca
-                </span>
-              </div>
 
-              {/* Caja de Ganancia */}
-              <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-2xl p-3 flex items-center justify-between gap-2">
-                <div>
-                  <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider block">Tu Margen</span>
-                  <span className="text-lg font-black text-emerald-700 block leading-tight">+15% a +25%</span>
-                  <span className="text-[9px] text-slate-500">sobre cada producto</span>
-                </div>
-                <div className="text-right bg-white/80 px-2.5 py-1.5 rounded-xl border border-emerald-200/60 shrink-0">
-                  <span className="text-[8px] font-bold text-slate-500 block uppercase">Estimado</span>
-                  <span className="text-xs font-black text-slate-900 block leading-tight">S/ 600 - 1,200</span>
-                  <span className="text-[8px] text-emerald-700 font-bold">mes</span>
-                </div>
-              </div>
-
-              {/* Beneficios directos */}
-              <div className="flex flex-col gap-2 text-xs">
-                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                  <span className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[18px]">storefront</span>
-                  </span>
-                  <div className="min-w-0">
-                    <p className="font-extrabold text-slate-900 text-xs">Catálogo con tu marca</p>
-                    <p className="text-[10px] text-slate-500 leading-tight">Link propio con fotos y precios.</p>
+                {/* Caja de Ganancia */}
+                <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-2xl p-3 flex items-center justify-between gap-2">
+                  <div>
+                    <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider block">Tu Margen</span>
+                    <span className="text-lg font-black text-emerald-700 block leading-tight">+15% a +25%</span>
+                    <span className="text-[9px] text-slate-500">sobre cada producto</span>
+                  </div>
+                  <div className="text-right bg-white/80 px-2.5 py-1.5 rounded-xl border border-emerald-200/60 shrink-0">
+                    <span className="text-[8px] font-bold text-slate-500 block uppercase">Estimado</span>
+                    <span className="text-xs font-black text-slate-900 block leading-tight">S/ 600 - 1,200</span>
+                    <span className="text-[8px] text-emerald-700 font-bold">mes</span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                  <span className="w-8 h-8 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[18px]">inventory_2</span>
-                  </span>
-                  <div className="min-w-0">
-                    <p className="font-extrabold text-slate-900 text-xs">Cero inversión previa</p>
-                    <p className="text-[10px] text-slate-500 leading-tight">Proveedor despacha en Pucallpa.</p>
+                {/* Beneficios directos */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <span className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[16px]">storefront</span>
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-extrabold text-slate-900 text-[11px] leading-tight">Catálogo propio</p>
+                      <p className="text-[9px] text-slate-500 leading-tight">Con tus fotos y precios.</p>
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                  <span className="w-8 h-8 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[18px]">shopping_cart</span>
-                  </span>
-                  <div className="min-w-0">
-                    <p className="font-extrabold text-slate-900 text-xs">Pedidos a tu WhatsApp</p>
-                    <p className="text-[10px] text-slate-500 leading-tight">Arman carrito y te pagan a ti.</p>
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <span className="w-7 h-7 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[16px]">inventory_2</span>
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-extrabold text-slate-900 text-[11px] leading-tight">Cero inversión</p>
+                      <p className="text-[9px] text-slate-500 leading-tight">Proveedor despacha.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <span className="w-7 h-7 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[16px]">shopping_cart</span>
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-extrabold text-slate-900 text-[11px] leading-tight">A tu WhatsApp</p>
+                      <p className="text-[9px] text-slate-500 leading-tight">Te pagan directamente.</p>
+                    </div>
                   </div>
                 </div>
               </div>
+
+              <button
+                type="button"
+                onClick={() => irAPanelPestaña('preview')}
+                className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+              >
+                <span className="material-symbols-outlined text-[16px]">store</span>
+                <span>{cuentaExistente ? 'Ir a Mis Tiendas Virtuales →' : 'Crear Tienda Virtual →'}</span>
+              </button>
             </div>
 
-            <button
-              type="button"
-              onClick={() => irAPanelPestaña('preview')}
-              className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
-            >
-              <span className="material-symbols-outlined text-[16px]">store</span>
-              <span>{cuentaExistente ? 'Ir a Mis Tiendas Virtuales →' : 'Crear Tienda Virtual →'}</span>
-            </button>
+            {/* ════ TARJETA 2: RECOMIENDA PRODUCTOS INDIVIDUALES ════ */}
+            <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-xs flex flex-col justify-between gap-4 hover:border-sky-300 hover:shadow-md transition">
+              <div className="flex flex-col gap-3.5">
+                <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className="w-7 h-7 rounded-xl bg-sky-100 text-sky-800 flex items-center justify-center text-xs font-black shrink-0">
+                      2
+                    </span>
+                    <h2 className="text-sm sm:text-base font-black text-slate-900 tracking-tight leading-snug">
+                      Productos Individuales
+                    </h2>
+                  </div>
+                  <span className="bg-sky-100 text-sky-800 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
+                    Venta Rápida
+                  </span>
+                </div>
+
+                {/* Caja de Ganancia */}
+                <div className="bg-gradient-to-r from-sky-500/10 to-blue-500/10 border border-sky-500/20 rounded-2xl p-3 flex items-center justify-between gap-2">
+                  <div>
+                    <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider block">Comisión Directa</span>
+                    <span className="text-lg font-black text-sky-800 block leading-tight">+S/ 10 a S/ 35</span>
+                    <span className="text-[9px] text-slate-500">por producto vendido</span>
+                  </div>
+                  <div className="text-right bg-white/80 px-2.5 py-1.5 rounded-xl border border-sky-200/60 shrink-0">
+                    <span className="text-[8px] font-bold text-slate-500 block uppercase">En Estados</span>
+                    <span className="text-xs font-black text-slate-900 block leading-tight">1 Clic</span>
+                    <span className="text-[8px] text-sky-700 font-bold">compartir</span>
+                  </div>
+                </div>
+
+                {/* Beneficios directos */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <span className="w-7 h-7 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[16px]">loyalty</span>
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-extrabold text-slate-900 text-[11px] leading-tight">Links de Afiliado</p>
+                      <p className="text-[9px] text-slate-500 leading-tight">Enlace directo a 1 producto.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <span className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[16px]">bolt</span>
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-extrabold text-slate-900 text-[11px] leading-tight">Alta demanda</p>
+                      <p className="text-[9px] text-slate-500 leading-tight">Relojes, lentes, gadgets.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <span className="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[16px]">share</span>
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-extrabold text-slate-900 text-[11px] leading-tight">Estados de Wsp</p>
+                      <p className="text-[9px] text-slate-500 leading-tight">Publicas y cobras diario.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => irAPanelPestaña('productos')}
+                className="w-full py-2.5 px-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-black text-xs shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+              >
+                <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                <span>{cuentaExistente ? 'Ir a Productos de Afiliado →' : 'Recomendar Productos →'}</span>
+              </button>
+            </div>
+
+            {/* ════ TARJETA 3: PROGRAMA DE AFILIADOS & BONOS EN EFECTIVO ════ */}
+            <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-xs flex flex-col justify-between gap-4 hover:border-purple-300 hover:shadow-md transition">
+              <div className="flex flex-col gap-3.5">
+                <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className="w-7 h-7 rounded-xl bg-purple-100 text-purple-800 flex items-center justify-center text-xs font-black shrink-0">
+                      3
+                    </span>
+                    <h2 className="text-sm sm:text-base font-black text-slate-900 tracking-tight leading-snug">
+                      Bonos por Recomendación
+                    </h2>
+                  </div>
+                  <span className="bg-purple-100 text-purple-800 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
+                    Bono Efectivo
+                  </span>
+                </div>
+
+                {/* Caja de Ganancia */}
+                <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-3 flex items-center justify-between gap-2">
+                  <div>
+                    <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider block">Bono Directo</span>
+                    <span className="text-lg font-black text-purple-800 block leading-tight">+S/ 20 a S/ 50</span>
+                    <span className="text-[9px] text-slate-500">por cada referido activo</span>
+                  </div>
+                  <div className="text-right bg-white/80 px-2.5 py-1.5 rounded-xl border border-purple-200/60 shrink-0">
+                    <span className="text-[8px] font-bold text-slate-500 block uppercase">Pago directo</span>
+                    <span className="text-xs font-black text-purple-800 block leading-tight">Yape / Plin</span>
+                    <span className="text-[8px] text-purple-700 font-bold">inmediato</span>
+                  </div>
+                </div>
+
+                {/* Beneficios directos */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <span className="w-7 h-7 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[16px]">store</span>
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-extrabold text-slate-900 text-[11px] leading-tight">Comercios</p>
+                      <p className="text-[9px] text-slate-500 leading-tight">Pollerías, boutiques.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <span className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[16px]">local_taxi</span>
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-extrabold text-slate-900 text-[11px] leading-tight">Choferes</p>
+                      <p className="text-[9px] text-slate-500 leading-tight">Taxi o mototaxis.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <span className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[16px]">group_add</span>
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-extrabold text-slate-900 text-[11px] leading-tight">Revendedores</p>
+                      <p className="text-[9px] text-slate-500 leading-tight">Comisiones de red.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => irAPanelPestaña('afiliados')}
+                className="w-full py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+              >
+                <span className="material-symbols-outlined text-[16px]">group_add</span>
+                <span>{cuentaExistente ? 'Ir a Programa de Afiliados →' : 'Empezar con Afiliados →'}</span>
+              </button>
+            </div>
+
           </div>
 
-          {/* ════ TARJETA 2: RECOMIENDA PRODUCTOS INDIVIDUALES ════ */}
-          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-xs flex flex-col justify-between gap-4 hover:border-sky-300 hover:shadow-md transition">
-            <div className="flex flex-col gap-3.5">
-              <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
-                <div className="flex items-center gap-2">
-                  <span className="w-7 h-7 rounded-xl bg-sky-100 text-sky-800 flex items-center justify-center text-xs font-black shrink-0">
-                    2
-                  </span>
-                  <h2 className="text-sm sm:text-base font-black text-slate-900 tracking-tight leading-snug">
-                    Productos Individuales
-                  </h2>
-                </div>
-                <span className="bg-sky-100 text-sky-800 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
-                  Venta Rápida
-                </span>
-              </div>
-
-              {/* Caja de Ganancia */}
-              <div className="bg-gradient-to-r from-sky-500/10 to-blue-500/10 border border-sky-500/20 rounded-2xl p-3 flex items-center justify-between gap-2">
-                <div>
-                  <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider block">Comisión Directa</span>
-                  <span className="text-lg font-black text-sky-800 block leading-tight">+S/ 10 a S/ 35</span>
-                  <span className="text-[9px] text-slate-500">por producto vendido</span>
-                </div>
-                <div className="text-right bg-white/80 px-2.5 py-1.5 rounded-xl border border-sky-200/60 shrink-0">
-                  <span className="text-[8px] font-bold text-slate-500 block uppercase">En Estados</span>
-                  <span className="text-xs font-black text-slate-900 block leading-tight">1 Clic</span>
-                  <span className="text-[8px] text-sky-700 font-bold">compartir</span>
-                </div>
-              </div>
-
-              {/* Beneficios directos */}
-              <div className="flex flex-col gap-2 text-xs">
-                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                  <span className="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[18px]">loyalty</span>
-                  </span>
-                  <div className="min-w-0">
-                    <p className="font-extrabold text-slate-900 text-xs">Links de Afiliado</p>
-                    <p className="text-[10px] text-slate-500 leading-tight">Enlace directo a 1 producto exacto.</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                  <span className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[18px]">bolt</span>
-                  </span>
-                  <div className="min-w-0">
-                    <p className="font-extrabold text-slate-900 text-xs">Productos de alta demanda</p>
-                    <p className="text-[10px] text-slate-500 leading-tight">Relojes, lentes, gadgets con stock.</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                  <span className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[18px]">share</span>
-                  </span>
-                  <div className="min-w-0">
-                    <p className="font-extrabold text-slate-900 text-xs">Para Estados de WhatsApp</p>
-                    <p className="text-[10px] text-slate-500 leading-tight">Publicas 1 al día y cobras en soles.</p>
-                  </div>
-                </div>
-              </div>
+          {/* ════ COLUMNA DERECHA: TEXTO PRINCIPAL Y ACCIONES STICKY ════ */}
+          <div className="order-1 lg:order-2 lg:col-span-5 lg:sticky lg:top-20 flex flex-col items-start gap-4 text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Oportunidades de Ingresos · Pucallpa</span>
             </div>
 
-            <button
-              type="button"
-              onClick={() => irAPanelPestaña('productos')}
-              className="w-full py-2.5 px-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-black text-xs shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
-            >
-              <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-              <span>{cuentaExistente ? 'Ir a Productos de Afiliado →' : 'Recomendar Productos →'}</span>
-            </button>
-          </div>
+            <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+              Gana dinero desde tu celular con{' '}
+              <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 bg-clip-text text-transparent">
+                Boga Network
+              </span>
+            </h1>
 
-          {/* ════ TARJETA 3: PROGRAMA DE AFILIADOS & BONOS EN EFECTIVO ════ */}
-          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-xs flex flex-col justify-between gap-4 hover:border-purple-300 hover:shadow-md transition">
-            <div className="flex flex-col gap-3.5">
-              <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
-                <div className="flex items-center gap-2">
-                  <span className="w-7 h-7 rounded-xl bg-purple-100 text-purple-800 flex items-center justify-center text-xs font-black shrink-0">
-                    3
-                  </span>
-                  <h2 className="text-sm sm:text-base font-black text-slate-900 tracking-tight leading-snug">
-                    Bonos por Recomendación
-                  </h2>
-                </div>
-                <span className="bg-purple-100 text-purple-800 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
-                  Bono Efectivo
-                </span>
-              </div>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              Descubre las <b>3 formas oficiales</b> de generar ingresos hoy mismo sin jefes ni horarios. Elige la que mejor se adapte a ti o combina las tres.
+            </p>
 
-              {/* Caja de Ganancia */}
-              <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-3 flex items-center justify-between gap-2">
-                <div>
-                  <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider block">Bono Directo</span>
-                  <span className="text-lg font-black text-purple-800 block leading-tight">+S/ 20 a S/ 50</span>
-                  <span className="text-[9px] text-slate-500">por cada referido activo</span>
-                </div>
-                <div className="text-right bg-white/80 px-2.5 py-1.5 rounded-xl border border-purple-200/60 shrink-0">
-                  <span className="text-[8px] font-bold text-slate-500 block uppercase">Pago directo</span>
-                  <span className="text-xs font-black text-purple-800 block leading-tight">Yape / Plin</span>
-                  <span className="text-[8px] text-purple-700 font-bold">inmediato</span>
-                </div>
-              </div>
+            {/* Botones de acción principales */}
+            <div className="flex flex-col gap-2.5 w-full mt-1">
+              <button
+                type="button"
+                onClick={abrirModalActivacion}
+                className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-sm shadow-md shadow-emerald-600/25 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 text-center"
+              >
+                <span className="material-symbols-outlined text-[20px]">badge</span>
+                <span>{cuentaExistente ? 'Entrar a Mi Panel de Control →' : 'Activar Mi Cuenta Network →'}</span>
+              </button>
 
-              {/* Beneficios directos */}
-              <div className="flex flex-col gap-2 text-xs">
-                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                  <span className="w-8 h-8 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[18px]">store</span>
-                  </span>
-                  <div className="min-w-0">
-                    <p className="font-extrabold text-slate-900 text-xs">Comercios locales</p>
-                    <p className="text-[10px] text-slate-500 leading-tight">Pollerías, boutiques, bodegas.</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                  <span className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[18px]">local_taxi</span>
-                  </span>
-                  <div className="min-w-0">
-                    <p className="font-extrabold text-slate-900 text-xs">Choferes (Taxi / Mototaxi)</p>
-                    <p className="text-[10px] text-slate-500 leading-tight">Conéctalos con Boga Taxi.</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                  <span className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[18px]">group_add</span>
-                  </span>
-                  <div className="min-w-0">
-                    <p className="font-extrabold text-slate-900 text-xs">Nuevos Revendedores</p>
-                    <p className="text-[10px] text-slate-500 leading-tight">Ganas comisiones de su red.</p>
-                  </div>
-                </div>
-              </div>
+              <a
+                href={LINK_GRUPO_WHATSAPP}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3 px-5 rounded-2xl bg-[#25D366]/15 hover:bg-[#25D366]/25 text-[#128C7E] font-black text-xs sm:text-sm border border-[#25D366]/30 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 text-center"
+              >
+                <span className="material-symbols-outlined text-[19px]">chat</span>
+                <span>Únete al Grupo WhatsApp</span>
+              </a>
             </div>
 
-            <button
-              type="button"
-              onClick={() => irAPanelPestaña('afiliados')}
-              className="w-full py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
-            >
-              <span className="material-symbols-outlined text-[16px]">group_add</span>
-              <span>{cuentaExistente ? 'Ir a Programa de Afiliados →' : 'Empezar con Afiliados →'}</span>
-            </button>
+            <p className="text-[11px] text-slate-400 font-medium">
+              🔒 Sin costos ocultos · Cero inversión en mercadería · Pagos directos
+            </p>
+
+            {/* Tarjeta de Beneficios y Confianza */}
+            <div className="w-full bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs flex flex-col gap-2.5 mt-1">
+              <div className="flex items-center gap-2 text-slate-900 font-extrabold text-xs">
+                <span className="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[15px]">verified</span>
+                </span>
+                <span>Beneficios oficiales de la red</span>
+              </div>
+              <ul className="text-xs text-slate-600 space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="material-symbols-outlined text-emerald-600 text-[16px] shrink-0 mt-0.5">check_circle</span>
+                  <span>Proveedores con stock verificado en Pucallpa.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="material-symbols-outlined text-emerald-600 text-[16px] shrink-0 mt-0.5">check_circle</span>
+                  <span>Cobros inmediatos por Yape o Plin al entregar.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="material-symbols-outlined text-emerald-600 text-[16px] shrink-0 mt-0.5">check_circle</span>
+                  <span>Comunidad activa con soporte directo por WhatsApp.</span>
+                </li>
+              </ul>
+            </div>
           </div>
 
         </div>
