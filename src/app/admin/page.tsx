@@ -85,7 +85,7 @@ interface Product {
   afiliado_comision?: number | null;
 }
 
-type TabId = 'inicio' | 'products' | 'categories' | 'orders' | 'pos' | 'metrics' | 'cobros' | 'stores';
+type TabId = 'inicio' | 'products' | 'categories' | 'orders' | 'pos' | 'metrics' | 'cobros' | 'stores' | 'afiliados';
 
 // Orden canónico de la navegación. La sidebar de escritorio, la barra inferior
 // móvil, el menú Perfil y las tarjetas de "Gestión" del Inicio se arman TODAS
@@ -95,6 +95,7 @@ const NAV_TABS: { id: TabId; label: string; icon: string; sub: string; inBottomB
   { id: 'orders',   label: 'Pedidos',      icon: 'receipt_long',  sub: 'Gestiona los pedidos',       inBottomBar: true },
   { id: 'pos',      label: 'Vender (POS)', icon: 'point_of_sale', sub: 'Caja rápida en el local',    inBottomBar: true },
   { id: 'products', label: 'Productos',    icon: 'inventory_2',   sub: 'Añade o modifica ítems',     inBottomBar: true },
+  { id: 'afiliados',label: 'Afiliados',    icon: 'loyalty',       sub: 'Programa de promotores',     inBottomBar: false },
   { id: 'metrics',  label: 'Métricas',     icon: 'bar_chart',     sub: 'Rendimiento del negocio',    inBottomBar: false },
   { id: 'cobros',   label: 'Cobros',       icon: 'event_repeat',  sub: 'Cobros mensuales a tus clientes', inBottomBar: false },
   { id: 'stores',   label: 'Mis Tiendas',  icon: 'store',         sub: 'Administra tus sucursales',  inBottomBar: false },
@@ -268,6 +269,70 @@ function AdminDashboard({ user }: { user: User }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [dbStores, setDbStores] = useState<any[]>([]);
 
+  // Estados y acciones para el Programa de Afiliados (Boga Network)
+  const [busquedaAfiliados, setBusquedaAfiliados] = useState('');
+  const [filtroAfiliados, setFiltroAfiliados] = useState<'todos' | 'activos' | 'inactivos'>('todos');
+  const [guardandoAfiliadoId, setGuardandoAfiliadoId] = useState<string | null>(null);
+  const [guardadoExitosoId, setGuardadoExitosoId] = useState<string | null>(null);
+
+  const actualizarAfiliadoProducto = async (prod: Product, activar: boolean, comisionPorcentaje: number = 15) => {
+    setGuardandoAfiliadoId(prod.id);
+    const pct = Math.max(10, Math.min(80, Math.round(comisionPorcentaje)));
+
+    const descLimpia = (prod.description || '').replace(RE_AFILIADO, '').trim();
+    const descNueva = activar ? `${descLimpia} [afiliado:${pct}%]`.trim() : descLimpia;
+    const comisionVal = activar ? pct : null;
+
+    setProducts((prev) =>
+      prev.map((p) => {
+        if (p.id !== prod.id) return p;
+        return {
+          ...p,
+          description: descNueva,
+          afiliado_comision: comisionVal,
+        };
+      })
+    );
+
+    try {
+      let { error } = await supabase
+        .from('products')
+        .update({
+          description: descNueva,
+          afiliado_comision: comisionVal,
+        })
+        .eq('id', prod.id);
+
+      if (error && error.message?.toLowerCase().includes('afiliado_comision')) {
+        const { error: err2 } = await supabase
+          .from('products')
+          .update({
+            description: descNueva,
+          })
+          .eq('id', prod.id);
+        if (err2) throw err2;
+      } else if (error) {
+        throw error;
+      }
+
+      if (activar && prod.store) {
+        supabase.from('stores').update({ permite_revendedores: true }).eq('slug', prod.store).then(() => {});
+      }
+
+      setGuardadoExitosoId(prod.id);
+      setTimeout(() => {
+        setGuardadoExitosoId((cur) => (cur === prod.id ? null : cur));
+      }, 2000);
+      refrescarTienda(prod.store);
+    } catch (err: any) {
+      console.error('Error al actualizar afiliado:', err);
+      alert('No se pudo guardar el cambio de afiliado: ' + (err?.message || 'Error desconocido'));
+      fetchProducts(undefined, true);
+    } finally {
+      setGuardandoAfiliadoId(null);
+    }
+  };
+
   // Tiendas que este usuario administra: las que tienen su user_id en la
   // base (RLS ya solo deja editar las propias). Antes esto era una lista
   // guardada en localStorage sin ninguna verificacion real de dueño — cualquiera
@@ -409,17 +474,18 @@ function AdminDashboard({ user }: { user: User }) {
   const esAcademia = stores[focusedStore]?.template === 'academia';
   // Categorías ya no tiene pestaña propia: se abre desde Productos (y desde el Inicio), y mientras tanto Productos queda resaltado.
   const navActivo = activeTab === 'categories' ? 'products' : activeTab;
-  // Dos pestañitas arriba de Productos / Categorías: son la misma sección.
+  // Pestañitas arriba de Productos / Categorías / Afiliados: son la misma sección de catálogo.
   const pestanasCatalogo = (
-    <div className="flex gap-2 mb-4">
+    <div className="flex gap-2 mb-4 overflow-x-auto pb-1 [scrollbar-width:none]">
       {([
         { id: 'products', label: esEmpresa ? 'Servicios' : esAcademia ? 'Grupos' : 'Productos', icon: 'inventory_2' },
         { id: 'categories', label: 'Categorías', icon: 'category' },
+        { id: 'afiliados', label: 'Afiliados (Boga Network)', icon: 'loyalty' },
       ] as const).map((p) => (
         <button
           key={p.id}
           onClick={() => setActiveTab(p.id)}
-          className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-bold transition-colors ${activeTab === p.id ? 'bg-[var(--tienda-color)] text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-bold transition-colors whitespace-nowrap ${activeTab === p.id ? 'bg-[var(--tienda-color)] text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
         >
           <span className="material-symbols-outlined text-[18px]">{p.icon}</span>
           {p.label}
@@ -427,6 +493,39 @@ function AdminDashboard({ user }: { user: User }) {
       ))}
     </div>
   );
+
+  const productosTiendaActual = React.useMemo(() => {
+    return products.filter((p) => p.store === focusedStore);
+  }, [products, focusedStore]);
+
+  const productosAfiliadosActivos = React.useMemo(() => {
+    return productosTiendaActual.filter((p) => {
+      const m = (p.description || '').match(RE_AFILIADO);
+      return (p as any).afiliado_comision != null || !!m;
+    });
+  }, [productosTiendaActual]);
+
+  const comisionPromedio = React.useMemo(() => {
+    if (productosAfiliadosActivos.length === 0) return 15;
+    const suma = productosAfiliadosActivos.reduce((acc, p) => {
+      const m = (p.description || '').match(RE_AFILIADO);
+      const val = (p as any).afiliado_comision != null ? Number((p as any).afiliado_comision) : (m ? parseInt(m[1], 10) : 15);
+      return acc + (isNaN(val) ? 15 : val);
+    }, 0);
+    return Math.round(suma / productosAfiliadosActivos.length);
+  }, [productosAfiliadosActivos]);
+
+  const productosAfiliadosFiltrados = React.useMemo(() => {
+    return productosTiendaActual.filter((p) => {
+      const comMatch = (p.description || '').match(RE_AFILIADO);
+      const estaActivo = (p as any).afiliado_comision != null || !!comMatch;
+      if (filtroAfiliados === 'activos' && !estaActivo) return false;
+      if (filtroAfiliados === 'inactivos' && estaActivo) return false;
+      if (!busquedaAfiliados.trim()) return true;
+      const b = busquedaAfiliados.toLowerCase();
+      return p.name.toLowerCase().includes(b) || (p.category || '').toLowerCase().includes(b);
+    });
+  }, [productosTiendaActual, filtroAfiliados, busquedaAfiliados]);
   // Una empresa no tiene pedidos ni caja: el cliente cotiza por WhatsApp y no queda nada que gestionar aquí.
   const navTabs = (esEmpresa || esAcademia) ? navTabsBase.filter(t => t.id !== 'orders') : navTabsBase;
   const inicioDb = dbStores.find((s: any) => s.slug === focusedStore);
@@ -2307,14 +2406,14 @@ function AdminDashboard({ user }: { user: User }) {
         <header className={`hidden md:flex flex-col md:flex-row md:items-center justify-between gap-4 ${activeTab === 'pos' || activeTab === 'orders' ? 'mb-2' : 'mb-6'}`}>
           <div>
             <h1 className={`${activeTab === 'pos' || activeTab === 'orders' ? 'text-lg font-black' : 'text-2xl font-extrabold'} text-gray-900 tracking-tight`}>
-              {activeTab === 'inicio' ? 'Inicio' : activeTab === 'products' ? (esEmpresa ? 'Gestión de Servicios' : esAcademia ? 'Grupos y horarios' : 'Gestión de Productos') : activeTab === 'categories' ? 'Categorías' : activeTab === 'orders' ? 'Gestión de Pedidos' : activeTab === 'stores' ? 'Mis Tiendas' : activeTab === 'pos' ? 'Caja Rápida (POS)' : activeTab === 'cobros' ? 'Cobros mensuales' : 'Métricas y Rendimiento'}
+              {activeTab === 'inicio' ? 'Inicio' : activeTab === 'products' ? (esEmpresa ? 'Gestión de Servicios' : esAcademia ? 'Grupos y horarios' : 'Gestión de Productos') : activeTab === 'categories' ? 'Categorías' : activeTab === 'orders' ? 'Gestión de Pedidos' : activeTab === 'stores' ? 'Mis Tiendas' : activeTab === 'pos' ? 'Caja Rápida (POS)' : activeTab === 'cobros' ? 'Cobros mensuales' : activeTab === 'afiliados' ? 'Programa de Afiliados (Boga Network)' : 'Métricas y Rendimiento'}
               {(activeTab === 'pos' || activeTab === 'inicio') && stores[focusedStore] && (
                 <span className="ml-2 text-gray-400 font-semibold">· {stores[focusedStore].name}</span>
               )}
             </h1>
             {activeTab !== 'pos' && activeTab !== 'inicio' && (
               <p className={`text-gray-500 text-sm font-medium mt-1 ${activeTab === 'orders' ? 'hidden' : ''}`}>
-                {activeTab === 'products' ? (esEmpresa ? 'Administra los servicios de tu empresa.' : esAcademia ? 'Los grupos de tu academia: nombre, horario (una línea por día) y mensualidad opcional.' : inventarioOn ? 'Administra el inventario de tus tiendas.' : 'Administra la carta de tus tiendas.') : activeTab === 'categories' ? 'Crea, ordena y renombra las categorías de tu negocio.' : activeTab === 'orders' ? 'Gestiona los pedidos de tus clientes.' : activeTab === 'stores' ? 'Administra la información de tus sucursales.' : 'Analiza el rendimiento de tu negocio.'}
+                {activeTab === 'products' ? (esEmpresa ? 'Administra los servicios de tu empresa.' : esAcademia ? 'Los grupos de tu academia: nombre, horario (una línea por día) y mensualidad opcional.' : inventarioOn ? 'Administra el inventario de tus tiendas.' : 'Administra la carta de tus tiendas.') : activeTab === 'categories' ? 'Crea, ordena y renombra las categorías de tu negocio.' : activeTab === 'orders' ? 'Gestiona los pedidos de tus clientes.' : activeTab === 'stores' ? 'Administra la información de tus sucursales.' : activeTab === 'afiliados' ? 'Elige qué productos ofrecer a promotores de Boga Network y define su comisión desde 10%.' : 'Analiza el rendimiento de tu negocio.'}
               </p>
             )}
           </div>
@@ -3249,6 +3348,247 @@ function AdminDashboard({ user }: { user: User }) {
             alternarSilencio={alternarSilencio}
             ocupado={pedidoOcupado}
           />
+        )}
+
+        {activeTab === 'afiliados' && (
+          <div className="flex flex-col gap-6">
+            {pestanasCatalogo}
+
+            {/* Banner Informativo */}
+            <div className="bg-gradient-to-r from-teal-900 via-emerald-900 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div className="relative z-10 max-w-2xl">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-bold mb-3">
+                  <span className="material-symbols-outlined text-[15px]">verified</span>
+                  <span>Red de Promotores de Pucallpa · Boga Network</span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black tracking-tight leading-tight">
+                  Vende más con promotores de Boga Network
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed">
+                  Activa los productos que deseas promocionar y elige la comisión que pagas por cada venta concretada (desde 10%). Los promotores afiliados compartirán tus productos en sus estados de WhatsApp y redes. Solo pagas comisión cuando el cliente compra.
+                </p>
+              </div>
+
+              {/* Métricas rápidas de la tienda */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 shrink-0 relative z-10">
+                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center min-w-[100px]">
+                  <span className="text-[10px] uppercase font-bold text-slate-300 block">En Catálogo</span>
+                  <span className="text-lg font-black text-white mt-0.5 block">{productosTiendaActual.length}</span>
+                  <span className="text-[10px] text-slate-400">productos</span>
+                </div>
+                <div className="bg-emerald-500/20 backdrop-blur-md rounded-2xl p-3 border border-emerald-400/30 text-center min-w-[100px]">
+                  <span className="text-[10px] uppercase font-bold text-emerald-300 block">Activos en Red</span>
+                  <span className="text-lg font-black text-emerald-300 mt-0.5 block">{productosAfiliadosActivos.length}</span>
+                  <span className="text-[10px] text-emerald-200/80">con comisión</span>
+                </div>
+                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center min-w-[100px] col-span-2 sm:col-span-1">
+                  <span className="text-[10px] uppercase font-bold text-slate-300 block">Comisión Prom.</span>
+                  <span className="text-lg font-black text-white mt-0.5 block">
+                    {comisionPromedio > 0 ? `${comisionPromedio}%` : '15%'}
+                  </span>
+                  <span className="text-[10px] text-slate-400">por venta</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Barra de Filtros y Búsqueda */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 sm:p-4 rounded-2xl border border-gray-200 shadow-2xs">
+              <div className="relative flex-1 max-w-md">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">
+                  search
+                </span>
+                <input
+                  type="text"
+                  value={busquedaAfiliados}
+                  onChange={(e) => setBusquedaAfiliados(e.target.value)}
+                  placeholder="Buscar producto por nombre o categoría..."
+                  className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-200 text-xs font-medium focus:outline-none focus:border-emerald-500 bg-gray-50 focus:bg-white transition"
+                />
+              </div>
+
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 [scrollbar-width:none]">
+                <button
+                  type="button"
+                  onClick={() => setFiltroAfiliados('todos')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                    filtroAfiliados === 'todos'
+                      ? 'bg-gray-900 text-white shadow-2xs'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  Todos ({productosTiendaActual.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFiltroAfiliados('activos')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1 ${
+                    filtroAfiliados === 'activos'
+                      ? 'bg-emerald-600 text-white shadow-2xs'
+                      : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[14px]">loyalty</span>
+                  <span>Activos en Red ({productosAfiliadosActivos.length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFiltroAfiliados('inactivos')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                    filtroAfiliados === 'inactivos'
+                      ? 'bg-gray-900 text-white shadow-2xs'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  Sin Comisión ({productosTiendaActual.length - productosAfiliadosActivos.length})
+                </button>
+              </div>
+            </div>
+
+            {/* Listado de Productos */}
+            {productosAfiliadosFiltrados.length === 0 ? (
+              <div className="bg-white rounded-3xl border border-gray-200 p-8 sm:p-12 text-center flex flex-col items-center justify-center max-w-md mx-auto">
+                <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">inventory_2</span>
+                <p className="text-sm font-bold text-gray-700">No se encontraron productos</p>
+                <p className="text-xs text-gray-400 mt-1">Prueba cambiando el filtro o agrega productos a tu catálogo.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {productosAfiliadosFiltrados.map((prod) => {
+                  const comMatch = (prod.description || '').match(RE_AFILIADO);
+                  const comisionActual = (prod as any).afiliado_comision != null
+                    ? Number((prod as any).afiliado_comision)
+                    : (comMatch ? parseInt(comMatch[1], 10) : null);
+                  const estaActivo = comisionActual != null && comisionActual > 0;
+                  const pctSeleccionado = comisionActual || 15;
+                  const precio = Number(prod.price) || 0;
+                  const gananciaPromotor = (precio * (pctSeleccionado / 100)).toFixed(2);
+                  const ingresoTienda = (precio - (precio * (pctSeleccionado / 100))).toFixed(2);
+                  const estaGuardando = guardandoAfiliadoId === prod.id;
+                  const esGuardadoExito = guardadoExitosoId === prod.id;
+
+                  return (
+                    <div
+                      key={prod.id}
+                      className={`bg-white rounded-2xl border p-4 sm:p-5 flex flex-col justify-between gap-4 transition shadow-2xs ${
+                        estaActivo
+                          ? 'border-emerald-300 ring-2 ring-emerald-100/80'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      {/* Cabecera del Item */}
+                      <div className="flex items-start gap-3">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-gray-100 overflow-hidden shrink-0 border border-gray-100">
+                          {prod.image ? (
+                            <img
+                              src={prod.image}
+                              alt={prod.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-300">
+                              <span className="material-symbols-outlined text-2xl">image</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block truncate">
+                            {prod.category || 'General'}
+                          </span>
+                          <h4 className="text-sm font-extrabold text-gray-900 leading-snug line-clamp-2 mt-0.5" title={prod.name}>
+                            {prod.name}
+                          </h4>
+                          <span className="text-sm font-black text-gray-900 block mt-1.5">
+                            S/ {precio.toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Configuración de Afiliado */}
+                      <div className="pt-3 border-t border-gray-100 flex flex-col gap-3">
+                        {/* Toggle de Activación */}
+                        <div className="flex items-center justify-between gap-2">
+                          <label className="flex items-center gap-2 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={estaActivo}
+                              disabled={estaGuardando}
+                              onChange={(e) => {
+                                actualizarAfiliadoProducto(prod, e.target.checked, pctSeleccionado);
+                              }}
+                              className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                            />
+                            <span className="text-xs font-bold text-gray-800">
+                              {estaActivo ? 'Ofrecer a promotores' : 'Sin comisión de afiliados'}
+                            </span>
+                          </label>
+
+                          {estaGuardando && (
+                            <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                              <span className="w-2.5 h-2.5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                              Guardando...
+                            </span>
+                          )}
+                          {esGuardadoExito && (
+                            <span className="text-[10px] text-emerald-700 font-bold flex items-center gap-0.5 bg-emerald-50 px-1.5 py-0.5 rounded">
+                              <span className="material-symbols-outlined text-[13px]">check</span>
+                              Listo
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Botones de Porcentaje (Desde 10% según requisito) */}
+                        {estaActivo && (
+                          <div className="flex flex-col gap-2 pt-1 animate-in fade-in">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                              Porcentaje de comisión:
+                            </span>
+                            <div className="grid grid-cols-4 gap-1.5">
+                              {[10, 15, 20, 30].map((pct) => (
+                                <button
+                                  key={pct}
+                                  type="button"
+                                  disabled={estaGuardando}
+                                  onClick={() => actualizarAfiliadoProducto(prod, true, pct)}
+                                  className={`py-1.5 rounded-lg text-xs font-black transition cursor-pointer ${
+                                    pctSeleccionado === pct
+                                      ? 'bg-emerald-600 text-white shadow-2xs'
+                                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                                  }`}
+                                >
+                                  {pct}%
+                                </button>
+                              ))}
+                            </div>
+
+                            {/* Desglose de Ganancias */}
+                            <div className="bg-emerald-50/80 border border-emerald-100 rounded-xl p-2.5 flex items-center justify-between text-xs mt-1">
+                              <div>
+                                <span className="text-[9px] uppercase font-bold text-emerald-700 block">
+                                  Promotor gana
+                                </span>
+                                <span className="text-xs font-black text-emerald-800 block">
+                                  +S/ {gananciaPromotor}
+                                </span>
+                              </div>
+                              <div className="text-right border-l border-emerald-200/80 pl-3">
+                                <span className="text-[9px] uppercase font-bold text-gray-500 block">
+                                  Tu tienda recibe
+                                </span>
+                                <span className="text-xs font-black text-gray-900 block">
+                                  S/ {ingresoTienda}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         )}
 
         {activeTab === 'stores' && (
