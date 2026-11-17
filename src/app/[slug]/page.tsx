@@ -141,9 +141,9 @@ export default async function StorePage({ params, searchParams }: Props) {
     if (preview === 'true') {
       return (
         <>
-          <div className="bg-amber-400 text-slate-950 px-4 py-2.5 text-center text-xs font-black sticky top-0 z-50 shadow-md flex items-center justify-center gap-2">
-            <span className="material-symbols-outlined text-[16px]">visibility</span>
-            <span>MODO VISTA PREVIA: Esta tienda está desactivada (en gris). Tus clientes no pueden ver tus productos hasta que la pongas en verde.</span>
+          <div className="bg-amber-400 text-slate-950 px-3 sm:px-4 py-2 sm:py-2.5 text-center text-[11px] sm:text-xs font-black sticky top-0 z-50 shadow-md flex items-center justify-center gap-1.5 sm:gap-2">
+            <span className="material-symbols-outlined text-[15px] sm:text-[16px] shrink-0">visibility</span>
+            <span>MODO VISTA PREVIA: Esta tienda está desactivada (en gris). Tus clientes no ven tus productos hasta ponerla en verde.</span>
           </div>
           <StoreRenderer store={store!} />
         </>
@@ -155,8 +155,8 @@ export default async function StorePage({ params, searchParams }: Props) {
     const numWsp = cleanWsp.length === 9 ? `51${cleanWsp}` : cleanWsp;
 
     return (
-      <div className="min-h-screen bg-[#f9f9ff] flex flex-col items-center justify-center p-4 sm:p-6 text-center font-sans">
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl p-8 sm:p-12 max-w-md w-full flex flex-col items-center animate-in fade-in">
+      <div className="min-h-screen bg-[#f9f9ff] flex flex-col items-center justify-center p-3 sm:p-6 text-center font-sans">
+        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl p-6 sm:p-10 max-w-md w-full flex flex-col items-center animate-in fade-in">
           <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4">
             <span className="material-symbols-outlined text-4xl">storefront</span>
           </div>

@@ -744,7 +744,7 @@ export default function SuperadminNetworkPage() {
                         </div>
 
                         {/* Botones a nivel de perfil */}
-                        <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+                        <div className="flex items-center gap-2 shrink-0 self-end md:self-center flex-wrap">
                           {af.whatsapp && (
                             <a
                               href={`https://wa.me/${numWsp}?text=${encodeURIComponent(
@@ -849,7 +849,7 @@ export default function SuperadminNetworkPage() {
                                   </div>
 
                                   {/* Acciones de la tienda */}
-                                  <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                                  <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center flex-wrap">
                                     <button
                                       type="button"
                                       onClick={() => setTiendaDetalle({ tienda: t, afiliado: af })}

@@ -2250,7 +2250,7 @@ function RevendedorPanelContent() {
                           </div>
 
                           {/* Derecha: Imagen más chica */}
-                          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-slate-100 overflow-hidden shrink-0 relative border border-slate-100 shadow-2xs">
+                          <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl bg-slate-100 overflow-hidden shrink-0 relative border border-slate-100 shadow-2xs">
                             {prod.agotado && (
                               <div className="absolute top-1.5 left-1.5 z-10 bg-rose-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 shadow-xs">
                                 Agotado
