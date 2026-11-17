@@ -91,31 +91,31 @@ type TabId = 'inicio' | 'products' | 'categories' | 'orders' | 'pos' | 'metrics'
 // móvil, el menú Perfil y las tarjetas de "Gestión" del Inicio se arman TODAS
 // desde acá: así no se desincronizan ni quedan en distinto orden.
 const NAV_TABS: { id: TabId; label: string; icon: string; sub: string; inBottomBar: boolean }[] = [
-  { id: 'inicio',   label: 'Inicio',       icon: 'home',          sub: 'Resumen de tu carta',        inBottomBar: true },
-  { id: 'orders',   label: 'Pedidos',      icon: 'receipt_long',  sub: 'Gestiona los pedidos',       inBottomBar: true },
-  { id: 'pos',      label: 'Vender (POS)', icon: 'point_of_sale', sub: 'Caja rápida en el local',    inBottomBar: true },
-  { id: 'products', label: 'Productos',    icon: 'inventory_2',   sub: 'Añade o modifica ítems',     inBottomBar: true },
-  { id: 'afiliados',label: 'Afiliados',    icon: 'loyalty',       sub: 'Programa de promotores',     inBottomBar: false },
-  { id: 'metrics',  label: 'Métricas',     icon: 'bar_chart',     sub: 'Rendimiento del negocio',    inBottomBar: false },
-  { id: 'cobros',   label: 'Cobros',       icon: 'event_repeat',  sub: 'Cobros mensuales a tus clientes', inBottomBar: false },
-  { id: 'stores',   label: 'Mis Tiendas',  icon: 'store',         sub: 'Administra tus sucursales',  inBottomBar: false },
+  { id: 'inicio', label: 'Inicio', icon: 'home', sub: 'Resumen de tu carta', inBottomBar: true },
+  { id: 'orders', label: 'Pedidos', icon: 'receipt_long', sub: 'Gestiona los pedidos', inBottomBar: true },
+  { id: 'pos', label: 'Vender (POS)', icon: 'point_of_sale', sub: 'Caja rápida en el local', inBottomBar: true },
+  { id: 'products', label: 'Productos', icon: 'inventory_2', sub: 'Añade o modifica ítems', inBottomBar: true },
+  { id: 'afiliados', label: 'Afiliados', icon: 'loyalty', sub: 'Programa de promotores', inBottomBar: false },
+  { id: 'metrics', label: 'Métricas', icon: 'bar_chart', sub: 'Rendimiento del negocio', inBottomBar: false },
+  { id: 'cobros', label: 'Cobros', icon: 'event_repeat', sub: 'Cobros mensuales a tus clientes', inBottomBar: false },
+  { id: 'stores', label: 'Mis Tiendas', icon: 'store', sub: 'Administra tus sucursales', inBottomBar: false },
 ];
 
 // Métodos de pago que una carta puede aceptar. Un solo lugar: lo usan el editor
 // de tienda (qué acepta el negocio) y la caja POS (cómo se pagó esta venta).
 const PAYMENT_METHODS: { id: string; label: string; icon: string; color: string }[] = [
-  { id: 'Efectivo',      label: 'Efectivo',      icon: 'payments',       color: '#16a34a' },
-  { id: 'Yape/Plin',     label: 'Yape / Plin',   icon: 'qr_code_2',      color: '#7c3aed' },
-  { id: 'Transferencia', label: 'Transferencia', icon: 'account_balance',color: '#0ea5e9' },
-  { id: 'Visa',          label: 'Visa',          icon: 'credit_card',    color: '#1d4ed8' },
-  { id: 'Mastercard',    label: 'Mastercard',    icon: 'credit_card',    color: '#ea580c' },
+  { id: 'Efectivo', label: 'Efectivo', icon: 'payments', color: '#16a34a' },
+  { id: 'Yape/Plin', label: 'Yape / Plin', icon: 'qr_code_2', color: '#7c3aed' },
+  { id: 'Transferencia', label: 'Transferencia', icon: 'account_balance', color: '#0ea5e9' },
+  { id: 'Visa', label: 'Visa', icon: 'credit_card', color: '#1d4ed8' },
+  { id: 'Mastercard', label: 'Mastercard', icon: 'credit_card', color: '#ea580c' },
 ];
 
 // Cómo se cobró una venta en el POS. "Tarjeta" agrupa Visa/Mastercard.
 const POS_PAYMENT_METHODS: { id: 'Efectivo' | 'Yape/Plin' | 'Tarjeta'; label: string; icon: string; color: string }[] = [
-  { id: 'Efectivo',  label: 'Efectivo',    icon: 'payments',    color: '#16a34a' },
-  { id: 'Yape/Plin', label: 'Yape / Plin', icon: 'qr_code_2',   color: '#7c3aed' },
-  { id: 'Tarjeta',   label: 'Tarjeta',     icon: 'credit_card', color: '#1d4ed8' },
+  { id: 'Efectivo', label: 'Efectivo', icon: 'payments', color: '#16a34a' },
+  { id: 'Yape/Plin', label: 'Yape / Plin', icon: 'qr_code_2', color: '#7c3aed' },
+  { id: 'Tarjeta', label: 'Tarjeta', icon: 'credit_card', color: '#1d4ed8' },
 ];
 
 // Enlace de Google Maps dentro de la descripción de un terreno (ver templates/terrenos/useTerrenos.ts).
@@ -146,8 +146,8 @@ function formatDiasHorario(seleccionados: string[]): string {
   grupos.push(actual);
   const partes = grupos.map((g) =>
     g.length === 1 ? DIAS_SEMANA[g[0]]
-    : g.length === 2 ? `${DIAS_SEMANA[g[0]]} y ${DIAS_SEMANA[g[1]]}`
-    : `${DIAS_SEMANA[g[0]]} a ${DIAS_SEMANA[g[g.length - 1]]}`
+      : g.length === 2 ? `${DIAS_SEMANA[g[0]]} y ${DIAS_SEMANA[g[1]]}`
+        : `${DIAS_SEMANA[g[0]]} a ${DIAS_SEMANA[g[g.length - 1]]}`
   );
   return partes.length === 1 ? partes[0] : `${partes.slice(0, -1).join(', ')} y ${partes[partes.length - 1]}`;
 }
@@ -272,65 +272,54 @@ function AdminDashboard({ user }: { user: User }) {
   // Estados y acciones para el Programa de Afiliados (Boga Network)
   const [busquedaAfiliados, setBusquedaAfiliados] = useState('');
   const [filtroAfiliados, setFiltroAfiliados] = useState<'todos' | 'activos' | 'inactivos'>('todos');
-  const [guardandoAfiliadoId, setGuardandoAfiliadoId] = useState<string | null>(null);
-  const [guardadoExitosoId, setGuardadoExitosoId] = useState<string | null>(null);
+  const [afiliadosDraft, setAfiliadosDraft] = useState<Record<string, { activo: boolean; comision: number }>>({});
+  const [guardandoTodosAfiliados, setGuardandoTodosAfiliados] = useState(false);
+  const [afiliadosGuardadoExito, setAfiliadosGuardadoExito] = useState(false);
 
-  const actualizarAfiliadoProducto = async (prod: Product, activar: boolean, comisionPorcentaje: number = 15) => {
-    setGuardandoAfiliadoId(prod.id);
-    const pct = Math.max(10, Math.min(80, Math.round(comisionPorcentaje)));
-
-    const descLimpia = (prod.description || '').replace(RE_AFILIADO, '').trim();
-    const descNueva = activar ? `${descLimpia} [afiliado:${pct}%]`.trim() : descLimpia;
-    const comisionVal = activar ? pct : null;
-
-    setProducts((prev) =>
-      prev.map((p) => {
-        if (p.id !== prod.id) return p;
-        return {
-          ...p,
-          description: descNueva,
-          afiliado_comision: comisionVal,
-        };
-      })
-    );
-
-    try {
-      let { error } = await supabase
-        .from('products')
-        .update({
-          description: descNueva,
-          afiliado_comision: comisionVal,
-        })
-        .eq('id', prod.id);
-
-      if (error && error.message?.toLowerCase().includes('afiliado_comision')) {
-        const { error: err2 } = await supabase
-          .from('products')
-          .update({
-            description: descNueva,
-          })
-          .eq('id', prod.id);
-        if (err2) throw err2;
-      } else if (error) {
-        throw error;
-      }
-
-      if (activar && prod.store) {
-        supabase.from('stores').update({ permite_revendedores: true }).eq('slug', prod.store).then(() => {});
-      }
-
-      setGuardadoExitosoId(prod.id);
-      setTimeout(() => {
-        setGuardadoExitosoId((cur) => (cur === prod.id ? null : cur));
-      }, 2000);
-      refrescarTienda(prod.store);
-    } catch (err: any) {
-      console.error('Error al actualizar afiliado:', err);
-      alert('No se pudo guardar el cambio de afiliado: ' + (err?.message || 'Error desconocido'));
-      fetchProducts(undefined, true);
-    } finally {
-      setGuardandoAfiliadoId(null);
+  // Obtiene el estado efectivo de afiliado de un producto (desde draft o desde el producto original)
+  const getAfiliadoEstado = React.useCallback((prod: Product) => {
+    if (afiliadosDraft[prod.id] !== undefined) {
+      return afiliadosDraft[prod.id];
     }
+    const comMatch = (prod.description || '').match(RE_AFILIADO);
+    const comisionActual = (prod as any).afiliado_comision != null
+      ? Number((prod as any).afiliado_comision)
+      : (comMatch ? parseInt(comMatch[1], 10) : null);
+    return {
+      activo: comisionActual != null && comisionActual > 0,
+      comision: comisionActual || 15,
+    };
+  }, [afiliadosDraft]);
+
+  const toggleDraftAfiliado = (prod: Product, nuevoActivo: boolean) => {
+    setAfiliadosDraft((prev) => {
+      const actual = prev[prod.id] ?? getAfiliadoEstado(prod);
+      return {
+        ...prev,
+        [prod.id]: {
+          ...actual,
+          activo: nuevoActivo,
+        },
+      };
+    });
+  };
+
+  const setComisionDraftAfiliado = (prod: Product, nuevaComision: number) => {
+    setAfiliadosDraft((prev) => {
+      const actual = prev[prod.id] ?? getAfiliadoEstado(prod);
+      return {
+        ...prev,
+        [prod.id]: {
+          ...actual,
+          activo: true,
+          comision: Math.max(10, Math.min(80, Math.round(nuevaComision))),
+        },
+      };
+    });
+  };
+
+  const descartarCambiosAfiliados = () => {
+    setAfiliadosDraft({});
   };
 
   // Tiendas que este usuario administra: las que tienen su user_id en la
@@ -498,34 +487,122 @@ function AdminDashboard({ user }: { user: User }) {
     return products.filter((p) => p.store === focusedStore);
   }, [products, focusedStore]);
 
+  const cambiosPendientesAfiliados = React.useMemo(() => {
+    const dirtyIds = Object.keys(afiliadosDraft);
+    const changes: { prod: Product; activo: boolean; comision: number }[] = [];
+    for (const id of dirtyIds) {
+      const prod = products.find((p) => p.id === id);
+      if (!prod) continue;
+      const comMatch = (prod.description || '').match(RE_AFILIADO);
+      const originalCom = (prod as any).afiliado_comision != null
+        ? Number((prod as any).afiliado_comision)
+        : (comMatch ? parseInt(comMatch[1], 10) : null);
+      const originalActivo = originalCom != null && originalCom > 0;
+      const originalPct = originalCom || 15;
+
+      const draft = afiliadosDraft[id];
+      if (draft.activo !== originalActivo || (draft.activo && draft.comision !== originalPct)) {
+        changes.push({ prod, activo: draft.activo, comision: draft.comision });
+      }
+    }
+    return changes;
+  }, [afiliadosDraft, products]);
+
+  const hayCambiosAfiliados = cambiosPendientesAfiliados.length > 0;
+
+  const guardarCambiosAfiliados = async () => {
+    if (cambiosPendientesAfiliados.length === 0 || guardandoTodosAfiliados) return;
+    setGuardandoTodosAfiliados(true);
+
+    try {
+      const actualizadosMap = new Map<string, { descNueva: string; comisionVal: number | null }>();
+      cambiosPendientesAfiliados.forEach(({ prod, activo, comision }) => {
+        const descLimpia = (prod.description || '').replace(RE_AFILIADO, '').trim();
+        const descNueva = activo ? `${descLimpia} [afiliado:${comision}%]`.trim() : descLimpia;
+        const comisionVal = activo ? comision : null;
+        actualizadosMap.set(prod.id, { descNueva, comisionVal });
+      });
+
+      // Actualizar estado local inmediatamente para feedback instantáneo
+      setProducts((prev) =>
+        prev.map((p) => {
+          const act = actualizadosMap.get(p.id);
+          if (!act) return p;
+          return {
+            ...p,
+            description: act.descNueva,
+            afiliado_comision: act.comisionVal,
+          };
+        })
+      );
+
+      // Guardar en Supabase en paralelo
+      const promesas = cambiosPendientesAfiliados.map(async ({ prod }) => {
+        const act = actualizadosMap.get(prod.id)!;
+        let { error } = await supabase
+          .from('products')
+          .update({
+            description: act.descNueva,
+            afiliado_comision: act.comisionVal,
+          })
+          .eq('id', prod.id);
+
+        if (error && error.message?.toLowerCase().includes('afiliado_comision')) {
+          const { error: err2 } = await supabase
+            .from('products')
+            .update({ description: act.descNueva })
+            .eq('id', prod.id);
+          if (err2) throw err2;
+        } else if (error) {
+          throw error;
+        }
+      });
+
+      await Promise.all(promesas);
+
+      if (focusedStore) {
+        supabase.from('stores').update({ permite_revendedores: true }).eq('slug', focusedStore).then(() => { });
+        refrescarTienda(focusedStore);
+      }
+
+      setAfiliadosDraft({});
+      setAfiliadosGuardadoExito(true);
+      setTimeout(() => setAfiliadosGuardadoExito(false), 3000);
+    } catch (err: any) {
+      console.error('Error al guardar cambios de afiliados:', err);
+      alert('Error al guardar los cambios de afiliados: ' + (err?.message || 'Error desconocido'));
+      fetchProducts(undefined, true);
+    } finally {
+      setGuardandoTodosAfiliados(false);
+    }
+  };
+
   const productosAfiliadosActivos = React.useMemo(() => {
     return productosTiendaActual.filter((p) => {
-      const m = (p.description || '').match(RE_AFILIADO);
-      return (p as any).afiliado_comision != null || !!m;
+      const st = getAfiliadoEstado(p);
+      return st.activo;
     });
-  }, [productosTiendaActual]);
+  }, [productosTiendaActual, getAfiliadoEstado]);
 
   const comisionPromedio = React.useMemo(() => {
     if (productosAfiliadosActivos.length === 0) return 15;
     const suma = productosAfiliadosActivos.reduce((acc, p) => {
-      const m = (p.description || '').match(RE_AFILIADO);
-      const val = (p as any).afiliado_comision != null ? Number((p as any).afiliado_comision) : (m ? parseInt(m[1], 10) : 15);
-      return acc + (isNaN(val) ? 15 : val);
+      const st = getAfiliadoEstado(p);
+      return acc + (isNaN(st.comision) ? 15 : st.comision);
     }, 0);
     return Math.round(suma / productosAfiliadosActivos.length);
-  }, [productosAfiliadosActivos]);
+  }, [productosAfiliadosActivos, getAfiliadoEstado]);
 
   const productosAfiliadosFiltrados = React.useMemo(() => {
     return productosTiendaActual.filter((p) => {
-      const comMatch = (p.description || '').match(RE_AFILIADO);
-      const estaActivo = (p as any).afiliado_comision != null || !!comMatch;
-      if (filtroAfiliados === 'activos' && !estaActivo) return false;
-      if (filtroAfiliados === 'inactivos' && estaActivo) return false;
+      const st = getAfiliadoEstado(p);
+      if (filtroAfiliados === 'activos' && !st.activo) return false;
+      if (filtroAfiliados === 'inactivos' && st.activo) return false;
       if (!busquedaAfiliados.trim()) return true;
       const b = busquedaAfiliados.toLowerCase();
       return p.name.toLowerCase().includes(b) || (p.category || '').toLowerCase().includes(b);
     });
-  }, [productosTiendaActual, filtroAfiliados, busquedaAfiliados]);
+  }, [productosTiendaActual, filtroAfiliados, busquedaAfiliados, getAfiliadoEstado]);
   // Una empresa no tiene pedidos ni caja: el cliente cotiza por WhatsApp y no queda nada que gestionar aquí.
   const navTabs = (esEmpresa || esAcademia) ? navTabsBase.filter(t => t.id !== 'orders') : navTabsBase;
   const inicioDb = dbStores.find((s: any) => s.slug === focusedStore);
@@ -541,7 +618,7 @@ function AdminDashboard({ user }: { user: User }) {
   const [waAsesor, setWaAsesor] = useState('');
   useEffect(() => {
     let vivo = true;
-    fetch('/api/contacto').then(r => (r.ok ? r.json() : null)).then(d => { if (vivo && d?.whatsapp) setWaAsesor(d.whatsapp); }).catch(() => {});
+    fetch('/api/contacto').then(r => (r.ok ? r.json() : null)).then(d => { if (vivo && d?.whatsapp) setWaAsesor(d.whatsapp); }).catch(() => { });
     return () => { vivo = false; };
   }, []);
   useEffect(() => {
@@ -571,7 +648,7 @@ function AdminDashboard({ user }: { user: User }) {
   const inicioOrders = inicioStore ? orders.filter(o => o.store === inicioStore.slug) : [];
   const compartirCarta = async () => {
     if (typeof navigator === 'undefined') return;
-    if (navigator.share) { try { await navigator.share({ title: inicioStore?.name, url: inicioUrl }); } catch {} }
+    if (navigator.share) { try { await navigator.share({ title: inicioStore?.name, url: inicioUrl }); } catch { } }
     else if (navigator.clipboard) { await navigator.clipboard.writeText(inicioUrl); alert('Link copiado: ' + inicioUrl); }
   };
 
@@ -1012,7 +1089,7 @@ function AdminDashboard({ user }: { user: User }) {
 
       if (logo) {
         const t = ajustarImagen(logo, 24, 24);
-        try { doc.addImage(logo.data, 'JPEG', (W - t.w) / 2, y, t.w, t.h); } catch {}
+        try { doc.addImage(logo.data, 'JPEG', (W - t.w) / 2, y, t.w, t.h); } catch { }
         y += t.h + 3;
       }
       txt(storeName, { size: 12, bold: true, align: 'center' });
@@ -1182,15 +1259,15 @@ function AdminDashboard({ user }: { user: User }) {
       const [logoSubido, heroSubido] = await Promise.all([
         storeLogoFile
           ? uploadFile(storeLogoFile, `store-assets/${editingStoreSlug}`).catch((err) => {
-              console.error('Error subiendo logo:', err);
-              return null;
-            })
+            console.error('Error subiendo logo:', err);
+            return null;
+          })
           : null,
         storeHeroFile
           ? uploadFile(storeHeroFile, `store-assets/${editingStoreSlug}`).catch((err) => {
-              console.error('Error subiendo portada:', err);
-              return null;
-            })
+            console.error('Error subiendo portada:', err);
+            return null;
+          })
           : null,
       ]);
       if (logoSubido) logoUrl = logoSubido;
@@ -1658,8 +1735,8 @@ function AdminDashboard({ user }: { user: User }) {
       const camposAfiliado = newProduct.afiliado
         ? { afiliado_comision: Number(newProduct.afiliadoComision) || 15 }
         : (productoPrevio as any)?.afiliado_comision != null
-        ? { afiliado_comision: null }
-        : {};
+          ? { afiliado_comision: null }
+          : {};
 
       // Tope de productos del plan: se avisa acá con un mensaje claro (la base también lo hace cumplir).
       if (!editingProductId) {
@@ -1845,7 +1922,7 @@ function AdminDashboard({ user }: { user: User }) {
       // justo después de guardar, ya no ve la copia vieja.
       await refrescarTienda(tiendaGuardada);
       fetchProducts(undefined, true);
-      
+
     } catch (error: any) {
       console.error('Error saving product:', error);
       alert('Hubo un error al guardar: ' + error.message);
@@ -2189,7 +2266,7 @@ function AdminDashboard({ user }: { user: User }) {
         const t = ajustarImagen(logo, 40, 20);
         doc.setFillColor(255, 255, 255);
         doc.roundedRect(14, 17 - t.h / 2 - 2, t.w + 4, t.h + 4, 2, 2, 'F');
-        try { doc.addImage(logo.data, 'JPEG', 16, 17 - t.h / 2, t.w, t.h); } catch {}
+        try { doc.addImage(logo.data, 'JPEG', 16, 17 - t.h / 2, t.w, t.h); } catch { }
         textoX = 14 + t.w + 4 + 6;
       }
       doc.setTextColor(255, 255, 255);
@@ -2238,7 +2315,7 @@ function AdminDashboard({ user }: { user: User }) {
               const img = imagesMap[catProducts[data.row.index].id];
               if (img) {
                 const t = ajustarImagen(img, 16, 16);
-                try { doc.addImage(img.data, 'JPEG', data.cell.x + 3 + (16 - t.w) / 2, data.cell.y + 2 + (16 - t.h) / 2, t.w, t.h); } catch {}
+                try { doc.addImage(img.data, 'JPEG', data.cell.x + 3 + (16 - t.w) / 2, data.cell.y + 2 + (16 - t.h) / 2, t.w, t.h); } catch { }
               }
             }
           },
@@ -2303,7 +2380,7 @@ function AdminDashboard({ user }: { user: User }) {
           ))}
 
           {/* Static Install Button */}
-          <button 
+          <button
             onClick={() => {
               if (typeof window !== 'undefined') {
                 localStorage.removeItem('bogadash_pwa_stats');
@@ -2462,18 +2539,16 @@ function AdminDashboard({ user }: { user: User }) {
                         setDbStores(prev => prev.map((s: any) => s.slug === selectedStore ? { ...s, permite_revendedores: nuevoEstado } : s));
                       }
                     }}
-                    className={`flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-md font-bold text-xs border transition-all cursor-pointer ${
-                      (dbStores.find((s: any) => s.slug === selectedStore)?.permite_revendedores === true || selectedStore === 'delva')
+                    className={`flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-md font-bold text-xs border transition-all cursor-pointer ${(dbStores.find((s: any) => s.slug === selectedStore)?.permite_revendedores === true || selectedStore === 'delva')
                         ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
                         : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                    }`}
+                      }`}
                     title="Permitir que revendedores de BogaHub vendan los productos de esta tienda"
                   >
-                    <span className={`w-2 h-2 rounded-full ${
-                      (dbStores.find((s: any) => s.slug === selectedStore)?.permite_revendedores === true || selectedStore === 'delva')
+                    <span className={`w-2 h-2 rounded-full ${(dbStores.find((s: any) => s.slug === selectedStore)?.permite_revendedores === true || selectedStore === 'delva')
                         ? 'bg-emerald-500 animate-pulse'
                         : 'bg-gray-400'
-                    }`} />
+                      }`} />
                     <span>
                       {(dbStores.find((s: any) => s.slug === selectedStore)?.permite_revendedores === true || selectedStore === 'delva')
                         ? 'Compartiendo con revendedores'
@@ -2576,207 +2651,207 @@ function AdminDashboard({ user }: { user: User }) {
           const titulo = 'text-[11px] font-extrabold uppercase tracking-wider text-gray-400 mb-2 px-1';
 
           return (
-          <div className="max-w-md md:max-w-2xl lg:max-w-5xl mx-auto flex flex-col gap-4 pb-24 md:pb-4">
-            {/* Tu tienda: logo, selector, enlace y el interruptor "activa" */}
-            <div className="rounded-xl p-3.5 text-white shadow-sm flex items-center gap-3" style={{ background: inicioStore.theme?.primary || 'var(--tienda-color)' }}>
-              <div className="w-10 h-10 rounded-full bg-white/15 border border-white/25 overflow-hidden flex items-center justify-center shrink-0">
-                {inicioStore.logoImage
-                  ? <img src={inicioStore.logoImage} alt={inicioStore.name} className="w-full h-full object-cover" />
-                  : <span className="material-symbols-outlined text-white text-[20px]">storefront</span>}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-white/70 text-[11px] font-semibold leading-none">Hola{inicioNombre ? `, ${inicioNombre}` : ''}</p>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <select
-                    value={selectedStore === 'all' ? inicioStore.slug : selectedStore}
-                    onChange={(e) => setSelectedStore(e.target.value)}
-                    className="max-w-full bg-transparent text-white font-black text-base leading-tight truncate focus:outline-none cursor-pointer appearance-none"
+            <div className="max-w-md md:max-w-2xl lg:max-w-5xl mx-auto flex flex-col gap-4 pb-24 md:pb-4">
+              {/* Tu tienda: logo, selector, enlace y el interruptor "activa" */}
+              <div className="rounded-xl p-3.5 text-white shadow-sm flex items-center gap-3" style={{ background: inicioStore.theme?.primary || 'var(--tienda-color)' }}>
+                <div className="w-10 h-10 rounded-full bg-white/15 border border-white/25 overflow-hidden flex items-center justify-center shrink-0">
+                  {inicioStore.logoImage
+                    ? <img src={inicioStore.logoImage} alt={inicioStore.name} className="w-full h-full object-cover" />
+                    : <span className="material-symbols-outlined text-white text-[20px]">storefront</span>}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-white/70 text-[11px] font-semibold leading-none">Hola{inicioNombre ? `, ${inicioNombre}` : ''}</p>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <select
+                      value={selectedStore === 'all' ? inicioStore.slug : selectedStore}
+                      onChange={(e) => setSelectedStore(e.target.value)}
+                      className="max-w-full bg-transparent text-white font-black text-base leading-tight truncate focus:outline-none cursor-pointer appearance-none"
+                    >
+                      {Object.values(stores).map(s => (
+                        <option key={s.slug} value={s.slug} className="text-gray-900">{s.name}</option>
+                      ))}
+                    </select>
+                    {Object.keys(stores).length > 1 && <span className="material-symbols-outlined text-white/70 text-[18px] shrink-0">unfold_more</span>}
+                  </div>
+                  <p className="text-white/70 text-[11px] truncate">{inicioUrl.replace(/^https?:\/\//, '')}</p>
+                </div>
+                <div className="flex flex-col items-center gap-1.5 shrink-0">
+                  <button
+                    onClick={() => toggleStoreActive(inicioStore.slug, !inicioActiva)}
+                    disabled={togglingActive}
+                    title={inicioActiva ? 'Carta activa — recibe pedidos' : 'Carta inactiva'}
+                    className={`relative w-11 h-6 rounded-full transition-colors ${inicioActiva ? 'bg-[#25D366]' : 'bg-white/30'} disabled:opacity-60`}
+                    aria-pressed={inicioActiva}
                   >
-                    {Object.values(stores).map(s => (
-                      <option key={s.slug} value={s.slug} className="text-gray-900">{s.name}</option>
-                    ))}
-                  </select>
-                  {Object.keys(stores).length > 1 && <span className="material-symbols-outlined text-white/70 text-[18px] shrink-0">unfold_more</span>}
+                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${inicioActiva ? 'translate-x-5' : ''}`} />
+                  </button>
+                  <span className="text-white/90 text-[10px] font-bold">{inicioActiva ? 'Abierta' : 'Cerrada'}</span>
                 </div>
-                <p className="text-white/70 text-[11px] truncate">{inicioUrl.replace(/^https?:\/\//, '')}</p>
               </div>
-              <div className="flex flex-col items-center gap-1.5 shrink-0">
-                <button
-                  onClick={() => toggleStoreActive(inicioStore.slug, !inicioActiva)}
-                  disabled={togglingActive}
-                  title={inicioActiva ? 'Carta activa — recibe pedidos' : 'Carta inactiva'}
-                  className={`relative w-11 h-6 rounded-full transition-colors ${inicioActiva ? 'bg-[#25D366]' : 'bg-white/30'} disabled:opacity-60`}
-                  aria-pressed={inicioActiva}
-                >
-                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${inicioActiva ? 'translate-x-5' : ''}`} />
-                </button>
-                <span className="text-white/90 text-[10px] font-bold">{inicioActiva ? 'Abierta' : 'Cerrada'}</span>
-              </div>
-            </div>
 
-            {/* Acceso directo a la tienda: misma pestaña, así en la app instalada se puede volver con "atrás" */}
-            <a href={inicioUrl} className="flex items-center justify-center gap-2 bg-white border-2 border-[var(--tienda-color)] text-[var(--tienda-color)] rounded-xl py-3 font-extrabold text-sm shadow-sm hover:bg-[var(--tienda-color)]/5 active:scale-[0.99] transition">
-              <span className="material-symbols-outlined text-[20px]">storefront</span>
-              {esEmpresa ? 'Ver mi página' : 'Ver mi tienda'}
-            </a>
+              {/* Acceso directo a la tienda: misma pestaña, así en la app instalada se puede volver con "atrás" */}
+              <a href={inicioUrl} className="flex items-center justify-center gap-2 bg-white border-2 border-[var(--tienda-color)] text-[var(--tienda-color)] rounded-xl py-3 font-extrabold text-sm shadow-sm hover:bg-[var(--tienda-color)]/5 active:scale-[0.99] transition">
+                <span className="material-symbols-outlined text-[20px]">storefront</span>
+                {esEmpresa ? 'Ver mi página' : 'Ver mi tienda'}
+              </a>
 
-            {/* Pantalla ancha: dos columnas (lo de hoy a la izquierda; completar y configurar a la derecha).
+              {/* Pantalla ancha: dos columnas (lo de hoy a la izquierda; completar y configurar a la derecha).
                 En celular y tablet es una sola columna en el mismo orden. */}
-            <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-5 lg:items-start">
-            <div className="flex flex-col gap-4">
-            {/* Hoy: lo que importa de un vistazo (una empresa no tiene ventas ni pedidos que mostrar) */}
-            {!esEmpresa && (<>
-            <div>
-              <p className={titulo}>Hoy</p>
-              <div className="grid grid-cols-3 gap-2.5">
-                <div className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm">
-                  <p className="text-[11px] font-semibold text-gray-400">Ventas</p>
-                  <p className="text-xl font-black text-gray-900 leading-tight mt-1">S/ {ventasHoy.toFixed(2)}</p>
-                  <p className="text-[10px] font-semibold text-gray-400 mt-1.5">Mes: S/ {ventasMes.toFixed(2)}</p>
-                </div>
-                <div className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm">
-                  <p className="text-[11px] font-semibold text-gray-400">Pedidos</p>
-                  <p className="text-xl font-black text-gray-900 leading-tight mt-1">{deHoy.length}</p>
-                  <p className="text-[10px] font-semibold text-gray-400 mt-1.5">Mes: {deMes.length}</p>
-                </div>
-                <button
-                  onClick={() => setActiveTab('orders')}
-                  className={`rounded-xl p-3 shadow-sm text-left border transition-colors ${pendientes.length > 0 ? 'bg-[var(--tienda-color)] border-[var(--tienda-color)] text-white' : 'bg-white border-gray-100 text-gray-900'}`}
-                >
-                  <p className={`text-[11px] font-semibold ${pendientes.length > 0 ? 'text-white/80' : 'text-gray-400'}`}>Por atender</p>
-                  <p className="text-xl font-black leading-tight mt-1">{pendientes.length}</p>
-                </button>
-              </div>
-            </div>
+              <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-5 lg:items-start">
+                <div className="flex flex-col gap-4">
+                  {/* Hoy: lo que importa de un vistazo (una empresa no tiene ventas ni pedidos que mostrar) */}
+                  {!esEmpresa && (<>
+                    <div>
+                      <p className={titulo}>Hoy</p>
+                      <div className="grid grid-cols-3 gap-2.5">
+                        <div className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm">
+                          <p className="text-[11px] font-semibold text-gray-400">Ventas</p>
+                          <p className="text-xl font-black text-gray-900 leading-tight mt-1">S/ {ventasHoy.toFixed(2)}</p>
+                          <p className="text-[10px] font-semibold text-gray-400 mt-1.5">Mes: S/ {ventasMes.toFixed(2)}</p>
+                        </div>
+                        <div className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm">
+                          <p className="text-[11px] font-semibold text-gray-400">Pedidos</p>
+                          <p className="text-xl font-black text-gray-900 leading-tight mt-1">{deHoy.length}</p>
+                          <p className="text-[10px] font-semibold text-gray-400 mt-1.5">Mes: {deMes.length}</p>
+                        </div>
+                        <button
+                          onClick={() => setActiveTab('orders')}
+                          className={`rounded-xl p-3 shadow-sm text-left border transition-colors ${pendientes.length > 0 ? 'bg-[var(--tienda-color)] border-[var(--tienda-color)] text-white' : 'bg-white border-gray-100 text-gray-900'}`}
+                        >
+                          <p className={`text-[11px] font-semibold ${pendientes.length > 0 ? 'text-white/80' : 'text-gray-400'}`}>Por atender</p>
+                          <p className="text-xl font-black leading-tight mt-1">{pendientes.length}</p>
+                        </button>
+                      </div>
+                    </div>
 
-            {/* Pedidos por atender (los más recientes), o aviso de que está todo al día */}
-            <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
-              {pendientes.length === 0 ? (
-                <div className="px-4 py-4 flex items-center gap-3">
-                  <span className="w-9 h-9 rounded-lg bg-green-50 text-green-600 flex items-center justify-center shrink-0"><span className="material-symbols-outlined text-[20px]">task_alt</span></span>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-bold text-gray-900 text-sm">Todo al día</p>
-                    <p className="text-[11px] text-gray-500">No tienes pedidos por atender. Cuando llegue uno, aparece aquí.</p>
-                    {otrasPendientes.length > 0 && (
-                      <p className="text-[11px] font-semibold text-orange-700 mt-1">
-                        Pendientes en otras tiendas: {otrasPendientes.map(x => `${x.nombre} (${x.n})`).join(', ')}
-                      </p>
-                    )}
+                    {/* Pedidos por atender (los más recientes), o aviso de que está todo al día */}
+                    <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+                      {pendientes.length === 0 ? (
+                        <div className="px-4 py-4 flex items-center gap-3">
+                          <span className="w-9 h-9 rounded-lg bg-green-50 text-green-600 flex items-center justify-center shrink-0"><span className="material-symbols-outlined text-[20px]">task_alt</span></span>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-bold text-gray-900 text-sm">Todo al día</p>
+                            <p className="text-[11px] text-gray-500">No tienes pedidos por atender. Cuando llegue uno, aparece aquí.</p>
+                            {otrasPendientes.length > 0 && (
+                              <p className="text-[11px] font-semibold text-orange-700 mt-1">
+                                Pendientes en otras tiendas: {otrasPendientes.map(x => `${x.nombre} (${x.n})`).join(', ')}
+                              </p>
+                            )}
+                          </div>
+                          <button onClick={() => { if (otrasPendientes.length > 0) setSelectedStore('all'); setActiveTab('orders'); }} className="text-xs font-bold text-[var(--tienda-color)] shrink-0">Ver pedidos</button>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="px-4 pt-3 pb-1 flex items-center justify-between">
+                            <p className="font-bold text-gray-900 text-sm">Pedidos por atender</p>
+                            <button onClick={() => setActiveTab('orders')} className="text-xs font-bold text-[var(--tienda-color)]">Ver todos ({pendientes.length})</button>
+                          </div>
+                          <div className="divide-y divide-gray-100">
+                            {pendientes.slice(0, 3).map(o => (
+                              <button key={o.id} onClick={() => setActiveTab('orders')} className={fila}>
+                                <span className="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0"><span className="material-symbols-outlined text-[20px]">schedule</span></span>
+                                <span className="min-w-0 flex-1">
+                                  <span className="block font-bold text-gray-900 text-sm truncate">{o.customer_name || 'Cliente'}</span>
+                                  <span className="block text-[11px] text-gray-500">{new Date(o.created_at).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Lima' })} · {o.customer_address || 'Recojo'}</span>
+                                </span>
+                                <span className="font-black text-gray-900 text-sm shrink-0">S/ {(Number(o.total_amount) || 0).toFixed(2)}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                  </>)}
+
+                  {/* Acciones rápidas: lo que más se hace, a un toque */}
+                  <div>
+                    <p className={titulo}>Acciones rápidas</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { icon: 'add_circle', t: esEmpresa ? 'Agregar servicio' : esAcademia ? 'Agregar grupo' : 'Agregar producto', s: esEmpresa ? 'Súbelo con su foto y descripción' : 'Súbelo con su foto y precio', on: () => { setActiveTab('products'); setSelectedStore(inicioStore.slug); resetForm(); setNewProduct(prev => ({ ...prev, store: inicioStore.slug })); setIsModalOpen(true); } },
+                        ...(posOn ? [{ icon: 'point_of_sale', t: 'Nueva venta', s: 'Caja rápida en el local', on: () => setActiveTab('pos') }] : []),
+                        ...(moduloAcademia(inicioDb?.modulos) ? [{ icon: 'school', t: 'Alumnos', s: 'Carnet con QR y asistencia', on: () => router.push('/admin/alumnos') }] : []),
+                        ...((inicioStore?.template === 'sweetkittynails' || inicioStore?.template === 'belleza') ? [{ icon: 'event_available', t: 'Reservas', s: 'Citas que piden tus clientas', on: () => router.push('/admin/reservas') }] : []),
+                        { icon: 'share', t: esEmpresa ? 'Compartir mi página' : 'Compartir mi tienda', s: 'Envía tu enlace por WhatsApp', on: compartirCarta },
+                        { icon: 'qr_code_2', t: 'Código QR', s: 'Para tus mesas o tu puerta', on: () => { setSelectedStore(inicioStore.slug); setIsQRModalOpen(true); } },
+                        { icon: 'notifications', t: 'Notificaciones', s: 'Avisa a tus clientes de una oferta', on: () => { window.location.href = '/admin/notificaciones'; } },
+                      ].map(a => (
+                        <button key={a.t} onClick={a.on} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm text-left hover:shadow-md hover:border-gray-200 transition-all flex flex-col gap-2 active:scale-[0.98]">
+                          <span className={icono}><span className="material-symbols-outlined text-[20px]">{a.icon}</span></span>
+                          <span className="font-bold text-gray-900 text-sm leading-tight">{a.t}</span>
+                          <span className="text-[11px] text-gray-500 leading-snug">{a.s}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <button onClick={() => { if (otrasPendientes.length > 0) setSelectedStore('all'); setActiveTab('orders'); }} className="text-xs font-bold text-[var(--tienda-color)] shrink-0">Ver pedidos</button>
+
                 </div>
-              ) : (
-                <>
-                  <div className="px-4 pt-3 pb-1 flex items-center justify-between">
-                    <p className="font-bold text-gray-900 text-sm">Pedidos por atender</p>
-                    <button onClick={() => setActiveTab('orders')} className="text-xs font-bold text-[var(--tienda-color)]">Ver todos ({pendientes.length})</button>
-                  </div>
-                  <div className="divide-y divide-gray-100">
-                    {pendientes.slice(0, 3).map(o => (
-                      <button key={o.id} onClick={() => setActiveTab('orders')} className={fila}>
-                        <span className="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0"><span className="material-symbols-outlined text-[20px]">schedule</span></span>
+                <div className="flex flex-col gap-4">
+                  {/* Completa tu tienda: solo mientras falte algo */}
+                  {faltan.length > 0 && (
+                    <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+                      <div className="px-4 pt-3 pb-3">
+                        <div className="flex items-center justify-between">
+                          <p className="font-bold text-gray-900 text-sm">{esEmpresa ? 'Completa tu página' : 'Completa tu tienda'}</p>
+                          <span className="text-xs font-bold text-gray-500">{hechas} de {tareas.length}</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-gray-100 mt-2 overflow-hidden">
+                          <div className="h-full rounded-full bg-[var(--tienda-color)] transition-all" style={{ width: `${(hechas / tareas.length) * 100}%` }} />
+                        </div>
+                      </div>
+                      <div className="divide-y divide-gray-100 border-t border-gray-100">
+                        {faltan.map(tarea => (
+                          <button key={tarea.titulo} onClick={tarea.ir} className={fila}>
+                            <span className={icono}><span className="material-symbols-outlined text-[20px]">{tarea.icon}</span></span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block font-bold text-gray-900 text-sm leading-tight">{tarea.titulo}</span>
+                              <span className="block text-[11px] text-gray-500 leading-snug">{tarea.sub}</span>
+                            </span>
+                            <span className="material-symbols-outlined text-gray-300 text-[20px] shrink-0">chevron_right</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Configuración y herramientas: lista compacta (lo de gestión ya está en el menú, no se repite) */}
+                  <div>
+                    <p className={titulo}>{esEmpresa ? 'Configura tu página' : 'Configura tu tienda'}</p>
+                    <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden divide-y divide-gray-100">
+                      {[
+                        { icon: 'palette', t: esEmpresa ? 'Personaliza tu página' : 'Personaliza tu tienda', s: esEmpresa ? 'Logo, portada, perfil de la empresa, horario y contacto' : 'Logo, portada, datos, horario y pagos', on: () => openStoreEditor(inicioStore.slug) },
+                        { icon: 'category', t: 'Categorías', s: 'Crea y ordena las categorías de tu negocio', on: () => setActiveTab('categories') },
+                        { icon: 'notifications', t: 'Avisos de pedidos', s: 'WhatsApp y correo donde los recibes', on: () => openStoreEditor(inicioStore.slug, 'avisos') },
+                        { icon: 'campaign', t: 'Notificaciones a clientes', s: 'Envía avisos a quienes instalaron tu app', on: () => router.push('/admin/notificaciones') },
+                        { icon: 'picture_as_pdf', t: 'Exportar catálogo en PDF', s: 'Descarga tu carta para compartirla', on: () => { setSelectedStore(inicioStore.slug); setIsPDFModalOpen(true); } },
+                        { icon: 'store', t: 'Mis Tiendas', s: 'Todas tus sucursales, una por una', on: () => setActiveTab('stores') },
+                      ].map(f => (
+                        <button key={f.t} onClick={f.on} className={fila}>
+                          <span className={icono}><span className="material-symbols-outlined text-[20px]">{f.icon}</span></span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block font-bold text-gray-900 text-sm leading-tight">{f.t}</span>
+                            <span className="block text-[11px] text-gray-500 leading-snug">{f.s}</span>
+                          </span>
+                          <span className="material-symbols-outlined text-gray-300 text-[20px] shrink-0">chevron_right</span>
+                        </button>
+                      ))}
+                      <a href={inicioUrl} target="_blank" rel="noopener noreferrer" className={fila}>
+                        <span className={icono}><span className="material-symbols-outlined text-[20px]">open_in_new</span></span>
                         <span className="min-w-0 flex-1">
-                          <span className="block font-bold text-gray-900 text-sm truncate">{o.customer_name || 'Cliente'}</span>
-                          <span className="block text-[11px] text-gray-500">{new Date(o.created_at).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Lima' })} · {o.customer_address || 'Recojo'}</span>
+                          <span className="block font-bold text-gray-900 text-sm leading-tight">{esEmpresa ? 'Ver mi página' : 'Ver mi tienda'}</span>
+                          <span className="block text-[11px] text-gray-500 leading-snug">Tal como la ven tus clientes</span>
                         </span>
-                        <span className="font-black text-gray-900 text-sm shrink-0">S/ {(Number(o.total_amount) || 0).toFixed(2)}</span>
-                      </button>
-                    ))}
+                        <span className="material-symbols-outlined text-gray-300 text-[20px] shrink-0">chevron_right</span>
+                      </a>
+                    </div>
                   </div>
-                </>
-              )}
-            </div>
 
-            </>)}
-
-            {/* Acciones rápidas: lo que más se hace, a un toque */}
-            <div>
-              <p className={titulo}>Acciones rápidas</p>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { icon: 'add_circle', t: esEmpresa ? 'Agregar servicio' : esAcademia ? 'Agregar grupo' : 'Agregar producto', s: esEmpresa ? 'Súbelo con su foto y descripción' : 'Súbelo con su foto y precio', on: () => { setActiveTab('products'); setSelectedStore(inicioStore.slug); resetForm(); setNewProduct(prev => ({ ...prev, store: inicioStore.slug })); setIsModalOpen(true); } },
-                  ...(posOn ? [{ icon: 'point_of_sale', t: 'Nueva venta', s: 'Caja rápida en el local', on: () => setActiveTab('pos') }] : []),
-                  ...(moduloAcademia(inicioDb?.modulos) ? [{ icon: 'school', t: 'Alumnos', s: 'Carnet con QR y asistencia', on: () => router.push('/admin/alumnos') }] : []),
-                  ...((inicioStore?.template === 'sweetkittynails' || inicioStore?.template === 'belleza') ? [{ icon: 'event_available', t: 'Reservas', s: 'Citas que piden tus clientas', on: () => router.push('/admin/reservas') }] : []),
-                  { icon: 'share', t: esEmpresa ? 'Compartir mi página' : 'Compartir mi tienda', s: 'Envía tu enlace por WhatsApp', on: compartirCarta },
-                  { icon: 'qr_code_2', t: 'Código QR', s: 'Para tus mesas o tu puerta', on: () => { setSelectedStore(inicioStore.slug); setIsQRModalOpen(true); } },
-                  { icon: 'notifications', t: 'Notificaciones', s: 'Avisa a tus clientes de una oferta', on: () => { window.location.href = '/admin/notificaciones'; } },
-                ].map(a => (
-                  <button key={a.t} onClick={a.on} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm text-left hover:shadow-md hover:border-gray-200 transition-all flex flex-col gap-2 active:scale-[0.98]">
-                    <span className={icono}><span className="material-symbols-outlined text-[20px]">{a.icon}</span></span>
-                    <span className="font-bold text-gray-900 text-sm leading-tight">{a.t}</span>
-                    <span className="text-[11px] text-gray-500 leading-snug">{a.s}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            </div>
-            <div className="flex flex-col gap-4">
-            {/* Completa tu tienda: solo mientras falte algo */}
-            {faltan.length > 0 && (
-              <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
-                <div className="px-4 pt-3 pb-3">
-                  <div className="flex items-center justify-between">
-                    <p className="font-bold text-gray-900 text-sm">{esEmpresa ? 'Completa tu página' : 'Completa tu tienda'}</p>
-                    <span className="text-xs font-bold text-gray-500">{hechas} de {tareas.length}</span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-gray-100 mt-2 overflow-hidden">
-                    <div className="h-full rounded-full bg-[var(--tienda-color)] transition-all" style={{ width: `${(hechas / tareas.length) * 100}%` }} />
-                  </div>
-                </div>
-                <div className="divide-y divide-gray-100 border-t border-gray-100">
-                  {faltan.map(tarea => (
-                    <button key={tarea.titulo} onClick={tarea.ir} className={fila}>
-                      <span className={icono}><span className="material-symbols-outlined text-[20px]">{tarea.icon}</span></span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block font-bold text-gray-900 text-sm leading-tight">{tarea.titulo}</span>
-                        <span className="block text-[11px] text-gray-500 leading-snug">{tarea.sub}</span>
-                      </span>
-                      <span className="material-symbols-outlined text-gray-300 text-[20px] shrink-0">chevron_right</span>
-                    </button>
-                  ))}
+                  {/* Tu plan: nivel, cuánto paga y hasta cuándo (solo si tiene costo o fecha de pago) */}
+                  <MiPlan slug={focusedStore} modulos={inicioDb?.modulos} subdominioActivo={inicioDb?.subdominio_activo} plan={inicioDb?.plan} />
                 </div>
               </div>
-            )}
-
-            {/* Configuración y herramientas: lista compacta (lo de gestión ya está en el menú, no se repite) */}
-            <div>
-              <p className={titulo}>{esEmpresa ? 'Configura tu página' : 'Configura tu tienda'}</p>
-              <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden divide-y divide-gray-100">
-                {[
-                  { icon: 'palette', t: esEmpresa ? 'Personaliza tu página' : 'Personaliza tu tienda', s: esEmpresa ? 'Logo, portada, perfil de la empresa, horario y contacto' : 'Logo, portada, datos, horario y pagos', on: () => openStoreEditor(inicioStore.slug) },
-                  { icon: 'category', t: 'Categorías', s: 'Crea y ordena las categorías de tu negocio', on: () => setActiveTab('categories') },
-                  { icon: 'notifications', t: 'Avisos de pedidos', s: 'WhatsApp y correo donde los recibes', on: () => openStoreEditor(inicioStore.slug, 'avisos') },
-                  { icon: 'campaign', t: 'Notificaciones a clientes', s: 'Envía avisos a quienes instalaron tu app', on: () => router.push('/admin/notificaciones') },
-                  { icon: 'picture_as_pdf', t: 'Exportar catálogo en PDF', s: 'Descarga tu carta para compartirla', on: () => { setSelectedStore(inicioStore.slug); setIsPDFModalOpen(true); } },
-                  { icon: 'store', t: 'Mis Tiendas', s: 'Todas tus sucursales, una por una', on: () => setActiveTab('stores') },
-                ].map(f => (
-                  <button key={f.t} onClick={f.on} className={fila}>
-                    <span className={icono}><span className="material-symbols-outlined text-[20px]">{f.icon}</span></span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block font-bold text-gray-900 text-sm leading-tight">{f.t}</span>
-                      <span className="block text-[11px] text-gray-500 leading-snug">{f.s}</span>
-                    </span>
-                    <span className="material-symbols-outlined text-gray-300 text-[20px] shrink-0">chevron_right</span>
-                  </button>
-                ))}
-                <a href={inicioUrl} target="_blank" rel="noopener noreferrer" className={fila}>
-                  <span className={icono}><span className="material-symbols-outlined text-[20px]">open_in_new</span></span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block font-bold text-gray-900 text-sm leading-tight">{esEmpresa ? 'Ver mi página' : 'Ver mi tienda'}</span>
-                    <span className="block text-[11px] text-gray-500 leading-snug">Tal como la ven tus clientes</span>
-                  </span>
-                  <span className="material-symbols-outlined text-gray-300 text-[20px] shrink-0">chevron_right</span>
-                </a>
-              </div>
             </div>
-
-            {/* Tu plan: nivel, cuánto paga y hasta cuándo (solo si tiene costo o fecha de pago) */}
-            <MiPlan slug={focusedStore} modulos={inicioDb?.modulos} subdominioActivo={inicioDb?.subdominio_activo} plan={inicioDb?.plan} />
-            </div>
-            </div>
-          </div>
           );
         })()}
 
@@ -2785,32 +2860,30 @@ function AdminDashboard({ user }: { user: User }) {
             {pestanasCatalogo}
             {/* Store Selector Global for Dashboard */}
             {Object.keys(stores).length > 1 && (
-            <div className="md:hidden flex gap-2 overflow-x-auto hide-scrollbar pb-2 mb-4" style={{ scrollbarWidth: 'none' }}>
-              <button
-                onClick={() => setSelectedStore('all')}
-                className={`px-4 py-2 rounded-md text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-2 ${
-                  selectedStore === 'all' 
-                    ? 'bg-[var(--tienda-color)] text-white shadow-md' 
-                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[18px]">grid_view</span>
-                Todas las tiendas
-              </button>
-              {Object.values(stores).map((store) => (
+              <div className="md:hidden flex gap-2 overflow-x-auto hide-scrollbar pb-2 mb-4" style={{ scrollbarWidth: 'none' }}>
                 <button
-                  key={store.slug}
-                  onClick={() => setSelectedStore(store.slug)}
-                  className={`px-4 py-2 rounded-md text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-2 border ${
-                    selectedStore === store.slug 
-                      ? 'bg-[var(--tienda-color)] text-white border-[var(--tienda-color)] shadow-md' 
-                      : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200'
-                  }`}
+                  onClick={() => setSelectedStore('all')}
+                  className={`px-4 py-2 rounded-md text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-2 ${selectedStore === 'all'
+                      ? 'bg-[var(--tienda-color)] text-white shadow-md'
+                      : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                    }`}
                 >
-                  {store.name}
+                  <span className="material-symbols-outlined text-[18px]">grid_view</span>
+                  Todas las tiendas
                 </button>
-              ))}
-            </div>
+                {Object.values(stores).map((store) => (
+                  <button
+                    key={store.slug}
+                    onClick={() => setSelectedStore(store.slug)}
+                    className={`px-4 py-2 rounded-md text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-2 border ${selectedStore === store.slug
+                        ? 'bg-[var(--tienda-color)] text-white border-[var(--tienda-color)] shadow-md'
+                        : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200'
+                      }`}
+                  >
+                    {store.name}
+                  </button>
+                ))}
+              </div>
             )}
 
             {/* Stats Row */}
@@ -2820,11 +2893,11 @@ function AdminDashboard({ user }: { user: User }) {
               const normCat = (c: string) => (c || '').trim().toLowerCase();
               // Sin repetidos por mayúsculas o espacios ("Relojes" y "relojes " son la misma categoría).
               const availableCategories = Array.from(new Map(storeFiltered.filter((p) => normCat(p.category)).map((p) => [normCat(p.category), p.category.trim()] as const)).values());
-              
+
               const filtradosBase = storeFiltered.filter(p => {
-                const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                                      p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                      (p.subcategory || '').toLowerCase().includes(searchQuery.toLowerCase());
+                const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  (p.subcategory || '').toLowerCase().includes(searchQuery.toLowerCase());
                 const matchesCategory = selectedFilterCategory === 'all' || (selectedFilterCategory === '__sin__' ? sinCategoria(p) : normCat(p.category) === normCat(selectedFilterCategory));
                 return matchesSearch && matchesCategory;
               });
@@ -2834,15 +2907,15 @@ function AdminDashboard({ user }: { user: User }) {
               const filtrados = filtradosBase.filter(p => (isNaN(pMin) || p.price >= pMin) && (isNaN(pMax) || p.price <= pMax) && (filtroEstado === 'all' || (filtroEstado === 'Agotado' ? p.status === 'Agotado' && p.stock === 0 : filtroEstado === 'Desactivado' ? p.status === 'Agotado' && p.stock !== 0 : p.status === filtroEstado)));
               const ordenados = tablaOrden
                 ? [...filtrados].sort((a, b) => {
-                    const f = tablaOrden.dir === 'asc' ? 1 : -1;
-                    switch (tablaOrden.col) {
-                      case 'nombre': return f * a.name.localeCompare(b.name, 'es', { sensitivity: 'base' });
-                      case 'categoria': return f * (a.category || '').localeCompare(b.category || '', 'es', { sensitivity: 'base' });
-                      case 'stock': return f * ((a.stock || 0) - (b.stock || 0));
-                      case 'estado': return f * (a.status || '').localeCompare(b.status || '', 'es');
-                      default: return f * ((a.price || 0) - (b.price || 0));
-                    }
-                  })
+                  const f = tablaOrden.dir === 'asc' ? 1 : -1;
+                  switch (tablaOrden.col) {
+                    case 'nombre': return f * a.name.localeCompare(b.name, 'es', { sensitivity: 'base' });
+                    case 'categoria': return f * (a.category || '').localeCompare(b.category || '', 'es', { sensitivity: 'base' });
+                    case 'stock': return f * ((a.stock || 0) - (b.stock || 0));
+                    case 'estado': return f * (a.status || '').localeCompare(b.status || '', 'es');
+                    default: return f * ((a.price || 0) - (b.price || 0));
+                  }
+                })
                 : filtrados;
               const totalPaginas = Math.max(1, Math.ceil(ordenados.length / tablaTamano));
               const paginaActual = Math.min(tablaPagina, totalPaginas);
@@ -2932,47 +3005,44 @@ function AdminDashboard({ user }: { user: User }) {
                       <div className="flex flex-col md:flex-row md:items-center gap-3">
                         <div className="relative w-full md:w-96 shrink-0">
                           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
-                          <input 
-                            type="text" 
+                          <input
+                            type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Buscar nombre o categoría..." 
+                            placeholder="Buscar nombre o categoría..."
                             className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm font-medium focus:outline-none focus:ring-1 focus:ring-black focus:border-black transition-all"
                           />
                         </div>
                         <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1 md:pb-0" style={{ scrollbarWidth: 'none' }}>
-                          <button 
+                          <button
                             onClick={() => setSelectedFilterCategory('all')}
-                            className={`px-4 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition-colors uppercase tracking-wider border ${
-                              selectedFilterCategory === 'all' 
-                                ? 'bg-[var(--tienda-color)] text-white border-transparent' 
+                            className={`px-4 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition-colors uppercase tracking-wider border ${selectedFilterCategory === 'all'
+                                ? 'bg-[var(--tienda-color)] text-white border-transparent'
                                 : 'bg-transparent text-gray-600 border-gray-200 hover:bg-gray-50'
-                            }`}
+                              }`}
                           >
                             Todos
                           </button>
                           {storeFiltered.some(sinCategoria) && (
                             <button
                               onClick={() => setSelectedFilterCategory('__sin__')}
-                              className={`px-4 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap uppercase tracking-wider transition-colors border flex items-center gap-1 ${
-                                selectedFilterCategory === '__sin__'
+                              className={`px-4 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap uppercase tracking-wider transition-colors border flex items-center gap-1 ${selectedFilterCategory === '__sin__'
                                   ? 'bg-amber-500 text-white border-transparent'
                                   : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
-                              }`}
+                                }`}
                             >
                               <span className="material-symbols-outlined text-[14px]">warning</span>
                               Sin categoría ({storeFiltered.filter(sinCategoria).length})
                             </button>
                           )}
                           {availableCategories.map(cat => (
-                            <button 
+                            <button
                               key={cat}
                               onClick={() => setSelectedFilterCategory(cat)}
-                              className={`px-4 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap uppercase tracking-wider transition-colors border ${
-                                selectedFilterCategory === cat 
-                                  ? 'bg-[var(--tienda-color)] text-white border-transparent' 
+                              className={`px-4 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap uppercase tracking-wider transition-colors border ${selectedFilterCategory === cat
+                                  ? 'bg-[var(--tienda-color)] text-white border-transparent'
                                   : 'bg-transparent text-gray-600 border-gray-200 hover:bg-gray-50'
-                              }`}
+                                }`}
                             >
                               {cat}
                             </button>
@@ -3015,292 +3085,292 @@ function AdminDashboard({ user }: { user: User }) {
                         )}
                       </div>
                     </div>
-                
-                <div className="overflow-x-auto">
-                  {isLoading ? (
-                    <div className="p-8 text-center text-gray-400">esEmpresa ? 'Cargando servicios...' : 'Cargando productos...'</div>
-                  ) : filteredProducts.length === 0 ? (
-                    <div className="p-12 flex flex-col items-center justify-center text-center">
-                      <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                        <span className="material-symbols-outlined text-3xl text-gray-400">inventory_2</span>
-                      </div>
-                      <h3 className="text-lg font-bold text-gray-900 mb-1">{esEmpresa ? 'No hay servicios' : 'No hay productos'}</h3>
-                      <p className="text-gray-500 text-sm max-w-sm">{esEmpresa ? 'No se encontraron servicios para esta tienda. Empieza añadiendo el primero.' : 'No se encontraron productos para esta tienda. Empieza añadiendo el primero.'}</p>
-                      <button 
-                        onClick={() => { resetForm(); setIsModalOpen(true); }}
-                        className="mt-6 px-4 py-2 bg-[var(--tienda-color)] text-white font-semibold rounded-lg hover:bg-[#8f0f0b] transition-colors"
-                      >
-                        Añadir Producto
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      {/* Desktop Table View */}
-                      <div className="hidden md:block">
-                        <table className="w-full text-left border-collapse min-w-[800px]">
-                          <thead>
-                            <tr className="bg-[#f8f9fa] text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-100">
-                              <th className="p-3 font-bold w-1/3" aria-sort={tablaOrden?.col === 'nombre' ? (tablaOrden.dir === 'asc' ? 'ascending' : 'descending') : 'none'}>
-                                <button type="button" onClick={() => alternarOrden('nombre')} className={`uppercase tracking-wider inline-flex items-center gap-1 hover:text-black transition-colors ${tablaOrden?.col === 'nombre' ? 'text-black' : ''}`}>
-                                  {esEmpresa ? 'Servicio' : 'Producto'}<span className={tablaOrden?.col === 'nombre' ? '' : 'opacity-40'}>{flecha('nombre')}</span>
-                                </button>
-                              </th>
-                              {selectedStore === 'all' && <th className="p-3 font-bold">Tienda</th>}
-                              {thOrden('categoria', 'Categoría')}
-                              {inventarioOn && thOrden('stock', 'Stock')}
-                              {thOrden('estado', 'Estado')}
-                              {thOrden('precio', 'Precio')}
-                              <th className="p-3 font-bold text-right">Acciones</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {filteredProducts.map((p) => (
-                              <tr key={p.id} className={`group border-b border-gray-50 hover:bg-gray-50/50 transition-colors ${p.status === 'Agotado' ? 'opacity-70' : ''}`}>
-                                <td className="p-3">
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
-                                      {p.image ? (
-                                        <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
-                                      ) : (
-                                        <div className="w-full h-full flex items-center justify-center">
-                                          <span className="material-symbols-outlined text-gray-400">image</span>
+
+                    <div className="overflow-x-auto">
+                      {isLoading ? (
+                        <div className="p-8 text-center text-gray-400">esEmpresa ? 'Cargando servicios...' : 'Cargando productos...'</div>
+                      ) : filteredProducts.length === 0 ? (
+                        <div className="p-12 flex flex-col items-center justify-center text-center">
+                          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                            <span className="material-symbols-outlined text-3xl text-gray-400">inventory_2</span>
+                          </div>
+                          <h3 className="text-lg font-bold text-gray-900 mb-1">{esEmpresa ? 'No hay servicios' : 'No hay productos'}</h3>
+                          <p className="text-gray-500 text-sm max-w-sm">{esEmpresa ? 'No se encontraron servicios para esta tienda. Empieza añadiendo el primero.' : 'No se encontraron productos para esta tienda. Empieza añadiendo el primero.'}</p>
+                          <button
+                            onClick={() => { resetForm(); setIsModalOpen(true); }}
+                            className="mt-6 px-4 py-2 bg-[var(--tienda-color)] text-white font-semibold rounded-lg hover:bg-[#8f0f0b] transition-colors"
+                          >
+                            Añadir Producto
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          {/* Desktop Table View */}
+                          <div className="hidden md:block">
+                            <table className="w-full text-left border-collapse min-w-[800px]">
+                              <thead>
+                                <tr className="bg-[#f8f9fa] text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-100">
+                                  <th className="p-3 font-bold w-1/3" aria-sort={tablaOrden?.col === 'nombre' ? (tablaOrden.dir === 'asc' ? 'ascending' : 'descending') : 'none'}>
+                                    <button type="button" onClick={() => alternarOrden('nombre')} className={`uppercase tracking-wider inline-flex items-center gap-1 hover:text-black transition-colors ${tablaOrden?.col === 'nombre' ? 'text-black' : ''}`}>
+                                      {esEmpresa ? 'Servicio' : 'Producto'}<span className={tablaOrden?.col === 'nombre' ? '' : 'opacity-40'}>{flecha('nombre')}</span>
+                                    </button>
+                                  </th>
+                                  {selectedStore === 'all' && <th className="p-3 font-bold">Tienda</th>}
+                                  {thOrden('categoria', 'Categoría')}
+                                  {inventarioOn && thOrden('stock', 'Stock')}
+                                  {thOrden('estado', 'Estado')}
+                                  {thOrden('precio', 'Precio')}
+                                  <th className="p-3 font-bold text-right">Acciones</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {filteredProducts.map((p) => (
+                                  <tr key={p.id} className={`group border-b border-gray-50 hover:bg-gray-50/50 transition-colors ${p.status === 'Agotado' ? 'opacity-70' : ''}`}>
+                                    <td className="p-3">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
+                                          {p.image ? (
+                                            <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                                          ) : (
+                                            <div className="w-full h-full flex items-center justify-center">
+                                              <span className="material-symbols-outlined text-gray-400">image</span>
+                                            </div>
+                                          )}
                                         </div>
-                                      )}
-                                    </div>
-                                    <div>
-                                      <p className="font-bold text-gray-900 flex items-center gap-1.5 flex-wrap">
-                                        {p.name}
-                                        {tiendaConReservas(p.store) && p.reserva === true && (
-                                          <span className="bg-orange-100 text-orange-800 text-[10px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase">🗓️ Reserva</span>
-                                        )}
-                                        {p.es_combo && (
-                                          <span className="bg-amber-100 text-amber-800 text-[10px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase">
-                                            🔥 Combo
-                                          </span>
-                                        )}
-                                        {(() => {
-                                          const comMatch = (p.description || '').match(RE_AFILIADO);
-                                          const pct = (p as any).afiliado_comision ?? (comMatch ? comMatch[1] : null);
-                                          if (!pct) return null;
-                                          return (
-                                            <span className="bg-sky-100 text-sky-800 text-[10px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase flex items-center gap-0.5">
-                                              <span className="material-symbols-outlined text-[12px]">loyalty</span>
-                                              Afiliado {pct}%
+                                        <div>
+                                          <p className="font-bold text-gray-900 flex items-center gap-1.5 flex-wrap">
+                                            {p.name}
+                                            {tiendaConReservas(p.store) && p.reserva === true && (
+                                              <span className="bg-orange-100 text-orange-800 text-[10px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase">🗓️ Reserva</span>
+                                            )}
+                                            {p.es_combo && (
+                                              <span className="bg-amber-100 text-amber-800 text-[10px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase">
+                                                🔥 Combo
+                                              </span>
+                                            )}
+                                            {(() => {
+                                              const comMatch = (p.description || '').match(RE_AFILIADO);
+                                              const pct = (p as any).afiliado_comision ?? (comMatch ? comMatch[1] : null);
+                                              if (!pct) return null;
+                                              return (
+                                                <span className="bg-sky-100 text-sky-800 text-[10px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase flex items-center gap-0.5">
+                                                  <span className="material-symbols-outlined text-[12px]">loyalty</span>
+                                                  Afiliado {pct}%
+                                                </span>
+                                              );
+                                            })()}
+                                          </p>
+                                          {p.subcategory && (
+                                            <span className="text-xs font-medium text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-100 mt-1 inline-block">
+                                              {p.subcategory}
                                             </span>
-                                          );
-                                        })()}
-                                      </p>
-                                      {p.subcategory && (
-                                        <span className="text-xs font-medium text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-100 mt-1 inline-block">
-                                          {p.subcategory}
+                                          )}
+                                        </div>
+                                      </div>
+                                    </td>
+                                    {selectedStore === 'all' && (
+                                      <td className="p-3">
+                                        <span className="text-sm font-medium text-gray-600">{stores[p.store]?.name || p.store}</span>
+                                      </td>
+                                    )}
+                                    <td className="p-3">
+                                      {sinCategoria(p) ? (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200" title="Este producto no tiene una categoría válida: a tus clientes solo les sale en Todos">
+                                          <span className="material-symbols-outlined text-[13px]">warning</span>
+                                          Sin categoría
+                                        </span>
+                                      ) : (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
+                                          {p.category}
                                         </span>
                                       )}
+                                    </td>
+                                    {inventarioOn && <td className="p-3">{celdaStock(p)}</td>}
+                                    <td className="p-3">
+                                      <label className="flex items-center cursor-pointer">
+                                        <div className="relative">
+                                          <input type="checkbox" className="sr-only" checked={p.status === 'Activo'} onChange={() => toggleStatus(p.id, p.status)} />
+                                          <div className={`block w-10 h-6 rounded-full transition-colors ${p.status === 'Activo' ? 'bg-[#25D366]' : 'bg-red-500'}`}></div>
+                                          <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${p.status === 'Activo' ? 'translate-x-4' : ''}`}></div>
+                                        </div>
+                                        <span className={`ml-2 text-xs font-bold ${p.status === 'Activo' ? 'text-green-700' : 'text-red-600'}`}>{p.status === 'Activo' ? 'ACTIVO' : p.stock === 0 ? 'AGOTADO' : 'DESACTIVADO'}</span>
+                                      </label>
+                                    </td>
+                                    <td className="p-3 font-bold text-gray-900">
+                                      {precioOfertaVigente(p) !== null ? (
+                                        <>
+                                          S/ {precioOfertaVigente(p)!.toFixed(2)}
+                                          <span className="block text-[11px] font-medium text-gray-400 line-through">S/ {Number(p.price).toFixed(2)}</span>
+                                        </>
+                                      ) : (
+                                        <>S/ {Number(p.price).toFixed(2)}</>
+                                      )}
+                                    </td>
+                                    <td className="p-3 text-right">
+                                      {/* Solo se ocultan hasta pasar el mouse donde HAY mouse; en tablet/celular (sin hover) siempre se ven. */}
+                                      <div className="flex items-center justify-end gap-1">
+                                        <button
+                                          onClick={() => toggleReserva(p)}
+                                          className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${tiendaConReservas(p.store) && p.reserva === true ? 'text-orange-600 bg-orange-50 hover:bg-orange-100' : 'text-gray-400 hover:text-orange-600 hover:bg-orange-50'}`}
+                                          title={tiendaConReservas(p.store) ? (p.reserva === true ? 'Quitar de reserva (vuelve a automático)' : 'Marcar como reserva (siempre se reserva por WhatsApp)') : 'Poner en reserva (te ofrece prender las reservas)'}
+                                        >
+                                          <span className="material-symbols-outlined text-[18px]">event_available</span>
+                                        </button>
+                                        <button
+                                          onClick={() => handleEdit(p)}
+                                          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition-colors"
+                                          title="Editar"
+                                        >
+                                          <span className="material-symbols-outlined text-[18px]">edit</span>
+                                        </button>
+                                        <button
+                                          onClick={() => handleDuplicate(p)}
+                                          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition-colors"
+                                          title="Duplicar (mismo producto en otro color o sabor)"
+                                        >
+                                          <span className="material-symbols-outlined text-[18px]">content_copy</span>
+                                        </button>
+                                        <button
+                                          onClick={() => handleDelete(p.id, p.name)}
+                                          disabled={isDeleting === p.id}
+                                          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-[#8c0009] hover:bg-[#8c0009]/8 rounded-lg transition-colors"
+                                          title="Eliminar"
+                                        >
+                                          <span className={`material-symbols-outlined text-[18px] ${isDeleting === p.id ? 'animate-spin' : ''}`}>
+                                            {isDeleting === p.id ? 'refresh' : 'delete'}
+                                          </span>
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+
+                          {/* Mobile Cards View */}
+                          <div className="md:hidden flex flex-col p-4 gap-3">
+                            {filteredProducts.map((p) => (
+                              <div key={p.id} className={`bg-white border border-gray-100 rounded-md p-3 flex gap-4 shadow-sm relative ${p.status === 'Agotado' ? 'opacity-70 grayscale-[0.3]' : ''}`}>
+                                {/* Image */}
+                                <div className="w-20 h-20 rounded-md bg-gray-50 border border-gray-100 overflow-hidden shrink-0">
+                                  {p.image ? (
+                                    <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                      <span className="material-symbols-outlined text-gray-400">image</span>
                                     </div>
+                                  )}
+                                </div>
+
+                                {/* Details */}
+                                <div className="flex flex-col flex-1 min-w-0 py-0.5">
+                                  <div className="flex justify-between items-start gap-2">
+                                    <h3 className="font-bold text-gray-900 text-[13px] leading-tight line-clamp-2">
+                                      {p.es_combo && (
+                                        <span className="bg-amber-100 text-amber-800 text-[9px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase mr-1 inline-block align-middle">
+                                          🔥 Combo
+                                        </span>
+                                      )}
+                                      {(() => {
+                                        const comMatch = (p.description || '').match(RE_AFILIADO);
+                                        const pct = (p as any).afiliado_comision ?? (comMatch ? comMatch[1] : null);
+                                        if (!pct) return null;
+                                        return (
+                                          <span className="bg-sky-100 text-sky-800 text-[9px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase mr-1 inline-flex items-center gap-0.5 align-middle">
+                                            <span className="material-symbols-outlined text-[11px]">loyalty</span>
+                                            Afiliado {pct}%
+                                          </span>
+                                        );
+                                      })()}
+                                      {p.name}
+                                    </h3>
+                                    <span className="font-bold text-primary text-[13px] whitespace-nowrap">
+                                      {precioOfertaVigente(p) !== null ? (
+                                        <>S/ {precioOfertaVigente(p)!.toFixed(2)} <span className="text-[10px] font-medium text-gray-400 line-through">S/ {Number(p.price).toFixed(2)}</span></>
+                                      ) : (
+                                        <>S/ {Number(p.price).toFixed(2)}</>
+                                      )}
+                                    </span>
                                   </div>
-                                </td>
-                                {selectedStore === 'all' && (
-                                  <td className="p-3">
-                                    <span className="text-sm font-medium text-gray-600">{stores[p.store]?.name || p.store}</span>
-                                  </td>
-                                )}
-                                <td className="p-3">
-                                  {sinCategoria(p) ? (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200" title="Este producto no tiene una categoría válida: a tus clientes solo les sale en Todos">
-                                      <span className="material-symbols-outlined text-[13px]">warning</span>
-                                      Sin categoría
-                                    </span>
-                                  ) : (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
-                                      {p.category}
-                                    </span>
-                                  )}
-                                </td>
-                                {inventarioOn && <td className="p-3">{celdaStock(p)}</td>}
-                                <td className="p-3">
-                                  <label className="flex items-center cursor-pointer">
-                                    <div className="relative">
-                                      <input type="checkbox" className="sr-only" checked={p.status === 'Activo'} onChange={() => toggleStatus(p.id, p.status)} />
-                                      <div className={`block w-10 h-6 rounded-full transition-colors ${p.status === 'Activo' ? 'bg-[#25D366]' : 'bg-red-500'}`}></div>
-                                      <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${p.status === 'Activo' ? 'translate-x-4' : ''}`}></div>
-                                    </div>
-                                    <span className={`ml-2 text-xs font-bold ${p.status === 'Activo' ? 'text-green-700' : 'text-red-600'}`}>{p.status === 'Activo' ? 'ACTIVO' : p.stock === 0 ? 'AGOTADO' : 'DESACTIVADO'}</span>
-                                  </label>
-                                </td>
-                                <td className="p-3 font-bold text-gray-900">
-                                  {precioOfertaVigente(p) !== null ? (
-                                    <>
-                                      S/ {precioOfertaVigente(p)!.toFixed(2)}
-                                      <span className="block text-[11px] font-medium text-gray-400 line-through">S/ {Number(p.price).toFixed(2)}</span>
-                                    </>
-                                  ) : (
-                                    <>S/ {Number(p.price).toFixed(2)}</>
-                                  )}
-                                </td>
-                                <td className="p-3 text-right">
-                                  {/* Solo se ocultan hasta pasar el mouse donde HAY mouse; en tablet/celular (sin hover) siempre se ven. */}
-                                  <div className="flex items-center justify-end gap-1">
-                                    <button
-                                      onClick={() => toggleReserva(p)}
-                                      className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${tiendaConReservas(p.store) && p.reserva === true ? 'text-orange-600 bg-orange-50 hover:bg-orange-100' : 'text-gray-400 hover:text-orange-600 hover:bg-orange-50'}`}
-                                      title={tiendaConReservas(p.store) ? (p.reserva === true ? 'Quitar de reserva (vuelve a automático)' : 'Marcar como reserva (siempre se reserva por WhatsApp)') : 'Poner en reserva (te ofrece prender las reservas)'}
-                                    >
-                                      <span className="material-symbols-outlined text-[18px]">event_available</span>
-                                    </button>
-                                    <button 
-                                      onClick={() => handleEdit(p)}
-                                      className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition-colors"
-                                      title="Editar"
-                                    >
-                                      <span className="material-symbols-outlined text-[18px]">edit</span>
-                                    </button>
-                                    <button
-                                      onClick={() => handleDuplicate(p)}
-                                      className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition-colors"
-                                      title="Duplicar (mismo producto en otro color o sabor)"
-                                    >
-                                      <span className="material-symbols-outlined text-[18px]">content_copy</span>
-                                    </button>
-                                    <button 
-                                      onClick={() => handleDelete(p.id, p.name)}
-                                      disabled={isDeleting === p.id}
-                                      className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-[#8c0009] hover:bg-[#8c0009]/8 rounded-lg transition-colors"
-                                      title="Eliminar"
-                                    >
-                                      <span className={`material-symbols-outlined text-[18px] ${isDeleting === p.id ? 'animate-spin' : ''}`}>
-                                        {isDeleting === p.id ? 'refresh' : 'delete'}
+
+                                  <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                                    {sinCategoria(p) ? (
+                                      <span className="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 uppercase font-bold tracking-wider flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-[12px]">warning</span>
+                                        Sin categoría
                                       </span>
-                                    </button>
+                                    ) : (
+                                      <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider truncate">
+                                        {p.category} {p.subcategory ? `• ${p.subcategory}` : ''}
+                                      </span>
+                                    )}
+                                    {tiendaTiene(p.store, 'inventario') && (
+                                      <>
+                                        <span className="text-[10px] text-gray-300">•</span>
+                                        {celdaStock(p)}
+                                      </>
+                                    )}
                                   </div>
-                                </td>
-                              </tr>
+
+                                  <div className="flex justify-between items-center mt-auto">
+                                    <label className="flex items-center cursor-pointer" onClick={(e) => e.stopPropagation()}>
+                                      <div className="relative">
+                                        <input type="checkbox" className="sr-only" checked={p.status === 'Activo'} onChange={() => toggleStatus(p.id, p.status)} />
+                                        <div className={`block w-8 h-5 rounded-full transition-colors ${p.status === 'Activo' ? 'bg-[#25D366]' : 'bg-red-500'}`}></div>
+                                        <div className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform ${p.status === 'Activo' ? 'translate-x-3' : ''}`}></div>
+                                      </div>
+                                      <span className={`ml-1.5 text-[9px] font-extrabold ${p.status === 'Activo' ? 'text-green-700' : 'text-red-600'}`}>
+                                        {p.status === 'Activo' ? 'ACTIVO' : p.stock === 0 ? 'AGOTADO' : 'DESACTIVADO'}
+                                      </span>
+                                    </label>
+
+                                    <div className="flex items-center gap-1">
+                                      <button onClick={() => toggleReserva(p)} title={p.reserva === true && tiendaConReservas(p.store) ? 'Quitar de reserva' : 'Poner en reserva'} className={`p-1.5 rounded-lg transition-colors ${tiendaConReservas(p.store) && p.reserva === true ? 'text-orange-600 bg-orange-50' : 'text-gray-400 hover:text-orange-600 hover:bg-orange-50'}`}>
+                                        <span className="material-symbols-outlined text-[16px]">event_available</span>
+                                      </button>
+                                      <button onClick={() => handleEdit(p)} className="p-1.5 text-gray-400 hover:text-black rounded-lg hover:bg-gray-100 transition-colors">
+                                        <span className="material-symbols-outlined text-[16px]">edit</span>
+                                      </button>
+                                      <button onClick={() => handleDuplicate(p)} title="Duplicar" className="p-1.5 text-gray-400 hover:text-black rounded-lg hover:bg-gray-100 transition-colors">
+                                        <span className="material-symbols-outlined text-[16px]">content_copy</span>
+                                      </button>
+                                      <button onClick={() => handleDelete(p.id, p.name)} className="p-1.5 text-gray-400 hover:text-[#8c0009] rounded-lg hover:bg-[#8c0009]/8 transition-colors">
+                                        <span className={`material-symbols-outlined text-[16px] ${isDeleting === p.id ? 'animate-spin' : ''}`}>
+                                          {isDeleting === p.id ? 'refresh' : 'delete'}
+                                        </span>
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
                             ))}
-                          </tbody>
-                        </table>
-                      </div>
+                          </div>
 
-                      {/* Mobile Cards View */}
-                      <div className="md:hidden flex flex-col p-4 gap-3">
-                        {filteredProducts.map((p) => (
-                          <div key={p.id} className={`bg-white border border-gray-100 rounded-md p-3 flex gap-4 shadow-sm relative ${p.status === 'Agotado' ? 'opacity-70 grayscale-[0.3]' : ''}`}>
-                            {/* Image */}
-                            <div className="w-20 h-20 rounded-md bg-gray-50 border border-gray-100 overflow-hidden shrink-0">
-                              {p.image ? (
-                                <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                  <span className="material-symbols-outlined text-gray-400">image</span>
-                                </div>
-                              )}
-                            </div>
-                            
-                            {/* Details */}
-                            <div className="flex flex-col flex-1 min-w-0 py-0.5">
-                              <div className="flex justify-between items-start gap-2">
-                                <h3 className="font-bold text-gray-900 text-[13px] leading-tight line-clamp-2">
-                                  {p.es_combo && (
-                                    <span className="bg-amber-100 text-amber-800 text-[9px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase mr-1 inline-block align-middle">
-                                      🔥 Combo
-                                    </span>
-                                  )}
-                                  {(() => {
-                                    const comMatch = (p.description || '').match(RE_AFILIADO);
-                                    const pct = (p as any).afiliado_comision ?? (comMatch ? comMatch[1] : null);
-                                    if (!pct) return null;
-                                    return (
-                                      <span className="bg-sky-100 text-sky-800 text-[9px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase mr-1 inline-flex items-center gap-0.5 align-middle">
-                                        <span className="material-symbols-outlined text-[11px]">loyalty</span>
-                                        Afiliado {pct}%
-                                      </span>
-                                    );
-                                  })()}
-                                  {p.name}
-                                </h3>
-                                <span className="font-bold text-primary text-[13px] whitespace-nowrap">
-                                  {precioOfertaVigente(p) !== null ? (
-                                    <>S/ {precioOfertaVigente(p)!.toFixed(2)} <span className="text-[10px] font-medium text-gray-400 line-through">S/ {Number(p.price).toFixed(2)}</span></>
-                                  ) : (
-                                    <>S/ {Number(p.price).toFixed(2)}</>
-                                  )}
-                                </span>
-                              </div>
-                              
-                              <div className="flex items-center gap-1.5 flex-wrap mt-1">
-                                {sinCategoria(p) ? (
-                                  <span className="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 uppercase font-bold tracking-wider flex items-center gap-1">
-                                    <span className="material-symbols-outlined text-[12px]">warning</span>
-                                    Sin categoría
-                                  </span>
-                                ) : (
-                                  <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider truncate">
-                                    {p.category} {p.subcategory ? `• ${p.subcategory}` : ''}
-                                  </span>
-                                )}
-                                {tiendaTiene(p.store, 'inventario') && (
-                                  <>
-                                    <span className="text-[10px] text-gray-300">•</span>
-                                    {celdaStock(p)}
-                                  </>
-                                )}
-                              </div>
-                              
-                              <div className="flex justify-between items-center mt-auto">
-                                <label className="flex items-center cursor-pointer" onClick={(e) => e.stopPropagation()}>
-                                  <div className="relative">
-                                    <input type="checkbox" className="sr-only" checked={p.status === 'Activo'} onChange={() => toggleStatus(p.id, p.status)} />
-                                    <div className={`block w-8 h-5 rounded-full transition-colors ${p.status === 'Activo' ? 'bg-[#25D366]' : 'bg-red-500'}`}></div>
-                                    <div className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform ${p.status === 'Activo' ? 'translate-x-3' : ''}`}></div>
-                                  </div>
-                                  <span className={`ml-1.5 text-[9px] font-extrabold ${p.status === 'Activo' ? 'text-green-700' : 'text-red-600'}`}>
-                                    {p.status === 'Activo' ? 'ACTIVO' : p.stock === 0 ? 'AGOTADO' : 'DESACTIVADO'}
-                                  </span>
+                          {/* Páginas */}
+                          {(ordenados.length > 20 || totalPaginas > 1) && (
+                            <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-gray-100 text-xs font-semibold text-gray-600">
+                              <span>Mostrando {desde + 1}–{Math.min(desde + tablaTamano, ordenados.length)} de {ordenados.length}</span>
+                              <div className="flex items-center gap-2">
+                                <label className="flex items-center gap-1.5">
+                                  Por página
+                                  <select value={tablaTamano} onChange={(e) => setTablaTamano(Number(e.target.value))} className="px-2 py-1 bg-gray-50 border border-gray-200 rounded-md cursor-pointer">
+                                    {[20, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
+                                  </select>
                                 </label>
-                                
-                                <div className="flex items-center gap-1">
-                                  <button onClick={() => toggleReserva(p)} title={p.reserva === true && tiendaConReservas(p.store) ? 'Quitar de reserva' : 'Poner en reserva'} className={`p-1.5 rounded-lg transition-colors ${tiendaConReservas(p.store) && p.reserva === true ? 'text-orange-600 bg-orange-50' : 'text-gray-400 hover:text-orange-600 hover:bg-orange-50'}`}>
-                                    <span className="material-symbols-outlined text-[16px]">event_available</span>
-                                  </button>
-                                  <button onClick={() => handleEdit(p)} className="p-1.5 text-gray-400 hover:text-black rounded-lg hover:bg-gray-100 transition-colors">
-                                    <span className="material-symbols-outlined text-[16px]">edit</span>
-                                  </button>
-                                  <button onClick={() => handleDuplicate(p)} title="Duplicar" className="p-1.5 text-gray-400 hover:text-black rounded-lg hover:bg-gray-100 transition-colors">
-                                    <span className="material-symbols-outlined text-[16px]">content_copy</span>
-                                  </button>
-                                  <button onClick={() => handleDelete(p.id, p.name)} className="p-1.5 text-gray-400 hover:text-[#8c0009] rounded-lg hover:bg-[#8c0009]/8 transition-colors">
-                                    <span className={`material-symbols-outlined text-[16px] ${isDeleting === p.id ? 'animate-spin' : ''}`}>
-                                      {isDeleting === p.id ? 'refresh' : 'delete'}
-                                    </span>
-                                  </button>
-                                </div>
+                                <button type="button" disabled={paginaActual <= 1} onClick={() => setTablaPagina(paginaActual - 1)} className="px-3 py-1.5 rounded-md border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">← Anterior</button>
+                                <span className="px-1">Página {paginaActual} de {totalPaginas}</span>
+                                <button type="button" disabled={paginaActual >= totalPaginas} onClick={() => setTablaPagina(paginaActual + 1)} className="px-3 py-1.5 rounded-md border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">Siguiente →</button>
                               </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Páginas */}
-                      {(ordenados.length > 20 || totalPaginas > 1) && (
-                        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-gray-100 text-xs font-semibold text-gray-600">
-                          <span>Mostrando {desde + 1}–{Math.min(desde + tablaTamano, ordenados.length)} de {ordenados.length}</span>
-                          <div className="flex items-center gap-2">
-                            <label className="flex items-center gap-1.5">
-                              Por página
-                              <select value={tablaTamano} onChange={(e) => setTablaTamano(Number(e.target.value))} className="px-2 py-1 bg-gray-50 border border-gray-200 rounded-md cursor-pointer">
-                                {[20, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
-                              </select>
-                            </label>
-                            <button type="button" disabled={paginaActual <= 1} onClick={() => setTablaPagina(paginaActual - 1)} className="px-3 py-1.5 rounded-md border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">← Anterior</button>
-                            <span className="px-1">Página {paginaActual} de {totalPaginas}</span>
-                            <button type="button" disabled={paginaActual >= totalPaginas} onClick={() => setTablaPagina(paginaActual + 1)} className="px-3 py-1.5 rounded-md border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">Siguiente →</button>
-                          </div>
-                        </div>
+                          )}
+                        </>
                       )}
-                    </>
-                  )}
-                </div>
-              </div>
-            </>
-          );
-        })()}
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
           </>
         )}
 
@@ -3311,26 +3381,26 @@ function AdminDashboard({ user }: { user: User }) {
           products.filter((p) => p.store === tienda.slug).forEach((p) => { conteos[p.category] = (conteos[p.category] || 0) + 1; });
           return (
             <>
-            {pestanasCatalogo}
-            <CategoriasTab
-              key={tienda.slug}
-              nombreTienda={tienda.name}
-              categorias={tienda.categories}
-              conteos={conteos}
-              onGuardar={async (lista) => {
-                const { error } = await supabase.from('stores').update({ categories: lista }).eq('slug', tienda.slug);
-                if (error) { alert('No se pudo guardar: ' + error.message); return false; }
-                setDbStores((prev) => prev.map((x: any) => x.slug === tienda.slug ? { ...x, categories: lista } : x));
-                return true;
-              }}
-              onRenombrarProductos={async (viejo, nuevo) => {
-                const { error } = await supabase.from('products').update({ category: nuevo }).eq('store', tienda.slug).eq('category', viejo);
-                if (error) { alert('La categoría cambió, pero no se pudieron mover los productos: ' + error.message); return false; }
-                setProducts((prev) => prev.map((p) => p.store === tienda.slug && p.category === viejo ? { ...p, category: nuevo } : p));
-                refrescarTienda(tienda.slug);
-                return true;
-              }}
-            />
+              {pestanasCatalogo}
+              <CategoriasTab
+                key={tienda.slug}
+                nombreTienda={tienda.name}
+                categorias={tienda.categories}
+                conteos={conteos}
+                onGuardar={async (lista) => {
+                  const { error } = await supabase.from('stores').update({ categories: lista }).eq('slug', tienda.slug);
+                  if (error) { alert('No se pudo guardar: ' + error.message); return false; }
+                  setDbStores((prev) => prev.map((x: any) => x.slug === tienda.slug ? { ...x, categories: lista } : x));
+                  return true;
+                }}
+                onRenombrarProductos={async (viejo, nuevo) => {
+                  const { error } = await supabase.from('products').update({ category: nuevo }).eq('store', tienda.slug).eq('category', viejo);
+                  if (error) { alert('La categoría cambió, pero no se pudieron mover los productos: ' + error.message); return false; }
+                  setProducts((prev) => prev.map((p) => p.store === tienda.slug && p.category === viejo ? { ...p, category: nuevo } : p));
+                  refrescarTienda(tienda.slug);
+                  return true;
+                }}
+              />
             </>
           );
         })()}
@@ -3391,8 +3461,8 @@ function AdminDashboard({ user }: { user: User }) {
               </div>
             </div>
 
-            {/* Barra de Filtros y Búsqueda */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 sm:p-4 rounded-2xl border border-gray-200 shadow-2xs">
+            {/* Barra de Filtros, Búsqueda y Guardar Cambios en Lote */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white p-3.5 sm:p-4 rounded-2xl border border-gray-200 shadow-2xs">
               <div className="relative flex-1 max-w-md">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">
                   search
@@ -3406,41 +3476,76 @@ function AdminDashboard({ user }: { user: User }) {
                 />
               </div>
 
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 [scrollbar-width:none]">
-                <button
-                  type="button"
-                  onClick={() => setFiltroAfiliados('todos')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
-                    filtroAfiliados === 'todos'
-                      ? 'bg-gray-900 text-white shadow-2xs'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  Todos ({productosTiendaActual.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFiltroAfiliados('activos')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1 ${
-                    filtroAfiliados === 'activos'
-                      ? 'bg-emerald-600 text-white shadow-2xs'
-                      : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-[14px]">loyalty</span>
-                  <span>Activos en Red ({productosAfiliadosActivos.length})</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFiltroAfiliados('inactivos')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
-                    filtroAfiliados === 'inactivos'
-                      ? 'bg-gray-900 text-white shadow-2xs'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  Sin Comisión ({productosTiendaActual.length - productosAfiliadosActivos.length})
-                </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 [scrollbar-width:none]">
+                  <button
+                    type="button"
+                    onClick={() => setFiltroAfiliados('todos')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${filtroAfiliados === 'todos'
+                        ? 'bg-gray-900 text-white shadow-2xs'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                  >
+                    Todos ({productosTiendaActual.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFiltroAfiliados('activos')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1 ${filtroAfiliados === 'activos'
+                        ? 'bg-emerald-600 text-white shadow-2xs'
+                        : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
+                      }`}
+                  >
+                    <span className="material-symbols-outlined text-[14px]">loyalty</span>
+                    <span>Activos en Red ({productosAfiliadosActivos.length})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFiltroAfiliados('inactivos')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${filtroAfiliados === 'inactivos'
+                        ? 'bg-gray-900 text-white shadow-2xs'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                  >
+                    Sin Comisión ({productosTiendaActual.length - productosAfiliadosActivos.length})
+                  </button>
+                </div>
+
+                {/* Botón Guardar Cambios en Lote */}
+                <div className="flex items-center gap-2 ml-auto">
+                  {hayCambiosAfiliados && (
+                    <button
+                      type="button"
+                      disabled={guardandoTodosAfiliados}
+                      onClick={descartarCambiosAfiliados}
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition cursor-pointer"
+                    >
+                      Descartar
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    disabled={!hayCambiosAfiliados || guardandoTodosAfiliados}
+                    onClick={guardarCambiosAfiliados}
+                    className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow-xs cursor-pointer ${
+                      hayCambiosAfiliados
+                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95'
+                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    {guardandoTodosAfiliados ? (
+                      <>
+                        <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Guardando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-[16px]">save</span>
+                        <span>Guardar Cambios {hayCambiosAfiliados ? `(${cambiosPendientesAfiliados.length})` : ''}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -3454,27 +3559,33 @@ function AdminDashboard({ user }: { user: User }) {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {productosAfiliadosFiltrados.map((prod) => {
-                  const comMatch = (prod.description || '').match(RE_AFILIADO);
-                  const comisionActual = (prod as any).afiliado_comision != null
-                    ? Number((prod as any).afiliado_comision)
-                    : (comMatch ? parseInt(comMatch[1], 10) : null);
-                  const estaActivo = comisionActual != null && comisionActual > 0;
-                  const pctSeleccionado = comisionActual || 15;
+                  const st = getAfiliadoEstado(prod);
+                  const estaActivo = st.activo;
+                  const pctSeleccionado = st.comision;
                   const precio = Number(prod.price) || 0;
                   const gananciaPromotor = (precio * (pctSeleccionado / 100)).toFixed(2);
                   const ingresoTienda = (precio - (precio * (pctSeleccionado / 100))).toFixed(2);
-                  const estaGuardando = guardandoAfiliadoId === prod.id;
-                  const esGuardadoExito = guardadoExitosoId === prod.id;
+                  const esModificado = afiliadosDraft[prod.id] !== undefined;
 
                   return (
                     <div
                       key={prod.id}
-                      className={`bg-white rounded-2xl border p-4 sm:p-5 flex flex-col justify-between gap-4 transition shadow-2xs ${
-                        estaActivo
+                      className={`bg-white rounded-2xl border p-4 sm:p-5 flex flex-col justify-between gap-4 transition shadow-2xs relative ${
+                        esModificado
+                          ? 'border-amber-400 ring-2 ring-amber-100'
+                          : estaActivo
                           ? 'border-emerald-300 ring-2 ring-emerald-100/80'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
+                      {/* Badge si fue modificado en borrador */}
+                      {esModificado && (
+                        <div className="absolute -top-2.5 right-3 bg-amber-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-xs flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                          <span>Pendiente de guardar</span>
+                        </div>
+                      )}
+
                       {/* Cabecera del Item */}
                       <div className="flex items-start gap-3">
                         <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-gray-100 overflow-hidden shrink-0 border border-gray-100">
@@ -3512,9 +3623,9 @@ function AdminDashboard({ user }: { user: User }) {
                             <input
                               type="checkbox"
                               checked={estaActivo}
-                              disabled={estaGuardando}
+                              disabled={guardandoTodosAfiliados}
                               onChange={(e) => {
-                                actualizarAfiliadoProducto(prod, e.target.checked, pctSeleccionado);
+                                toggleDraftAfiliado(prod, e.target.checked);
                               }}
                               className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
                             />
@@ -3523,16 +3634,9 @@ function AdminDashboard({ user }: { user: User }) {
                             </span>
                           </label>
 
-                          {estaGuardando && (
-                            <span className="text-[10px] text-gray-400 flex items-center gap-1">
-                              <span className="w-2.5 h-2.5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                              Guardando...
-                            </span>
-                          )}
-                          {esGuardadoExito && (
-                            <span className="text-[10px] text-emerald-700 font-bold flex items-center gap-0.5 bg-emerald-50 px-1.5 py-0.5 rounded">
-                              <span className="material-symbols-outlined text-[13px]">check</span>
-                              Listo
+                          {esModificado && (
+                            <span className="text-[10px] text-amber-700 font-bold bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                              Editado
                             </span>
                           )}
                         </div>
@@ -3548,13 +3652,12 @@ function AdminDashboard({ user }: { user: User }) {
                                 <button
                                   key={pct}
                                   type="button"
-                                  disabled={estaGuardando}
-                                  onClick={() => actualizarAfiliadoProducto(prod, true, pct)}
-                                  className={`py-1.5 rounded-lg text-xs font-black transition cursor-pointer ${
-                                    pctSeleccionado === pct
+                                  disabled={guardandoTodosAfiliados}
+                                  onClick={() => setComisionDraftAfiliado(prod, pct)}
+                                  className={`py-1.5 rounded-lg text-xs font-black transition cursor-pointer ${pctSeleccionado === pct
                                       ? 'bg-emerald-600 text-white shadow-2xs'
                                       : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                                  }`}
+                                    }`}
                                 >
                                   {pct}%
                                 </button>
@@ -3586,6 +3689,54 @@ function AdminDashboard({ user }: { user: User }) {
                     </div>
                   );
                 })}
+              </div>
+            )}
+
+            {/* Barra flotante inferior cuando hay cambios pendientes */}
+            {hayCambiosAfiliados && (
+              <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 backdrop-blur-md text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-4 border border-slate-700 animate-in slide-in-from-bottom-5">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
+                  <span className="text-xs font-bold text-slate-200">
+                    Tienes <strong className="text-white">{cambiosPendientesAfiliados.length}</strong> {cambiosPendientesAfiliados.length === 1 ? 'cambio pendiente' : 'cambios pendientes'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={guardandoTodosAfiliados}
+                    onClick={descartarCambiosAfiliados}
+                    className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer"
+                  >
+                    Descartar
+                  </button>
+                  <button
+                    type="button"
+                    disabled={guardandoTodosAfiliados}
+                    onClick={guardarCambiosAfiliados}
+                    className="px-4 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs transition shadow-md flex items-center gap-1.5 active:scale-95 cursor-pointer"
+                  >
+                    {guardandoTodosAfiliados ? (
+                      <>
+                        <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Guardando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-[16px]">check</span>
+                        <span>Guardar Cambios</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Toast de éxito al guardar */}
+            {afiliadosGuardadoExito && (
+              <div className="fixed bottom-6 right-6 z-50 bg-emerald-700 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 border border-emerald-500 animate-in slide-in-from-bottom-4">
+                <span className="material-symbols-outlined text-lg">check_circle</span>
+                <span className="text-xs font-bold">¡Cambios guardados correctamente en catálogo de afiliados!</span>
               </div>
             )}
           </div>
@@ -3633,9 +3784,9 @@ function AdminDashboard({ user }: { user: User }) {
                         </span>
                       </div>
                       <div className="flex gap-1 shrink-0">
-                        <a 
+                        <a
                           href={urlDeTienda(store.slug)}
-                          target="_blank" 
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition-colors"
                           title="Ver tienda"
@@ -3843,7 +3994,7 @@ function AdminDashboard({ user }: { user: User }) {
               <span className="material-symbols-outlined text-4xl mb-2">install_mobile</span>
               <h3 className="font-bold text-lg mb-1">Instalar Boga Dash</h3>
               <p className="text-white/80 text-sm mb-4">Instala la app en tu celular para una experiencia más rápida y nativa.</p>
-              <button 
+              <button
                 onClick={() => {
                   if (typeof window !== 'undefined') {
                     localStorage.removeItem('bogadash_pwa_stats');
@@ -3880,46 +4031,44 @@ function AdminDashboard({ user }: { user: User }) {
               {/* Row 1: Unified Search Bar & Categories */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center w-full gap-2 bg-white p-1 md:p-1.5 rounded-md border border-[#e1e3e4]/40 shadow-sm shrink-0">
                 <div className="flex items-center gap-1.5 w-full sm:w-auto shrink-0">
-                <div className="relative flex-1 sm:w-56 shrink-0 group">
-                  <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[16px]">search</span>
-                  <input
-                    type="text"
-                    value={posProductSearch}
-                    onChange={(e) => setPosProductSearch(e.target.value)}
-                    placeholder="Buscar productos..."
-                    className="w-full h-8 pl-8 pr-2.5 bg-gray-50 border border-[#e1e3e4]/40 rounded-lg focus:ring-1 focus:ring-[var(--tienda-color)] focus:border-[var(--tienda-color)] focus:outline-none transition-all text-xs font-medium text-[#191c1d]"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={abrirEscanerPos}
-                  className="h-8 px-3 shrink-0 rounded-lg bg-[var(--tienda-color)] text-white text-xs font-bold flex items-center gap-1.5 active:scale-95 cursor-pointer shadow-sm"
-                  title="Escanear código de barras con la cámara"
-                >
-                  <span className="material-symbols-outlined text-[18px]">photo_camera</span>
-                  Escanear
-                </button>
+                  <div className="relative flex-1 sm:w-56 shrink-0 group">
+                    <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[16px]">search</span>
+                    <input
+                      type="text"
+                      value={posProductSearch}
+                      onChange={(e) => setPosProductSearch(e.target.value)}
+                      placeholder="Buscar productos..."
+                      className="w-full h-8 pl-8 pr-2.5 bg-gray-50 border border-[#e1e3e4]/40 rounded-lg focus:ring-1 focus:ring-[var(--tienda-color)] focus:border-[var(--tienda-color)] focus:outline-none transition-all text-xs font-medium text-[#191c1d]"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={abrirEscanerPos}
+                    className="h-8 px-3 shrink-0 rounded-lg bg-[var(--tienda-color)] text-white text-xs font-bold flex items-center gap-1.5 active:scale-95 cursor-pointer shadow-sm"
+                    title="Escanear código de barras con la cámara"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">photo_camera</span>
+                    Escanear
+                  </button>
                 </div>
                 <div className="flex-1 flex gap-1 overflow-x-auto hide-scrollbar py-0.5" style={{ scrollbarWidth: 'none' }}>
-                  <button 
+                  <button
                     onClick={() => setPosProductCategory('all')}
-                    className={`px-2.5 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all border ${
-                      posProductCategory === 'all' 
-                        ? 'bg-[var(--tienda-color)] text-white border-transparent shadow-sm' 
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all border ${posProductCategory === 'all'
+                        ? 'bg-[var(--tienda-color)] text-white border-transparent shadow-sm'
                         : 'bg-transparent text-gray-600 border-gray-100 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     Todos
                   </button>
                   {Array.from(new Set(visibleProducts.filter(p => p.store === focusedStore).map(p => p.category))).map(cat => (
-                    <button 
+                    <button
                       key={cat}
                       onClick={() => setPosProductCategory(cat)}
-                      className={`px-2.5 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all border ${
-                        posProductCategory === cat 
-                          ? 'bg-[var(--tienda-color)] text-white border-transparent shadow-sm' 
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all border ${posProductCategory === cat
+                          ? 'bg-[var(--tienda-color)] text-white border-transparent shadow-sm'
                           : 'bg-transparent text-gray-600 border-gray-100 hover:bg-gray-50'
-                      }`}
+                        }`}
                     >
                       {cat}
                     </button>
@@ -3932,7 +4081,7 @@ function AdminDashboard({ user }: { user: User }) {
                 const posFilteredStoreProducts = visibleProducts.filter(p => p.store === focusedStore);
                 const posProducts = posFilteredStoreProducts.filter(p => {
                   const matchesSearch = p.name.toLowerCase().includes(posProductSearch.toLowerCase()) ||
-                                        p.category.toLowerCase().includes(posProductSearch.toLowerCase());
+                    p.category.toLowerCase().includes(posProductSearch.toLowerCase());
                   const matchesCategory = posProductCategory === 'all' || p.category === posProductCategory;
                   return matchesSearch && matchesCategory;
                 });
@@ -3956,14 +4105,12 @@ function AdminDashboard({ user }: { user: User }) {
                       const agotado = p.status === 'Agotado' || (limitado && p.stock <= 0);
                       const enMaximo = limitado && quantity >= p.stock;
                       return (
-                        <div 
-                          key={p.id} 
+                        <div
+                          key={p.id}
                           onClick={() => { if (!agotado) addToCart(p); }}
-                          className={`product-card text-left flex flex-col bg-white border rounded-md overflow-hidden transition-all group ${
-                            agotado ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-sm active:scale-[0.98] cursor-pointer'
-                          } ${
-                            quantity > 0 ? 'border-[var(--tienda-color)] ring-1 ring-[var(--tienda-color)]/20' : 'border-[#e1e3e4]/30'
-                          }`}
+                          className={`product-card text-left flex flex-col bg-white border rounded-md overflow-hidden transition-all group ${agotado ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-sm active:scale-[0.98] cursor-pointer'
+                            } ${quantity > 0 ? 'border-[var(--tienda-color)] ring-1 ring-[var(--tienda-color)]/20' : 'border-[#e1e3e4]/30'
+                            }`}
                         >
                           <div className="h-20 w-full bg-[#ffece9] relative overflow-hidden shrink-0">
                             {p.image ? (
@@ -3988,7 +4135,7 @@ function AdminDashboard({ user }: { user: User }) {
                               </p>
                               {quantity > 0 && (
                                 <div className="flex items-center gap-0.5 bg-[#ffece9] border border-[#e1e3e4]/20 p-0.5 rounded" onClick={e => e.stopPropagation()}>
-                                  <button 
+                                  <button
                                     onClick={() => removeFromCart(p.id)}
                                     className="text-gray-500 hover:text-[#8c0009] transition-colors flex items-center justify-center font-bold text-[10px] bg-white rounded shadow-sm cursor-pointer"
                                     style={{ width: '18px', height: '18px' }}
@@ -3996,7 +4143,7 @@ function AdminDashboard({ user }: { user: User }) {
                                     -
                                   </button>
                                   <span className="text-[10px] font-black text-[#191c1d] w-3 text-center">{quantity}</span>
-                                  <button 
+                                  <button
                                     onClick={() => addToCart(p)}
                                     className="text-gray-500 hover:text-[var(--tienda-color)] transition-colors flex items-center justify-center font-bold text-[10px] bg-white rounded shadow-sm cursor-pointer"
                                     style={{ width: '18px', height: '18px' }}
@@ -4021,14 +4168,14 @@ function AdminDashboard({ user }: { user: User }) {
               <div className="p-2 border-b border-[#e1e3e4]/30 bg-[#f8f9fa]">
                 <div className="flex items-center justify-between">
                   <h2 className="font-extrabold text-[11px] text-[#191c1d]">Venta Actual</h2>
-                  <button 
+                  <button
                     onClick={() => setPosCart([])}
                     className="text-[#8c0009] hover:text-[#6b0007] font-bold text-[9px] hover:underline cursor-pointer"
                   >
                     Limpiar Todo
                   </button>
                 </div>
-                <button 
+                <button
                   onClick={() => setIsCustomerDetailsOpen(!isCustomerDetailsOpen)}
                   className="flex items-center gap-1 text-[var(--tienda-color)] font-bold text-[9px] mt-0.5 hover:underline cursor-pointer"
                 >
@@ -4042,18 +4189,18 @@ function AdminDashboard({ user }: { user: User }) {
                 <div className="p-2 border-b border-[#e1e3e4]/20 bg-white flex flex-col gap-1">
                   <h4 className="text-[7px] font-extrabold text-gray-400 uppercase tracking-widest">Datos del Cliente</h4>
                   <div className="grid grid-cols-2 gap-1.5">
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={posCustomerName}
                       onChange={(e) => setPosCustomerName(e.target.value)}
-                      placeholder="Nombre" 
+                      placeholder="Nombre"
                       className="w-full px-1.5 py-0.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[var(--tienda-color)] h-7"
                     />
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={posCustomerPhone}
                       onChange={(e) => setPosCustomerPhone(e.target.value)}
-                      placeholder="WhatsApp" 
+                      placeholder="WhatsApp"
                       className="w-full px-1.5 py-0.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[var(--tienda-color)] h-7"
                     />
                   </div>
@@ -4064,8 +4211,8 @@ function AdminDashboard({ user }: { user: User }) {
               <div className="p-2 border-b border-[#e1e3e4]/10 bg-white/65 flex items-center justify-between gap-2 shrink-0">
                 <span className="text-[8px] font-extrabold text-gray-400 uppercase tracking-widest shrink-0">Vendedor:</span>
                 <div className="flex-1 flex gap-1 justify-end">
-                  <select 
-                    value={posSeller} 
+                  <select
+                    value={posSeller}
                     onChange={(e) => setPosSeller(e.target.value)}
                     className="px-1.5 py-0.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[var(--tienda-color)] cursor-pointer h-7"
                   >
@@ -4074,11 +4221,11 @@ function AdminDashboard({ user }: { user: User }) {
                     <option value="Otro">Otro...</option>
                   </select>
                   {posSeller === 'Otro' && (
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={customSeller}
                       onChange={(e) => setCustomSeller(e.target.value)}
-                      placeholder="Nombre" 
+                      placeholder="Nombre"
                       className="w-24 px-1.5 py-0.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[var(--tienda-color)] h-7"
                     />
                   )}
@@ -4106,7 +4253,7 @@ function AdminDashboard({ user }: { user: User }) {
                       <div className="flex items-center gap-1.5 shrink-0">
                         <span className="font-bold text-xs text-[#191c1d]">S/ {(item.product.price * item.quantity).toFixed(2)}</span>
                         <div className="flex items-center gap-0.5 bg-[#ffece9] border border-[#e1e3e4]/20 p-0.5 rounded">
-                          <button 
+                          <button
                             onClick={() => removeFromCart(item.product.id)}
                             className="text-gray-500 hover:text-[#8c0009] transition-colors flex items-center justify-center font-bold text-[10px] bg-white rounded shadow-sm cursor-pointer"
                             style={{ width: '18px', height: '18px' }}
@@ -4114,7 +4261,7 @@ function AdminDashboard({ user }: { user: User }) {
                             -
                           </button>
                           <span className="text-[10px] font-black text-[#191c1d] w-3 text-center">{item.quantity}</span>
-                          <button 
+                          <button
                             onClick={() => addToCart(item.product)}
                             className="text-gray-500 hover:text-[var(--tienda-color)] transition-colors flex items-center justify-center font-bold text-[10px] bg-white rounded shadow-sm cursor-pointer"
                             style={{ width: '18px', height: '18px' }}
@@ -4168,7 +4315,7 @@ function AdminDashboard({ user }: { user: User }) {
                     </div>
                   </div>
 
-                  <button 
+                  <button
                     onClick={handlePosCheckout}
                     disabled={posCart.length === 0 || isPosSaving}
                     className="w-full py-2 bg-[var(--tienda-color)] text-white rounded-lg font-bold text-[13px] shadow-lg shadow-[var(--tienda-color)]/20 hover:scale-[1.01] active:scale-95 transition-all disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none cursor-pointer flex items-center justify-center gap-1.5"
@@ -4204,7 +4351,7 @@ function AdminDashboard({ user }: { user: User }) {
                 >
                   <span className="material-symbols-outlined text-[22px]">photo_camera</span>
                 </button>
-                <button 
+                <button
                   onClick={() => setIsMobileCheckoutOpen(true)}
                   disabled={posCart.length === 0}
                   className="bg-[var(--tienda-color)] text-white px-5 h-11 rounded-md font-bold text-xs flex items-center gap-1.5 active:scale-95 transition-transform disabled:bg-gray-200 disabled:text-gray-400 cursor-pointer shadow-md"
@@ -4235,7 +4382,7 @@ function AdminDashboard({ user }: { user: User }) {
                     {/* Receipt Header Actions (like Limpiar Todo) */}
                     <div className="p-3 border-b border-[#e1e3e4]/30 bg-white flex items-center justify-between">
                       <span className="text-xs font-bold text-gray-500">Detalles de Venta</span>
-                      <button 
+                      <button
                         onClick={() => {
                           setPosCart([]);
                           setIsMobileCheckoutOpen(false);
@@ -4248,7 +4395,7 @@ function AdminDashboard({ user }: { user: User }) {
 
                     {/* Client Add button & form */}
                     <div className="p-3 border-b border-[#e1e3e4]/30 bg-white">
-                      <button 
+                      <button
                         onClick={() => setIsCustomerDetailsOpen(!isCustomerDetailsOpen)}
                         className="flex items-center gap-1 text-[var(--tienda-color)] font-bold text-xs hover:underline cursor-pointer"
                       >
@@ -4258,18 +4405,18 @@ function AdminDashboard({ user }: { user: User }) {
                       {isCustomerDetailsOpen && (
                         <div className="mt-3 flex flex-col gap-2">
                           <div className="grid grid-cols-2 gap-2">
-                            <input 
-                              type="text" 
+                            <input
+                              type="text"
                               value={posCustomerName}
                               onChange={(e) => setPosCustomerName(e.target.value)}
-                              placeholder="Nombre" 
+                              placeholder="Nombre"
                               className="w-full px-2.5 py-1.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[var(--tienda-color)]"
                             />
-                            <input 
-                              type="text" 
+                            <input
+                              type="text"
                               value={posCustomerPhone}
                               onChange={(e) => setPosCustomerPhone(e.target.value)}
-                              placeholder="WhatsApp" 
+                              placeholder="WhatsApp"
                               className="w-full px-2.5 py-1.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[var(--tienda-color)]"
                             />
                           </div>
@@ -4281,8 +4428,8 @@ function AdminDashboard({ user }: { user: User }) {
                     <div className="p-3 border-b border-[#e1e3e4]/10 bg-white flex flex-col gap-1.5">
                       <h4 className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Vendedor</h4>
                       <div className="grid grid-cols-2 gap-2">
-                        <select 
-                          value={posSeller} 
+                        <select
+                          value={posSeller}
                           onChange={(e) => setPosSeller(e.target.value)}
                           className="w-full px-2.5 py-1.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[var(--tienda-color)] cursor-pointer"
                         >
@@ -4291,11 +4438,11 @@ function AdminDashboard({ user }: { user: User }) {
                           <option value="Otro">Otro...</option>
                         </select>
                         {posSeller === 'Otro' && (
-                          <input 
-                            type="text" 
+                          <input
+                            type="text"
                             value={customSeller}
                             onChange={(e) => setCustomSeller(e.target.value)}
-                            placeholder="Nombre" 
+                            placeholder="Nombre"
                             className="w-full px-2.5 py-1.5 bg-[#ffece9]/40 border border-[#e1e3e4]/30 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-[var(--tienda-color)]"
                           />
                         )}
@@ -4319,14 +4466,14 @@ function AdminDashboard({ user }: { user: User }) {
                           <div className="flex items-center gap-2 shrink-0">
                             <span className="font-bold text-xs text-[#191c1d]">S/ {(item.product.price * item.quantity).toFixed(2)}</span>
                             <div className="flex items-center gap-0.5 bg-[#ffece9] border border-[#e1e3e4]/20 p-0.5 rounded-lg">
-                              <button 
+                              <button
                                 onClick={() => removeFromCart(item.product.id)}
                                 className="text-gray-500 hover:text-[#8c0009] transition-colors w-5.5 h-5.5 flex items-center justify-center font-bold text-xs"
                               >
                                 -
                               </button>
                               <span className="text-[11px] font-black text-[#191c1d] w-3 text-center">{item.quantity}</span>
-                              <button 
+                              <button
                                 onClick={() => addToCart(item.product)}
                                 className="text-gray-500 hover:text-[var(--tienda-color)] transition-colors w-5.5 h-5.5 flex items-center justify-center font-bold text-xs"
                               >
@@ -4341,68 +4488,68 @@ function AdminDashboard({ user }: { user: User }) {
 
                   {/* Payment & Action Footer */}
                   <div className="p-4 bg-white border-t border-[#e1e3e4]/30 shrink-0">
-                      <div className="space-y-1 mb-2.5">
-                        <div className="flex justify-between text-gray-500 font-semibold text-[11px]">
-                          <span>Subtotal</span>
-                          <span>S/ {posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0).toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between text-gray-500 font-semibold text-[11px]">
-                          <span>IGV (18% Incluido)</span>
-                          <span>S/ {(posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0) * 0.18 / 1.18).toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between text-[#191c1d] font-black text-sm mt-1.5 pt-1.5 border-t border-[#e1e3e4]/20">
-                          <span>Total</span>
-                          <span>S/ {posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0).toFixed(2)}</span>
+                    <div className="space-y-1 mb-2.5">
+                      <div className="flex justify-between text-gray-500 font-semibold text-[11px]">
+                        <span>Subtotal</span>
+                        <span>S/ {posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-gray-500 font-semibold text-[11px]">
+                        <span>IGV (18% Incluido)</span>
+                        <span>S/ {(posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0) * 0.18 / 1.18).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-[#191c1d] font-black text-sm mt-1.5 pt-1.5 border-t border-[#e1e3e4]/20">
+                        <span>Total</span>
+                        <span>S/ {posCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0).toFixed(2)}</span>
+                      </div>
+                    </div>
+
+                    {/* Payment Actions */}
+                    <div className="flex flex-col gap-2.5">
+                      <div className="flex flex-col gap-1">
+                        <h4 className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Método de Pago</h4>
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {POS_PAYMENT_METHODS.map(m => {
+                            const on = posPaymentMethod === m.id;
+                            return (
+                              <button
+                                key={m.id}
+                                type="button"
+                                onClick={() => setPosPaymentMethod(m.id)}
+                                className="py-1.5 px-2 rounded-lg border-2 transition-all flex flex-col items-center gap-0.5 cursor-pointer bg-white"
+                                style={on ? { borderColor: m.color, background: `${m.color}0d`, color: m.color } : { borderColor: '#e5e7eb', color: '#6b7280' }}
+                              >
+                                <span className="material-symbols-outlined text-[16px]">{m.icon}</span>
+                                <span className="text-[9px] font-bold">{m.label}</span>
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
 
-                      {/* Payment Actions */}
-                      <div className="flex flex-col gap-2.5">
-                        <div className="flex flex-col gap-1">
-                          <h4 className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Método de Pago</h4>
-                          <div className="grid grid-cols-3 gap-1.5">
-                            {POS_PAYMENT_METHODS.map(m => {
-                              const on = posPaymentMethod === m.id;
-                              return (
-                                <button
-                                  key={m.id}
-                                  type="button"
-                                  onClick={() => setPosPaymentMethod(m.id)}
-                                  className="py-1.5 px-2 rounded-lg border-2 transition-all flex flex-col items-center gap-0.5 cursor-pointer bg-white"
-                                  style={on ? { borderColor: m.color, background: `${m.color}0d`, color: m.color } : { borderColor: '#e5e7eb', color: '#6b7280' }}
-                                >
-                                  <span className="material-symbols-outlined text-[16px]">{m.icon}</span>
-                                  <span className="text-[9px] font-bold">{m.label}</span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        <button 
-                          onClick={async () => {
-                            await handlePosCheckout();
-                            setIsMobileCheckoutOpen(false);
-                          }}
-                          disabled={posCart.length === 0 || isPosSaving}
-                          className="w-full py-3 bg-[var(--tienda-color)] text-white rounded-lg font-bold text-sm shadow-lg shadow-[var(--tienda-color)]/20 hover:scale-[1.01] active:scale-95 transition-all disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none cursor-pointer flex items-center justify-center gap-1.5"
-                        >
-                          {isPosSaving ? (
-                            <>
-                              <span className="material-symbols-outlined animate-spin text-[16px]">refresh</span>
-                              Procesando...
-                            </>
-                          ) : (
-                            <>
-                              <span className="material-symbols-outlined text-[16px]">receipt_long</span>
-                              Cobrar y Generar Ticket
-                            </>
-                          )}
-                        </button>
-                      </div>
+                      <button
+                        onClick={async () => {
+                          await handlePosCheckout();
+                          setIsMobileCheckoutOpen(false);
+                        }}
+                        disabled={posCart.length === 0 || isPosSaving}
+                        className="w-full py-3 bg-[var(--tienda-color)] text-white rounded-lg font-bold text-sm shadow-lg shadow-[var(--tienda-color)]/20 hover:scale-[1.01] active:scale-95 transition-all disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none cursor-pointer flex items-center justify-center gap-1.5"
+                      >
+                        {isPosSaving ? (
+                          <>
+                            <span className="material-symbols-outlined animate-spin text-[16px]">refresh</span>
+                            Procesando...
+                          </>
+                        ) : (
+                          <>
+                            <span className="material-symbols-outlined text-[16px]">receipt_long</span>
+                            Cobrar y Generar Ticket
+                          </>
+                        )}
+                      </button>
                     </div>
                   </div>
                 </div>
+              </div>
             )}
           </div>
         )}
@@ -4413,7 +4560,7 @@ function AdminDashboard({ user }: { user: User }) {
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => !isSaving && setIsModalOpen(false)}></div>
-          
+
           <div className="relative bg-white w-[90vw] md:w-[980px] md:max-w-[95vw] rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             {/* Mismo formato que el formulario de productos del superadmin: las acciones van ARRIBA y fijas (no hay que bajar
                 hasta el final del formulario) y en escritorio la foto queda a la izquierda y los campos a la derecha. */}
@@ -4470,7 +4617,7 @@ function AdminDashboard({ user }: { user: User }) {
             )}
 
             <form id="form-producto-dueno" onSubmit={handleSave} className="p-6 md:p-8 overflow-y-auto overflow-x-hidden flex-1 custom-scrollbar md:grid md:grid-cols-[300px_minmax(0,1fr)] md:gap-8 md:items-start">
-              
+
               {/* Fotos del producto: la primera es la portada. Se pueden elegir/soltar/pegar varias de una sola vez. */}
               <div className="mb-8 md:mb-0">
                 <input
@@ -4551,11 +4698,11 @@ function AdminDashboard({ user }: { user: User }) {
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">{formEmpresa ? 'Nombre del Servicio' : 'Nombre del Producto'}</label>
-                  <input 
+                  <input
                     required
-                    type="text" 
+                    type="text"
                     value={newProduct.name}
-                    onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
+                    onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
                     placeholder="Ej: Sunset Ribeye"
                     className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
                   />
@@ -4565,7 +4712,7 @@ function AdminDashboard({ user }: { user: User }) {
                   <label className="block text-sm font-bold text-gray-700 mb-2">{formEmpresa ? 'Descripción del servicio' : 'Descripción Corta'}</label>
                   <textarea
                     value={newProduct.desc}
-                    onChange={(e) => setNewProduct({...newProduct, desc: e.target.value})}
+                    onChange={(e) => setNewProduct({ ...newProduct, desc: e.target.value })}
                     placeholder="Breve descripción de los ingredientes o detalles..."
                     rows={2}
                     className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all resize-none"
@@ -4573,31 +4720,31 @@ function AdminDashboard({ user }: { user: User }) {
                 </div>
 
                 {!formEmpresa && (<>
-                {/* Servicio: se reserva o se consulta, no se "agrega al carrito" como un producto normal. Decide si la tienda aparece en el toggle "Servicios" de BogaHub. */}
-                <div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {([
-                      { v: false, icon: 'inventory_2', label: 'Producto' },
-                      { v: true, icon: 'handyman', label: 'Servicio' },
-                    ] as const).map((o) => {
-                      const activo = !!newProduct.esServicio === o.v;
-                      return (
-                        <button
-                          key={o.label}
-                          type="button"
-                          onClick={() => setNewProduct({ ...newProduct, esServicio: o.v })}
-                          className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 font-bold text-sm transition-all ${activo ? 'border-[var(--tienda-color)] bg-[var(--tienda-color)]/10 text-gray-900' : 'border-gray-200 bg-gray-50 text-gray-500'}`}
-                        >
-                          <span className="material-symbols-outlined text-[20px]">{o.icon}</span>
-                          {o.label}
-                        </button>
-                      );
-                    })}
+                  {/* Servicio: se reserva o se consulta, no se "agrega al carrito" como un producto normal. Decide si la tienda aparece en el toggle "Servicios" de BogaHub. */}
+                  <div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {([
+                        { v: false, icon: 'inventory_2', label: 'Producto' },
+                        { v: true, icon: 'handyman', label: 'Servicio' },
+                      ] as const).map((o) => {
+                        const activo = !!newProduct.esServicio === o.v;
+                        return (
+                          <button
+                            key={o.label}
+                            type="button"
+                            onClick={() => setNewProduct({ ...newProduct, esServicio: o.v })}
+                            className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 font-bold text-sm transition-all ${activo ? 'border-[var(--tienda-color)] bg-[var(--tienda-color)]/10 text-gray-900' : 'border-gray-200 bg-gray-50 text-gray-500'}`}
+                          >
+                            <span className="material-symbols-outlined text-[20px]">{o.icon}</span>
+                            {o.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {newProduct.esServicio && (
+                      <p className="text-xs text-gray-500 mt-2">Ej. un corte, una consulta, una reserva. En tu tienda no tendrá carrito: el cliente te consulta por WhatsApp.</p>
+                    )}
                   </div>
-                  {newProduct.esServicio && (
-                    <p className="text-xs text-gray-500 mt-2">Ej. un corte, una consulta, una reserva. En tu tienda no tendrá carrito: el cliente te consulta por WhatsApp.</p>
-                  )}
-                </div>
                 </>)}
 
                 <div className="grid grid-cols-2 gap-4">
@@ -4609,7 +4756,7 @@ function AdminDashboard({ user }: { user: User }) {
                       type="number"
                       step="0.10"
                       value={newProduct.presentaciones.length > 0 ? '' : newProduct.price}
-                      onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
+                      onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
                       placeholder={newProduct.presentaciones.length > 0 ? 'Según presentaciones' : '0.00'}
                       className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black transition-all disabled:opacity-60"
                     />
@@ -4623,7 +4770,7 @@ function AdminDashboard({ user }: { user: User }) {
                         const newStore = e.target.value;
                         const storeObj = Object.values(stores).find(s => s.slug === newStore);
                         setNewProduct({
-                          ...newProduct, 
+                          ...newProduct,
                           store: newStore,
                           // Seleccionar la primera categoría por defecto si cambia de tienda
                           category: storeObj?.categories[0]?.name || ''
@@ -4642,68 +4789,68 @@ function AdminDashboard({ user }: { user: User }) {
 
                 {/* Costo (opcional): solo lo ves tú; sirve para calcular tu inversión y ganancia en Métricas. */}
                 {!formEmpresa && (
-                <div className="mt-5">
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Costo por unidad <span className="font-medium text-gray-400">· opcional, solo lo ves tú</span></label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-400">S/</span>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={newProduct.costo}
-                      onChange={(e) => setNewProduct({ ...newProduct, costo: e.target.value.replace(/[^0-9.,]/g, '') })}
-                      placeholder="Lo que te costó cada unidad"
-                      className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black transition-all"
-                    />
+                  <div className="mt-5">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Costo por unidad <span className="font-medium text-gray-400">· opcional, solo lo ves tú</span></label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-400">S/</span>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={newProduct.costo}
+                        onChange={(e) => setNewProduct({ ...newProduct, costo: e.target.value.replace(/[^0-9.,]/g, '') })}
+                        placeholder="Lo que te costó cada unidad"
+                        className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black transition-all"
+                      />
+                    </div>
                   </div>
-                </div>
                 )}
 
                 {/* IGV: por defecto sigue a la tienda (Personaliza tu tienda → «Mis precios incluyen IGV»); aquí se puede salir de eso. */}
                 {!formEmpresa && !precioOpcional && (
-                <div className="mt-5">
-                  <label className="block text-sm font-bold text-gray-700 mb-2">IGV <span className="font-medium text-gray-400">· aviso junto al precio</span></label>
-                  <select
-                    value={newProduct.igv}
-                    onChange={(e) => setNewProduct({ ...newProduct, igv: e.target.value as '' | 'con' | 'sin' })}
-                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black transition-all"
-                  >
-                    <option value="">Según la tienda ({(stores as any)[newProduct.store]?.igvIncluido ? 'con IGV incluido' : 'sin aviso de IGV'})</option>
-                    <option value="con">Precio con IGV incluido</option>
-                    <option value="sin">Sin aviso de IGV</option>
-                  </select>
-                </div>
+                  <div className="mt-5">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">IGV <span className="font-medium text-gray-400">· aviso junto al precio</span></label>
+                    <select
+                      value={newProduct.igv}
+                      onChange={(e) => setNewProduct({ ...newProduct, igv: e.target.value as '' | 'con' | 'sin' })}
+                      className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black transition-all"
+                    >
+                      <option value="">Según la tienda ({(stores as any)[newProduct.store]?.igvIncluido ? 'con IGV incluido' : 'sin aviso de IGV'})</option>
+                      <option value="con">Precio con IGV incluido</option>
+                      <option value="sin">Sin aviso de IGV</option>
+                    </select>
+                  </div>
                 )}
 
                 {/* Oferta: aparece en tu tienda con el precio anterior tachado y en la página Promos de BogaHub */}
                 {!formEmpresa && newProduct.presentaciones.length === 0 && (
-                <div className="mt-5 rounded-xl border border-dashed border-primary/40 bg-primary/5 p-4">
-                  <p className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-primary text-[18px]">local_offer</span>
-                    ¿Está en oferta? <span className="font-medium text-gray-500">(opcional)</span>
-                  </p>
-                  <div className="grid grid-cols-2 gap-4 mt-3">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Precio en oferta (S/)</label>
-                      <input
-                        type="number"
-                        step="0.10"
-                        min="0"
-                        value={newProduct.precioOferta}
-                        onChange={(e) => setNewProduct({...newProduct, precioOferta: e.target.value})}
-                        placeholder="Déjalo vacío si no"
-                        className="w-full px-3 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
-                      />
-                    </div>
-                    {/* La fecha «Hasta el día» es del módulo «Ofertas con fecha de vencimiento» (aparte). Hoy las ofertas son manuales. */}
-                  </div>
-                  {newProduct.precioOferta && parseFloat(newProduct.precioOferta) > 0 && parseFloat(newProduct.price) > 0 && (
-                    <p className="text-xs mt-2 font-medium" style={{ color: parseFloat(newProduct.precioOferta) < parseFloat(newProduct.price) ? '#15803d' : '#b91c1c' }}>
-                      {parseFloat(newProduct.precioOferta) < parseFloat(newProduct.price)
-                        ? `Tus clientes verán S/ ${parseFloat(newProduct.precioOferta).toFixed(2)} y el precio normal tachado (${porcentajeOferta(parseFloat(newProduct.price), parseFloat(newProduct.precioOferta))}). Sin fecha, la oferta dura hasta que la quites.`
-                        : 'El precio en oferta tiene que ser menor al precio normal.'}
+                  <div className="mt-5 rounded-xl border border-dashed border-primary/40 bg-primary/5 p-4">
+                    <p className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-primary text-[18px]">local_offer</span>
+                      ¿Está en oferta? <span className="font-medium text-gray-500">(opcional)</span>
                     </p>
-                  )}
-                </div>
+                    <div className="grid grid-cols-2 gap-4 mt-3">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1.5">Precio en oferta (S/)</label>
+                        <input
+                          type="number"
+                          step="0.10"
+                          min="0"
+                          value={newProduct.precioOferta}
+                          onChange={(e) => setNewProduct({ ...newProduct, precioOferta: e.target.value })}
+                          placeholder="Déjalo vacío si no"
+                          className="w-full px-3 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
+                        />
+                      </div>
+                      {/* La fecha «Hasta el día» es del módulo «Ofertas con fecha de vencimiento» (aparte). Hoy las ofertas son manuales. */}
+                    </div>
+                    {newProduct.precioOferta && parseFloat(newProduct.precioOferta) > 0 && parseFloat(newProduct.price) > 0 && (
+                      <p className="text-xs mt-2 font-medium" style={{ color: parseFloat(newProduct.precioOferta) < parseFloat(newProduct.price) ? '#15803d' : '#b91c1c' }}>
+                        {parseFloat(newProduct.precioOferta) < parseFloat(newProduct.price)
+                          ? `Tus clientes verán S/ ${parseFloat(newProduct.precioOferta).toFixed(2)} y el precio normal tachado (${porcentajeOferta(parseFloat(newProduct.price), parseFloat(newProduct.precioOferta))}). Sin fecha, la oferta dura hasta que la quites.`
+                          : 'El precio en oferta tiene que ser menor al precio normal.'}
+                      </p>
+                    )}
+                  </div>
                 )}
 
                 {/* ── PROGRAMA DE AFILIADOS BOGA NETWORK ── */}
@@ -4751,11 +4898,10 @@ function AdminDashboard({ user }: { user: User }) {
                               key={pct}
                               type="button"
                               onClick={() => setNewProduct({ ...newProduct, afiliadoComision: pct })}
-                              className={`py-2 px-2.5 rounded-xl text-xs font-black transition border text-center cursor-pointer ${
-                                newProduct.afiliadoComision === pct
+                              className={`py-2 px-2.5 rounded-xl text-xs font-black transition border text-center cursor-pointer ${newProduct.afiliadoComision === pct
                                   ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
                                   : 'bg-white text-slate-700 border-slate-200 hover:bg-sky-50'
-                              }`}
+                                }`}
                             >
                               {pct}%
                             </button>
@@ -4810,13 +4956,12 @@ function AdminDashboard({ user }: { user: User }) {
                                 type="button"
                                 disabled={sugerido === null || String(sugerido) === valor}
                                 onClick={() => sugerido !== null && setNewProduct({ ...newProduct, preciosMoneda: { ...newProduct.preciosMoneda, [m.codigo]: String(sugerido) } })}
-                                className={`px-3 py-2 rounded-full border text-xs font-bold transition-colors ${
-                                  sugerido !== null && String(sugerido) === valor
+                                className={`px-3 py-2 rounded-full border text-xs font-bold transition-colors ${sugerido !== null && String(sugerido) === valor
                                     ? 'border-green-300 bg-green-50 text-green-700'
                                     : sugerido !== null
                                       ? 'border-gray-300 bg-white text-gray-700 hover:border-black'
                                       : 'border-gray-200 bg-gray-100 text-gray-400'
-                                } disabled:cursor-default`}
+                                  } disabled:cursor-default`}
                                 title={sugerido === null
                                   ? 'Escribe el precio en soles y el tipo de cambio de esta moneda para calcularlo'
                                   : 'Calculado con el tipo de cambio de tu tienda; puedes escribir otro precio a mano'}
@@ -4873,227 +5018,227 @@ function AdminDashboard({ user }: { user: User }) {
                 })()}
 
                 {!formEmpresa && (<>
-                {/* Presentaciones: tallas, tamaños de vaso, medidas o peso con su precio */}
-                {(() => {
-                  const storeObj = Object.values(stores).find(s => s.slug === newProduct.store);
-                  const infoPres = textosPresentacion(newProduct.category, storeObj?.template);
-                  const tipoPres = tipoPresentacionDe(newProduct.category, storeObj?.template);
-                  const usaModo = tipoPres === 'unidades' || tipoPres === 'peso';
-                  // Por defecto: bodega -> unidades; plantillas de comida -> tamaño o porción; el resto -> peso. Siempre se puede cambiar.
-                  const esDeComida = ['helados', 'menudirecto', 'polleria', 'iniciocatalogo', 'fichadigital', 'fichaplana'].includes(String(storeObj?.template));
-                  const modo: ModoMedida = modoPres ?? (tipoPres === 'unidades' ? 'unidades' : esDeComida ? 'tamano' : 'peso');
-                  const medidaElegida = UNIDADES_DE_MEDIDA.find((m) => m.id === modo);
-                  const sugeridas = usaModo
-                    ? (medidaElegida?.sugeridas ?? [])
-                    : presentacionesSugeridas(newProduct.category, storeObj?.template);
-                  return (
-                    <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4">
-                      <p className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-gray-600 text-[18px]">{infoPres.icono}</span>
-                        {infoPres.titulo}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {infoPres.subtitulo}
-                      </p>
-                      {newProduct.presentaciones.length > 0 && tiendaTiene(newProduct.store, 'inventario') && (
-                        <p className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 mt-2 flex items-start gap-1.5">
-                          <span className="material-symbols-outlined text-[14px] mt-px">info</span>
-                          Con presentaciones el inventario no cuenta unidades de este producto (se vende por medida). Para que no se venda, márcalo Agotado.
+                  {/* Presentaciones: tallas, tamaños de vaso, medidas o peso con su precio */}
+                  {(() => {
+                    const storeObj = Object.values(stores).find(s => s.slug === newProduct.store);
+                    const infoPres = textosPresentacion(newProduct.category, storeObj?.template);
+                    const tipoPres = tipoPresentacionDe(newProduct.category, storeObj?.template);
+                    const usaModo = tipoPres === 'unidades' || tipoPres === 'peso';
+                    // Por defecto: bodega -> unidades; plantillas de comida -> tamaño o porción; el resto -> peso. Siempre se puede cambiar.
+                    const esDeComida = ['helados', 'menudirecto', 'polleria', 'iniciocatalogo', 'fichadigital', 'fichaplana'].includes(String(storeObj?.template));
+                    const modo: ModoMedida = modoPres ?? (tipoPres === 'unidades' ? 'unidades' : esDeComida ? 'tamano' : 'peso');
+                    const medidaElegida = UNIDADES_DE_MEDIDA.find((m) => m.id === modo);
+                    const sugeridas = usaModo
+                      ? (medidaElegida?.sugeridas ?? [])
+                      : presentacionesSugeridas(newProduct.category, storeObj?.template);
+                    return (
+                      <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4">
+                        <p className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-gray-600 text-[18px]">{infoPres.icono}</span>
+                          {infoPres.titulo}
                         </p>
-                      )}
+                        <p className="text-xs text-gray-500 mt-1">
+                          {infoPres.subtitulo}
+                        </p>
+                        {newProduct.presentaciones.length > 0 && tiendaTiene(newProduct.store, 'inventario') && (
+                          <p className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 mt-2 flex items-start gap-1.5">
+                            <span className="material-symbols-outlined text-[14px] mt-px">info</span>
+                            Con presentaciones el inventario no cuenta unidades de este producto (se vende por medida). Para que no se venda, márcalo Agotado.
+                          </p>
+                        )}
 
-                      {newProduct.presentaciones.length > 0 && (
-                        <div className="flex flex-col gap-2 mt-3">
-                          {newProduct.presentaciones.map((x, i) => (
-                            <div key={i} className="space-y-1.5">
-                            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
-                              <input
-                                value={x.label}
-                                maxLength={30}
-                                onChange={(e) => setNewProduct({...newProduct, presentaciones: newProduct.presentaciones.map((y, j) => j === i ? { ...y, label: e.target.value } : y)})}
-                                placeholder={infoPres.ejemploLabel}
-                                // Si escribe solo el número, se completa con la unidad elegida: "12" -> "12 unidades".
-                                onBlur={(e) => {
-                                  const completo = completarMedida(e.target.value, usaModo ? modo : null);
-                                  if (completo !== e.target.value) setNewProduct((prev) => ({ ...prev, presentaciones: prev.presentaciones.map((y, j) => j === i ? { ...y, label: completo } : y) }));
-                                }}
-                                className="w-full sm:w-auto sm:flex-1 min-w-0 px-3 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
-                              />
-                              <div className="relative flex-1 min-w-[7rem] sm:flex-none sm:w-32">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">S/</span>
-                                <input
-                                  type="number"
-                                  step="0.10"
-                                  min="0"
-                                  value={x.price}
-                                  onChange={(e) => setNewProduct({...newProduct, presentaciones: newProduct.presentaciones.map((y, j) => j === i ? { ...y, price: e.target.value } : y)})}
-                                  placeholder="0.00"
-                                  className="w-full pl-9 pr-2 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
-                                />
-                              </div>
-                              <button
-                                type="button"
-                                aria-label={x.promo ? 'Quitar la marca de promo' : 'Marcar como promo'}
-                                title={x.promo ? 'Promo: toca para quitar la marca' : 'Marcar esta opción como promo (precio por cantidad)'}
-                                aria-pressed={x.promo === true}
-                                onClick={() => setNewProduct({...newProduct, presentaciones: newProduct.presentaciones.map((y, j) => j === i ? { ...y, promo: !y.promo } : y)})}
-                                className={`h-10 shrink-0 px-2.5 rounded-md border flex items-center justify-center gap-1 text-xs font-bold transition-colors ${x.promo ? 'bg-amber-50 border-amber-300 text-amber-700' : 'bg-white border-gray-200 text-gray-400 hover:text-amber-600 hover:border-amber-300'}`}
-                              >
-                                <span className="text-[15px] leading-none" style={{ filter: x.promo ? 'none' : 'grayscale(1)', opacity: x.promo ? 1 : 0.7 }}>🔥</span>
-                                <span className="hidden sm:inline">Promo</span>
-                              </button>
-                              <button
-                                type="button"
-                                aria-label="Quitar opción"
-                                onClick={() => setNewProduct({...newProduct, presentaciones: newProduct.presentaciones.filter((_, j) => j !== i)})}
-                                className="w-10 h-10 shrink-0 rounded-md flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50"
-                              >
-                                <span className="material-symbols-outlined text-[20px]">close</span>
-                              </button>
-                            </div>
-                            {/* Foto de esta opción (sabor, color…): solo si el producto tiene más de una foto. Al elegir la opción el cliente ve esa foto y al tocar la foto se elige la opción. */}
-                            {fotos.length > 1 && (
-                              <div className="flex items-center gap-1.5 pl-1">
-                                <span className="text-[11px] font-bold text-gray-500 shrink-0">Foto de esta opción:</span>
-                                <div className="flex flex-wrap gap-1">
-                                  {fotos.map((foto, k) => {
-                                    const activa = x.fotoIdx === k;
-                                    return (
-                                      <button
-                                        key={foto.url}
-                                        type="button"
-                                        aria-label={`Foto ${k + 1}`}
-                                        aria-pressed={activa}
-                                        onClick={() => setNewProduct({ ...newProduct, presentaciones: newProduct.presentaciones.map((y, j) => j === i ? { ...y, fotoIdx: activa ? undefined : k } : y) })}
-                                        className={`w-8 h-8 rounded-md overflow-hidden border-2 transition-all ${activa ? 'border-black scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`}
-                                      >
-                                        <img src={foto.url} alt="" className="w-full h-full object-cover" />
-                                      </button>
-                                    );
-                                  })}
+                        {newProduct.presentaciones.length > 0 && (
+                          <div className="flex flex-col gap-2 mt-3">
+                            {newProduct.presentaciones.map((x, i) => (
+                              <div key={i} className="space-y-1.5">
+                                <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
+                                  <input
+                                    value={x.label}
+                                    maxLength={30}
+                                    onChange={(e) => setNewProduct({ ...newProduct, presentaciones: newProduct.presentaciones.map((y, j) => j === i ? { ...y, label: e.target.value } : y) })}
+                                    placeholder={infoPres.ejemploLabel}
+                                    // Si escribe solo el número, se completa con la unidad elegida: "12" -> "12 unidades".
+                                    onBlur={(e) => {
+                                      const completo = completarMedida(e.target.value, usaModo ? modo : null);
+                                      if (completo !== e.target.value) setNewProduct((prev) => ({ ...prev, presentaciones: prev.presentaciones.map((y, j) => j === i ? { ...y, label: completo } : y) }));
+                                    }}
+                                    className="w-full sm:w-auto sm:flex-1 min-w-0 px-3 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
+                                  />
+                                  <div className="relative flex-1 min-w-[7rem] sm:flex-none sm:w-32">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">S/</span>
+                                    <input
+                                      type="number"
+                                      step="0.10"
+                                      min="0"
+                                      value={x.price}
+                                      onChange={(e) => setNewProduct({ ...newProduct, presentaciones: newProduct.presentaciones.map((y, j) => j === i ? { ...y, price: e.target.value } : y) })}
+                                      placeholder="0.00"
+                                      className="w-full pl-9 pr-2 py-3 bg-white border border-gray-200 rounded-md font-medium focus:outline-none focus:border-black transition-all"
+                                    />
+                                  </div>
+                                  <button
+                                    type="button"
+                                    aria-label={x.promo ? 'Quitar la marca de promo' : 'Marcar como promo'}
+                                    title={x.promo ? 'Promo: toca para quitar la marca' : 'Marcar esta opción como promo (precio por cantidad)'}
+                                    aria-pressed={x.promo === true}
+                                    onClick={() => setNewProduct({ ...newProduct, presentaciones: newProduct.presentaciones.map((y, j) => j === i ? { ...y, promo: !y.promo } : y) })}
+                                    className={`h-10 shrink-0 px-2.5 rounded-md border flex items-center justify-center gap-1 text-xs font-bold transition-colors ${x.promo ? 'bg-amber-50 border-amber-300 text-amber-700' : 'bg-white border-gray-200 text-gray-400 hover:text-amber-600 hover:border-amber-300'}`}
+                                  >
+                                    <span className="text-[15px] leading-none" style={{ filter: x.promo ? 'none' : 'grayscale(1)', opacity: x.promo ? 1 : 0.7 }}>🔥</span>
+                                    <span className="hidden sm:inline">Promo</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    aria-label="Quitar opción"
+                                    onClick={() => setNewProduct({ ...newProduct, presentaciones: newProduct.presentaciones.filter((_, j) => j !== i) })}
+                                    className="w-10 h-10 shrink-0 rounded-md flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50"
+                                  >
+                                    <span className="material-symbols-outlined text-[20px]">close</span>
+                                  </button>
                                 </div>
-                              </div>
-                            )}
-                            {/* Precio de esta medida en otras monedas: opcional, solo si la tienda activó monedas. El cambio solo sugiere. */}
-                            {(() => {
-                              const monedasTienda = ((stores as any)[newProduct.store]?.monedas ?? []) as { codigo: string; simbolo: string; tasa?: number }[];
-                              if (monedasTienda.length === 0) return null;
-                              return (
-                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pl-1" onFocusCapture={() => setPedirCambio(true)}>
-                                  {monedasTienda.map((m) => {
-                                    const valor = x.preciosMoneda?.[m.codigo] ?? '';
-                                    const sugerido = precioSugerido(parseFloat(x.price), { ...m, tasa: tasaDe(m) } as any);
-                                    const poner = (v: string) => setNewProduct({
-                                      ...newProduct,
-                                      presentaciones: newProduct.presentaciones.map((y, j) => j === i ? { ...y, preciosMoneda: { ...(y.preciosMoneda ?? {}), [m.codigo]: v } } : y),
-                                    });
-                                    return (
-                                      <div key={m.codigo} className="flex items-center gap-1.5">
-                                        <span className="text-xs font-bold text-gray-500 w-9">{m.simbolo}</span>
-                                        <input
-                                          type="number"
-                                          step="0.01"
-                                          min="0"
-                                          value={valor}
-                                          onChange={(e) => poner(e.target.value)}
-                                          placeholder="0.00"
-                                          aria-label={`Precio de ${x.label || 'esta opción'} en ${m.simbolo}`}
-                                          className="w-24 px-2 py-2 bg-white border border-gray-200 rounded-md text-sm font-medium focus:outline-none focus:border-black transition-all"
-                                        />
-                                        {sugerido !== null && String(sugerido) !== valor && (
-                                          <button type="button" onClick={() => poner(String(sugerido))} className="text-[11px] font-bold text-gray-500 underline hover:text-black" title="Calculado con el tipo de cambio de tu tienda; puedes escribir otro">
-                                            Usar {sugerido.toFixed(2)}
+                                {/* Foto de esta opción (sabor, color…): solo si el producto tiene más de una foto. Al elegir la opción el cliente ve esa foto y al tocar la foto se elige la opción. */}
+                                {fotos.length > 1 && (
+                                  <div className="flex items-center gap-1.5 pl-1">
+                                    <span className="text-[11px] font-bold text-gray-500 shrink-0">Foto de esta opción:</span>
+                                    <div className="flex flex-wrap gap-1">
+                                      {fotos.map((foto, k) => {
+                                        const activa = x.fotoIdx === k;
+                                        return (
+                                          <button
+                                            key={foto.url}
+                                            type="button"
+                                            aria-label={`Foto ${k + 1}`}
+                                            aria-pressed={activa}
+                                            onClick={() => setNewProduct({ ...newProduct, presentaciones: newProduct.presentaciones.map((y, j) => j === i ? { ...y, fotoIdx: activa ? undefined : k } : y) })}
+                                            className={`w-8 h-8 rounded-md overflow-hidden border-2 transition-all ${activa ? 'border-black scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                                          >
+                                            <img src={foto.url} alt="" className="w-full h-full object-cover" />
                                           </button>
-                                        )}
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              );
-                            })()}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {newProduct.presentaciones.length > 0 && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const precioSugerido = newProduct.presentaciones[newProduct.presentaciones.length - 1]?.price || newProduct.price || '';
-                            setNewProduct({ ...newProduct, presentaciones: [...newProduct.presentaciones, { label: '', price: precioSugerido }] });
-                          }}
-                          className="mt-2 w-full flex items-center justify-center gap-1.5 py-2.5 rounded-md border-2 border-dashed border-gray-300 text-sm font-bold text-gray-600 hover:border-black hover:text-black hover:bg-white transition-colors"
-                        >
-                          <span className="material-symbols-outlined text-[18px]">add</span>
-                          Agregar otra opción
-                        </button>
-                      )}
-
-                      {usaModo && (
-                        <div className="mt-3">
-                          <p className="text-[11px] font-bold text-gray-500 mb-1.5">¿En qué unidad de medida lo vendes?</p>
-                          <div className="inline-flex flex-wrap rounded-lg border border-gray-200 bg-white p-0.5">
-                            {UNIDADES_DE_MEDIDA.map(({ id, label, icono }) => (
-                              <button
-                                key={id}
-                                type="button"
-                                onClick={() => setModoPres(id)}
-                                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-bold transition-colors ${modo === id ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
-                              >
-                                <span className="material-symbols-outlined text-[16px]">{icono}</span>
-                                {label}
-                              </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
+                                {/* Precio de esta medida en otras monedas: opcional, solo si la tienda activó monedas. El cambio solo sugiere. */}
+                                {(() => {
+                                  const monedasTienda = ((stores as any)[newProduct.store]?.monedas ?? []) as { codigo: string; simbolo: string; tasa?: number }[];
+                                  if (monedasTienda.length === 0) return null;
+                                  return (
+                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pl-1" onFocusCapture={() => setPedirCambio(true)}>
+                                      {monedasTienda.map((m) => {
+                                        const valor = x.preciosMoneda?.[m.codigo] ?? '';
+                                        const sugerido = precioSugerido(parseFloat(x.price), { ...m, tasa: tasaDe(m) } as any);
+                                        const poner = (v: string) => setNewProduct({
+                                          ...newProduct,
+                                          presentaciones: newProduct.presentaciones.map((y, j) => j === i ? { ...y, preciosMoneda: { ...(y.preciosMoneda ?? {}), [m.codigo]: v } } : y),
+                                        });
+                                        return (
+                                          <div key={m.codigo} className="flex items-center gap-1.5">
+                                            <span className="text-xs font-bold text-gray-500 w-9">{m.simbolo}</span>
+                                            <input
+                                              type="number"
+                                              step="0.01"
+                                              min="0"
+                                              value={valor}
+                                              onChange={(e) => poner(e.target.value)}
+                                              placeholder="0.00"
+                                              aria-label={`Precio de ${x.label || 'esta opción'} en ${m.simbolo}`}
+                                              className="w-24 px-2 py-2 bg-white border border-gray-200 rounded-md text-sm font-medium focus:outline-none focus:border-black transition-all"
+                                            />
+                                            {sugerido !== null && String(sugerido) !== valor && (
+                                              <button type="button" onClick={() => poner(String(sugerido))} className="text-[11px] font-bold text-gray-500 underline hover:text-black" title="Calculado con el tipo de cambio de tu tienda; puedes escribir otro">
+                                                Usar {sugerido.toFixed(2)}
+                                              </button>
+                                            )}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  );
+                                })()}
+                              </div>
                             ))}
                           </div>
-                        </div>
-                      )}
+                        )}
 
-                      {usaModo && medidaElegida && (
-                        <p className="text-[11px] text-gray-500 font-medium mt-2">
-                          {medidaElegida.id === 'otra'
-                            ? <>Escribe tu propia medida con <strong>+ Otra</strong> y ponle su precio.</>
-                            : <>{medidaElegida.ayuda}. Toca un atajo, o escribe solo el número en una fila y se completa con la unidad.</>}
-                        </p>
-                      )}
-
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {sugeridas.filter((l) => !newProduct.presentaciones.some((x) => x.label.trim().toLowerCase() === l.toLowerCase())).map((l) => (
+                        {newProduct.presentaciones.length > 0 && (
                           <button
-                            key={l}
+                            type="button"
+                            onClick={() => {
+                              const precioSugerido = newProduct.presentaciones[newProduct.presentaciones.length - 1]?.price || newProduct.price || '';
+                              setNewProduct({ ...newProduct, presentaciones: [...newProduct.presentaciones, { label: '', price: precioSugerido }] });
+                            }}
+                            className="mt-2 w-full flex items-center justify-center gap-1.5 py-2.5 rounded-md border-2 border-dashed border-gray-300 text-sm font-bold text-gray-600 hover:border-black hover:text-black hover:bg-white transition-colors"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">add</span>
+                            Agregar otra opción
+                          </button>
+                        )}
+
+                        {usaModo && (
+                          <div className="mt-3">
+                            <p className="text-[11px] font-bold text-gray-500 mb-1.5">¿En qué unidad de medida lo vendes?</p>
+                            <div className="inline-flex flex-wrap rounded-lg border border-gray-200 bg-white p-0.5">
+                              {UNIDADES_DE_MEDIDA.map(({ id, label, icono }) => (
+                                <button
+                                  key={id}
+                                  type="button"
+                                  onClick={() => setModoPres(id)}
+                                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-bold transition-colors ${modo === id ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                                >
+                                  <span className="material-symbols-outlined text-[16px]">{icono}</span>
+                                  {label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {usaModo && medidaElegida && (
+                          <p className="text-[11px] text-gray-500 font-medium mt-2">
+                            {medidaElegida.id === 'otra'
+                              ? <>Escribe tu propia medida con <strong>+ Otra</strong> y ponle su precio.</>
+                              : <>{medidaElegida.ayuda}. Toca un atajo, o escribe solo el número en una fila y se completa con la unidad.</>}
+                          </p>
+                        )}
+
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {sugeridas.filter((l) => !newProduct.presentaciones.some((x) => x.label.trim().toLowerCase() === l.toLowerCase())).map((l) => (
+                            <button
+                              key={l}
+                              type="button"
+                              onClick={() => {
+                                const precioSugerido = newProduct.price || (newProduct.presentaciones[0]?.price ?? '');
+                                setNewProduct({ ...newProduct, presentaciones: [...newProduct.presentaciones, { label: l, price: precioSugerido }] });
+                              }}
+                              className="px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs font-bold text-gray-700 hover:border-black"
+                            >
+                              + {l}
+                            </button>
+                          ))}
+                          <button
                             type="button"
                             onClick={() => {
                               const precioSugerido = newProduct.price || (newProduct.presentaciones[0]?.price ?? '');
-                              setNewProduct({...newProduct, presentaciones: [...newProduct.presentaciones, { label: l, price: precioSugerido }]});
+                              setNewProduct({ ...newProduct, presentaciones: [...newProduct.presentaciones, { label: '', price: precioSugerido }] });
                             }}
                             className="px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs font-bold text-gray-700 hover:border-black"
                           >
-                            + {l}
+                            + Otra
                           </button>
-                        ))}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const precioSugerido = newProduct.price || (newProduct.presentaciones[0]?.price ?? '');
-                            setNewProduct({...newProduct, presentaciones: [...newProduct.presentaciones, { label: '', price: precioSugerido }]});
-                          }}
-                          className="px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs font-bold text-gray-700 hover:border-black"
-                        >
-                          + Otra
-                        </button>
-                      </div>
+                        </div>
 
-                      {newProduct.presentaciones.length > 0 && (
-                        <p className="text-xs mt-2 font-medium text-gray-600">
-                          Tus clientes verán «Desde S/ {(() => {
-                            const precios = newProduct.presentaciones.map((x) => parseFloat(x.price)).filter((n) => n > 0);
-                            return precios.length ? Math.min(...precios).toFixed(2) : '0.00';
-                          })()}» y elegirán la opción al pedir.
-                        </p>
-                      )}
-                    </div>
-                  );
-                })()}
+                        {newProduct.presentaciones.length > 0 && (
+                          <p className="text-xs mt-2 font-medium text-gray-600">
+                            Tus clientes verán «Desde S/ {(() => {
+                              const precios = newProduct.presentaciones.map((x) => parseFloat(x.price)).filter((n) => n > 0);
+                              return precios.length ? Math.min(...precios).toFixed(2) : '0.00';
+                            })()}» y elegirán la opción al pedir.
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                 </>)}
                 <div className="grid grid-cols-2 gap-4">
@@ -5140,106 +5285,106 @@ function AdminDashboard({ user }: { user: User }) {
                     </button>
                   </div>
                   {!formEmpresa && (
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">{esTerreno ? 'Área del terreno' : 'Subcategoría (Ej: Entradas)'}</label>
-                    <input 
-                      type="text" 
-                      list="existing-subcategories"
-                      value={newProduct.subcategory}
-                      onChange={(e) => setNewProduct({...newProduct, subcategory: e.target.value})}
-                      placeholder={esTerreno ? 'Ej. 200 m² o 1 hectárea' : 'Título separador...'}
-                      className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black transition-all"
-                    />
-                    <datalist id="existing-subcategories">
-                      {Array.from(new Set(products.filter(p => p.store === newProduct.store && p.category === newProduct.category && p.subcategory).map(p => p.subcategory))).map(sub => (
-                        <option key={sub} value={sub} />
-                      ))}
-                    </datalist>
-                  </div>
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">{esTerreno ? 'Área del terreno' : 'Subcategoría (Ej: Entradas)'}</label>
+                      <input
+                        type="text"
+                        list="existing-subcategories"
+                        value={newProduct.subcategory}
+                        onChange={(e) => setNewProduct({ ...newProduct, subcategory: e.target.value })}
+                        placeholder={esTerreno ? 'Ej. 200 m² o 1 hectárea' : 'Título separador...'}
+                        className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black transition-all"
+                      />
+                      <datalist id="existing-subcategories">
+                        {Array.from(new Set(products.filter(p => p.store === newProduct.store && p.category === newProduct.category && p.subcategory).map(p => p.subcategory))).map(sub => (
+                          <option key={sub} value={sub} />
+                        ))}
+                      </datalist>
+                    </div>
                   )}
                 </div>
 
                 {!formEmpresa && (<>
-                {/* Combo / Pack: solo si la tienda tiene el módulo 'promociones' activo (o si es superadmin) */}
-                {(tiendaTiene(newProduct.store, 'promociones') || esSuperadmin) && (
-                  <label className="flex items-center gap-3 rounded-xl border border-dashed border-amber-300 bg-amber-50/60 p-4 cursor-pointer hover:bg-amber-50/90 transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={newProduct.esCombo}
-                      onChange={(e) => setNewProduct({ ...newProduct, esCombo: e.target.checked })}
-                      className="w-5 h-5 accent-amber-600 shrink-0"
-                    />
-                    <span>
-                      <span className="block text-sm font-bold text-amber-950 flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-[18px] text-amber-600">takeout_dining</span>
-                        🔥 Es un Combo / Pack
-                      </span>
-                      <span className="block text-xs text-amber-800/80 mt-0.5">
-                        Ideal para paquetes de comida (pollerías, combos familiares) o packs. Se destaca en tu carta con sello especial y aparece en Promociones de BogaHub.
-                      </span>
-                    </span>
-                  </label>
-                )}
-                {/* Aviso: un producto con precios por cantidad (incluida 1 sola unidad) no es un combo. */}
-                {newProduct.esCombo && newProduct.presentaciones.some((x) => /^1\s*(unidad|und|u)?$/i.test(x.label.trim())) && (
-                  <div className="-mt-3 rounded-lg border border-amber-300 bg-amber-100/60 px-4 py-3 text-xs font-semibold text-amber-900 flex items-start gap-2">
-                    <span className="material-symbols-outlined text-[18px] text-amber-600 shrink-0">info</span>
-                    <span>
-                      Este producto tiene <strong>1 unidad</strong> entre sus opciones, así que se vende por cantidad: no es un combo. Un combo es un paquete fijo
-                      (por ejemplo "Escoba + recogedor"). Si lo dejas marcado, saldrá en Promociones con el precio de 1 unidad. Mejor desmárcalo.
-                    </span>
-                  </div>
-                )}
-
-                {tiendaTiene(newProduct.store, 'pos') && (
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Código de barras <span className="font-medium text-gray-400">(opcional, para cobrar con la cámara)</span></label>
-                    <div className="flex gap-2">
+                  {/* Combo / Pack: solo si la tienda tiene el módulo 'promociones' activo (o si es superadmin) */}
+                  {(tiendaTiene(newProduct.store, 'promociones') || esSuperadmin) && (
+                    <label className="flex items-center gap-3 rounded-xl border border-dashed border-amber-300 bg-amber-50/60 p-4 cursor-pointer hover:bg-amber-50/90 transition-colors">
                       <input
-                        value={newProduct.codigoBarras}
-                        onChange={(e) => setNewProduct({ ...newProduct, codigoBarras: e.target.value })}
-                        inputMode="numeric"
-                        placeholder="Escanéalo o escríbelo"
-                        className="flex-1 min-w-0 px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                        type="checkbox"
+                        checked={newProduct.esCombo}
+                        onChange={(e) => setNewProduct({ ...newProduct, esCombo: e.target.checked })}
+                        className="w-5 h-5 accent-amber-600 shrink-0"
                       />
-                      <button
-                        type="button"
-                        onClick={() => setEscanerCodigoAbierto(true)}
-                        aria-label="Escanear el código del producto con la cámara"
-                        className="px-3 sm:px-4 rounded-md bg-gray-900 text-white font-bold text-sm flex items-center gap-1.5 hover:bg-black"
-                      >
-                        <span className="material-symbols-outlined text-[20px]">photo_camera</span>
-                        <span className="hidden sm:inline">Escanear</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setNewProduct((prev) => ({ ...prev, codigoBarras: generarEan13Interno() }))}
-                        title="Crear un código de barras interno para este producto"
-                        aria-label="Crear un código de barras interno"
-                        className="px-3 rounded-md bg-white border border-gray-300 text-gray-800 font-bold text-sm flex items-center gap-1.5 hover:bg-gray-50"
-                      >
-                        <span className="material-symbols-outlined text-[20px]">autorenew</span>
-                        <span className="hidden sm:inline">Crear</span>
-                      </button>
+                      <span>
+                        <span className="block text-sm font-bold text-amber-950 flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-[18px] text-amber-600">takeout_dining</span>
+                          🔥 Es un Combo / Pack
+                        </span>
+                        <span className="block text-xs text-amber-800/80 mt-0.5">
+                          Ideal para paquetes de comida (pollerías, combos familiares) o packs. Se destaca en tu carta con sello especial y aparece en Promociones de BogaHub.
+                        </span>
+                      </span>
+                    </label>
+                  )}
+                  {/* Aviso: un producto con precios por cantidad (incluida 1 sola unidad) no es un combo. */}
+                  {newProduct.esCombo && newProduct.presentaciones.some((x) => /^1\s*(unidad|und|u)?$/i.test(x.label.trim())) && (
+                    <div className="-mt-3 rounded-lg border border-amber-300 bg-amber-100/60 px-4 py-3 text-xs font-semibold text-amber-900 flex items-start gap-2">
+                      <span className="material-symbols-outlined text-[18px] text-amber-600 shrink-0">info</span>
+                      <span>
+                        Este producto tiene <strong>1 unidad</strong> entre sus opciones, así que se vende por cantidad: no es un combo. Un combo es un paquete fijo
+                        (por ejemplo "Escoba + recogedor"). Si lo dejas marcado, saldrá en Promociones con el precio de 1 unidad. Mejor desmárcalo.
+                      </span>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1.5">Es el código de barras impreso en el empaque. Si el producto no trae, toca «Crear» para darle uno propio e imprime su etiqueta desde Productos → «Etiquetas con código».</p>
-                  </div>
-                )}
+                  )}
 
-                {esTerreno && (
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Ubicación (enlace de Google Maps)</label>
-                    <input
-                      value={newProduct.ubicacion}
-                      onChange={(e) => setNewProduct({ ...newProduct, ubicacion: e.target.value })}
-                      placeholder="https://maps.app.goo.gl/…"
-                      className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
-                    />
-                    <p className="text-xs text-gray-500 mt-1.5">
-                      Abre el terreno en Google Maps, toca Compartir y copia el enlace. Aparece como &quot;Ver ubicación&quot; en la tarjeta.
-                    </p>
-                  </div>
-                )}
+                  {tiendaTiene(newProduct.store, 'pos') && (
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">Código de barras <span className="font-medium text-gray-400">(opcional, para cobrar con la cámara)</span></label>
+                      <div className="flex gap-2">
+                        <input
+                          value={newProduct.codigoBarras}
+                          onChange={(e) => setNewProduct({ ...newProduct, codigoBarras: e.target.value })}
+                          inputMode="numeric"
+                          placeholder="Escanéalo o escríbelo"
+                          className="flex-1 min-w-0 px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setEscanerCodigoAbierto(true)}
+                          aria-label="Escanear el código del producto con la cámara"
+                          className="px-3 sm:px-4 rounded-md bg-gray-900 text-white font-bold text-sm flex items-center gap-1.5 hover:bg-black"
+                        >
+                          <span className="material-symbols-outlined text-[20px]">photo_camera</span>
+                          <span className="hidden sm:inline">Escanear</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setNewProduct((prev) => ({ ...prev, codigoBarras: generarEan13Interno() }))}
+                          title="Crear un código de barras interno para este producto"
+                          aria-label="Crear un código de barras interno"
+                          className="px-3 rounded-md bg-white border border-gray-300 text-gray-800 font-bold text-sm flex items-center gap-1.5 hover:bg-gray-50"
+                        >
+                          <span className="material-symbols-outlined text-[20px]">autorenew</span>
+                          <span className="hidden sm:inline">Crear</span>
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1.5">Es el código de barras impreso en el empaque. Si el producto no trae, toca «Crear» para darle uno propio e imprime su etiqueta desde Productos → «Etiquetas con código».</p>
+                    </div>
+                  )}
+
+                  {esTerreno && (
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">Ubicación (enlace de Google Maps)</label>
+                      <input
+                        value={newProduct.ubicacion}
+                        onChange={(e) => setNewProduct({ ...newProduct, ubicacion: e.target.value })}
+                        placeholder="https://maps.app.goo.gl/…"
+                        className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                      />
+                      <p className="text-xs text-gray-500 mt-1.5">
+                        Abre el terreno en Google Maps, toca Compartir y copia el enlace. Aparece como &quot;Ver ubicación&quot; en la tarjeta.
+                      </p>
+                    </div>
+                  )}
 
                 </>)}
                 {/* Disponibilidad: siempre disponible, stock controlado (con inventario) o por reserva (se reserva por WhatsApp, no se vende al momento). */}
@@ -5249,103 +5394,103 @@ function AdminDashboard({ user }: { user: User }) {
                   const tiendaReserva = tiendaConReservas(newProduct.store);
                   const tarjeta = (activa: boolean) => `p-3 rounded-lg border text-left transition-all flex items-start gap-2.5 ${activa ? 'border-[var(--tienda-color)] bg-white ring-2 ring-[var(--tienda-color)]/10 shadow-sm' : 'border-gray-200 bg-white/50 hover:bg-white text-gray-600'}`;
                   return (
-                <div className="bg-gray-50/70 border border-gray-200/80 rounded-xl p-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-[18px] text-[var(--tienda-color)]">inventory_2</span>
-                        {conInventario ? 'Disponibilidad e Inventario' : 'Disponibilidad'}
-                      </h4>
-                      <p className="text-xs text-gray-500 mt-0.5">{conInventario ? 'Define si el producto tiene stock controlado, siempre está disponible o se vende por reserva' : 'Define si el producto se vende al momento o por reserva'}</p>
+                    <div className="bg-gray-50/70 border border-gray-200/80 rounded-xl p-4 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-[18px] text-[var(--tienda-color)]">inventory_2</span>
+                            {conInventario ? 'Disponibilidad e Inventario' : 'Disponibilidad'}
+                          </h4>
+                          <p className="text-xs text-gray-500 mt-0.5">{conInventario ? 'Define si el producto tiene stock controlado, siempre está disponible o se vende por reserva' : 'Define si el producto se vende al momento o por reserva'}</p>
+                        </div>
+                      </div>
+
+                      <div className={`grid gap-3 ${conInventario ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                        <button
+                          type="button"
+                          onClick={() => setNewProduct({ ...newProduct, stockType: 'ilimitado', reserva: '' })}
+                          className={tarjeta(!porReserva && newProduct.stockType === 'ilimitado')}
+                        >
+                          <span className={`material-symbols-outlined text-[20px] shrink-0 mt-0.5 ${!porReserva && newProduct.stockType === 'ilimitado' ? 'text-[var(--tienda-color)]' : 'text-gray-400'}`}>
+                            all_inclusive
+                          </span>
+                          <div>
+                            <p className="text-xs font-bold text-gray-900">Siempre disponible</p>
+                            <p className="text-[11px] text-gray-500 leading-tight mt-0.5">Ideal para comida, menús o servicios bajo pedido</p>
+                          </div>
+                        </button>
+
+                        {conInventario && (
+                          <button
+                            type="button"
+                            onClick={() => setNewProduct({ ...newProduct, stockType: 'limitado', stockQuantity: newProduct.stockQuantity || '10', reserva: newProduct.reserva === 'no' ? 'no' : '' })}
+                            className={tarjeta(!porReserva && newProduct.stockType === 'limitado')}
+                          >
+                            <span className={`material-symbols-outlined text-[20px] shrink-0 mt-0.5 ${!porReserva && newProduct.stockType === 'limitado' ? 'text-[var(--tienda-color)]' : 'text-gray-400'}`}>
+                              inventory
+                            </span>
+                            <div>
+                              <p className="text-xs font-bold text-gray-900">Stock controlado</p>
+                              <p className="text-[11px] text-gray-500 leading-tight mt-0.5">Para prendas, abarrotes o unidades exactas</p>
+                            </div>
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => setNewProduct({ ...newProduct, reserva: 'si' })}
+                          className={tarjeta(porReserva)}
+                        >
+                          <span className={`material-symbols-outlined text-[20px] shrink-0 mt-0.5 ${porReserva ? 'text-orange-600' : 'text-gray-400'}`}>
+                            event_available
+                          </span>
+                          <div>
+                            <p className="text-xs font-bold text-gray-900">Por reserva</p>
+                            <p className="text-[11px] text-gray-500 leading-tight mt-0.5">Se reserva por WhatsApp, no se vende al momento</p>
+                          </div>
+                        </button>
+                      </div>
+
+                      {porReserva && !tiendaReserva && (
+                        <p className="text-[11px] font-semibold text-orange-700 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2">Las reservas están apagadas en esta tienda: al guardar se prenden solas.</p>
+                      )}
+
+                      {conInventario && !porReserva && newProduct.stockType === 'limitado' && tiendaReserva && (
+                        <label className="flex items-start gap-2 text-[11px] text-gray-600 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={newProduct.reserva === 'no'}
+                            onChange={(e) => setNewProduct({ ...newProduct, reserva: e.target.checked ? 'no' : '' })}
+                            className="mt-0.5 w-3.5 h-3.5 accent-black"
+                          />
+                          <span>Si se agota, <b>esconderlo</b> (no ofrecerlo en reserva). Sin marcar, un producto agotado pasa a reserva solo.</span>
+                        </label>
+                      )}
+
+                      {conInventario && !porReserva && newProduct.stockType === 'limitado' && (
+                        <div className="pt-2 border-t border-gray-200/60 flex items-center justify-between gap-4">
+                          <div>
+                            <label className="block text-xs font-bold text-gray-700">Cantidad de unidades en stock</label>
+                            <p className="text-[11px] text-gray-500">Si llega a 0, se marcará automáticamente como Agotado</p>
+                          </div>
+                          <div className="w-32 shrink-0">
+                            <input
+                              type="number"
+                              min="0"
+                              value={newProduct.stockQuantity}
+                              onChange={(e) => setNewProduct({ ...newProduct, stockQuantity: e.target.value })}
+                              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-center font-bold text-gray-900 focus:outline-none focus:border-[var(--tienda-color)]"
+                              placeholder="Ej: 15"
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-
-                  <div className={`grid gap-3 ${conInventario ? 'grid-cols-3' : 'grid-cols-2'}`}>
-                    <button
-                      type="button"
-                      onClick={() => setNewProduct({ ...newProduct, stockType: 'ilimitado', reserva: '' })}
-                      className={tarjeta(!porReserva && newProduct.stockType === 'ilimitado')}
-                    >
-                      <span className={`material-symbols-outlined text-[20px] shrink-0 mt-0.5 ${!porReserva && newProduct.stockType === 'ilimitado' ? 'text-[var(--tienda-color)]' : 'text-gray-400'}`}>
-                        all_inclusive
-                      </span>
-                      <div>
-                        <p className="text-xs font-bold text-gray-900">Siempre disponible</p>
-                        <p className="text-[11px] text-gray-500 leading-tight mt-0.5">Ideal para comida, menús o servicios bajo pedido</p>
-                      </div>
-                    </button>
-
-                    {conInventario && (
-                    <button
-                      type="button"
-                      onClick={() => setNewProduct({ ...newProduct, stockType: 'limitado', stockQuantity: newProduct.stockQuantity || '10', reserva: newProduct.reserva === 'no' ? 'no' : '' })}
-                      className={tarjeta(!porReserva && newProduct.stockType === 'limitado')}
-                    >
-                      <span className={`material-symbols-outlined text-[20px] shrink-0 mt-0.5 ${!porReserva && newProduct.stockType === 'limitado' ? 'text-[var(--tienda-color)]' : 'text-gray-400'}`}>
-                        inventory
-                      </span>
-                      <div>
-                        <p className="text-xs font-bold text-gray-900">Stock controlado</p>
-                        <p className="text-[11px] text-gray-500 leading-tight mt-0.5">Para prendas, abarrotes o unidades exactas</p>
-                      </div>
-                    </button>
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={() => setNewProduct({ ...newProduct, reserva: 'si' })}
-                      className={tarjeta(porReserva)}
-                    >
-                      <span className={`material-symbols-outlined text-[20px] shrink-0 mt-0.5 ${porReserva ? 'text-orange-600' : 'text-gray-400'}`}>
-                        event_available
-                      </span>
-                      <div>
-                        <p className="text-xs font-bold text-gray-900">Por reserva</p>
-                        <p className="text-[11px] text-gray-500 leading-tight mt-0.5">Se reserva por WhatsApp, no se vende al momento</p>
-                      </div>
-                    </button>
-                  </div>
-
-                  {porReserva && !tiendaReserva && (
-                    <p className="text-[11px] font-semibold text-orange-700 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2">Las reservas están apagadas en esta tienda: al guardar se prenden solas.</p>
-                  )}
-
-                  {conInventario && !porReserva && newProduct.stockType === 'limitado' && tiendaReserva && (
-                    <label className="flex items-start gap-2 text-[11px] text-gray-600 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={newProduct.reserva === 'no'}
-                        onChange={(e) => setNewProduct({ ...newProduct, reserva: e.target.checked ? 'no' : '' })}
-                        className="mt-0.5 w-3.5 h-3.5 accent-black"
-                      />
-                      <span>Si se agota, <b>esconderlo</b> (no ofrecerlo en reserva). Sin marcar, un producto agotado pasa a reserva solo.</span>
-                    </label>
-                  )}
-
-                  {conInventario && !porReserva && newProduct.stockType === 'limitado' && (
-                    <div className="pt-2 border-t border-gray-200/60 flex items-center justify-between gap-4">
-                      <div>
-                        <label className="block text-xs font-bold text-gray-700">Cantidad de unidades en stock</label>
-                        <p className="text-[11px] text-gray-500">Si llega a 0, se marcará automáticamente como Agotado</p>
-                      </div>
-                      <div className="w-32 shrink-0">
-                        <input
-                          type="number"
-                          min="0"
-                          value={newProduct.stockQuantity}
-                          onChange={(e) => setNewProduct({ ...newProduct, stockQuantity: e.target.value })}
-                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-center font-bold text-gray-900 focus:outline-none focus:border-[var(--tienda-color)]"
-                          placeholder="Ej: 15"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
                   );
                 })()}
               </div>
             </form>
-            
+
           </div>
         </div>
       )}
@@ -5381,7 +5526,7 @@ function AdminDashboard({ user }: { user: User }) {
                   </label>
                 </div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Foto de Portada</label>
-                <input type="file" ref={storeHeroInputRef} onChange={e => { if (e.target.files?.[0]) { setStoreHeroFile(e.target.files[0]); setStoreHeroPreview(URL.createObjectURL(e.target.files[0])); }}} accept="image/*" className="sr-only" />
+                <input type="file" ref={storeHeroInputRef} onChange={e => { if (e.target.files?.[0]) { setStoreHeroFile(e.target.files[0]); setStoreHeroPreview(URL.createObjectURL(e.target.files[0])); } }} accept="image/*" className="sr-only" />
                 <div
                   onClick={() => storeHeroInputRef.current?.click()}
                   tabIndex={0}
@@ -5465,7 +5610,7 @@ function AdminDashboard({ user }: { user: User }) {
               {/* Logo Upload */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Logo / Miniatura</label>
-                <input type="file" ref={storeLogoInputRef} onChange={e => { if (e.target.files?.[0]) { setStoreLogoFile(e.target.files[0]); setStoreLogoPreview(URL.createObjectURL(e.target.files[0])); }}} accept="image/*" className="sr-only" />
+                <input type="file" ref={storeLogoInputRef} onChange={e => { if (e.target.files?.[0]) { setStoreLogoFile(e.target.files[0]); setStoreLogoPreview(URL.createObjectURL(e.target.files[0])); } }} accept="image/*" className="sr-only" />
                 <div className="flex items-center gap-4">
                   <div
                     onClick={() => storeLogoInputRef.current?.click()}
@@ -5582,9 +5727,8 @@ function AdminDashboard({ user }: { user: User }) {
                     title="Dejar el color actual"
                   >
                     <div
-                      className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${
-                        colorPreset === null ? 'ring-2 ring-offset-2 ring-black' : 'border-gray-200 hover:scale-105'
-                      }`}
+                      className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${colorPreset === null ? 'ring-2 ring-offset-2 ring-black' : 'border-gray-200 hover:scale-105'
+                        }`}
                       style={{ background: stores[editingStoreSlug || '']?.theme?.primary || '#0058be' }}
                     >
                       {colorPreset === null && <span className="material-symbols-outlined text-white text-[16px] drop-shadow">check</span>}
@@ -5601,9 +5745,8 @@ function AdminDashboard({ user }: { user: User }) {
                       title={p.name}
                     >
                       <div
-                        className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${
-                          colorPreset === p.id ? 'ring-2 ring-offset-2 ring-black' : 'border-gray-200 hover:scale-105'
-                        }`}
+                        className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${colorPreset === p.id ? 'ring-2 ring-offset-2 ring-black' : 'border-gray-200 hover:scale-105'
+                          }`}
                         style={{ background: p.swatch }}
                       >
                         {colorPreset === p.id && <span className="material-symbols-outlined text-white text-[16px] drop-shadow">check</span>}
@@ -5620,9 +5763,8 @@ function AdminDashboard({ user }: { user: User }) {
                     title="Sacar los colores del logo o portada ya cargados"
                   >
                     <div
-                      className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all bg-[conic-gradient(from_180deg,#f43f5e,#f59e0b,#22c55e,#3b82f6,#a855f7,#f43f5e)] ${
-                        colorPreset === 'logo' ? 'ring-2 ring-offset-2 ring-black' : 'border-gray-200 hover:scale-105'
-                      }`}
+                      className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all bg-[conic-gradient(from_180deg,#f43f5e,#f59e0b,#22c55e,#3b82f6,#a855f7,#f43f5e)] ${colorPreset === 'logo' ? 'ring-2 ring-offset-2 ring-black' : 'border-gray-200 hover:scale-105'
+                        }`}
                     >
                       {extractingTheme ? (
                         <span className="material-symbols-outlined text-white text-[16px] animate-spin drop-shadow">progress_activity</span>
@@ -5643,7 +5785,7 @@ function AdminDashboard({ user }: { user: User }) {
                 <input
                   type="text"
                   value={storeForm.name}
-                  onChange={e => setStoreForm({...storeForm, name: e.target.value})}
+                  onChange={e => setStoreForm({ ...storeForm, name: e.target.value })}
                   className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
                   placeholder={editEmpresa ? 'Ej: S.E.L. Perú' : 'Ej: Sunset Lounge'}
                 />
@@ -5655,7 +5797,7 @@ function AdminDashboard({ user }: { user: User }) {
                 <input
                   type="text"
                   value={storeForm.tagline}
-                  onChange={e => setStoreForm({...storeForm, tagline: e.target.value})}
+                  onChange={e => setStoreForm({ ...storeForm, tagline: e.target.value })}
                   className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
                   placeholder={editEmpresa ? 'Ej: Fabricación y montaje de estructuras metálicas' : 'Ej: Bar & Café'}
                 />
@@ -5667,7 +5809,7 @@ function AdminDashboard({ user }: { user: User }) {
                 <p className="text-xs text-gray-500 mb-2">Decide en qué sección de Explorar aparece tu negocio.</p>
                 <select
                   value={storeForm.marketplace_category}
-                  onChange={e => setStoreForm({...storeForm, marketplace_category: e.target.value})}
+                  onChange={e => setStoreForm({ ...storeForm, marketplace_category: e.target.value })}
                   className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-md font-medium focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none cursor-pointer"
                   style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'black\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.2em' }}
                 >
@@ -5707,164 +5849,164 @@ function AdminDashboard({ user }: { user: User }) {
               </div>
 
               {!editEmpresa && (<>
-              {/* IGV: un solo ajuste para todo el catálogo; cada producto puede salirse de él. */}
-              <div className="scroll-mt-4">
-                <label className="flex items-start gap-3 cursor-pointer p-4 rounded-xl border border-gray-200 bg-white">
-                  <input type="checkbox" checked={storeForm.igv_incluido} onChange={e => setStoreForm({ ...storeForm, igv_incluido: e.target.checked })} className="mt-0.5 w-4 h-4 rounded text-black focus:ring-black border-gray-300 accent-black" />
-                  <span>
-                    <span className="block text-sm font-bold text-gray-700">Mis precios incluyen IGV</span>
-                    <span className="block text-xs text-gray-500 mt-0.5">Tu tienda muestra «IGV incluido» junto a cada precio, en el carrito y en el pedido por WhatsApp. En cada producto puedes quitarlo o ponerlo solo a ese.</span>
-                  </span>
-                </label>
-              </div>
-
-              {/* Metodos de pago: solo informativos, el pago se coordina por WhatsApp */}
-              <div id="editor-pagos" className="scroll-mt-4">
-                <label className="block text-sm font-bold text-gray-700 mb-1">Métodos de Pago que Aceptas</label>
-                <p className="text-xs text-gray-500 mb-3">
-                  Se muestran en tu tienda como referencia. El pago se coordina por WhatsApp{dbStores.find((s: any) => s.slug === editingStoreSlug)?.modulos?.pasarela_pago === true ? ', salvo el cobro online de más abajo' : ''}.
-                </p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                  {PAYMENT_METHODS.map((m) => {
-                    const activo = storeForm.metodos_pago.includes(m.id);
-                    return (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => setStoreForm({
-                          ...storeForm,
-                          metodos_pago: activo
-                            ? storeForm.metodos_pago.filter((x) => x !== m.id)
-                            : [...storeForm.metodos_pago, m.id],
-                        })}
-                        className="relative flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all bg-white hover:border-gray-300"
-                        style={activo
-                          ? { borderColor: m.color, background: `${m.color}0d` }
-                          : { borderColor: '#e5e7eb' }}
-                      >
-                        {activo && (
-                          <span className="material-symbols-outlined absolute top-1 right-1 text-[16px]" style={{ color: m.color }}>check_circle</span>
-                        )}
-                        <span
-                          className="w-9 h-9 rounded-lg flex items-center justify-center overflow-hidden"
-                          style={{ background: `${m.color}1a`, color: m.color }}
-                        >
-                          {m.id === 'Visa' ? (
-                            <span className="italic font-black text-[11px] tracking-tight" style={{ color: m.color }}>VISA</span>
-                          ) : m.id === 'Mastercard' ? (
-                            <svg width="22" height="14" viewBox="0 0 22 14" aria-hidden="true">
-                              <circle cx="8" cy="7" r="7" fill="#eb001b" />
-                              <circle cx="14" cy="7" r="7" fill="#f79e1b" fillOpacity="0.85" />
-                            </svg>
-                          ) : (
-                            <span className="material-symbols-outlined text-[20px]">{m.icon}</span>
-                          )}
-                        </span>
-                        <span className="text-xs font-bold" style={{ color: activo ? m.color : '#374151' }}>{m.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-                {storeForm.metodos_pago.length === 0 && (
-                  <p className="text-xs text-gray-400 mt-2">Si no eliges ninguno, tu tienda muestra solo Efectivo.</p>
-                )}
-
-                <label className="block text-sm font-bold text-gray-700 mt-6 mb-1">Monedas para tus clientes</label>
-                <p className="text-xs text-gray-500 mb-3">
-                  Tus precios están en soles. Si también vendes en otra moneda (por ejemplo dólares, para quien compra desde fuera), actívala aquí.
-                  Luego, en cada producto, escribes su precio en esa moneda y tu tienda muestra los dos precios.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {MONEDAS_SUGERIDAS.map((m) => {
-                    const activa = storeForm.monedas.some((x) => x.codigo === m.codigo);
-                    return (
-                      <button
-                        key={m.codigo}
-                        type="button"
-                        onClick={() => setStoreForm({
-                          ...storeForm,
-                          monedas: activa
-                            ? storeForm.monedas.filter((x) => x.codigo !== m.codigo)
-                            : [...storeForm.monedas, { codigo: m.codigo, simbolo: m.simbolo, tasa: '' }],
-                        })}
-                        className={`px-3 py-2 rounded-full border-2 text-xs font-bold transition-all ${activa ? 'border-[#0058be] bg-[#0058be]/10 text-[#0058be]' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'}`}
-                      >
-                        {activa && <span className="material-symbols-outlined text-[14px] align-middle mr-0.5">check</span>}
-                        {m.simbolo} · {m.nombre}
-                      </button>
-                    );
-                  })}
+                {/* IGV: un solo ajuste para todo el catálogo; cada producto puede salirse de él. */}
+                <div className="scroll-mt-4">
+                  <label className="flex items-start gap-3 cursor-pointer p-4 rounded-xl border border-gray-200 bg-white">
+                    <input type="checkbox" checked={storeForm.igv_incluido} onChange={e => setStoreForm({ ...storeForm, igv_incluido: e.target.checked })} className="mt-0.5 w-4 h-4 rounded text-black focus:ring-black border-gray-300 accent-black" />
+                    <span>
+                      <span className="block text-sm font-bold text-gray-700">Mis precios incluyen IGV</span>
+                      <span className="block text-xs text-gray-500 mt-0.5">Tu tienda muestra «IGV incluido» junto a cada precio, en el carrito y en el pedido por WhatsApp. En cada producto puedes quitarlo o ponerlo solo a ese.</span>
+                    </span>
+                  </label>
                 </div>
 
-                {storeForm.monedas.length > 0 && (
-                  <div className="mt-3 space-y-2">
-                    <p className="text-xs text-gray-500">Tipo de cambio (opcional): sirve para <b>sugerirte</b> el precio al editar un producto. Siempre puedes escribir otro precio a mano.</p>
-                    {storeForm.monedas.map((m, i) => (
-                      <div key={m.codigo} className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-bold text-gray-700 w-28">1 {m.simbolo} =</span>
-                        <span className="text-sm font-bold text-gray-500">S/</span>
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          value={m.tasa}
-                          onChange={(e) => setStoreForm({
+                {/* Metodos de pago: solo informativos, el pago se coordina por WhatsApp */}
+                <div id="editor-pagos" className="scroll-mt-4">
+                  <label className="block text-sm font-bold text-gray-700 mb-1">Métodos de Pago que Aceptas</label>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Se muestran en tu tienda como referencia. El pago se coordina por WhatsApp{dbStores.find((s: any) => s.slug === editingStoreSlug)?.modulos?.pasarela_pago === true ? ', salvo el cobro online de más abajo' : ''}.
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    {PAYMENT_METHODS.map((m) => {
+                      const activo = storeForm.metodos_pago.includes(m.id);
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => setStoreForm({
                             ...storeForm,
-                            monedas: storeForm.monedas.map((x, j) => (j === i ? { ...x, tasa: e.target.value } : x)),
+                            metodos_pago: activo
+                              ? storeForm.metodos_pago.filter((x) => x !== m.id)
+                              : [...storeForm.metodos_pago, m.id],
                           })}
-                          placeholder={`ej. ${ejemploDeCambio(m.codigo)}`}
-                          className="w-28 px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0058be]"
-                        />
-                        {!(cambioHoy?.tasas[m.codigo] && String(cambioHoy.tasas[m.codigo]) === m.tasa) && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const hoy = cambioHoy?.tasas[m.codigo];
-                              if (hoy) {
-                                setStoreForm({ ...storeForm, monedas: storeForm.monedas.map((x, j) => (j === i ? { ...x, tasa: String(hoy) } : x)) });
-                              } else {
-                                // Recién ahora se consulta la cotización; al llegar se escribe sola.
-                                setCambioParaTienda(m.codigo);
-                                setPedirCambio(true);
-                              }
-                            }}
-                            className="px-3 py-2 rounded-full border border-gray-300 bg-white text-xs font-bold text-gray-700 hover:border-black transition-colors"
-                            title={`Cotización de ExchangeRate-API${fechaCambio ? `, actualizada el ${fechaCambio}` : ''}`}
+                          className="relative flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all bg-white hover:border-gray-300"
+                          style={activo
+                            ? { borderColor: m.color, background: `${m.color}0d` }
+                            : { borderColor: '#e5e7eb' }}
+                        >
+                          {activo && (
+                            <span className="material-symbols-outlined absolute top-1 right-1 text-[16px]" style={{ color: m.color }}>check_circle</span>
+                          )}
+                          <span
+                            className="w-9 h-9 rounded-lg flex items-center justify-center overflow-hidden"
+                            style={{ background: `${m.color}1a`, color: m.color }}
                           >
-                            {cambioHoy?.tasas[m.codigo]
-                              ? `Usar cambio de hoy: S/ ${cambioHoy.tasas[m.codigo]}`
-                              : cambioParaTienda === m.codigo ? 'Trayendo…' : 'Traer cambio de hoy'}
-                          </button>
-                        )}
-                      </div>
-                    ))}
+                            {m.id === 'Visa' ? (
+                              <span className="italic font-black text-[11px] tracking-tight" style={{ color: m.color }}>VISA</span>
+                            ) : m.id === 'Mastercard' ? (
+                              <svg width="22" height="14" viewBox="0 0 22 14" aria-hidden="true">
+                                <circle cx="8" cy="7" r="7" fill="#eb001b" />
+                                <circle cx="14" cy="7" r="7" fill="#f79e1b" fillOpacity="0.85" />
+                              </svg>
+                            ) : (
+                              <span className="material-symbols-outlined text-[20px]">{m.icon}</span>
+                            )}
+                          </span>
+                          <span className="text-xs font-bold" style={{ color: activo ? m.color : '#374151' }}>{m.label}</span>
+                        </button>
+                      );
+                    })}
                   </div>
-                )}
+                  {storeForm.metodos_pago.length === 0 && (
+                    <p className="text-xs text-gray-400 mt-2">Si no eliges ninguno, tu tienda muestra solo Efectivo.</p>
+                  )}
 
-                <label className="block text-sm font-bold text-gray-700 mt-6 mb-1">¿Cómo entregas tus pedidos?</label>
-                <p className="text-xs text-gray-500 mb-3">Define qué le ofrece el carrito al cliente al confirmar su pedido.</p>
-                <div className="grid grid-cols-3 gap-2.5">
-                  {([
-                    { id: 'ambos', label: 'Ambos', icon: 'sync_alt' },
-                    { id: 'delivery', label: 'Solo delivery', icon: 'moped' },
-                    { id: 'recojo', label: 'Solo recojo', icon: 'storefront' },
-                  ] as const).map((op) => {
-                    const activo = storeForm.entrega === op.id;
-                    return (
-                      <button
-                        key={op.id}
-                        type="button"
-                        onClick={() => setStoreForm({ ...storeForm, entrega: op.id })}
-                        className="relative flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all bg-white hover:border-gray-300"
-                        style={activo ? { borderColor: '#111827', background: '#1118270d' } : { borderColor: '#e5e7eb' }}
-                      >
-                        {activo && <span className="material-symbols-outlined absolute top-1 right-1 text-[16px] text-gray-900">check_circle</span>}
-                        <span className="material-symbols-outlined text-[20px] text-gray-700">{op.icon}</span>
-                        <span className="text-xs font-bold text-gray-700">{op.label}</span>
-                      </button>
-                    );
-                  })}
+                  <label className="block text-sm font-bold text-gray-700 mt-6 mb-1">Monedas para tus clientes</label>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Tus precios están en soles. Si también vendes en otra moneda (por ejemplo dólares, para quien compra desde fuera), actívala aquí.
+                    Luego, en cada producto, escribes su precio en esa moneda y tu tienda muestra los dos precios.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {MONEDAS_SUGERIDAS.map((m) => {
+                      const activa = storeForm.monedas.some((x) => x.codigo === m.codigo);
+                      return (
+                        <button
+                          key={m.codigo}
+                          type="button"
+                          onClick={() => setStoreForm({
+                            ...storeForm,
+                            monedas: activa
+                              ? storeForm.monedas.filter((x) => x.codigo !== m.codigo)
+                              : [...storeForm.monedas, { codigo: m.codigo, simbolo: m.simbolo, tasa: '' }],
+                          })}
+                          className={`px-3 py-2 rounded-full border-2 text-xs font-bold transition-all ${activa ? 'border-[#0058be] bg-[#0058be]/10 text-[#0058be]' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'}`}
+                        >
+                          {activa && <span className="material-symbols-outlined text-[14px] align-middle mr-0.5">check</span>}
+                          {m.simbolo} · {m.nombre}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {storeForm.monedas.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      <p className="text-xs text-gray-500">Tipo de cambio (opcional): sirve para <b>sugerirte</b> el precio al editar un producto. Siempre puedes escribir otro precio a mano.</p>
+                      {storeForm.monedas.map((m, i) => (
+                        <div key={m.codigo} className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-bold text-gray-700 w-28">1 {m.simbolo} =</span>
+                          <span className="text-sm font-bold text-gray-500">S/</span>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={m.tasa}
+                            onChange={(e) => setStoreForm({
+                              ...storeForm,
+                              monedas: storeForm.monedas.map((x, j) => (j === i ? { ...x, tasa: e.target.value } : x)),
+                            })}
+                            placeholder={`ej. ${ejemploDeCambio(m.codigo)}`}
+                            className="w-28 px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#0058be]"
+                          />
+                          {!(cambioHoy?.tasas[m.codigo] && String(cambioHoy.tasas[m.codigo]) === m.tasa) && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const hoy = cambioHoy?.tasas[m.codigo];
+                                if (hoy) {
+                                  setStoreForm({ ...storeForm, monedas: storeForm.monedas.map((x, j) => (j === i ? { ...x, tasa: String(hoy) } : x)) });
+                                } else {
+                                  // Recién ahora se consulta la cotización; al llegar se escribe sola.
+                                  setCambioParaTienda(m.codigo);
+                                  setPedirCambio(true);
+                                }
+                              }}
+                              className="px-3 py-2 rounded-full border border-gray-300 bg-white text-xs font-bold text-gray-700 hover:border-black transition-colors"
+                              title={`Cotización de ExchangeRate-API${fechaCambio ? `, actualizada el ${fechaCambio}` : ''}`}
+                            >
+                              {cambioHoy?.tasas[m.codigo]
+                                ? `Usar cambio de hoy: S/ ${cambioHoy.tasas[m.codigo]}`
+                                : cambioParaTienda === m.codigo ? 'Trayendo…' : 'Traer cambio de hoy'}
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <label className="block text-sm font-bold text-gray-700 mt-6 mb-1">¿Cómo entregas tus pedidos?</label>
+                  <p className="text-xs text-gray-500 mb-3">Define qué le ofrece el carrito al cliente al confirmar su pedido.</p>
+                  <div className="grid grid-cols-3 gap-2.5">
+                    {([
+                      { id: 'ambos', label: 'Ambos', icon: 'sync_alt' },
+                      { id: 'delivery', label: 'Solo delivery', icon: 'moped' },
+                      { id: 'recojo', label: 'Solo recojo', icon: 'storefront' },
+                    ] as const).map((op) => {
+                      const activo = storeForm.entrega === op.id;
+                      return (
+                        <button
+                          key={op.id}
+                          type="button"
+                          onClick={() => setStoreForm({ ...storeForm, entrega: op.id })}
+                          className="relative flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all bg-white hover:border-gray-300"
+                          style={activo ? { borderColor: '#111827', background: '#1118270d' } : { borderColor: '#e5e7eb' }}
+                        >
+                          {activo && <span className="material-symbols-outlined absolute top-1 right-1 text-[16px] text-gray-900">check_circle</span>}
+                          <span className="material-symbols-outlined text-[20px] text-gray-700">{op.icon}</span>
+                          <span className="text-xs font-bold text-gray-700">{op.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
 
               </>)}
 
@@ -5915,9 +6057,8 @@ function AdminDashboard({ user }: { user: User }) {
                                       const dias = activo ? bloque.dias.filter((d) => d !== dia) : [...bloque.dias, dia];
                                       actualizarBloques(horarioBloques.map((b, j) => (j === idx ? { ...b, dias } : b)));
                                     }}
-                                    className={`w-9 h-8 rounded-lg text-xs font-bold transition-colors ${
-                                      usadoEnOtro ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : activo ? 'bg-black text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'
-                                    }`}
+                                    className={`w-9 h-8 rounded-lg text-xs font-bold transition-colors ${usadoEnOtro ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : activo ? 'bg-black text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'
+                                      }`}
                                   >
                                     {dia}
                                   </button>
@@ -6373,7 +6514,7 @@ function AdminDashboard({ user }: { user: User }) {
       {/* Mobile Floating Action Button (FAB) */}
       {activeTab === 'products' && (
         <div className="md:hidden fixed right-4 bottom-24 z-40">
-          <button 
+          <button
             onClick={() => { setIsModalOpen(true); resetForm(); }}
             className="w-14 h-14 bg-[var(--tienda-color)] text-white rounded-full flex items-center justify-center shadow-lg hover:bg-[#8f0f0b] transition-colors"
           >
@@ -6443,7 +6584,7 @@ function AdminDashboard({ user }: { user: User }) {
           <div className="relative bg-white w-full rounded-t-lg sm:rounded-lg sm:w-[400px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-[slideDown_0.3s_ease-out]">
             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
               <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">Menú</h2>
-              <button 
+              <button
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors"
               >
@@ -6546,7 +6687,7 @@ function AdminDashboard({ user }: { user: User }) {
                 <span className="material-symbols-outlined text-[20px] text-green-600">check_circle</span>
                 Venta Registrada
               </h3>
-              <button 
+              <button
                 onClick={() => setIsTicketModalOpen(false)}
                 className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors"
               >
@@ -6557,13 +6698,13 @@ function AdminDashboard({ user }: { user: User }) {
             {/* Scrollable Receipt Body */}
             <div className="p-6 overflow-y-auto flex-1 custom-scrollbar flex flex-col items-center bg-gray-50/50">
               {/* Receipt Visual Container */}
-              <div 
+              <div
                 id="thermal-ticket"
                 className="bg-white border border-gray-200 shadow-sm rounded-md p-5 w-full font-mono text-xs text-gray-800 flex flex-col gap-4 relative overflow-hidden"
               >
                 {/* Decorative cut details */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-200 via-transparent to-transparent"></div>
-                
+
                 {/* Header info */}
                 <div className="text-center flex flex-col items-center border-b border-dashed border-gray-200 pb-4">
                   <span className="font-black text-lg text-gray-900 tracking-tight">BOGA MARKET</span>
@@ -6611,10 +6752,10 @@ function AdminDashboard({ user }: { user: User }) {
                   </div>
                   <div className="flex flex-col gap-2">
                     {(() => {
-                      const items = Array.isArray(lastCompletedSale.items) 
-                        ? lastCompletedSale.items 
-                        : typeof lastCompletedSale.items === 'string' 
-                          ? JSON.parse(lastCompletedSale.items) 
+                      const items = Array.isArray(lastCompletedSale.items)
+                        ? lastCompletedSale.items
+                        : typeof lastCompletedSale.items === 'string'
+                          ? JSON.parse(lastCompletedSale.items)
                           : [];
                       return items.map((item: any, idx: number) => (
                         <div key={idx} className="grid grid-cols-12 text-[11px] leading-tight">
@@ -6642,7 +6783,7 @@ function AdminDashboard({ user }: { user: User }) {
 
             {/* Print and Share Actions */}
             <div className="p-6 border-t border-gray-100 flex flex-col gap-3 bg-white sticky bottom-0">
-              <button 
+              <button
                 onClick={() => {
                   if (typeof window !== 'undefined') {
                     window.print();
@@ -6672,7 +6813,8 @@ function AdminDashboard({ user }: { user: User }) {
             </div>
           </div>
           {/* Custom Print Style */}
-          <style dangerouslySetInnerHTML={{__html: `
+          <style dangerouslySetInnerHTML={{
+            __html: `
             @media print {
               body * {
                 visibility: hidden !important;

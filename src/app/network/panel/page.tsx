@@ -1260,9 +1260,15 @@ function RevendedorPanelContent() {
             >
               <span className="material-symbols-outlined text-[18px]">loyalty</span>
               <span>2. Productos de Afiliado</span>
-              <span className="bg-sky-100 text-sky-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                Comisión por Venta
-              </span>
+              {tieneTienda ? (
+                <span className="bg-sky-100 text-sky-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                  Comisión por Venta
+                </span>
+              ) : (
+                <span className="bg-slate-100 text-slate-500 border border-slate-200 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                  Vista Previa
+                </span>
+              )}
             </button>
 
             {/* PESTAÑA 3: MIS VENTAS & GANANCIAS */}
@@ -1343,21 +1349,36 @@ function RevendedorPanelContent() {
               )}
             </button>
 
-            {/* PESTAÑA 5: BONOS POR RECOMENDACIÓN (DESACTIVADO / PRÓXIMAMENTE) */}
+            {/* PESTAÑA 5: BONOS POR RECOMENDACIÓN */}
             <button
               type="button"
-              onClick={() => setPestañaActiva('afiliados')}
+              onClick={() => {
+                if (!tieneTienda) {
+                  setPasoRegistro('form');
+                  setModalRegistro(true);
+                  return;
+                }
+                setPestañaActiva('afiliados');
+              }}
               className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${
                 pestañaActiva === 'afiliados'
                   ? 'border-slate-500 text-slate-800'
-                  : 'border-transparent text-slate-400 hover:text-slate-600'
+                  : tieneTienda
+                  ? 'border-transparent text-slate-400 hover:text-slate-600'
+                  : 'border-transparent text-slate-400 opacity-60 hover:opacity-90'
               }`}
             >
               <span className="material-symbols-outlined text-[18px] text-slate-400">volunteer_activism</span>
               <span className="text-slate-500">5. Bonos por Recomendación</span>
-              <span className="bg-slate-100 text-slate-500 border border-slate-200 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                Próximamente
-              </span>
+              {tieneTienda ? (
+                <span className="bg-slate-100 text-slate-500 border border-slate-200 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                  Próximamente
+                </span>
+              ) : (
+                <span className="bg-slate-100 text-slate-400 border border-slate-200/80 text-[10px] px-1.5 py-0.5 rounded-full font-medium">
+                  Activar cuenta
+                </span>
+              )}
             </button>
 
             {/* PESTAÑA 6: AJUSTES & CUENTA */}
@@ -2039,6 +2060,38 @@ function RevendedorPanelContent() {
 
             {/* Columna Derecha: Listado de Productos */}
             <div className="flex-1 min-w-0 flex flex-col gap-4">
+              {!tieneTienda && (
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/90 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 shadow-2xs">
+                  <div className="flex items-start sm:items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <span className="material-symbols-outlined text-[22px]">lock</span>
+                    </div>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-black text-amber-950">
+                        Catálogo en modo vista previa (Cuenta no activada)
+                      </h4>
+                      <p className="text-[11px] text-amber-900 mt-0.5 leading-relaxed">
+                        Explora los productos y ganancias estimadas. Para generar tus links de afiliado exclusivos, compartirlos a WhatsApp y cobrar comisiones directas, activa tu cuenta.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!user) router.push('/login?redirect=/network');
+                      else {
+                        setPasoRegistro('form');
+                        setModalRegistro(true);
+                      }
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs transition shrink-0 cursor-pointer shadow-xs active:scale-95 flex items-center gap-1.5"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">how_to_reg</span>
+                    <span>Activar Cuenta Network →</span>
+                  </button>
+                </div>
+              )}
+
               <div className="flex items-center justify-between px-1">
                 <span className="text-xs font-bold text-slate-600">
                   Mostrando <strong className="text-slate-900">{productosReferidosFiltrados.length}</strong> productos listos para compartir
@@ -2161,41 +2214,72 @@ function RevendedorPanelContent() {
 
                         {/* Fila inferior: Link y Botones de acción */}
                         <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
-                          <div className="bg-slate-50 rounded-xl px-2.5 py-1.5 border border-slate-200/80">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
-                              Link de Afiliado Personalizado
-                            </span>
-                            <p className="text-[11px] text-sky-700 font-mono truncate select-all">
-                              {linkProd}
-                            </p>
-                          </div>
+                          {tieneTienda ? (
+                            <>
+                              <div className="bg-slate-50 rounded-xl px-2.5 py-1.5 border border-slate-200/80">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
+                                  Link de Afiliado Personalizado
+                                </span>
+                                <p className="text-[11px] text-sky-700 font-mono truncate select-all">
+                                  {linkProd}
+                                </p>
+                              </div>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <button
-                              type="button"
-                              onClick={() => copiarLinkProductoReferido(prod.id)}
-                              className={`w-full py-2 px-2.5 rounded-xl font-black text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs active:scale-95 ${
-                                esCopiado
-                                  ? 'bg-emerald-600 text-white'
-                                  : 'bg-sky-600 hover:bg-sky-700 text-white'
-                              }`}
-                            >
-                              <span className="material-symbols-outlined text-[15px]">
-                                {esCopiado ? 'check_circle' : 'content_copy'}
-                              </span>
-                              <span className="truncate">{esCopiado ? '¡Copiado!' : 'Copiar Link'}</span>
-                            </button>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => copiarLinkProductoReferido(prod.id)}
+                                  className={`w-full py-2 px-2.5 rounded-xl font-black text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs active:scale-95 ${
+                                    esCopiado
+                                      ? 'bg-emerald-600 text-white'
+                                      : 'bg-sky-600 hover:bg-sky-700 text-white'
+                                  }`}
+                                >
+                                  <span className="material-symbols-outlined text-[15px]">
+                                    {esCopiado ? 'check_circle' : 'content_copy'}
+                                  </span>
+                                  <span className="truncate">{esCopiado ? '¡Copiado!' : 'Copiar Link'}</span>
+                                </button>
 
-                            <a
-                              href={`https://wa.me/?text=${encodeURIComponent(textoWsp)}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="w-full py-2 px-2.5 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#128C7E] font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer text-center"
-                            >
-                              <IconoWhatsApp className="w-3.5 h-3.5 shrink-0" />
-                              <span className="truncate">WhatsApp</span>
-                            </a>
-                          </div>
+                                <a
+                                  href={`https://wa.me/?text=${encodeURIComponent(textoWsp)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="w-full py-2 px-2.5 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#128C7E] font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                                >
+                                  <IconoWhatsApp className="w-3.5 h-3.5 shrink-0" />
+                                  <span className="truncate">WhatsApp</span>
+                                </a>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="bg-slate-100/70 rounded-xl px-2.5 py-2 border border-slate-200/80 text-center">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
+                                  Link de Afiliado Exclusivo
+                                </span>
+                                <p className="text-[11px] text-slate-400 font-medium italic flex items-center justify-center gap-1">
+                                  <span className="material-symbols-outlined text-[13px]">lock</span>
+                                  Bloqueado · Requiere activar cuenta Network
+                                </p>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (!user) router.push('/login?redirect=/network');
+                                  else {
+                                    setPasoRegistro('form');
+                                    setModalRegistro(true);
+                                  }
+                                }}
+                                className="w-full py-2 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer border border-slate-200/80 active:scale-95 shadow-2xs"
+                              >
+                                <span className="material-symbols-outlined text-[15px] text-slate-500">lock</span>
+                                <span>Activar cuenta para compartir enlace</span>
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
                     );
@@ -2815,8 +2899,37 @@ function RevendedorPanelContent() {
         {/* ══ PESTAÑA 5: BONOS POR RECOMENDACIÓN (DESACTIVADO / PRÓXIMAMENTE) ══ */}
         {pestañaActiva === 'afiliados' && (
           <div className="w-full flex flex-col gap-6 animate-in fade-in">
-            {/* Banner en tono gris oscuro / slate elegante de próximamente */}
-            <div className="bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-md relative overflow-hidden flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            {!tieneTienda ? (
+              <div className="bg-white rounded-3xl border border-slate-200/90 p-8 sm:p-12 text-center flex flex-col items-center justify-center max-w-lg mx-auto shadow-xs">
+                <div className="w-16 h-16 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center mb-4">
+                  <span className="material-symbols-outlined text-3xl">volunteer_activism</span>
+                </div>
+                <h3 className="text-lg font-black text-slate-900">
+                  Activa tu cuenta para acceder a Bonos por Recomendación
+                </h3>
+                <p className="text-xs text-slate-500 mt-2 max-w-sm leading-relaxed">
+                  Los bonos por recomendar comercios y choferes estarán disponibles para miembros con cuenta activa en Boga Network.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!user) {
+                      router.push('/login?redirect=/network');
+                    } else {
+                      setPasoRegistro('form');
+                      setModalRegistro(true);
+                    }
+                  }}
+                  className="mt-6 px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition shadow-md cursor-pointer active:scale-95 flex items-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-[18px]">how_to_reg</span>
+                  <span>Activar Mi Cuenta Network →</span>
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Banner en tono gris oscuro / slate elegante de próximamente */}
+                <div className="bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-md relative overflow-hidden flex flex-col lg:flex-row lg:items-center justify-between gap-6">
               <div className="relative z-10 max-w-3xl">
                 <span className="inline-flex items-center gap-1 bg-white/10 backdrop-blur-xs text-slate-200 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full mb-3 border border-white/10">
                   <span className="material-symbols-outlined text-[14px]">lock</span>
@@ -2994,8 +3107,10 @@ function RevendedorPanelContent() {
                 Consultar con Asesor
               </button>
             </div>
-          </div>
+          </>
         )}
+      </div>
+    )}
 
         {/* ══ PESTAÑA 6: AJUSTES & ESTADO (TIENDA EN GRIS / ACTIVACIÓN) ══ */}
         {pestañaActiva === 'ajustes' && (
