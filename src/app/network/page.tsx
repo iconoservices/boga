@@ -300,7 +300,7 @@ export default function BogaNetworkHomePage() {
             </h1>
 
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-              Descubre las <b>3 formas oficiales</b> de generar ingresos hoy mismo sin jefes ni horarios. Elige la que mejor se adapte a ti o combina las tres.
+              Descubre las formas oficiales de generar ingresos hoy mismo sin jefes ni horarios. Elige la que mejor se adapte a ti o combínalas.
             </p>
 
             {/* Botones de acción principales */}
@@ -507,78 +507,79 @@ export default function BogaNetworkHomePage() {
               </button>
             </div>
 
-            {/* ════ TARJETA 3: PROGRAMA DE AFILIADOS & BONOS EN EFECTIVO ════ */}
-            <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-xs flex flex-col justify-between gap-4 hover:border-purple-300 hover:shadow-md transition">
+            {/* ════ TARJETA 3: PROGRAMA DE AFILIADOS & BONOS EN EFECTIVO (DESACTIVADA / GRIS) ════ */}
+            <div className="bg-slate-50/90 rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-2xs flex flex-col justify-between gap-4 transition opacity-80">
               <div className="flex flex-col gap-3.5">
-                <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                <div className="flex items-center justify-between gap-2 border-b border-slate-200/80 pb-2.5">
                   <div className="flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-xl bg-purple-100 text-purple-800 flex items-center justify-center text-xs font-black shrink-0">
+                    <span className="w-7 h-7 rounded-xl bg-slate-200 text-slate-600 flex items-center justify-center text-xs font-black shrink-0">
                       3
                     </span>
-                    <h2 className="text-sm sm:text-base font-black text-slate-900 tracking-tight leading-snug">
+                    <h2 className="text-sm sm:text-base font-black text-slate-600 tracking-tight leading-snug">
                       Bonos por Recomendación
                     </h2>
                   </div>
-                  <span className="bg-purple-100 text-purple-800 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
-                    Bono Efectivo
+                  <span className="bg-slate-200 text-slate-600 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
+                    Próximamente
                   </span>
                 </div>
 
-                {/* Caja de Ganancia */}
-                <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-3 flex items-center justify-between gap-2">
+                {/* Caja de Ganancia Desactivada */}
+                <div className="bg-slate-100/80 border border-slate-200 rounded-2xl p-3 flex items-center justify-between gap-2">
                   <div>
-                    <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider block">Bono Directo</span>
-                    <span className="text-lg font-black text-purple-800 block leading-tight">+S/ 20 a S/ 50</span>
-                    <span className="text-[9px] text-slate-500">por cada referido activo</span>
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">Bono por Referido</span>
+                    <span className="text-lg font-black text-slate-600 block leading-tight">+S/ 20 a S/ 50</span>
+                    <span className="text-[9px] text-slate-400">por cada referido activo</span>
                   </div>
-                  <div className="text-right bg-white/80 px-2.5 py-1.5 rounded-xl border border-purple-200/60 shrink-0">
-                    <span className="text-[8px] font-bold text-slate-500 block uppercase">Pago directo</span>
-                    <span className="text-xs font-black text-purple-800 block leading-tight">Yape / Plin</span>
-                    <span className="text-[8px] text-purple-700 font-bold">inmediato</span>
+                  <div className="text-right bg-white px-2.5 py-1.5 rounded-xl border border-slate-200 shrink-0">
+                    <span className="text-[8px] font-bold text-slate-400 block uppercase">Estado</span>
+                    <span className="text-xs font-black text-slate-600 block leading-tight">En pausa</span>
+                    <span className="text-[8px] text-slate-400 font-bold">por ahora</span>
                   </div>
                 </div>
 
-                {/* Beneficios directos */}
+                {/* Beneficios directos en gris */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="w-7 h-7 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center shrink-0">
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-slate-200/60">
+                    <span className="w-7 h-7 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
                       <span className="material-symbols-outlined text-[16px]">store</span>
                     </span>
                     <div className="min-w-0">
-                      <p className="font-extrabold text-slate-900 text-[11px] leading-tight">Comercios</p>
-                      <p className="text-[9px] text-slate-500 leading-tight">Pollerías, boutiques.</p>
+                      <p className="font-extrabold text-slate-700 text-[11px] leading-tight">Comercios</p>
+                      <p className="text-[9px] text-slate-400 leading-tight">Pollerías, boutiques.</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-slate-200/60">
+                    <span className="w-7 h-7 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
                       <span className="material-symbols-outlined text-[16px]">local_taxi</span>
                     </span>
                     <div className="min-w-0">
-                      <p className="font-extrabold text-slate-900 text-[11px] leading-tight">Choferes</p>
-                      <p className="text-[9px] text-slate-500 leading-tight">Taxi o mototaxis.</p>
+                      <p className="font-extrabold text-slate-700 text-[11px] leading-tight">Choferes</p>
+                      <p className="text-[9px] text-slate-400 leading-tight">Taxi o mototaxis.</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-slate-200/60">
+                    <span className="w-7 h-7 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
                       <span className="material-symbols-outlined text-[16px]">group_add</span>
                     </span>
                     <div className="min-w-0">
-                      <p className="font-extrabold text-slate-900 text-[11px] leading-tight">Revendedores</p>
-                      <p className="text-[9px] text-slate-500 leading-tight">Comisiones de red.</p>
+                      <p className="font-extrabold text-slate-700 text-[11px] leading-tight">Revendedores</p>
+                      <p className="text-[9px] text-slate-400 leading-tight">Comisiones de red.</p>
                     </div>
                   </div>
                 </div>
               </div>
 
+              {/* Botón en gris / desactivado */}
               <button
                 type="button"
-                onClick={() => irAPanelPestaña('afiliados')}
-                className="w-full py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                disabled
+                className="w-full py-2.5 px-3 rounded-xl bg-slate-200 text-slate-500 font-bold text-xs shadow-none cursor-not-allowed flex items-center justify-center gap-1.5"
               >
-                <span className="material-symbols-outlined text-[16px]">group_add</span>
-                <span>{cuentaExistente ? 'Ir a Programa de Afiliados →' : 'Empezar con Afiliados →'}</span>
+                <span className="material-symbols-outlined text-[16px]">lock</span>
+                <span>Desactivado por ahora · Próximamente</span>
               </button>
             </div>
 
