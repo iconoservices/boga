@@ -195,53 +195,55 @@ export default function BogaNetworkHomePage() {
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
       {/* ── Barra Superior Slim ── */}
       <header className="sticky top-0 z-30 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 shrink-0">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <img src="/logo-mark.svg" alt="Boga Network" className="w-6 h-6" />
-            <span className="font-extrabold text-slate-900 text-sm sm:text-base tracking-tight">Boga Network</span>
-            <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 h-14 flex items-center justify-between gap-2">
+          <Link href="/" className="flex items-center gap-2 min-w-0 shrink">
+            <img src="/logo-mark.svg" alt="Boga Network" className="w-6 h-6 shrink-0" />
+            <span className="font-extrabold text-slate-900 text-sm sm:text-base tracking-tight shrink-0">Boga Network</span>
+            <span className="hidden md:inline-flex bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full items-center gap-1 shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
               Gana Dinero · Reventa & Afiliados
             </span>
           </Link>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {cuentaExistente ? (
               <Link
                 href="/network/panel"
-                className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-xs transition"
+                className="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-2.5 sm:px-3 py-1.5 rounded-xl shadow-xs transition shrink-0"
               >
                 <span className="material-symbols-outlined text-[16px]">dashboard</span>
-                <span>Ir a mi Panel</span>
+                <span className="hidden sm:inline">Ir a mi Panel</span>
+                <span className="sm:hidden">Panel</span>
               </Link>
             ) : null}
 
             {authLoading ? (
               <span className="w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
             ) : user ? (
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-600 hidden sm:inline">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-xs text-slate-600 hidden md:inline">
                   Hola, <b>{user.user_metadata?.full_name || user.email?.split('@')[0]}</b>
                 </span>
                 <Link
                   href="/profile"
-                  className="text-xs font-bold text-slate-700 hover:text-emerald-700 bg-slate-100 hover:bg-emerald-50 border border-slate-200 px-3 py-1.5 rounded-xl transition flex items-center gap-1"
+                  className="text-xs font-bold text-slate-700 hover:text-emerald-700 bg-slate-100 hover:bg-emerald-50 border border-slate-200 px-2 sm:px-3 py-1.5 rounded-xl transition flex items-center gap-1 shrink-0"
+                  title="Mi Cuenta"
                 >
                   <span className="material-symbols-outlined text-[15px]">account_circle</span>
-                  <span>Mi Cuenta</span>
+                  <span className="hidden sm:inline">Mi Cuenta</span>
                 </Link>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <Link
                   href="/login?redirect=/network"
-                  className="text-xs font-semibold text-slate-600 hover:text-slate-900 px-2.5 py-1.5 rounded-lg"
+                  className="text-xs font-semibold text-slate-600 hover:text-slate-900 px-2 py-1.5 rounded-lg"
                 >
                   Ingresar
                 </Link>
                 <Link
                   href="/login?modo=registro&redirect=/network"
-                  className="text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 px-3 py-1.5 rounded-xl transition shadow-xs"
+                  className="text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 px-2.5 sm:px-3 py-1.5 rounded-xl transition shadow-xs"
                 >
                   Registrarse
                 </Link>
@@ -252,34 +254,15 @@ export default function BogaNetworkHomePage() {
 
             <Link
               href="/trabajos"
-              className="text-xs font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1"
+              className="text-xs font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-0.5 p-1 sm:p-0 rounded-lg shrink-0"
+              title="Volver a Trabajos"
             >
-              <span className="material-symbols-outlined text-[15px]">arrow_back</span>
-              <span className="hidden sm:inline">Volver a Trabajos</span>
+              <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+              <span className="hidden sm:inline">Volver</span>
             </Link>
           </div>
         </div>
       </header>
-
-      {/* ── Banner si ya tiene cuenta activa ── */}
-      {cuentaExistente && (
-        <div className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white px-4 py-2.5 text-xs shadow-xs">
-          <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-            <div className="flex items-center gap-2 text-center sm:text-left">
-              <span className="material-symbols-outlined text-emerald-200 text-lg">verified_user</span>
-              <span>
-                Ya tienes tu cuenta activa en Boga Network. Entra a tu panel para ver tus tiendas, productos y ganancias.
-              </span>
-            </div>
-            <Link
-              href="/network/panel"
-              className="font-black bg-white text-emerald-800 hover:bg-emerald-50 px-3.5 py-1.5 rounded-xl text-xs shadow-xs transition shrink-0"
-            >
-              Abrir Mi Panel de Control →
-            </Link>
-          </div>
-        </div>
-      )}
 
       {/* ── Contenido Principal (TEXTO A LA IZQUIERDA Y LAS 3 OPCIONES A LA DERECHA) ── */}
       <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 w-full">
@@ -357,13 +340,88 @@ export default function BogaNetworkHomePage() {
           {/* ════ COLUMNA DERECHA: LAS 3 OPCIONES (TARJETAS) DE GANAR DINERO ════ */}
           <div className="lg:col-span-7 flex flex-col gap-4">
             
-            {/* ════ TARJETA 1: CREA Y VENDE CON TU TIENDA VIRTUAL ════ */}
+            {/* ════ TARJETA 1: AFILIADO (RECOMIENDA PRODUCTOS Y NEGOCIOS) ════ */}
+            <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-xs flex flex-col justify-between gap-4 hover:border-sky-300 hover:shadow-md transition">
+              <div className="flex flex-col gap-3.5">
+                <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className="w-7 h-7 rounded-xl bg-sky-100 text-sky-800 flex items-center justify-center text-xs font-black shrink-0">
+                      1
+                    </span>
+                    <h2 className="text-sm sm:text-base font-black text-slate-900 tracking-tight leading-snug">
+                      Afiliado (Recomienda Productos o Negocios)
+                    </h2>
+                  </div>
+                  <span className="bg-sky-100 text-sky-800 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
+                    Recomendado · Rápido
+                  </span>
+                </div>
+
+                {/* Caja de Ganancia */}
+                <div className="bg-gradient-to-r from-sky-500/10 to-blue-500/10 border border-sky-500/20 rounded-2xl p-3 flex items-center justify-between gap-2">
+                  <div>
+                    <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider block">Comisión Directa</span>
+                    <span className="text-lg font-black text-sky-800 block leading-tight">+S/ 10 a S/ 35</span>
+                    <span className="text-[9px] text-slate-500">por cada producto o negocio</span>
+                  </div>
+                  <div className="text-right bg-white/80 px-2.5 py-1.5 rounded-xl border border-sky-200/60 shrink-0">
+                    <span className="text-[8px] font-bold text-slate-500 block uppercase">En Redes</span>
+                    <span className="text-xs font-black text-slate-900 block leading-tight">1 Clic</span>
+                    <span className="text-[8px] text-sky-700 font-bold">compartir</span>
+                  </div>
+                </div>
+
+                {/* Beneficios directos */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <span className="w-7 h-7 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[16px]">share</span>
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-extrabold text-slate-900 text-[11px] leading-tight">Wsp y Redes</p>
+                      <p className="text-[9px] text-slate-500 leading-tight">Compártelo en tus estados y redes.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <span className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[16px]">store</span>
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-extrabold text-slate-900 text-[11px] leading-tight">Negocios o Productos</p>
+                      <p className="text-[9px] text-slate-500 leading-tight">Links directos a productos y tiendas.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    <span className="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[16px]">payments</span>
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-extrabold text-slate-900 text-[11px] leading-tight">Gana por cada uno</p>
+                      <p className="text-[9px] text-slate-500 leading-tight">Cobras al instante por Yape o Plin.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => irAPanelPestaña('productos')}
+                className="w-full py-2.5 px-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-black text-xs shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+              >
+                <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                <span>{cuentaExistente ? 'Ir a Productos de Afiliado →' : 'Empezar como Afiliado →'}</span>
+              </button>
+            </div>
+
+            {/* ════ TARJETA 2: CREA Y VENDE CON TU TIENDA VIRTUAL ════ */}
             <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-xs flex flex-col justify-between gap-4 hover:border-emerald-300 hover:shadow-md transition">
               <div className="flex flex-col gap-3.5">
                 <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
                   <div className="flex items-center gap-2">
                     <span className="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs font-black shrink-0">
-                      1
+                      2
                     </span>
                     <h2 className="text-sm sm:text-base font-black text-slate-900 tracking-tight leading-snug">
                       Tienda Virtual Propia
@@ -429,81 +487,6 @@ export default function BogaNetworkHomePage() {
               >
                 <span className="material-symbols-outlined text-[16px]">store</span>
                 <span>{cuentaExistente ? 'Ir a Mis Tiendas Virtuales →' : 'Crear Tienda Virtual →'}</span>
-              </button>
-            </div>
-
-            {/* ════ TARJETA 2: RECOMIENDA PRODUCTOS INDIVIDUALES ════ */}
-            <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-xs flex flex-col justify-between gap-4 hover:border-sky-300 hover:shadow-md transition">
-              <div className="flex flex-col gap-3.5">
-                <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
-                  <div className="flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-xl bg-sky-100 text-sky-800 flex items-center justify-center text-xs font-black shrink-0">
-                      2
-                    </span>
-                    <h2 className="text-sm sm:text-base font-black text-slate-900 tracking-tight leading-snug">
-                      Productos Individuales
-                    </h2>
-                  </div>
-                  <span className="bg-sky-100 text-sky-800 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
-                    Venta Rápida
-                  </span>
-                </div>
-
-                {/* Caja de Ganancia */}
-                <div className="bg-gradient-to-r from-sky-500/10 to-blue-500/10 border border-sky-500/20 rounded-2xl p-3 flex items-center justify-between gap-2">
-                  <div>
-                    <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider block">Comisión Directa</span>
-                    <span className="text-lg font-black text-sky-800 block leading-tight">+S/ 10 a S/ 35</span>
-                    <span className="text-[9px] text-slate-500">por producto vendido</span>
-                  </div>
-                  <div className="text-right bg-white/80 px-2.5 py-1.5 rounded-xl border border-sky-200/60 shrink-0">
-                    <span className="text-[8px] font-bold text-slate-500 block uppercase">En Estados</span>
-                    <span className="text-xs font-black text-slate-900 block leading-tight">1 Clic</span>
-                    <span className="text-[8px] text-sky-700 font-bold">compartir</span>
-                  </div>
-                </div>
-
-                {/* Beneficios directos */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="w-7 h-7 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-[16px]">loyalty</span>
-                    </span>
-                    <div className="min-w-0">
-                      <p className="font-extrabold text-slate-900 text-[11px] leading-tight">Links de Afiliado</p>
-                      <p className="text-[9px] text-slate-500 leading-tight">Enlace directo a 1 producto.</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-[16px]">bolt</span>
-                    </span>
-                    <div className="min-w-0">
-                      <p className="font-extrabold text-slate-900 text-[11px] leading-tight">Alta demanda</p>
-                      <p className="text-[9px] text-slate-500 leading-tight">Relojes, lentes, gadgets.</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-[16px]">share</span>
-                    </span>
-                    <div className="min-w-0">
-                      <p className="font-extrabold text-slate-900 text-[11px] leading-tight">Estados de Wsp</p>
-                      <p className="text-[9px] text-slate-500 leading-tight">Publicas y cobras diario.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => irAPanelPestaña('productos')}
-                className="w-full py-2.5 px-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-black text-xs shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
-              >
-                <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-                <span>{cuentaExistente ? 'Ir a Productos de Afiliado →' : 'Recomendar Productos →'}</span>
               </button>
             </div>
 

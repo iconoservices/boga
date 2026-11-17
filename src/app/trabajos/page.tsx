@@ -128,7 +128,7 @@ export default function Servicios() {
           <div className="grid grid-cols-2 gap-2.5 sm:gap-3 w-full sm:w-auto sm:min-w-[420px] lg:min-w-[480px]">
             <Link
               href="/network"
-              aria-label="Boga Network · Reventa y Afiliados"
+              aria-label="Gana Dinero con Boga · Reventa y Afiliados"
               className="rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 text-white px-3.5 py-2.5 flex items-center gap-2.5 active:scale-[0.98] hover:shadow-xl hover:shadow-emerald-600/30 transition-all shadow-md text-left border border-emerald-400/40 group relative overflow-hidden ring-1 ring-emerald-400/30"
               style={{ animation: 'gentle-wiggle 6s ease-in-out infinite' }}
             >
@@ -157,7 +157,7 @@ export default function Servicios() {
               </span>
               <span className="flex flex-col min-w-0 leading-tight relative z-10">
                 <span className="font-headline-sm text-[13px] font-bold truncate flex items-center gap-1.5">
-                  Boga Network
+                  Gana Dinero con Boga
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75" />
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-200" />
