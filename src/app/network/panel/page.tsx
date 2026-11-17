@@ -1119,7 +1119,7 @@ function RevendedorPanelContent() {
 
     setCuentaActiva(true);
     // IMPORTANTE: NO se crea tienda automáticamente aquí.
-    // La tienda sólo se crea si el usuario le da a "Crear Tienda Virtual" en la pestaña 4 "Mis Tiendas".
+    // La tienda sólo se crea si el usuario le da a "Crear Tienda Virtual" en la pestaña 3 "Mis Tiendas".
     setTieneTienda(false);
     setNombreTienda('');
     setTiendasUsuario([]);
@@ -1311,46 +1311,7 @@ function RevendedorPanelContent() {
               )}
             </button>
 
-            {/* PESTAÑA 3: MIS VENTAS & GANANCIAS */}
-            <button
-              type="button"
-              onClick={() => {
-                if (!cuentaActiva) {
-                  setPasoRegistro('form');
-                  setModalRegistro(true);
-                  return;
-                }
-                setPestañaActiva('ventas');
-              }}
-              className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${
-                pestañaActiva === 'ventas'
-                  ? 'border-emerald-600 text-emerald-700'
-                  : cuentaActiva
-                  ? 'border-transparent text-slate-500 hover:text-slate-800'
-                  : 'border-transparent text-slate-400 opacity-60 hover:opacity-90'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[18px]">account_balance_wallet</span>
-              <span>3. Mis Ventas & Ganancias</span>
-              {cuentaActiva ? (
-                <>
-                  <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-black">
-                    S/ {resumenVentas.gananciasCobradas.toFixed(2)}
-                  </span>
-                  {resumenVentas.pedidosPendientes > 0 && (
-                    <span className="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                      {resumenVentas.pedidosPendientes} pendientes
-                    </span>
-                  )}
-                </>
-              ) : (
-                <span className="bg-slate-100 text-slate-400 border border-slate-200/80 text-[10px] px-1.5 py-0.5 rounded-full font-medium">
-                  Activar cuenta
-                </span>
-              )}
-            </button>
-
-            {/* PESTAÑA 4: MIS TIENDAS */}
+            {/* PESTAÑA 3: MIS TIENDAS */}
             <button
               type="button"
               onClick={() => {
@@ -1370,7 +1331,7 @@ function RevendedorPanelContent() {
               }`}
             >
               <span className="material-symbols-outlined text-[18px]">store</span>
-              <span>4. Mis Tiendas</span>
+              <span>3. Mis Tiendas</span>
               {cuentaActiva && tieneTienda ? (
                 estadoTienda === 'activa' ? (
                   <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-1">
@@ -1386,6 +1347,45 @@ function RevendedorPanelContent() {
                 <span className="bg-slate-100 text-slate-500 border border-slate-200/80 text-[10px] px-1.5 py-0.5 rounded-full font-medium">
                   Sin tiendas
                 </span>
+              ) : (
+                <span className="bg-slate-100 text-slate-400 border border-slate-200/80 text-[10px] px-1.5 py-0.5 rounded-full font-medium">
+                  Activar cuenta
+                </span>
+              )}
+            </button>
+
+            {/* PESTAÑA 4: MIS VENTAS & GANANCIAS */}
+            <button
+              type="button"
+              onClick={() => {
+                if (!cuentaActiva) {
+                  setPasoRegistro('form');
+                  setModalRegistro(true);
+                  return;
+                }
+                setPestañaActiva('ventas');
+              }}
+              className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${
+                pestañaActiva === 'ventas'
+                  ? 'border-emerald-600 text-emerald-700'
+                  : cuentaActiva
+                  ? 'border-transparent text-slate-500 hover:text-slate-800'
+                  : 'border-transparent text-slate-400 opacity-60 hover:opacity-90'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+              <span>4. Mis Ventas & Ganancias</span>
+              {cuentaActiva ? (
+                <>
+                  <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-black">
+                    S/ {resumenVentas.gananciasCobradas.toFixed(2)}
+                  </span>
+                  {resumenVentas.pedidosPendientes > 0 && (
+                    <span className="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                      {resumenVentas.pedidosPendientes} pendientes
+                    </span>
+                  )}
+                </>
               ) : (
                 <span className="bg-slate-100 text-slate-400 border border-slate-200/80 text-[10px] px-1.5 py-0.5 rounded-full font-medium">
                   Activar cuenta
@@ -2331,7 +2331,218 @@ function RevendedorPanelContent() {
           </div>
         )}
 
-        {/* ══ PESTAÑA 3: MIS VENTAS & GANANCIAS EN TIEMPO REAL ══ */}
+        {/* ══ PESTAÑA 3: MIS TIENDAS (LISTA DE TIENDAS VINCULADAS) ══ */}
+        {pestañaActiva === 'preview' && (
+          <div className="w-full flex flex-col gap-6 animate-in fade-in">
+            {!user ? (
+              <div className="bg-white rounded-3xl border border-slate-200/90 p-8 sm:p-12 text-center flex flex-col items-center justify-center max-w-lg mx-auto shadow-xs">
+                <div className="w-16 h-16 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center mb-4">
+                  <span className="material-symbols-outlined text-3xl">account_circle</span>
+                </div>
+                <h3 className="text-base font-black text-slate-800">Inicia sesión para usar esta cuenta</h3>
+                <p className="text-xs text-slate-500 mt-1 max-w-sm">
+                  Para ver, administrar o crear tus tiendas virtuales de reventa, inicia sesión con tu cuenta de Boga Network.
+                </p>
+                <div className="mt-5 flex items-center gap-3">
+                  <Link
+                    href="/login?redirect=/network"
+                    className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black shadow-md transition cursor-pointer flex items-center gap-2"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">login</span>
+                    <span>Iniciar Sesión</span>
+                  </Link>
+                  <Link
+                    href="/login?modo=registro&redirect=/network"
+                    className="px-5 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs font-black transition cursor-pointer"
+                  >
+                    Crear Cuenta
+                  </Link>
+                </div>
+              </div>
+            ) : !cuentaActiva ? (
+              <div className="bg-white rounded-3xl border border-slate-200/90 p-8 sm:p-12 text-center flex flex-col items-center justify-center max-w-lg mx-auto shadow-xs">
+                <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
+                  <span className="material-symbols-outlined text-3xl">storefront</span>
+                </div>
+                <h3 className="text-base font-black text-slate-800">Activa tu cuenta Network</h3>
+                <p className="text-xs text-slate-500 mt-1 max-w-sm">
+                  Para crear y administrar tus tiendas virtuales de reventa, primero activa tu cuenta Network.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => { setPasoRegistro('form'); setModalRegistro(true); }}
+                  className="mt-5 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-md transition cursor-pointer flex items-center gap-2 active:scale-95"
+                >
+                  <span className="material-symbols-outlined text-[18px]">badge</span>
+                  <span>Activar Mi Cuenta Network</span>
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
+                  <div>
+                    <h2 className="text-base sm:text-lg font-black text-slate-900">
+                      Mis Tiendas de Reventa
+                    </h2>
+                    <p className="text-xs text-slate-500">
+                      Toca la tienda para abrirla directamente en internet o compartir tu enlace oficial.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setModalCrearTienda(true)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-xs transition active:scale-95 shrink-0 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">add</span>
+                    <span>{tiendasUsuario.length === 0 ? 'Crear mi primera tienda' : 'Crear otra tienda'}</span>
+                  </button>
+                </div>
+
+                {/* Lista de Tiendas de Reventa */}
+                <div className="flex flex-col gap-4">
+                  {tiendasUsuario.length === 0 ? (
+                    <div className="bg-white rounded-3xl border border-slate-200/90 p-8 sm:p-12 text-center flex flex-col items-center justify-center max-w-lg mx-auto shadow-xs">
+                      <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
+                        <span className="material-symbols-outlined text-3xl">storefront</span>
+                      </div>
+                      <h3 className="text-base font-black text-slate-800">No tienes tiendas de reventa activas</h3>
+                      <p className="text-xs text-slate-500 mt-1 max-w-sm">
+                        Aún no tienes ninguna tienda creada o tu tienda anterior fue eliminada. Crea tu propia tienda online gratis en 1 clic.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setModalCrearTienda(true)}
+                        className="mt-5 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-md transition cursor-pointer flex items-center gap-2 active:scale-95"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">add_circle</span>
+                        <span>Crear mi tienda virtual</span>
+                      </button>
+                    </div>
+                  ) : (
+                    tiendasUsuario.map((t, idx) => {
+                      const tNombre = t.business_name || t.name || nombreTienda || 'Mi Tienda bm';
+                      const tSlug = (tNombre || 'tienda')
+                        .toLowerCase()
+                        .normalize('NFD')
+                        .replace(/[\u0300-\u036f]/g, '')
+                        .replace(/[^a-z0-9]+/g, '-')
+                        .replace(/(^-|-$)/g, '');
+                      const tLink = `${origin}/${tSlug}`;
+                      const tEstado = t.status === 'approved' || (tNombre === nombreTienda && estadoTienda === 'activa') ? 'activa' : 'desactivada';
+
+                      return (
+                        <div
+                          key={t.id || tSlug || idx}
+                          className="group bg-white rounded-3xl border border-slate-200 hover:border-emerald-500 p-5 sm:p-6 shadow-sm hover:shadow-md transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-5 relative overflow-hidden"
+                        >
+                          <div className="flex items-center gap-4 min-w-0">
+                            <div className="w-14 h-14 rounded-2xl bg-emerald-600 group-hover:bg-emerald-500 text-white font-black text-2xl flex items-center justify-center shrink-0 shadow-md ring-2 ring-emerald-100 transition">
+                              {(tNombre || 'T').slice(0, 1).toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h3 className="text-base sm:text-lg font-black text-slate-900 group-hover:text-emerald-700 transition capitalize flex items-baseline gap-1">
+                                  <span>{tNombre.replace(/\s+bm$/i, '')}</span>
+                                  <span className="text-slate-400 font-bold text-xs lowercase">bm</span>
+                                </h3>
+                                {tEstado === 'activa' ? (
+                                  <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    Pública
+                                  </span>
+                                ) : (
+                                  <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                    En borrador (Privada)
+                                  </span>
+                                )}
+                              </div>
+
+                              <p className="text-xs text-slate-500 mt-1 truncate">
+                                {t.contact_name || nombre ? `Catálogo de ${t.contact_name || nombre} · ` : ''}Envíos en {t.city || ciudad}
+                              </p>
+
+                              <a
+                                href={`/${tSlug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs font-mono font-bold text-emerald-800 mt-1.5 flex items-center gap-1 hover:underline"
+                              >
+                                <span>{tLink}</span>
+                                <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+                              </a>
+                            </div>
+                          </div>
+
+                          <div
+                            className="flex items-center gap-2 shrink-0 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100 flex-wrap"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {/* BOTÓN PROMINENTE QUE ABRE EL ADMINISTRADOR DE PRODUCTOS Y PRECIOS */}
+                            <button
+                              type="button"
+                              onClick={() => abrirModalAdminTienda(t)}
+                              className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs flex items-center gap-1.5 shadow-xs transition active:scale-95 cursor-pointer"
+                              title="Administrar qué productos y qué precios tiene esta tienda"
+                            >
+                              <span className="material-symbols-outlined text-[16px]">tune</span>
+                              <span>Administrar Catálogo & Precios</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => copiarLinkDeTienda(tSlug)}
+                              className="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                            >
+                              <span className="material-symbols-outlined text-[16px]">
+                                {tiendaCopiadaSlug === tSlug ? 'check' : 'content_copy'}
+                              </span>
+                              <span>{tiendaCopiadaSlug === tSlug ? '¡Copiado!' : 'Copiar Link'}</span>
+                            </button>
+
+                            <a
+                              href={`https://wa.me/?text=${encodeURIComponent(
+                                `¡Hola! Ya abrí mi tienda virtual "${tNombre}". Puedes ver mi catálogo y hacer pedidos directo aquí: ${tLink}`
+                              )}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-3.5 py-2 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-black text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+                            >
+                              <IconoWhatsApp className="w-4 h-4 text-white" />
+                              <span>Compartir</span>
+                            </a>
+
+                            <a
+                              href={`/${tSlug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition"
+                            >
+                              <span>Abrir Tienda</span>
+                              <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
+                            </a>
+
+                            {/* Botón para eliminar la tienda */}
+                            <button
+                              type="button"
+                              onClick={() => eliminarTiendaDeReventa(t)}
+                              className="p-2 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 hover:text-rose-700 font-bold text-xs flex items-center justify-center transition cursor-pointer"
+                              title="Eliminar esta tienda de reventa"
+                            >
+                              <span className="material-symbols-outlined text-[17px]">delete</span>
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ══ PESTAÑA 4: MIS VENTAS & GANANCIAS EN TIEMPO REAL ══ */}
         {pestañaActiva === 'ventas' && (
           <div className="w-full flex flex-col gap-6 animate-in fade-in">
             {!cuentaActiva ? (
@@ -2739,217 +2950,6 @@ function RevendedorPanelContent() {
                 })}
               </div>
             )}
-              </>
-            )}
-          </div>
-        )}
-
-        {/* ══ PESTAÑA 4: MIS TIENDAS (LISTA DE TIENDAS VINCULADAS) ══ */}
-        {pestañaActiva === 'preview' && (
-          <div className="w-full flex flex-col gap-6 animate-in fade-in">
-            {!user ? (
-              <div className="bg-white rounded-3xl border border-slate-200/90 p-8 sm:p-12 text-center flex flex-col items-center justify-center max-w-lg mx-auto shadow-xs">
-                <div className="w-16 h-16 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center mb-4">
-                  <span className="material-symbols-outlined text-3xl">account_circle</span>
-                </div>
-                <h3 className="text-base font-black text-slate-800">Inicia sesión para usar esta cuenta</h3>
-                <p className="text-xs text-slate-500 mt-1 max-w-sm">
-                  Para ver, administrar o crear tus tiendas virtuales de reventa, inicia sesión con tu cuenta de Boga Network.
-                </p>
-                <div className="mt-5 flex items-center gap-3">
-                  <Link
-                    href="/login?redirect=/network"
-                    className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black shadow-md transition cursor-pointer flex items-center gap-2"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">login</span>
-                    <span>Iniciar Sesión</span>
-                  </Link>
-                  <Link
-                    href="/login?modo=registro&redirect=/network"
-                    className="px-5 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs font-black transition cursor-pointer"
-                  >
-                    Crear Cuenta
-                  </Link>
-                </div>
-              </div>
-            ) : !cuentaActiva ? (
-              <div className="bg-white rounded-3xl border border-slate-200/90 p-8 sm:p-12 text-center flex flex-col items-center justify-center max-w-lg mx-auto shadow-xs">
-                <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
-                  <span className="material-symbols-outlined text-3xl">storefront</span>
-                </div>
-                <h3 className="text-base font-black text-slate-800">Activa tu cuenta Network</h3>
-                <p className="text-xs text-slate-500 mt-1 max-w-sm">
-                  Para crear y administrar tus tiendas virtuales de reventa, primero activa tu cuenta Network.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => { setPasoRegistro('form'); setModalRegistro(true); }}
-                  className="mt-5 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-md transition cursor-pointer flex items-center gap-2 active:scale-95"
-                >
-                  <span className="material-symbols-outlined text-[18px]">badge</span>
-                  <span>Activar Mi Cuenta Network</span>
-                </button>
-              </div>
-            ) : (
-              <>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
-                  <div>
-                    <h2 className="text-base sm:text-lg font-black text-slate-900">
-                      Mis Tiendas de Reventa
-                    </h2>
-                    <p className="text-xs text-slate-500">
-                      Toca la tienda para abrirla directamente en internet o compartir tu enlace oficial.
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setModalCrearTienda(true)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-xs transition active:scale-95 shrink-0 cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">add</span>
-                    <span>{tiendasUsuario.length === 0 ? 'Crear mi primera tienda' : 'Crear otra tienda'}</span>
-                  </button>
-                </div>
-
-                {/* Lista de Tiendas de Reventa */}
-                <div className="flex flex-col gap-4">
-                  {tiendasUsuario.length === 0 ? (
-                    <div className="bg-white rounded-3xl border border-slate-200/90 p-8 sm:p-12 text-center flex flex-col items-center justify-center max-w-lg mx-auto shadow-xs">
-                      <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
-                        <span className="material-symbols-outlined text-3xl">storefront</span>
-                      </div>
-                      <h3 className="text-base font-black text-slate-800">No tienes tiendas de reventa activas</h3>
-                      <p className="text-xs text-slate-500 mt-1 max-w-sm">
-                        Aún no tienes ninguna tienda creada o tu tienda anterior fue eliminada. Crea tu propia tienda online gratis en 1 clic.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => setModalCrearTienda(true)}
-                        className="mt-5 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-md transition cursor-pointer flex items-center gap-2 active:scale-95"
-                      >
-                        <span className="material-symbols-outlined text-[18px]">add_circle</span>
-                        <span>Crear mi tienda virtual</span>
-                      </button>
-                    </div>
-                  ) : (
-                    tiendasUsuario.map((t, idx) => {
-                      const tNombre = t.business_name || t.name || nombreTienda || 'Mi Tienda bm';
-                      const tSlug = (tNombre || 'tienda')
-                        .toLowerCase()
-                        .normalize('NFD')
-                        .replace(/[\u0300-\u036f]/g, '')
-                        .replace(/[^a-z0-9]+/g, '-')
-                        .replace(/(^-|-$)/g, '');
-                      const tLink = `${origin}/${tSlug}`;
-                      const tEstado = t.status === 'approved' || (tNombre === nombreTienda && estadoTienda === 'activa') ? 'activa' : 'desactivada';
-
-                      return (
-                        <div
-                          key={t.id || tSlug || idx}
-                          className="group bg-white rounded-3xl border border-slate-200 hover:border-emerald-500 p-5 sm:p-6 shadow-sm hover:shadow-md transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-5 relative overflow-hidden"
-                        >
-                          <div className="flex items-center gap-4 min-w-0">
-                            <div className="w-14 h-14 rounded-2xl bg-emerald-600 group-hover:bg-emerald-500 text-white font-black text-2xl flex items-center justify-center shrink-0 shadow-md ring-2 ring-emerald-100 transition">
-                              {(tNombre || 'T').slice(0, 1).toUpperCase()}
-                            </div>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <h3 className="text-base sm:text-lg font-black text-slate-900 group-hover:text-emerald-700 transition capitalize flex items-baseline gap-1">
-                                  <span>{tNombre.replace(/\s+bm$/i, '')}</span>
-                                  <span className="text-slate-400 font-bold text-xs lowercase">bm</span>
-                                </h3>
-                                {tEstado === 'activa' ? (
-                                  <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                    Pública
-                                  </span>
-                                ) : (
-                                  <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                                    En borrador (Privada)
-                                  </span>
-                                )}
-                              </div>
-
-                              <p className="text-xs text-slate-500 mt-1 truncate">
-                                {t.contact_name || nombre ? `Catálogo de ${t.contact_name || nombre} · ` : ''}Envíos en {t.city || ciudad}
-                              </p>
-
-                              <a
-                                href={`/${tSlug}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs font-mono font-bold text-emerald-800 mt-1.5 flex items-center gap-1 hover:underline"
-                              >
-                                <span>{tLink}</span>
-                                <span className="material-symbols-outlined text-[14px]">open_in_new</span>
-                              </a>
-                            </div>
-                          </div>
-
-                          <div
-                            className="flex items-center gap-2 shrink-0 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100 flex-wrap"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {/* BOTÓN PROMINENTE QUE ABRE EL ADMINISTRADOR DE PRODUCTOS Y PRECIOS */}
-                            <button
-                              type="button"
-                              onClick={() => abrirModalAdminTienda(t)}
-                              className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs flex items-center gap-1.5 shadow-xs transition active:scale-95 cursor-pointer"
-                              title="Administrar qué productos y qué precios tiene esta tienda"
-                            >
-                              <span className="material-symbols-outlined text-[16px]">tune</span>
-                              <span>Administrar Catálogo & Precios</span>
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => copiarLinkDeTienda(tSlug)}
-                              className="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
-                            >
-                              <span className="material-symbols-outlined text-[16px]">
-                                {tiendaCopiadaSlug === tSlug ? 'check' : 'content_copy'}
-                              </span>
-                              <span>{tiendaCopiadaSlug === tSlug ? '¡Copiado!' : 'Copiar Link'}</span>
-                            </button>
-
-                            <a
-                              href={`https://wa.me/?text=${encodeURIComponent(
-                                `¡Hola! Ya abrí mi tienda virtual "${tNombre}". Puedes ver mi catálogo y hacer pedidos directo aquí: ${tLink}`
-                              )}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="px-3.5 py-2 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-black text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
-                            >
-                              <IconoWhatsApp className="w-4 h-4 text-white" />
-                              <span>Compartir</span>
-                            </a>
-
-                            <a
-                              href={`/${tSlug}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition"
-                            >
-                              <span>Abrir Tienda</span>
-                              <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
-                            </a>
-
-                            {/* Botón para eliminar la tienda */}
-                            <button
-                              type="button"
-                              onClick={() => eliminarTiendaDeReventa(t)}
-                              className="p-2 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 hover:text-rose-700 font-bold text-xs flex items-center justify-center transition cursor-pointer"
-                              title="Eliminar esta tienda de reventa"
-                            >
-                              <span className="material-symbols-outlined text-[17px]">delete</span>
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
               </>
             )}
           </div>

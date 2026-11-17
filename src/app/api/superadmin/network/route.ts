@@ -60,8 +60,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Cuerpo de solicitud inválido' }, { status: 400 });
   }
 
-  const { accion, id, business_name, whatsapp, email, city } = body;
+  const { accion, id, business_name, whatsapp, email, city, tipo, es_perfil } = body;
   const admin = getAdminClient();
+
+  const esPerfil =
+    es_perfil === true ||
+    tipo === 'perfil' ||
+    (typeof business_name === 'string' && business_name.startsWith('[Perfil]'));
 
   if (accion === 'activar') {
     // 1. Marcar solicitud como approved
@@ -69,7 +74,12 @@ export async function POST(request: Request) {
       await admin.from('store_requests').update({ status: 'approved' }).eq('id', id);
     }
 
-    // 2. Slug seguro
+    // Si es solo activación de perfil de afiliado, no crear tienda virtual
+    if (esPerfil) {
+      return NextResponse.json({ ok: true, mensaje: `Perfil de afiliado activado con éxito` });
+    }
+
+    // 2. Slug seguro para tienda de reventa
     const baseSlug = (business_name || 'tienda')
       .toLowerCase()
       .normalize('NFD')
@@ -134,6 +144,10 @@ export async function POST(request: Request) {
       await admin.from('store_requests').update({ status: 'pending' }).eq('id', id);
     }
 
+    if (esPerfil) {
+      return NextResponse.json({ ok: true, mensaje: `Perfil de afiliado puesto en revisión (Gris)` });
+    }
+
     if (business_name) {
       await admin.from('stores').update({ status: 'inactive' }).ilike('name', business_name);
     }
@@ -151,11 +165,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: delErr.message }, { status: 500 });
     }
 
-    if (business_name) {
+    if (!esPerfil && business_name) {
       await admin.from('stores').delete().ilike('name', business_name);
     }
 
-    return NextResponse.json({ ok: true, mensaje: `Solicitud eliminada con éxito` });
+    return NextResponse.json({ ok: true, mensaje: `Registro eliminado con éxito` });
   }
 
   return NextResponse.json({ error: 'Acción no reconocida' }, { status: 400 });
