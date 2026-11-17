@@ -39,12 +39,13 @@ function RevendedorPanelContent() {
   const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
 
-  // Datos de la tienda del revendedor
+  // Datos del perfil y tienda del revendedor
   const [nombre, setNombre] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [nombreTienda, setNombreTienda] = useState('');
   const [ciudad, setCiudad] = useState('pucallpa');
   const [cargandoDatos, setCargandoDatos] = useState(true);
+  const [cuentaActiva, setCuentaActiva] = useState(false);
   const [tieneTienda, setTieneTienda] = useState(false);
   const [wspBoga, setWspBoga] = useState('51987911213');
 
@@ -201,80 +202,116 @@ function RevendedorPanelContent() {
   useEffect(() => {
     if (authLoading) return;
 
-    const userDraftKey = user ? `boga_revendedor_draft_${user.id}` : null;
+    const userDraftKey = user ? `boga_network_perfil_${user.id}` : null;
 
     // Si el usuario tiene sesión, la base de datos es la única fuente de la verdad
     if (user?.email) {
       supabase
         .from('store_requests')
-        .select('id, business_name, contact_name, whatsapp, city, description, status, created_at')
+        .select('id, business_name, contact_name, whatsapp, city, description, category, status, created_at')
         .eq('email', user.email)
         .eq('interest', 'revendedor')
         .order('created_at', { ascending: false })
         .then(({ data, error }) => {
-          if (!error && data && data.length > 0 && data[0].business_name) {
-            setTiendasUsuario(data);
-            const req = data[0];
-            setNombreTienda(req.business_name);
-            setNombre(req.contact_name || user.user_metadata?.full_name || '');
-            setWhatsapp(req.whatsapp || '');
-            if (req.city) setCiudad(req.city);
-            if (req.status === 'approved') setEstadoTienda('activa');
-            setTieneTienda(true);
+          if (!error && data && data.length > 0) {
+            // El usuario ya activó su cuenta en Boga Network
+            setCuentaActiva(true);
 
-            // Cargar preferencias locales (márgenes y productos elegidos)
-            try {
-              const raw = typeof window !== 'undefined'
-                ? ((userDraftKey && localStorage.getItem(userDraftKey)) || localStorage.getItem('boga_revendedor_draft'))
-                : null;
-              if (raw) {
-                const p = JSON.parse(raw);
-                if (p.margenPorcentaje !== undefined) setMargenPorcentaje(p.margenPorcentaje);
-                if (p.tiendaSeleccionada) setTiendaSeleccionada(p.tiendaSeleccionada);
-                if (p.productosSeleccionados && Array.isArray(p.productosSeleccionados)) {
-                  setProductosSeleccionados(new Set(p.productosSeleccionados));
+            // Obtener datos personales del perfil más reciente
+            const ultimoRegistro = data[0];
+            setNombre(ultimoRegistro.contact_name || user.user_metadata?.full_name || '');
+            setWhatsapp(ultimoRegistro.whatsapp || '');
+            if (ultimoRegistro.city) setCiudad(ultimoRegistro.city);
+
+            // Filtrar SOLO las tiendas de reventa reales creadas explícitamente desde la pestaña de tiendas
+            // (Excluyendo perfiles y tiendas generadas automáticamente en el registro de cuenta)
+            const tiendasReales = data.filter((d: any) => {
+              if (d.category === 'perfil') return false;
+              if (d.description === 'Perfil de usuario activado en Boga Network') return false;
+              if (d.description === 'Cuenta de dropshipping / revendedor activada desde Boga Network') return false;
+              if (d.business_name?.startsWith('[Perfil]')) return false;
+              return !!d.business_name;
+            });
+
+            setTiendasUsuario(tiendasReales);
+
+            if (tiendasReales.length > 0) {
+              const req = tiendasReales[0];
+              setNombreTienda(req.business_name);
+              if (req.status === 'approved') setEstadoTienda('activa');
+              setTieneTienda(true);
+
+              // Cargar preferencias locales (márgenes y productos elegidos)
+              try {
+                const legacyKey = user ? `boga_revendedor_draft_${user.id}` : null;
+                const raw = typeof window !== 'undefined'
+                  ? ((legacyKey && localStorage.getItem(legacyKey)) || localStorage.getItem('boga_revendedor_draft'))
+                  : null;
+                if (raw) {
+                  const p = JSON.parse(raw);
+                  if (p.margenPorcentaje !== undefined) setMargenPorcentaje(p.margenPorcentaje);
+                  if (p.tiendaSeleccionada) setTiendaSeleccionada(p.tiendaSeleccionada);
+                  if (p.productosSeleccionados && Array.isArray(p.productosSeleccionados)) {
+                    setProductosSeleccionados(new Set(p.productosSeleccionados));
+                  }
+                  if (p.preciosPersonalizados && typeof p.preciosPersonalizados === 'object') {
+                    setPreciosPersonalizados(p.preciosPersonalizados);
+                  }
                 }
-                if (p.preciosPersonalizados && typeof p.preciosPersonalizados === 'object') {
-                  setPreciosPersonalizados(p.preciosPersonalizados);
-                }
+              } catch (e) {
+                console.warn('Error leyendo preferencias locales:', e);
               }
-            } catch (e) {
-              console.warn('Error leyendo preferencias locales:', e);
+
+              // Sincronizar también con la configuración guardada en el servidor
+              const sSlug = (req.business_name || '')
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/(^-|-$)/g, '');
+
+              fetch(`/api/network/tienda?slug=${sSlug}`)
+                .then((r) => r.json())
+                .then((res) => {
+                  if (res.ok && res.tienda) {
+                    if (typeof res.tienda.margenPorcentaje === 'number') {
+                      setMargenPorcentaje(res.tienda.margenPorcentaje);
+                    }
+                    if (res.tienda.tiendaProveedora) {
+                      setTiendaSeleccionada(res.tienda.tiendaProveedora);
+                    }
+                    if (Array.isArray(res.tienda.productosSeleccionados) && res.tienda.productosSeleccionados.length > 0) {
+                      setProductosSeleccionados(new Set(res.tienda.productosSeleccionados));
+                    }
+                    if (res.tienda.preciosPersonalizados && typeof res.tienda.preciosPersonalizados === 'object') {
+                      setPreciosPersonalizados(res.tienda.preciosPersonalizados);
+                    }
+                  }
+                })
+                .catch(() => {});
+            } else {
+              // El usuario tiene perfil activo pero NO tiene tiendas creadas
+              setTieneTienda(false);
+              setNombreTienda('');
             }
-
-            // Sincronizar también con la configuración guardada en el servidor
-            const sSlug = (req.business_name || '')
-              .toLowerCase()
-              .normalize('NFD')
-              .replace(/[\u0300-\u036f]/g, '')
-              .replace(/[^a-z0-9]+/g, '-')
-              .replace(/(^-|-$)/g, '');
-
-            fetch(`/api/network/tienda?slug=${sSlug}`)
-              .then((r) => r.json())
-              .then((res) => {
-                if (res.ok && res.tienda) {
-                  if (typeof res.tienda.margenPorcentaje === 'number') {
-                    setMargenPorcentaje(res.tienda.margenPorcentaje);
-                  }
-                  if (res.tienda.tiendaProveedora) {
-                    setTiendaSeleccionada(res.tienda.tiendaProveedora);
-                  }
-                  if (Array.isArray(res.tienda.productosSeleccionados) && res.tienda.productosSeleccionados.length > 0) {
-                    setProductosSeleccionados(new Set(res.tienda.productosSeleccionados));
-                  }
-                  if (res.tienda.preciosPersonalizados && typeof res.tienda.preciosPersonalizados === 'object') {
-                    setPreciosPersonalizados(res.tienda.preciosPersonalizados);
-                  }
-                }
-              })
-              .catch(() => {});
           } else {
-            // NO EXISTE EN SUPABASE (Fue borrada por el Superadmin)
+            // No existe en Supabase: revisar si tiene perfil guardado localmente
             try {
-              if (userDraftKey) localStorage.removeItem(userDraftKey);
-              localStorage.removeItem('boga_revendedor_draft');
-            } catch {}
+              const perfilRaw = typeof window !== 'undefined'
+                ? ((userDraftKey && localStorage.getItem(userDraftKey)) || localStorage.getItem('boga_network_perfil'))
+                : null;
+              if (perfilRaw) {
+                const p = JSON.parse(perfilRaw);
+                if (p.nombre) setNombre(p.nombre);
+                if (p.whatsapp) setWhatsapp(p.whatsapp);
+                if (p.ciudad) setCiudad(p.ciudad);
+                setCuentaActiva(true);
+              } else {
+                setCuentaActiva(false);
+              }
+            } catch {
+              setCuentaActiva(false);
+            }
             setTieneTienda(false);
             setNombreTienda('');
             setTiendasUsuario([]);
@@ -282,35 +319,24 @@ function RevendedorPanelContent() {
           setCargandoDatos(false);
         });
     } else {
-      // Usuario anónimo / sin sesión: revisar borrador temporal en localStorage
+      // Usuario anónimo / sin sesión: revisar perfil local
       try {
-        const raw = typeof window !== 'undefined' ? localStorage.getItem('boga_revendedor_draft') : null;
-        if (raw) {
-          const p = JSON.parse(raw);
-          if (p.nombreTienda && p.whatsapp) {
-            setNombre(p.nombre || '');
-            setWhatsapp(p.whatsapp || '');
-            setNombreTienda(p.nombreTienda || '');
-            setCiudad(p.ciudad || 'pucallpa');
-            if (p.margenPorcentaje !== undefined) setMargenPorcentaje(p.margenPorcentaje);
-            if (p.tiendaSeleccionada) setTiendaSeleccionada(p.tiendaSeleccionada);
-            if (p.productosSeleccionados && Array.isArray(p.productosSeleccionados)) {
-              setProductosSeleccionados(new Set(p.productosSeleccionados));
-            }
-            if (p.preciosPersonalizados && typeof p.preciosPersonalizados === 'object') {
-              setPreciosPersonalizados(p.preciosPersonalizados);
-            }
-            setTieneTienda(true);
-            setTiendasUsuario([{ business_name: p.nombreTienda, contact_name: p.nombre, city: p.ciudad, status: 'desactivada' }]);
-          } else {
-            setTieneTienda(false);
-          }
+        const perfilRaw = typeof window !== 'undefined' ? localStorage.getItem('boga_network_perfil') : null;
+        if (perfilRaw) {
+          const p = JSON.parse(perfilRaw);
+          if (p.nombre) setNombre(p.nombre);
+          if (p.whatsapp) setWhatsapp(p.whatsapp);
+          if (p.ciudad) setCiudad(p.ciudad);
+          setCuentaActiva(true);
         } else {
-          setTieneTienda(false);
+          setCuentaActiva(false);
         }
       } catch {
-        setTieneTienda(false);
+        setCuentaActiva(false);
       }
+      setTieneTienda(false);
+      setNombreTienda('');
+      setTiendasUsuario([]);
       setCargandoDatos(false);
     }
   }, [user, authLoading]);
@@ -747,18 +773,8 @@ function RevendedorPanelContent() {
     try {
       if (tiendaAEliminar.id) {
         await supabase.from('store_requests').delete().eq('id', tiendaAEliminar.id);
-      }
-      const sSlug = (tNombre || '')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
-      if (sSlug) {
-        await supabase.from('stores').delete().eq('slug', sSlug);
-      }
-      if (user?.email) {
-        await supabase.from('store_requests').delete().eq('email', user.email).eq('interest', 'revendedor');
+      } else if (user?.email && tNombre) {
+        await supabase.from('store_requests').delete().eq('email', user.email).eq('business_name', tNombre);
       }
 
       try {
@@ -981,25 +997,42 @@ function RevendedorPanelContent() {
     const nombreTiendaSinBm = nuevoNombreTienda.replace(/\s+bm$/i, '').trim();
     const nombreFinal = `${nombreTiendaSinBm} bm`;
 
+    let nuevaFilaId: any = null;
     try {
       if (user?.email) {
-        await supabase.from('store_requests').insert({
+        const { data: insData } = await supabase.from('store_requests').insert({
           contact_name: nombre.trim() || user.user_metadata?.full_name || 'Revendedor',
           business_name: nombreFinal,
           whatsapp: whatsapp.trim(),
           city: ciudad,
           interest: 'revendedor',
           email: user.email,
-          category: 'revendedor',
+          category: 'tienda_revendedor',
           description: 'Tienda creada desde el Panel de Revendedor',
-        });
+        }).select();
+        if (insData && insData.length > 0) {
+          nuevaFilaId = insData[0].id;
+        }
       }
     } catch (e: any) {
       console.warn('Error al guardar en Supabase:', e);
     }
 
+    const nuevaTiendaObj = {
+      id: nuevaFilaId || `local_${Date.now()}`,
+      business_name: nombreFinal,
+      contact_name: nombre.trim() || user?.user_metadata?.full_name || 'Revendedor',
+      whatsapp: whatsapp.trim(),
+      city: ciudad,
+      status: 'desactivada',
+      category: 'tienda_revendedor',
+      description: 'Tienda creada desde el Panel de Revendedor',
+    };
+
+    setTiendasUsuario((prev) => [nuevaTiendaObj, ...prev.filter(t => t.business_name !== nombreFinal)]);
     setNombreTienda(nombreFinal);
     setTieneTienda(true);
+    setCuentaActiva(true);
     setGuardandoTienda(false);
     setModalCrearTienda(false);
     setNuevoNombreTienda('');
@@ -1050,39 +1083,46 @@ function RevendedorPanelContent() {
     }
 
     setIsActivating(true);
-    const nombreTiendaProvisional = `${nombre.trim()} bm`;
 
     try {
+      // Guardar el registro de perfil de promotor / afiliado Network en Supabase (SIN crear tienda virtual)
       const { error } = await supabase.from('store_requests').insert({
         contact_name: nombre.trim(),
-        business_name: nombreTiendaProvisional,
+        business_name: `[Perfil] ${nombre.trim()}`,
         whatsapp: whatsapp.trim(),
         city: ciudad,
         interest: 'revendedor',
         email: user.email || '',
-        category: 'revendedor',
-        description: 'Cuenta de dropshipping / revendedor activada desde Boga Network',
+        category: 'perfil',
+        description: 'Perfil de usuario activado en Boga Network',
       });
-      if (error) console.warn('Aviso al guardar solicitud en Supabase:', error.message);
+      if (error) console.warn('Aviso al guardar perfil en Supabase:', error.message);
     } catch (err: any) {
-      console.warn('Error no bloqueante al registrar solicitud:', err?.message);
+      console.warn('Error no bloqueante al registrar perfil:', err?.message);
     }
 
     try {
-      const draftData = {
+      const perfilData = {
         nombre: nombre.trim(),
         whatsapp: whatsapp.trim(),
-        nombreTienda: nombreTiendaProvisional,
         ciudad,
         email: user.email,
+        cuentaActiva: true,
         createdAt: new Date().toISOString(),
       };
-      localStorage.setItem('boga_revendedor_draft', JSON.stringify(draftData));
-      if (user?.id) localStorage.setItem(`boga_revendedor_draft_${user.id}`, JSON.stringify(draftData));
+      localStorage.setItem('boga_network_perfil', JSON.stringify(perfilData));
+      if (user?.id) localStorage.setItem(`boga_network_perfil_${user.id}`, JSON.stringify(perfilData));
+      // Limpiar cualquier borrador viejo que forzaba tiendas falsas
+      localStorage.removeItem('boga_revendedor_draft');
+      if (user?.id) localStorage.removeItem(`boga_revendedor_draft_${user.id}`);
     } catch {}
 
-    setNombreTienda(nombreTiendaProvisional);
-    setTieneTienda(true);
+    setCuentaActiva(true);
+    // IMPORTANTE: NO se crea tienda automáticamente aquí.
+    // La tienda sólo se crea si el usuario le da a "Crear Tienda Virtual" en la pestaña 4 "Mis Tiendas".
+    setTieneTienda(false);
+    setNombreTienda('');
+    setTiendasUsuario([]);
     setIsActivating(false);
     setPasoRegistro('exito');
   };
@@ -1260,7 +1300,7 @@ function RevendedorPanelContent() {
             >
               <span className="material-symbols-outlined text-[18px]">loyalty</span>
               <span>2. Productos de Afiliado</span>
-              {tieneTienda ? (
+              {cuentaActiva ? (
                 <span className="bg-sky-100 text-sky-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
                   Comisión por Venta
                 </span>
@@ -1275,7 +1315,7 @@ function RevendedorPanelContent() {
             <button
               type="button"
               onClick={() => {
-                if (!tieneTienda) {
+                if (!cuentaActiva) {
                   setPasoRegistro('form');
                   setModalRegistro(true);
                   return;
@@ -1285,14 +1325,14 @@ function RevendedorPanelContent() {
               className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${
                 pestañaActiva === 'ventas'
                   ? 'border-emerald-600 text-emerald-700'
-                  : tieneTienda
+                  : cuentaActiva
                   ? 'border-transparent text-slate-500 hover:text-slate-800'
                   : 'border-transparent text-slate-400 opacity-60 hover:opacity-90'
               }`}
             >
               <span className="material-symbols-outlined text-[18px]">account_balance_wallet</span>
               <span>3. Mis Ventas & Ganancias</span>
-              {tieneTienda ? (
+              {cuentaActiva ? (
                 <>
                   <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-black">
                     S/ {resumenVentas.gananciasCobradas.toFixed(2)}
@@ -1314,7 +1354,7 @@ function RevendedorPanelContent() {
             <button
               type="button"
               onClick={() => {
-                if (!tieneTienda) {
+                if (!cuentaActiva) {
                   setPasoRegistro('form');
                   setModalRegistro(true);
                   return;
@@ -1324,14 +1364,14 @@ function RevendedorPanelContent() {
               className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${
                 pestañaActiva === 'preview'
                   ? 'border-emerald-600 text-emerald-700'
-                  : tieneTienda
+                  : cuentaActiva
                   ? 'border-transparent text-slate-500 hover:text-slate-800'
                   : 'border-transparent text-slate-400 opacity-60 hover:opacity-90'
               }`}
             >
               <span className="material-symbols-outlined text-[18px]">store</span>
               <span>4. Mis Tiendas</span>
-              {tieneTienda ? (
+              {cuentaActiva && tieneTienda ? (
                 estadoTienda === 'activa' ? (
                   <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -1342,9 +1382,13 @@ function RevendedorPanelContent() {
                     Privada
                   </span>
                 )
+              ) : cuentaActiva ? (
+                <span className="bg-slate-100 text-slate-500 border border-slate-200/80 text-[10px] px-1.5 py-0.5 rounded-full font-medium">
+                  Sin tiendas
+                </span>
               ) : (
                 <span className="bg-slate-100 text-slate-400 border border-slate-200/80 text-[10px] px-1.5 py-0.5 rounded-full font-medium">
-                  Sin tiendas
+                  Activar cuenta
                 </span>
               )}
             </button>
@@ -1353,7 +1397,7 @@ function RevendedorPanelContent() {
             <button
               type="button"
               onClick={() => {
-                if (!tieneTienda) {
+                if (!cuentaActiva) {
                   setPasoRegistro('form');
                   setModalRegistro(true);
                   return;
@@ -1363,14 +1407,14 @@ function RevendedorPanelContent() {
               className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${
                 pestañaActiva === 'afiliados'
                   ? 'border-slate-500 text-slate-800'
-                  : tieneTienda
+                  : cuentaActiva
                   ? 'border-transparent text-slate-400 hover:text-slate-600'
                   : 'border-transparent text-slate-400 opacity-60 hover:opacity-90'
               }`}
             >
               <span className="material-symbols-outlined text-[18px] text-slate-400">volunteer_activism</span>
               <span className="text-slate-500">5. Bonos por Recomendación</span>
-              {tieneTienda ? (
+              {cuentaActiva ? (
                 <span className="bg-slate-100 text-slate-500 border border-slate-200 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
                   Próximamente
                 </span>
@@ -1480,7 +1524,7 @@ function RevendedorPanelContent() {
 
                 {/* Botones de acción principales */}
                 <div className="flex flex-col gap-2.5 w-full mt-1">
-                  {user && tieneTienda ? (
+                  {user && cuentaActiva ? (
                     <button
                       type="button"
                       onClick={() => setPestañaActiva('productos')}
@@ -1489,19 +1533,13 @@ function RevendedorPanelContent() {
                       <span className="material-symbols-outlined text-[20px]">loyalty</span>
                       <span>Ver Productos de Afiliado →</span>
                     </button>
-                  ) : user ? (
-                    <button
-                      type="button"
-                      onClick={() => { setPasoRegistro('form'); setModalRegistro(true); }}
-                      className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-sm shadow-md shadow-emerald-600/25 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 text-center"
-                    >
-                      <span className="material-symbols-outlined text-[20px]">badge</span>
-                      <span>Activar Mi Cuenta Network →</span>
-                    </button>
                   ) : (
                     <button
                       type="button"
-                      onClick={() => { setPasoRegistro('form'); setModalRegistro(true); }}
+                      onClick={() => {
+                        if (!user) router.push('/login?redirect=/network');
+                        else { setPasoRegistro('form'); setModalRegistro(true); }
+                      }}
                       className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-sm shadow-md shadow-emerald-600/25 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 text-center"
                     >
                       <span className="material-symbols-outlined text-[20px]">badge</span>
@@ -1738,9 +1776,12 @@ function RevendedorPanelContent() {
                     onClick={() => {
                       if (!user) {
                         router.push('/login?redirect=/network');
-                      } else if (!tieneTienda) {
+                      } else if (!cuentaActiva) {
                         setPasoRegistro('form');
                         setModalRegistro(true);
+                      } else if (!tieneTienda) {
+                        setPestañaActiva('preview');
+                        setModalCrearTienda(true);
                       } else {
                         setPestañaActiva('preview');
                       }
@@ -2060,7 +2101,7 @@ function RevendedorPanelContent() {
 
             {/* Columna Derecha: Listado de Productos */}
             <div className="flex-1 min-w-0 flex flex-col gap-4">
-              {!tieneTienda && (
+              {!cuentaActiva && (
                 <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/90 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 shadow-2xs">
                   <div className="flex items-start sm:items-center gap-3">
                     <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
@@ -2214,7 +2255,7 @@ function RevendedorPanelContent() {
 
                         {/* Fila inferior: Link y Botones de acción */}
                         <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
-                          {tieneTienda ? (
+                          {cuentaActiva ? (
                             <>
                               <div className="bg-slate-50 rounded-xl px-2.5 py-1.5 border border-slate-200/80">
                                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
@@ -2293,7 +2334,7 @@ function RevendedorPanelContent() {
         {/* ══ PESTAÑA 3: MIS VENTAS & GANANCIAS EN TIEMPO REAL ══ */}
         {pestañaActiva === 'ventas' && (
           <div className="w-full flex flex-col gap-6 animate-in fade-in">
-            {!tieneTienda ? (
+            {!cuentaActiva ? (
               <div className="bg-white rounded-3xl border border-slate-200/90 p-8 sm:p-12 text-center flex flex-col items-center justify-center max-w-lg mx-auto shadow-xs">
                 <div className="w-16 h-16 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center mb-4">
                   <span className="material-symbols-outlined text-3xl">account_balance_wallet</span>
@@ -2731,6 +2772,24 @@ function RevendedorPanelContent() {
                   </Link>
                 </div>
               </div>
+            ) : !cuentaActiva ? (
+              <div className="bg-white rounded-3xl border border-slate-200/90 p-8 sm:p-12 text-center flex flex-col items-center justify-center max-w-lg mx-auto shadow-xs">
+                <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
+                  <span className="material-symbols-outlined text-3xl">storefront</span>
+                </div>
+                <h3 className="text-base font-black text-slate-800">Activa tu cuenta Network</h3>
+                <p className="text-xs text-slate-500 mt-1 max-w-sm">
+                  Para crear y administrar tus tiendas virtuales de reventa, primero activa tu cuenta Network.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => { setPasoRegistro('form'); setModalRegistro(true); }}
+                  className="mt-5 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-md transition cursor-pointer flex items-center gap-2 active:scale-95"
+                >
+                  <span className="material-symbols-outlined text-[18px]">badge</span>
+                  <span>Activar Mi Cuenta Network</span>
+                </button>
+              </div>
             ) : (
               <>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
@@ -2749,7 +2808,7 @@ function RevendedorPanelContent() {
                     className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-xs transition active:scale-95 shrink-0 cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-[16px]">add</span>
-                    <span>Crear otra tienda</span>
+                    <span>{tiendasUsuario.length === 0 ? 'Crear mi primera tienda' : 'Crear otra tienda'}</span>
                   </button>
                 </div>
 
@@ -2899,7 +2958,7 @@ function RevendedorPanelContent() {
         {/* ══ PESTAÑA 5: BONOS POR RECOMENDACIÓN (DESACTIVADO / PRÓXIMAMENTE) ══ */}
         {pestañaActiva === 'afiliados' && (
           <div className="w-full flex flex-col gap-6 animate-in fade-in">
-            {!tieneTienda ? (
+            {!cuentaActiva ? (
               <div className="bg-white rounded-3xl border border-slate-200/90 p-8 sm:p-12 text-center flex flex-col items-center justify-center max-w-lg mx-auto shadow-xs">
                 <div className="w-16 h-16 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center mb-4">
                   <span className="material-symbols-outlined text-3xl">volunteer_activism</span>
