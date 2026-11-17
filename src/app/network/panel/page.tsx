@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { CIUDADES } from '@/lib/ciudades';
+import { detectarCiudad } from '@/lib/geo';
 import IconoWhatsApp from '@/templates/shared/IconoWhatsApp';
 
 function waLink(numero: string, texto: string) {
@@ -29,6 +30,8 @@ interface ProductoProveedor {
   category?: string;
   image?: string;
   store: string;
+  description?: string;
+  afiliadoComision?: number | null;
 }
 
 function RevendedorPanelContent() {
@@ -56,6 +59,14 @@ function RevendedorPanelContent() {
   const [copiado, setCopiado] = useState(false);
   const [guardandoEnNube, setGuardandoEnNube] = useState(false);
   const [guardadoExitoso, setGuardadoExitoso] = useState(false);
+
+  // Modal para activar cuenta de network (si el usuario no tiene tienda aún)
+  const [modalRegistro, setModalRegistro] = useState(false);
+  const [pasoRegistro, setPasoRegistro] = useState<'form' | 'exito'>('form');
+  const [detectando, setDetectando] = useState(false);
+  const [geoAviso, setGeoAviso] = useState('');
+  const [isActivating, setIsActivating] = useState(false);
+  const [errorMsgActivacion, setErrorMsgActivacion] = useState('');
 
   // Leer pestaña desde query parameter (ej: ?tab=ventas, ?tab=preview, etc.)
   useEffect(() => {
@@ -499,14 +510,14 @@ function RevendedorPanelContent() {
 
   // Cargar productos del proveedor seleccionado (SIN filtro is_available para que carguen todos los productos de delva)
   useEffect(() => {
-    if (!tiendaSeleccionada || !tieneTienda) return;
+    if (!tiendaSeleccionada) return;
     setCargandoProductos(true);
     setFiltroCategoria('todas');
     setBusqueda('');
 
     supabase
       .from('products')
-      .select('id, name, price, category, image, store, status')
+      .select('id, name, price, category, image, store, status, description')
       .eq('store', tiendaSeleccionada)
       .order('name')
       .limit(100)
@@ -514,14 +525,20 @@ function RevendedorPanelContent() {
         if (error) {
           console.error('Error al cargar productos de proveedor:', error);
         }
-        const prods = (data || []).map((p: any) => ({
-          id: p.id,
-          name: p.name,
-          price: Number(p.price) || 0,
-          category: p.category || 'General',
-          image: p.image,
-          store: p.store,
-        }));
+        const prods = (data || []).map((p: any) => {
+          const comMatch = (p.description || '').match(/\[afiliado:(\d+)%?\]/i);
+          const comision = p.afiliado_comision != null ? Number(p.afiliado_comision) : (comMatch ? parseInt(comMatch[1], 10) : null);
+          return {
+            id: p.id,
+            name: p.name,
+            price: Number(p.price) || 0,
+            category: p.category || 'General',
+            image: p.image,
+            store: p.store,
+            description: p.description,
+            afiliadoComision: comision,
+          };
+        });
         setProductosDisponibles(prods);
 
         setProductosSeleccionados((prev) => {
@@ -533,7 +550,7 @@ function RevendedorPanelContent() {
 
         setCargandoProductos(false);
       });
-  }, [tiendaSeleccionada, tieneTienda]);
+  }, [tiendaSeleccionada]);
 
   // Categorías con conteo dinámico
   const categoriasDisponibles = useMemo(() => {
@@ -543,6 +560,11 @@ function RevendedorPanelContent() {
       map[cat] = (map[cat] || 0) + 1;
     });
     return Object.entries(map).map(([name, count]) => ({ name, count }));
+  }, [productosDisponibles]);
+
+  // Productos con bono especial de afiliado
+  const productosConBono = useMemo(() => {
+    return productosDisponibles.filter((p) => !!p.afiliadoComision);
   }, [productosDisponibles]);
 
   // Filtro de productos
@@ -561,7 +583,10 @@ function RevendedorPanelContent() {
   const productosReferidosFiltrados = useMemo(() => {
     return productosDisponibles.filter((p) => {
       const matchesSearch = !busquedaReferidos.trim() || p.name.toLowerCase().includes(busquedaReferidos.toLowerCase());
-      const matchesCat = filtroCatReferidos === 'todas' || (p.category && p.category.trim().toLowerCase() === filtroCatReferidos.toLowerCase());
+      const matchesCat =
+        filtroCatReferidos === 'todas' ||
+        (filtroCatReferidos === 'con-bono' && !!p.afiliadoComision) ||
+        (p.category && p.category.trim().toLowerCase() === filtroCatReferidos.toLowerCase());
       return matchesSearch && matchesCat;
     });
   }, [productosDisponibles, busquedaReferidos, filtroCatReferidos]);
@@ -579,7 +604,9 @@ function RevendedorPanelContent() {
     if (prodId && preciosPersonalizados[String(prodId)] && preciosPersonalizados[String(prodId)] > 0) {
       return Number(preciosPersonalizados[String(prodId)]).toFixed(2);
     }
-    const aumento = 1 + margenPorcentaje / 100;
+    const prod = prodId ? productosDisponibles.find((p) => String(p.id) === String(prodId)) : null;
+    const margen = prod?.afiliadoComision ? prod.afiliadoComision : margenPorcentaje;
+    const aumento = 1 + margen / 100;
     const final = Math.round(base * aumento * 10) / 10;
     return final.toFixed(2);
   };
@@ -900,591 +927,869 @@ function RevendedorPanelContent() {
     setModalCrearTienda(true);
   };
 
+  const handleDetectarCiudad = async () => {
+    setDetectando(true);
+    setGeoAviso('');
+    try {
+      const res = await detectarCiudad();
+      if (res.ok && res.slug) {
+        setCiudad(res.slug);
+        setGeoAviso(`Ubicado en ${res.nombreCrudo || res.slug}`);
+      } else {
+        setGeoAviso('No pudimos detectar tu ubicación.');
+      }
+    } catch {
+      setGeoAviso('Permiso de GPS denegado.');
+    } finally {
+      setDetectando(false);
+    }
+  };
+
+  const handleActivarCuenta = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsgActivacion('');
+
+    if (!user) {
+      router.push('/login?redirect=/network');
+      return;
+    }
+
+    const cleanWsp = whatsapp.replace(/\D/g, '');
+    if (!nombre.trim()) {
+      setErrorMsgActivacion('Por favor ingresa tu nombre completo.');
+      return;
+    }
+    if (!whatsapp.trim() || cleanWsp.length < 9) {
+      setErrorMsgActivacion('El número de WhatsApp es obligatorio (mínimo 9 dígitos) para comunicarnos y validar tu cuenta.');
+      return;
+    }
+
+    setIsActivating(true);
+    const nombreTiendaProvisional = `${nombre.trim()} bm`;
+
+    try {
+      const { error } = await supabase.from('store_requests').insert({
+        contact_name: nombre.trim(),
+        business_name: nombreTiendaProvisional,
+        whatsapp: whatsapp.trim(),
+        city: ciudad,
+        interest: 'revendedor',
+        email: user.email || '',
+        category: 'revendedor',
+        description: 'Cuenta de dropshipping / revendedor activada desde Boga Network',
+      });
+      if (error) console.warn('Aviso al guardar solicitud en Supabase:', error.message);
+    } catch (err: any) {
+      console.warn('Error no bloqueante al registrar solicitud:', err?.message);
+    }
+
+    try {
+      const draftData = {
+        nombre: nombre.trim(),
+        whatsapp: whatsapp.trim(),
+        nombreTienda: nombreTiendaProvisional,
+        ciudad,
+        email: user.email,
+        createdAt: new Date().toISOString(),
+      };
+      localStorage.setItem('boga_revendedor_draft', JSON.stringify(draftData));
+      if (user?.id) localStorage.setItem(`boga_revendedor_draft_${user.id}`, JSON.stringify(draftData));
+    } catch {}
+
+    setNombreTienda(nombreTiendaProvisional);
+    setTieneTienda(true);
+    setIsActivating(false);
+    setPasoRegistro('exito');
+  };
+
   // ── ESTADO DE CARGA ──
   if (authLoading || cargandoDatos) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
         <span className="w-10 h-10 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mb-3" />
-        <p className="text-xs font-bold text-slate-700">Cargando tu Panel de Revendedor...</p>
-        <p className="text-[11px] text-slate-400 mt-1">Conectando con tu cuenta en Boga Network</p>
+        <p className="text-xs font-bold text-slate-700">Cargando Boga Network...</p>
+        <p className="text-[11px] text-slate-400 mt-1">Conectando con tu cuenta</p>
       </div>
     );
   }
 
-  // ── SI NO TIENE TIENDA CREADA AÚN ──
-  if (!tieneTienda) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex flex-col justify-between text-slate-900">
-        <header className="sticky top-0 z-30 w-full bg-white/95 backdrop-blur-md border-b border-slate-200">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 h-13 flex items-center justify-between">
-            <Link href="/network" className="flex items-center gap-2">
-              <img src="/logo-mark.svg" alt="Boga Network" className="w-6 h-6" />
-              <span className="font-extrabold text-slate-900 text-sm tracking-tight">Boga Network</span>
-              <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                Panel de Revendedor
-              </span>
-            </Link>
-            <Link
-              href="/network"
-              className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 flex items-center gap-1"
-            >
-              <span className="material-symbols-outlined text-[15px]">arrow_back</span>
-              <span>Ver Información</span>
-            </Link>
-          </div>
-        </header>
-
-        <main className="flex-1 max-w-md mx-auto px-4 py-12 flex flex-col items-center justify-center text-center">
-          <div className="w-16 h-16 rounded-3xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mb-4">
-            <span className="material-symbols-outlined text-3xl">storefront</span>
-          </div>
-          <h1 className="text-xl font-extrabold text-slate-900">Aún no tienes una tienda de reventa</h1>
-          <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-            Crea tu tienda con tu propia marca en solo 2 minutos. Elige productos locales de Pucallpa sin invertir en mercadería y fija tus ganancias.
-          </p>
-          <div className="mt-6 flex flex-col gap-2.5 w-full">
-            <Link
-              href="/network"
-              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-extrabold text-xs shadow-md transition"
-            >
-              Crear Mi Tienda de Reventa Ahora →
-            </Link>
-            <Link
-              href="/trabajos"
-              className="text-xs text-slate-500 hover:text-slate-800 font-medium py-1"
-            >
-              Volver a bolsa de Trabajos
-            </Link>
-          </div>
-        </main>
-
-        <footer className="w-full py-3 text-center text-[10px] text-slate-400">
-          © {new Date().getFullYear()} Boga Network Pucallpa
-        </footer>
-      </div>
-    );
-  }
-
-  // ── PANEL PRINCIPAL ──
+  // ── PANEL PRINCIPAL UNIFICADO ──
   const prodsElegidos = productosDisponibles.filter((p) => productosSeleccionados.has(p.id));
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col selection:bg-emerald-500 selection:text-white">
-      {/* ── Barra Superior del Admin del Revendedor ── */}
-      <header className="sticky top-0 z-30 w-full bg-white/95 backdrop-blur-md border-b border-slate-200 shrink-0">
-        <div className="w-full px-4 sm:px-8 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2">
-              <img src="/logo-mark.svg" alt="Boga Network" className="w-7 h-7" />
-              <span className="font-extrabold text-slate-900 text-sm tracking-tight hidden sm:inline">Boga Network</span>
+      {/* ── Barra Superior Slim Unificada (Solo un header ordenado) ── */}
+      <header className="sticky top-0 z-30 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 shrink-0">
+        <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 h-14 flex items-center justify-between gap-2">
+          {/* Izquierda: Marca y Tienda Activa */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 shrink">
+            <Link href="/network" className="flex items-center gap-1.5 shrink-0 hover:opacity-90 transition">
+              <img src="/logo-mark.svg" alt="Boga Network" className="w-6 h-6 sm:w-7 sm:h-7 shrink-0" />
+              <span className="font-extrabold text-slate-900 text-sm sm:text-base tracking-tight shrink-0">Boga Network</span>
             </Link>
-            <div className="h-4 w-px bg-slate-200 hidden sm:block" />
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-slate-900 text-sm sm:text-base">{nombreTienda}</span>
-              {estadoTienda === 'desactivada' ? (
-                <span className="bg-slate-100 text-slate-600 border border-slate-300 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
-                  Desactivada (En gris / Borrador)
-                </span>
-              ) : (
-                <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Activa en Boga Market
-                </span>
-              )}
-            </div>
+
+            {user && tieneTienda && (
+              <>
+                <div className="h-4 w-px bg-slate-200 hidden sm:block shrink-0" />
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span
+                    className="font-bold text-slate-900 text-xs sm:text-sm truncate max-w-[110px] sm:max-w-[200px]"
+                    title={nombreTienda}
+                  >
+                    {nombreTienda}
+                  </span>
+                  {estadoTienda === 'activa' ? (
+                    <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0 whitespace-nowrap">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      Activa
+                    </span>
+                  ) : (
+                    <span className="bg-slate-100 text-slate-600 border border-slate-300 text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0 whitespace-nowrap">
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                      Borrador
+                    </span>
+                  )}
+                </div>
+              </>
+            )}
+
+            {(!user || !tieneTienda) && (
+              <span className="hidden md:inline-flex bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full items-center gap-1 shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                Gana Dinero · Reventa & Afiliados
+              </span>
+            )}
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Pill de ganancias recaudadas en tiempo real */}
-            <button
-              type="button"
-              onClick={() => setPestañaActiva('ventas')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-black transition cursor-pointer shadow-2xs"
-              title="Ver mis ventas y dinero recaudado"
-            >
-              <span className="material-symbols-outlined text-[16px] text-emerald-600">payments</span>
-              <span>Ganancias: S/ {resumenVentas.gananciasCobradas.toFixed(2)}</span>
-              {resumenVentas.pedidosPendientes > 0 && (
-                <span className="bg-amber-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold ml-0.5">
-                  {resumenVentas.pedidosPendientes} por cobrar
-                </span>
-              )}
-            </button>
+          {/* Derecha: Acciones Ordenadas */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+            {/* Pill de ganancias recaudadas en tiempo real (si está logueado) */}
+            {user && (
+              <button
+                type="button"
+                onClick={() => setPestañaActiva('ventas')}
+                className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-black transition cursor-pointer shadow-2xs shrink-0 whitespace-nowrap"
+                title="Ver mis ventas y dinero recaudado"
+              >
+                <span className="material-symbols-outlined text-[15px] text-emerald-600">payments</span>
+                <span className="hidden sm:inline">Ganancias: </span>
+                <span>S/ {resumenVentas.gananciasCobradas.toFixed(2)}</span>
+                {resumenVentas.pedidosPendientes > 0 && (
+                  <span className="bg-amber-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold ml-0.5">
+                    {resumenVentas.pedidosPendientes}
+                  </span>
+                )}
+              </button>
+            )}
 
-            {/* Botón Grupo Oficial de WhatsApp */}
+            {/* Botón WhatsApp Oficial */}
             <a
               href="https://chat.whatsapp.com/ClozDTrFdhH8cqJPziBYKQ"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:inline-flex items-center gap-1.5 bg-[#25D366]/15 hover:bg-[#25D366]/25 text-[#128C7E] font-bold text-xs px-3 py-1.5 rounded-xl border border-[#25D366]/30 transition"
-              title="Unirte al grupo oficial de WhatsApp de revendedores"
+              className="inline-flex items-center gap-1.5 bg-[#25D366]/15 hover:bg-[#25D366]/25 text-[#128C7E] font-bold text-xs px-2.5 sm:px-3 py-1.5 rounded-xl border border-[#25D366]/30 transition shrink-0"
+              title="Unirte al grupo oficial de WhatsApp"
             >
               <IconoWhatsApp className="w-3.5 h-3.5" />
               <span className="hidden md:inline">Grupo WhatsApp</span>
             </a>
 
-            {user?.email && (
-              <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-slate-600 text-xs font-medium">
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <span className="truncate max-w-[150px]">{user.email}</span>
+            {/* Usuario / Mi Cuenta o Ingresar */}
+            {authLoading ? (
+              <span className="w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+            ) : user ? (
+              <div className="flex items-center gap-1.5">
+                <Link
+                  href="/profile"
+                  className="text-xs font-bold text-slate-700 hover:text-emerald-700 bg-slate-100 hover:bg-emerald-50 border border-slate-200 px-2 sm:px-2.5 py-1.5 rounded-xl transition flex items-center gap-1 shrink-0"
+                  title="Mi Cuenta"
+                >
+                  <span className="material-symbols-outlined text-[15px]">account_circle</span>
+                  <span className="hidden sm:inline">
+                    {user.user_metadata?.full_name?.split(' ')[0] || user.email?.split('@')[0] || 'Mi Cuenta'}
+                  </span>
+                </Link>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Link
+                  href="/login?redirect=/network"
+                  className="text-xs font-semibold text-slate-600 hover:text-slate-900 px-2 py-1.5 rounded-lg"
+                >
+                  Ingresar
+                </Link>
+                <Link
+                  href="/login?modo=registro&redirect=/network"
+                  className="text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 px-2.5 sm:px-3 py-1.5 rounded-xl transition shadow-xs shrink-0"
+                >
+                  Registrarse
+                </Link>
               </div>
             )}
 
+            <div className="h-4 w-px bg-slate-200 hidden sm:block" />
+
+            {/* Volver */}
             <Link
-              href="/network"
-              className="text-xs font-semibold text-slate-600 hover:text-emerald-700 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 transition flex items-center gap-1"
-              title="Ver página informativa pública"
+              href="/"
+              className="text-xs font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-0.5 p-1 sm:px-1.5 sm:py-1 rounded-lg shrink-0"
+              title="Volver a Boga Market"
             >
-              <span className="material-symbols-outlined text-[15px]">info</span>
-              <span className="hidden md:inline">Ver Info</span>
+              <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+              <span className="hidden sm:inline">Volver</span>
             </Link>
-
-            <button
-              type="button"
-              onClick={handleRegistrarOtra}
-              title="Salir y registrar otra tienda"
-              className="text-xs font-semibold text-slate-500 hover:text-slate-800 px-2 py-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer flex items-center gap-1"
-            >
-              <span className="material-symbols-outlined text-[15px]">add_business</span>
-              <span className="hidden sm:inline">Nueva tienda</span>
-            </button>
-
-            {estadoTienda !== 'activa' && (
-              <button
-                type="button"
-                onClick={() => setModalAvisoAsesor(true)}
-                className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-xs transition active:scale-95 cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[16px]">chat</span>
-                <span className="hidden sm:inline">Asegurar activación</span>
-              </button>
-            )}
           </div>
         </div>
       </header>
 
-      {/* ── Barra de Pestañas a Pantalla Completa (Sin Marco y Sin Barra de Scroll) ── */}
-      <div className="bg-white border-b border-slate-200 sticky top-14 z-20 shadow-2xs w-full">
-        <div className="w-full px-4 sm:px-8 flex items-center gap-2 sm:gap-4 overflow-x-auto no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-          {/* PESTAÑA 1: INICIO & FORMAS DE GANAR */}
-          <button
-            type="button"
-            onClick={() => setPestañaActiva('inicio')}
-            className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${
-              pestañaActiva === 'inicio'
-                ? 'border-emerald-600 text-emerald-700'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[18px]">payments</span>
-            <span>1. Formas de Ganar</span>
-            <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-black">
-              Principal
-            </span>
-          </button>
-
-          {/* PESTAÑA 2: PRODUCTOS DE AFILIADO */}
-          <button
-            type="button"
-            onClick={() => setPestañaActiva('productos')}
-            className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${
-              pestañaActiva === 'productos'
-                ? 'border-sky-600 text-sky-700'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[18px]">loyalty</span>
-            <span>2. Productos de Afiliado</span>
-            <span className="bg-sky-100 text-sky-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-              Comisión por Venta
-            </span>
-          </button>
-
-          {/* PESTAÑA 3: MIS VENTAS & GANANCIAS */}
-          <button
-            type="button"
-            onClick={() => setPestañaActiva('ventas')}
-            className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${
-              pestañaActiva === 'ventas'
-                ? 'border-emerald-600 text-emerald-700'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[18px]">account_balance_wallet</span>
-            <span>3. Mis Ventas & Ganancias</span>
-            <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-black">
-              S/ {resumenVentas.gananciasCobradas.toFixed(2)}
-            </span>
-            {resumenVentas.pedidosPendientes > 0 && (
-              <span className="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                {resumenVentas.pedidosPendientes} pendientes
+      {/* ── Barra de Pestañas a Pantalla Completa (Solo si ha iniciado sesión) ── */}
+      {user && (
+        <div className="bg-white border-b border-slate-200 sticky top-14 z-20 shadow-2xs w-full">
+          <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 flex items-center gap-2 sm:gap-4 overflow-x-auto no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            {/* PESTAÑA 1: INICIO */}
+            <button
+              type="button"
+              onClick={() => setPestañaActiva('inicio')}
+              className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${
+                pestañaActiva === 'inicio'
+                  ? 'border-emerald-600 text-emerald-700'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">home</span>
+              <span>1. Inicio</span>
+              <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-black">
+                Principal
               </span>
-            )}
-          </button>
+            </button>
 
-          {/* PESTAÑA 4: MIS TIENDAS */}
-          <button
-            type="button"
-            onClick={() => setPestañaActiva('preview')}
-            className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${
-              pestañaActiva === 'preview'
-                ? 'border-emerald-600 text-emerald-700'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[18px]">store</span>
-            <span>4. Mis Tiendas</span>
-            {estadoTienda === 'activa' ? (
-              <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Pública
+            {/* PESTAÑA 2: PRODUCTOS DE AFILIADO */}
+            <button
+              type="button"
+              onClick={() => setPestañaActiva('productos')}
+              className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${
+                pestañaActiva === 'productos'
+                  ? 'border-sky-600 text-sky-700'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">loyalty</span>
+              <span>2. Productos de Afiliado</span>
+              <span className="bg-sky-100 text-sky-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                Comisión por Venta
               </span>
-            ) : (
-              <span className="bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                Privada
-              </span>
-            )}
-          </button>
+            </button>
 
-          {/* PESTAÑA 5: BONOS POR RECOMENDACIÓN (DESACTIVADO / PRÓXIMAMENTE) */}
-          <button
-            type="button"
-            onClick={() => setPestañaActiva('afiliados')}
-            className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${
-              pestañaActiva === 'afiliados'
-                ? 'border-slate-500 text-slate-800'
-                : 'border-transparent text-slate-400 hover:text-slate-600'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[18px] text-slate-400">volunteer_activism</span>
-            <span className="text-slate-500">5. Bonos por Recomendación</span>
-            <span className="bg-slate-100 text-slate-500 border border-slate-200 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-              Próximamente
-            </span>
-          </button>
+            {/* PESTAÑA 3: MIS VENTAS & GANANCIAS */}
+            <button
+              type="button"
+              onClick={() => setPestañaActiva('ventas')}
+              className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${
+                pestañaActiva === 'ventas'
+                  ? 'border-emerald-600 text-emerald-700'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+              <span>3. Mis Ventas & Ganancias</span>
+              <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-black">
+                S/ {resumenVentas.gananciasCobradas.toFixed(2)}
+              </span>
+              {resumenVentas.pedidosPendientes > 0 && (
+                <span className="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                  {resumenVentas.pedidosPendientes} pendientes
+                </span>
+              )}
+            </button>
 
-          {/* PESTAÑA 6: AJUSTES & CUENTA */}
-          <button
-            type="button"
-            onClick={() => setPestañaActiva('ajustes')}
-            className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${
-              pestañaActiva === 'ajustes'
-                ? 'border-emerald-600 text-emerald-700'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[18px]">settings</span>
-            <span>6. Ajustes & Cuenta</span>
-            {estadoTienda === 'activa' ? (
-              <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                Activa
+            {/* PESTAÑA 4: MIS TIENDAS */}
+            <button
+              type="button"
+              onClick={() => setPestañaActiva('preview')}
+              className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${
+                pestañaActiva === 'preview'
+                  ? 'border-emerald-600 text-emerald-700'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">store</span>
+              <span>4. Mis Tiendas</span>
+              {estadoTienda === 'activa' ? (
+                <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Pública
+                </span>
+              ) : (
+                <span className="bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                  Privada
+                </span>
+              )}
+            </button>
+
+            {/* PESTAÑA 5: BONOS POR RECOMENDACIÓN (DESACTIVADO / PRÓXIMAMENTE) */}
+            <button
+              type="button"
+              onClick={() => setPestañaActiva('afiliados')}
+              className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${
+                pestañaActiva === 'afiliados'
+                  ? 'border-slate-500 text-slate-800'
+                  : 'border-transparent text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px] text-slate-400">volunteer_activism</span>
+              <span className="text-slate-500">5. Bonos por Recomendación</span>
+              <span className="bg-slate-100 text-slate-500 border border-slate-200 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                Próximamente
               </span>
-            ) : (
-              <span className="bg-slate-200 text-slate-700 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                En gris
-              </span>
-            )}
-          </button>
+            </button>
+
+            {/* PESTAÑA 6: AJUSTES & CUENTA */}
+            <button
+              type="button"
+              onClick={() => setPestañaActiva('ajustes')}
+              className={`py-3 text-xs sm:text-sm font-bold flex items-center gap-1.5 border-b-2 transition cursor-pointer whitespace-nowrap ${
+                pestañaActiva === 'ajustes'
+                  ? 'border-emerald-600 text-emerald-700'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">settings</span>
+              <span>6. Ajustes & Cuenta</span>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* ── Contenido Principal a Pantalla Completa (Sin Marco Limitante) ── */}
-      <main className="flex-1 w-full px-4 sm:px-8 xl:px-10 py-6">
-        {/* ══ PESTAÑA 1: INICIO Y FORMAS DE GANAR DINERO (PANEL PRINCIPAL) ══ */}
+      {/* ── Contenido Principal a Pantalla Completa ── */}
+      <main className="flex-1 w-full px-3 sm:px-6 xl:px-8 py-6">
+        {/* ══ PESTAÑA 1: INICIO (HOME PRINCIPAL UNIFICADO) ══ */}
         {pestañaActiva === 'inicio' && (
-          <div className="flex flex-col gap-6">
-            {/* 1. Banner Principal de Bienvenida y Estado del Negocio */}
-            <div className="bg-gradient-to-br from-slate-900 via-slate-850 to-emerald-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden border border-slate-800">
-              <div className="absolute -right-10 -bottom-10 w-72 h-72 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="max-w-7xl mx-auto flex flex-col gap-6 animate-in fade-in">
+            {/* 1. Si el usuario tiene tienda activa o borrador, mostramos su Banner de Bienvenida y Métricas */}
+            {user && tieneTienda && (
+              <div className="bg-gradient-to-br from-slate-900 via-slate-850 to-emerald-950 text-white rounded-3xl p-5 sm:p-7 shadow-xl relative overflow-hidden border border-slate-800">
+                <div className="absolute -right-10 -bottom-10 w-72 h-72 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
 
-              <div className="relative z-10 max-w-3xl">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="bg-emerald-500/20 text-emerald-400 text-xs font-black px-3 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    Panel de Control Principal · Boga Network
+                <div className="relative z-10 max-w-4xl">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="bg-emerald-500/20 text-emerald-400 text-xs font-black px-3 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      Panel de Control Principal · Boga Network
+                    </span>
+                    <span className="text-slate-400 text-xs hidden sm:inline">Pucallpa, Perú</span>
+                  </div>
+
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight">
+                    ¡Hola, {nombre || user.user_metadata?.full_name || 'Emprendedor'}! 👋
+                  </h1>
+                  <p className="text-xs sm:text-sm text-slate-300 mt-1.5 leading-relaxed">
+                    Bienvenido a tu centro de ingresos. Aquí tienes las <b>formas activas de ganar dinero</b> con tu tienda de reventa y con la red comercial de BogaHub, sin necesidad de invertir capital en mercadería.
+                  </p>
+
+                  {/* Métricas rápidas */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mt-4 sm:mt-5">
+                    <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 border border-white/10">
+                      <span className="text-[10px] text-slate-400 font-bold block uppercase">Tu Tienda:</span>
+                      <span className="text-xs sm:text-sm font-black text-white truncate block mt-0.5" title={nombreTienda}>{nombreTienda || 'Mi Tienda'}</span>
+                      {estadoTienda === 'activa' ? (
+                        <span className="text-[10px] text-emerald-400 font-bold">● Activa en internet</span>
+                      ) : (
+                        <span className="text-[10px] text-amber-300 font-bold">○ Privada / Borrador</span>
+                      )}
+                    </div>
+
+                    <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 border border-white/10">
+                      <span className="text-[10px] text-slate-400 font-bold block uppercase">Tu Margen:</span>
+                      <span className="text-xs sm:text-sm font-black text-emerald-300 block mt-0.5">+{margenPorcentaje}%</span>
+                      <span className="text-[10px] text-slate-400">Ganancia neta</span>
+                    </div>
+
+                    <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 border border-white/10">
+                      <span className="text-[10px] text-slate-400 font-bold block uppercase">Productos Listos:</span>
+                      <span className="text-xs sm:text-sm font-black text-white block mt-0.5">{productosSeleccionados.size} ítems</span>
+                      <span className="text-[10px] text-slate-400">En tu catálogo</span>
+                    </div>
+
+                    <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 border border-white/10">
+                      <span className="text-[10px] text-slate-400 font-bold block uppercase">Proveedor Aliado:</span>
+                      <span className="text-xs sm:text-sm font-black text-white block mt-0.5 capitalize">{tiendaSeleccionada}</span>
+                      <span className="text-[10px] text-emerald-400">Stock en Pucallpa</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 2. EL DISEÑO PRINCIPAL DEL HOME (2 COLUMNAS: IZQUIERDA PRESENTACIÓN, DERECHA LAS 3 TARJETAS) */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start w-full">
+              {/* ── COLUMNA IZQUIERDA: HERO, BOTONES Y BENEFICIOS ── */}
+              <div className="lg:col-span-5 lg:sticky lg:top-24 flex flex-col items-start gap-4 text-left">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Oportunidades de Ingresos · Pucallpa</span>
+                </div>
+
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+                  Gana dinero desde tu celular con{' '}
+                  <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 bg-clip-text text-transparent">
+                    Boga Network
                   </span>
-                  <span className="text-slate-400 text-xs hidden sm:inline">Pucallpa, Perú</span>
-                </div>
-
-                <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                  ¡Hola, {nombre || 'Emprendedor'}! 👋
-                </h1>
-                <p className="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed">
-                  Bienvenido a tu centro de ingresos. Aquí tienes las <b>formas activas de ganar dinero</b> con tu tienda de reventa y con la red comercial de BogaHub, sin necesidad de invertir capital en mercadería.
-                </p>
-
-                {/* Métricas rápidas */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
-                  <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 border border-white/10">
-                    <span className="text-[11px] text-slate-400 font-bold block">Tu Tienda:</span>
-                    <span className="text-sm font-black text-white truncate block mt-0.5">{nombreTienda || 'tiRI bm'}</span>
-                    <span className="text-[10px] text-emerald-400 font-bold">● Activa en internet</span>
-                  </div>
-
-                  <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 border border-white/10">
-                    <span className="text-[11px] text-slate-400 font-bold block">Tu Margen:</span>
-                    <span className="text-sm font-black text-emerald-300 block mt-0.5">+{margenPorcentaje}%</span>
-                    <span className="text-[10px] text-slate-400">Ganancia neta</span>
-                  </div>
-
-                  <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 border border-white/10">
-                    <span className="text-[11px] text-slate-400 font-bold block">Productos Listos:</span>
-                    <span className="text-sm font-black text-white block mt-0.5">{productosSeleccionados.size} ítems</span>
-                    <span className="text-[10px] text-slate-400">En tu catálogo</span>
-                  </div>
-
-                  <div className="bg-white/10 backdrop-blur-xs rounded-2xl p-3 border border-white/10">
-                    <span className="text-[11px] text-slate-400 font-bold block">Proveedor Aliado:</span>
-                    <span className="text-sm font-black text-white block mt-0.5 capitalize">{tiendaSeleccionada}</span>
-                    <span className="text-[10px] text-emerald-400">Stock en Pucallpa</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 2. LAS 3 FORMAS DE GANAR DINERO */}
-            <div className="flex flex-col gap-3">
-              <div>
-                <h2 className="text-lg sm:text-xl font-black text-slate-900 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-emerald-600">payments</span>
-                  <span>Formas de Ganar Dinero en Boga Network</span>
                 </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Elige la estrategia que prefieras o combínalas para multiplicar tus ingresos mensuales:
+
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  Descubre las formas oficiales de generar ingresos hoy mismo sin jefes ni horarios. Elige la que mejor se adapte a ti o combínalas.
                 </p>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
-                {/* FORMA 1: CREA Y VENDE CON TU TIENDA VIRTUAL */}
-                <div className="bg-white rounded-3xl border-2 border-emerald-500/20 p-5 sm:p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between group relative overflow-hidden">
-                  <div className="absolute top-0 right-0 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-bl-xl shadow-2xs">
-                    Tu Tienda Propia
-                  </div>
-
-                  <div>
-                    <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mb-4 group-hover:scale-110 transition shadow-2xs">
-                      <span className="material-symbols-outlined text-2xl">storefront</span>
-                    </div>
-
-                    <h3 className="text-base font-black text-slate-900 leading-snug">
-                      1. Crea y Vende con tu Tienda Virtual
-                    </h3>
-
-                    <p className="text-xs text-slate-600 leading-relaxed mt-2">
-                      Tienes tu propia tienda online oficial (<b>{nombreTienda || 'tiRI bm'}</b>) con catálogo completo de productos de proveedores de Pucallpa con entrega local.
-                    </p>
-
-                    <div className="bg-slate-50 rounded-2xl p-3.5 my-4 border border-slate-100 text-xs flex flex-col gap-2">
-                      <div className="flex items-start gap-2">
-                        <span className="material-symbols-outlined text-[16px] text-emerald-600 shrink-0 mt-0.5">check_circle</span>
-                        <span className="text-slate-700">Tú fijas tu propio margen de ganancia (ej. <b>+{margenPorcentaje}%</b>).</span>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <span className="material-symbols-outlined text-[16px] text-emerald-600 shrink-0 mt-0.5">check_circle</span>
-                        <span className="text-slate-700">Tus clientes arman carrito y te piden directo a tu <b>WhatsApp</b>.</span>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <span className="material-symbols-outlined text-[16px] text-emerald-600 shrink-0 mt-0.5">check_circle</span>
-                        <span className="text-slate-700"><b>Cero inversión previa:</b> tú solo compras al proveedor cuando ya te pagaron.</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-2 pt-2 border-t border-slate-100">
-                    <button
-                      type="button"
-                      onClick={() => setPestañaActiva('preview')}
-                      className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">store</span>
-                      <span>Administrar Mis Tiendas</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* FORMA 2: RECOMIENDA PRODUCTOS INDIVIDUALES */}
-                <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between group relative overflow-hidden">
-                  <div className="absolute top-0 right-0 bg-sky-600 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-bl-xl shadow-2xs">
-                    Venta Rápida
-                  </div>
-
-                  <div>
-                    <div className="w-12 h-12 rounded-2xl bg-sky-100 text-sky-700 flex items-center justify-center mb-4 group-hover:scale-110 transition shadow-2xs">
-                      <span className="material-symbols-outlined text-2xl">loyalty</span>
-                    </div>
-
-                    <h3 className="text-base font-black text-slate-900 leading-snug">
-                      2. Recomienda Productos Individuales
-                    </h3>
-
-                    <p className="text-xs text-slate-600 leading-relaxed mt-2">
-                      No necesitas que el cliente revise todo el catálogo. Puedes promocionar <b>productos individuales</b> de alta demanda directamente en tus redes.
-                    </p>
-
-                    <div className="bg-slate-50 rounded-2xl p-3.5 my-4 border border-slate-100 text-xs flex flex-col gap-2">
-                      <div className="flex items-start gap-2">
-                        <span className="material-symbols-outlined text-[16px] text-sky-600 shrink-0 mt-0.5">check_circle</span>
-                        <span className="text-slate-700">Ideal para publicar en <b>Estados de WhatsApp</b> e historias.</span>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <span className="material-symbols-outlined text-[16px] text-sky-600 shrink-0 mt-0.5">check_circle</span>
-                        <span className="text-slate-700">Eliges 1 producto estrella del día (relojes, lentes, accesorios).</span>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <span className="material-symbols-outlined text-[16px] text-sky-600 shrink-0 mt-0.5">check_circle</span>
-                        <span className="text-slate-700">El cliente te escribe directo a comprar ese producto exacto.</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-2 pt-2 border-t border-slate-100">
+                {/* Botones de acción principales */}
+                <div className="flex flex-col gap-2.5 w-full mt-1">
+                  {user && tieneTienda ? (
                     <button
                       type="button"
                       onClick={() => setPestañaActiva('productos')}
-                      className="w-full py-2.5 px-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-black text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+                      className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-sm shadow-md shadow-emerald-600/25 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 text-center"
                     >
-                      <span className="material-symbols-outlined text-[16px]">loyalty</span>
-                      <span>Ver Productos & Links de Referidos</span>
+                      <span className="material-symbols-outlined text-[20px]">loyalty</span>
+                      <span>Ver Productos de Afiliado →</span>
                     </button>
-                    <a
-                      href={`https://wa.me/?text=${encodeURIComponent(
-                        `¡Hola! Te comparto algunos de los productos más pedidos con entrega inmediata en Pucallpa: ${linkTienda}`
-                      )}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full py-2 px-3 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#128C7E] font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer text-center"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">share</span>
-                      <span>Compartir Catálogo en WhatsApp</span>
-                    </a>
-                  </div>
-                </div>
-
-                {/* FORMA 3: RECOMIENDA BOGAHUB Y BOGA NETWORK */}
-                <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between group relative overflow-hidden">
-                  <div className="absolute top-0 right-0 bg-purple-600 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-bl-xl shadow-2xs">
-                    Bonos en Efectivo
-                  </div>
-
-                  <div>
-                    <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center mb-4 group-hover:scale-110 transition shadow-2xs">
-                      <span className="material-symbols-outlined text-2xl">volunteer_activism</span>
-                    </div>
-
-                    <h3 className="text-base font-black text-slate-900 leading-snug">
-                      3. Recomienda BogaHub & Boga Network
-                    </h3>
-
-                    <p className="text-xs text-slate-600 leading-relaxed mt-2">
-                      Gana dinero en efectivo sin vender productos físicos, recomendando la plataforma a amigos o comercios locales.
-                    </p>
-
-                    <div className="bg-slate-50 rounded-2xl p-3.5 my-4 border border-slate-100 text-xs flex flex-col gap-2">
-                      <div className="flex items-start gap-2">
-                        <span className="material-symbols-outlined text-[16px] text-purple-600 shrink-0 mt-0.5">check_circle</span>
-                        <span className="text-slate-700"><b>Invita Revendedores:</b> Amigos que creen su tienda te generan bonos en efectivo.</span>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <span className="material-symbols-outlined text-[16px] text-purple-600 shrink-0 mt-0.5">check_circle</span>
-                        <span className="text-slate-700"><b>Comercios BogaHub:</b> Recomienda negocios de Pucallpa para digitalizarse.</span>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <span className="material-symbols-outlined text-[16px] text-purple-600 shrink-0 mt-0.5">check_circle</span>
-                        <span className="text-slate-700">Ingresos adicionales mientras tu red crece semana a semana.</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-2 pt-2 border-t border-slate-100">
+                  ) : user ? (
                     <button
                       type="button"
-                      onClick={() => setPestañaActiva('afiliados')}
-                      className="w-full py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+                      onClick={() => { setPasoRegistro('form'); setModalRegistro(true); }}
+                      className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-sm shadow-md shadow-emerald-600/25 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 text-center"
                     >
-                      <span className="material-symbols-outlined text-[16px]">qr_code_scanner</span>
-                      <span>Ver Mi Link de Afiliados y Bonos</span>
+                      <span className="material-symbols-outlined text-[20px]">badge</span>
+                      <span>Activar Mi Cuenta Network →</span>
                     </button>
-                    <a
-                      href="https://bogahub.app"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setPasoRegistro('form'); setModalRegistro(true); }}
+                      className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-sm shadow-md shadow-emerald-600/25 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 text-center"
                     >
-                      <span className="material-symbols-outlined text-[16px]">explore</span>
-                      <span>Explorar BogaHub Pucallpa</span>
-                    </a>
+                      <span className="material-symbols-outlined text-[20px]">badge</span>
+                      <span>Activar Mi Cuenta Network →</span>
+                    </button>
+                  )}
+
+                  <a
+                    href="https://chat.whatsapp.com/ClozDTrFdhH8cqJPziBYKQ"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3 px-5 rounded-2xl bg-[#25D366]/15 hover:bg-[#25D366]/25 text-[#128C7E] font-black text-xs sm:text-sm border border-[#25D366]/30 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 text-center"
+                  >
+                    <IconoWhatsApp className="w-4 h-4 shrink-0" />
+                    <span>Únete al Grupo WhatsApp</span>
+                  </a>
+                </div>
+
+                <p className="text-[11px] text-slate-400 font-medium">
+                  🔒 Sin costos ocultos · Cero inversión en mercadería · Pagos directos
+                </p>
+
+                {/* Tarjeta de Beneficios y Confianza */}
+                <div className="w-full bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs flex flex-col gap-2.5 mt-1">
+                  <div className="flex items-center gap-2 text-slate-900 font-extrabold text-xs">
+                    <span className="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-[15px]">verified</span>
+                    </span>
+                    <span>Beneficios oficiales de la red</span>
                   </div>
+                  <ul className="text-xs text-slate-600 space-y-2">
+                    <li className="flex items-start gap-2">
+                      <span className="material-symbols-outlined text-emerald-600 text-[16px] shrink-0 mt-0.5">check_circle</span>
+                      <span>Proveedores con stock verificado en Pucallpa.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="material-symbols-outlined text-emerald-600 text-[16px] shrink-0 mt-0.5">check_circle</span>
+                      <span>Cobros inmediatos por Yape o Plin al entregar.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="material-symbols-outlined text-emerald-600 text-[16px] shrink-0 mt-0.5">check_circle</span>
+                      <span>Comunidad activa con soporte directo por WhatsApp.</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* ── COLUMNA DERECHA: LAS 3 TARJETAS (ESTILO IMAGEN media_1794879485019_b5734ae9.png + TEXTO EXTRA media_1794879507585_6c55d750.png) ── */}
+              <div className="lg:col-span-7 flex flex-col gap-4">
+                {/* TARJETA 1: AFILIADO (RECOMIENDA PRODUCTOS O NEGOCIOS) */}
+                <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-xs flex flex-col justify-between gap-3.5 hover:border-sky-300 hover:shadow-md transition">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-xl bg-sky-100 text-sky-800 flex items-center justify-center text-xs font-black shrink-0">
+                          1
+                        </span>
+                        <h3 className="text-sm sm:text-base font-black text-slate-900 tracking-tight leading-snug">
+                          Afiliado (Recomienda Productos o Negocios)
+                        </h3>
+                      </div>
+                      <span className="bg-sky-100 text-sky-800 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
+                        Recomendado · Rápido
+                      </span>
+                    </div>
+
+                    {/* Caja de Comisión */}
+                    <div className="bg-gradient-to-r from-sky-500/10 to-blue-500/10 border border-sky-500/20 rounded-2xl p-3 flex items-center justify-between gap-2">
+                      <div>
+                        <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider block">Comisión Directa</span>
+                        <span className="text-lg font-black text-sky-800 block leading-tight">+S/ 10 a S/ 35</span>
+                        <span className="text-[9px] text-slate-500">por cada producto o negocio</span>
+                      </div>
+                      <div className="text-right bg-white/80 px-2.5 py-1.5 rounded-xl border border-sky-200/60 shrink-0">
+                        <span className="text-[8px] font-bold text-slate-500 block uppercase">En Redes</span>
+                        <span className="text-xs font-black text-slate-900 block leading-tight">1 Clic</span>
+                        <span className="text-[8px] text-sky-700 font-bold">compartir</span>
+                      </div>
+                    </div>
+
+                    {/* 3 Pills */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                      <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                        <span className="w-7 h-7 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+                          <span className="material-symbols-outlined text-[16px]">share</span>
+                        </span>
+                        <div className="min-w-0">
+                          <p className="font-extrabold text-slate-900 text-[11px] leading-tight">Wsp y Redes</p>
+                          <p className="text-[9px] text-slate-500 leading-tight">Compártelo en tus estados y redes.</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                        <span className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                          <span className="material-symbols-outlined text-[16px]">store</span>
+                        </span>
+                        <div className="min-w-0">
+                          <p className="font-extrabold text-slate-900 text-[11px] leading-tight">Negocios o Productos</p>
+                          <p className="text-[9px] text-slate-500 leading-tight">Links directos a productos y tiendas.</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                        <span className="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
+                          <span className="material-symbols-outlined text-[16px]">payments</span>
+                        </span>
+                        <div className="min-w-0">
+                          <p className="font-extrabold text-slate-900 text-[11px] leading-tight">Gana por cada uno</p>
+                          <p className="text-[9px] text-slate-500 leading-tight">Cobras al instante por Yape o Plin.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Texto y Checkmarks adicionales (de media_1794879507585_6c55d750.png) */}
+                    <div className="bg-slate-50/80 rounded-2xl p-3 border border-slate-100 text-xs flex flex-col gap-1.5 mt-0.5">
+                      <div className="flex items-start gap-2">
+                        <span className="material-symbols-outlined text-[15px] text-sky-600 shrink-0 mt-0.5">check_circle</span>
+                        <span className="text-slate-700 text-[11px]">Ideal para publicar en <b>Estados de WhatsApp</b> e historias.</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="material-symbols-outlined text-[15px] text-sky-600 shrink-0 mt-0.5">check_circle</span>
+                        <span className="text-slate-700 text-[11px]">Comisiones desde <b>10%, 15%, 20% al 30%</b> por cada venta generada.</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="material-symbols-outlined text-[15px] text-sky-600 shrink-0 mt-0.5">check_circle</span>
+                        <span className="text-slate-700 text-[11px]"><b>Cobras al instante</b> por Yape o Plin al concretarse la entrega.</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!user) {
+                        router.push('/login?redirect=/network');
+                      } else {
+                        setPestañaActiva('productos');
+                      }
+                    }}
+                    className="w-full py-2.5 px-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-black text-xs shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                    <span>{user ? 'Ir a Productos de Afiliado →' : 'Empezar como Afiliado →'}</span>
+                  </button>
+                </div>
+
+                {/* TARJETA 2: TIENDA VIRTUAL PROPIA */}
+                <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-xs flex flex-col justify-between gap-3.5 hover:border-emerald-300 hover:shadow-md transition">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs font-black shrink-0">
+                          2
+                        </span>
+                        <h3 className="text-sm sm:text-base font-black text-slate-900 tracking-tight leading-snug">
+                          Tienda Virtual Propia
+                        </h3>
+                      </div>
+                      <span className="bg-emerald-100 text-emerald-800 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
+                        Tu Marca
+                      </span>
+                    </div>
+
+                    {/* Caja de Margen */}
+                    <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-2xl p-3 flex items-center justify-between gap-2">
+                      <div>
+                        <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider block">Tu Margen</span>
+                        <span className="text-lg font-black text-emerald-700 block leading-tight">+15% a +25%</span>
+                        <span className="text-[9px] text-slate-500">sobre cada producto</span>
+                      </div>
+                      <div className="text-right bg-white/80 px-2.5 py-1.5 rounded-xl border border-emerald-200/60 shrink-0">
+                        <span className="text-[8px] font-bold text-slate-500 block uppercase">Estimado</span>
+                        <span className="text-xs font-black text-slate-900 block leading-tight">S/ 600 - 1,200</span>
+                        <span className="text-[8px] text-emerald-700 font-bold">mes</span>
+                      </div>
+                    </div>
+
+                    {/* 3 Pills */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                      <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                        <span className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                          <span className="material-symbols-outlined text-[16px]">storefront</span>
+                        </span>
+                        <div className="min-w-0">
+                          <p className="font-extrabold text-slate-900 text-[11px] leading-tight">Catálogo propio</p>
+                          <p className="text-[9px] text-slate-500 leading-tight">Con tus fotos y precios.</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                        <span className="w-7 h-7 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center shrink-0">
+                          <span className="material-symbols-outlined text-[16px]">inventory_2</span>
+                        </span>
+                        <div className="min-w-0">
+                          <p className="font-extrabold text-slate-900 text-[11px] leading-tight">Cero inversión</p>
+                          <p className="text-[9px] text-slate-500 leading-tight">Proveedor despacha.</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                        <span className="w-7 h-7 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center shrink-0">
+                          <span className="material-symbols-outlined text-[16px]">shopping_cart</span>
+                        </span>
+                        <div className="min-w-0">
+                          <p className="font-extrabold text-slate-900 text-[11px] leading-tight">A tu WhatsApp</p>
+                          <p className="text-[9px] text-slate-500 leading-tight">Te pagan directamente.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Texto y Checkmarks adicionales (de media_1794879507585_6c55d750.png) */}
+                    <p className="text-[11px] text-slate-600 leading-relaxed mt-0.5">
+                      Tienes tu propia tienda online oficial ({nombreTienda ? <b>{nombreTienda}</b> : 'con tu propia marca'}) con catálogo completo de productos de proveedores de Pucallpa con entrega local.
+                    </p>
+
+                    <div className="bg-slate-50/80 rounded-2xl p-3 border border-slate-100 text-xs flex flex-col gap-1.5">
+                      <div className="flex items-start gap-2">
+                        <span className="material-symbols-outlined text-[15px] text-emerald-600 shrink-0 mt-0.5">check_circle</span>
+                        <span className="text-slate-700 text-[11px]">Tú fijas tu propio margen de ganancia (ej. <b>+{margenPorcentaje}%</b>).</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="material-symbols-outlined text-[15px] text-emerald-600 shrink-0 mt-0.5">check_circle</span>
+                        <span className="text-slate-700 text-[11px]">Tus clientes arman carrito y te piden directo a tu <b>WhatsApp</b>.</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="material-symbols-outlined text-[15px] text-emerald-600 shrink-0 mt-0.5">check_circle</span>
+                        <span className="text-slate-700 text-[11px]"><b>Cero inversión previa:</b> tú solo compras al proveedor cuando ya te pagaron.</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!user) {
+                        router.push('/login?redirect=/network');
+                      } else if (!tieneTienda) {
+                        setPasoRegistro('form');
+                        setModalRegistro(true);
+                      } else {
+                        setPestañaActiva('preview');
+                      }
+                    }}
+                    className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">store</span>
+                    <span>{tieneTienda ? 'Administrar Mi Tienda →' : 'Crear Tienda Virtual →'}</span>
+                  </button>
+                </div>
+
+                {/* TARJETA 3: BONOS POR RECOMENDACIÓN (DESACTIVADO / PRÓXIMAMENTE) */}
+                <div className="bg-slate-50/90 rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-2xs flex flex-col justify-between gap-3.5 transition opacity-80">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between gap-2 border-b border-slate-200/80 pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-xl bg-slate-200 text-slate-600 flex items-center justify-center text-xs font-black shrink-0">
+                          3
+                        </span>
+                        <h3 className="text-sm sm:text-base font-black text-slate-600 tracking-tight leading-snug">
+                          Bonos por Recomendación
+                        </h3>
+                      </div>
+                      <span className="bg-slate-200 text-slate-600 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
+                        Próximamente
+                      </span>
+                    </div>
+
+                    {/* Caja de Ganancia Desactivada */}
+                    <div className="bg-slate-100/80 border border-slate-200 rounded-2xl p-3 flex items-center justify-between gap-2">
+                      <div>
+                        <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">Bono por Referido</span>
+                        <span className="text-lg font-black text-slate-600 block leading-tight">+S/ 20 a S/ 50</span>
+                        <span className="text-[9px] text-slate-400">por cada referido activo</span>
+                      </div>
+                      <div className="text-right bg-white px-2.5 py-1.5 rounded-xl border border-slate-200 shrink-0">
+                        <span className="text-[8px] font-bold text-slate-400 block uppercase">Estado</span>
+                        <span className="text-xs font-black text-slate-600 block leading-tight">En pausa</span>
+                        <span className="text-[8px] text-slate-400 font-bold">por ahora</span>
+                      </div>
+                    </div>
+
+                    {/* 3 Pills */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                      <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-slate-200/60">
+                        <span className="w-7 h-7 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
+                          <span className="material-symbols-outlined text-[16px]">store</span>
+                        </span>
+                        <div className="min-w-0">
+                          <p className="font-extrabold text-slate-700 text-[11px] leading-tight">Comercios</p>
+                          <p className="text-[9px] text-slate-400 leading-tight">Pollerías, boutiques.</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-slate-200/60">
+                        <span className="w-7 h-7 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
+                          <span className="material-symbols-outlined text-[16px]">local_taxi</span>
+                        </span>
+                        <div className="min-w-0">
+                          <p className="font-extrabold text-slate-700 text-[11px] leading-tight">Choferes</p>
+                          <p className="text-[9px] text-slate-400 leading-tight">Taxi o mototaxis.</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-slate-200/60">
+                        <span className="w-7 h-7 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
+                          <span className="material-symbols-outlined text-[16px]">group_add</span>
+                        </span>
+                        <div className="min-w-0">
+                          <p className="font-extrabold text-slate-700 text-[11px] leading-tight">Contactos</p>
+                          <p className="text-[9px] text-slate-400 leading-tight">Amigos y revendedores.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Texto y Checkmarks adicionales */}
+                    <div className="bg-white/80 rounded-2xl p-3 border border-slate-200/60 text-xs flex flex-col gap-1.5 mt-0.5">
+                      <div className="flex items-start gap-2">
+                        <span className="material-symbols-outlined text-[15px] text-slate-400 shrink-0 mt-0.5">check_circle</span>
+                        <span className="text-slate-600 text-[11px]"><b>Comercios BogaHub:</b> Recomienda negocios de Pucallpa para digitalizarse.</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="material-symbols-outlined text-[15px] text-slate-400 shrink-0 mt-0.5">check_circle</span>
+                        <span className="text-slate-600 text-[11px]"><b>Choferes:</b> Recomienda conductores de taxi o mototaxi.</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="material-symbols-outlined text-[15px] text-slate-400 shrink-0 mt-0.5">check_circle</span>
+                        <span className="text-slate-600 text-[11px]">Bonos en efectivo por cada referido activo.</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled
+                    className="w-full py-2.5 px-3 rounded-xl bg-slate-200 text-slate-500 font-bold text-xs shadow-none cursor-not-allowed flex items-center justify-center gap-1.5"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">lock</span>
+                    <span>Desactivado por ahora · Próximamente</span>
+                  </button>
                 </div>
               </div>
             </div>
 
-            {/* 3. Guía de Inicio Rápido en 3 Pasos */}
-            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-2xs">
+            {/* 3. PARTE DE ABAJO COMBINADA: GUÍA RÁPIDA EN 3 PASOS (media_1794879314322_c26b6a23.png) */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-2xs mt-2">
               <h3 className="text-sm font-extrabold text-slate-900 mb-4 flex items-center gap-2">
-                <span className="material-symbols-outlined text-emerald-600 text-[20px]">rocket_launch</span>
+                <span className="material-symbols-outlined text-emerald-600 text-xl">rocket_launch</span>
                 <span>Plan de Acción Rápido: Cómo hacer tus primeras ventas hoy</span>
               </h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col justify-between">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col justify-between">
                   <div>
-                    <span className="w-7 h-7 rounded-full bg-emerald-600 text-white font-black text-xs flex items-center justify-center mb-2 shadow-2xs">
+                    <span className="w-6 h-6 rounded-full bg-emerald-600 text-white font-extrabold text-xs flex items-center justify-center mb-2">
                       1
                     </span>
-                    <h4 className="font-bold text-xs text-slate-900">Ajusta tu Margen & Catálogo</h4>
-                    <p className="text-[11px] text-slate-500 mt-1">
+                    <h4 className="font-extrabold text-slate-900 text-sm">Ajusta tu Margen & Catálogo</h4>
+                    <p className="text-slate-600 text-xs mt-1 leading-relaxed">
                       Elige los productos que más te gusten y define tu porcentaje de ganancia (15% recomendado).
                     </p>
                   </div>
                   <button
                     type="button"
-                    onClick={() => setPestañaActiva('preview')}
+                    onClick={() => {
+                      if (!user) router.push('/login?redirect=/network');
+                      else if (!tieneTienda) { setPasoRegistro('form'); setModalRegistro(true); }
+                      else setPestañaActiva('preview');
+                    }}
                     className="mt-3 text-[11px] font-bold text-emerald-700 hover:underline text-left cursor-pointer"
                   >
                     Ir a Mis Tiendas →
                   </button>
                 </div>
 
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col justify-between">
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col justify-between">
                   <div>
-                    <span className="w-7 h-7 rounded-full bg-emerald-600 text-white font-black text-xs flex items-center justify-center mb-2 shadow-2xs">
+                    <span className="w-6 h-6 rounded-full bg-emerald-600 text-white font-extrabold text-xs flex items-center justify-center mb-2">
                       2
                     </span>
-                    <h4 className="font-bold text-xs text-slate-900">Publica en Estados de WhatsApp</h4>
-                    <p className="text-[11px] text-slate-500 mt-1">
+                    <h4 className="font-extrabold text-slate-900 text-sm">Publica en Estados de WhatsApp</h4>
+                    <p className="text-slate-600 text-xs mt-1 leading-relaxed">
                       Comparte el enlace de tu tienda o producto estrella con tus contactos de Pucallpa.
-                    </p>
-                  </div>
-                  <a
-                    href={`https://wa.me/?text=${encodeURIComponent(
-                      `¡Hola! Visita mi tienda virtual oficial: ${linkTienda}`
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-3 text-[11px] font-bold text-emerald-700 hover:underline text-left"
-                  >
-                    Compartir ahora →
-                  </a>
-                </div>
-
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col justify-between">
-                  <div>
-                    <span className="w-7 h-7 rounded-full bg-emerald-600 text-white font-black text-xs flex items-center justify-center mb-2 shadow-2xs">
-                      3
-                    </span>
-                    <h4 className="font-bold text-xs text-slate-900">Recibe Pedidos y Cobra Ganancia</h4>
-                    <p className="text-[11px] text-slate-500 mt-1">
-                      Tu cliente te pide al WhatsApp, el proveedor entrega localmente y tú te quedas con tu margen neto.
                     </p>
                   </div>
                   <button
                     type="button"
-                    onClick={() => setPestañaActiva('preview')}
+                    onClick={() => {
+                      if (!user) router.push('/login?redirect=/network');
+                      else setPestañaActiva('productos');
+                    }}
                     className="mt-3 text-[11px] font-bold text-emerald-700 hover:underline text-left cursor-pointer"
                   >
-                    Ver mi Tienda →
+                    Compartir ahora →
                   </button>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col justify-between">
+                  <div>
+                    <span className="w-6 h-6 rounded-full bg-emerald-600 text-white font-extrabold text-xs flex items-center justify-center mb-2">
+                      3
+                    </span>
+                    <h4 className="font-extrabold text-slate-900 text-sm">Recibe Pedidos y Cobra Ganancia</h4>
+                    <p className="text-slate-600 text-xs mt-1 leading-relaxed">
+                      Tu cliente te pide al WhatsApp, el proveedor entrega localmente y tú te quedas con tu margen neto.
+                    </p>
+                  </div>
+                  {tieneTienda ? (
+                    <a
+                      href={`${origin}/${slugTienda}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 text-[11px] font-bold text-emerald-700 hover:underline text-left cursor-pointer"
+                    >
+                      Ver mi Tienda →
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!user) router.push('/login?redirect=/network');
+                        else { setPasoRegistro('form'); setModalRegistro(true); }
+                      }}
+                      className="mt-3 text-[11px] font-bold text-emerald-700 hover:underline text-left cursor-pointer"
+                    >
+                      Crear mi Tienda →
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -1572,6 +1877,22 @@ function RevendedorPanelContent() {
                     <span>Todas las categorías</span>
                     <span className="text-[10px] opacity-80">({productosDisponibles.length})</span>
                   </button>
+                  {productosConBono.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setFiltroCatReferidos('con-bono')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-between text-left ${
+                        filtroCatReferidos === 'con-bono'
+                          ? 'bg-amber-500 text-white shadow-xs font-black'
+                          : 'bg-amber-50 text-amber-800 border border-amber-200/80 hover:bg-amber-100'
+                      }`}
+                    >
+                      <span className="flex items-center gap-1 truncate mr-2">
+                        <span>⭐</span> Con Bono Afiliado
+                      </span>
+                      <span className="text-[10px] opacity-90 shrink-0 font-black">({productosConBono.length})</span>
+                    </button>
+                  )}
                   {categoriasDisponibles.map((cat) => (
                     <button
                       key={cat.name}
@@ -1662,10 +1983,17 @@ function RevendedorPanelContent() {
                               <span className="bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-lg truncate max-w-[130px]">
                                 {prod.category || prod.store || 'Producto'}
                               </span>
-                              <span className="bg-emerald-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-2xs">
-                                <span className="material-symbols-outlined text-[13px]">monetization_on</span>
-                                <span>+S/ {ganancia}</span>
-                              </span>
+                              {prod.afiliadoComision ? (
+                                <span className="bg-amber-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-2xs">
+                                  <span className="material-symbols-outlined text-[13px]">verified</span>
+                                  <span>Bono {prod.afiliadoComision}% (+S/ {ganancia})</span>
+                                </span>
+                              ) : (
+                                <span className="bg-emerald-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-2xs">
+                                  <span className="material-symbols-outlined text-[13px]">monetization_on</span>
+                                  <span>+S/ {ganancia}</span>
+                                </span>
+                              )}
                             </div>
 
                             <h4 className="text-xs sm:text-sm font-black text-slate-900 line-clamp-2 leading-snug" title={prod.name}>
@@ -1679,7 +2007,9 @@ function RevendedorPanelContent() {
                                 <span className="text-xs font-black text-slate-900">S/ {precioCliente}</span>
                               </div>
                               <div className="border-l border-emerald-200/80 pl-3">
-                                <span className="text-[9px] uppercase font-extrabold text-emerald-700 block">Tu Ganancia</span>
+                                <span className="text-[9px] uppercase font-extrabold text-emerald-700 block">
+                                  {prod.afiliadoComision ? `Comisión Afiliado (${prod.afiliadoComision}%)` : 'Tu Ganancia'}
+                                </span>
                                 <span className="text-xs font-black text-emerald-700">+S/ {ganancia}</span>
                               </div>
                             </div>
@@ -3398,6 +3728,181 @@ function RevendedorPanelContent() {
             </span>
             <span>{guardandoEnNube ? 'Guardando...' : 'Guardar Cambios'}</span>
           </button>
+        </div>
+      )}
+
+      {/* ── MODAL: Activación de Cuenta y Confirmación con Grupo de WhatsApp ── */}
+      {modalRegistro && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in"
+          onClick={() => setModalRegistro(false)}
+        >
+          <div
+            className="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl relative border border-slate-100 flex flex-col gap-4 text-slate-900 animate-in zoom-in-95"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setModalRegistro(false)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-800 flex items-center justify-center transition cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-lg">close</span>
+            </button>
+
+            {pasoRegistro === 'form' ? (
+              <>
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-2xl">badge</span>
+                  </div>
+                  <div>
+                    <h3 className="text-base font-extrabold text-slate-900">Activar Mi Cuenta Network</h3>
+                    <p className="text-xs text-slate-500 font-medium">Completa tus datos para ingresar al panel y unirte a la red</p>
+                  </div>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200/80 text-[11px] text-emerald-950 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[16px] text-emerald-600 shrink-0">contact_phone</span>
+                  <span><b>Contacto directo:</b> Revisaremos tu solicitud y usaremos tu WhatsApp para validar tu cuenta.</span>
+                </div>
+
+                {errorMsgActivacion && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-semibold flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[16px] text-red-600 shrink-0">error</span>
+                    <span>{errorMsgActivacion}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleActivarCuenta} className="flex flex-col gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Tu nombre completo <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ej: Camila Salazar"
+                        value={nombre}
+                        onChange={(e) => setNombre(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 bg-slate-50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Tu WhatsApp de contacto <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="tel"
+                        required
+                        placeholder="Ej: 987 654 321"
+                        value={whatsapp}
+                        onChange={(e) => setWhatsapp(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 bg-slate-50"
+                      />
+                      <p className="text-[10px] text-emerald-700 font-bold mt-1">
+                        Número de 9 dígitos de celular
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-bold text-slate-700">Tu ciudad / distrito</label>
+                      <button
+                        type="button"
+                        onClick={handleDetectarCiudad}
+                        disabled={detectando}
+                        className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-0.5 cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-[12px]">my_location</span>
+                        {detectando ? 'Ubicando...' : 'Ubicar GPS'}
+                      </button>
+                    </div>
+                    <select
+                      value={ciudad}
+                      onChange={(e) => setCiudad(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-emerald-500 bg-slate-50"
+                    >
+                      {CIUDADES.map((c) => (
+                        <option key={c.slug} value={c.slug}>
+                          {c.nombre} ({c.region})
+                        </option>
+                      ))}
+                    </select>
+                    {geoAviso && <p className="text-[10px] text-amber-600 mt-1">{geoAviso}</p>}
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={isActivating}
+                      className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-sm shadow-md shadow-emerald-600/20 active:scale-[0.99] transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                    >
+                      {isActivating ? (
+                        <span>Activando tu cuenta...</span>
+                      ) : (
+                        <>
+                          <span>Activar Cuenta y Continuar</span>
+                          <span className="material-symbols-outlined text-base">arrow_forward</span>
+                        </>
+                      )}
+                    </button>
+                    <p className="text-center text-[10px] text-slate-400 mt-2">
+                      🔒 Sin costos ocultos · Al activar podrás ingresar a tu panel
+                    </p>
+                  </div>
+                </form>
+              </>
+            ) : (
+              /* PANTALLA DE ÉXITO */
+              <div className="flex flex-col items-center text-center gap-4 py-2 animate-in fade-in">
+                <div className="w-16 h-16 rounded-3xl bg-[#25D366]/15 text-[#25D366] flex items-center justify-center shadow-xs">
+                  <span className="material-symbols-outlined text-4xl">check_circle</span>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-black text-slate-900 tracking-tight">
+                    ¡Solicitud Recibida con Éxito! 🚀
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 mt-2 max-w-sm leading-relaxed">
+                    Revisaremos tu solicitud y usaremos tu número de WhatsApp (<b>{whatsapp}</b>) para comunicarnos contigo y validar tu cuenta.
+                  </p>
+                </div>
+
+                <div className="w-full bg-emerald-50 border border-emerald-200/80 rounded-2xl p-4 text-xs text-emerald-950 flex flex-col gap-2.5">
+                  <div className="flex items-center gap-2 text-emerald-800 font-extrabold text-sm justify-center">
+                    <span className="material-symbols-outlined text-[#25D366]">groups</span>
+                    <span>Grupo Oficial de Emprendedores</span>
+                  </div>
+                  <p className="text-slate-600 text-xs">
+                    Únete a nuestra comunidad oficial en WhatsApp para novedades de productos, tips de venta y soporte directo:
+                  </p>
+                  <a
+                    href="https://chat.whatsapp.com/ClozDTrFdhH8cqJPziBYKQ"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3 px-4 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-black text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                  >
+                    <IconoWhatsApp className="w-4 h-4 shrink-0" />
+                    <span>Unirme al Grupo Oficial de WhatsApp</span>
+                  </a>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setModalRegistro(false);
+                    setPestañaActiva('inicio');
+                  }}
+                  className="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs sm:text-sm transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                >
+                  <span>Continuar a Mi Panel de Control</span>
+                  <span className="material-symbols-outlined text-base">arrow_forward</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

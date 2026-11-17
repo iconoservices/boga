@@ -81,6 +81,8 @@ interface Product {
   igv?: string | null;
   /** Precio del producto en otras monedas, escrito por el dueño: {"USD": 10, "MXN": 180}. El precio normal (price) es en soles. */
   precios_moneda?: PreciosMoneda | null;
+  /** Comisión para afiliados en % (10, 15, 20, 30): null o no definido = no participa */
+  afiliado_comision?: number | null;
 }
 
 type TabId = 'inicio' | 'products' | 'categories' | 'orders' | 'pos' | 'metrics' | 'cobros' | 'stores';
@@ -117,6 +119,8 @@ const POS_PAYMENT_METHODS: { id: 'Efectivo' | 'Yape/Plin' | 'Tarjeta'; label: st
 
 // Enlace de Google Maps dentro de la descripción de un terreno (ver templates/terrenos/useTerrenos.ts).
 const RE_MAPS = /https?:\/\/(?:www\.)?(?:google\.[a-z.]+\/maps|maps\.app\.goo\.gl|goo\.gl\/maps)[^\s)]*/i;
+// Etiqueta de comisión de afiliado en la descripción: [afiliado:15%]
+const RE_AFILIADO = /\[afiliado:(\d+)%?\]/i;
 
 // Constructor de "Horario de atención": arma el texto (ej. "Lun a Vie: 9:00 am – 6:00 pm") a partir
 // de los días marcados y la hora elegida. `horario` en la base sigue siendo un texto libre.
@@ -554,6 +558,8 @@ function AdminDashboard({ user }: { user: User }) {
     esCombo: false,
     costo: '',
     codigoBarras: "",
+    afiliado: false,
+    afiliadoComision: 15,
   });
 
   // Tiendas de terrenos: "Subcategoría" pasa a ser el área, y aparece un campo para la ubicación (enlace de Maps).
@@ -612,6 +618,8 @@ function AdminDashboard({ user }: { user: User }) {
       esCombo: false,
       costo: '',
       codigoBarras: '',
+      afiliado: false,
+      afiliadoComision: 15,
     });
     setFotos([]);
   };
@@ -1473,11 +1481,14 @@ function AdminDashboard({ user }: { user: User }) {
         finalStock = null; // null = ilimitado / siempre disponible
       }
 
-      // El enlace de ubicación de un terreno se guarda al final de la descripción (la plantilla lo detecta
-      // y lo usa en "Ver ubicación" sin mostrarlo como texto).
+      // El enlace de ubicación de un terreno y la comisión de afiliado se guardan en la descripción
+      let descBase = newProduct.desc.trim();
+      if (newProduct.afiliado && newProduct.afiliadoComision) {
+        descBase = `${descBase} [afiliado:${newProduct.afiliadoComision}%]`.trim();
+      }
       const descripcionFinal = esTerreno && newProduct.ubicacion.trim()
-        ? `${newProduct.desc.trim()}\n${newProduct.ubicacion.trim()}`.trim()
-        : newProduct.desc;
+        ? `${descBase}\n${newProduct.ubicacion.trim()}`.trim()
+        : descBase;
 
       // Oferta: precio rebajado (menor al normal) y, si quiere, hasta qué día. Los campos solo se mandan si hay
       // oferta o si el producto tenía una que se está quitando (así guardar un producto normal no depende del SQL).
@@ -1544,6 +1555,12 @@ function AdminDashboard({ user }: { user: User }) {
       const camposFotos = urlsFotos.length > 1 || (productoPrevio?.images?.length ?? 0) > 0
         ? { images: urlsFotos.length > 1 ? urlsFotos : null }
         : {};
+      // Comisión de afiliados Boga Network: 10%, 15%, 20%, 30%
+      const camposAfiliado = newProduct.afiliado
+        ? { afiliado_comision: Number(newProduct.afiliadoComision) || 15 }
+        : (productoPrevio as any)?.afiliado_comision != null
+        ? { afiliado_comision: null }
+        : {};
 
       // Tope de productos del plan: se avisa acá con un mensaje claro (la base también lo hace cumplir).
       if (!editingProductId) {
@@ -1555,7 +1572,7 @@ function AdminDashboard({ user }: { user: User }) {
       // 3. Guardar en la base de datos
       let idGuardado: string | null = editingProductId;
       if (editingProductId) {
-        const { error: dbError } = await supabase.from('products').update({
+        let { error: dbError } = await supabase.from('products').update({
           name: newProduct.name,
           store: newProduct.store,
           price: precioNormal,
@@ -1572,10 +1589,35 @@ function AdminDashboard({ user }: { user: User }) {
           ...camposCosto,
           ...camposFotos,
           ...camposIgv,
+          ...camposAfiliado,
           // Sin módulo de inventario no se toca el stock guardado (por si lo vuelven a prender).
           ...(tiendaTiene(newProduct.store, 'inventario') ? { stock: finalStock } : {}),
           status: finalStatus,
         }).eq('id', editingProductId);
+
+        if (dbError && dbError.message?.toLowerCase().includes('afiliado_comision')) {
+          const resRetry = await supabase.from('products').update({
+            name: newProduct.name,
+            store: newProduct.store,
+            price: precioNormal,
+            category: newProduct.category,
+            subcategory: newProduct.subcategory,
+            image: finalImageUrl,
+            description: descripcionFinal,
+            ...camposOferta,
+            ...camposPres,
+            ...camposMoneda,
+            ...camposServicio,
+            ...camposReserva,
+            ...camposCombo,
+            ...camposCosto,
+            ...camposFotos,
+            ...camposIgv,
+            ...(tiendaTiene(newProduct.store, 'inventario') ? { stock: finalStock } : {}),
+            status: finalStatus,
+          }).eq('id', editingProductId);
+          dbError = resRetry.error;
+        }
 
         if (dbError) throw dbError;
 
@@ -1590,6 +1632,7 @@ function AdminDashboard({ user }: { user: User }) {
           image: finalImageUrl,
           description: descripcionFinal,
           status: finalStatus,
+          afiliado_comision: newProduct.afiliado ? Number(newProduct.afiliadoComision) || 15 : null,
           ...(tiendaTiene(newProduct.store, 'inventario') ? { stock: finalStock as number } : {}),
           ...camposOferta,
           ...camposPres,
@@ -1618,7 +1661,7 @@ function AdminDashboard({ user }: { user: User }) {
           }
         }
       } else {
-        const { data: creado, error: dbError } = await supabase.from('products').insert([
+        let { data: creado, error: dbError } = await supabase.from('products').insert([
           {
             name: newProduct.name,
             store: newProduct.store,
@@ -1633,17 +1676,48 @@ function AdminDashboard({ user }: { user: User }) {
             ...camposServicio,
             ...camposReserva,
             ...camposCombo,
-          ...camposCosto,
+            ...camposCosto,
             ...camposFotos,
             ...camposIgv,
+            ...camposAfiliado,
             stock: finalStock,
             status: finalStatus,
           }
         ]).select().single();
 
+        if (dbError && dbError.message?.toLowerCase().includes('afiliado_comision')) {
+          const resRetry = await supabase.from('products').insert([
+            {
+              name: newProduct.name,
+              store: newProduct.store,
+              price: precioNormal,
+              category: newProduct.category,
+              subcategory: newProduct.subcategory,
+              image: finalImageUrl,
+              description: descripcionFinal,
+              ...camposOferta,
+              ...camposPres,
+              ...camposMoneda,
+              ...camposServicio,
+              ...camposReserva,
+              ...camposCombo,
+              ...camposCosto,
+              ...camposFotos,
+              ...camposIgv,
+              stock: finalStock,
+              status: finalStatus,
+            }
+          ]).select().single();
+          creado = resRetry.data;
+          dbError = resRetry.error;
+        }
+
         if (dbError) throw dbError;
         // Aparece en la lista de inmediato, sin esperar a que se vuelva a pedir todo.
-        if (creado) setProducts((prev) => [creado as Product, ...prev.filter((x) => x.id !== (creado as Product).id)]);
+        if (creado) {
+          (creado as any).afiliado_comision = newProduct.afiliado ? Number(newProduct.afiliadoComision) || 15 : null;
+          setProducts((prev) => [creado as Product, ...prev.filter((x) => x.id !== (creado as Product).id)]);
+        }
         idGuardado = (creado as Product | null)?.id ?? null;
       }
 
@@ -1686,6 +1760,11 @@ function AdminDashboard({ user }: { user: User }) {
     // stock 0 con estado Activo = "no se cargó" (es el valor por defecto de la base), no "agotado": abrirlo a
     // editar no debe convertirlo en stock limitado con 0 (al guardar quedaría marcado como Agotado).
     const hasFixedStock = !stockIlimitado(product);
+    const comisionMatch = (product.description || '').match(RE_AFILIADO);
+    const pctAfiliado = product.afiliado_comision != null
+      ? Number(product.afiliado_comision)
+      : comisionMatch ? parseInt(comisionMatch[1], 10) : null;
+
     setNewProduct({
       name: product.name,
       store: product.store,
@@ -1693,7 +1772,7 @@ function AdminDashboard({ user }: { user: User }) {
       category: product.category,
       subcategory: product.subcategory || '',
       image: product.image,
-      desc: (product.description || '').replace(RE_MAPS, '').trim(),
+      desc: (product.description || '').replace(RE_MAPS, '').replace(RE_AFILIADO, '').trim(),
       stockType: hasFixedStock ? 'limitado' : 'ilimitado',
       stockQuantity: hasFixedStock ? product.stock.toString() : '',
       status: product.status || 'Activo',
@@ -1714,6 +1793,8 @@ function AdminDashboard({ user }: { user: User }) {
       costo: product.costo != null ? String(product.costo) : '',
       reserva: product.reserva === true ? 'si' : product.reserva === false ? 'no' : '',
       codigoBarras: '',
+      afiliado: pctAfiliado !== null && pctAfiliado > 0,
+      afiliadoComision: pctAfiliado || 15,
     });
     setFotos(
       product.images?.length ? product.images.map((url) => ({ url })) : product.image ? [{ url: product.image }] : []
@@ -2888,7 +2969,7 @@ function AdminDashboard({ user }: { user: User }) {
                                       )}
                                     </div>
                                     <div>
-                                      <p className="font-bold text-gray-900 flex items-center gap-1.5">
+                                      <p className="font-bold text-gray-900 flex items-center gap-1.5 flex-wrap">
                                         {p.name}
                                         {tiendaConReservas(p.store) && p.reserva === true && (
                                           <span className="bg-orange-100 text-orange-800 text-[10px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase">🗓️ Reserva</span>
@@ -2898,6 +2979,17 @@ function AdminDashboard({ user }: { user: User }) {
                                             🔥 Combo
                                           </span>
                                         )}
+                                        {(() => {
+                                          const comMatch = (p.description || '').match(RE_AFILIADO);
+                                          const pct = (p as any).afiliado_comision ?? (comMatch ? comMatch[1] : null);
+                                          if (!pct) return null;
+                                          return (
+                                            <span className="bg-sky-100 text-sky-800 text-[10px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase flex items-center gap-0.5">
+                                              <span className="material-symbols-outlined text-[12px]">loyalty</span>
+                                              Afiliado {pct}%
+                                            </span>
+                                          );
+                                        })()}
                                       </p>
                                       {p.subcategory && (
                                         <span className="text-xs font-medium text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-100 mt-1 inline-block">
@@ -3011,6 +3103,17 @@ function AdminDashboard({ user }: { user: User }) {
                                       🔥 Combo
                                     </span>
                                   )}
+                                  {(() => {
+                                    const comMatch = (p.description || '').match(RE_AFILIADO);
+                                    const pct = (p as any).afiliado_comision ?? (comMatch ? comMatch[1] : null);
+                                    if (!pct) return null;
+                                    return (
+                                      <span className="bg-sky-100 text-sky-800 text-[9px] font-black px-1.5 py-0.5 rounded tracking-wide uppercase mr-1 inline-flex items-center gap-0.5 align-middle">
+                                        <span className="material-symbols-outlined text-[11px]">loyalty</span>
+                                        Afiliado {pct}%
+                                      </span>
+                                    );
+                                  })()}
                                   {p.name}
                                 </h3>
                                 <span className="font-bold text-primary text-[13px] whitespace-nowrap">
@@ -4261,6 +4364,75 @@ function AdminDashboard({ user }: { user: User }) {
                     </p>
                   )}
                 </div>
+                )}
+
+                {/* ── PROGRAMA DE AFILIADOS BOGA NETWORK ── */}
+                {!formEmpresa && (
+                  <div className="mt-5 p-4 rounded-xl border border-sky-200 bg-sky-50/60 transition">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+                          <span className="material-symbols-outlined text-[19px]">loyalty</span>
+                        </span>
+                        <div>
+                          <label className="text-xs font-bold text-slate-900 block">
+                            Programa de Afiliados (Boga Network)
+                          </label>
+                          <p className="text-[11px] text-slate-500 leading-tight">
+                            Permite que revendedores y promotores recomienden este producto en WhatsApp y redes.
+                          </p>
+                        </div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                        <input
+                          type="checkbox"
+                          checked={newProduct.afiliado}
+                          onChange={(e) => setNewProduct({ ...newProduct, afiliado: e.target.checked })}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-600"></div>
+                      </label>
+                    </div>
+
+                    {newProduct.afiliado && (
+                      <div className="mt-3 pt-3 border-t border-sky-200/80 flex flex-col gap-2.5">
+                        <div>
+                          <span className="block text-xs font-bold text-slate-800">
+                            Comisión o bono por venta para el afiliado:
+                          </span>
+                          <p className="text-[10px] text-slate-500">
+                            Elige qué porcentaje de ganancia ganará el promotor al vender este producto:
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-4 gap-2">
+                          {[10, 15, 20, 30].map((pct) => (
+                            <button
+                              key={pct}
+                              type="button"
+                              onClick={() => setNewProduct({ ...newProduct, afiliadoComision: pct })}
+                              className={`py-2 px-2.5 rounded-xl text-xs font-black transition border text-center cursor-pointer ${
+                                newProduct.afiliadoComision === pct
+                                  ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
+                                  : 'bg-white text-slate-700 border-slate-200 hover:bg-sky-50'
+                              }`}
+                            >
+                              {pct}%
+                            </button>
+                          ))}
+                        </div>
+
+                        {parseFloat(newProduct.price) > 0 && (
+                          <div className="bg-white rounded-xl p-2.5 border border-sky-200 text-xs flex items-center justify-between shadow-2xs">
+                            <span className="text-slate-600 font-medium">Ganancia para el afiliado por venta:</span>
+                            <span className="font-black text-sky-800 text-sm">
+                              +S/ {((parseFloat(newProduct.price) * (newProduct.afiliadoComision || 15)) / 100).toFixed(2)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 )}
 
 
