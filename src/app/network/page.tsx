@@ -281,12 +281,81 @@ export default function BogaNetworkHomePage() {
         </div>
       )}
 
-      {/* ── Contenido Principal (3 TARJETAS A LA IZQUIERDA Y TEXTO A LA DERECHA) ── */}
+      {/* ── Contenido Principal (TEXTO A LA IZQUIERDA Y LAS 3 OPCIONES A LA DERECHA) ── */}
       <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start w-full">
           
-          {/* ════ COLUMNA IZQUIERDA: LAS 3 TARJETAS DE OPORTUNIDADES ════ */}
-          <div className="order-2 lg:order-1 lg:col-span-7 flex flex-col gap-4">
+          {/* ════ COLUMNA IZQUIERDA: TEXTO PRINCIPAL Y ACCIONES STICKY ════ */}
+          <div className="lg:col-span-5 lg:sticky lg:top-20 flex flex-col items-start gap-4 text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Oportunidades de Ingresos · Pucallpa</span>
+            </div>
+
+            <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+              Gana dinero desde tu celular con{' '}
+              <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 bg-clip-text text-transparent">
+                Boga Network
+              </span>
+            </h1>
+
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              Descubre las <b>3 formas oficiales</b> de generar ingresos hoy mismo sin jefes ni horarios. Elige la que mejor se adapte a ti o combina las tres.
+            </p>
+
+            {/* Botones de acción principales */}
+            <div className="flex flex-col gap-2.5 w-full mt-1">
+              <button
+                type="button"
+                onClick={abrirModalActivacion}
+                className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-sm shadow-md shadow-emerald-600/25 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 text-center"
+              >
+                <span className="material-symbols-outlined text-[20px]">badge</span>
+                <span>{cuentaExistente ? 'Entrar a Mi Panel de Control →' : 'Activar Mi Cuenta Network →'}</span>
+              </button>
+
+              <a
+                href={LINK_GRUPO_WHATSAPP}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3 px-5 rounded-2xl bg-[#25D366]/15 hover:bg-[#25D366]/25 text-[#128C7E] font-black text-xs sm:text-sm border border-[#25D366]/30 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 text-center"
+              >
+                <span className="material-symbols-outlined text-[19px]">chat</span>
+                <span>Únete al Grupo WhatsApp</span>
+              </a>
+            </div>
+
+            <p className="text-[11px] text-slate-400 font-medium">
+              🔒 Sin costos ocultos · Cero inversión en mercadería · Pagos directos
+            </p>
+
+            {/* Tarjeta de Beneficios y Confianza */}
+            <div className="w-full bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs flex flex-col gap-2.5 mt-1">
+              <div className="flex items-center gap-2 text-slate-900 font-extrabold text-xs">
+                <span className="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[15px]">verified</span>
+                </span>
+                <span>Beneficios oficiales de la red</span>
+              </div>
+              <ul className="text-xs text-slate-600 space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="material-symbols-outlined text-emerald-600 text-[16px] shrink-0 mt-0.5">check_circle</span>
+                  <span>Proveedores con stock verificado en Pucallpa.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="material-symbols-outlined text-emerald-600 text-[16px] shrink-0 mt-0.5">check_circle</span>
+                  <span>Cobros inmediatos por Yape o Plin al entregar.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="material-symbols-outlined text-emerald-600 text-[16px] shrink-0 mt-0.5">check_circle</span>
+                  <span>Comunidad activa con soporte directo por WhatsApp.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* ════ COLUMNA DERECHA: LAS 3 OPCIONES (TARJETAS) DE GANAR DINERO ════ */}
+          <div className="lg:col-span-7 flex flex-col gap-4">
             
             {/* ════ TARJETA 1: CREA Y VENDE CON TU TIENDA VIRTUAL ════ */}
             <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-xs flex flex-col justify-between gap-4 hover:border-emerald-300 hover:shadow-md transition">
@@ -513,75 +582,6 @@ export default function BogaNetworkHomePage() {
               </button>
             </div>
 
-          </div>
-
-          {/* ════ COLUMNA DERECHA: TEXTO PRINCIPAL Y ACCIONES STICKY ════ */}
-          <div className="order-1 lg:order-2 lg:col-span-5 lg:sticky lg:top-20 flex flex-col items-start gap-4 text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Oportunidades de Ingresos · Pucallpa</span>
-            </div>
-
-            <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
-              Gana dinero desde tu celular con{' '}
-              <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 bg-clip-text text-transparent">
-                Boga Network
-              </span>
-            </h1>
-
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-              Descubre las <b>3 formas oficiales</b> de generar ingresos hoy mismo sin jefes ni horarios. Elige la que mejor se adapte a ti o combina las tres.
-            </p>
-
-            {/* Botones de acción principales */}
-            <div className="flex flex-col gap-2.5 w-full mt-1">
-              <button
-                type="button"
-                onClick={abrirModalActivacion}
-                className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-sm shadow-md shadow-emerald-600/25 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 text-center"
-              >
-                <span className="material-symbols-outlined text-[20px]">badge</span>
-                <span>{cuentaExistente ? 'Entrar a Mi Panel de Control →' : 'Activar Mi Cuenta Network →'}</span>
-              </button>
-
-              <a
-                href={LINK_GRUPO_WHATSAPP}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-3 px-5 rounded-2xl bg-[#25D366]/15 hover:bg-[#25D366]/25 text-[#128C7E] font-black text-xs sm:text-sm border border-[#25D366]/30 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 text-center"
-              >
-                <span className="material-symbols-outlined text-[19px]">chat</span>
-                <span>Únete al Grupo WhatsApp</span>
-              </a>
-            </div>
-
-            <p className="text-[11px] text-slate-400 font-medium">
-              🔒 Sin costos ocultos · Cero inversión en mercadería · Pagos directos
-            </p>
-
-            {/* Tarjeta de Beneficios y Confianza */}
-            <div className="w-full bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs flex flex-col gap-2.5 mt-1">
-              <div className="flex items-center gap-2 text-slate-900 font-extrabold text-xs">
-                <span className="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[15px]">verified</span>
-                </span>
-                <span>Beneficios oficiales de la red</span>
-              </div>
-              <ul className="text-xs text-slate-600 space-y-2">
-                <li className="flex items-start gap-2">
-                  <span className="material-symbols-outlined text-emerald-600 text-[16px] shrink-0 mt-0.5">check_circle</span>
-                  <span>Proveedores con stock verificado en Pucallpa.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="material-symbols-outlined text-emerald-600 text-[16px] shrink-0 mt-0.5">check_circle</span>
-                  <span>Cobros inmediatos por Yape o Plin al entregar.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="material-symbols-outlined text-emerald-600 text-[16px] shrink-0 mt-0.5">check_circle</span>
-                  <span>Comunidad activa con soporte directo por WhatsApp.</span>
-                </li>
-              </ul>
-            </div>
           </div>
 
         </div>
