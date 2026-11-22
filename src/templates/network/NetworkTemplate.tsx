@@ -372,9 +372,7 @@ export default function NetworkTemplate({ store, initialProductId }: Props) {
                 </div>
 
                 <p className="text-slate-300 text-xs sm:text-sm mt-1 truncate">
-                  {nombreContacto
-                    ? `Catálogo de ${nombreContacto} · Envíos en ${ciudad}`
-                    : `Catálogo Oficial en Boga Network · Envíos en ${ciudad}`}
+                  {store.tagline || `Tienda Oficial en Boga Network · Envíos en ${ciudad}`}
                 </p>
               </div>
             </div>

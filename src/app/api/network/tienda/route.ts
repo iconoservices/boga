@@ -55,7 +55,7 @@ export async function GET(request: Request) {
       productosSeleccionados,
       preciosPersonalizados,
       status: store?.status || (requestRow?.status === 'approved' ? 'active' : 'inactive'),
-      tagline: store?.tagline || (nombreContacto ? `Catálogo de ${nombreContacto} · Envíos en ${ciudad}` : `Catálogo Oficial · Envíos en ${ciudad}`),
+      tagline: store?.tagline || `Tienda Oficial de Reventa · Envíos en ${ciudad}`,
       template: store?.template || 'network',
       esRevendedor: true,
     },
@@ -101,9 +101,7 @@ export async function POST(request: Request) {
     ciudad: ciudad || 'pucallpa',
   };
 
-  const tagline = nombre
-    ? `Catálogo de ${nombre} · Envíos en ${ciudad || 'pucallpa'}`
-    : `Catálogo Oficial en Boga Network · Envíos en ${ciudad || 'pucallpa'}`;
+  const tagline = `Tienda Oficial de Reventa · Envíos en ${ciudad || 'pucallpa'}`;
 
   const slugSinBm = cleanSlug.replace(/-bm$/, '');
   const slugConBm = cleanSlug.endsWith('-bm') ? cleanSlug : `${cleanSlug}-bm`;

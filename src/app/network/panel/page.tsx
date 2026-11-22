@@ -221,11 +221,11 @@ function RevendedorPanelContent() {
             // El usuario ya activó su cuenta en Boga Network
             setCuentaActiva(true);
 
-            // Obtener datos personales del perfil más reciente
-            const ultimoRegistro = data[0];
-            setNombre(ultimoRegistro.contact_name || user.user_metadata?.full_name || '');
-            setWhatsapp(ultimoRegistro.whatsapp || '');
-            if (ultimoRegistro.city) setCiudad(ultimoRegistro.city);
+            // Obtener datos personales del perfil
+            const regPerfil = data.find((d: any) => d.category === 'perfil' || d.business_name?.startsWith('[Perfil]')) || data[0];
+            setNombre(regPerfil.contact_name || user.user_metadata?.full_name || '');
+            setWhatsapp(regPerfil.whatsapp || '');
+            if (regPerfil.city) setCiudad(regPerfil.city);
 
             // Filtrar SOLO las tiendas de reventa reales creadas explícitamente desde la pestaña de tiendas
             // (Excluyendo perfiles y tiendas generadas automáticamente en el registro de cuenta)
@@ -243,6 +243,7 @@ function RevendedorPanelContent() {
               const req = tiendasReales[0];
               setNombreTienda(req.business_name);
               if (req.status === 'approved') setEstadoTienda('activa');
+              else setEstadoTienda('desactivada');
               setTieneTienda(true);
 
               // Cargar preferencias locales (márgenes y productos elegidos)
@@ -2485,7 +2486,7 @@ function RevendedorPanelContent() {
                               </div>
 
                               <p className="text-xs text-slate-500 mt-1 truncate">
-                                {t.contact_name || nombre ? `Catálogo de ${t.contact_name || nombre} · ` : ''}Envíos en {t.city || ciudad}
+                                {t.tagline || t.description || `Tienda Oficial de Reventa · Envíos en ${t.city || ciudad}`}
                               </p>
 
                               <a

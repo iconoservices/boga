@@ -27,7 +27,7 @@ type TiendaStore = {
   slug?: string;
   status?: string;
   whatsapp?: string;
-  owner_email?: string;
+  user_id?: string;
   plan?: string;
   created_at?: string;
   tienda_proveedora?: string;
@@ -144,9 +144,6 @@ export default function SuperadminNetworkPage() {
       if (st.whatsapp && wsp && st.whatsapp.replace(/\D/g, '') === wsp.replace(/\D/g, '')) {
         return true;
       }
-      if (st.owner_email && email && st.owner_email.toLowerCase() === email.toLowerCase()) {
-        return true;
-      }
       return false;
     });
   };
@@ -222,9 +219,8 @@ export default function SuperadminNetworkPage() {
       if (!st.es_revendedor && st.plan !== 'revendedor' && st.template !== 'network') return;
       if (st.name?.startsWith('[Perfil]')) return;
 
-      const emailKey = st.owner_email?.trim().toLowerCase();
       const wspKey = st.whatsapp?.replace(/\D/g, '');
-      const key = emailKey || (wspKey ? `wsp_${wspKey}` : `store_${st.id}`);
+      const key = (wspKey ? `wsp_${wspKey}` : `store_${st.id}`);
 
       let grupo = mapa.get(key);
       if (!grupo) {
@@ -232,7 +228,7 @@ export default function SuperadminNetworkPage() {
           id: st.id,
           key,
           contact_name: st.name.replace(/\s+bm$/i, ''),
-          email: st.owner_email || '',
+          email: '',
           whatsapp: st.whatsapp || '',
           city: 'Pucallpa',
           estadoPerfil: 'approved',

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { revalidatePath, revalidateTag } from 'next/cache';
+import { purgeCloudflare, rutasCatalogo } from '@/lib/cloudflare';
 
 function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -34,7 +35,7 @@ export async function GET(request: Request) {
 
   const [{ data: solicitudes, error: errSol }, { data: stores, error: errStores }] = await Promise.all([
     admin.from('store_requests').select('*').order('created_at', { ascending: false }),
-    admin.from('stores').select('id, name, slug, status, whatsapp, owner_email, plan, created_at, tienda_proveedora, modulos, es_revendedor, template').order('created_at', { ascending: false }),
+    admin.from('stores').select('id, name, slug, status, whatsapp, user_id, plan, created_at, tienda_proveedora, modulos, es_revendedor, template').order('created_at', { ascending: false }),
   ]);
 
   if (errSol) {
@@ -106,7 +107,6 @@ export async function POST(request: Request) {
           plan: 'revendedor',
           es_revendedor: true,
           tienda_proveedora: 'delva',
-          owner_email: email || undefined,
           whatsapp: whatsapp || undefined,
         })
         .eq('id', existing[0].id);
@@ -119,7 +119,6 @@ export async function POST(request: Request) {
         es_revendedor: true,
         tienda_proveedora: 'delva',
         whatsapp: whatsapp || null,
-        owner_email: email || null,
         marketplace_category: 'Tienda de Reventa',
         tagline: 'Tienda de Reventa Oficial en Boga Network',
         template: 'network',
@@ -141,8 +140,14 @@ export async function POST(request: Request) {
 
     try {
       revalidateTag('stores', { expire: 0 });
-      if (baseSlug) revalidatePath(`/${baseSlug}`);
-      if (slugSinBm) revalidatePath(`/${slugSinBm}`);
+      if (baseSlug) {
+        revalidatePath(`/${baseSlug}`);
+        await purgeCloudflare(rutasCatalogo(baseSlug));
+      }
+      if (slugSinBm) {
+        revalidatePath(`/${slugSinBm}`);
+        await purgeCloudflare(rutasCatalogo(slugSinBm));
+      }
     } catch {}
 
     return NextResponse.json({ ok: true, mensaje: `Tienda "${business_name}" activada (Verde)` });
@@ -177,8 +182,14 @@ export async function POST(request: Request) {
 
     try {
       revalidateTag('stores', { expire: 0 });
-      if (baseSlug) revalidatePath(`/${baseSlug}`);
-      if (slugSinBm) revalidatePath(`/${slugSinBm}`);
+      if (baseSlug) {
+        revalidatePath(`/${baseSlug}`);
+        await purgeCloudflare(rutasCatalogo(baseSlug));
+      }
+      if (slugSinBm) {
+        revalidatePath(`/${slugSinBm}`);
+        await purgeCloudflare(rutasCatalogo(slugSinBm));
+      }
     } catch {}
 
     return NextResponse.json({ ok: true, mensaje: `Tienda "${business_name}" puesta en gris` });
@@ -214,8 +225,14 @@ export async function POST(request: Request) {
 
     try {
       revalidateTag('stores', { expire: 0 });
-      if (baseSlug) revalidatePath(`/${baseSlug}`);
-      if (slugSinBm) revalidatePath(`/${slugSinBm}`);
+      if (baseSlug) {
+        revalidatePath(`/${baseSlug}`);
+        await purgeCloudflare(rutasCatalogo(baseSlug));
+      }
+      if (slugSinBm) {
+        revalidatePath(`/${slugSinBm}`);
+        await purgeCloudflare(rutasCatalogo(slugSinBm));
+      }
     } catch {}
 
     return NextResponse.json({ ok: true, mensaje: `Registro eliminado con éxito` });

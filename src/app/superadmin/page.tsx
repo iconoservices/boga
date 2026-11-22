@@ -601,8 +601,18 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
       .from('store_requests')
       .select('*')
       .eq('status', 'pending')
+      .neq('interest', 'revendedor')
       .order('created_at', { ascending: false });
-    if (!error && data) setStoreRequests(data);
+    if (!error && data) {
+      // Excluir solicitudes de perfil o tiendas de reventa de Network (se gestionan en /superadmin/network)
+      const soloComercios = data.filter((r: any) =>
+        r.interest !== 'revendedor' &&
+        r.category !== 'perfil' &&
+        r.category !== 'tienda_revendedor' &&
+        !r.business_name?.startsWith('[Perfil]')
+      );
+      setStoreRequests(soloComercios);
+    }
     setRequestsLoading(false);
   }, []);
 
@@ -735,6 +745,17 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
           const mergedOwners = {} as Record<string, string | null>;
 
           data.forEach(dbStore => {
+            // Excluir perfiles y tiendas de reventa de Network del directorio general de comercios
+            if (
+              dbStore.name?.startsWith('[Perfil]') ||
+              dbStore.slug?.startsWith('perfil-') ||
+              dbStore.plan === 'revendedor' ||
+              dbStore.es_revendedor === true ||
+              dbStore.template === 'network'
+            ) {
+              return;
+            }
+
             const slug = dbStore.slug;
             mergedIds[slug] = dbStore.id;
             mergedOwners[slug] = dbStore.user_id || null;
