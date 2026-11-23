@@ -425,11 +425,6 @@ export default function BannersAdmin() {
     await revalidarCatalogo();
   };
 
-  const handleMoveMarketBanner = (id: string, direction: -1 | 1) => {
-    const idx = visibleMarketBanners.findIndex(b => b.id === id);
-    if (idx < 0) return;
-    handleMoveBanner(idx, idx + direction);
-  };
 
   if (!esSuperadmin) return null;
 
@@ -801,39 +796,20 @@ export default function BannersAdmin() {
                                   </p>
                                   <p className="text-[10px] text-[#727785] truncate">{b.sub}{b.link ? ` · → ${b.link}` : ''}</p>
                                 </div>
-                                <div className="flex items-center gap-0.5 shrink-0 bg-slate-50 border border-slate-200 rounded-md p-0.5">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleMoveMarketBanner(b.id, -1)}
-                                    disabled={idx === 0}
-                                    className="material-symbols-outlined text-[17px] text-[#424754] hover:text-[#0058be] p-1 hover:bg-white rounded disabled:opacity-20 disabled:pointer-events-none cursor-pointer transition-colors"
-                                    title={`Subir a posición #${idx}`}
-                                  >
-                                    arrow_upward
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleMoveMarketBanner(b.id, 1)}
-                                    disabled={idx === visibleMarketBanners.length - 1}
-                                    className="material-symbols-outlined text-[17px] text-[#424754] hover:text-[#0058be] p-1 hover:bg-white rounded disabled:opacity-20 disabled:pointer-events-none cursor-pointer transition-colors"
-                                    title={`Bajar a posición #${idx + 2}`}
-                                  >
-                                    arrow_downward
-                                  </button>
-                                  <div className="w-[1px] h-4 bg-slate-200 my-auto mx-0.5" />
+                                <div className="flex items-center gap-1 shrink-0">
                                   <button
                                     type="button"
                                     onClick={() => handleOpenEditMarketBanner(b)}
-                                    className="material-symbols-outlined text-[17px] text-[#424754] hover:text-[#0058be] p-1 hover:bg-white rounded cursor-pointer transition-colors"
-                                    title="Editar"
+                                    className="material-symbols-outlined text-[18px] text-[#424754] hover:text-[#0058be] p-1.5 hover:bg-[#e6e7f2] rounded-md cursor-pointer transition-colors"
+                                    title="Editar banner"
                                   >
                                     edit
                                   </button>
                                   <button
                                     type="button"
                                     onClick={() => handleDeleteMarketBanner(b.id)}
-                                    className="material-symbols-outlined text-[17px] text-[#424754] hover:text-red-600 p-1 hover:bg-red-50 rounded cursor-pointer transition-colors"
-                                    title="Eliminar"
+                                    className="material-symbols-outlined text-[18px] text-[#424754] hover:text-red-600 p-1.5 hover:bg-red-50 rounded-md cursor-pointer transition-colors"
+                                    title="Eliminar banner"
                                   >
                                     delete
                                   </button>
