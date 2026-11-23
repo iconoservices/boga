@@ -169,8 +169,9 @@ export function armarCatalogoHome(
 
   const tiendasOcultasSet = new Set((config?.tiendasOcultas || []).map((s) => s.toLowerCase()));
   const productosOcultosSet = new Set((config?.productosOcultos || []).map(String));
-  // Por defecto, si no se especifica otra lista, 'delva' tiene prioridad #1
-  const prioritarias = (config?.tiendasPrioritarias && config.tiendasPrioritarias.length > 0)
+  // Si en el panel de Superadmin se configuró la lista (incluso vacía []), se respeta.
+  // Solo si no existe configuración alguna, arranca con 'delva' por defecto.
+  const prioritarias = Array.isArray(config?.tiendasPrioritarias)
     ? config.tiendasPrioritarias.map((s) => s.toLowerCase())
     : ['delva'];
 
