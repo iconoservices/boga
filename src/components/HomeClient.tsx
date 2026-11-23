@@ -46,14 +46,19 @@ const SLIDE_GUIA_2025: Slide = {
 };
 
 function armarSlides(notas: NotaHome[], promos: Slide[]): Slide[] {
+  // Si el superadmin cargó banners para el Inicio, se muestran ÚNICAMENTE esos banners
+  // en el orden exacto configurado en el panel, sin inyecciones ocultas.
+  if (promos.length > 0) {
+    return promos;
+  }
   const rev: Slide[] = notas.slice(0, 2).map((n) => ({
     kicker: `Revista · ${n.kicker}`,
     title: n.titulo,
     href: `/revista/${n.slug}`,
     img: n.img,
   }));
-  // Guía 2025 entra como slide en posición 2, igual que un banner pagado.
-  return [promos[0], rev[0], SLIDE_GUIA_2025, promos[1], rev[1], ...promos.slice(2)].filter(Boolean) as Slide[];
+  // Solo como respaldo si no hay ningún banner cargado en superadmin:
+  return [rev[0], SLIDE_GUIA_2025, rev[1]].filter(Boolean) as Slide[];
 }
 
 // Los 8 Portales de BogaHub — el lanzador de la ciudad. Un ícono por hub, cada
