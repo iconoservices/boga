@@ -15,6 +15,7 @@ import ImageUploadInput from '@/components/superadmin/ImageUploadInput';
 import { useDemo } from '@/context/DemoContext';
 import { useStoreSettings } from '@/context/StoreSettingsContext';
 import { PRODUCTOS_MOSTRADOR, portadaDe } from '@/lib/productos';
+import { armarCatalogoHome, type HomeMarketConfig } from '@/lib/homeShape';
 
 export default function BannersAdmin() {
   const { esSuperadmin, cargando } = useEsSuperadmin();
@@ -42,7 +43,37 @@ export default function BannersAdmin() {
   const [marketBanners, setMarketBanners] = useState<any[]>([]);
   const [isLoadingMarketBanners, setIsLoadingMarketBanners] = useState(true);
   // Que carrusel se esta editando: /market, Inicio "/", /negocios o /productos.
-  const [bannerPageTab, setBannerPageTab] = useState<'market' | 'home' | 'negocios' | 'productos'>('home');
+  const [bannerPageTab, setBannerPageTab] = useState<'market' | 'home' | 'lo_que_se_pide' | 'negocios' | 'productos'>('home');
+  const [homeMarketConfig, setHomeMarketConfig] = useState<HomeMarketConfig>({
+    tiendasPrioritarias: ['delva'],
+    tiendasOcultas: [],
+    productosOcultos: [],
+  });
+  const [allCatalogProducts, setAllCatalogProducts] = useState<any[]>([]);
+  const [tiendaSeleccionadaPrioridad, setTiendaSeleccionadaPrioridad] = useState('');
+  const [busquedaTiendaLoQueSePide, setBusquedaTiendaLoQueSePide] = useState('');
+
+  const fetchHomeMarketConfig = async () => {
+    try {
+      const { data } = await supabase.from('site_settings').select('valor').eq('clave', 'home_lo_que_se_pide').maybeSingle();
+      if (data?.valor) {
+        const parsed = typeof data.valor === 'string' ? JSON.parse(data.valor) : data.valor;
+        setHomeMarketConfig({
+          tiendasPrioritarias: Array.isArray(parsed?.tiendasPrioritarias) ? parsed.tiendasPrioritarias : ['delva'],
+          tiendasOcultas: Array.isArray(parsed?.tiendasOcultas) ? parsed.tiendasOcultas : [],
+          productosOcultos: Array.isArray(parsed?.productosOcultos) ? parsed.productosOcultos : [],
+        });
+      }
+    } catch {}
+  };
+
+  const fetchCatalogForPreview = async () => {
+    try {
+      const res = await fetch('/api/catalog');
+      const d = await res.json();
+      if (d.products) setAllCatalogProducts(d.products);
+    } catch {}
+  };
   const [productosBanners, setProductosBanners] = useState<Record<string, string>>({});
   const [guardandoProductoSlug, setGuardandoProductoSlug] = useState<string | null>(null);
   const [mensajeProducto, setMensajeProducto] = useState<string | null>(null);
@@ -154,6 +185,20 @@ export default function BannersAdmin() {
     setGuardandoTodo(true);
     setGuardadoExito(false);
     try {
+      // Guardar configuración de "Lo que se pide en Market" (Inicio)
+      if (bannerPageTab === 'lo_que_se_pide') {
+        const { error } = await supabase.from('site_settings').upsert({
+          clave: 'home_lo_que_se_pide',
+          valor: JSON.stringify(homeMarketConfig),
+          updated_at: new Date().toISOString(),
+        });
+        if (error) throw error;
+        await revalidarCatalogo();
+        setHayCambios(false);
+        setGuardadoExito(true);
+        setTimeout(() => setGuardadoExito(false), 4500);
+        return;
+      }
       // 1. Guardar estilo del carrusel si no es /productos
       if (bannerPageTab !== 'productos') {
         const estiloActual = bannerStyles[bannerPageTab] || (bannerPageTab === 'home' ? 'bottom' : 'center');
@@ -439,7 +484,7 @@ export default function BannersAdmin() {
     setMarketBanners(data || []);
   };
 
-  React.useEffect(() => { fetchMarketBanners(); fetchBannerStyles(); fetchProductosBanners(); fetchAutoEventoSetting(); }, []);
+  React.useEffect(() => { fetchMarketBanners(); fetchBannerStyles(); fetchProductosBanners(); fetchAutoEventoSetting(); fetchHomeMarketConfig(); fetchCatalogForPreview(); }, []);
 
   const handleOpenNewMarketBanner = () => {
     setEditingMarketBannerId('new');
@@ -527,73 +572,77 @@ export default function BannersAdmin() {
                   <h2 className="text-sm font-bold text-[#191b23]">Banners de Portada</h2>
                   <p className="text-[11px] text-[#424754] mt-0.5">Los carruseles de /market y del Inicio — son del sitio entero, no de una tienda.</p>
                 </div>
-                {bannerPageTab !== 'productos' && (
-                  <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap">
                     {guardadoExito && (
                       <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-md flex items-center gap-1.5 animate-fade-in">
                         <span className="material-symbols-outlined text-[16px]">check_circle</span>
                         ¡Guardado!
                       </span>
                     )}
-                    <button
-                      type="button"
-                      onClick={handleGuardarCambios}
-                      disabled={guardandoTodo || (!hayCambios && !guardadoExito)}
-                      className={`px-3.5 py-2 rounded-md font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer ${
-                        guardandoTodo
-                          ? 'bg-slate-400 text-white cursor-wait'
-                          : hayCambios
-                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white ring-2 ring-emerald-400 ring-offset-1 shadow-md'
-                          : guardadoExito
-                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                          : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-60'
-                      }`}
-                      title="Guarda los cambios de orden y estilo de esta sección"
-                    >
-                      <span className={`material-symbols-outlined text-[16px] ${guardandoTodo ? 'animate-spin' : ''}`}>
-                        {guardandoTodo ? 'refresh' : guardadoExito ? 'check' : 'save'}
-                      </span>
-                      {guardandoTodo ? 'Guardando...' : guardadoExito ? '¡Guardado!' : hayCambios ? 'Guardar Cambios' : 'Guardar Cambios'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        fetchEventosProximos();
-                        setModalEventosAbierto(true);
-                      }}
-                      className="px-3 py-2 bg-emerald-600 text-white rounded-md font-bold text-xs hover:bg-emerald-700 transition-colors flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer"
-                      title="Seleccionar un evento de la agenda de Pucallpa y ponerlo en este carrusel"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">celebration</span>
-                      Vincular Evento
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        fetchNotasRevistaModal();
-                        setModalRevistaAbierto(true);
-                      }}
-                      className="px-3 py-2 bg-amber-600 text-white rounded-md font-bold text-xs hover:bg-amber-700 transition-colors flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer"
-                      title="Seleccionar un artículo de la Revista y ponerlo en este carrusel"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">menu_book</span>
-                      Vincular Revista
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleOpenNewMarketBanner}
-                      className="px-3 py-2 bg-[#0058be] text-white rounded-md font-bold text-xs hover:bg-[#004395] transition-colors flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">add</span>
-                      Nuevo Banner
-                    </button>
+                    {bannerPageTab !== 'productos' && (
+                      <button
+                        type="button"
+                        onClick={handleGuardarCambios}
+                        disabled={guardandoTodo || (!hayCambios && !guardadoExito)}
+                        className={`px-3.5 py-2 rounded-md font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer ${
+                          guardandoTodo
+                            ? 'bg-slate-400 text-white cursor-wait'
+                            : hayCambios
+                            ? 'bg-emerald-600 hover:bg-emerald-700 text-white ring-2 ring-emerald-400 ring-offset-1 shadow-md'
+                            : guardadoExito
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                            : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-60'
+                        }`}
+                        title="Guarda todos los cambios de esta sección en una sola operación"
+                      >
+                        <span className={`material-symbols-outlined text-[16px] ${guardandoTodo ? 'animate-spin' : ''}`}>
+                          {guardandoTodo ? 'refresh' : guardadoExito ? 'check' : 'save'}
+                        </span>
+                        {guardandoTodo ? 'Guardando...' : guardadoExito ? '¡Guardado!' : hayCambios ? 'Guardar Cambios' : 'Guardar Cambios'}
+                      </button>
+                    )}
+                    {(bannerPageTab === 'home' || bannerPageTab === 'market' || bannerPageTab === 'negocios') && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            fetchEventosProximos();
+                            setModalEventosAbierto(true);
+                          }}
+                          className="px-3 py-2 bg-emerald-600 text-white rounded-md font-bold text-xs hover:bg-emerald-700 transition-colors flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer"
+                          title="Seleccionar un evento de la agenda de Pucallpa y ponerlo en este carrusel"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">celebration</span>
+                          Vincular Evento
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            fetchNotasRevistaModal();
+                            setModalRevistaAbierto(true);
+                          }}
+                          className="px-3 py-2 bg-amber-600 text-white rounded-md font-bold text-xs hover:bg-amber-700 transition-colors flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer"
+                          title="Seleccionar un artículo de la Revista y ponerlo en este carrusel"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">menu_book</span>
+                          Vincular Revista
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleOpenNewMarketBanner}
+                          className="px-3 py-2 bg-[#0058be] text-white rounded-md font-bold text-xs hover:bg-[#004395] transition-colors flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">add</span>
+                          Nuevo Banner
+                        </button>
+                      </>
+                    )}
                   </div>
-                )}
               </div>
 
               <div className="px-5 pt-3 flex items-center justify-between flex-wrap gap-2">
                 <div className="flex gap-1.5 flex-wrap">
-                  {([['home', 'Inicio'], ['market', 'Market'], ['negocios', 'Foto de /negocios'], ['productos', 'Productos (/productos)']] as const).map(([id, label]) => (
+                  {([['home', 'Inicio (Banners)'], ['lo_que_se_pide', '«Lo que se pide» (Inicio)'], ['market', 'Market'], ['negocios', 'Foto de /negocios'], ['productos', 'Productos (/productos)']] as const).map(([id, label]) => (
                     <button
                       key={id}
                       onClick={() => { setBannerPageTab(id); setHayCambios(false); setGuardadoExito(false); }}
@@ -605,7 +654,7 @@ export default function BannersAdmin() {
                   ))}
                 </div>
 
-                {bannerPageTab !== 'productos' && (
+                {bannerPageTab !== 'productos' && bannerPageTab !== 'lo_que_se_pide' && (
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-bold text-[#727785] uppercase tracking-wide">Estilo del carrusel:</span>
                     <div className="flex gap-1 bg-[#f2f3fd] p-0.5 rounded-full">
@@ -624,7 +673,7 @@ export default function BannersAdmin() {
                 )}
               </div>
 
-              {bannerPageTab !== 'productos' ? (
+              {bannerPageTab !== 'productos' && bannerPageTab !== 'lo_que_se_pide' ? (
                 <p className="px-5 pb-1 text-[10px] text-[#727785] font-semibold">
                   Afecta a TODOS los banners de {{ market: '/market', home: 'el Inicio', negocios: 'la portada de /negocios (se usa la primera foto activa)' }[bannerPageTab]}, no solo al que estés editando.
                 </p>
@@ -642,7 +691,316 @@ export default function BannersAdmin() {
               )}
 
               <div className="p-4">
-                {bannerPageTab === 'productos' ? (
+                {bannerPageTab === 'lo_que_se_pide' ? (
+                  <div className="space-y-6 animate-fade-in">
+                    {/* Tarjeta Explicativa */}
+                    <div className="bg-[#f2f3fd]/60 border border-[#c2c6d6] rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <span className="w-10 h-10 rounded-xl bg-[#0058be] text-white flex items-center justify-center shrink-0 shadow-xs">
+                          <span className="material-symbols-outlined text-[22px]">storefront</span>
+                        </span>
+                        <div>
+                          <h3 className="font-bold text-sm text-[#191b23]">
+                            Fila «Lo que se pide en Market» (Inicio)
+                          </h3>
+                          <p className="text-xs text-[#545f73] mt-0.5">
+                            Esta fila aparece en la pantalla de Inicio (<b>/</b>) mostrando productos destacados de comercios locales. Puedes dar favoritismo a una tienda para que sus productos aparezcan <b>primero</b>, o activar/desactivar tiendas y productos específicos.
+                          </p>
+                        </div>
+                      </div>
+                      {hayCambios && (
+                        <button
+                          type="button"
+                          onClick={handleGuardarCambios}
+                          disabled={guardandoTodo}
+                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition-colors shadow-sm shrink-0 flex items-center gap-1.5 cursor-pointer ring-2 ring-emerald-400"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">save</span>
+                          {guardandoTodo ? 'Guardando...' : 'Guardar Cambios'}
+                        </button>
+                      )}
+                    </div>
+
+                    {/* 1. Tiendas con Favoritismo / Prioritarias */}
+                    <div className="bg-white rounded-xl border border-[#c2c6d6] p-4 sm:p-5 shadow-xs space-y-3">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div>
+                          <h4 className="font-bold text-xs uppercase tracking-wider text-[#191b23] flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-amber-500 text-[18px]">star</span>
+                            Tiendas con Favoritismo (Sus productos salen primero)
+                          </h4>
+                          <p className="text-[11px] text-[#727785] mt-0.5">
+                            Las tiendas añadidas aquí encabezan la fila de productos del Inicio. Delva está configurada con prioridad por defecto.
+                          </p>
+                        </div>
+
+                        {/* Añadir otra tienda a favoritas */}
+                        <div className="flex items-center gap-2">
+                          <select
+                            value={tiendaSeleccionadaPrioridad}
+                            onChange={(e) => setTiendaSeleccionadaPrioridad(e.target.value)}
+                            className="text-xs border border-[#c2c6d6] rounded-lg px-2.5 py-1.5 bg-white text-[#191b23] font-semibold outline-none focus:border-[#0058be]"
+                          >
+                            <option value="">Seleccionar tienda para dar favoritismo...</option>
+                            {storeList
+                              .filter((s) => !(homeMarketConfig.tiendasPrioritarias || []).includes(s.slug))
+                              .map((s) => (
+                                <option key={s.slug} value={s.slug}>
+                                  {s.name} (/{s.slug})
+                                </option>
+                              ))}
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!tiendaSeleccionadaPrioridad) return;
+                              setHomeMarketConfig((prev) => ({
+                                ...prev,
+                                tiendasPrioritarias: [...(prev.tiendasPrioritarias || []), tiendaSeleccionadaPrioridad],
+                              }));
+                              setTiendaSeleccionadaPrioridad('');
+                              setHayCambios(true);
+                              setGuardadoExito(false);
+                            }}
+                            disabled={!tiendaSeleccionadaPrioridad}
+                            className="px-3 py-1.5 bg-[#0058be] hover:bg-[#004395] text-white font-bold text-xs rounded-lg transition-colors disabled:opacity-40 cursor-pointer flex items-center gap-1"
+                          >
+                            <span className="material-symbols-outlined text-[15px]">add</span>
+                            Dar Prioridad
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Lista de chips prioritarios */}
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {(homeMarketConfig.tiendasPrioritarias || []).length === 0 ? (
+                          <p className="text-xs text-[#727785] italic">No hay tiendas con favoritismo fijadas. Se repartirán de forma equitativa.</p>
+                        ) : (
+                          (homeMarketConfig.tiendasPrioritarias || []).map((slug, idx) => {
+                            const st = storeList.find((s) => s.slug === slug);
+                            return (
+                              <span
+                                key={slug}
+                                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-300 text-amber-900 text-xs font-bold shadow-2xs"
+                              >
+                                <span className="flex items-center gap-1">
+                                  <span className="material-symbols-outlined text-[16px] text-amber-500">star</span>
+                                  <span>#{idx + 1} {st ? st.name : slug}</span>
+                                  <span className="text-[10px] text-amber-700/80 font-mono font-normal">({slug})</span>
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setHomeMarketConfig((prev) => ({
+                                      ...prev,
+                                      tiendasPrioritarias: (prev.tiendasPrioritarias || []).filter((s) => s !== slug),
+                                    }));
+                                    setHayCambios(true);
+                                    setGuardadoExito(false);
+                                  }}
+                                  className="w-4 h-4 rounded-full hover:bg-amber-200 flex items-center justify-center text-amber-800 cursor-pointer"
+                                  title="Quitar favoritismo"
+                                >
+                                  <span className="material-symbols-outlined text-[14px]">close</span>
+                                </button>
+                              </span>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 2. Vista Previa en Vivo de la Fila del Inicio */}
+                    <div className="bg-white rounded-xl border border-[#c2c6d6] p-4 sm:p-5 shadow-xs space-y-3">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div>
+                          <h4 className="font-bold text-xs uppercase tracking-wider text-[#191b23] flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-[#0058be] text-[18px]">preview</span>
+                            Vista Previa en Vivo de la Fila (Orden exacto en el Inicio)
+                          </h4>
+                          <p className="text-[11px] text-[#727785] mt-0.5">
+                            Así se verá exactamente el carrusel de «Lo que se pide en Market». Puedes ocultar productos específicos haciendo clic en el icono.
+                          </p>
+                        </div>
+                        {(homeMarketConfig.productosOcultos || []).length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setHomeMarketConfig((prev) => ({ ...prev, productosOcultos: [] }));
+                              setHayCambios(true);
+                              setGuardadoExito(false);
+                            }}
+                            className="text-xs text-[#0058be] font-bold hover:underline flex items-center gap-1 cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-[15px]">undo</span>
+                            Restaurar {homeMarketConfig.productosOcultos?.length} producto(s) oculto(s)
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Tira de productos preview */}
+                      {(() => {
+                        const { productos: previewProds } = armarCatalogoHome(storeList, allCatalogProducts, homeMarketConfig);
+                        if (previewProds.length === 0) {
+                          return (
+                            <p className="text-xs text-[#727785] italic py-4 text-center">
+                              No hay productos visibles con la configuración actual. Revisa las tiendas desactivadas.
+                            </p>
+                          );
+                        }
+                        return (
+                          <div className="flex gap-3 overflow-x-auto pb-2 pt-1">
+                            {previewProds.map((p, pIdx) => {
+                              const isFromFav = (homeMarketConfig.tiendasPrioritarias || []).includes(p.storeSlug);
+                              return (
+                                <div
+                                  key={p.id + '-' + pIdx}
+                                  className="w-[140px] shrink-0 bg-white border border-[#c2c6d6] rounded-xl overflow-hidden shadow-2xs flex flex-col relative group"
+                                >
+                                  {isFromFav && (
+                                    <span className="absolute top-1.5 left-1.5 z-10 bg-amber-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow flex items-center gap-0.5">
+                                      <span className="material-symbols-outlined text-[10px]">star</span>
+                                      FAVORITA
+                                    </span>
+                                  )}
+                                  <div className="aspect-square bg-[#f2f3fd] overflow-hidden relative">
+                                    <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setHomeMarketConfig((prev) => ({
+                                          ...prev,
+                                          productosOcultos: [...(prev.productosOcultos || []), p.id],
+                                        }));
+                                        setHayCambios(true);
+                                        setGuardadoExito(false);
+                                      }}
+                                      className="absolute top-1.5 right-1.5 w-6 h-6 rounded-md bg-black/60 hover:bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow"
+                                      title="Ocultar este producto específico de la fila del Inicio"
+                                    >
+                                      <span className="material-symbols-outlined text-[14px]">visibility_off</span>
+                                    </button>
+                                  </div>
+                                  <div className="p-2 flex flex-col gap-0.5 flex-1">
+                                    <span className="text-[9px] font-bold text-[#727785] truncate uppercase">{p.storeName}</span>
+                                    <h5 className="font-bold text-[11px] text-[#191b23] line-clamp-1 leading-tight">{p.name}</h5>
+                                    <span className="text-xs font-black text-[#0058be] mt-auto">S/ {p.price.toFixed(2)}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    {/* 3. Directorio de Tiendas (Activar / Desactivar en la fila) */}
+                    <div className="bg-white rounded-xl border border-[#c2c6d6] p-4 sm:p-5 shadow-xs space-y-3">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div>
+                          <h4 className="font-bold text-xs uppercase tracking-wider text-[#191b23] flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-[#0058be] text-[18px]">toggle_on</span>
+                            Activar / Desactivar Tiendas en la Fila de Inicio
+                          </h4>
+                          <p className="text-[11px] text-[#727785] mt-0.5">
+                            Si desactivas una tienda aquí, sus productos no aparecerán en la fila del Inicio, pero la tienda continuará funcionando normalmente en su enlace y en /market.
+                          </p>
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Buscar tienda por nombre o slug..."
+                          value={busquedaTiendaLoQueSePide}
+                          onChange={(e) => setBusquedaTiendaLoQueSePide(e.target.value)}
+                          className="text-xs border border-[#c2c6d6] rounded-lg px-3 py-1.5 bg-white text-[#191b23] outline-none focus:border-[#0058be] w-64"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 pt-1">
+                        {storeList
+                          .filter((s) =>
+                            s.name.toLowerCase().includes(busquedaTiendaLoQueSePide.toLowerCase()) ||
+                            s.slug.toLowerCase().includes(busquedaTiendaLoQueSePide.toLowerCase())
+                          )
+                          .map((st) => {
+                            const isFav = (homeMarketConfig.tiendasPrioritarias || []).includes(st.slug);
+                            const isHidden = (homeMarketConfig.tiendasOcultas || []).includes(st.slug);
+
+                            return (
+                              <div
+                                key={st.slug}
+                                className={`p-3 rounded-xl border flex items-center justify-between gap-2.5 transition-all ${
+                                  isHidden
+                                    ? 'bg-slate-50/70 border-slate-200 opacity-60 text-slate-400'
+                                    : isFav
+                                    ? 'bg-amber-50/50 border-amber-300'
+                                    : 'bg-white border-[#ecedf7] hover:border-[#c2c6d6]'
+                                }`}
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="font-bold text-xs truncate text-[#191b23]">{st.name}</span>
+                                    {isFav && (
+                                      <span className="inline-flex items-center gap-0.5 text-[9px] font-black bg-amber-200 text-amber-900 px-1 py-0.2 rounded">
+                                        ⭐ Favorita
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-[10px] text-[#727785] truncate font-mono">/{st.slug}</p>
+                                </div>
+
+                                <div className="flex items-center gap-1 shrink-0">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setHomeMarketConfig((prev) => {
+                                        const list = prev.tiendasPrioritarias || [];
+                                        const updated = isFav ? list.filter((s) => s !== st.slug) : [...list, st.slug];
+                                        return { ...prev, tiendasPrioritarias: updated };
+                                      });
+                                      setHayCambios(true);
+                                      setGuardadoExito(false);
+                                    }}
+                                    className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                                      isFav
+                                        ? 'bg-amber-500 text-white border-amber-500'
+                                        : 'bg-white text-slate-400 border-slate-200 hover:text-amber-500 hover:border-amber-300'
+                                    }`}
+                                    title={isFav ? 'Quitar favoritismo' : 'Dar favoritismo (sale primero)'}
+                                  >
+                                    <span className="material-symbols-outlined text-[16px]">star</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setHomeMarketConfig((prev) => {
+                                        const list = prev.tiendasOcultas || [];
+                                        const updated = isHidden ? list.filter((s) => s !== st.slug) : [...list, st.slug];
+                                        return { ...prev, tiendasOcultas: updated };
+                                      });
+                                      setHayCambios(true);
+                                      setGuardadoExito(false);
+                                    }}
+                                    className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer flex items-center gap-1 ${
+                                      isHidden
+                                        ? 'bg-slate-200 text-slate-700 border-slate-300 hover:bg-slate-300'
+                                        : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+                                    }`}
+                                    title={isHidden ? 'Activar en Inicio' : 'Ocultar de Inicio'}
+                                  >
+                                    <span className="material-symbols-outlined text-[13px]">
+                                      {isHidden ? 'visibility_off' : 'visibility'}
+                                    </span>
+                                    <span>{isHidden ? 'Oculta' : 'Activa'}</span>
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  </div>
+                ) : bannerPageTab === 'productos' ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {PRODUCTOS_MOSTRADOR.map((p) => {
                       const customUrl = productosBanners[p.slug] || '';

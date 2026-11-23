@@ -866,11 +866,18 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
     return () => { vivo = false; };
   }, []);
 
-  const filtered = orden === 'antiguas'
+  const baseSorted = orden === 'antiguas'
     ? [...filtradas].reverse()
     : orden === 'az'
       ? [...filtradas].sort((a, b) => a.name.localeCompare(b.name, 'es'))
       : filtradas;
+
+  // Las tiendas pausadas o desactivadas van abajo del todo en la tabla
+  const filtered = [...baseSorted].sort((a, b) => {
+    const aOn = activeStores[a.slug] ? 1 : 0;
+    const bOn = activeStores[b.slug] ? 1 : 0;
+    return bOn - aOn; // Activas (1) primero, Pausadas (0) al final
+  });
 
   const activeCount = storeList.filter(s => activeStores[s.slug]).length;
   const pausedCount = storeList.length - activeCount;
@@ -1670,15 +1677,24 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                         }
 
                         return (
-                          <tr key={store.slug} className={`flex flex-col gap-2 p-4 md:p-0 md:table-row hover:bg-[#f2f3fd]/40 transition-colors ${isIncomplete ? 'bg-amber-50/40' : ''}`}>
+                          <tr
+                            key={store.slug}
+                            className={`flex flex-col gap-2 p-4 md:p-0 md:table-row transition-colors ${
+                              !storeOn
+                                ? 'bg-slate-100/70 text-[#727785] opacity-65 hover:bg-slate-200/50'
+                                : isIncomplete
+                                ? 'bg-amber-50/40 hover:bg-[#f2f3fd]/40'
+                                : 'hover:bg-[#f2f3fd]/40'
+                            }`}
+                          >
                             <td className="block md:table-cell md:px-5 md:py-3">
                               <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0 border border-[#c2c6d6]/60 bg-[#f9f9ff]">
+                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0 border border-[#c2c6d6]/60 ${!storeOn ? 'bg-slate-200/80 grayscale' : 'bg-[#f9f9ff]'}`}>
                                   {meta.emoji}
                                 </div>
                                 <div>
                                   <div className="flex items-center gap-1.5">
-                                    <p className="font-bold text-xs text-[#191b23]">{store.name}</p>
+                                    <p className={`font-bold text-xs ${!storeOn ? 'text-[#727785]' : 'text-[#191b23]'}`}>{store.name}</p>
                                     {sinWhatsapp && (
                                       <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 text-[8px] font-bold uppercase tracking-wide border border-red-200" title="Esta tienda no tiene número de WhatsApp: los pedidos no le llegan al dueño">
                                         <span className="material-symbols-outlined text-[10px]">chat_error</span>

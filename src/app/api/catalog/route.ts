@@ -120,7 +120,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const [stores, products, banners, estilo] = await Promise.all([
+  const [stores, products, banners, estilo, configRow] = await Promise.all([
     supabase
       .from('stores')
       .select('slug,name,tagline,marketplace_category,template,hero_image,hero_alt,logo_image,theme,categories,status,external_url,subdominio_activo,modulos'),
@@ -132,7 +132,15 @@ export async function GET(request: Request) {
       .eq('page', 'market')
       .order('sort_order', { ascending: true }),
     estiloPromise,
+    supabase.from('site_settings').select('valor').eq('clave', 'home_lo_que_se_pide').maybeSingle(),
   ]);
+
+  let homeMarketConfig = null;
+  if (configRow?.data?.valor) {
+    try {
+      homeMarketConfig = typeof configRow.data.valor === 'string' ? JSON.parse(configRow.data.valor) : configRow.data.valor;
+    } catch {}
+  }
 
   if (stores.error || products.error) return falloSupabase();
 
@@ -151,6 +159,7 @@ export async function GET(request: Request) {
         .map(aplicarOferta),
       banners: banners.data ?? [],
       bannerStyle: estilo.data?.style || ESTILO_DEFECTO.market,
+      homeMarketConfig,
     },
     { headers: cacheHeaders },
   );

@@ -67,7 +67,7 @@ export async function cargarHome(): Promise<HomeData> {
     data.bannerStyle = promos.bannerStyle || 'bottom';
   } else fallidas.push('promos');
 
-  if (catalogo) Object.assign(data, armarCatalogoHome(catalogo.stores ?? [], catalogo.products ?? []));
+  if (catalogo) Object.assign(data, armarCatalogoHome(catalogo.stores ?? [], catalogo.products ?? [], catalogo.homeMarketConfig));
   else fallidas.push('catalogo');
 
   if (eventos && lugares) data.queHacer = armarQueHacer(parseEventos(eventos), parseLugares(lugares));

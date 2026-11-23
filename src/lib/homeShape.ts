@@ -150,14 +150,37 @@ function mezclarDeterminista<T>(a: T[]): T[] {
   return [...a].sort((x, y) => hashCode(String((x as any)?.id ?? (Array.isArray(x) ? (x[0] as any)?.id : x))) - hashCode(String((y as any)?.id ?? (Array.isArray(y) ? (y[0] as any)?.id : y))));
 }
 
-// "Lo que se pide en Market" (productos de TODAS las categorías, repartidos por tienda en rondas para
-// que no domine la que tiene más) y "Tiendas de comida" (solo rubro comida/bebida, con su logo).
-export function armarCatalogoHome(dbStores: any[], dbProducts: any[]): { productos: ProductoHome[]; tiendasComida: TiendaComida[] } {
+export type HomeMarketConfig = {
+  tiendasPrioritarias?: string[]; // Slugs de tiendas que van primero (ej. ['delva'])
+  tiendasOcultas?: string[];      // Slugs de tiendas desactivadas en esta fila
+  productosOcultos?: string[];    // IDs de productos específicos desactivados en esta fila
+};
+
+// "Lo que se pide en Market" (productos de TODAS las categorías, con soporte para tiendas prioritarias
+// como Delva primero, exclusiones de tiendas o productos y rondas deterministas para variedad)
+// y "Tiendas de comida" (solo rubro comida/bebida, con su logo).
+export function armarCatalogoHome(
+  dbStores: any[],
+  dbProducts: any[],
+  config?: HomeMarketConfig | null
+): { productos: ProductoHome[]; tiendasComida: TiendaComida[] } {
   const tiendasPorSlug: Record<string, any> = {};
   (dbStores || []).forEach((s) => { tiendasPorSlug[s.slug] = s; });
 
+  const tiendasOcultasSet = new Set((config?.tiendasOcultas || []).map((s) => s.toLowerCase()));
+  const productosOcultosSet = new Set((config?.productosOcultos || []).map(String));
+  // Por defecto, si no se especifica otra lista, 'delva' tiene prioridad #1
+  const prioritarias = (config?.tiendasPrioritarias && config.tiendasPrioritarias.length > 0)
+    ? config.tiendasPrioritarias.map((s) => s.toLowerCase())
+    : ['delva'];
+
   const items: ProductoHome[] = (dbProducts || [])
-    .filter((p) => tiendasPorSlug[p.store] && p.image)
+    .filter((p) => {
+      if (!tiendasPorSlug[p.store] || !p.image) return false;
+      if (tiendasOcultasSet.has(p.store.toLowerCase())) return false;
+      if (productosOcultosSet.has(String(p.id))) return false;
+      return true;
+    })
     .map((p) => ({
       id: p.id,
       name: p.name,
@@ -169,12 +192,38 @@ export function armarCatalogoHome(dbStores: any[], dbProducts: any[]): { product
       storeExternalUrl: tiendasPorSlug[p.store]?.external_url || undefined,
     }));
 
-  // Repartir en rondas (una por tienda) con orden determinista: así el servidor siempre
-  // produce el mismo HTML para los mismos datos y Vercel no escribe en disco innecesariamente.
+  // Repartir en rondas con orden determinista, colocando primero los productos de las tiendas prioritarias
   const porTienda: Record<string, ProductoHome[]> = {};
   mezclarDeterminista(items).forEach((it) => { (porTienda[it.storeSlug] ||= []).push(it); });
-  const colas = mezclarDeterminista(Object.values(porTienda).map((arr) => arr));
+
   const productos: ProductoHome[] = [];
+
+  // 1. Las tiendas con favoritismo/prioridad (ej. Delva) ponen sus primeros productos al inicio de la fila
+  for (const slugP of prioritarias) {
+    const matchingKey = Object.keys(porTienda).find((k) => k.toLowerCase() === slugP);
+    if (matchingKey && porTienda[matchingKey]?.length) {
+      // Tomamos hasta 2 productos destacados de la tienda prioritaria para abrir la fila
+      const destacados = porTienda[matchingKey].splice(0, 2);
+      for (const p of destacados) {
+        if (productos.length < 12) productos.push(p);
+      }
+    }
+  }
+
+  // 2. El resto se reparte en rondas equitativas (round-robin)
+  // Primero las tiendas prioritarias si aún tienen productos restantes, luego el resto ordenado determinista
+  const colasRestantesPrioritarias: ProductoHome[][] = [];
+  const otrasTiendasMap: Record<string, ProductoHome[]> = { ...porTienda };
+  for (const slugP of prioritarias) {
+    const matchingKey = Object.keys(otrasTiendasMap).find((k) => k.toLowerCase() === slugP);
+    if (matchingKey && otrasTiendasMap[matchingKey]?.length) {
+      colasRestantesPrioritarias.push(otrasTiendasMap[matchingKey]);
+      delete otrasTiendasMap[matchingKey];
+    }
+  }
+  const otrasColas = mezclarDeterminista(Object.values(otrasTiendasMap).filter((arr) => arr.length > 0));
+  const colas = [...colasRestantesPrioritarias, ...otrasColas];
+
   while (productos.length < 12 && colas.some((c) => c.length)) {
     for (const c of colas) {
       const it = c.shift();
