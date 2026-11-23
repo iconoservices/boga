@@ -105,6 +105,86 @@ const NAV = [
   { id: 'tiendas',         icon: 'storefront',    label: 'Tiendas' },
 ] as const;
 
+const MONOGRAM_PALETTES = [
+  'from-blue-600 to-indigo-700 text-white',
+  'from-violet-600 to-purple-700 text-white',
+  'from-emerald-600 to-teal-700 text-white',
+  'from-amber-500 to-orange-600 text-white',
+  'from-rose-500 to-pink-600 text-white',
+  'from-cyan-600 to-blue-700 text-white',
+  'from-indigo-600 to-sky-600 text-white',
+  'from-fuchsia-600 to-pink-600 text-white',
+];
+
+function getStoreGradient(str: string) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return MONOGRAM_PALETTES[Math.abs(hash) % MONOGRAM_PALETTES.length];
+}
+
+function getStoreInitials(name: string) {
+  if (!name) return 'TI';
+  const clean = name.trim().replace(/^\[.*?\]\s*/, '');
+  const words = clean.split(/\s+/).filter(Boolean);
+  if (words.length === 1) {
+    return words[0].slice(0, 2).toUpperCase();
+  }
+  return (words[0][0] + (words[1][0] || '')).toUpperCase();
+}
+
+function StoreAvatar({
+  name,
+  slug,
+  logoImage,
+  emoji,
+  storeOn = true,
+  size = 'md',
+}: {
+  name: string;
+  slug: string;
+  logoImage?: string;
+  emoji?: string;
+  storeOn?: boolean;
+  size?: 'sm' | 'md' | 'lg';
+}) {
+  const [imgError, setImgError] = useState(false);
+  const hasCustomEmoji = emoji && emoji !== '🏪';
+  const dim = size === 'sm' ? 'w-8 h-8 rounded-lg' : size === 'lg' ? 'w-12 h-12 rounded-2xl' : 'w-10 h-10 rounded-xl';
+  const textSize = size === 'sm' ? 'text-[11px]' : size === 'lg' ? 'text-sm' : 'text-xs';
+
+  return (
+    <div
+      className={`${dim} flex items-center justify-center shrink-0 border transition-all overflow-hidden relative select-none ${
+        !storeOn
+          ? 'bg-slate-200/90 border-slate-300 grayscale opacity-60 text-slate-400'
+          : logoImage && !imgError
+            ? 'bg-white border-slate-200/90 p-0.5 shadow-2xs'
+            : hasCustomEmoji
+              ? 'bg-slate-100 border-slate-200/90 shadow-2xs'
+              : `bg-gradient-to-br ${getStoreGradient(name || slug)} border-black/10 shadow-2xs`
+      }`}
+    >
+      {logoImage && !imgError ? (
+        <img
+          src={logoImage}
+          alt={name}
+          className="w-full h-full object-cover rounded-[8px]"
+          onError={() => setImgError(true)}
+        />
+      ) : hasCustomEmoji ? (
+        <span className={`${size === 'sm' ? 'text-base' : 'text-xl'} leading-none`}>{emoji}</span>
+      ) : (
+        <span className={`font-black ${textSize} tracking-tight text-white drop-shadow-2xs`}>
+          {getStoreInitials(name)}
+        </span>
+      )}
+    </div>
+  );
+}
+
 
 
 
@@ -1705,13 +1785,14 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                           >
                             <td className="block md:table-cell md:px-5 md:py-3.5">
                               <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 border transition-all ${
-                                  !storeOn
-                                    ? 'bg-slate-200/80 border-slate-300 grayscale text-slate-400'
-                                    : 'bg-slate-50 border-slate-200 shadow-2xs'
-                                }`}>
-                                  {meta.emoji}
-                                </div>
+                                <StoreAvatar
+                                  name={store.name || ''}
+                                  slug={store.slug || ''}
+                                  logoImage={store.logoImage}
+                                  emoji={meta.emoji}
+                                  storeOn={storeOn}
+                                  size="md"
+                                />
                                 <div className="min-w-0">
                                   <div className="flex items-center gap-1.5 flex-wrap">
                                     <p className={`font-bold text-xs truncate ${!storeOn ? 'text-slate-500 line-through decoration-slate-300' : 'text-slate-900'}`}>
@@ -1795,53 +1876,69 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                                 </span>
                               )}
                             </td>
-                            <td className="block md:table-cell md:px-5 md:py-3 md:text-right border-t border-[#ecedf7] pt-2 md:border-0 md:pt-3">
+                            <td className="block md:table-cell md:px-5 md:py-3.5 md:text-right border-t border-slate-100 pt-2 md:border-0 md:pt-3.5">
                               <div className="flex flex-wrap items-center justify-start md:justify-end gap-1.5">
+                                {/* Pausar / Activar */}
                                 <button
+                                  type="button"
                                   onClick={() => handleTogglePausaTienda(store)}
                                   disabled={togglingStoreSlug === store.slug}
-                                  className={`material-symbols-outlined text-[18px] transition-colors p-1 rounded disabled:opacity-50 ${
-                                    storeOn ? 'text-[#545f73] hover:text-red-600 hover:bg-red-50' : 'text-[#545f73] hover:text-emerald-600 hover:bg-emerald-50'
+                                  className={`w-8 h-8 rounded-lg flex items-center justify-center border shadow-2xs active:scale-95 transition-all disabled:opacity-50 ${
+                                    storeOn
+                                      ? 'bg-white border-slate-200 text-slate-600 hover:text-amber-600 hover:bg-amber-50 hover:border-amber-300'
+                                      : 'bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-400'
                                   }`}
-                                  title={storeOn ? 'Pausar Tienda' : 'Activar Tienda'}
+                                  title={storeOn ? 'Pausar tienda' : 'Activar tienda'}
                                 >
-                                  {storeOn ? 'pause_circle' : 'play_circle'}
+                                  <span className="material-symbols-outlined text-[17px]">
+                                    {storeOn ? 'pause' : 'play_arrow'}
+                                  </span>
                                 </button>
+
+                                {/* Ver Tienda Pública */}
                                 <Link
                                   href={`/${store.slug}`}
                                   target="_blank"
-                                  className="material-symbols-outlined text-[18px] text-[#545f73] hover:text-[#0058be] transition-colors p-1 hover:bg-[#e6e7f2] rounded"
-                                  title="Ver Tienda Pública"
+                                  className="w-8 h-8 rounded-lg flex items-center justify-center border border-slate-200 bg-white text-slate-600 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 shadow-2xs active:scale-95 transition-all"
+                                  title="Ver tienda pública"
                                 >
-                                  visibility
+                                  <span className="material-symbols-outlined text-[17px]">visibility</span>
                                 </Link>
+
+                                {/* Ver Panel como Dueño */}
                                 <Link
                                   href={`/admin?como=${store.slug}`}
                                   target="_blank"
-                                  className="material-symbols-outlined text-[18px] text-[#545f73] hover:text-[#0058be] transition-colors p-1 hover:bg-[#e6e7f2] rounded"
+                                  className="w-8 h-8 rounded-lg flex items-center justify-center border border-slate-200 bg-white text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 shadow-2xs active:scale-95 transition-all"
                                   title="Ver el panel como lo ve su dueño"
                                 >
-                                  space_dashboard
+                                  <span className="material-symbols-outlined text-[17px]">space_dashboard</span>
                                 </Link>
+
+                                {/* Editar Tienda */}
                                 <button
+                                  type="button"
                                   onClick={() => handleOpenEditStore(store)}
-                                  className="material-symbols-outlined text-[18px] text-[#545f73] hover:text-[#0058be] transition-colors p-1 hover:bg-[#e6e7f2] rounded"
-                                  title="Editar Tienda"
+                                  className="w-8 h-8 rounded-lg flex items-center justify-center border border-slate-200 bg-white text-slate-600 hover:text-sky-600 hover:bg-sky-50 hover:border-sky-300 shadow-2xs active:scale-95 transition-all"
+                                  title="Editar tienda"
                                 >
-                                  edit
+                                  <span className="material-symbols-outlined text-[17px]">edit</span>
                                 </button>
+
+                                {/* Cargar Productos */}
                                 <button
+                                  type="button"
                                   onClick={() => handleOpenStoreProducts(store.slug)}
-                                  className="material-symbols-outlined text-[18px] text-[#545f73] hover:text-[#0058be] transition-colors p-1 hover:bg-[#e6e7f2] rounded"
-                                  title="Cargar Productos"
+                                  className="w-8 h-8 rounded-lg flex items-center justify-center border border-slate-200 bg-white text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 hover:border-emerald-300 shadow-2xs active:scale-95 transition-all"
+                                  title="Cargar productos"
                                 >
-                                  inventory_2
+                                  <span className="material-symbols-outlined text-[17px]">inventory_2</span>
                                 </button>
+
+                                {/* Administrador */}
                                 <button
+                                  type="button"
                                   onClick={() => {
-                                    // Abre el modal de asignar/editar admin sin salir de esta
-                                    // pestaña: si ya hay un admin de tienda lo carga para
-                                    // editar, si no precarga la invitación con esta tienda.
                                     if (storeAdmin) {
                                       setEditingUser({ ...storeAdmin });
                                       setEditingUserOriginalStore(store.slug);
@@ -1854,13 +1951,24 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                                     }
                                     setAssignStoreSlug(store.slug);
                                   }}
-                                  className="material-symbols-outlined text-[18px] text-[#545f73] hover:text-[#0058be] transition-colors p-1 hover:bg-[#e6e7f2] rounded"
-                                  title={storeAdmin ? 'Editar Administrador' : 'Asignar Administrador'}
+                                  className={`w-8 h-8 rounded-lg flex items-center justify-center border shadow-2xs active:scale-95 transition-all ${
+                                    storeAdmin
+                                      ? 'bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100 hover:border-purple-300'
+                                      : 'bg-white border-slate-200 text-slate-600 hover:text-purple-600 hover:bg-purple-50 hover:border-purple-300'
+                                  }`}
+                                  title={storeAdmin ? `Administrador: ${storeAdmin.email}` : 'Asignar administrador'}
                                 >
-                                  {storeAdmin ? 'manage_accounts' : 'person_add'}
+                                  <span className="material-symbols-outlined text-[17px]">
+                                    {storeAdmin ? 'manage_accounts' : 'person_add'}
+                                  </span>
                                 </button>
-                                <span className="w-px h-5 bg-[#e6e7f2] mx-1" aria-hidden />
+
+                                {/* Separador */}
+                                <span className="w-px h-5 bg-slate-200 mx-0.5 self-center" aria-hidden />
+
+                                {/* Eliminar Tienda */}
                                 <button
+                                  type="button"
                                   onClick={async () => {
                                     setDeletingStoreSlug(store.slug);
                                     setDeleteConfirmText('');
@@ -1868,10 +1976,10 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                                     const { count } = await supabase.from('products').select('id', { count: 'exact', head: true }).eq('store', store.slug);
                                     setDeletingStoreProductCount(count || 0);
                                   }}
-                                  className="material-symbols-outlined text-[18px] text-[#545f73] hover:text-red-600 transition-colors p-1 hover:bg-red-50 rounded"
-                                  title="Eliminar Tienda"
+                                  className="w-8 h-8 rounded-lg flex items-center justify-center border border-slate-200 bg-white text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-300 shadow-2xs active:scale-95 transition-all"
+                                  title="Eliminar tienda"
                                 >
-                                  delete
+                                  <span className="material-symbols-outlined text-[17px]">delete</span>
                                 </button>
                               </div>
                             </td>
@@ -3661,9 +3769,13 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
           </div>
           <div className="p-5 space-y-4 flex-1 overflow-y-auto min-h-0">
             <div className="flex items-center gap-3 pb-2 border-b border-[#c2c6d6]">
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0 border border-[#c2c6d6]/60 bg-[#f9f9ff]">
-                {dMeta.emoji}
-              </div>
+              <StoreAvatar
+                name={ds.name || ''}
+                slug={ds.slug || ''}
+                logoImage={ds.logoImage}
+                emoji={dMeta.emoji}
+                size="md"
+              />
               <div>
                 <p className="font-bold text-sm text-[#191b23]">{ds.name || 'Sin nombre'}</p>
                 <p className="text-[10px] text-[#727785] font-semibold">/{ds.slug}</p>
