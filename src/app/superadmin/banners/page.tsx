@@ -127,6 +127,54 @@ export default function BannersAdmin() {
   const [eventosDisponibles, setEventosDisponibles] = useState<any[]>([]);
   const [cargandoEventos, setCargandoEventos] = useState(false);
 
+  // ── Switch automático para mostrar siempre el próximo evento en Inicio ──
+  const [autoEventoActivo, setAutoEventoActivo] = useState(false);
+  const [guardandoAutoEvento, setGuardandoAutoEvento] = useState(false);
+  const [proximoEventoPreview, setProximoEventoPreview] = useState<any | null>(null);
+
+  const fetchAutoEventoSetting = async () => {
+    try {
+      const { data } = await supabase
+        .from('site_settings')
+        .select('valor')
+        .eq('clave', 'banner_inicio_proximo_evento')
+        .maybeSingle();
+      setAutoEventoActivo(data?.valor === 'true');
+
+      const hoy = new Date().toISOString().slice(0, 10);
+      const { data: ev } = await supabase
+        .from('events')
+        .select('id,titulo,lugar,dia,mes,fecha,img')
+        .eq('status', 'activo')
+        .or(`fecha.is.null,fecha.gte.${hoy}`)
+        .order('fecha', { ascending: true, nullsFirst: false })
+        .order('orden', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      setProximoEventoPreview(ev || null);
+    } catch {}
+  };
+
+  const handleToggleAutoEvento = async () => {
+    const nuevo = !autoEventoActivo;
+    setAutoEventoActivo(nuevo);
+    setGuardandoAutoEvento(true);
+    try {
+      const { error } = await supabase.from('site_settings').upsert({
+        clave: 'banner_inicio_proximo_evento',
+        valor: nuevo ? 'true' : 'false',
+        updated_at: new Date().toISOString(),
+      });
+      if (error) throw error;
+      await revalidarCatalogo();
+    } catch (err: any) {
+      alert('Error guardando configuración de evento automático: ' + err.message);
+      setAutoEventoActivo(!nuevo);
+    } finally {
+      setGuardandoAutoEvento(false);
+    }
+  };
+
   const fetchEventosProximos = async () => {
     setCargandoEventos(true);
     const hoy = new Date().toISOString().slice(0, 10);
@@ -273,7 +321,7 @@ export default function BannersAdmin() {
     setMarketBanners(data || []);
   };
 
-  React.useEffect(() => { fetchMarketBanners(); fetchBannerStyles(); fetchProductosBanners(); }, []);
+  React.useEffect(() => { fetchMarketBanners(); fetchBannerStyles(); fetchProductosBanners(); fetchAutoEventoSetting(); }, []);
 
   const handleOpenNewMarketBanner = () => {
     setEditingMarketBannerId('new');

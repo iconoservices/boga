@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { enMarketplace } from '@/lib/modulos';
 import { COLS_OFERTA, aplicarOferta } from '@/lib/ofertas';
+import { hoyLima } from '@/lib/fechaLima';
 
 // Catálogo completo del marketplace (todas las tiendas + productos), en UN
 // endpoint cacheado. /market y /explore lo consumen en vez de pegarle a
@@ -70,8 +71,51 @@ export async function GET(request: Request) {
       estiloPromise,
     ]);
     if (errBanners) return falloSupabase();
+
+    let bannersFinales = banners ?? [];
+
+    if (page === 'home') {
+      try {
+        const { data: configEvento } = await supabase
+          .from('site_settings')
+          .select('valor')
+          .eq('clave', 'banner_inicio_proximo_evento')
+          .maybeSingle();
+
+        if (configEvento?.valor === 'true') {
+          const hoy = hoyLima();
+          const { data: proxEvento } = await supabase
+            .from('events')
+            .select('id,titulo,lugar,dia,mes,fecha,img,descripcion')
+            .eq('status', 'activo')
+            .or(`fecha.is.null,fecha.gte.${hoy}`)
+            .order('fecha', { ascending: true, nullsFirst: false })
+            .order('orden', { ascending: true })
+            .limit(1)
+            .maybeSingle();
+
+          if (proxEvento && proxEvento.img) {
+            const tag = `Próximo Evento · ${proxEvento.dia || ''} ${proxEvento.mes || ''}`.trim();
+            const bannerEvento = {
+              id: `auto-event-${proxEvento.id}`,
+              image: proxEvento.img,
+              tag: tag.length > 3 ? tag : 'Próximo Evento',
+              title1: proxEvento.titulo,
+              title2: proxEvento.lugar ? `en ${proxEvento.lugar}` : '',
+              sub: proxEvento.descripcion ? (proxEvento.descripcion.length > 80 ? proxEvento.descripcion.slice(0, 77) + '...' : proxEvento.descripcion) : 'Entradas y detalles en la agenda de eventos',
+              link: '/eventos',
+              show_text: true,
+            };
+            bannersFinales = [bannerEvento, ...bannersFinales];
+          }
+        }
+      } catch (e) {
+        console.error('Error insertando banner de evento automático:', e);
+      }
+    }
+
     return NextResponse.json(
-      { stores: [], products: [], banners: banners ?? [], bannerStyle: estilo?.style || ESTILO_DEFECTO[page] || 'center' },
+      { stores: [], products: [], banners: bannersFinales, bannerStyle: estilo?.style || ESTILO_DEFECTO[page] || 'center' },
       { headers: cacheHeaders },
     );
   }
