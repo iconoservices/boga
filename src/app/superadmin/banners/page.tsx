@@ -53,7 +53,7 @@ export default function BannersAdmin() {
       try {
         const parsed = typeof data.valor === 'string' ? JSON.parse(data.valor) : data.valor;
         setProductosBanners(parsed || {});
-      } catch {}
+      } catch { }
     }
   };
 
@@ -117,6 +117,148 @@ export default function BannersAdmin() {
     if (error) { alert('No se pudo guardar el estilo: ' + error.message); return; }
     await revalidarCatalogo();
   };
+  // ── Drag & Drop para reordenar banners ──
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [isReordering, setIsReordering] = useState(false);
+
+  // ── Modal y eventos para banner de Inicio ──
+  const [modalEventosAbierto, setModalEventosAbierto] = useState(false);
+  const [eventosDisponibles, setEventosDisponibles] = useState<any[]>([]);
+  const [cargandoEventos, setCargandoEventos] = useState(false);
+
+  const fetchEventosProximos = async () => {
+    setCargandoEventos(true);
+    const hoy = new Date().toISOString().slice(0, 10);
+    const { data, error } = await supabase
+      .from('events')
+      .select('id,titulo,categoria,descripcion,lugar,dia,mes,fecha,img,link_entradas')
+      .eq('status', 'activo')
+      .or(`fecha.is.null,fecha.gte.${hoy}`)
+      .order('fecha', { ascending: true, nullsFirst: false })
+      .order('orden', { ascending: true })
+      .limit(8);
+    setCargandoEventos(false);
+    if (!error && data) {
+      setEventosDisponibles(data);
+    }
+  };
+
+  const handleVincularEvento = async (ev: any, modo: 'directo' | 'editar') => {
+    const tag = `Próximo Evento · ${ev.dia || ''} ${ev.mes || ''}`.trim();
+    const titulo1 = ev.titulo || 'Evento en Pucallpa';
+    const titulo2 = ev.lugar ? `en ${ev.lugar}` : '';
+    const desc = ev.descripcion
+      ? (ev.descripcion.length > 80 ? ev.descripcion.slice(0, 77) + '...' : ev.descripcion)
+      : 'Entradas y detalles en la agenda de eventos de Pucallpa';
+    const link = '/eventos';
+    const imgUrl = ev.img || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&q=80';
+
+    if (modo === 'editar') {
+      setEditingMarketBannerId('new');
+      setMarketBannerForm({
+        tag: tag.length > 3 ? tag : 'Próximo Evento',
+        title1: titulo1,
+        title2: titulo2,
+        sub: desc,
+        link: link,
+        active: true,
+        showText: true,
+      });
+      setMarketBannerImageFile(null);
+      setMarketBannerImagePreview(imgUrl);
+      setModalEventosAbierto(false);
+      return;
+    }
+
+    // Modo directo: agregar al carrusel actual de inmediato
+    setIsSavingMarketBanner(true);
+    try {
+      const payload: Record<string, any> = {
+        image: imgUrl,
+        tag: tag.length > 3 ? tag : 'Próximo Evento',
+        title1: titulo1,
+        title2: titulo2 || null,
+        sub: desc,
+        link: link,
+        active: true,
+        show_text: true,
+        sort_order: 1, // Lo colocamos como prioritario
+        page: bannerPageTab,
+      };
+
+      const { error } = await supabase.from('market_banners').insert([payload]);
+      if (error) throw error;
+      setModalEventosAbierto(false);
+      await fetchMarketBanners();
+      await revalidarCatalogo();
+    } catch (err: any) {
+      alert('Error al vincular evento: ' + err.message);
+    } finally {
+      setIsSavingMarketBanner(false);
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', index.toString());
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === targetIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const items = [...visibleMarketBanners];
+    const [movedItem] = items.splice(draggedIndex, 1);
+    items.splice(targetIndex, 0, movedItem);
+
+    // Actualización optimista inmediata
+    setMarketBanners(prev => {
+      const otros = prev.filter(b => (b.page || 'market') !== bannerPageTab);
+      const reordenados = items.map((item, idx) => ({
+        ...item,
+        sort_order: idx + 1,
+      }));
+      return [...otros, ...reordenados].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    });
+
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+
+    // Persistir en Supabase
+    setIsReordering(true);
+    try {
+      await Promise.all(
+        items.map((item, idx) =>
+          supabase.from('market_banners').update({ sort_order: idx + 1 }).eq('id', item.id)
+        )
+      );
+      await revalidarCatalogo();
+    } catch (err) {
+      console.error('Error al reordenar banners:', err);
+    } finally {
+      setIsReordering(false);
+    }
+  };
+
   const [editingMarketBannerId, setEditingMarketBannerId] = useState<string | 'new' | null>(null);
   const [marketBannerForm, setMarketBannerForm] = useState({ tag: '', title1: '', title2: '', sub: '', link: '', active: true, showText: true });
   const [marketBannerImageFile, setMarketBannerImageFile] = useState<File | null>(null);
@@ -245,386 +387,579 @@ export default function BannersAdmin() {
       <div className="flex-1 min-w-0 bg-[#f9f9ff] text-[#191b23] flex flex-col">
         <SuperadminSubheader title="Banners de portada" icon="view_carousel" />
         <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 w-full flex-1 flex flex-col gap-6">
-            <div className="space-y-6 animate-fade-in">
-              {/* Banners de los carruseles de portada — no son de una tienda puntual, son del sitio entero */}
-              <div className="bg-white rounded-md border border-[#c2c6d6] overflow-hidden shadow-sm">
-                <div className="p-5 border-b border-[#c2c6d6] flex items-center justify-between">
-                  <div>
-                    <h2 className="text-sm font-bold text-[#191b23]">Banners de Portada</h2>
-                    <p className="text-[11px] text-[#424754] mt-0.5">Los carruseles de /market y del Inicio — son del sitio entero, no de una tienda.</p>
-                  </div>
-                  {bannerPageTab !== 'productos' && (
+          <div className="space-y-6 animate-fade-in">
+            {/* Banners de los carruseles de portada — no son de una tienda puntual, son del sitio entero */}
+            <div className="bg-white rounded-md border border-[#c2c6d6] overflow-hidden shadow-sm">
+              <div className="p-5 border-b border-[#c2c6d6] flex items-center justify-between">
+                <div>
+                  <h2 className="text-sm font-bold text-[#191b23]">Banners de Portada</h2>
+                  <p className="text-[11px] text-[#424754] mt-0.5">Los carruseles de /market y del Inicio — son del sitio entero, no de una tienda.</p>
+                </div>
+                {bannerPageTab !== 'productos' && (
+                  <div className="flex items-center gap-2">
                     <button
+                      type="button"
+                      onClick={() => {
+                        fetchEventosProximos();
+                        setModalEventosAbierto(true);
+                      }}
+                      className="px-3 py-2 bg-emerald-600 text-white rounded-md font-bold text-xs hover:bg-emerald-700 transition-colors flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer"
+                      title="Seleccionar un evento de la agenda de Pucallpa y ponerlo en este carrusel"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">celebration</span>
+                      Vincular Evento
+                    </button>
+                    <button
+                      type="button"
                       onClick={handleOpenNewMarketBanner}
-                      className="px-3 py-2 bg-[#0058be] text-white rounded-md font-bold text-xs hover:bg-[#004395] transition-colors flex items-center gap-1.5 shrink-0"
+                      className="px-3 py-2 bg-[#0058be] text-white rounded-md font-bold text-xs hover:bg-[#004395] transition-colors flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer"
                     >
                       <span className="material-symbols-outlined text-[16px]">add</span>
                       Nuevo Banner
                     </button>
-                  )}
-                </div>
-
-                <div className="px-5 pt-3 flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex gap-1.5 flex-wrap">
-                    {([['market', 'Market'], ['home', 'Inicio'], ['negocios', 'Foto de /negocios'], ['productos', 'Productos (/productos)']] as const).map(([id, label]) => (
-                      <button
-                        key={id}
-                        onClick={() => setBannerPageTab(id)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${
-                          bannerPageTab === id ? 'bg-[#0058be] text-white' : 'bg-[#f2f3fd] text-[#545f73] hover:bg-[#e6e7f2]'
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-
-                  {bannerPageTab !== 'productos' && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold text-[#727785] uppercase tracking-wide">Estilo del carrusel:</span>
-                      <div className="flex gap-1 bg-[#f2f3fd] p-0.5 rounded-full">
-                        {([['center', 'Centrado'], ['bottom', 'Abajo']] as const).map(([id, label]) => (
-                          <button
-                            key={id}
-                            onClick={() => handleSetBannerStyle(id)}
-                            className={`px-3 py-1 rounded-full text-[11px] font-bold transition-colors ${
-                              (bannerStyles[bannerPageTab] || 'center') === id ? 'bg-white text-[#0058be] shadow-sm' : 'text-[#727785] hover:text-[#424754]'
-                            }`}
-                          >
-                            {label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {bannerPageTab !== 'productos' ? (
-                  <p className="px-5 pb-1 text-[10px] text-[#727785] font-semibold">
-                    Afecta a TODOS los banners de {{ market: '/market', home: 'el Inicio', negocios: 'la portada de /negocios (se usa la primera foto activa)' }[bannerPageTab]}, no solo al que estés editando.
-                  </p>
-                ) : (
-                  <div className="px-5 pb-2 pt-1 flex items-center justify-between gap-2 flex-wrap border-b border-[#ecedf7]">
-                    <p className="text-[11px] text-[#424754] font-medium">
-                      Portadas de las tarjetas de <a href="/productos" target="_blank" className="text-[#0058be] underline font-bold">/productos</a>. Sube una imagen (16:9) o pega un enlace para personalizar cada solución.
-                    </p>
-                    {mensajeProducto && (
-                      <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-0.5 rounded-full animate-fade-in">
-                        {mensajeProducto}
-                      </span>
-                    )}
                   </div>
                 )}
+              </div>
 
-                <div className="p-4">
-                  {bannerPageTab === 'productos' ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {PRODUCTOS_MOSTRADOR.map((p) => {
-                        const customUrl = productosBanners[p.slug] || '';
-                        const currentImg = customUrl || portadaDe(p);
-                        const isSaving = guardandoProductoSlug === p.slug;
+              <div className="px-5 pt-3 flex items-center justify-between flex-wrap gap-2">
+                <div className="flex gap-1.5 flex-wrap">
+                  {([['market', 'Market'], ['home', 'Inicio'], ['negocios', 'Foto de /negocios'], ['productos', 'Productos (/productos)']] as const).map(([id, label]) => (
+                    <button
+                      key={id}
+                      onClick={() => setBannerPageTab(id)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${bannerPageTab === id ? 'bg-[#0058be] text-white' : 'bg-[#f2f3fd] text-[#545f73] hover:bg-[#e6e7f2]'
+                        }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
 
-                        return (
-                          <div key={p.slug} className="bg-white rounded-xl border border-[#c2c6d6] overflow-hidden flex flex-col shadow-sm">
-                            <div className="relative aspect-[16/9] bg-[#e6e7f2] overflow-hidden">
-                              {currentImg ? (
-                                <img src={currentImg} alt="" className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-[#727785]">
-                                  <span className="material-symbols-outlined text-[48px] opacity-60">{p.icon}</span>
-                                </div>
-                              )}
-                              <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
-                                <span className="material-symbols-outlined text-[13px]">{p.icon}</span>
-                                {p.para}
-                              </div>
-                              {customUrl ? (
-                                <span className="absolute top-2.5 right-2.5 text-[9px] font-extrabold uppercase bg-emerald-600 text-white px-2 py-0.5 rounded shadow">
-                                  Personalizado
-                                </span>
-                              ) : (
-                                <span className="absolute top-2.5 right-2.5 text-[9px] font-extrabold uppercase bg-black/50 text-white/80 px-2 py-0.5 rounded">
-                                  Por defecto
-                                </span>
-                              )}
-                            </div>
-
-                            <div className="p-4 flex flex-col gap-2.5 flex-1">
-                              <div>
-                                <h4 className="font-bold text-sm text-[#191b23]">{p.titulo}</h4>
-                                <p className="text-[11px] text-[#727785] line-clamp-1">{p.gancho}</p>
-                              </div>
-
-                              <div className="mt-auto pt-2 space-y-2">
-                                <label className="text-[10px] font-extrabold text-[#424754] uppercase tracking-wider block">
-                                  Banner (recomendado 16:9):
-                                </label>
-                                <ImageUploadInput
-                                  value={customUrl}
-                                  onChange={(url) => handleSaveProductoBanner(p.slug, url)}
-                                  placeholder="URL del banner o sube un archivo..."
-                                />
-
-                                <div className="flex items-center justify-between pt-1">
-                                  <a
-                                    href={`/productos/${p.slug}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-[11px] font-bold text-[#0058be] hover:underline flex items-center gap-0.5"
-                                  >
-                                    Ver producto
-                                    <span className="material-symbols-outlined text-[13px]">open_in_new</span>
-                                  </a>
-
-                                  {customUrl && (
-                                    <button
-                                      type="button"
-                                      onClick={() => handleSaveProductoBanner(p.slug, '')}
-                                      disabled={isSaving}
-                                      className="text-[11px] font-semibold text-red-600 hover:text-red-800 disabled:opacity-50"
-                                    >
-                                      Restablecer por defecto
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
+                {bannerPageTab !== 'productos' && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-[#727785] uppercase tracking-wide">Estilo del carrusel:</span>
+                    <div className="flex gap-1 bg-[#f2f3fd] p-0.5 rounded-full">
+                      {([['center', 'Centrado'], ['bottom', 'Abajo']] as const).map(([id, label]) => (
+                        <button
+                          key={id}
+                          onClick={() => handleSetBannerStyle(id)}
+                          className={`px-3 py-1 rounded-full text-[11px] font-bold transition-colors ${(bannerStyles[bannerPageTab] || 'center') === id ? 'bg-white text-[#0058be] shadow-sm' : 'text-[#727785] hover:text-[#424754]'
+                            }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
                     </div>
-                  ) : (
-                    <>
-                      {editingMarketBannerId && (
-                        <form onSubmit={handleSaveMarketBanner} className="mb-4 p-4 bg-[#f2f3fd]/40 rounded-lg border border-[#c2c6d6] space-y-3">
-                          <p className="text-[10px] font-black text-[#424754] uppercase tracking-widest">
-                            {editingMarketBannerId === 'new' ? 'Nuevo banner' : 'Editar banner'}
-                          </p>
-                          <p className="text-[10px] text-[#727785] font-semibold -mt-1.5">
-                            Si tu imagen ya tiene el texto dibujado (un flyer armado en Canva u otra herramienta), deja el tag y los títulos vacíos — si los llenás, la web dibuja ese texto ENCIMA del de tu imagen y se pisan.
-                          </p>
-                          <div className="flex gap-3">
-                            <label className="shrink-0 w-20 h-14 rounded-lg border-2 border-dashed border-[#c2c6d6] flex items-center justify-center cursor-pointer hover:bg-white transition-colors overflow-hidden bg-white">
-                              {marketBannerImagePreview ? (
-                                <img src={marketBannerImagePreview} alt="" className="w-full h-full object-cover" />
-                              ) : (
-                                <span className="material-symbols-outlined text-[#727785] text-[20px]">add_a_photo</span>
-                              )}
-                              <input
-                                type="file" accept="image/*" className="sr-only"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (!file) return;
-                                  setMarketBannerImageFile(file);
-                                  setMarketBannerImagePreview(URL.createObjectURL(file));
-                                }}
-                              />
-                            </label>
-                            <div className="flex-1 grid grid-cols-2 gap-2">
-                              <input
-                                type="text" placeholder="Tag (opcional, ej: Promo Exclusiva)"
-                                value={marketBannerForm.tag}
-                                onChange={(e) => setMarketBannerForm(prev => ({ ...prev, tag: e.target.value }))}
-                                className="col-span-2 bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be]"
-                              />
-                              <input
-                                type="text" placeholder="Título línea 1 (ej: 2X1 EN) — opcional"
-                                value={marketBannerForm.title1}
-                                onChange={(e) => setMarketBannerForm(prev => ({ ...prev, title1: e.target.value }))}
-                                className="bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be]"
-                              />
-                              <input
-                                type="text" placeholder="Título línea 2 (ej: HAMBURGUESAS)"
-                                value={marketBannerForm.title2}
-                                onChange={(e) => setMarketBannerForm(prev => ({ ...prev, title2: e.target.value }))}
-                                className="bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be]"
-                              />
-                            </div>
-                          </div>
-                          <input
-                            type="text" placeholder="Descripción corta (ej: Solo por hoy en locales seleccionados)"
-                            value={marketBannerForm.sub}
-                            onChange={(e) => setMarketBannerForm(prev => ({ ...prev, sub: e.target.value }))}
-                            className="w-full bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-medium text-[#191b23] outline-none focus:border-[#0058be]"
-                          />
-                          <input
-                            type="text" placeholder="Link opcional al tocarlo (ej: /promotions o una url)"
-                            value={marketBannerForm.link}
-                            onChange={(e) => setMarketBannerForm(prev => ({ ...prev, link: e.target.value }))}
-                            className="w-full bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-medium text-[#191b23] outline-none focus:border-[#0058be]"
-                          />
-                          <div className="flex items-center justify-between pt-1">
-                            <div className="flex items-center gap-4">
-                              <label className="flex items-center gap-2 text-[11px] font-bold text-[#424754] cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={marketBannerForm.active}
-                                  onChange={(e) => setMarketBannerForm(prev => ({ ...prev, active: e.target.checked }))}
-                                  className="w-4 h-4 accent-[#0058be]"
-                                />
-                                Visible en {{ market: '/market', home: 'el Inicio', negocios: 'la portada de /negocios (se usa la primera foto activa)' }[bannerPageTab]}
-                              </label>
-                              <label className="flex items-center gap-2 text-[11px] font-bold text-[#424754] cursor-pointer" title="Desmarca esto si tu imagen ya trae el texto dibujado — el tag/título/descripción quedan guardados pero no se dibujan encima.">
-                                <input
-                                  type="checkbox"
-                                  checked={marketBannerForm.showText}
-                                  onChange={(e) => setMarketBannerForm(prev => ({ ...prev, showText: e.target.checked }))}
-                                  className="w-4 h-4 accent-[#0058be]"
-                                />
-                                Mostrar texto encima
-                              </label>
-                            </div>
-                            <div className="flex gap-2">
-                              <button type="button" onClick={() => setEditingMarketBannerId(null)} className="px-3 py-2 rounded-md font-bold text-xs text-[#424754] hover:bg-[#e6e7f2] transition-colors">
-                                Cancelar
-                              </button>
-                              <button type="submit" disabled={isSavingMarketBanner} className="px-4 py-2 bg-[#0058be] text-white rounded-md font-bold text-xs hover:bg-[#004395] transition-colors disabled:opacity-50">
-                                {isSavingMarketBanner ? 'Guardando…' : 'Guardar'}
-                              </button>
-                            </div>
-                          </div>
-                        </form>
-                      )}
+                  </div>
+                )}
+              </div>
 
-                      {isLoadingMarketBanners ? (
-                        <p className="text-xs text-[#727785] italic py-3 text-center">Cargando…</p>
-                      ) : visibleMarketBanners.length === 0 ? (
-                        <p className="text-xs text-[#727785] italic py-3 text-center">
-                          Sin banners cargados para {{ market: '/market', home: 'el Inicio', negocios: 'la portada de /negocios (se usa la primera foto activa)' }[bannerPageTab]} — muestra los de ejemplo por defecto.
-                        </p>
-                      ) : (
-                        <div className="space-y-1.5">
-                          {visibleMarketBanners.map((b, idx) => (
-                            <div key={b.id} className="flex items-center gap-3 p-2 rounded-lg border border-[#ecedf7]">
-                              <img src={b.image} alt="" className="w-16 h-9 rounded-md object-cover shrink-0 bg-[#e6e7f2]" />
-                              <div className="min-w-0 flex-1">
-                                <p className="text-xs font-bold text-[#191b23] truncate">
-                                  {b.title1} {b.title2}
-                                  {!b.active && <span className="ml-2 text-[9px] font-bold text-amber-600 uppercase">Oculto</span>}
-                                </p>
-                                <p className="text-[10px] text-[#727785] truncate">{b.sub}{b.link ? ` · → ${b.link}` : ''}</p>
-                              </div>
-                              <div className="flex items-center gap-0.5 shrink-0">
-                                <button onClick={() => handleMoveMarketBanner(b.id, -1)} disabled={idx === 0} className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] p-1 hover:bg-[#e6e7f2] rounded disabled:opacity-30 disabled:pointer-events-none">arrow_upward</button>
-                                <button onClick={() => handleMoveMarketBanner(b.id, 1)} disabled={idx === visibleMarketBanners.length - 1} className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] p-1 hover:bg-[#e6e7f2] rounded disabled:opacity-30 disabled:pointer-events-none">arrow_downward</button>
-                                <button onClick={() => handleOpenEditMarketBanner(b)} className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] p-1 hover:bg-[#e6e7f2] rounded">edit</button>
-                                <button onClick={() => handleDeleteMarketBanner(b.id)} className="material-symbols-outlined text-[16px] text-[#727785] hover:text-red-600 p-1 hover:bg-red-50 rounded">delete</button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </>
+              {bannerPageTab !== 'productos' ? (
+                <p className="px-5 pb-1 text-[10px] text-[#727785] font-semibold">
+                  Afecta a TODOS los banners de {{ market: '/market', home: 'el Inicio', negocios: 'la portada de /negocios (se usa la primera foto activa)' }[bannerPageTab]}, no solo al que estés editando.
+                </p>
+              ) : (
+                <div className="px-5 pb-2 pt-1 flex items-center justify-between gap-2 flex-wrap border-b border-[#ecedf7]">
+                  <p className="text-[11px] text-[#424754] font-medium">
+                    Portadas de las tarjetas de <a href="/productos" target="_blank" className="text-[#0058be] underline font-bold">/productos</a>. Sube una imagen (16:9) o pega un enlace para personalizar cada solución.
+                  </p>
+                  {mensajeProducto && (
+                    <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-0.5 rounded-full animate-fade-in">
+                      {mensajeProducto}
+                    </span>
                   )}
                 </div>
-              </div>
+              )}
 
-              <div className="border-b border-[#c2c6d6] pb-4">
-                <h2 className="text-xl font-bold text-[#191b23]">Personalización de Tiendas</h2>
-                <p className="text-xs text-[#424754] mt-1">Ajusta la apariencia visual, banners promocionales y contenido demostrativo de cada comercio.</p>
-              </div>
+              <div className="p-4">
+                {bannerPageTab === 'productos' ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {PRODUCTOS_MOSTRADOR.map((p) => {
+                      const customUrl = productosBanners[p.slug] || '';
+                      const currentImg = customUrl || portadaDe(p);
+                      const isSaving = guardandoProductoSlug === p.slug;
 
-              <div className="bg-white rounded-md border border-[#c2c6d6] overflow-hidden divide-y divide-[#ecedf7] shadow-sm">
-                {storeList.map((store) => {
-                  const settings = getSettings(store.slug);
-                  const demoOn = isDemoVisible(store.slug);
-                  return (
-                    <div key={store.slug} className="p-5 flex flex-col lg:flex-row gap-6 lg:items-start justify-between hover:bg-[#f2f3fd]/10 transition-colors">
-                      <div className="min-w-0 lg:w-1/3">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-bold text-xs text-[#191b23]">{store.name}</span>
-                          <span className="text-[9px] font-bold text-[#424754] bg-[#ecedf7] px-2 py-0.5 rounded-full border border-[#c2c6d6]">/{store.slug}</span>
+                      return (
+                        <div key={p.slug} className="bg-white rounded-xl border border-[#c2c6d6] overflow-hidden flex flex-col shadow-sm">
+                          <div className="relative aspect-[16/9] bg-[#e6e7f2] overflow-hidden">
+                            {currentImg ? (
+                              <img src={currentImg} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-[#727785]">
+                                <span className="material-symbols-outlined text-[48px] opacity-60">{p.icon}</span>
+                              </div>
+                            )}
+                            <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
+                              <span className="material-symbols-outlined text-[13px]">{p.icon}</span>
+                              {p.para}
+                            </div>
+                            {customUrl ? (
+                              <span className="absolute top-2.5 right-2.5 text-[9px] font-extrabold uppercase bg-emerald-600 text-white px-2 py-0.5 rounded shadow">
+                                Personalizado
+                              </span>
+                            ) : (
+                              <span className="absolute top-2.5 right-2.5 text-[9px] font-extrabold uppercase bg-black/50 text-white/80 px-2 py-0.5 rounded">
+                                Por defecto
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="p-4 flex flex-col gap-2.5 flex-1">
+                            <div>
+                              <h4 className="font-bold text-sm text-[#191b23]">{p.titulo}</h4>
+                              <p className="text-[11px] text-[#727785] line-clamp-1">{p.gancho}</p>
+                            </div>
+
+                            <div className="mt-auto pt-2 space-y-2">
+                              <label className="text-[10px] font-extrabold text-[#424754] uppercase tracking-wider block">
+                                Banner (recomendado 16:9):
+                              </label>
+                              <ImageUploadInput
+                                value={customUrl}
+                                onChange={(url) => handleSaveProductoBanner(p.slug, url)}
+                                placeholder="URL del banner o sube un archivo..."
+                              />
+
+                              <div className="flex items-center justify-between pt-1">
+                                <a
+                                  href={`/productos/${p.slug}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-[11px] font-bold text-[#0058be] hover:underline flex items-center gap-0.5"
+                                >
+                                  Ver producto
+                                  <span className="material-symbols-outlined text-[13px]">open_in_new</span>
+                                </a>
+
+                                {customUrl && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSaveProductoBanner(p.slug, '')}
+                                    disabled={isSaving}
+                                    className="text-[11px] font-semibold text-red-600 hover:text-red-800 disabled:opacity-50"
+                                  >
+                                    Restablecer por defecto
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <p className="text-[11px] text-[#424754] font-medium leading-relaxed">
-                          Define el comportamiento de visualización del catálogo e imágenes para la tienda en su sitio independiente.
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <>
+                    {editingMarketBannerId && (
+                      <form onSubmit={handleSaveMarketBanner} className="mb-4 p-4 bg-[#f2f3fd]/40 rounded-lg border border-[#c2c6d6] space-y-3">
+                        <p className="text-[10px] font-black text-[#424754] uppercase tracking-widest">
+                          {editingMarketBannerId === 'new' ? 'Nuevo banner' : 'Editar banner'}
                         </p>
+                        <p className="text-[10px] text-[#727785] font-semibold -mt-1.5">
+                          Si tu imagen ya tiene el texto dibujado (un flyer armado en Canva u otra herramienta), deja el tag y los títulos vacíos — si los llenás, la web dibuja ese texto ENCIMA del de tu imagen y se pisan.
+                        </p>
+                        <div className="flex gap-3">
+                          <label className="shrink-0 w-20 h-14 rounded-lg border-2 border-dashed border-[#c2c6d6] flex items-center justify-center cursor-pointer hover:bg-white transition-colors overflow-hidden bg-white">
+                            {marketBannerImagePreview ? (
+                              <img src={marketBannerImagePreview} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="material-symbols-outlined text-[#727785] text-[20px]">add_a_photo</span>
+                            )}
+                            <input
+                              type="file" accept="image/*" className="sr-only"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                setMarketBannerImageFile(file);
+                                setMarketBannerImagePreview(URL.createObjectURL(file));
+                              }}
+                            />
+                          </label>
+                          <div className="flex-1 grid grid-cols-2 gap-2">
+                            <input
+                              type="text" placeholder="Tag (opcional, ej: Promo Exclusiva)"
+                              value={marketBannerForm.tag}
+                              onChange={(e) => setMarketBannerForm(prev => ({ ...prev, tag: e.target.value }))}
+                              className="col-span-2 bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be]"
+                            />
+                            <input
+                              type="text" placeholder="Título línea 1 (ej: 2X1 EN) — opcional"
+                              value={marketBannerForm.title1}
+                              onChange={(e) => setMarketBannerForm(prev => ({ ...prev, title1: e.target.value }))}
+                              className="bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be]"
+                            />
+                            <input
+                              type="text" placeholder="Título línea 2 (ej: HAMBURGUESAS)"
+                              value={marketBannerForm.title2}
+                              onChange={(e) => setMarketBannerForm(prev => ({ ...prev, title2: e.target.value }))}
+                              className="bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be]"
+                            />
+                          </div>
+                        </div>
+                        <input
+                          type="text" placeholder="Descripción corta (ej: Solo por hoy en locales seleccionados)"
+                          value={marketBannerForm.sub}
+                          onChange={(e) => setMarketBannerForm(prev => ({ ...prev, sub: e.target.value }))}
+                          className="w-full bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-medium text-[#191b23] outline-none focus:border-[#0058be]"
+                        />
+                        <input
+                          type="text" placeholder="Link opcional al tocarlo (ej: /promotions o una url)"
+                          value={marketBannerForm.link}
+                          onChange={(e) => setMarketBannerForm(prev => ({ ...prev, link: e.target.value }))}
+                          className="w-full bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-medium text-[#191b23] outline-none focus:border-[#0058be]"
+                        />
+                        <div className="flex items-center justify-between pt-1">
+                          <div className="flex items-center gap-4">
+                            <label className="flex items-center gap-2 text-[11px] font-bold text-[#424754] cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={marketBannerForm.active}
+                                onChange={(e) => setMarketBannerForm(prev => ({ ...prev, active: e.target.checked }))}
+                                className="w-4 h-4 accent-[#0058be]"
+                              />
+                              Visible en {{ market: '/market', home: 'el Inicio', negocios: 'la portada de /negocios (se usa la primera foto activa)' }[bannerPageTab]}
+                            </label>
+                            <label className="flex items-center gap-2 text-[11px] font-bold text-[#424754] cursor-pointer" title="Desmarca esto si tu imagen ya trae el texto dibujado — el tag/título/descripción quedan guardados pero no se dibujan encima.">
+                              <input
+                                type="checkbox"
+                                checked={marketBannerForm.showText}
+                                onChange={(e) => setMarketBannerForm(prev => ({ ...prev, showText: e.target.checked }))}
+                                className="w-4 h-4 accent-[#0058be]"
+                              />
+                              Mostrar texto encima
+                            </label>
+                          </div>
+                          <div className="flex gap-2">
+                            <button type="button" onClick={() => setEditingMarketBannerId(null)} className="px-3 py-2 rounded-md font-bold text-xs text-[#424754] hover:bg-[#e6e7f2] transition-colors">
+                              Cancelar
+                            </button>
+                            <button type="submit" disabled={isSavingMarketBanner} className="px-4 py-2 bg-[#0058be] text-white rounded-md font-bold text-xs hover:bg-[#004395] transition-colors disabled:opacity-50">
+                              {isSavingMarketBanner ? 'Guardando…' : 'Guardar'}
+                            </button>
+                          </div>
+                        </div>
+                      </form>
+                    )}
+
+                    {isLoadingMarketBanners ? (
+                      <p className="text-xs text-[#727785] italic py-3 text-center">Cargando…</p>
+                    ) : visibleMarketBanners.length === 0 ? (
+                      <p className="text-xs text-[#727785] italic py-3 text-center">
+                        Sin banners cargados para {{ market: '/market', home: 'el Inicio', negocios: 'la portada de /negocios (se usa la primera foto activa)' }[bannerPageTab]} — muestra los de ejemplo por defecto.
+                      </p>
+                    ) : (
+                      <div>
+                        <div className="flex items-center justify-between pb-2 text-[11px] text-[#727785] px-1">
+                          <span className="flex items-center gap-1 font-medium">
+                            <span className="material-symbols-outlined text-[15px] text-[#0058be]">drag_indicator</span>
+                            Arrastra las filas para reordenar los banners
+                          </span>
+                          {isReordering && (
+                            <span className="text-emerald-700 font-bold flex items-center gap-1 animate-pulse">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                              Guardando orden…
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="space-y-1.5">
+                          {visibleMarketBanners.map((b, idx) => {
+                            const isDragging = draggedIndex === idx;
+                            const isOver = dragOverIndex === idx;
+                            return (
+                              <div
+                                key={b.id}
+                                draggable
+                                onDragStart={(e) => handleDragStart(e, idx)}
+                                onDragOver={(e) => handleDragOver(e, idx)}
+                                onDragEnd={handleDragEnd}
+                                onDrop={(e) => handleDrop(e, idx)}
+                                className={`flex items-center gap-3 p-2 rounded-lg border transition-all duration-150 select-none ${
+                                  isDragging
+                                    ? 'opacity-40 border-dashed border-[#0058be] bg-[#f2f3fd]/60 scale-[0.99]'
+                                    : isOver
+                                    ? 'border-2 border-[#0058be] bg-[#d8e2ff]/30 shadow-md scale-[1.005]'
+                                    : 'border-[#ecedf7] hover:border-[#c2c6d6] hover:bg-slate-50/70 bg-white'
+                                }`}
+                              >
+                                <div
+                                  className="cursor-grab active:cursor-grabbing p-1 text-[#727785] hover:text-[#0058be] shrink-0 flex items-center justify-center transition-colors"
+                                  title="Arrastra para cambiar el orden"
+                                >
+                                  <span className="material-symbols-outlined text-[20px]">drag_indicator</span>
+                                </div>
+                                <img
+                                  src={b.image}
+                                  alt=""
+                                  className="w-16 h-9 rounded-md object-cover shrink-0 bg-[#e6e7f2] pointer-events-none"
+                                />
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs font-bold text-[#191b23] truncate flex items-center gap-1.5">
+                                    <span>{b.title1} {b.title2}</span>
+                                    {b.tag && (
+                                      <span className="text-[9px] font-bold px-1.5 py-0.2 bg-[#d8e2ff] text-[#0058be] rounded">
+                                        {b.tag}
+                                      </span>
+                                    )}
+                                    {!b.active && (
+                                      <span className="text-[9px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200 uppercase">
+                                        Oculto
+                                      </span>
+                                    )}
+                                  </p>
+                                  <p className="text-[10px] text-[#727785] truncate">{b.sub}{b.link ? ` · → ${b.link}` : ''}</p>
+                                </div>
+                                <div className="flex items-center gap-0.5 shrink-0">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleMoveMarketBanner(b.id, -1)}
+                                    disabled={idx === 0}
+                                    className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] p-1 hover:bg-[#e6e7f2] rounded disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                                    title="Subir"
+                                  >
+                                    arrow_upward
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleMoveMarketBanner(b.id, 1)}
+                                    disabled={idx === visibleMarketBanners.length - 1}
+                                    className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] p-1 hover:bg-[#e6e7f2] rounded disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                                    title="Bajar"
+                                  >
+                                    arrow_downward
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenEditMarketBanner(b)}
+                                    className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] p-1 hover:bg-[#e6e7f2] rounded cursor-pointer"
+                                    title="Editar"
+                                  >
+                                    edit
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteMarketBanner(b.id)}
+                                    className="material-symbols-outlined text-[16px] text-[#727785] hover:text-red-600 p-1 hover:bg-red-50 rounded cursor-pointer"
+                                    title="Eliminar"
+                                  >
+                                    delete
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="border-b border-[#c2c6d6] pb-4">
+              <h2 className="text-xl font-bold text-[#191b23]">Personalización de Tiendas</h2>
+              <p className="text-xs text-[#424754] mt-1">Ajusta la apariencia visual, banners promocionales y contenido demostrativo de cada comercio.</p>
+            </div>
+
+            <div className="bg-white rounded-md border border-[#c2c6d6] overflow-hidden divide-y divide-[#ecedf7] shadow-sm">
+              {storeList.map((store) => {
+                const settings = getSettings(store.slug);
+                const demoOn = isDemoVisible(store.slug);
+                return (
+                  <div key={store.slug} className="p-5 flex flex-col lg:flex-row gap-6 lg:items-start justify-between hover:bg-[#f2f3fd]/10 transition-colors">
+                    <div className="min-w-0 lg:w-1/3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-bold text-xs text-[#191b23]">{store.name}</span>
+                        <span className="text-[9px] font-bold text-[#424754] bg-[#ecedf7] px-2 py-0.5 rounded-full border border-[#c2c6d6]">/{store.slug}</span>
+                      </div>
+                      <p className="text-[11px] text-[#424754] font-medium leading-relaxed">
+                        Define el comportamiento de visualización del catálogo e imágenes para la tienda en su sitio independiente.
+                      </p>
+                    </div>
+
+                    <div className="flex-1 flex flex-col gap-4">
+                      {/* Option toggles */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3 bg-[#f2f3fd]/35 p-4 rounded-md border border-[#c2c6d6]/60">
+                        {[
+                          { label: 'Productos Demo', on: demoOn, toggle: () => toggleDemoProducts(store.slug) },
+                          { label: 'Fotos Productos', on: settings.showProductImages, toggle: () => updateSetting(store.slug, 'showProductImages', !settings.showProductImages) },
+                          { label: 'Splash Inicial', on: settings.showSplash, toggle: () => updateSetting(store.slug, 'showSplash', !settings.showSplash) },
+                          { label: 'Imagen Splash', on: settings.showHeroImage, toggle: () => updateSetting(store.slug, 'showHeroImage', !settings.showHeroImage), disabled: !settings.showSplash },
+                          { label: 'Auto-Banner Cat', on: settings.useCategoryFeaturedImage, toggle: () => updateSetting(store.slug, 'useCategoryFeaturedImage', !settings.useCategoryFeaturedImage) },
+                        ].map(item => (
+                          <div key={item.label} className={`flex items-center justify-between gap-3 ${item.disabled ? 'opacity-40 pointer-events-none' : ''}`}>
+                            <span className="text-[11px] font-bold text-[#424754]">{item.label}</span>
+                            <Toggle on={item.on} onChange={item.toggle} />
+                          </div>
+                        ))}
                       </div>
 
-                      <div className="flex-1 flex flex-col gap-4">
-                        {/* Option toggles */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3 bg-[#f2f3fd]/35 p-4 rounded-md border border-[#c2c6d6]/60">
-                          {[
-                            { label: 'Productos Demo',   on: demoOn,                          toggle: () => toggleDemoProducts(store.slug) },
-                            { label: 'Fotos Productos',  on: settings.showProductImages,       toggle: () => updateSetting(store.slug, 'showProductImages', !settings.showProductImages) },
-                            { label: 'Splash Inicial',    on: settings.showSplash,             toggle: () => updateSetting(store.slug, 'showSplash', !settings.showSplash) },
-                            { label: 'Imagen Splash',    on: settings.showHeroImage,          toggle: () => updateSetting(store.slug, 'showHeroImage', !settings.showHeroImage), disabled: !settings.showSplash },
-                            { label: 'Auto-Banner Cat',  on: settings.useCategoryFeaturedImage, toggle: () => updateSetting(store.slug, 'useCategoryFeaturedImage', !settings.useCategoryFeaturedImage) },
-                          ].map(item => (
-                            <div key={item.label} className={`flex items-center justify-between gap-3 ${item.disabled ? 'opacity-40 pointer-events-none' : ''}`}>
-                              <span className="text-[11px] font-bold text-[#424754]">{item.label}</span>
-                              <Toggle on={item.on} onChange={item.toggle} />
+                      {/* Manual Category Banners */}
+                      {!settings.useCategoryFeaturedImage && (
+                        <div className="bg-[#f2f3fd]/20 rounded-md p-4 border border-[#c2c6d6] space-y-4">
+                          <div className="border-b border-[#c2c6d6] pb-2 flex justify-between items-center">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#424754]">Banners Promocionales por Sección</span>
+                            <span className="text-[9px] font-bold text-[#0058be] bg-[#d8e2ff] px-2 py-0.5 rounded">Manuales</span>
+                          </div>
+
+                          {[{ href: 'all', name: 'Todas las secciones' }, ...store.categories].map(cat => (
+                            <div key={cat.href} className="bg-white rounded-md p-3 border border-[#c2c6d6] space-y-2.5 shadow-sm">
+                              <p className="text-[10px] font-extrabold text-[#0058be] uppercase tracking-wide">{cat.name}</p>
+                              <ImageUploadInput
+                                value={settings.categoryBannerUrls[cat.href] || ''}
+                                onChange={(url) => updateSetting(store.slug, 'categoryBannerUrls', { ...settings.categoryBannerUrls, [cat.href]: url })}
+                                placeholder="Imagen de banner (URL)..."
+                              />
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                <div className="sm:col-span-2">
+                                  <input
+                                    type="text"
+                                    placeholder="Título del banner..."
+                                    value={settings.categoryBannerTitles[cat.href] || ''}
+                                    onChange={(e) => updateSetting(store.slug, 'categoryBannerTitles', { ...settings.categoryBannerTitles, [cat.href]: e.target.value })}
+                                    className="w-full bg-[#f9f9ff] border border-[#c2c6d6] rounded-lg px-2.5 py-1.5 text-xs text-[#191b23] outline-none focus:border-[#0058be] transition-colors"
+                                  />
+                                </div>
+                                <div>
+                                  <input
+                                    type="text"
+                                    placeholder="Precio destacado..."
+                                    value={settings.categoryBannerPrices[cat.href] || ''}
+                                    onChange={(e) => updateSetting(store.slug, 'categoryBannerPrices', { ...settings.categoryBannerPrices, [cat.href]: e.target.value })}
+                                    className="w-full bg-[#f9f9ff] border border-[#c2c6d6] rounded-lg px-2.5 py-1.5 text-xs text-[#191b23] outline-none focus:border-[#0058be] transition-colors"
+                                  />
+                                </div>
+                                <div className="sm:col-span-3">
+                                  <input
+                                    type="text"
+                                    placeholder="Descripción promocional..."
+                                    value={settings.categoryBannerDescs[cat.href] || ''}
+                                    onChange={(e) => updateSetting(store.slug, 'categoryBannerDescs', { ...settings.categoryBannerDescs, [cat.href]: e.target.value })}
+                                    className="w-full bg-[#f9f9ff] border border-[#c2c6d6] rounded-lg px-2.5 py-1.5 text-xs text-[#191b23] outline-none focus:border-[#0058be] transition-colors"
+                                  />
+                                </div>
+                              </div>
                             </div>
                           ))}
                         </div>
+                      )}
 
-                        {/* Manual Category Banners */}
-                        {!settings.useCategoryFeaturedImage && (
-                          <div className="bg-[#f2f3fd]/20 rounded-md p-4 border border-[#c2c6d6] space-y-4">
-                            <div className="border-b border-[#c2c6d6] pb-2 flex justify-between items-center">
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-[#424754]">Banners Promocionales por Sección</span>
-                              <span className="text-[9px] font-bold text-[#0058be] bg-[#d8e2ff] px-2 py-0.5 rounded">Manuales</span>
-                            </div>
-                            
-                            {[{ href: 'all', name: 'Todas las secciones' }, ...store.categories].map(cat => (
-                              <div key={cat.href} className="bg-white rounded-md p-3 border border-[#c2c6d6] space-y-2.5 shadow-sm">
-                                <p className="text-[10px] font-extrabold text-[#0058be] uppercase tracking-wide">{cat.name}</p>
-                                <ImageUploadInput
-                                  value={settings.categoryBannerUrls[cat.href] || ''}
-                                  onChange={(url) => updateSetting(store.slug, 'categoryBannerUrls', { ...settings.categoryBannerUrls, [cat.href]: url })}
-                                  placeholder="Imagen de banner (URL)..."
-                                />
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                  <div className="sm:col-span-2">
-                                    <input
-                                      type="text"
-                                      placeholder="Título del banner..."
-                                      value={settings.categoryBannerTitles[cat.href] || ''}
-                                      onChange={(e) => updateSetting(store.slug, 'categoryBannerTitles', { ...settings.categoryBannerTitles, [cat.href]: e.target.value })}
-                                      className="w-full bg-[#f9f9ff] border border-[#c2c6d6] rounded-lg px-2.5 py-1.5 text-xs text-[#191b23] outline-none focus:border-[#0058be] transition-colors"
-                                    />
-                                  </div>
-                                  <div>
-                                    <input
-                                      type="text"
-                                      placeholder="Precio destacado..."
-                                      value={settings.categoryBannerPrices[cat.href] || ''}
-                                      onChange={(e) => updateSetting(store.slug, 'categoryBannerPrices', { ...settings.categoryBannerPrices, [cat.href]: e.target.value })}
-                                      className="w-full bg-[#f9f9ff] border border-[#c2c6d6] rounded-lg px-2.5 py-1.5 text-xs text-[#191b23] outline-none focus:border-[#0058be] transition-colors"
-                                    />
-                                  </div>
-                                  <div className="sm:col-span-3">
-                                    <input
-                                      type="text"
-                                      placeholder="Descripción promocional..."
-                                      value={settings.categoryBannerDescs[cat.href] || ''}
-                                      onChange={(e) => updateSetting(store.slug, 'categoryBannerDescs', { ...settings.categoryBannerDescs, [cat.href]: e.target.value })}
-                                      className="w-full bg-[#f9f9ff] border border-[#c2c6d6] rounded-lg px-2.5 py-1.5 text-xs text-[#191b23] outline-none focus:border-[#0058be] transition-colors"
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Splash hero URL */}
-                        <div className={`transition-opacity ${(!settings.showSplash || !settings.showHeroImage) ? 'opacity-30 pointer-events-none' : ''}`}>
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-[#424754] mb-1.5 block">Imagen Splash de Bienvenida</label>
-                          <ImageUploadInput
-                            value={settings.customHeroUrl}
-                            onChange={(url) => updateSetting(store.slug, 'customHeroUrl', url)}
-                            placeholder="Predeterminada del sistema (dejar en blanco)..."
-                          />
-                        </div>
+                      {/* Splash hero URL */}
+                      <div className={`transition-opacity ${(!settings.showSplash || !settings.showHeroImage) ? 'opacity-30 pointer-events-none' : ''}`}>
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-[#424754] mb-1.5 block">Imagen Splash de Bienvenida</label>
+                        <ImageUploadInput
+                          value={settings.customHeroUrl}
+                          onChange={(url) => updateSetting(store.slug, 'customHeroUrl', url)}
+                          placeholder="Predeterminada del sistema (dejar en blanco)..."
+                        />
                       </div>
-
                     </div>
-                  );
-                })}
-              </div>
+
+                  </div>
+                );
+              })}
             </div>
+          </div>
         </main>
       </div>
+
+      {/* Modal para Vincular Próximos Eventos como Banner */}
+      {modalEventosAbierto && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[85vh] flex flex-col overflow-hidden border border-[#c2c6d6]">
+            <div className="p-4 border-b border-[#c2c6d6] flex items-center justify-between bg-[#f8fafc]">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-emerald-600 text-xl">celebration</span>
+                <div>
+                  <h3 className="font-bold text-sm text-[#191b23]">Vincular Evento a Portada ({bannerPageTab === 'home' ? 'Inicio' : bannerPageTab})</h3>
+                  <p className="text-[11px] text-[#727785]">Selecciona un evento próximo de la agenda para mostrarlo como banner</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setModalEventosAbierto(false)}
+                className="w-8 h-8 rounded-full hover:bg-slate-200 flex items-center justify-center text-[#727785] cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
+
+            <div className="p-4 overflow-y-auto space-y-2 flex-1">
+              {cargandoEventos ? (
+                <div className="py-8 text-center text-xs text-[#727785] flex flex-col items-center gap-2">
+                  <div className="w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span>Cargando agenda de eventos…</span>
+                </div>
+              ) : eventosDisponibles.length === 0 ? (
+                <div className="py-8 text-center text-xs text-[#727785]">
+                  <p>No hay eventos activos programados actualmente en /eventos.</p>
+                </div>
+              ) : (
+                eventosDisponibles.map((ev) => (
+                  <div
+                    key={ev.id}
+                    className="p-3 rounded-lg border border-[#ecedf7] hover:border-emerald-500 hover:bg-emerald-50/20 transition-all flex items-center gap-3 bg-white"
+                  >
+                    <img
+                      src={ev.img || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80'}
+                      alt=""
+                      className="w-16 h-12 rounded object-cover shrink-0 bg-slate-100 border border-slate-200"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                          {ev.dia || ''} {ev.mes || ''}
+                        </span>
+                        {ev.categoria && (
+                          <span className="text-[9px] font-semibold text-[#727785]">
+                            · {ev.categoria}
+                          </span>
+                        )}
+                      </div>
+                      <h4 className="text-xs font-bold text-[#191b23] truncate mt-0.5">
+                        {ev.titulo}
+                      </h4>
+                      <p className="text-[10px] text-[#727785] truncate">
+                        {ev.lugar ? `📍 ${ev.lugar}` : 'Pucallpa'} {ev.precio ? `· ${ev.precio}` : ''}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleVincularEvento(ev, 'editar')}
+                        className="px-2.5 py-1.5 rounded border border-[#c2c6d6] hover:bg-slate-100 text-[11px] font-bold text-[#424754] transition cursor-pointer"
+                        title="Personalizar texto o foto antes de publicar"
+                      >
+                        Ajustar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleVincularEvento(ev, 'directo')}
+                        className="px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition shadow-xs cursor-pointer flex items-center gap-1"
+                      >
+                        <span className="material-symbols-outlined text-[14px]">add</span>
+                        Publicar
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="p-3 bg-slate-50 border-t border-[#c2c6d6] flex items-center justify-between text-xs">
+              <span className="text-[11px] text-[#727785]">Los eventos se publican en el carrusel de <b>{bannerPageTab === 'home' ? 'Inicio' : bannerPageTab}</b></span>
+              <button
+                type="button"
+                onClick={() => setModalEventosAbierto(false)}
+                className="px-3 py-1.5 border border-[#c2c6d6] rounded-md text-[#424754] hover:bg-slate-100 font-bold cursor-pointer"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
