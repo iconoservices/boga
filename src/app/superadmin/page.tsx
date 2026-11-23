@@ -1586,36 +1586,50 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
               {/* Métricas + buscador en una sola fila */}
               <div className="flex flex-col lg:flex-row lg:items-stretch gap-3">
                 <div className="grid grid-cols-3 gap-2 lg:flex lg:gap-3 lg:shrink-0">
-                  {([
-                    ['Total', storeList.length, 'store', 'bg-[#d5e0f8]/40 text-[#0058be]', false],
-                    ['Activas', activeCount, 'check_circle', 'bg-emerald-50 text-emerald-700', true],
-                    ['En pausa', pausedCount, 'pause_circle', 'bg-red-50 text-red-700', false],
-                  ] as const).map(([label, valor, icono, color, relleno]) => (
-                    <div key={label} className="bg-white border border-[#c2c6d6] px-3 py-2.5 rounded-md flex items-center gap-2.5 lg:min-w-[132px] hover:border-[#0058be] transition-colors">
-                      <div className={`hidden sm:flex w-8 h-8 rounded-full items-center justify-center shrink-0 ${color}`}>
-                        <span className="material-symbols-outlined text-[16px]" style={relleno ? { fontVariationSettings: "'FILL' 1" } : {}}>{icono}</span>
-                      </div>
-                      <div className="min-w-0">
-                        <span className="block text-[10px] font-bold text-[#424754] uppercase tracking-wider leading-tight">{label}</span>
-                        <span className="block text-xl font-bold text-[#191b23] leading-tight">{valor}</span>
-                      </div>
+                  <div className="bg-white border border-slate-200/90 shadow-2xs px-3.5 py-2.5 rounded-xl flex items-center gap-3 lg:min-w-[135px] hover:border-blue-400 transition-colors">
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#0058be] flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[18px]">store</span>
                     </div>
-                  ))}
+                    <div>
+                      <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-tight">Total</span>
+                      <span className="block text-lg font-black text-slate-900 leading-tight">{storeList.length}</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white border border-slate-200/90 shadow-2xs px-3.5 py-2.5 rounded-xl flex items-center gap-3 lg:min-w-[135px] hover:border-emerald-400 transition-colors">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                    </div>
+                    <div>
+                      <span className="block text-[10px] font-bold text-emerald-800 uppercase tracking-wider leading-tight">Activas</span>
+                      <span className="block text-lg font-black text-emerald-700 leading-tight">{activeCount}</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-50/80 border border-slate-200/90 shadow-2xs px-3.5 py-2.5 rounded-xl flex items-center gap-3 lg:min-w-[135px] hover:border-slate-300 transition-colors">
+                    <div className="w-8 h-8 rounded-lg bg-slate-200/70 text-slate-600 flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[18px]">pause_circle</span>
+                    </div>
+                    <div>
+                      <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-tight">En pausa</span>
+                      <span className="block text-lg font-black text-slate-600 leading-tight">{pausedCount}</span>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex-1 min-w-0 bg-white border border-[#c2c6d6] rounded-md px-4 py-2.5 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#424754] text-[18px]">search</span>
+                <div className="flex-1 min-w-0 bg-white border border-slate-200 shadow-2xs rounded-xl px-3.5 py-2 flex items-center gap-2.5 focus-within:border-[#0058be] focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                  <span className="material-symbols-outlined text-slate-400 text-[18px]">search</span>
                   <input
                     placeholder="Buscar tienda por nombre o id..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="flex-1 min-w-0 bg-transparent border-none outline-none text-xs font-semibold text-[#191b23] placeholder-[#c2c6d6]"
+                    className="flex-1 min-w-0 bg-transparent border-none outline-none text-xs font-semibold text-slate-900 placeholder-slate-400"
                   />
                   <select
                     value={orden}
                     onChange={(e) => setOrden(e.target.value as 'recientes' | 'antiguas' | 'az')}
                     aria-label="Ordenar tiendas"
-                    className="shrink-0 bg-[#f2f3fd] border border-[#c2c6d6] rounded-md px-2 py-1 text-[11px] font-bold text-[#191b23] outline-none cursor-pointer"
+                    className="shrink-0 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-[11px] font-bold text-slate-700 outline-none cursor-pointer hover:bg-slate-100 transition-colors"
                   >
                     <option value="recientes">Más nuevas primero</option>
                     <option value="antiguas">Más antiguas primero</option>
@@ -1625,13 +1639,17 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
               </div>
 
               {/* Stores Data Table */}
-              <div className="bg-white border border-[#c2c6d6] rounded-md overflow-hidden shadow-sm">
-                <div className="px-5 py-3 border-b border-[#c2c6d6] flex justify-between items-center bg-[#f2f3fd]">
-                  <span className="text-xs font-bold text-[#191b23] uppercase tracking-wider">Directorio de Comercios</span>
+              <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                <div className="px-5 py-3.5 border-b border-slate-200 flex justify-between items-center bg-slate-50/70">
                   <div className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#0058be] inline-block" />
-                    <span className="text-[9px] text-[#424754] font-bold uppercase tracking-wider">
-                      Modo Administrativo
+                    <span className="material-symbols-outlined text-[18px] text-[#0058be]">storefront</span>
+                    <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">Directorio de Comercios</span>
+                    <span className="text-[10px] font-bold text-slate-500 bg-slate-200/80 px-2 py-0.5 rounded-full">{filtered.length}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                      Panel Superadmin
                     </span>
                   </div>
                 </div>
@@ -1639,11 +1657,11 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse block md:table">
                     <thead className="hidden md:table-header-group">
-                      <tr className="bg-white border-b border-[#ecedf7]">
-                        <th className="px-5 py-3 text-[10px] font-bold text-[#424754] uppercase tracking-wider">Tienda</th>
-                        <th className="px-5 py-3 text-[10px] font-bold text-[#424754] uppercase tracking-wider">Plan y cobro</th>
-                        <th className="px-5 py-3 text-[10px] font-bold text-[#424754] uppercase tracking-wider">Estado</th>
-                        <th className="px-5 py-3 text-[10px] font-bold text-[#424754] uppercase tracking-wider text-right">Acciones</th>
+                      <tr className="bg-slate-50/40 border-b border-slate-200/80">
+                        <th className="px-5 py-3 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Tienda</th>
+                        <th className="px-5 py-3 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Plan y cobro</th>
+                        <th className="px-5 py-3 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Estado</th>
+                        <th className="px-5 py-3 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider text-right">Acciones</th>
                       </tr>
                     </thead>
                     <tbody className="block md:table-row-group divide-y divide-[#ecedf7]">
@@ -1679,45 +1697,56 @@ function SuperadminDashboard({ onSignOut }: { onSignOut: () => void }) {
                         return (
                           <tr
                             key={store.slug}
-                            className={`flex flex-col gap-2 p-4 md:p-0 md:table-row transition-colors ${
+                            className={`flex flex-col gap-2 p-4 md:p-0 md:table-row transition-all duration-150 ${
                               !storeOn
-                                ? 'bg-slate-100/70 text-[#727785] opacity-65 hover:bg-slate-200/50'
-                                : isIncomplete
-                                ? 'bg-amber-50/40 hover:bg-[#f2f3fd]/40'
-                                : 'hover:bg-[#f2f3fd]/40'
+                                ? 'bg-slate-100/60 text-slate-400 opacity-60 hover:opacity-90 hover:bg-slate-100'
+                                : 'bg-white hover:bg-slate-50/80'
                             }`}
                           >
-                            <td className="block md:table-cell md:px-5 md:py-3">
+                            <td className="block md:table-cell md:px-5 md:py-3.5">
                               <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0 border border-[#c2c6d6]/60 ${!storeOn ? 'bg-slate-200/80 grayscale' : 'bg-[#f9f9ff]'}`}>
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 border transition-all ${
+                                  !storeOn
+                                    ? 'bg-slate-200/80 border-slate-300 grayscale text-slate-400'
+                                    : 'bg-slate-50 border-slate-200 shadow-2xs'
+                                }`}>
                                   {meta.emoji}
                                 </div>
-                                <div>
-                                  <div className="flex items-center gap-1.5">
-                                    <p className={`font-bold text-xs ${!storeOn ? 'text-[#727785]' : 'text-[#191b23]'}`}>{store.name}</p>
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <p className={`font-bold text-xs truncate ${!storeOn ? 'text-slate-500 line-through decoration-slate-300' : 'text-slate-900'}`}>
+                                      {store.name}
+                                    </p>
                                     {sinWhatsapp && (
-                                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 text-[8px] font-bold uppercase tracking-wide border border-red-200" title="Esta tienda no tiene número de WhatsApp: los pedidos no le llegan al dueño">
-                                        <span className="material-symbols-outlined text-[10px]">chat_error</span>
+                                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-red-50 text-red-700 text-[9px] font-bold border border-red-200" title="Esta tienda no tiene número de WhatsApp: los pedidos no le llegan al dueño">
+                                        <span className="material-symbols-outlined text-[11px]">chat_error</span>
                                         Sin WhatsApp
                                       </span>
                                     )}
                                     {isIncomplete && (
                                       <button
+                                        type="button"
                                         onClick={(e) => { e.stopPropagation(); setDiagnosticStore(store); setShowDiagnosticModal(true); }}
-                                        className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[8px] font-bold uppercase tracking-wide border border-amber-200 hover:bg-amber-200 transition-colors cursor-pointer"
+                                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 hover:bg-amber-100 hover:text-amber-800 text-[9px] font-bold border border-slate-200 transition-colors cursor-pointer"
+                                        title="Ver detalles o campos sugeridos para esta tienda"
                                       >
-                                        <span className="material-symbols-outlined text-[10px]">warning</span>
-                                        Incompleta
+                                        <span className="material-symbols-outlined text-[11px] text-amber-500">info</span>
+                                        <span>Detalles</span>
                                       </button>
                                     )}
                                   </div>
-                                  <p className="text-[10px] text-[#727785] font-semibold tracking-wide flex flex-wrap items-center gap-x-1.5">
-                                    <span>/{store.slug}</span>
-                                    <span aria-hidden>·</span>
+                                  <p className="text-[11px] text-slate-500 font-medium tracking-wide flex flex-wrap items-center gap-x-1.5 mt-0.5">
+                                    <span className="font-mono text-[10px] text-slate-600">/{store.slug}</span>
+                                    <span aria-hidden className="text-slate-300">·</span>
                                     {store.marketplaceCategory && store.marketplaceCategory !== 'General'
-                                      ? <span>{store.marketplaceCategory}</span>
-                                      : <span className="text-amber-600 italic">Sin categoría</span>}
-                                    {details.location && details.location !== '—' && (<><span aria-hidden>·</span><span>{details.location}</span></>)}
+                                      ? <span className="text-slate-600 font-semibold">{store.marketplaceCategory}</span>
+                                      : <span className="text-slate-400 italic">Sin categoría</span>}
+                                    {details.location && details.location !== '—' && (
+                                      <>
+                                        <span aria-hidden className="text-slate-300">·</span>
+                                        <span className="text-slate-400">{details.location}</span>
+                                      </>
+                                    )}
                                   </p>
                                 </div>
                               </div>
