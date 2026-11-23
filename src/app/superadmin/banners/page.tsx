@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { uploadFile } from '@/lib/uploadClient';
 import { useEsSuperadmin } from '@/lib/superadmin';
+import SuperadminSidebarNav from '@/components/superadmin/SuperadminSidebarNav';
 import SuperadminSubheader from '@/components/SuperadminSubheader';
 import Toggle from '@/components/superadmin/Toggle';
 import ImageUploadInput from '@/components/superadmin/ImageUploadInput';
@@ -238,9 +239,12 @@ export default function BannersAdmin() {
   if (!esSuperadmin) return null;
 
   return (
-    <div className="min-h-screen bg-[#f9f9ff]">
-      <SuperadminSubheader title="Banners de portada" icon="view_carousel" />
-      <main className="max-w-[900px] mx-auto px-4 py-8">
+    <div className="min-h-screen bg-[#f9f9ff] flex">
+      <SuperadminSidebarNav />
+
+      <div className="flex-1 min-w-0 bg-[#f9f9ff] text-[#191b23] flex flex-col">
+        <SuperadminSubheader title="Banners de portada" icon="view_carousel" />
+        <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 w-full flex-1 flex flex-col gap-6">
             <div className="space-y-6 animate-fade-in">
               {/* Banners de los carruseles de portada — no son de una tienda puntual, son del sitio entero */}
               <div className="bg-white rounded-md border border-[#c2c6d6] overflow-hidden shadow-sm">
@@ -619,7 +623,8 @@ export default function BannersAdmin() {
                 })}
               </div>
             </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }
