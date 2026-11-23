@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
 import { useCart } from '@/context/CartContext';
 import { fetchEventos } from '@/lib/eventos';
@@ -50,12 +51,6 @@ type Evento = {
 
 export default function Eventos() {
   const { cartCount, setIsCartOpen } = useCart();
-  const [cat, setCat] = useState<Cat | null>(null);
-  // Al elegir una categoría, la lista filtrada queda mucho más abajo de los íconos: se baja sola hasta ella
-  // para que se vea el resultado (antes parecía que el botón no hacía nada).
-  const irALaLista = () => {
-    setTimeout(() => document.getElementById('agenda-lista')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
-  };
   const [slide, setSlide] = useState(0);
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [lugares, setLugares] = useState<Lugar[]>([]);
@@ -82,8 +77,6 @@ export default function Eventos() {
     const id = setInterval(next, 5000);
     return () => clearInterval(id);
   }, [next, carrusel.length]);
-
-  const lista = cat ? eventos.filter((e) => e.cat === cat) : eventos;
 
   return (
     <>
@@ -254,46 +247,39 @@ export default function Eventos() {
           {/* Categorías */}
           <section className="flex flex-col gap-2">
             <div className="flex gap-4 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-1 lg:grid lg:grid-cols-5 lg:gap-x-2 lg:gap-y-3.5 lg:overflow-visible" style={{ scrollbarWidth: 'none' }}>
-              <button
-                onClick={() => { setCat(null); irALaLista(); }}
+              <Link
+                href="/eventos/agenda"
                 className="flex flex-col items-center gap-1.5 shrink-0 w-[68px] lg:w-auto group"
               >
-                <span className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
-                  cat === null ? 'bg-primary text-white shadow-xs' : 'bg-surface-container-low text-primary group-hover:bg-primary-fixed'
-                }`}>
+                <span className="w-14 h-14 rounded-full flex items-center justify-center transition-all bg-surface-container-low text-primary group-hover:bg-primary-fixed group-hover:scale-105 shadow-xs">
                   <span className="material-symbols-outlined text-[24px]">apps</span>
                 </span>
-                <span className="font-label-md text-[10px] text-center leading-tight text-secondary">Todos</span>
-              </button>
-              {CATEGORIAS.map((c) => {
-                const active = cat === c.cat;
-                return (
-                  <button
-                    key={c.cat}
-                    onClick={() => { setCat(active ? null : c.cat); irALaLista(); }}
-                    className="flex flex-col items-center gap-1.5 shrink-0 w-[68px] lg:w-auto group"
-                  >
-                    <span className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
-                      active ? 'bg-primary text-white shadow-xs' : 'bg-surface-container-low text-primary group-hover:bg-primary-fixed'
-                    }`}>
-                      <span className="material-symbols-outlined text-[24px]">{c.icon}</span>
-                    </span>
-                    <span className="font-label-md text-[10px] text-center leading-tight text-secondary">{c.cat}</span>
-                  </button>
-                );
-              })}
+                <span className="font-label-md text-[10px] text-center leading-tight text-secondary group-hover:text-primary">Todos</span>
+              </Link>
+              {CATEGORIAS.map((c) => (
+                <Link
+                  key={c.cat}
+                  href={`/eventos/agenda?cat=${encodeURIComponent(c.cat)}`}
+                  className="flex flex-col items-center gap-1.5 shrink-0 w-[68px] lg:w-auto group"
+                >
+                  <span className="w-14 h-14 rounded-full flex items-center justify-center transition-all bg-surface-container-low text-primary group-hover:bg-primary-fixed group-hover:scale-105 shadow-xs">
+                    <span className="material-symbols-outlined text-[24px]">{c.icon}</span>
+                  </span>
+                  <span className="font-label-md text-[10px] text-center leading-tight text-secondary group-hover:text-primary">{c.cat}</span>
+                </Link>
+              ))}
             </div>
           </section>
         </div>
 
         </div>
 
-        {/* Lugares para visitar */}
+        {/* Lugares para ir cualquier día (Gratis) */}
         <section className="flex flex-col gap-3">
           <div className="flex items-end justify-between">
             <div>
-              <h2 className="font-headline-lg text-on-surface">Lugares para visitar 🌴</h2>
-              <p className="text-secondary font-body-md text-xs mt-0.5">Sitios turísticos para conocer cualquier día del año</p>
+              <h2 className="font-headline-lg text-on-surface">Lugares para ir cualquier día (Gratis) 🌴</h2>
+              <p className="text-secondary font-body-md text-xs mt-0.5">Sitios turísticos y paseos de acceso libre para conocer cualquier día del año</p>
             </div>
           </div>
           <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x scroll-pl-container-margin lg:scroll-pl-0" style={{ scrollbarWidth: 'none' }}>
@@ -319,7 +305,19 @@ export default function Eventos() {
 
         {/* Planes imperdibles — carrusel de eventos */}
         <section className="flex flex-col gap-3">
-          <h2 className="font-headline-lg text-on-surface">Planes imperdibles</h2>
+          <div className="flex items-end justify-between">
+            <div>
+              <h2 className="font-headline-lg text-on-surface">Planes imperdibles 🔥</h2>
+              <p className="text-secondary font-body-md text-xs mt-0.5">Los eventos destacados y recomendados de la ciudad</p>
+            </div>
+            <Link
+              href="/eventos/agenda"
+              className="text-primary font-bold text-xs hover:underline flex items-center gap-0.5 shrink-0"
+            >
+              <span>Ver toda la agenda</span>
+              <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
+            </Link>
+          </div>
           <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x scroll-pl-container-margin lg:scroll-pl-0" style={{ scrollbarWidth: 'none' }}>
             {eventos.map((e) => (
               <div key={e.id} onClick={() => setEventoAbierto(e)} className="min-w-[180px] w-[180px] lg:min-w-[210px] lg:w-[210px] bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest snap-start flex flex-col cursor-pointer active:scale-[0.98] transition-transform">
@@ -361,9 +359,12 @@ export default function Eventos() {
             <div>
               <h2 className="font-headline-lg font-extrabold text-2xl lg:text-3xl leading-tight">Fiestas de la Selva</h2>
               <p className="text-white/75 font-body-md text-sm mt-2">Cumbia, aniversarios y ferias. La agenda que llena el malecón.</p>
-              <button className="mt-4 bg-white text-on-surface font-label-md text-[12px] px-4 py-2 rounded-full active:scale-95 transition-transform">
+              <Link
+                href="/eventos/agenda?cat=Fiestas"
+                className="mt-4 bg-white text-on-surface font-label-md text-[12px] px-4 py-2 rounded-full active:scale-95 transition-transform inline-block w-fit"
+              >
                 Ver todas las fiestas
-              </button>
+              </Link>
             </div>
             <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1 snap-x" style={{ scrollbarWidth: 'none' }}>
               {eventos.filter((e) => ['Conciertos', 'Fiestas', 'Ferias'].includes(e.cat)).map((e) => (
@@ -382,60 +383,25 @@ export default function Eventos() {
           </div>
         </section>
 
-        {/* Toda la agenda */}
-        <section id="agenda-lista" className="flex flex-col gap-4 scroll-mt-32">
-          <h2 className="font-headline-lg text-on-surface">{cat ? cat : 'Toda la agenda'}</h2>
-          {lista.length === 0 ? (
-            <p className="text-secondary font-body-md text-sm py-8">No hay eventos en esta categoría por ahora.</p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {lista.map((e) => (
-                <article
-                  key={e.id}
-                  onClick={() => setEventoAbierto(e)}
-                  className="bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest flex flex-col cursor-pointer active:scale-[0.98] transition-transform"
-                >
-                  <div className="relative h-36 overflow-hidden bg-surface-container-low">
-                    <Foto src={e.img} alt={`Foto de ${e.titulo}`} className="w-full h-full object-cover" />
-                    <div className="absolute top-2 left-2 bg-white rounded-lg px-2 py-1 text-center shadow-sm">
-                      <span className="block font-price-lg text-primary text-sm leading-none">{e.dia}</span>
-                      <span className="block font-label-md text-[9px] text-secondary uppercase">{e.mes}</span>
-                    </div>
-                    <span className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-label-md px-2 py-0.5 rounded-full uppercase tracking-wider">{e.cat}</span>
-                  </div>
-                  <div className="p-3 flex flex-col gap-1 flex-1">
-                    <h3 className="font-headline-sm text-sm text-on-surface line-clamp-1">{e.titulo}</h3>
-                    <span className="text-secondary font-label-md text-[11px] flex items-center gap-1 line-clamp-1">
-                      <span className="material-symbols-outlined text-[13px]">location_on</span>{e.lugar}
-                    </span>
-                    <span className="text-secondary/70 font-label-md text-[10px] uppercase tracking-wider">Organiza · {e.organiza}</span>
-                    <div className="flex items-center justify-between border-t border-surface-container pt-2.5 mt-2">
-                      <span className="font-price-lg text-primary text-sm">{e.precio}</span>
-                      <div className="flex items-center gap-2">
-                        {e.linkEntradas && <span className="bg-primary-fixed text-primary text-[10px] font-label-md px-2 py-0.5 rounded-full flex items-center gap-1"><span className="material-symbols-outlined text-[12px]">confirmation_number</span>Entradas online</span>}
-                        {e.linkPostOriginal && (
-                          <a
-                            href={e.linkPostOriginal}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(ev) => ev.stopPropagation()}
-                            className="bg-[#f2f3fd] hover:bg-[#e6e7f2] text-[#0058be] text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 transition-colors border border-blue-200"
-                            title="Ver publicación o post original"
-                          >
-                            <span className="material-symbols-outlined text-[12px]">open_in_new</span>Post original
-                          </a>
-                        )}
-                        <span className="text-primary font-label-md text-[11px] flex items-center gap-1">Más info<span className="material-symbols-outlined text-[13px]">arrow_forward</span></span>
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
+        {/* Banner CTA a Toda la agenda */}
+        <section className="bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 rounded-2xl p-6 sm:p-8 text-white flex flex-col sm:flex-row items-center justify-between gap-5 shadow-lg">
+          <div className="flex flex-col gap-1 text-center sm:text-left">
+            <span className="text-[11px] uppercase font-extrabold tracking-wider text-white/80">Cartelera completa</span>
+            <h3 className="font-headline-lg font-extrabold text-xl sm:text-2xl leading-tight">¿Buscas más eventos y actividades?</h3>
+            <p className="text-white/90 text-xs sm:text-sm max-w-xl">
+              Descubre conciertos, festivales, ferias, deportes y cultura en Pucallpa y Yarinacocha en un solo lugar.
+            </p>
+          </div>
+          <Link
+            href="/eventos/agenda"
+            className="bg-white text-primary hover:bg-white/95 font-black text-xs sm:text-sm px-6 py-3 rounded-full shadow-lg active:scale-95 transition-transform shrink-0 flex items-center gap-1.5"
+          >
+            <span>Ver toda la agenda</span>
+            <span className="material-symbols-outlined text-base">arrow_forward</span>
+          </Link>
         </section>
 
-        <p className="text-secondary/70 font-body-md text-[11px] text-center pt-2">
+        <p className="text-secondary/70 font-body-md text-[11px] text-center pt-1">
           ¿Organizas un evento en Pucallpa? Publícalo en BogaHub y llega a miles de personas. Escríbenos por WhatsApp.
         </p>
       </main>
