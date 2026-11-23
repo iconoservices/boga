@@ -518,7 +518,7 @@ function ExploreContenido() {
                         {p.original && <span className="text-secondary text-[11px] line-through">{p.original}</span>}
                       </div>
                       <div className="flex items-center justify-between pt-2 mt-auto">
-                        <span className={`font-price-lg text-primary text-base font-bold ${p.status === 'Agotado' ? 'text-secondary/50' : ''}`}>{p.price}</span>
+                        <span className={`font-price-lg ${p.original ? 'text-red-600' : 'text-slate-900'} text-base font-bold ${p.status === 'Agotado' ? 'text-secondary/50' : ''}`}>{p.price}</span>
                         <button
                           type="button"
                           onClick={(e) => {
@@ -760,7 +760,7 @@ function ExploreContenido() {
                             <img src={p.img} className="w-full h-full object-cover" alt={p.name} />
                           </div>
                           <span className="font-label-md text-[9px] text-secondary uppercase leading-tight line-clamp-1 mt-0.5">{p.name}</span>
-                          <span className="font-price-lg text-primary text-xs">{p.price}{p.original && <span className="ml-1 text-[9px] font-normal text-secondary line-through">{p.original}</span>}</span>
+                          <span className={`font-price-lg ${p.original ? 'text-red-600' : 'text-slate-900'} font-bold text-xs`}>{p.price}{p.original && <span className="ml-1 text-[9px] font-normal text-secondary line-through">{p.original}</span>}</span>
                         </div>
                       ))}
                     </div>
@@ -835,7 +835,7 @@ function ExploreContenido() {
                           <h4 className={`font-headline-sm text-sm line-clamp-1 ${p.status === 'Agotado' ? 'text-secondary/50' : 'text-on-surface'}`}>{p.name}</h4>
                         </div>
                         <div className="flex items-center mt-2">
-                          <span className={`font-price-lg text-primary text-sm ${p.status === 'Agotado' ? 'text-secondary/50' : ''}`}>{p.price}{p.original && <span className="ml-1.5 text-[11px] font-normal text-secondary line-through">{p.original}</span>}</span>
+                          <span className={`font-price-lg ${p.original ? 'text-red-600' : 'text-slate-900'} font-bold text-sm ${p.status === 'Agotado' ? 'text-secondary/50' : ''}`}>{p.price}{p.original && <span className="ml-1.5 text-[11px] font-normal text-secondary line-through">{p.original}</span>}</span>
                         </div>
                       </div>
                     </Link>
@@ -956,7 +956,7 @@ function ExploreContenido() {
                       {(p as any).original && <span className="text-secondary text-[11px] line-through">{(p as any).original}</span>}
                     </div>
                     <div className="flex items-center pt-2 mt-auto">
-                      <span className={`font-price-lg text-primary text-base ${p.status === 'Agotado' ? 'text-secondary/50' : ''}`}>{p.price}</span>
+                      <span className={`font-price-lg ${(p as any).original ? 'text-red-600' : 'text-slate-900'} font-bold text-base ${p.status === 'Agotado' ? 'text-secondary/50' : ''}`}>{p.price}</span>
                     </div>
                   </div>
                 </Link>

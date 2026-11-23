@@ -507,7 +507,7 @@ export default function Home() {
                                   <img loading="lazy" decoding="async" src={sp.img} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={sp.name} />
                                 </div>
                                 <h4 className="text-[10px] font-label-md text-secondary uppercase leading-tight line-clamp-1 mt-1">{sp.name}</h4>
-                                <span className="font-price-lg text-primary text-xs">{sp.price}{sp.original && <span className="ml-1 text-[9px] font-normal text-secondary line-through">{sp.original}</span>}</span>
+                                <span className={`font-price-lg ${sp.original ? 'text-red-600' : 'text-slate-900'} font-bold text-xs`}>{sp.price}{sp.original && <span className="ml-1 text-[9px] font-normal text-secondary line-through">{sp.original}</span>}</span>
                               </div>
                             ))}
                           </div>
@@ -559,7 +559,7 @@ export default function Home() {
                             <h4 className="font-headline-sm text-sm text-on-surface mt-2 line-clamp-1">{prod.title}</h4>
                           </div>
                           <div className="flex items-center justify-between mt-3">
-                            <span className="font-price-lg text-primary text-base">{prod.price}{prod.original && <span className="ml-1.5 text-[11px] font-normal text-secondary line-through">{prod.original}</span>}</span>
+                            <span className={`font-price-lg ${prod.original ? 'text-red-600' : 'text-slate-900'} font-bold text-base`}>{prod.price}{prod.original && <span className="ml-1.5 text-[11px] font-normal text-secondary line-through">{prod.original}</span>}</span>
                             <div className="flex items-center gap-2">
                               <button 
                                 onClick={(e) => {
@@ -622,7 +622,7 @@ export default function Home() {
                           <h4 className="font-headline-sm text-sm text-on-surface line-clamp-1">{prod.title}</h4>
                         </div>
                         <div className="flex justify-between items-center pt-2 mt-auto">
-                          <span className="font-price-lg text-primary text-base">{prod.price}{prod.original && <span className="ml-1.5 text-[11px] font-normal text-secondary line-through">{prod.original}</span>}</span>
+                          <span className={`font-price-lg ${prod.original ? 'text-red-600' : 'text-slate-900'} font-bold text-base`}>{prod.price}{prod.original && <span className="ml-1.5 text-[11px] font-normal text-secondary line-through">{prod.original}</span>}</span>
                           <button 
                             onClick={(e) => {
                               e.preventDefault();
@@ -708,7 +708,7 @@ export default function Home() {
                         {(p as any).original && <span className="text-secondary text-[11px] line-through">{(p as any).original}</span>}
                       </div>
                       <div className="flex justify-between items-center pt-2 mt-auto">
-                        <span className="font-price-lg text-primary text-base">{p.price}</span>
+                        <span className={`font-price-lg ${(p as any).original ? 'text-red-600' : 'text-slate-900'} font-bold text-base`}>{p.price}</span>
                         <button 
                           onClick={(e) => {
                             e.preventDefault();

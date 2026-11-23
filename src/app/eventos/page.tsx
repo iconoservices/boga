@@ -91,25 +91,11 @@ export default function Eventos() {
 
       <main className="max-w-[1440px] mx-auto px-container-margin lg:px-6 w-full pt-4 flex flex-col gap-8 pb-14">
 
-        {/* Encabezado principal (en móvil va arriba; en desktop con carrusel va en la columna derecha) */}
-        <header className={`flex flex-col gap-1 pt-1 ${carrusel.length > 0 ? 'lg:hidden' : ''}`}>
-          
-          <h1 className="font-headline-lg font-extrabold text-xl sm:text-2xl text-on-surface tracking-tight leading-tight">
-            Agenda y Eventos en Pucallpa
-          </h1>
-          <p className="font-body-md text-xs sm:text-sm text-secondary max-w-2xl leading-relaxed">
-            Conciertos, festivales, ferias y cultura en Pucallpa y Yarinacocha.
-          </p>
-        </header>
-
-        {/* Destacado + categorías: lado a lado en escritorio (banner solito a la izquierda, textos + categorías a la derecha) */}
-        <div className={carrusel.length > 0 ? 'flex flex-col gap-8 lg:grid lg:grid-cols-[1.25fr_1fr] lg:gap-8 lg:items-center' : 'contents'}>
-
-        {/* Carrusel destacado (solito a la izquierda en desktop) */}
+        {/* Carrusel destacado: banner completo a todo lo ancho */}
         {carrusel.length > 0 && (
         <section className="w-full">
           <div
-            className="relative overflow-hidden rounded-2xl shadow-sm h-[360px] sm:h-auto sm:aspect-[21/9] lg:aspect-auto lg:h-[370px]"
+            className="relative overflow-hidden rounded-2xl shadow-sm h-[320px] sm:h-[380px] lg:h-[420px] w-full"
             onTouchStart={(e) => { swipeX.current = e.touches[0].clientX; }}
             onTouchEnd={(e) => {
               if (swipeX.current === null) return;
@@ -131,7 +117,7 @@ export default function Eventos() {
                   <Foto src={c.img} alt={c.titulo} className="absolute inset-0 w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
                   {/* El texto va ABAJO y compacto: en el medio tapaba a la persona o el motivo de la foto. */}
-                  <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1.5 px-4 pb-4 pr-24 pt-16 lg:px-8 lg:pb-6 max-w-[760px]">
+                  <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1.5 px-4 pb-4 pr-24 pt-16 lg:px-8 lg:pb-6 max-w-[840px]">
                     <div className="flex items-center gap-2">
                       <div className="bg-white rounded-lg px-2 py-0.5 text-center shadow-md">
                         <span className="block font-price-lg text-primary text-sm leading-none">{c.dia}</span>
@@ -149,7 +135,7 @@ export default function Eventos() {
                     </div>
                     <button
                       onClick={(ev) => { ev.stopPropagation(); setEventoAbierto(c); }}
-                      className="w-fit mt-1 bg-primary text-white font-label-md text-[11px] px-3.5 py-1.5 rounded-full active:scale-95 transition-transform"
+                      className="w-fit mt-1 bg-primary hover:bg-primary-container text-white font-label-md text-[11px] px-4 py-1.5 rounded-full active:scale-95 transition-transform"
                     >
                       Ver más
                     </button>
@@ -164,7 +150,7 @@ export default function Eventos() {
                   type="button"
                   onClick={(ev) => { ev.stopPropagation(); prev(); }}
                   aria-label="Anterior"
-                  className="flex w-8 h-8 rounded-full bg-white/90 items-center justify-center shadow-md active:scale-90 transition-transform"
+                  className="flex w-8 h-8 rounded-full bg-white/90 hover:bg-white items-center justify-center shadow-md active:scale-90 transition-transform"
                 >
                   <span className="material-symbols-outlined text-[18px] text-on-surface">chevron_left</span>
                 </button>
@@ -172,7 +158,7 @@ export default function Eventos() {
                   type="button"
                   onClick={(ev) => { ev.stopPropagation(); next(); }}
                   aria-label="Siguiente"
-                  className="flex w-8 h-8 rounded-full bg-white/90 items-center justify-center shadow-md active:scale-90 transition-transform"
+                  className="flex w-8 h-8 rounded-full bg-white/90 hover:bg-white items-center justify-center shadow-md active:scale-90 transition-transform"
                 >
                   <span className="material-symbols-outlined text-[18px] text-on-surface">chevron_right</span>
                 </button>
@@ -195,29 +181,26 @@ export default function Eventos() {
         </section>
         )}
 
-        {/* Lado derecho en escritorio: Encabezado compacto + Categorías */}
-        <div className="flex flex-col gap-4 justify-center">
-          {carrusel.length > 0 && (
-            <header className="hidden lg:flex flex-col gap-1">
-              
-              <h1 className="font-headline-lg font-extrabold text-xl lg:text-2xl text-on-surface tracking-tight leading-tight">
-                Agenda y Eventos en Pucallpa
-              </h1>
-              <p className="font-body-md text-xs text-secondary leading-relaxed">
-                Conciertos, festivales, ferias y cultura en Pucallpa y Yarinacocha.
-              </p>
-            </header>
-          )}
+        {/* Encabezado + Categorías */}
+        <div className="flex flex-col gap-4">
+          <header className="flex flex-col gap-1">
+            <h1 className="font-headline-lg font-extrabold text-xl sm:text-2xl text-on-surface tracking-tight leading-tight">
+              Agenda y Eventos en Pucallpa
+            </h1>
+            <p className="font-body-md text-xs sm:text-sm text-secondary max-w-2xl leading-relaxed">
+              Conciertos, festivales, ferias y cultura en Pucallpa y Yarinacocha.
+            </p>
+          </header>
 
           {/* Categorías */}
           <section className="flex flex-col gap-2">
-            <div className="flex gap-4 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-1 lg:grid lg:grid-cols-5 lg:gap-x-2 lg:gap-y-3.5 lg:overflow-visible" style={{ scrollbarWidth: 'none' }}>
+            <div className="flex gap-4 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-1 lg:flex-wrap lg:overflow-visible" style={{ scrollbarWidth: 'none' }}>
               <button
                 onClick={() => { setCat(null); irALaLista(); }}
-                className="flex flex-col items-center gap-1.5 shrink-0 w-[68px] lg:w-auto group"
+                className="flex flex-col items-center gap-1.5 shrink-0 w-[68px] lg:w-[74px] group"
               >
                 <span className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
-                  cat === null ? 'bg-primary text-white' : 'bg-surface-container-low text-primary group-hover:bg-primary-fixed'
+                  cat === null ? 'bg-primary text-white shadow-xs' : 'bg-surface-container-low text-primary group-hover:bg-primary-fixed'
                 }`}>
                   <span className="material-symbols-outlined text-[24px]">apps</span>
                 </span>
@@ -229,10 +212,10 @@ export default function Eventos() {
                   <button
                     key={c.cat}
                     onClick={() => { setCat(active ? null : c.cat); irALaLista(); }}
-                    className="flex flex-col items-center gap-1.5 shrink-0 w-[68px] lg:w-auto group"
+                    className="flex flex-col items-center gap-1.5 shrink-0 w-[68px] lg:w-[74px] group"
                   >
                     <span className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
-                      active ? 'bg-primary text-white' : 'bg-surface-container-low text-primary group-hover:bg-primary-fixed'
+                      active ? 'bg-primary text-white shadow-xs' : 'bg-surface-container-low text-primary group-hover:bg-primary-fixed'
                     }`}>
                       <span className="material-symbols-outlined text-[24px]">{c.icon}</span>
                     </span>
@@ -242,8 +225,6 @@ export default function Eventos() {
               })}
             </div>
           </section>
-        </div>
-
         </div>
 
         {/* Lugares para visitar */}
