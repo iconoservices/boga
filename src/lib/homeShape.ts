@@ -15,7 +15,16 @@ import type { Sorteo } from '@/lib/sorteos';
 
 export type BannerEstilo = 'center' | 'bottom';
 
-export type HomeSlide = { kicker: string; title: string; href: string; img: string; portrait?: string; pura?: boolean };
+export type HomeSlide = {
+  kicker: string;
+  title: string;
+  sub?: string;
+  href: string;
+  img: string;
+  portrait?: string;
+  pura?: boolean;
+  esEvento?: boolean;
+};
 export type NotaHome = Pick<NotaCard, 'slug' | 'kicker' | 'titulo' | 'img'>;
 export type QueHacerItem = { id: string; title: string; img: string; tag: string; meta: string };
 export type EmpleoHome = { id: string; puesto: string; negocio: string; zona: string; tipo: string; pago: string; img: string; subido: string };
@@ -55,12 +64,19 @@ export function armarNotas(notas: NotaCard[]): NotaHome[] {
 export function armarPromos(banners: any[]): HomeSlide[] {
   return banners.map((b) => {
     const conTexto = b.show_text !== false && (b.tag || b.title1 || b.title2 || b.sub);
+    const esEvento =
+      (b.link && (b.link === '/eventos' || b.link.startsWith('/eventos'))) ||
+      (b.tag && /pr[oó]ximo evento/i.test(b.tag)) ||
+      (b.id && String(b.id).startsWith('auto-event-'));
+
     return {
       kicker: conTexto ? (b.tag || 'Promo') : '',
       title: conTexto ? [b.title1, b.title2].filter(Boolean).join(' ') : '',
-      href: b.link || '/explore',
+      sub: b.sub || '',
+      href: b.link || (esEvento ? '/eventos' : '/explore'),
       img: b.image,
-      pura: !conTexto,
+      pura: !conTexto && !esEvento,
+      esEvento: !!esEvento,
     };
   });
 }

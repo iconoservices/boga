@@ -154,7 +154,57 @@ function PortadaCarrusel({ notas, promos, style, cargando }: { notas: NotaHome[]
           {slides.map((s, idx) => (
             // La primera imagen es lo más grande de la pantalla (LCP): se pide primero y con prioridad; el resto espera.
             <Link key={`${idx}-${s.href}`} href={s.href} className="group relative w-full h-full shrink-0">
-              {s.pura ? (
+              {s.esEvento ? (
+                <div className="relative w-full h-full overflow-hidden bg-black flex items-center">
+                  {/* Fondo difuminado vibrante y colorido del mismo flyer */}
+                  <img
+                    src={s.img}
+                    alt=""
+                    aria-hidden
+                    loading={idx === 0 ? 'eager' : 'lazy'}
+                    className="absolute inset-0 w-full h-full object-cover blur-xl scale-115 opacity-80 pointer-events-none"
+                  />
+                  {/* Degradado suave para asegurar lectura perfecta del texto en el lado izquierdo */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-transparent pointer-events-none" />
+
+                  {/* 2 Columnas: Izquierda texto y detalles, Derecha flyer completo */}
+                  <div className="relative z-10 w-full h-full flex items-center justify-between p-3.5 sm:p-7 lg:p-10 gap-3 sm:gap-6">
+                    <div className="flex-1 min-w-0 max-w-[62%] sm:max-w-[58%] flex flex-col justify-center gap-1 sm:gap-2.5">
+                      {s.kicker && (
+                        <div className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-extrabold text-[9px] sm:text-xs tracking-wider uppercase w-fit truncate">
+                          <span className="material-symbols-outlined text-[11px] sm:text-[14px]">celebration</span>
+                          <span className="truncate">{s.kicker}</span>
+                        </div>
+                      )}
+                      <h2 className="font-extrabold text-white text-sm sm:text-2xl lg:text-3xl leading-tight line-clamp-2 drop-shadow-md">
+                        {s.title}
+                      </h2>
+                      {s.sub && (
+                        <p className="text-white/80 text-[10px] sm:text-sm line-clamp-1 sm:line-clamp-2 max-w-md">
+                          {s.sub}
+                        </p>
+                      )}
+                      <div className="pt-0.5 sm:pt-1">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 sm:px-4 sm:py-2 rounded-full bg-white text-slate-900 font-extrabold text-[10px] sm:text-xs lg:text-sm group-hover:bg-emerald-400 group-hover:text-slate-950 transition-colors shadow-lg">
+                          <span>Ver evento</span>
+                          <span className="material-symbols-outlined text-[13px] sm:text-[16px]">arrow_forward</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Flyer completo a la derecha, sin recortar */}
+                    <div className="h-full max-h-full max-w-[36%] sm:max-w-[40%] flex items-center justify-center shrink-0">
+                      <img
+                        src={s.img}
+                        alt={s.title}
+                        loading={idx === 0 ? 'eager' : 'lazy'}
+                        fetchPriority={idx === 0 ? 'high' : 'auto'}
+                        className="h-full w-auto max-h-[88%] object-contain rounded-lg sm:rounded-2xl shadow-2xl border border-white/20 group-hover:scale-105 transition-transform duration-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : s.pura ? (
                 <>
                   <img src={s.img} alt="" aria-hidden loading={idx === 0 ? 'eager' : 'lazy'} className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110 opacity-60" />
                   <img src={s.img} alt={s.title} loading={idx === 0 ? 'eager' : 'lazy'} fetchPriority={idx === 0 ? 'high' : 'auto'} className="absolute inset-0 w-full h-full object-contain" />
@@ -167,7 +217,7 @@ function PortadaCarrusel({ notas, promos, style, cargando }: { notas: NotaHome[]
                   <img src={s.portrait} alt="" className="w-full h-full object-cover" />
                 </div>
               )}
-              <BannerOverlay style={style} tag={s.kicker} title1={s.title} />
+              {!s.esEvento && <BannerOverlay style={style} tag={s.kicker} title1={s.title} />}
             </Link>
           ))}
         </div>

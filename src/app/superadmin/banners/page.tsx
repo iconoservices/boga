@@ -112,21 +112,22 @@ export default function BannersAdmin() {
     } catch { /* no bloquea el guardado si esto falla */ }
   };
 
-  const handleSetBannerStyle = async (style: 'center' | 'bottom') => {
+  const handleSetBannerStyle = (style: 'center' | 'bottom') => {
+    if ((bannerStyles[bannerPageTab] || 'center') === style) return;
     setBannerStyles(prev => ({ ...prev, [bannerPageTab]: style }));
-    const { error } = await supabase.from('banner_page_settings').upsert({ page: bannerPageTab, style }, { onConflict: 'page' });
-    if (error) { alert('No se pudo guardar el estilo: ' + error.message); return; }
-    await revalidarCatalogo();
+    setHayCambios(true);
+    setGuardadoExito(false);
   };
-  // ── Reordenamiento y Guardado de Banners ──
+  // ── Reordenamiento y Guardado Único de Banners ──
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [isReordering, setIsReordering] = useState(false);
-  const [ordenModificado, setOrdenModificado] = useState(false);
-  const [guardandoOrden, setGuardandoOrden] = useState(false);
-  const [ordenGuardadoExito, setOrdenGuardadoExito] = useState(false);
+  const [hayCambios, setHayCambios] = useState(false);
+  const [guardandoTodo, setGuardandoTodo] = useState(false);
+  const [guardadoExito, setGuardadoExito] = useState(false);
+  const [bannersEliminados, setBannersEliminados] = useState<string[]>([]);
 
-  // Aplica el nuevo orden normalizando sort_order a 1, 2, 3...
+  // Aplica el nuevo orden normalizando sort_order a 1, 2, 3... en memoria
   const aplicarNuevoOrden = (nuevaLista: any[]) => {
     const normalizados = nuevaLista.map((item, idx) => ({
       ...item,
@@ -136,8 +137,8 @@ export default function BannersAdmin() {
       const otros = prev.filter(b => (b.page || 'market') !== bannerPageTab);
       return [...otros, ...normalizados];
     });
-    setOrdenModificado(true);
-    setOrdenGuardadoExito(false);
+    setHayCambios(true);
+    setGuardadoExito(false);
   };
 
   const handleMoveBanner = (indexActual: number, indexDestino: number) => {
@@ -148,23 +149,59 @@ export default function BannersAdmin() {
     aplicarNuevoOrden(items);
   };
 
-  const handleGuardarOrden = async () => {
-    setGuardandoOrden(true);
-    setOrdenGuardadoExito(false);
+  // ÚNICO botón de guardado: guarda estilo, nuevos banners, editados y orden en una sola operación
+  const handleGuardarCambios = async () => {
+    setGuardandoTodo(true);
+    setGuardadoExito(false);
     try {
-      const updates = visibleMarketBanners.map((item, idx) =>
-        supabase.from('market_banners').update({ sort_order: idx + 1 }).eq('id', item.id)
-      );
-      await Promise.all(updates);
+      // 1. Guardar estilo del carrusel si no es /productos
+      if (bannerPageTab !== 'productos') {
+        const estiloActual = bannerStyles[bannerPageTab] || (bannerPageTab === 'home' ? 'bottom' : 'center');
+        const { error: errEstilo } = await supabase
+          .from('banner_page_settings')
+          .upsert({ page: bannerPageTab, style: estiloActual }, { onConflict: 'page' });
+        if (errEstilo) console.warn('Aviso estilo:', errEstilo.message);
+      }
+
+      // 2. Eliminar banners marcados para borrar en la base de datos
+      if (bannersEliminados.length > 0) {
+        await supabase.from('market_banners').delete().in('id', bannersEliminados);
+      }
+
+      // 3. Guardar / insertar banners de esta pestaña con su orden normalizado 1, 2, 3...
+      for (let idx = 0; idx < visibleMarketBanners.length; idx++) {
+        const item = visibleMarketBanners[idx];
+        const payload: Record<string, any> = {
+          image: item.image,
+          tag: item.tag || null,
+          title1: item.title1 || '',
+          title2: item.title2 || null,
+          sub: item.sub || null,
+          link: item.link || null,
+          active: item.active !== false,
+          show_text: item.show_text !== false,
+          sort_order: idx + 1,
+          page: item.page || bannerPageTab,
+        };
+
+        if (item.id && !item.id.startsWith('temp-')) {
+          await supabase.from('market_banners').update(payload).eq('id', item.id);
+        } else {
+          await supabase.from('market_banners').insert([payload]);
+        }
+      }
+
+      // 4. Revalidar una sola vez servidor y Cloudflare
       await revalidarCatalogo();
-      setOrdenModificado(false);
-      setOrdenGuardadoExito(true);
-      setTimeout(() => setOrdenGuardadoExito(false), 4500);
+      setBannersEliminados([]);
+      setHayCambios(false);
+      setGuardadoExito(true);
+      setTimeout(() => setGuardadoExito(false), 4500);
       await fetchMarketBanners();
     } catch (err: any) {
-      alert('Error al guardar el orden: ' + err.message);
+      alert('Error al guardar cambios: ' + err.message);
     } finally {
-      setGuardandoOrden(false);
+      setGuardandoTodo(false);
     }
   };
 
@@ -265,32 +302,28 @@ export default function BannersAdmin() {
       return;
     }
 
-    // Modo directo: agregar al carrusel actual de inmediato
-    setIsSavingMarketBanner(true);
-    try {
-      const payload: Record<string, any> = {
-        image: imgUrl,
-        tag: tag.length > 3 ? tag : 'Próximo Evento',
-        title1: titulo1,
-        title2: titulo2 || null,
-        sub: desc,
-        link: link,
-        active: true,
-        show_text: true,
-        sort_order: 1, // Lo colocamos como prioritario
-        page: bannerPageTab,
-      };
-
-      const { error } = await supabase.from('market_banners').insert([payload]);
-      if (error) throw error;
-      setModalEventosAbierto(false);
-      await fetchMarketBanners();
-      await revalidarCatalogo();
-    } catch (err: any) {
-      alert('Error al vincular evento: ' + err.message);
-    } finally {
-      setIsSavingMarketBanner(false);
-    }
+    // Modo directo: agregar a la lista local (se guarda al presionar Guardar Cambios)
+    const nuevoBanner = {
+      id: 'temp-' + Date.now(),
+      image: imgUrl,
+      tag: tag.length > 3 ? tag : 'Próximo Evento',
+      title1: titulo1,
+      title2: titulo2 || null,
+      sub: desc,
+      link: link,
+      active: true,
+      show_text: true,
+      sort_order: 1,
+      page: bannerPageTab,
+    };
+    setMarketBanners(prev => {
+      const otros = prev.filter(b => (b.page || 'market') !== bannerPageTab);
+      const estaPestaña = [nuevoBanner, ...prev.filter(b => (b.page || 'market') === bannerPageTab)];
+      return [...otros, ...estaPestaña.map((item, idx) => ({ ...item, sort_order: idx + 1 }))];
+    });
+    setHayCambios(true);
+    setGuardadoExito(false);
+    setModalEventosAbierto(false);
   };
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
@@ -356,10 +389,6 @@ export default function BannersAdmin() {
 
   const handleSaveMarketBanner = async (e: React.FormEvent) => {
     e.preventDefault();
-    // El titulo es opcional a proposito: si la imagen ya trae el texto
-    // dibujado (un flyer armado en Canva, etc.), forzar un titulo aca
-    // terminaba dibujando el texto de la web ENCIMA del de la imagen,
-    // pisados los dos.
     const isNew = editingMarketBannerId === 'new';
     const current = !isNew ? marketBanners.find(b => b.id === editingMarketBannerId) : null;
     if (!marketBannerImageFile && !current?.image) { alert('Falta la imagen del banner.'); return; }
@@ -369,7 +398,7 @@ export default function BannersAdmin() {
       if (marketBannerImageFile) {
         imageUrl = await uploadFile(marketBannerImageFile, 'store-assets/market-banners');
       }
-      const payload = {
+      const bannerData = {
         image: imageUrl,
         tag: marketBannerForm.tag || null,
         title1: marketBannerForm.title1.trim(),
@@ -378,51 +407,38 @@ export default function BannersAdmin() {
         link: marketBannerForm.link || null,
         active: marketBannerForm.active,
         show_text: marketBannerForm.showText,
+        page: bannerPageTab,
       };
-      const fullPayload: Record<string, any> = isNew
-        ? { ...payload, sort_order: visibleMarketBanners.reduce((max, b) => Math.max(max, b.sort_order || 0), 0) + 1, page: bannerPageTab }
-        : payload;
 
-      const escribir = () =>
-        isNew
-          ? supabase.from('market_banners').insert([fullPayload])
-          : supabase.from('market_banners').update(fullPayload).eq('id', editingMarketBannerId);
-
-      let { error } = await escribir();
-
-      // Mismo problema de siempre: si `show_text` o `page` todavia no existen
-      // en la base (falta correr la migracion), reintenta sin esa columna en
-      // vez de que el banner entero no se pueda guardar.
-      const columnasOpcionales = ['show_text', 'page'];
-      const columnasFaltantes: string[] = [];
-      let faltante = columnasOpcionales.find((col) => col in fullPayload && new RegExp(col).test(error?.message || ''));
-      while (error && faltante) {
-        delete fullPayload[faltante];
-        columnasFaltantes.push(faltante);
-        ({ error } = await escribir());
-        faltante = columnasOpcionales.find((col) => col in fullPayload && new RegExp(col).test(error?.message || ''));
+      if (isNew) {
+        const nuevo = {
+          id: 'temp-' + Date.now(),
+          ...bannerData,
+          sort_order: visibleMarketBanners.length + 1,
+        };
+        setMarketBanners(prev => [...prev, nuevo]);
+      } else {
+        setMarketBanners(prev => prev.map(b => b.id === editingMarketBannerId ? { ...b, ...bannerData } : b));
       }
-      if (!error && columnasFaltantes.length) {
-        alert(`Banner guardado, pero faltó correr una migración pendiente en Supabase para: ${columnasFaltantes.join(', ')}.`);
-      }
-      if (error) throw error;
 
       setEditingMarketBannerId(null);
-      await fetchMarketBanners();
-      await revalidarCatalogo();
+      setHayCambios(true);
+      setGuardadoExito(false);
     } catch (err: any) {
-      alert('No se pudo guardar el banner: ' + err.message);
+      alert('No se pudo procesar el banner: ' + err.message);
     } finally {
       setIsSavingMarketBanner(false);
     }
   };
 
-  const handleDeleteMarketBanner = async (id: string) => {
-    if (!confirm('¿Eliminar este banner?')) return;
-    const { error } = await supabase.from('market_banners').delete().eq('id', id);
-    if (error) { alert('No se pudo eliminar: ' + error.message); return; }
+  const handleDeleteMarketBanner = (id: string) => {
+    if (!confirm('¿Eliminar este banner? (Haz clic en Guardar Cambios para confirmar)')) return;
     setMarketBanners(prev => prev.filter(b => b.id !== id));
-    await revalidarCatalogo();
+    if (!id.startsWith('temp-')) {
+      setBannersEliminados(prev => [...prev, id]);
+    }
+    setHayCambios(true);
+    setGuardadoExito(false);
   };
 
 
@@ -444,7 +460,33 @@ export default function BannersAdmin() {
                   <p className="text-[11px] text-[#424754] mt-0.5">Los carruseles de /market y del Inicio — son del sitio entero, no de una tienda.</p>
                 </div>
                 {bannerPageTab !== 'productos' && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {guardadoExito && (
+                      <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-md flex items-center gap-1.5 animate-fade-in">
+                        <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                        ¡Guardado!
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleGuardarCambios}
+                      disabled={guardandoTodo || (!hayCambios && !guardadoExito)}
+                      className={`px-3.5 py-2 rounded-md font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer ${
+                        guardandoTodo
+                          ? 'bg-slate-400 text-white cursor-wait'
+                          : hayCambios
+                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white ring-2 ring-emerald-400 ring-offset-1 shadow-md'
+                          : guardadoExito
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                          : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-60'
+                      }`}
+                      title="Guarda los cambios de orden y estilo de esta sección"
+                    >
+                      <span className={`material-symbols-outlined text-[16px] ${guardandoTodo ? 'animate-spin' : ''}`}>
+                        {guardandoTodo ? 'refresh' : guardadoExito ? 'check' : 'save'}
+                      </span>
+                      {guardandoTodo ? 'Guardando...' : guardadoExito ? '¡Guardado!' : hayCambios ? 'Guardar Cambios' : 'Guardar Cambios'}
+                    </button>
                     <button
                       type="button"
                       onClick={() => {
@@ -474,7 +516,7 @@ export default function BannersAdmin() {
                   {([['home', 'Inicio'], ['market', 'Market'], ['negocios', 'Foto de /negocios'], ['productos', 'Productos (/productos)']] as const).map(([id, label]) => (
                     <button
                       key={id}
-                      onClick={() => { setBannerPageTab(id); setOrdenModificado(false); setOrdenGuardadoExito(false); }}
+                      onClick={() => { setBannerPageTab(id); setHayCambios(false); setGuardadoExito(false); }}
                       className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${bannerPageTab === id ? 'bg-[#0058be] text-white' : 'bg-[#f2f3fd] text-[#545f73] hover:bg-[#e6e7f2]'
                         }`}
                     >
@@ -697,47 +739,18 @@ export default function BannersAdmin() {
                       </p>
                     ) : (
                       <div className="space-y-3">
-                        {/* Barra superior con instrucciones y botón de guardar orden */}
+                        {/* Instrucciones de arrastre */}
                         <div className="flex items-center justify-between pb-1 text-[11px] text-[#727785] px-1 flex-wrap gap-2">
                           <span className="flex items-center gap-1.5 font-bold text-[#191b23]">
-                            <span className="material-symbols-outlined text-[18px] text-[#0058be]">swap_vert</span>
-                            Orden de banners (el #1 aparece primero en el carrusel)
+                            <span className="material-symbols-outlined text-[18px] text-[#0058be]">drag_indicator</span>
+                            Arrastra las filas para reordenar los banners (el #1 aparece primero)
                           </span>
-
-                          <div className="flex items-center gap-2">
-                            {ordenModificado && (
-                              <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-md flex items-center gap-1 animate-pulse">
-                                <span className="material-symbols-outlined text-[14px]">warning</span>
-                                Cambios sin guardar
-                              </span>
-                            )}
-                            {ordenGuardadoExito && (
-                              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-md flex items-center gap-1 animate-fade-in">
-                                <span className="material-symbols-outlined text-[14px]">check_circle</span>
-                                ¡Guardado y actualizado en vivo!
-                              </span>
-                            )}
-                            <button
-                              type="button"
-                              onClick={handleGuardarOrden}
-                              disabled={guardandoOrden || (!ordenModificado && !ordenGuardadoExito)}
-                              className={`px-3.5 py-1.5 rounded-md font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer ${
-                                guardandoOrden
-                                  ? 'bg-slate-400 text-white cursor-wait'
-                                  : ordenModificado
-                                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white ring-2 ring-emerald-400 ring-offset-1 shadow-md'
-                                  : ordenGuardadoExito
-                                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                  : 'bg-slate-200 text-slate-500 cursor-default'
-                              }`}
-                              title="Guarda el orden actual y actualiza el sitio en vivo"
-                            >
-                              <span className={`material-symbols-outlined text-[16px] ${guardandoOrden ? 'animate-spin' : ''}`}>
-                                {guardandoOrden ? 'refresh' : ordenGuardadoExito ? 'check' : 'save'}
-                              </span>
-                              {guardandoOrden ? 'Guardando orden...' : ordenGuardadoExito ? '¡Guardado!' : 'Guardar Orden'}
-                            </button>
-                          </div>
+                          {hayCambios && (
+                            <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md flex items-center gap-1 animate-pulse">
+                              <span className="material-symbols-outlined text-[14px]">info</span>
+                              Tienes cambios sin guardar arriba
+                            </span>
+                          )}
                         </div>
 
                         {/* Listado con números de orden #1, #2... */}
@@ -819,32 +832,10 @@ export default function BannersAdmin() {
                           })}
                         </div>
 
-                        {/* Pie de lista con botón de guardar para carruseles con varios banners */}
-                        {visibleMarketBanners.length > 2 && (
-                          <div className="pt-3 flex items-center justify-between border-t border-[#ecedf7] mt-3">
-                            <p className="text-[11px] text-[#727785]">
-                              Total de banners en esta sección: <b>{visibleMarketBanners.length}</b>
-                            </p>
-                            <button
-                              type="button"
-                              onClick={handleGuardarOrden}
-                              disabled={guardandoOrden || (!ordenModificado && !ordenGuardadoExito)}
-                              className={`px-4 py-2 rounded-md font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer ${
-                                guardandoOrden
-                                  ? 'bg-slate-400 text-white cursor-wait'
-                                  : ordenModificado
-                                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white ring-2 ring-emerald-400 ring-offset-1 shadow-md'
-                                  : ordenGuardadoExito
-                                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                  : 'bg-slate-200 text-slate-500 cursor-default'
-                              }`}
-                            >
-                              <span className={`material-symbols-outlined text-[16px] ${guardandoOrden ? 'animate-spin' : ''}`}>
-                                {guardandoOrden ? 'refresh' : ordenGuardadoExito ? 'check' : 'save'}
-                              </span>
-                              {guardandoOrden ? 'Guardando orden...' : ordenGuardadoExito ? '¡Guardado y actualizado!' : 'Guardar Orden'}
-                            </button>
-                          </div>
+                        {visibleMarketBanners.length > 0 && (
+                          <p className="text-[11px] text-[#727785] pt-1 text-right">
+                            Total de banners en esta sección: <b>{visibleMarketBanners.length}</b>
+                          </p>
                         )}
                       </div>
                     )}
