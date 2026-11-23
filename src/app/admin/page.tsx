@@ -1419,7 +1419,7 @@ function AdminDashboard({ user }: { user: User }) {
   const toggleReserva = async (p: Product) => {
     // Con las reservas apagadas en la tienda, se ofrece prenderlas ahí mismo (antes el botón ni se veía y no había cómo enterarse).
     if (!tiendaConReservas(p.store)) {
-      const ok = window.confirm('Las reservas están apagadas en esta tienda.\n\n¿Prenderlas ahora? Los productos sin stock (o los que marques con este botón) saldrán con «Reservar por WhatsApp».');
+      const ok = window.confirm('Las reservas están apagadas en esta tienda.\n\n¿Prenderlas ahora? Los productos que marques con este botón saldrán con «Reservar por WhatsApp».');
       if (!ok) return;
       const { error: errTienda } = await supabase.from('stores').update({ reserva_activa: true }).eq('slug', p.store);
       if (errTienda) { alert('No se pudieron prender las reservas: ' + errTienda.message + '\n\n(¿corriste el SQL de reservas en Supabase?)'); return; }
@@ -2905,18 +2905,28 @@ function AdminDashboard({ user }: { user: User }) {
               const pMin = parseFloat(precioMin.replace(',', '.'));
               const pMax = parseFloat(precioMax.replace(',', '.'));
               const filtrados = filtradosBase.filter(p => (isNaN(pMin) || p.price >= pMin) && (isNaN(pMax) || p.price <= pMax) && (filtroEstado === 'all' || (filtroEstado === 'Agotado' ? p.status === 'Agotado' && p.stock === 0 : filtroEstado === 'Desactivado' ? p.status === 'Agotado' && p.stock !== 0 : p.status === filtroEstado)));
-              const ordenados = tablaOrden
-                ? [...filtrados].sort((a, b) => {
-                  const f = tablaOrden.dir === 'asc' ? 1 : -1;
-                  switch (tablaOrden.col) {
-                    case 'nombre': return f * a.name.localeCompare(b.name, 'es', { sensitivity: 'base' });
-                    case 'categoria': return f * (a.category || '').localeCompare(b.category || '', 'es', { sensitivity: 'base' });
-                    case 'stock': return f * ((a.stock || 0) - (b.stock || 0));
-                    case 'estado': return f * (a.status || '').localeCompare(b.status || '', 'es');
-                    default: return f * ((a.price || 0) - (b.price || 0));
-                  }
-                })
-                : filtrados;
+              const esNoDisponible = (p: Product) => {
+                if (p.status !== 'Activo') return 1;
+                if (!stockIlimitado(p) && (p.stock ?? 0) <= 0) return 1;
+                return 0;
+              };
+
+              const ordenados = [...filtrados].sort((a, b) => {
+                if (tablaOrden?.col !== 'estado') {
+                  const dispA = esNoDisponible(a);
+                  const dispB = esNoDisponible(b);
+                  if (dispA !== dispB) return dispA - dispB;
+                }
+                if (!tablaOrden) return 0;
+                const f = tablaOrden.dir === 'asc' ? 1 : -1;
+                switch (tablaOrden.col) {
+                  case 'nombre': return f * a.name.localeCompare(b.name, 'es', { sensitivity: 'base' });
+                  case 'categoria': return f * (a.category || '').localeCompare(b.category || '', 'es', { sensitivity: 'base' });
+                  case 'stock': return f * ((a.stock || 0) - (b.stock || 0));
+                  case 'estado': return f * (a.status || '').localeCompare(b.status || '', 'es');
+                  default: return f * ((a.price || 0) - (b.price || 0));
+                }
+              });
               const totalPaginas = Math.max(1, Math.ceil(ordenados.length / tablaTamano));
               const paginaActual = Math.min(tablaPagina, totalPaginas);
               const desde = (paginaActual - 1) * tablaTamano;
@@ -3212,7 +3222,7 @@ function AdminDashboard({ user }: { user: User }) {
                                         <button
                                           onClick={() => toggleReserva(p)}
                                           className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${tiendaConReservas(p.store) && p.reserva === true ? 'text-orange-600 bg-orange-50 hover:bg-orange-100' : 'text-gray-400 hover:text-orange-600 hover:bg-orange-50'}`}
-                                          title={tiendaConReservas(p.store) ? (p.reserva === true ? 'Quitar de reserva (vuelve a automático)' : 'Marcar como reserva (siempre se reserva por WhatsApp)') : 'Poner en reserva (te ofrece prender las reservas)'}
+                                          title={tiendaConReservas(p.store) ? (p.reserva === true ? 'Quitar de reserva' : 'Activar reserva (los clientes podrán reservarlo por WhatsApp)') : 'Activar reserva'}
                                         >
                                           <span className="material-symbols-outlined text-[18px]">event_available</span>
                                         </button>

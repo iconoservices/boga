@@ -63,11 +63,12 @@ function Tarjeta({ p, onSelect, onAdd }: { p: Producto; onSelect: (p: Producto) 
             {fotos.map((_, i) => <div key={i} style={{ flex: 1, background: i === activa ? '#fff' : 'transparent' }} />)}
           </div>
         )}
-        {(reservable || p.esCombo || esNuevo(p)) && (
+        {(reservable || (agotado && !reservable) || p.esCombo || esNuevo(p)) && (
           <div className="dv-pc-badges">
             {reservable && <span className="dv-pc-badge dv-pc-badge-reserva">Reservar</span>}
-            {!reservable && p.esCombo && <span className="dv-pc-badge dv-pc-badge-combo">Combo</span>}
-            {!reservable && esNuevo(p) && <span className="dv-pc-badge">Nuevo</span>}
+            {!reservable && agotado && <span className="dv-pc-badge" style={{ background: '#e11d48', color: '#fff' }}>Agotado</span>}
+            {!reservable && !agotado && p.esCombo && <span className="dv-pc-badge dv-pc-badge-combo">Combo</span>}
+            {!reservable && !agotado && esNuevo(p) && <span className="dv-pc-badge">Nuevo</span>}
           </div>
         )}
         <BotonFavorito producto={p} className="absolute top-2 right-2 z-10" />
@@ -91,10 +92,11 @@ function Tarjeta({ p, onSelect, onAdd }: { p: Producto; onSelect: (p: Producto) 
         </div>
         <button
           type="button"
-          className={`dv-pc-buy ${consultar ? 'dv-pc-buy-consulta' : ''} ${reservable ? 'dv-pc-buy-reserva' : ''} ${ok ? 'dv-pc-buy-ok' : ''}`}
+          disabled={agotado && !reservable}
+          className={`dv-pc-buy ${consultar ? 'dv-pc-buy-consulta' : ''} ${reservable ? 'dv-pc-buy-reserva' : ''} ${agotado && !reservable ? 'bg-gray-200 text-gray-400 cursor-not-allowed hover:bg-gray-200' : ''} ${ok ? 'dv-pc-buy-ok' : ''}`}
           onClick={(e) => {
             e.stopPropagation();
-            // Un agotado (se reserva), un servicio, un producto sin precio o uno con medidas se resuelve en su ficha.
+            if (agotado && !reservable) return;
             if (reservable || consultar || desde) { onSelect(p); return; }
             onAdd(p);
             setOk(true);
@@ -102,7 +104,7 @@ function Tarjeta({ p, onSelect, onAdd }: { p: Producto; onSelect: (p: Producto) 
             timer.current = setTimeout(() => setOk(false), 1000);
           }}
         >
-          {ok ? '✓ Agregado' : reservable ? 'Reservar' : consultar ? 'Consultar' : desde ? 'Elegir' : 'Comprar'}
+          {ok ? '✓ Agregado' : reservable ? 'Reservar' : (agotado && !reservable) ? 'Agotado' : consultar ? 'Consultar' : desde ? 'Elegir' : 'Comprar'}
         </button>
       </div>
     </div>
@@ -276,10 +278,15 @@ export default function DelvaTemplate({ store, initialProductId, initialTab }: P
   const coincide = (p: Producto) => !q || sinAcentos(`${p.name} ${p.desc} ${nombreCategoria(p.category)}`).includes(q);
 
   // Lo reservable no va en las filas destacadas: sale en «Reserva» y al final de la tienda.
-  const enStock = c.products.filter((p) => !p.reservable);
-  const agotados = c.products.filter((p) => p.reservable);
-  const alFinalLosAgotados = (lista: Producto[]) => [...lista.filter((p) => !p.reservable), ...lista.filter((p) => p.reservable)];
-  const ofertas = (c.combosYOfertas ?? []).filter((p) => !p.reservable);
+  const enStock = c.products.filter((p) => !p.reservable && !p.agotado);
+  const reservados = c.products.filter((p) => p.reservable);
+  const agotados = c.products.filter((p) => p.agotado && !p.reservable);
+  const alFinalLosAgotados = (lista: Producto[]) => [
+    ...lista.filter((p) => !p.reservable && !p.agotado),
+    ...lista.filter((p) => p.reservable),
+    ...lista.filter((p) => p.agotado && !p.reservable),
+  ];
+  const ofertas = (c.combosYOfertas ?? []).filter((p) => !p.reservable && !p.agotado);
   const nuevos = (enStock.some((p) => p.creado)
     ? [...enStock].filter((p) => p.creado).sort((a, b) => String(b.creado).localeCompare(String(a.creado)))
     : [...enStock].reverse()
@@ -287,7 +294,7 @@ export default function DelvaTemplate({ store, initialProductId, initialTab }: P
 
   // Con un chip (Promos / Novedad), una búsqueda o una categoría, el inicio pasa a una sola grilla de resultados (como en Delva).
   const enResultados = filtro !== 'all' || !!q || c.activeCategory !== 'all';
-  const resultados = alFinalLosAgotados(filtro === 'promos' ? ofertas : filtro === 'novedad' ? enStock.filter(esNuevo) : filtro === 'reserva' ? agotados : c.filtered).filter(
+  const resultados = alFinalLosAgotados(filtro === 'promos' ? ofertas : filtro === 'novedad' ? enStock.filter(esNuevo) : filtro === 'reserva' ? reservados : c.filtered).filter(
     (p) => coincide(p) && (c.activeCategory === 'all' || p.category === c.activeCategory),
   );
   const tituloResultados = filtro === 'promos' ? '🔥 Promos' : filtro === 'novedad' ? '✨ Lo más nuevo' : filtro === 'reserva' ? '🗓️ Reserva' : q ? `Resultados para «${busqueda.trim()}»` : nombreCategoria(c.activeCategory) || 'Resultados';
@@ -363,7 +370,7 @@ export default function DelvaTemplate({ store, initialProductId, initialTab }: P
 
   const filtrosRapidos = ([
     { id: 'promos', label: 'Promos', icon: '🔥', color: '#E91E63', hay: ofertas.length > 0 },
-    { id: 'reserva', label: 'Reserva', icon: '🗓️', color: '#F39C12', hay: agotados.length > 0 },
+    { id: 'reserva', label: 'Reserva', icon: '🗓️', color: '#F39C12', hay: reservados.length > 0 },
     { id: 'novedad', label: 'Novedad', icon: '✨', color: '#00A651', hay: enStock.some(esNuevo) },
   ] as const).filter((f) => f.hay);
 
@@ -552,7 +559,7 @@ export default function DelvaTemplate({ store, initialProductId, initialTab }: P
                 {seccion('destacados', '🔥 Lo más pedido', enStock.slice(0, 12), () => ir('tienda'))}
                 {seccion('promos', '🔥 Promos', ofertas, () => setFiltro('promos'))}
                 {seccion('nuevos', '✨ Novedades', nuevos, () => ir('tienda'))}
-                {seccion('reserva', '🗓️ Reserva', agotados, () => setFiltro('reserva'))}
+                {reservados.length > 0 && seccion('reserva', '🗓️ Reserva', reservados, () => setFiltro('reserva'))}
                 {categorias.map((cat) => seccion(`cat-${cat.id}`, cat.label, enStock.filter((p) => p.category === cat.id), () => ir('tienda', cat.id)))}
                 {c.products.length > 0 && (
                   <div className="dv-see-all-wrap">

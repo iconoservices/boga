@@ -130,9 +130,11 @@ function FotoTarjeta({ product }: { product: Producto }) {
           ))}
         </div>
       )}
-      {product.reservable && (
+      {product.reservable ? (
         <div className={`absolute left-2 ${product.esCombo ? 'top-8' : 'top-2'} bg-[#f39c12] text-white text-[10px] font-black px-2 py-0.5 rounded-lg shadow-md z-10`}>🗓️ RESERVA</div>
-      )}
+      ) : product.agotado ? (
+        <div className={`absolute left-2 ${product.esCombo ? 'top-8' : 'top-2'} bg-[#e11d48] text-white text-[10px] font-black px-2 py-0.5 rounded-lg shadow-md z-10`}>AGOTADO</div>
+      ) : null}
       {product.esCombo && (
         <div className="absolute top-2 left-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded-lg shadow-md z-10 flex items-center gap-0.5">
           <span>🔥</span> COMBO
@@ -238,6 +240,11 @@ export function ProductGrid({
                 >
                   Reservar
                 </button>
+              )}
+              {product.agotado && !product.reservable && (
+                <span className={`px-2.5 py-1 rounded-full font-bold ${TXT.small} bg-gray-100 text-gray-400`}>
+                  Agotado
+                </span>
               )}
               {!soloConsulta(product) && (
                 // Con medidas, el "+" agrega la más chica (la del precio "Desde"); para otra medida se toca el producto.
@@ -526,18 +533,27 @@ export function ProductModal({
   ) : null;
 
   const botonCompra = soloConsulta(producto) ? (
-    <button
-      onClick={() => {
-        // Una reserva usa su propio mensaje si la plantilla lo trae; si no, el de consulta con «(para reservar)» junto al nombre.
-        if (producto.reservable) { if (onReservar) onReservar(producto); else onConsultar?.({ ...producto, name: `${producto.name} (para reservar)` }); return; }
-        onConsultar?.(producto);
-      }}
-      className={`px-6 py-2.5 md:py-3 rounded-full font-bold ${TXT.body} flex items-center gap-1.5 active:scale-95 bg-[#25D366] text-white`}
-      style={textoConsultar ? { background: t.primary, color: t.onPrimary } : undefined}
-    >
-      <span className={`material-symbols-outlined ${ICON.sm}`}>{textoConsultar?.icono ?? 'chat'}</span>
-      {textoConsultar?.texto ?? (producto.reservable ? 'Reservar por WhatsApp' : 'Consultar por WhatsApp')}
-    </button>
+    producto.agotado && !producto.reservable ? (
+      <button
+        disabled
+        className={`px-6 py-2.5 md:py-3 rounded-full font-bold ${TXT.body} flex items-center gap-1.5 bg-gray-200 text-gray-500 cursor-not-allowed`}
+      >
+        <span className={`material-symbols-outlined ${ICON.sm}`}>block</span>
+        Agotado
+      </button>
+    ) : (
+      <button
+        onClick={() => {
+          if (producto.reservable) { if (onReservar) onReservar(producto); else onConsultar?.({ ...producto, name: `${producto.name} (para reservar)` }); return; }
+          onConsultar?.(producto);
+        }}
+        className={`px-6 py-2.5 md:py-3 rounded-full font-bold ${TXT.body} flex items-center gap-1.5 active:scale-95 bg-[#25D366] text-white`}
+        style={textoConsultar ? { background: t.primary, color: t.onPrimary } : producto.reservable ? { background: '#f39c12', color: '#fff' } : undefined}
+      >
+        <span className={`material-symbols-outlined ${ICON.sm}`}>{textoConsultar?.icono ?? (producto.reservable ? 'event_available' : 'chat')}</span>
+        {textoConsultar?.texto ?? (producto.reservable ? 'Reservar por WhatsApp' : 'Consultar por WhatsApp')}
+      </button>
+    )
   ) : (
     <button
       onClick={() => {

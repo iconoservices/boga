@@ -67,7 +67,7 @@ export function useCatalogo(store: StoreConfig, initialProductId?: string) {
       const reservaOn = store.reservaActiva === true && plantillaConReserva(store.template);
       const crudo = await fetchProductosDeTienda(store.demoDePlantilla ? demoSlug(store.slug) : store.slug, reservaOn);
       // Un agotado que no es reservable (el dueño lo marcó «nunca», o es de stock ilimitado y lo apagó a mano) se esconde, como siempre.
-      const data = reservaOn ? crudo.filter((p) => p.status !== 'Agotado' || esReservable(p)) : crudo;
+      const data = crudo;
 
       const deLaBase: Producto[] = data
         ? data.map((p) => ({
