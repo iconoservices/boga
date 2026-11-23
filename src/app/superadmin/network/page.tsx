@@ -159,48 +159,71 @@ export default function SuperadminNetworkPage() {
   };
 
   // ── AGRUPAR POR CUENTA / PERFIL DE AFILIADO ──
-  // Cada afiliado tiene 1 perfil y 0 o más tiendas de reventa asociadas
+  // Cada afiliado es una persona (nombre arriba) y dentro van sus tiendas de reventa asociadas
   const afiliadosAgrupados: PerfilAfiliadoGroup[] = useMemo(() => {
-    const mapa = new Map<string, PerfilAfiliadoGroup>();
+    const afiliadosMap = new Map<string, PerfilAfiliadoGroup>();
+    const indexByEmail = new Map<string, string>(); // email -> grupoId
+    const indexByWsp = new Map<string, string>();   // cleanWsp -> grupoId
 
+    const cleanWsp = (w?: string) => {
+      const c = (w || '').replace(/\D/g, '');
+      return c.length >= 9 ? c.slice(-9) : c;
+    };
+
+    // 1. Procesar solicitudes de Boga Network (perfiles y tiendas de revendedor)
     solicitudes.forEach((sol) => {
-      const emailKey = sol.email?.trim().toLowerCase();
-      const wspKey = sol.whatsapp?.replace(/\D/g, '');
-      const key = emailKey || (wspKey ? `wsp_${wspKey}` : `id_${sol.id}`);
+      const email = sol.email?.trim().toLowerCase();
+      const wsp = cleanWsp(sol.whatsapp);
 
-      let grupo = mapa.get(key);
+      // Buscar si ya existe un grupo por email o por WhatsApp
+      let grupoId = (email && indexByEmail.get(email)) || (wsp && indexByWsp.get(wsp));
+      let grupo = grupoId ? afiliadosMap.get(grupoId) : undefined;
+
       if (!grupo) {
-        const cleanName = sol.contact_name || sol.business_name.replace(/^\[Perfil\]\s*/i, '') || 'Usuario Network';
+        grupoId = sol.id;
+        const nombrePersona = sol.contact_name || sol.business_name?.replace(/^\[Perfil\]\s*/i, '') || 'Usuario Network';
         grupo = {
-          id: sol.id,
-          key,
-          contact_name: cleanName,
+          id: grupoId,
+          key: grupoId,
+          contact_name: nombrePersona,
           email: sol.email || '',
           whatsapp: sol.whatsapp || '',
           city: sol.city || 'Pucallpa',
-          estadoPerfil: 'pending',
+          estadoPerfil: sol.status === 'approved' ? 'approved' : 'pending',
           fechaRegistro: sol.created_at || '',
           tiendas: [],
         };
-        mapa.set(key, grupo);
+        afiliadosMap.set(grupoId, grupo);
+        if (email) indexByEmail.set(email, grupoId);
+        if (wsp) indexByWsp.set(wsp, grupoId);
+      } else {
+        if (!grupo.email && sol.email) {
+          grupo.email = sol.email;
+          if (email) indexByEmail.set(email, grupo.id);
+        }
+        if (!grupo.whatsapp && sol.whatsapp) {
+          grupo.whatsapp = sol.whatsapp;
+          if (wsp) indexByWsp.set(wsp, grupo.id);
+        }
+        if (sol.contact_name && (grupo.contact_name === 'Usuario Network' || grupo.contact_name.endsWith('bm'))) {
+          grupo.contact_name = sol.contact_name;
+        }
       }
 
-      if (sol.contact_name) grupo.contact_name = sol.contact_name;
-      if (sol.city) grupo.city = sol.city;
-      if (sol.whatsapp && !grupo.whatsapp) grupo.whatsapp = sol.whatsapp;
-
+      // Si esta fila de solicitud es el perfil del usuario
       if (esPerfilAfiliado(sol)) {
         grupo.perfilSolicitud = sol;
-        grupo.estadoPerfil = sol.status === 'approved' ? 'approved' : 'pending';
+        if (sol.contact_name) grupo.contact_name = sol.contact_name;
+        if (sol.status === 'approved') grupo.estadoPerfil = 'approved';
         if (sol.created_at) grupo.fechaRegistro = sol.created_at;
       } else {
-        // Es una tienda de reventa
+        // Es una tienda de reventa creada por este usuario
         const nombreTienda = sol.business_name;
         const slug = obtenerSlug(nombreTienda);
         const st = encontrarStore(nombreTienda, slug, sol.email, sol.whatsapp);
         const estaActiva = sol.status === 'approved' || st?.status === 'active';
 
-        if (!grupo.tiendas.some((t) => t.id === sol.id || t.slug === slug)) {
+        if (!grupo.tiendas.some((t) => t.id === sol.id || t.slug === slug || (st?.id && t.store?.id === st.id))) {
           grupo.tiendas.push({
             id: sol.id,
             solicitud: sol,
@@ -214,44 +237,63 @@ export default function SuperadminNetworkPage() {
       }
     });
 
-    // Agregar tiendas de stores que no estuvieran en store_requests
+    // 2. Asociar tiendas de la tabla `stores` a su respectivo afiliado
     stores.forEach((st) => {
       if (!st.es_revendedor && st.plan !== 'revendedor' && st.template !== 'network') return;
       if (st.name?.startsWith('[Perfil]')) return;
 
-      const wspKey = st.whatsapp?.replace(/\D/g, '');
-      const key = (wspKey ? `wsp_${wspKey}` : `store_${st.id}`);
+      const slug = st.slug || obtenerSlug(st.name);
+      const wsp = cleanWsp(st.whatsapp);
 
-      let grupo = mapa.get(key);
-      if (!grupo) {
-        grupo = {
-          id: st.id,
-          key,
+      // Buscar si ya pertenece a un afiliado existente por WhatsApp
+      let grupoId = wsp ? indexByWsp.get(wsp) : undefined;
+      let grupo = grupoId ? afiliadosMap.get(grupoId) : undefined;
+
+      if (grupo) {
+        const yaExiste = grupo.tiendas.find((t) => t.slug === slug || t.nombre?.toLowerCase() === st.name?.toLowerCase() || t.store?.id === st.id);
+        if (yaExiste) {
+          yaExiste.store = st;
+          if (st.status === 'active') yaExiste.estaActiva = true;
+          if (st.status === 'inactive') yaExiste.estaActiva = false;
+        } else {
+          grupo.tiendas.push({
+            id: st.id,
+            store: st,
+            nombre: st.name,
+            slug,
+            estaActiva: st.status === 'active',
+            fecha: st.created_at || '',
+          });
+        }
+      } else {
+        // Solo si NO pertenece a ningún afiliado conocido en store_requests, crearlo
+        const nuevoId = st.id;
+        const nuevoGrupo: PerfilAfiliadoGroup = {
+          id: nuevoId,
+          key: nuevoId,
           contact_name: st.name.replace(/\s+bm$/i, ''),
           email: '',
           whatsapp: st.whatsapp || '',
           city: 'Pucallpa',
           estadoPerfil: 'approved',
           fechaRegistro: st.created_at || '',
-          tiendas: [],
+          tiendas: [
+            {
+              id: st.id,
+              store: st,
+              nombre: st.name,
+              slug,
+              estaActiva: st.status === 'active',
+              fecha: st.created_at || '',
+            },
+          ],
         };
-        mapa.set(key, grupo);
-      }
-
-      const slug = st.slug || obtenerSlug(st.name);
-      if (!grupo.tiendas.some((t) => t.slug === slug || t.store?.id === st.id)) {
-        grupo.tiendas.push({
-          id: st.id,
-          store: st,
-          nombre: st.name,
-          slug,
-          estaActiva: st.status === 'active',
-          fecha: st.created_at || '',
-        });
+        afiliadosMap.set(nuevoId, nuevoGrupo);
+        if (wsp) indexByWsp.set(wsp, nuevoId);
       }
     });
 
-    return Array.from(mapa.values());
+    return Array.from(afiliadosMap.values());
   }, [solicitudes, stores]);
 
   // Métricas globales calculadas sobre los afiliados y tiendas
