@@ -519,20 +519,6 @@ function ExploreContenido() {
                       </div>
                       <div className="flex items-center justify-between pt-2 mt-auto">
                         <span className={`font-price-lg ${p.original ? 'text-red-600' : 'text-slate-900'} text-base font-bold ${p.status === 'Agotado' ? 'text-secondary/50' : ''}`}>{p.price}</span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleAddToCartWithAnim(p);
-                          }}
-                          className="w-8 h-8 rounded-full bg-primary-fixed text-primary flex items-center justify-center active:scale-90 transition-transform shadow-xs hover:scale-105"
-                          title="Agregar al carrito"
-                        >
-                          <span className="material-symbols-outlined text-[18px]">
-                            {addedItems[p.name] ? 'done' : 'add'}
-                          </span>
-                        </button>
                       </div>
                     </div>
                   </Link>

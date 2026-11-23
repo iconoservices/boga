@@ -570,17 +570,6 @@ export default function Home() {
                               >
                                 <span className="material-symbols-outlined text-[18px]" style={isFav ? { fontVariationSettings: "'FILL' 1" } : {}}>favorite</span>
                               </button>
-                              <button 
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  handleAddToCartWithAnim(prod);
-                                }}
-                                className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-transform ${
-                                  addedItems[prod.name] ? 'bg-[#25D366] text-white scale-110' : 'bg-primary text-white active:scale-90'
-                                }`}
-                              >
-                                <span className="material-symbols-outlined text-[18px]">{addedItems[prod.name] ? 'check' : 'add'}</span>
-                              </button>
                             </div>
                           </div>
                         </div>
@@ -623,17 +612,6 @@ export default function Home() {
                         </div>
                         <div className="flex justify-between items-center pt-2 mt-auto">
                           <span className={`font-price-lg ${prod.original ? 'text-red-600' : 'text-slate-900'} font-bold text-base`}>{prod.price}{prod.original && <span className="ml-1.5 text-[11px] font-normal text-secondary line-through">{prod.original}</span>}</span>
-                          <button 
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleAddToCartWithAnim(prod);
-                            }}
-                            className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-transform ${
-                              addedItems[prod.name] ? 'bg-[#25D366] text-white scale-110' : 'bg-primary text-white active:scale-90'
-                            }`}
-                          >
-                            <span className="material-symbols-outlined text-[18px]">{addedItems[prod.name] ? 'check' : 'add'}</span>
-                          </button>
                         </div>
                       </div>
                     </Link>
@@ -709,20 +687,6 @@ export default function Home() {
                       </div>
                       <div className="flex justify-between items-center pt-2 mt-auto">
                         <span className={`font-price-lg ${(p as any).original ? 'text-red-600' : 'text-slate-900'} font-bold text-base`}>{p.price}</span>
-                        <button 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleAddToCartWithAnim(p);
-                          }}
-                          className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-transform ${
-                            addedItems[p.name] ? 'bg-[#25D366] text-white scale-110' : 'bg-primary text-white active:scale-90'
-                          }`}
-                        >
-                          <span className="material-symbols-outlined text-[18px]">
-                            {addedItems[p.name] ? 'check' : 'add'}
-                          </span>
-                        </button>
                       </div>
                     </div>
                   </Link>
