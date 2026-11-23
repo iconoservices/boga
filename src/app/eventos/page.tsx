@@ -91,11 +91,24 @@ export default function Eventos() {
 
       <main className="max-w-[1440px] mx-auto px-container-margin lg:px-6 w-full pt-4 flex flex-col gap-8 pb-14">
 
-        {/* Carrusel destacado: banner completo a todo lo ancho */}
+        {/* Encabezado principal (en móvil va arriba; en desktop con carrusel va en la columna derecha) */}
+        <header className={`flex flex-col gap-1 pt-1 ${carrusel.length > 0 ? 'lg:hidden' : ''}`}>
+          <h1 className="font-headline-lg font-extrabold text-xl sm:text-2xl text-on-surface tracking-tight leading-tight">
+            Agenda y Eventos en Pucallpa
+          </h1>
+          <p className="font-body-md text-xs sm:text-sm text-secondary max-w-2xl leading-relaxed">
+            Conciertos, festivales, ferias y cultura en Pucallpa y Yarinacocha.
+          </p>
+        </header>
+
+        {/* Destacado a la izquierda + categorías a la derecha en escritorio */}
+        <div className={carrusel.length > 0 ? 'flex flex-col gap-8 lg:grid lg:grid-cols-[1.25fr_1fr] lg:gap-8 lg:items-center' : 'contents'}>
+
+        {/* Carrusel destacado (lado izquierdo en desktop) con diseño flyer + textos */}
         {carrusel.length > 0 && (
         <section className="w-full">
           <div
-            className="relative overflow-hidden rounded-2xl shadow-sm h-[320px] sm:h-[380px] lg:h-[420px] w-full"
+            className="relative overflow-hidden rounded-2xl shadow-sm h-[340px] sm:h-auto sm:aspect-[21/9] lg:aspect-auto lg:h-[380px] w-full"
             onTouchStart={(e) => { swipeX.current = e.touches[0].clientX; }}
             onTouchEnd={(e) => {
               if (swipeX.current === null) return;
@@ -112,33 +125,50 @@ export default function Eventos() {
                 <div
                   key={c.id}
                   onClick={() => setEventoAbierto(c)}
-                  className="relative w-full h-full shrink-0 bg-surface-container-low cursor-pointer"
+                  className="relative w-full h-full shrink-0 bg-slate-950 flex items-center overflow-hidden cursor-pointer group"
                 >
-                  <Foto src={c.img} alt={c.titulo} className="absolute inset-0 w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-                  {/* El texto va ABAJO y compacto: en el medio tapaba a la persona o el motivo de la foto. */}
-                  <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1.5 px-4 pb-4 pr-24 pt-16 lg:px-8 lg:pb-6 max-w-[840px]">
-                    <div className="flex items-center gap-2">
-                      <div className="bg-white rounded-lg px-2 py-0.5 text-center shadow-md">
-                        <span className="block font-price-lg text-primary text-sm leading-none">{c.dia}</span>
-                        <span className="block font-label-md text-[9px] text-secondary uppercase">{c.mes}</span>
+                  {/* Fondo difuminado vivo y colorido del mismo flyer */}
+                  <img
+                    src={c.img}
+                    alt=""
+                    aria-hidden
+                    className="absolute inset-0 w-full h-full object-cover blur-2xl scale-125 brightness-95 saturate-150 pointer-events-none"
+                  />
+                  {/* Degradado suave para asegurar lectura perfecta del texto en el lado izquierdo */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/50 to-black/20 pointer-events-none" />
+
+                  {/* 2 Columnas internas: Izquierda textos del evento, Derecha flyer completo */}
+                  <div className="relative z-10 w-full h-full flex items-center justify-between p-3.5 sm:p-6 lg:p-7 gap-3 sm:gap-4">
+                    <div className="flex-1 min-w-0 flex flex-col justify-center gap-1.5 sm:gap-2">
+                      <div className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-0.5 sm:py-1 rounded-full bg-emerald-500/25 border border-emerald-400/50 text-emerald-200 font-extrabold text-[9px] sm:text-xs tracking-wider uppercase w-fit truncate backdrop-blur-xs shadow-xs">
+                        <span className="material-symbols-outlined text-[11px] sm:text-[14px]">celebration</span>
+                        <span>PRÓXIMO EVENTO · {c.dia} {c.mes}</span>
                       </div>
-                      <span className="bg-primary text-white text-[10px] font-label-md px-2 py-1 rounded-full uppercase tracking-wider">Destacado</span>
+
+                      <h2 className="font-extrabold text-white text-sm sm:text-xl lg:text-2xl leading-tight line-clamp-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
+                        {c.titulo}
+                      </h2>
+
+                      <p className="text-white/85 text-[10px] sm:text-xs line-clamp-2 drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]">
+                        {c.organiza ? `${c.organiza}. ` : ''}{c.lugar}{c.precio ? ` · ${c.precio}` : ''}
+                      </p>
+
+                      <div className="pt-0.5 sm:pt-1">
+                        <span className="inline-flex items-center gap-1 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold text-[10px] sm:text-xs group-hover:scale-105 transition-all shadow-lg">
+                          <span>Ver evento</span>
+                          <span className="material-symbols-outlined text-[13px] sm:text-[15px]">arrow_forward</span>
+                        </span>
+                      </div>
                     </div>
-                    <h2 className="font-headline-lg text-white text-base sm:text-xl lg:text-2xl font-extrabold leading-tight line-clamp-2">{c.titulo}</h2>
-                    <p className="text-white/80 font-body-md text-[11px] sm:text-xs line-clamp-1">{c.organiza}</p>
-                    <div className="flex flex-wrap items-center gap-2 mt-1">
-                      <span className="text-white/90 font-label-md text-[11px] flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[13px]">location_on</span>{c.lugar}
-                      </span>
-                      <span className="text-white/90 font-label-md text-[11px]">· {c.precio}</span>
+
+                    {/* Flyer completo a la derecha, sin recortar */}
+                    <div className="h-full max-h-full max-w-[42%] sm:max-w-[44%] flex items-center justify-center shrink-0">
+                      <img
+                        src={c.img}
+                        alt={c.titulo}
+                        className="h-full w-auto max-h-[92%] object-contain rounded-xl sm:rounded-2xl shadow-2xl border border-white/20 group-hover:scale-105 transition-transform duration-500"
+                      />
                     </div>
-                    <button
-                      onClick={(ev) => { ev.stopPropagation(); setEventoAbierto(c); }}
-                      className="w-fit mt-1 bg-primary hover:bg-primary-container text-white font-label-md text-[11px] px-4 py-1.5 rounded-full active:scale-95 transition-transform"
-                    >
-                      Ver más
-                    </button>
                   </div>
                 </div>
               ))}
@@ -181,23 +211,25 @@ export default function Eventos() {
         </section>
         )}
 
-        {/* Encabezado + Categorías */}
-        <div className="flex flex-col gap-4">
-          <header className="flex flex-col gap-1">
-            <h1 className="font-headline-lg font-extrabold text-xl sm:text-2xl text-on-surface tracking-tight leading-tight">
-              Agenda y Eventos en Pucallpa
-            </h1>
-            <p className="font-body-md text-xs sm:text-sm text-secondary max-w-2xl leading-relaxed">
-              Conciertos, festivales, ferias y cultura en Pucallpa y Yarinacocha.
-            </p>
-          </header>
+        {/* Lado derecho en escritorio: Encabezado compacto + Categorías */}
+        <div className="flex flex-col gap-4 justify-center">
+          {carrusel.length > 0 && (
+            <header className="hidden lg:flex flex-col gap-1">
+              <h1 className="font-headline-lg font-extrabold text-xl lg:text-2xl text-on-surface tracking-tight leading-tight">
+                Agenda y Eventos en Pucallpa
+              </h1>
+              <p className="font-body-md text-xs text-secondary leading-relaxed">
+                Conciertos, festivales, ferias y cultura en Pucallpa y Yarinacocha.
+              </p>
+            </header>
+          )}
 
           {/* Categorías */}
           <section className="flex flex-col gap-2">
-            <div className="flex gap-4 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-1 lg:flex-wrap lg:overflow-visible" style={{ scrollbarWidth: 'none' }}>
+            <div className="flex gap-4 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-1 lg:grid lg:grid-cols-5 lg:gap-x-2 lg:gap-y-3.5 lg:overflow-visible" style={{ scrollbarWidth: 'none' }}>
               <button
                 onClick={() => { setCat(null); irALaLista(); }}
-                className="flex flex-col items-center gap-1.5 shrink-0 w-[68px] lg:w-[74px] group"
+                className="flex flex-col items-center gap-1.5 shrink-0 w-[68px] lg:w-auto group"
               >
                 <span className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
                   cat === null ? 'bg-primary text-white shadow-xs' : 'bg-surface-container-low text-primary group-hover:bg-primary-fixed'
@@ -212,7 +244,7 @@ export default function Eventos() {
                   <button
                     key={c.cat}
                     onClick={() => { setCat(active ? null : c.cat); irALaLista(); }}
-                    className="flex flex-col items-center gap-1.5 shrink-0 w-[68px] lg:w-[74px] group"
+                    className="flex flex-col items-center gap-1.5 shrink-0 w-[68px] lg:w-auto group"
                   >
                     <span className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
                       active ? 'bg-primary text-white shadow-xs' : 'bg-surface-container-low text-primary group-hover:bg-primary-fixed'
@@ -225,6 +257,8 @@ export default function Eventos() {
               })}
             </div>
           </section>
+        </div>
+
         </div>
 
         {/* Lugares para visitar */}
