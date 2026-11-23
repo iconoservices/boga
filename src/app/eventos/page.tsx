@@ -138,26 +138,53 @@ export default function Eventos() {
                   <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/50 to-black/20 pointer-events-none" />
 
                   {/* 2 Columnas internas: Izquierda textos del evento, Derecha flyer completo */}
-                  <div className="relative z-10 w-full h-full flex items-center justify-between p-3.5 sm:p-6 lg:p-7 gap-3 sm:gap-4">
-                    <div className="flex-1 min-w-0 flex flex-col justify-center gap-1.5 sm:gap-2">
-                      <div className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-0.5 sm:py-1 rounded-full bg-emerald-500/25 border border-emerald-400/50 text-emerald-200 font-extrabold text-[9px] sm:text-xs tracking-wider uppercase w-fit truncate backdrop-blur-xs shadow-xs">
-                        <span className="material-symbols-outlined text-[11px] sm:text-[14px]">celebration</span>
-                        <span>PRÓXIMO EVENTO · {c.dia} {c.mes}</span>
+                  <div className="relative z-10 w-full h-full flex items-center justify-between p-3.5 sm:p-5 lg:p-6 gap-3 sm:gap-4">
+                    <div className="flex-1 min-w-0 flex flex-col justify-center gap-2 sm:gap-2.5">
+                      {/* Fecha destacada + pill */}
+                      <div className="flex items-center gap-2">
+                        <div className="bg-white rounded-lg px-2 sm:px-2.5 py-0.5 sm:py-1 text-center shadow-md shrink-0">
+                          <span className="block font-black text-primary text-xs sm:text-sm lg:text-base leading-none">{c.dia}</span>
+                          <span className="block font-bold text-[8px] sm:text-[9px] text-slate-700 uppercase leading-none mt-0.5">{c.mes}</span>
+                        </div>
+                        <div className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-emerald-500/25 border border-emerald-400/50 text-emerald-200 font-extrabold text-[9px] sm:text-xs tracking-wider uppercase backdrop-blur-xs shadow-xs">
+                          <span className="material-symbols-outlined text-[11px] sm:text-[13px]">celebration</span>
+                          <span>PRÓXIMO EVENTO</span>
+                        </div>
                       </div>
 
-                      <h2 className="font-extrabold text-white text-sm sm:text-xl lg:text-2xl leading-tight line-clamp-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
+                      {/* Título */}
+                      <h2 className="font-extrabold text-white text-base sm:text-lg lg:text-xl leading-tight line-clamp-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
                         {c.titulo}
                       </h2>
 
-                      <p className="text-white/85 text-[10px] sm:text-xs line-clamp-2 drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]">
-                        {c.organiza ? `${c.organiza}. ` : ''}{c.lugar}{c.precio ? ` · ${c.precio}` : ''}
-                      </p>
+                      {/* Organizador (si existe y no es redundante) */}
+                      {c.organiza && !c.lugar.toLowerCase().startsWith(c.organiza.toLowerCase()) && (
+                        <p className="text-white/80 font-medium text-[11px] sm:text-xs line-clamp-1 drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]">
+                          {c.organiza}
+                        </p>
+                      )}
 
+                      {/* Lugar con ícono y precio */}
+                      <div className="flex flex-wrap items-center gap-1.5 text-white/95 text-[11px] sm:text-xs drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]">
+                        <span className="inline-flex items-center gap-1 font-medium">
+                          <span className="material-symbols-outlined text-[14px] sm:text-[16px] text-rose-400 shrink-0">location_on</span>
+                          <span className="line-clamp-1">{c.lugar}</span>
+                        </span>
+                        {c.precio && (
+                          <span className="text-emerald-300 font-bold shrink-0">· {c.precio}</span>
+                        )}
+                      </div>
+
+                      {/* Botón CTA */}
                       <div className="pt-0.5 sm:pt-1">
-                        <span className="inline-flex items-center gap-1 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold text-[10px] sm:text-xs group-hover:scale-105 transition-all shadow-lg">
+                        <button
+                          type="button"
+                          onClick={(ev) => { ev.stopPropagation(); setEventoAbierto(c); }}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold text-[11px] sm:text-xs group-hover:scale-105 transition-all shadow-lg active:scale-95"
+                        >
                           <span>Ver evento</span>
                           <span className="material-symbols-outlined text-[13px] sm:text-[15px]">arrow_forward</span>
-                        </span>
+                        </button>
                       </div>
                     </div>
 
@@ -294,7 +321,7 @@ export default function Eventos() {
         <section className="flex flex-col gap-3">
           <h2 className="font-headline-lg text-on-surface">Planes imperdibles</h2>
           <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x scroll-pl-container-margin lg:scroll-pl-0" style={{ scrollbarWidth: 'none' }}>
-            {eventos.slice(0, 7).map((e) => (
+            {eventos.map((e) => (
               <div key={e.id} onClick={() => setEventoAbierto(e)} className="min-w-[180px] w-[180px] lg:min-w-[210px] lg:w-[210px] bg-white rounded-2xl overflow-hidden shadow-[0_15px_15px_rgba(0,0,0,0.04)] border border-surface-container-highest snap-start flex flex-col cursor-pointer active:scale-[0.98] transition-transform">
                 <div className="relative aspect-square overflow-hidden bg-surface-container-low">
                   <Foto src={e.img} alt={e.titulo} className="w-full h-full object-cover" />
@@ -321,29 +348,6 @@ export default function Eventos() {
                       </a>
                     )}
                   </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Lo más vendido esta semana — numerado */}
-        <section className="flex flex-col gap-3">
-          <h2 className="font-headline-lg text-on-surface flex items-center gap-2">
-            <span className="material-symbols-outlined text-tertiary" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-            Lo más vendido esta semana
-          </h2>
-          <div className="flex gap-4 overflow-x-auto hide-scrollbar -mx-container-margin px-container-margin lg:mx-0 lg:px-0 pb-2 snap-x scroll-pl-container-margin lg:scroll-pl-0" style={{ scrollbarWidth: 'none' }}>
-            {eventos.slice(1, 6).map((e, i) => (
-              <div key={e.id} onClick={() => setEventoAbierto(e)} className="flex items-end gap-1 shrink-0 snap-start cursor-pointer active:scale-[0.98] transition-transform">
-                <span className="font-headline-lg font-black text-primary/25 text-[64px] leading-[0.7] select-none">{i + 1}</span>
-                <div className="w-[150px] lg:w-[170px]">
-                  <div className="relative aspect-square rounded-xl overflow-hidden bg-surface-container-low">
-                    <Foto src={e.img} alt={e.titulo} className="w-full h-full object-cover" />
-                  </div>
-                  <span className="font-label-md text-[10px] text-secondary uppercase tracking-wider mt-2 block">{e.dia} {e.mes} · {e.lugar.split(' ')[0]}</span>
-                  <h3 className="font-headline-sm text-[13px] text-on-surface line-clamp-2 leading-tight mt-0.5">{e.titulo}</h3>
-                  <span className="font-price-lg text-primary text-[13px]">Desde {e.precio}</span>
                 </div>
               </div>
             ))}
