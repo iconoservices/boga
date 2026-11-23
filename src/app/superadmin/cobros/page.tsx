@@ -12,6 +12,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useEsSuperadmin } from '@/lib/superadmin';
+import SuperadminSidebarNav from '@/components/superadmin/SuperadminSidebarNav';
 import SuperadminSubheader from '@/components/SuperadminSubheader';
 import { hoyLima } from '@/lib/fechaLima';
 import EditorPlanes from '@/components/superadmin/EditorPlanes';
@@ -481,9 +482,12 @@ export default function CobrosPage() {
   const nAtender = filas.filter((f) => atender(f.estado.tipo)).length;
 
   return (
-    <div className="min-h-screen bg-[#f9f9ff] text-[#191b23]">
-      <SuperadminSubheader title="Cobros" icon="payments" />
-      <main className="max-w-[1100px] mx-auto px-4 py-6 md:py-8 flex flex-col gap-6 md:gap-8">
+    <div className="min-h-screen bg-[#f9f9ff] flex">
+      <SuperadminSidebarNav />
+
+      <div className="flex-1 min-w-0 bg-[#f9f9ff] text-[#191b23] flex flex-col">
+        <SuperadminSubheader title="Cobros" icon="payments" />
+        <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 md:py-8 w-full flex-1 flex flex-col gap-6 md:gap-8">
         {sinTablas && (
           <div className="p-4 bg-[#fff8e1] border border-[#f5c518]/50 rounded-md text-xs text-[#5c4a00] font-semibold">
             Falta correr el SQL de «Cobros» de <code>supabase_setup.sql</code> en Supabase (tablas plan_precios, store_suscripciones y store_pagos).
@@ -1054,6 +1058,7 @@ export default function CobrosPage() {
           </div>
         </>)}
       </main>
+      </div>
 
       {abierta && (
         <GestionTienda
