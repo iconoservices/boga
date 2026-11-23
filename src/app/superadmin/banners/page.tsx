@@ -326,6 +326,74 @@ export default function BannersAdmin() {
     setModalEventosAbierto(false);
   };
 
+  // ── Modal y notas para vincular notas de la Revista como Banner ──
+  const [modalRevistaAbierto, setModalRevistaAbierto] = useState(false);
+  const [notasRevistaDisponibles, setNotasRevistaDisponibles] = useState<any[]>([]);
+  const [cargandoRevista, setCargandoRevista] = useState(false);
+
+  const fetchNotasRevistaModal = async () => {
+    setCargandoRevista(true);
+    try {
+      const res = await fetch('/api/revista');
+      const data = await res.json();
+      const items = Array.isArray(data) ? data : (data?.notas || []);
+      setNotasRevistaDisponibles(items);
+    } catch (e) {
+      console.error('Error cargando notas de revista:', e);
+    } finally {
+      setCargandoRevista(false);
+    }
+  };
+
+  const handleVincularNota = (nota: any, modo: 'directo' | 'editar') => {
+    const tag = nota.kicker ? `Revista · ${nota.kicker}` : 'Revista';
+    const titulo1 = nota.titulo || '';
+    const desc = nota.descripcion
+      ? (nota.descripcion.length > 90 ? nota.descripcion.slice(0, 87) + '...' : nota.descripcion)
+      : '';
+    const link = `/revista/${nota.slug}`;
+    const imgUrl = nota.img || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&q=80';
+
+    if (modo === 'editar') {
+      setEditingMarketBannerId('new');
+      setMarketBannerForm({
+        tag: tag,
+        title1: titulo1,
+        title2: '',
+        sub: desc,
+        link: link,
+        active: true,
+        showText: true,
+      });
+      setMarketBannerImageFile(null);
+      setMarketBannerImagePreview(imgUrl);
+      setModalRevistaAbierto(false);
+      return;
+    }
+
+    const nuevoBanner = {
+      id: 'temp-' + Date.now(),
+      image: imgUrl,
+      tag: tag,
+      title1: titulo1,
+      title2: null,
+      sub: desc,
+      link: link,
+      active: true,
+      show_text: true,
+      sort_order: 1,
+      page: bannerPageTab,
+    };
+    setMarketBanners(prev => {
+      const otros = prev.filter(b => (b.page || 'market') !== bannerPageTab);
+      const estaPestaña = [nuevoBanner, ...prev.filter(b => (b.page || 'market') === bannerPageTab)];
+      return [...otros, ...estaPestaña.map((item, idx) => ({ ...item, sort_order: idx + 1 }))];
+    });
+    setHayCambios(true);
+    setGuardadoExito(false);
+    setModalRevistaAbierto(false);
+  };
+
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = 'move';
@@ -501,6 +569,18 @@ export default function BannersAdmin() {
                     </button>
                     <button
                       type="button"
+                      onClick={() => {
+                        fetchNotasRevistaModal();
+                        setModalRevistaAbierto(true);
+                      }}
+                      className="px-3 py-2 bg-amber-600 text-white rounded-md font-bold text-xs hover:bg-amber-700 transition-colors flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer"
+                      title="Seleccionar un artículo de la Revista y ponerlo en este carrusel"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">menu_book</span>
+                      Vincular Revista
+                    </button>
+                    <button
+                      type="button"
                       onClick={handleOpenNewMarketBanner}
                       className="px-3 py-2 bg-[#0058be] text-white rounded-md font-bold text-xs hover:bg-[#004395] transition-colors flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer"
                     >
@@ -640,96 +720,7 @@ export default function BannersAdmin() {
                   </div>
                 ) : (
                   <>
-                    {editingMarketBannerId && (
-                      <form onSubmit={handleSaveMarketBanner} className="mb-4 p-4 bg-[#f2f3fd]/40 rounded-lg border border-[#c2c6d6] space-y-3">
-                        <p className="text-[10px] font-black text-[#424754] uppercase tracking-widest">
-                          {editingMarketBannerId === 'new' ? 'Nuevo banner' : 'Editar banner'}
-                        </p>
-                        <p className="text-[10px] text-[#727785] font-semibold -mt-1.5">
-                          Si tu imagen ya tiene el texto dibujado (un flyer armado en Canva u otra herramienta), deja el tag y los títulos vacíos — si los llenás, la web dibuja ese texto ENCIMA del de tu imagen y se pisan.
-                        </p>
-                        <div className="flex gap-3">
-                          <label className="shrink-0 w-20 h-14 rounded-lg border-2 border-dashed border-[#c2c6d6] flex items-center justify-center cursor-pointer hover:bg-white transition-colors overflow-hidden bg-white">
-                            {marketBannerImagePreview ? (
-                              <img src={marketBannerImagePreview} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <span className="material-symbols-outlined text-[#727785] text-[20px]">add_a_photo</span>
-                            )}
-                            <input
-                              type="file" accept="image/*" className="sr-only"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (!file) return;
-                                setMarketBannerImageFile(file);
-                                setMarketBannerImagePreview(URL.createObjectURL(file));
-                              }}
-                            />
-                          </label>
-                          <div className="flex-1 grid grid-cols-2 gap-2">
-                            <input
-                              type="text" placeholder="Tag (opcional, ej: Promo Exclusiva)"
-                              value={marketBannerForm.tag}
-                              onChange={(e) => setMarketBannerForm(prev => ({ ...prev, tag: e.target.value }))}
-                              className="col-span-2 bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be]"
-                            />
-                            <input
-                              type="text" placeholder="Título línea 1 (ej: 2X1 EN) — opcional"
-                              value={marketBannerForm.title1}
-                              onChange={(e) => setMarketBannerForm(prev => ({ ...prev, title1: e.target.value }))}
-                              className="bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be]"
-                            />
-                            <input
-                              type="text" placeholder="Título línea 2 (ej: HAMBURGUESAS)"
-                              value={marketBannerForm.title2}
-                              onChange={(e) => setMarketBannerForm(prev => ({ ...prev, title2: e.target.value }))}
-                              className="bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-bold text-[#191b23] outline-none focus:border-[#0058be]"
-                            />
-                          </div>
-                        </div>
-                        <input
-                          type="text" placeholder="Descripción corta (ej: Solo por hoy en locales seleccionados)"
-                          value={marketBannerForm.sub}
-                          onChange={(e) => setMarketBannerForm(prev => ({ ...prev, sub: e.target.value }))}
-                          className="w-full bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-medium text-[#191b23] outline-none focus:border-[#0058be]"
-                        />
-                        <input
-                          type="text" placeholder="Link opcional al tocarlo (ej: /promotions o una url)"
-                          value={marketBannerForm.link}
-                          onChange={(e) => setMarketBannerForm(prev => ({ ...prev, link: e.target.value }))}
-                          className="w-full bg-white border border-[#ecedf7] rounded-md px-3 py-2 text-xs font-medium text-[#191b23] outline-none focus:border-[#0058be]"
-                        />
-                        <div className="flex items-center justify-between pt-1">
-                          <div className="flex items-center gap-4">
-                            <label className="flex items-center gap-2 text-[11px] font-bold text-[#424754] cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={marketBannerForm.active}
-                                onChange={(e) => setMarketBannerForm(prev => ({ ...prev, active: e.target.checked }))}
-                                className="w-4 h-4 accent-[#0058be]"
-                              />
-                              Visible en {{ market: '/market', home: 'el Inicio', negocios: 'la portada de /negocios (se usa la primera foto activa)' }[bannerPageTab]}
-                            </label>
-                            <label className="flex items-center gap-2 text-[11px] font-bold text-[#424754] cursor-pointer" title="Desmarca esto si tu imagen ya trae el texto dibujado — el tag/título/descripción quedan guardados pero no se dibujan encima.">
-                              <input
-                                type="checkbox"
-                                checked={marketBannerForm.showText}
-                                onChange={(e) => setMarketBannerForm(prev => ({ ...prev, showText: e.target.checked }))}
-                                className="w-4 h-4 accent-[#0058be]"
-                              />
-                              Mostrar texto encima
-                            </label>
-                          </div>
-                          <div className="flex gap-2">
-                            <button type="button" onClick={() => setEditingMarketBannerId(null)} className="px-3 py-2 rounded-md font-bold text-xs text-[#424754] hover:bg-[#e6e7f2] transition-colors">
-                              Cancelar
-                            </button>
-                            <button type="submit" disabled={isSavingMarketBanner} className="px-4 py-2 bg-[#0058be] text-white rounded-md font-bold text-xs hover:bg-[#004395] transition-colors disabled:opacity-50">
-                              {isSavingMarketBanner ? 'Guardando…' : 'Guardar'}
-                            </button>
-                          </div>
-                        </div>
-                      </form>
-                    )}
+                    {/* Formulario ahora se abre como tarjeta emergente (modal) */}
 
                     {isLoadingMarketBanners ? (
                       <p className="text-xs text-[#727785] italic py-3 text-center">Cargando…</p>
@@ -950,6 +941,306 @@ export default function BannersAdmin() {
           </div>
         </main>
       </div>
+
+      {/* Modal / Tarjeta Emergente para Crear o Editar Banner */}
+      {editingMarketBannerId && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-[#c2c6d6]">
+            {/* Cabecera de la Tarjeta */}
+            <div className="p-4 sm:p-5 border-b border-[#c2c6d6] flex items-center justify-between bg-[#f8fafc]">
+              <div className="flex items-center gap-2.5">
+                <span className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 text-[#0058be] flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[20px]">
+                    {editingMarketBannerId === 'new' ? 'add_photo_alternate' : 'edit_document'}
+                  </span>
+                </span>
+                <div>
+                  <h3 className="font-bold text-sm text-[#191b23]">
+                    {editingMarketBannerId === 'new' ? 'Nuevo Banner de Portada' : 'Editar Banner de Portada'}
+                  </h3>
+                  <p className="text-[11px] text-[#727785]">
+                    {editingMarketBannerId === 'new'
+                      ? 'Configura la foto y textos para agregar un nuevo banner'
+                      : 'Modifica los datos del banner para esta sección'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingMarketBannerId(null)}
+                className="w-8 h-8 rounded-full hover:bg-slate-200 flex items-center justify-center text-[#727785] cursor-pointer transition-colors"
+                title="Cerrar sin guardar"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
+
+            {/* Formulario / Cuestionario en la Tarjeta */}
+            <form onSubmit={handleSaveMarketBanner} className="flex-1 overflow-y-auto p-5 space-y-4">
+              <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-xl text-[11px] text-amber-900 leading-relaxed flex items-start gap-2">
+                <span className="material-symbols-outlined text-[16px] text-amber-600 shrink-0 mt-0.5">info</span>
+                <span>
+                  <b>Consejo:</b> Si tu imagen ya tiene el texto dibujado (diseñado en Canva), deja los títulos y subtítulos vacíos para no tapar tu diseño.
+                </span>
+              </div>
+
+              {/* Imagen del Banner */}
+              <div>
+                <label className="block text-[11px] font-bold text-[#424754] uppercase tracking-wider mb-1.5">
+                  Imagen del Banner (Recomendado 16:9):
+                </label>
+                <div className="flex gap-3 items-center">
+                  <label className="relative aspect-video w-36 rounded-xl border-2 border-dashed border-[#c2c6d6] hover:border-[#0058be] bg-[#f8fafc] flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all group shrink-0">
+                    {marketBannerImagePreview ? (
+                      <>
+                        <img src={marketBannerImagePreview} alt="" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold gap-1">
+                          <span className="material-symbols-outlined text-[16px]">change_circle</span>
+                          Cambiar
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-center gap-1 text-[#727785] p-2 text-center">
+                        <span className="material-symbols-outlined text-[24px]">add_a_photo</span>
+                        <span className="text-[10px] font-bold">Subir foto</span>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="sr-only"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setMarketBannerImageFile(file);
+                        setMarketBannerImagePreview(URL.createObjectURL(file));
+                      }}
+                    />
+                  </label>
+                  <div className="flex-1 text-[11px] text-[#727785] space-y-1">
+                    <p className="font-semibold text-[#191b23]">Selecciona una foto desde tu computadora o celular.</p>
+                    <p className="text-[10px]">Formatos aceptados: JPG, PNG, WebP.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tag y Títulos */}
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#424754] mb-1">
+                    Etiqueta / Tag (opcional):
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej: Promo Exclusiva, Revista · Cultura, Servicios..."
+                    value={marketBannerForm.tag}
+                    onChange={(e) => setMarketBannerForm(prev => ({ ...prev, tag: e.target.value }))}
+                    className="w-full bg-white border border-[#c2c6d6] focus:border-[#0058be] rounded-lg px-3 py-2 text-xs font-bold text-[#191b23] outline-none transition-colors"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#424754] mb-1">
+                      Título línea 1 (opcional):
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ej: 2X1 EN, Startup ucayalina..."
+                      value={marketBannerForm.title1}
+                      onChange={(e) => setMarketBannerForm(prev => ({ ...prev, title1: e.target.value }))}
+                      className="w-full bg-white border border-[#c2c6d6] focus:border-[#0058be] rounded-lg px-3 py-2 text-xs font-bold text-[#191b23] outline-none transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#424754] mb-1">
+                      Título línea 2 (opcional):
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ej: HAMBURGUESAS, Pucallpa..."
+                      value={marketBannerForm.title2}
+                      onChange={(e) => setMarketBannerForm(prev => ({ ...prev, title2: e.target.value }))}
+                      className="w-full bg-white border border-[#c2c6d6] focus:border-[#0058be] rounded-lg px-3 py-2 text-xs font-bold text-[#191b23] outline-none transition-colors"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#424754] mb-1">
+                    Descripción corta o subtítulo:
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej: Solo por hoy en locales seleccionados..."
+                    value={marketBannerForm.sub}
+                    onChange={(e) => setMarketBannerForm(prev => ({ ...prev, sub: e.target.value }))}
+                    className="w-full bg-white border border-[#c2c6d6] focus:border-[#0058be] rounded-lg px-3 py-2 text-xs font-medium text-[#191b23] outline-none transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#424754] mb-1">
+                    Enlace de destino al hacer clic:
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej: /eventos, /revista/..., https://..."
+                    value={marketBannerForm.link}
+                    onChange={(e) => setMarketBannerForm(prev => ({ ...prev, link: e.target.value }))}
+                    className="w-full bg-white border border-[#c2c6d6] focus:border-[#0058be] rounded-lg px-3 py-2 text-xs font-medium text-[#191b23] outline-none transition-colors font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Opciones booleanas */}
+              <div className="pt-2 border-t border-[#ecedf7] flex flex-col sm:flex-row gap-4">
+                <label className="flex items-center gap-2 text-xs font-bold text-[#424754] cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={marketBannerForm.active}
+                    onChange={(e) => setMarketBannerForm(prev => ({ ...prev, active: e.target.checked }))}
+                    className="w-4 h-4 accent-[#0058be] rounded"
+                  />
+                  <span>Visible en {bannerPageTab === 'home' ? 'el Inicio' : bannerPageTab}</span>
+                </label>
+                <label className="flex items-center gap-2 text-xs font-bold text-[#424754] cursor-pointer" title="Desmarca si la imagen ya tiene textos dibujados">
+                  <input
+                    type="checkbox"
+                    checked={marketBannerForm.showText}
+                    onChange={(e) => setMarketBannerForm(prev => ({ ...prev, showText: e.target.checked }))}
+                    className="w-4 h-4 accent-[#0058be] rounded"
+                  />
+                  <span>Mostrar texto encima de la foto</span>
+                </label>
+              </div>
+
+              {/* Pie de la Tarjeta */}
+              <div className="pt-4 border-t border-[#c2c6d6] flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEditingMarketBannerId(null)}
+                  className="px-4 py-2 border border-[#c2c6d6] rounded-lg font-bold text-xs text-[#424754] hover:bg-slate-100 transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingMarketBanner}
+                  className="px-5 py-2 bg-[#0058be] hover:bg-[#004395] text-white rounded-lg font-bold text-xs transition-colors shadow-sm cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {isSavingMarketBanner ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Guardando foto…</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-[16px]">check</span>
+                      <span>Listo (Aplicar a lista)</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para Vincular Notas de Revista como Banner */}
+      {modalRevistaAbierto && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[85vh] flex flex-col overflow-hidden border border-[#c2c6d6]">
+            <div className="p-4 border-b border-[#c2c6d6] flex items-center justify-between bg-[#f8fafc]">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-amber-600 text-xl">menu_book</span>
+                <div>
+                  <h3 className="font-bold text-sm text-[#191b23]">Vincular Artículo de Revista ({bannerPageTab === 'home' ? 'Inicio' : bannerPageTab})</h3>
+                  <p className="text-[11px] text-[#727785]">Selecciona un artículo de la revista para mostrarlo como banner en la portada</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setModalRevistaAbierto(false)}
+                className="w-8 h-8 rounded-full hover:bg-slate-200 flex items-center justify-center text-[#727785] cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
+
+            <div className="p-4 overflow-y-auto space-y-2 flex-1">
+              {cargandoRevista ? (
+                <div className="py-8 text-center text-xs text-[#727785] flex flex-col items-center gap-2">
+                  <div className="w-6 h-6 border-2 border-amber-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span>Cargando notas de la revista…</span>
+                </div>
+              ) : notasRevistaDisponibles.length === 0 ? (
+                <div className="py-8 text-center text-xs text-[#727785]">
+                  <p>No se encontraron artículos en la revista.</p>
+                </div>
+              ) : (
+                notasRevistaDisponibles.map((nota) => (
+                  <div
+                    key={nota.slug || nota.id}
+                    className="p-3 rounded-lg border border-[#ecedf7] hover:border-amber-500 hover:bg-amber-50/20 transition-all flex items-center gap-3 bg-white"
+                  >
+                    <img
+                      src={nota.img || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=300&q=80'}
+                      alt=""
+                      className="w-16 h-12 rounded object-cover shrink-0 bg-slate-100 border border-slate-200"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        {nota.kicker && (
+                          <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
+                            {nota.kicker}
+                          </span>
+                        )}
+                      </div>
+                      <h4 className="text-xs font-bold text-[#191b23] truncate mt-0.5">
+                        {nota.titulo}
+                      </h4>
+                      <p className="text-[10px] text-[#727785] truncate">
+                        {nota.descripcion || `/revista/${nota.slug}`}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleVincularNota(nota, 'editar')}
+                        className="px-2.5 py-1.5 rounded border border-[#c2c6d6] hover:bg-slate-100 text-[11px] font-bold text-[#424754] transition cursor-pointer"
+                        title="Personalizar texto o foto antes de publicar"
+                      >
+                        Ajustar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleVincularNota(nota, 'directo')}
+                        className="px-3 py-1.5 rounded bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold transition shadow-xs cursor-pointer flex items-center gap-1"
+                      >
+                        <span className="material-symbols-outlined text-[14px]">add</span>
+                        Publicar
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="p-3 bg-slate-50 border-t border-[#c2c6d6] flex items-center justify-between text-xs">
+              <span className="text-[11px] text-[#727785]">Se agregará a la lista. Haz clic en <b>Guardar Cambios</b> en la cabecera para persistir.</span>
+              <button
+                type="button"
+                onClick={() => setModalRevistaAbierto(false)}
+                className="px-3 py-1.5 border border-[#c2c6d6] rounded-md text-[#424754] hover:bg-slate-100 font-bold cursor-pointer"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal para Vincular Próximos Eventos como Banner */}
       {modalEventosAbierto && (
