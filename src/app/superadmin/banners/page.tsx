@@ -42,7 +42,7 @@ export default function BannersAdmin() {
   const [marketBanners, setMarketBanners] = useState<any[]>([]);
   const [isLoadingMarketBanners, setIsLoadingMarketBanners] = useState(true);
   // Que carrusel se esta editando: /market, Inicio "/", /negocios o /productos.
-  const [bannerPageTab, setBannerPageTab] = useState<'market' | 'home' | 'negocios' | 'productos'>('market');
+  const [bannerPageTab, setBannerPageTab] = useState<'market' | 'home' | 'negocios' | 'productos'>('home');
   const [productosBanners, setProductosBanners] = useState<Record<string, string>>({});
   const [guardandoProductoSlug, setGuardandoProductoSlug] = useState<string | null>(null);
   const [mensajeProducto, setMensajeProducto] = useState<string | null>(null);
@@ -81,10 +81,11 @@ export default function BannersAdmin() {
       await revalidarCatalogo();
     }
   };
-  const visibleMarketBanners = React.useMemo(
-    () => marketBanners.filter(b => (b.page || 'market') === bannerPageTab),
-    [marketBanners, bannerPageTab]
-  );
+  const visibleMarketBanners = React.useMemo(() => {
+    return [...marketBanners]
+      .filter(b => (b.page || 'market') === bannerPageTab)
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+  }, [marketBanners, bannerPageTab]);
   // Estilo visual de cada carrusel completo (no de cada banner): 'center'
   // (el look de siempre de /market) o 'bottom' (el look de siempre del
   // Inicio). Tabla banner_page_settings, una fila por pagina.
@@ -117,10 +118,55 @@ export default function BannersAdmin() {
     if (error) { alert('No se pudo guardar el estilo: ' + error.message); return; }
     await revalidarCatalogo();
   };
-  // ── Drag & Drop para reordenar banners ──
+  // ── Reordenamiento y Guardado de Banners ──
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [isReordering, setIsReordering] = useState(false);
+  const [ordenModificado, setOrdenModificado] = useState(false);
+  const [guardandoOrden, setGuardandoOrden] = useState(false);
+  const [ordenGuardadoExito, setOrdenGuardadoExito] = useState(false);
+
+  // Aplica el nuevo orden normalizando sort_order a 1, 2, 3...
+  const aplicarNuevoOrden = (nuevaLista: any[]) => {
+    const normalizados = nuevaLista.map((item, idx) => ({
+      ...item,
+      sort_order: idx + 1,
+    }));
+    setMarketBanners(prev => {
+      const otros = prev.filter(b => (b.page || 'market') !== bannerPageTab);
+      return [...otros, ...normalizados];
+    });
+    setOrdenModificado(true);
+    setOrdenGuardadoExito(false);
+  };
+
+  const handleMoveBanner = (indexActual: number, indexDestino: number) => {
+    if (indexDestino < 0 || indexDestino >= visibleMarketBanners.length) return;
+    const items = [...visibleMarketBanners];
+    const [movido] = items.splice(indexActual, 1);
+    items.splice(indexDestino, 0, movido);
+    aplicarNuevoOrden(items);
+  };
+
+  const handleGuardarOrden = async () => {
+    setGuardandoOrden(true);
+    setOrdenGuardadoExito(false);
+    try {
+      const updates = visibleMarketBanners.map((item, idx) =>
+        supabase.from('market_banners').update({ sort_order: idx + 1 }).eq('id', item.id)
+      );
+      await Promise.all(updates);
+      await revalidarCatalogo();
+      setOrdenModificado(false);
+      setOrdenGuardadoExito(true);
+      setTimeout(() => setOrdenGuardadoExito(false), 4500);
+      await fetchMarketBanners();
+    } catch (err: any) {
+      alert('Error al guardar el orden: ' + err.message);
+    } finally {
+      setGuardandoOrden(false);
+    }
+  };
 
   // ── Modal y eventos para banner de Inicio ──
   const [modalEventosAbierto, setModalEventosAbierto] = useState(false);
@@ -266,45 +312,16 @@ export default function BannersAdmin() {
     setDragOverIndex(null);
   };
 
-  const handleDrop = async (e: React.DragEvent, targetIndex: number) => {
+  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
     e.preventDefault();
     if (draggedIndex === null || draggedIndex === targetIndex) {
       setDraggedIndex(null);
       setDragOverIndex(null);
       return;
     }
-
-    const items = [...visibleMarketBanners];
-    const [movedItem] = items.splice(draggedIndex, 1);
-    items.splice(targetIndex, 0, movedItem);
-
-    // Actualización optimista inmediata
-    setMarketBanners(prev => {
-      const otros = prev.filter(b => (b.page || 'market') !== bannerPageTab);
-      const reordenados = items.map((item, idx) => ({
-        ...item,
-        sort_order: idx + 1,
-      }));
-      return [...otros, ...reordenados].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
-    });
-
+    handleMoveBanner(draggedIndex, targetIndex);
     setDraggedIndex(null);
     setDragOverIndex(null);
-
-    // Persistir en Supabase
-    setIsReordering(true);
-    try {
-      await Promise.all(
-        items.map((item, idx) =>
-          supabase.from('market_banners').update({ sort_order: idx + 1 }).eq('id', item.id)
-        )
-      );
-      await revalidarCatalogo();
-    } catch (err) {
-      console.error('Error al reordenar banners:', err);
-    } finally {
-      setIsReordering(false);
-    }
   };
 
   const [editingMarketBannerId, setEditingMarketBannerId] = useState<string | 'new' | null>(null);
@@ -408,22 +425,10 @@ export default function BannersAdmin() {
     await revalidarCatalogo();
   };
 
-  const handleMoveMarketBanner = async (id: string, direction: -1 | 1) => {
+  const handleMoveMarketBanner = (id: string, direction: -1 | 1) => {
     const idx = visibleMarketBanners.findIndex(b => b.id === id);
-    const swapIdx = idx + direction;
-    if (idx < 0 || swapIdx < 0 || swapIdx >= visibleMarketBanners.length) return;
-    const a = visibleMarketBanners[idx];
-    const b = visibleMarketBanners[swapIdx];
-    setMarketBanners(prev => prev.map(x => {
-      if (x.id === a.id) return { ...x, sort_order: b.sort_order };
-      if (x.id === b.id) return { ...x, sort_order: a.sort_order };
-      return x;
-    }));
-    await Promise.all([
-      supabase.from('market_banners').update({ sort_order: b.sort_order }).eq('id', a.id),
-      supabase.from('market_banners').update({ sort_order: a.sort_order }).eq('id', b.id),
-    ]);
-    await revalidarCatalogo();
+    if (idx < 0) return;
+    handleMoveBanner(idx, idx + direction);
   };
 
   if (!esSuperadmin) return null;
@@ -471,10 +476,10 @@ export default function BannersAdmin() {
 
               <div className="px-5 pt-3 flex items-center justify-between flex-wrap gap-2">
                 <div className="flex gap-1.5 flex-wrap">
-                  {([['market', 'Market'], ['home', 'Inicio'], ['negocios', 'Foto de /negocios'], ['productos', 'Productos (/productos)']] as const).map(([id, label]) => (
+                  {([['home', 'Inicio'], ['market', 'Market'], ['negocios', 'Foto de /negocios'], ['productos', 'Productos (/productos)']] as const).map(([id, label]) => (
                     <button
                       key={id}
-                      onClick={() => setBannerPageTab(id)}
+                      onClick={() => { setBannerPageTab(id); setOrdenModificado(false); setOrdenGuardadoExito(false); }}
                       className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${bannerPageTab === id ? 'bg-[#0058be] text-white' : 'bg-[#f2f3fd] text-[#545f73] hover:bg-[#e6e7f2]'
                         }`}
                     >
@@ -696,21 +701,52 @@ export default function BannersAdmin() {
                         Sin banners cargados para {{ market: '/market', home: 'el Inicio', negocios: 'la portada de /negocios (se usa la primera foto activa)' }[bannerPageTab]} — muestra los de ejemplo por defecto.
                       </p>
                     ) : (
-                      <div>
-                        <div className="flex items-center justify-between pb-2 text-[11px] text-[#727785] px-1">
-                          <span className="flex items-center gap-1 font-medium">
-                            <span className="material-symbols-outlined text-[15px] text-[#0058be]">drag_indicator</span>
-                            Arrastra las filas para reordenar los banners
+                      <div className="space-y-3">
+                        {/* Barra superior con instrucciones y botón de guardar orden */}
+                        <div className="flex items-center justify-between pb-1 text-[11px] text-[#727785] px-1 flex-wrap gap-2">
+                          <span className="flex items-center gap-1.5 font-bold text-[#191b23]">
+                            <span className="material-symbols-outlined text-[18px] text-[#0058be]">swap_vert</span>
+                            Orden de banners (el #1 aparece primero en el carrusel)
                           </span>
-                          {isReordering && (
-                            <span className="text-emerald-700 font-bold flex items-center gap-1 animate-pulse">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                              Guardando orden…
-                            </span>
-                          )}
+
+                          <div className="flex items-center gap-2">
+                            {ordenModificado && (
+                              <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-md flex items-center gap-1 animate-pulse">
+                                <span className="material-symbols-outlined text-[14px]">warning</span>
+                                Cambios sin guardar
+                              </span>
+                            )}
+                            {ordenGuardadoExito && (
+                              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-md flex items-center gap-1 animate-fade-in">
+                                <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                                ¡Guardado y actualizado en vivo!
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={handleGuardarOrden}
+                              disabled={guardandoOrden || (!ordenModificado && !ordenGuardadoExito)}
+                              className={`px-3.5 py-1.5 rounded-md font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer ${
+                                guardandoOrden
+                                  ? 'bg-slate-400 text-white cursor-wait'
+                                  : ordenModificado
+                                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white ring-2 ring-emerald-400 ring-offset-1 shadow-md'
+                                  : ordenGuardadoExito
+                                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                  : 'bg-slate-200 text-slate-500 cursor-default'
+                              }`}
+                              title="Guarda el orden actual y actualiza el sitio en vivo"
+                            >
+                              <span className={`material-symbols-outlined text-[16px] ${guardandoOrden ? 'animate-spin' : ''}`}>
+                                {guardandoOrden ? 'refresh' : ordenGuardadoExito ? 'check' : 'save'}
+                              </span>
+                              {guardandoOrden ? 'Guardando orden...' : ordenGuardadoExito ? '¡Guardado!' : 'Guardar Orden'}
+                            </button>
+                          </div>
                         </div>
 
-                        <div className="space-y-1.5">
+                        {/* Listado con números de orden #1, #2... */}
+                        <div className="space-y-2">
                           {visibleMarketBanners.map((b, idx) => {
                             const isDragging = draggedIndex === idx;
                             const isOver = dragOverIndex === idx;
@@ -722,14 +758,22 @@ export default function BannersAdmin() {
                                 onDragOver={(e) => handleDragOver(e, idx)}
                                 onDragEnd={handleDragEnd}
                                 onDrop={(e) => handleDrop(e, idx)}
-                                className={`flex items-center gap-3 p-2 rounded-lg border transition-all duration-150 select-none ${
+                                className={`flex items-center gap-2.5 sm:gap-3 p-2.5 rounded-lg border transition-all duration-150 select-none ${
                                   isDragging
-                                    ? 'opacity-40 border-dashed border-[#0058be] bg-[#f2f3fd]/60 scale-[0.99]'
+                                    ? 'opacity-30 border-dashed border-[#0058be] bg-[#f2f3fd]/60 scale-[0.99]'
                                     : isOver
-                                    ? 'border-2 border-[#0058be] bg-[#d8e2ff]/30 shadow-md scale-[1.005]'
+                                    ? 'border-2 border-[#0058be] bg-[#d8e2ff]/40 shadow-md scale-[1.005]'
                                     : 'border-[#ecedf7] hover:border-[#c2c6d6] hover:bg-slate-50/70 bg-white'
                                 }`}
                               >
+                                {/* Número de posición en el carrusel */}
+                                <div
+                                  className="w-7 h-7 rounded-md bg-[#f2f3fd] border border-[#c2c6d6] text-[#0058be] font-black text-xs flex items-center justify-center shrink-0 shadow-2xs"
+                                  title={`Posición ${idx + 1} en el carrusel`}
+                                >
+                                  #{idx + 1}
+                                </div>
+
                                 <div
                                   className="cursor-grab active:cursor-grabbing p-1 text-[#727785] hover:text-[#0058be] shrink-0 flex items-center justify-center transition-colors"
                                   title="Arrastra para cambiar el orden"
@@ -739,7 +783,7 @@ export default function BannersAdmin() {
                                 <img
                                   src={b.image}
                                   alt=""
-                                  className="w-16 h-9 rounded-md object-cover shrink-0 bg-[#e6e7f2] pointer-events-none"
+                                  className="w-16 h-9 rounded-md object-cover shrink-0 bg-[#e6e7f2] pointer-events-none border border-slate-200"
                                 />
                                 <div className="min-w-0 flex-1">
                                   <p className="text-xs font-bold text-[#191b23] truncate flex items-center gap-1.5">
@@ -757,13 +801,13 @@ export default function BannersAdmin() {
                                   </p>
                                   <p className="text-[10px] text-[#727785] truncate">{b.sub}{b.link ? ` · → ${b.link}` : ''}</p>
                                 </div>
-                                <div className="flex items-center gap-0.5 shrink-0">
+                                <div className="flex items-center gap-0.5 shrink-0 bg-slate-50 border border-slate-200 rounded-md p-0.5">
                                   <button
                                     type="button"
                                     onClick={() => handleMoveMarketBanner(b.id, -1)}
                                     disabled={idx === 0}
-                                    className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] p-1 hover:bg-[#e6e7f2] rounded disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
-                                    title="Subir"
+                                    className="material-symbols-outlined text-[17px] text-[#424754] hover:text-[#0058be] p-1 hover:bg-white rounded disabled:opacity-20 disabled:pointer-events-none cursor-pointer transition-colors"
+                                    title={`Subir a posición #${idx}`}
                                   >
                                     arrow_upward
                                   </button>
@@ -771,15 +815,16 @@ export default function BannersAdmin() {
                                     type="button"
                                     onClick={() => handleMoveMarketBanner(b.id, 1)}
                                     disabled={idx === visibleMarketBanners.length - 1}
-                                    className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] p-1 hover:bg-[#e6e7f2] rounded disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
-                                    title="Bajar"
+                                    className="material-symbols-outlined text-[17px] text-[#424754] hover:text-[#0058be] p-1 hover:bg-white rounded disabled:opacity-20 disabled:pointer-events-none cursor-pointer transition-colors"
+                                    title={`Bajar a posición #${idx + 2}`}
                                   >
                                     arrow_downward
                                   </button>
+                                  <div className="w-[1px] h-4 bg-slate-200 my-auto mx-0.5" />
                                   <button
                                     type="button"
                                     onClick={() => handleOpenEditMarketBanner(b)}
-                                    className="material-symbols-outlined text-[16px] text-[#727785] hover:text-[#0058be] p-1 hover:bg-[#e6e7f2] rounded cursor-pointer"
+                                    className="material-symbols-outlined text-[17px] text-[#424754] hover:text-[#0058be] p-1 hover:bg-white rounded cursor-pointer transition-colors"
                                     title="Editar"
                                   >
                                     edit
@@ -787,7 +832,7 @@ export default function BannersAdmin() {
                                   <button
                                     type="button"
                                     onClick={() => handleDeleteMarketBanner(b.id)}
-                                    className="material-symbols-outlined text-[16px] text-[#727785] hover:text-red-600 p-1 hover:bg-red-50 rounded cursor-pointer"
+                                    className="material-symbols-outlined text-[17px] text-[#424754] hover:text-red-600 p-1 hover:bg-red-50 rounded cursor-pointer transition-colors"
                                     title="Eliminar"
                                   >
                                     delete
@@ -797,6 +842,34 @@ export default function BannersAdmin() {
                             );
                           })}
                         </div>
+
+                        {/* Pie de lista con botón de guardar para carruseles con varios banners */}
+                        {visibleMarketBanners.length > 2 && (
+                          <div className="pt-3 flex items-center justify-between border-t border-[#ecedf7] mt-3">
+                            <p className="text-[11px] text-[#727785]">
+                              Total de banners en esta sección: <b>{visibleMarketBanners.length}</b>
+                            </p>
+                            <button
+                              type="button"
+                              onClick={handleGuardarOrden}
+                              disabled={guardandoOrden || (!ordenModificado && !ordenGuardadoExito)}
+                              className={`px-4 py-2 rounded-md font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer ${
+                                guardandoOrden
+                                  ? 'bg-slate-400 text-white cursor-wait'
+                                  : ordenModificado
+                                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white ring-2 ring-emerald-400 ring-offset-1 shadow-md'
+                                  : ordenGuardadoExito
+                                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                  : 'bg-slate-200 text-slate-500 cursor-default'
+                              }`}
+                            >
+                              <span className={`material-symbols-outlined text-[16px] ${guardandoOrden ? 'animate-spin' : ''}`}>
+                                {guardandoOrden ? 'refresh' : ordenGuardadoExito ? 'check' : 'save'}
+                              </span>
+                              {guardandoOrden ? 'Guardando orden...' : ordenGuardadoExito ? '¡Guardado y actualizado!' : 'Guardar Orden'}
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </>
